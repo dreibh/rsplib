@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.28 2004/12/03 16:58:19 dreibh Exp $
+ *  $Id: rspsession.c,v 1.29 2004/12/03 17:16:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -991,7 +991,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
    int                      flags;
 
    tagListSetData(tags, TAG_RspIO_MsgIsCookie, 0);
-   LOG_NOTE
+   LOG_VERBOSE3
    fprintf(stdlog, "Trying to read message from session, socket %d\n",
            session->Socket);
    LOG_END
@@ -1000,14 +1000,14 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
       now = getMicroTime();
       readTimeout = (long long)timeout - (long long)(now - startTimeStamp);
       if(readTimeout < 0) {
-         LOG_ACTION
+         LOG_VERBOSE
          fprintf(stdlog, "Reading from session, socket %d, timed out\n",
                  session->Socket);
          LOG_END
          return(RspRead_Timeout);
       }
 
-      LOG_NOTE
+      LOG_VERBOSE4
       fprintf(stdlog, "Trying to read from session, socket %d, with timeout %Ldus\n",
               session->Socket, readTimeout);
       LOG_END
@@ -1063,7 +1063,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
                                timeout);
       }
       else {
-         LOG_VERBOSE5
+         LOG_VERBOSE4
          fputs("Check for control data completed -> returning\n", stdlog);
          LOG_END
          return(result);

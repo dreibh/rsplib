@@ -236,6 +236,8 @@ void FractalPU::run()
 {
    char              statusText[128];
    TagItem           tags[16];
+
+   Running           = true;
    Run               = 0;
    PoolElementUsages = 0;
 
