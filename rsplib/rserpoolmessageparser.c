@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.19 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.20 2004/11/09 13:54:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -1710,7 +1710,7 @@ static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    dummyAddress.sin_family = AF_INET;
    transportAddressBlockNew(dummyTransportAddressBlock,
                             IPPROTO_SCTP, 0xffff, 0,
-                            (sockaddr_union*)&dummyAddress, 1);
+                            (union sockaddr_union*)&dummyAddress, 1);
 
    while(scanPoolHandleParameter(message, &message->Handle)) {
       scannedPoolElementIdentifiers = 0;

@@ -2,6 +2,8 @@
 #define COMPONENTSTATUSPROTOCOL_H
 
 #include "sockaddrunion.h"
+#include <sys/types.h>
+#include <inttypes.h>
 
 #define CID_GROUP(id)  (((uint64_t)id >> 56) & (0xffffLL))
 #define CID_OBJECT(id) ((uint64_t)id & 0xffffffffffffffLL)
@@ -15,8 +17,8 @@
 
 struct ComponentAssociationEntry
 {
-   uint64_t ReceiverID;
-   uint64_t Duration;
+   u_int64_t ReceiverID;
+   u_int64_t Duration;
    uint16_t Flags;
    uint16_t ProtocolID;
    uint32_t PPID;
@@ -29,9 +31,9 @@ struct ComponentStatusProtocolHeader
    uint16_t                         Version;
    uint32_t                         Length;
 
-   uint64_t                         SenderID;
-   uint64_t                         ReportInterval;
-   uint64_t                         SenderTimeStamp;
+   u_int64_t                         SenderID;
+   u_int64_t                         ReportInterval;
+   u_int64_t                         SenderTimeStamp;
    char                             StatusText[128];
 
    uint32_t                         Associations;

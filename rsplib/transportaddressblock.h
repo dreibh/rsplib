@@ -23,6 +23,8 @@
 #ifndef TRANSPORTADDRESSBLOCK_H
 #define TRANSPORTADDRESSBLOCK_H
 
+#include <sys/types.h>
+#include <inttypes.h>
 
 #include <stdio.h>
 

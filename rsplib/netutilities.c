@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.17 2004/09/01 09:55:31 dreibh Exp $
+ *  $Id: netutilities.c,v 1.18 2004/11/09 13:54:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -1333,7 +1333,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
                 (const void*)&addrs[i], sizeof(union sockaddr_union));
          size = sizeof(peerParams);
 
-         if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_PARAMS,
+         if(sctp_opt_info(sockfd, assocID, SCTP_PEER_ADDR_PARAMS,
                           (void*)&peerParams, (socklen_t *)&size) == 0) {
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);

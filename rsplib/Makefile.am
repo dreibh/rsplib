@@ -97,37 +97,28 @@ noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu
 
 nameserver_SOURCES = nameserver.c
 nameserver_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-nameserver_LDFLAGS = -static $(all_libraries) -L.
 
 simpleexamplepe_SOURCES = simpleexamplepe.c
 simpleexamplepe_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-simpleexamplepe_LDFLAGS = -static $(all_libraries) -L.
 
 simpleexamplepu_SOURCES = simpleexamplepu.c
 simpleexamplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-simpleexamplepu_LDFLAGS = -static $(all_libraries) -L.
 
 examplepe_SOURCES = examplepe.c
 examplepe_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-examplepe_LDFLAGS = -static $(all_libraries) -L.
 
 testregistrator_SOURCES = testregistrator.c
 testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-testregistrator_LDFLAGS = -static $(all_libraries) -L.
 
 examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-examplepu_LDFLAGS = -static $(all_libraries) -L.
 
 fractalpoolelement_SOURCES = fractalpoolelement.cc
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-fractalpoolelement_LDFLAGS = -static $(all_libraries) -L.
 
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-fork_LDFLAGS = -static $(all_libraries) -L.
 
-cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 

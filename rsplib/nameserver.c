@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.38 2004/09/28 12:30:26 dreibh Exp $
+ *  $Id: nameserver.c,v 1.39 2004/11/09 13:54:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -473,7 +473,9 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                  const union sockaddr_union*   asapAnnounceAddress,
                                  const bool                    enrpUseMulticast,
                                  const bool                    enrpAnnounceViaMulticast,
-                                 const union sockaddr_union*   enrpMulticastAddress);
+                                 const union sockaddr_union*   enrpMulticastAddress,
+                                 const unsigned long long      cspReportInterval,
+                                 const union sockaddr_union*   cspReportAddress);
 void nameServerDelete(struct NameServer* nameServer);
 
 static void sendPeerNameUpdate(struct NameServer*                nameServer,
@@ -854,7 +856,7 @@ static void sendPeerPresence(struct NameServer*          nameServer,
                              const bool                  replyRequired)
 {
    struct RSerPoolMessage* message;
-   ST_CLASS(PeerListNode)  peerListNode;
+   struct ST_CLASS(PeerListNode)  peerListNode;
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
@@ -2048,7 +2050,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
                                sctp_assoc_t            assocID,
                                struct RSerPoolMessage* message)
 {
-   ST_CLASS(PeerListNode)* peerListNode;
+   struct ST_CLASS(PeerListNode)* peerListNode;
    struct TakeoverProcess* takeoverProcess;
    int                     result;
 
@@ -3178,7 +3180,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
    union sockaddr_union*    localAddressArray;
    char*                    address;
    char*                    idx;
-   sctp_event_subscribe     sctpEvents;
+   struct sctp_event_subscribe     sctpEvents;
    size_t                   sctpAddresses;
    int                      sctpSocket;
    int                      autoCloseTimeout;

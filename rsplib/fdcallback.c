@@ -49,7 +49,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
                                                   void*              userData),
                    void*              userData)
 {
-   LeafLinkedRedBlackTreeNode* result;
+   struct LeafLinkedRedBlackTreeNode* result;
    CHECK((fd >= 0) && (fd < FD_SETSIZE));
 
    leafLinkedRedBlackTreeNodeNew(&fdCallback->Node);
@@ -72,7 +72,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
 /* ###### Destructor ##################################################### */
 void fdCallbackDelete(struct FDCallback* fdCallback)
 {
-   LeafLinkedRedBlackTreeNode* result;
+   struct LeafLinkedRedBlackTreeNode* result;
    CHECK(leafLinkedRedBlackTreeNodeIsLinked(&fdCallback->Node));
 
    dispatcherLock(fdCallback->Master);

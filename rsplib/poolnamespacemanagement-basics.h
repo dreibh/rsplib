@@ -24,6 +24,8 @@
 #define POOLMANAGEMENT_BASICS_H
 
 
+#include <sys/types.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

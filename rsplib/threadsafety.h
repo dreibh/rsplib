@@ -1,5 +1,5 @@
 /*
- *  $Id: threadsafety.h,v 1.2 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: threadsafety.h,v 1.3 2004/11/09 13:54:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -42,8 +42,9 @@
 
 
 #define USE_PTHREADS
+/*
 #define HAS_PTHREADS_RECURSIVE_MUTEX
-
+*/
 
 #ifdef USE_PTHREADS
 #include <pthread.h>

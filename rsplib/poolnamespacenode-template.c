@@ -727,7 +727,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolElementCo
                                      const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID)
 {
-CHECK(false);
+CHECK(0);
 /*
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* nextPoolElementNode;

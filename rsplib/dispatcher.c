@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.6 2004/09/28 12:30:26 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.7 2004/11/09 13:54:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -116,7 +116,7 @@ void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData)
 /* ###### Handle timer events ############################################ */
 static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 {
-   LeafLinkedRedBlackTreeNode* node;
+   struct LeafLinkedRedBlackTreeNode* node;
    struct Timer*               timer;
    unsigned long long          now;
    dispatcherLock(dispatcher);
@@ -154,7 +154,7 @@ void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
                                    unsigned long long* testTS,
                                    struct timeval*     timeout)
 {
-   LeafLinkedRedBlackTreeNode* node;
+   struct LeafLinkedRedBlackTreeNode* node;
    struct FDCallback*          fdCallback;
    struct Timer*               timer;
    unsigned long long          now;
