@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.13 2004/08/04 01:02:39 dreibh Exp $
+ *  $Id: servertable.c,v 1.14 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -103,9 +103,6 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                            getMicroTime(),
                            &peerListNode);
                if(result == RSPERR_OKAY) {
-ST_CLASS(peerListManagementPrint)(&serverTable->List, stdlog, PLPO_FULL);
-// ??????????
-
                   serverTable->LastAnnounce = getMicroTime();
                   ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
                      &serverTable->List,
@@ -264,11 +261,11 @@ unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
 
 
 /* ###### Try more nameservers ########################################### */
-static void tryNextBlock(struct ServerTable*     serverTable,
-                         ENRPIdentifierType*     lastNSIdentifier,
-                         TransportAddressBlock** lastTransportAddressBlock,
-                         int*                    sd,
-                         card64*                 timeout)
+static void tryNextBlock(struct ServerTable*            serverTable,
+                         ENRPIdentifierType*            lastNSIdentifier,
+                         struct TransportAddressBlock** lastTransportAddressBlock,
+                         int*                           sd,
+                         card64*                        timeout)
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -369,20 +366,20 @@ static void tryNextBlock(struct ServerTable*     serverTable,
 /* ###### Find nameserver ################################################### */
 int serverTableFindServer(struct ServerTable* serverTable)
 {
-   struct timeval          selectTimeout;
-   union sockaddr_union    peerAddress;
-   socklen_t               peerAddressLength;
-   int                     sd[MAX_SIMULTANEOUS_REQUESTS];
-   card64                  timeout[MAX_SIMULTANEOUS_REQUESTS];
-   ENRPIdentifierType      lastNSIdentifier;
-   TransportAddressBlock*  lastTransportAddressBlock;
-   card64                  start;
-   card64                  nextTimeout;
-   fd_set                  rfdset;
-   fd_set                  wfdset;
-   unsigned int            trials;
-   unsigned int            i, j;
-   int                     n, result;
+   struct timeval                 selectTimeout;
+   union sockaddr_union           peerAddress;
+   socklen_t                      peerAddressLength;
+   int                            sd[MAX_SIMULTANEOUS_REQUESTS];
+   card64                         timeout[MAX_SIMULTANEOUS_REQUESTS];
+   ENRPIdentifierType             lastNSIdentifier;
+   struct TransportAddressBlock*  lastTransportAddressBlock;
+   card64                         start;
+   card64                         nextTimeout;
+   fd_set                         rfdset;
+   fd_set                         wfdset;
+   unsigned int                   trials;
+   unsigned int                   i, j;
+   int                            n, result;
 
    if(serverTable == NULL) {
       return(-1);

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.9 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rspsession.c,v 1.10 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -538,7 +538,7 @@ static void rspSessionDelete(struct SessionDescriptor* session)
    if(session) {
       if(session->PoolElement) {
          threadSafetyLock(&session->PoolElement->Mutex);
-         session->PoolElement->SessionList = g_list_append(session->PoolElement->SessionList, session);
+         session->PoolElement->SessionList = g_list_remove(session->PoolElement->SessionList, session);
          threadSafetyUnlock(&session->PoolElement->Mutex);
          session->PoolElement = NULL;
       }
@@ -867,7 +867,7 @@ static void handleRSerPoolMessage(struct SessionDescriptor* session,
    message = rserpoolPacket2Message(buffer, PPID_ASAP, size, size);
    if(message != NULL) {
       LOG_VERBOSE2
-      fprintf(stdlog, "Received ASAP type %u from session, socket %d\n",
+      fprintf(stdlog, "Received ASAP type $%04x from session, socket %d\n",
               message->Type, session->Socket);
       LOG_END
       switch(message->Type) {
@@ -1047,9 +1047,9 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
    struct TagItem mytags[16];
    struct timeval mytimeout;
    fd_set  myreadfds, mywritefds, myexceptfds;
-   fd_set* readfds   = (fd_set*)tagListGetData(tags, TAG_RspSelect_ReadFDs,   (tagdata_t)&myreadfds);
-   fd_set* writefds  = (fd_set*)tagListGetData(tags, TAG_RspSelect_WriteFDs,  (tagdata_t)&mywritefds);
-   fd_set* exceptfds = (fd_set*)tagListGetData(tags, TAG_RspSelect_ExceptFDs, (tagdata_t)&myexceptfds);
+   fd_set* readfds    = (fd_set*)tagListGetData(tags, TAG_RspSelect_ReadFDs,   (tagdata_t)&myreadfds);
+   fd_set* writefds   = (fd_set*)tagListGetData(tags, TAG_RspSelect_WriteFDs,  (tagdata_t)&mywritefds);
+   fd_set* exceptfds  = (fd_set*)tagListGetData(tags, TAG_RspSelect_ExceptFDs, (tagdata_t)&myexceptfds);
    struct timeval* to = (struct timeval*)tagListGetData(tags, TAG_RspSelect_Timeout, (tagdata_t)&mytimeout);
    int     readResult;
    int     result;

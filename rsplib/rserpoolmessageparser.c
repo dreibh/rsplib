@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.12 2004/08/19 11:04:56 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.13 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1060,12 +1060,12 @@ static bool scanCookieParameter(struct RSerPoolMessage* message)
 
 
 /* ###### Scan server information paramter ############################### */
-static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMessage* message)
+static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMessage* message)
 {
    char                                 transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*        transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct TransportAddressBlock*        newTransportAddressBlock;
-   ST_CLASS(PeerListNode)*              peerListNode;
+   struct ST_CLASS(PeerListNode)*       peerListNode;
    struct rserpool_serverinfoparameter* sip;
    size_t                               tlvPosition = 0;
    size_t                               tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_SERVER_INFORMATION, true);
@@ -1094,7 +1094,7 @@ static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMes
       return(false);
    }
 
-   peerListNode = (ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
+   peerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
    if(peerListNode == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.12 2004/07/29 15:10:33 dreibh Exp $
+ *  $Id: netutilities.c,v 1.13 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -882,7 +882,7 @@ int sendtoplus(int                   sockfd,
                const uint32_t        timeToLive,
                const card64          timeout)
 {
-   sockaddr_union         addressArray[MAX_TRANSPORTADDRESSES];
+   union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
    size_t                 addresses;
    struct sctp_sndrcvinfo sri;
    struct timeval         selectTimeout;

@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.8 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,10 +45,11 @@
 
 #include <ext_socket.h>
 #include <pthread.h>
+#include <glib.h>
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-#define FAST_BREAK
+/* #define FAST_BREAK */
 
 /* Disable RSerPool support */
 /* #define NO_RSP */

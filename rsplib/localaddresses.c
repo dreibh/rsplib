@@ -1,5 +1,5 @@
 /*
- *  $Id: localaddresses.c,v 1.2 2004/07/29 15:10:33 dreibh Exp $
+ *  $Id: localaddresses.c,v 1.3 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -136,7 +136,7 @@ bool gatherLocalAddresses(union sockaddr_union** addressArray,
    cf.ifc_buf = buffer;
    cf.ifc_len = sizeof(buffer);
    if(ioctl(fd, SIOCGIFCONF, (char *)&cf) == -1) {
-       return(FALSE);
+       return(false);
    }
 
 #if defined (LINUX)

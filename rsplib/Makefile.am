@@ -1,4 +1,8 @@
-lib_LTLIBRARIES = librsplib.la
+lib_LTLIBRARIES = librsplib.la libcppthread.la
+
+libcppthreadincludedir      = $(prefix)/include/rserpool
+libcppthreadinclude_HEADERS = mutex.h thread.h
+libcppthread_la_SOURCES     = mutex.cc thread.cc
 
 librsplibincludedir      = $(prefix)/include/rserpool
 librsplibinclude_HEADERS = rsplib.h rsplib-tags.h
@@ -79,7 +83,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fork
+noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement fork
 # examplepe2 examplepu2
 
 
@@ -107,6 +111,9 @@ examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 examplepu_LDFLAGS = -static $(all_libraries) -L.
 
+fractalpoolelement_SOURCES = fractalpoolelement.cc
+fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+fractalpoolelement_LDFLAGS = -static $(all_libraries) -L.
 
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)

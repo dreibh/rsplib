@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.6 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: netutilities.h,v 1.7 2004/08/23 10:48:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -46,7 +46,6 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <glib.h>
 #include <ext_socket.h>
 
 

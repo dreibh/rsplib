@@ -33,6 +33,9 @@
 #include <arpa/inet.h>
 
 
+#ifndef FAKE_ADDRESSCMP
+#include "netutilities.h"
+#else
 /* ###### Convert address to string ###################################### */
 static int address2string(const struct sockaddr* address,
                           char*                  buffer,
@@ -97,6 +100,7 @@ static int address2string(const struct sockaddr* address,
    snprintf(buffer,length,"(unsupported address family #%d)",address->sa_family);
    return(0);
 }
+#endif
 
 
 /* ###### Initialize ##################################################### */
@@ -261,6 +265,7 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
    const struct TransportAddressBlock* transportAddressBlock1 = (const struct TransportAddressBlock*)transportAddressBlockPtr1;
    const struct TransportAddressBlock* transportAddressBlock2 = (const struct TransportAddressBlock*)transportAddressBlockPtr2;
    int                                 result;
+   size_t                              i;
 
    if((transportAddressBlock1 == NULL) &&
       (transportAddressBlock2 != NULL)) {
@@ -288,7 +293,7 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
    else if(transportAddressBlock1->Addresses > transportAddressBlock2->Addresses) {
       return(1);
    }
-   for(size_t i = 0;i < transportAddressBlock1->Addresses;i++) {
+   for(i = 0;i < transportAddressBlock1->Addresses;i++) {
       result = addresscmp((const struct sockaddr*)&transportAddressBlock1->AddressArray[i],
                           (const struct sockaddr*)&transportAddressBlock2->AddressArray[i],
                           false);
