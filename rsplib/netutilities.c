@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.26 2004/11/11 22:44:20 dreibh Exp $
+ *  $Id: netutilities.c,v 1.27 2004/11/11 22:48:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -971,7 +971,7 @@ int sendtoplus(int                      sockfd,
       if((result > 0) && FD_ISSET(sockfd, &fdset)) {
          LOG_VERBOSE4
          fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
-                 sockfd, assocID, length);
+                 sockfd, (unsigned int)assocID, (unsigned int)length);
          LOG_END
          if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
             if(toaddrs) {
@@ -1027,7 +1027,11 @@ int recvfromplus(int                      sockfd,
    size_t          cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
    char            cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
    struct msghdr msg = {
-      (caddr_t*)from,
+#ifdef __APPLE__
+      (char*)from,
+#else
+      from,
+#endif
       (fromlen != NULL) ? *fromlen : 0,
       &iov, 1,
       cbuf, cmsglen,
@@ -1068,7 +1072,11 @@ int recvfromplus(int                      sockfd,
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
          LOG_END
-         msg.msg_name       = (caddr_t*)from;
+#ifdef __APPLE__
+         msg.msg_name       = (char*)from;
+#else
+         msg.msg_name       = from;
+#endif
          msg.msg_namelen    = (fromlen != NULL) ? *fromlen : 0;
          iov.iov_base       = (char*)buffer;
          iov.iov_len        = length;
