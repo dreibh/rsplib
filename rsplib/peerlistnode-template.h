@@ -1,0 +1,109 @@
+/*
+ * An Efficient RSerPool Pool Namespace Management Implementation
+ * Copyright (C) 2004 by Thomas Dreibholz
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Contact: dreibh@exp-math.uni-essen.de
+ *
+ */
+
+#ifndef INTERNAL_POOLTEMPLATE
+#error Do not include this file directly, use peerListmanagement.h
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+struct ST_CLASS(PeerList);
+
+
+#define PLNF_STATIC    0
+#define PLNF_DYNAMIC   (1 << 0)
+#define PLNF_MULTICAST (1 << 1)
+
+#define PLNT_EXPIRY                 2000
+#define PLNT_KEEPALIVE_TRANSMISSION 2001
+#define PLNT_KEEPALIVE_TIMEOUT      2002
+
+
+struct ST_CLASS(PeerListNode)
+{
+   struct STN_CLASSNAME          PeerListIndexStorageNode;
+   struct STN_CLASSNAME          PeerListTimerStorageNode;
+   struct ST_CLASS(PeerList)*    OwnerPeerList;
+
+   ENRPIdentifierType            Identifier;
+   unsigned int                  Flags;
+   unsigned long long            LastUpdateTimeStamp;
+
+   unsigned int                  TimerCode;
+   unsigned long long            TimerTimeStamp;
+
+   struct TransportAddressBlock* AddressBlock;
+   void*                         UserData;
+};
+
+
+void ST_CLASS(peerListIndexStorageNodePrint)(const void *nodePtr, FILE* fd);
+int ST_CLASS(peerListIndexStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
+
+void ST_CLASS(peerListTimerStorageNodePrint)(const void *nodePtr, FILE* fd);
+int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
+
+
+/* ###### Get PeerListNode from given Index Node ######################### */
+inline struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(void* node)
+{
+   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
+   long n = (long)node - ((long)&dummy->PeerListIndexStorageNode - (long)dummy);
+   return((struct ST_CLASS(PeerListNode)*)n);
+}
+
+
+/* ###### Get PeerListNode from given Timer Node ######################### */
+inline struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node)
+{
+   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
+   long n = (long)node - ((long)&dummy->PeerListTimerStorageNode - (long)dummy);
+   return((struct ST_CLASS(PeerListNode)*)n);
+}
+
+
+
+void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
+                               const ENRPIdentifierType       identifier,
+                               const unsigned int             flags,
+                               struct TransportAddressBlock*  transportAddressBlock);
+void ST_CLASS(peerListNodeDelete)(struct ST_CLASS(PeerListNode)* peerListNode);
+int ST_CLASS(peerListNodeUpdate)(struct ST_CLASS(PeerListNode)*       peerListNode,
+                                 const struct ST_CLASS(PeerListNode)* source);
+void ST_CLASS(peerListNodeGetDescription)(
+        const struct ST_CLASS(PeerListNode)* peerListNode,
+        char*                                buffer,
+        const size_t                         bufferSize,
+        const unsigned int                   fields);
+void ST_CLASS(peerListNodeVerify)(struct ST_CLASS(PeerListNode)* peerListNode);
+void ST_CLASS(peerListNodePrint)(const struct ST_CLASS(PeerListNode)* peerListNode,
+                                 FILE*                                fd,
+                                 const unsigned int                   fields);
+
+
+#ifdef __cplusplus
+}
+#endif

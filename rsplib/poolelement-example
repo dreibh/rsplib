@@ -1,0 +1,2 @@
+#!/bin/sh
+./fork 3 5 ./examplepe -ph=EchoPool -loglevel=1 $@

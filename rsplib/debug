@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "valgrind $@"
+valgrind  -v --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 $@

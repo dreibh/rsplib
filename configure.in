@@ -1,0 +1,436 @@
+# without this order in this file, autoconf will not work!
+# the argument is a source file out of your sources. But
+# acinclude.m4 makes the job for all programs ;-)
+AC_INIT(rsplib/rsplib.c)
+
+# enable the following if you want to use autoconf/automake
+# framework from a certain directory (like kde-common)
+AC_CONFIG_AUX_DIR(admin)
+
+AC_CANONICAL_SYSTEM
+
+AM_INIT_AUTOMAKE(rsplib, 0.5.0)
+
+AC_PREFIX_DEFAULT(/usr/local)
+if test "x$prefix" = "xNONE"; then
+  prefix=$ac_default_prefix
+  ac_configure_args="$ac_configure_args --prefix $prefix"
+fi
+
+# without this order in this file, automake will be confused!
+#
+AM_CONFIG_HEADER(config.h)
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_LIBTOOL
+
+# ----------------------
+# Packages configuration - Blatantly stolen from zebra !
+# ----------------------
+AC_ARG_ENABLE(ipv6,
+[  --disable-ipv6          turn off IPv6 support ])
+
+# ----------
+# IPv6 check
+# ----------
+AC_MSG_CHECKING(whether this OS does have IPv6 stack)
+if test "${enable_ipv6}" = "no"; then
+   AC_MSG_RESULT(disabled)
+else
+   # ----------
+   # INRIA IPv6
+   # ----------
+   if grep IPV6_INRIA_VERSION /usr/include/netinet/in.h >/dev/null 2>&1; then
+      cv_ipv6=yes
+      AC_DEFINE(HAVE_IPV6, 1, "Define to 1 if IPv6 is supported.")
+      AC_DEFINE(INRIA_IPV6, 1, "Define to 1 if it is a INRIA IPv6 stack.")
+      LIB_IPV6=""
+      AC_MSG_RESULT(INRIA IPv6)
+   fi
+
+   # ---------
+   # KAME IPv6
+   # ---------
+   if grep WIDE /usr/include/netinet6/in6.h >/dev/null 2>&1; then
+      cv_ipv6=yes
+      AC_DEFINE(HAVE_IPV6, 1, "Define to 1 if IPv6 is supported.")
+      AC_DEFINE(KAME, 1, "Define to 1 if the KAME implementation is used.")
+      if test -d /usr/local/v6/lib -a -f /usr/local/v6/lib/libinet6.a; then
+         LIB_IPV6="-L/usr/local/v6/lib -linet6"
+      fi
+      AC_MSG_RESULT(KAME)
+   fi
+
+   # ---------
+   # NRL check
+   # ---------
+   if grep NRL /usr/include/netinet6/in6.h >/dev/null 2>&1; then
+      cv_ipv6=yes
+      AC_DEFINE(HAVE_IPV6, 1, "Define to 1 if IPv6 is supported.")
+      AC_DEFINE(NRL, 1, "Define to 1 if NRL is used.")
+      if test x"$opsys" = x"bsdi";then
+         AC_DEFINE(BSDI_NRL, 1, "Define to 1 if BSDI NRL is used.")
+         AC_MSG_RESULT(BSDI_NRL)
+      else
+          AC_MSG_RESULT(NRL)
+      fi
+   fi
+
+   # ----------
+   # Linux IPv6
+   # ----------
+   AC_EGREP_CPP(yes, [#
+#include <linux/version.h>
+/* 2.1.128 or later */
+#if LINUX_VERSION_CODE >= 0x020180
+yes
+#endif],
+   [cv_ipv6=yes; cv_linux_ipv6=yes; AC_MSG_RESULT(Linux IPv6)])
+   if test "$cv_linux_ipv6" = "yes"; then
+      AC_DEFINE(HAVE_IPV6, 1, "Define to 1 if IPv6 is supported.")
+      AC_MSG_CHECKING(for GNU libc 2.1)
+      AC_EGREP_CPP(yes, [
+#include <features.h>
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
+      yes
+#endif], [glibc=yes; AC_MSG_RESULT(yes)], AC_MSG_RESULT(no))
+      AC_DEFINE(LINUX_IPV6, 1, "Define to 1 if the Linux IPv6 implementation is used.")
+      if test "$glibc" != "yes"; then
+         INCLUDES="-I/usr/inet6/include"
+         if test x`ls /usr/inet6/lib/libinet6.a 2>/dev/null` != x;then
+            LIB_IPV6="-L/usr/inet6/lib -linet6"
+         fi
+      fi
+   fi
+fi
+
+# -----------------------
+# Set IPv6 related values
+# -----------------------
+LIBS="$LIB_IPV6 $LIBS"
+AC_SUBST(LIB_IPV6)
+
+# -----------------------------------
+# check sin6_scope_id of sockaddr_in6
+# -----------------------------------
+if test "$cv_ipv6" = yes; then
+   AC_MSG_CHECKING(whether struct sockaddr_in6 has a sin6_scope_id field)
+   AC_TRY_COMPILE([#include <sys/types.h>
+#include <netinet/in.h>
+],[static struct sockaddr_in6 ac_i;int ac_j = sizeof(ac_i.sin6_scope_id);],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_SIN6_SCOPE_ID, 1, "Define to 1 if sin6_scope_id is supported.")],
+ AC_MSG_RESULT(no))
+fi
+
+# -----------------------------------
+# Check for New Socket API (RFC2292BIS)
+# -----------------------------------
+AC_MSG_CHECKING(for rfc2292bis support)
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <netinet/in.h>],
+         [int x = IPV6_RECVPKTINFO;],
+         [AC_DEFINE(USE_RFC2292BIS, 1, "Define to 1 if RFC 2292bis is supported.")
+          AC_MSG_RESULT(yes)],
+         [AC_MSG_RESULT(no)])
+
+
+if test x$with_glib = xyes ; then
+  AC_MSG_ERROR([
+*** Directory must be specified for --with-glib])
+fi
+
+if test x$with_glib = x ; then
+  # Look for separately installed glib
+
+  AM_PATH_GLIB(1.2.8,,
+    AC_MSG_ERROR([
+*** GLIB 1.2.8 or better is required. The latest version of GLIB
+*** is always available from ftp://ftp.gtk.org/.]),
+    gmodule gthread)
+
+  # we do not want to make all gtk progs to link to thread libraries.
+  glib_cflags=`$GLIB_CONFIG glib gmodule --cflags`
+  glib_thread_cflags="$GLIB_CFLAGS"
+  glib_libs=`$GLIB_CONFIG glib gmodule --libs`
+  glib_thread_libs="$GLIB_LIBS"
+  glib_LIBS="$glib_libs"
+  GLIB_LIBS="$glib_libs"
+  GLIB_DEPLIBS="$glib_libs"
+else
+  # Use uninstalled glib (assume they got the version right)
+
+  GLIB_CONFIG=$with_glib/glib-config
+  if test -x $GLIB_CONFIG ; then
+    :
+  else
+    AC_MSG_ERROR([GLIB directory ($with_glib) not present or not configured])
+  fi
+
+  # For use in gtk-config
+  glib_cflags=`$GLIB_CONFIG --cflags gmodule`
+  glib_thread_cflags=`$GLIB_CONFIG --cflags gmodule gthread`
+  glib_libs=`$GLIB_CONFIG --libs gmodule`
+  glib_thread_libs=`$GLIB_CONFIG --libs gmodule gthread`
+
+  glib_release=`$GLIB_CONFIG --version | sed 's%\\.[[0-9]]*$%%'`
+
+  # canonicalize relative paths
+  case $with_glib in
+    /*)
+      glib_dir=$with_glib
+      ;;
+    *)
+      glib_dir="\$(top_builddir)/$with_glib"
+      ;;
+  esac
+
+  glib_LIBS="$glib_libs"
+  GLIB_CFLAGS="-I$glib_dir -I$glib_dir/gmodule"
+  GLIB_LIBS="$glib_dir/libglib.la $glib_dir/gmodule/libgmodule.la"
+  GLIB_DEPLIBS=
+
+  AC_SUBST(GLIB_CFLAGS)
+  AC_SUBST(GLIB_LIBS)
+fi
+
+AC_SUBST(glib_cflags)
+AC_SUBST(glib_libs)
+AC_SUBST(glib_thread_cflags)
+AC_SUBST(glib_thread_libs)
+AC_SUBST(GLIB_DEPLIBS)
+AC_SUBST(glib_LIBS)
+
+CFLAGS="$CFLAGS $GLIB_CFLAGS -DINCLUDE_LEAFLINKEDREDBLACKTREE -DUSE_LEAFLINKEDREDBLACKTREE"
+CXXFLAGS="$CXXFLAGS $GLIB_CFLAGS -DINCLUDE_LEAFLINKEDREDBLACKTREE -DUSE_LEAFLINKEDREDBLACKTREE"
+
+
+# create only shared libtool-libraries (add --enable-shared)
+AC_ENABLE_SHARED(no)
+# AM_DISABLE_SHARED
+
+# set the following to yes, if you want to create static
+# libtool-libraries, else no
+AC_ENABLE_STATIC(yes)
+
+# create a working libtool-script
+#if test -z "$LIBTOOL"; then
+#  AC_LANG_SAVE
+#  AC_LANG_C
+#  AC_LIBTOOL_DLOPEN
+#  AM_PROG_LIBTOOL
+#  # LIBTOOL="$LIBTOOL --silent"
+#  # AC_SUBST(LIBTOOL)
+#  AC_LANG_RESTORE
+#  LIBTOOL_SHELL='/bin/sh ./libtool'
+#else
+#  LIBTOOL_SHELL=$LIBTOOL
+#fi
+
+
+AC_MSG_CHECKING(for type socklen_t)
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>],
+[socklen_t x; x = 0;],
+[AC_DEFINE(HAVE_SOCKLEN_T, 1, "Define to 1 if socklen_t is defined.")
+ AC_MSG_RESULT(yes)],
+[AC_MSG_RESULT(no)])
+
+
+AC_MSG_CHECKING(if stderr is a variable of type FILE* and not a macro)
+AC_TRY_COMPILE([#include <stdio.h>],
+[FILE** stdlog = &stderr],
+[AC_DEFINE(HAVE_STDERR_FILEPTR, 1, "Define to 1 if stderr is a pointer.")
+ AC_MSG_RESULT(yes)],
+[AC_MSG_RESULT(no)])
+
+
+# add --with-extra-includes and --with-extra-libs switch to ./configure
+#
+all_libraries="$all_libraries $USER_LDFLAGS"
+all_includes="$all_includes $USER_INCLUDES /usr/local/include"
+AC_SUBST(all_includes)
+AC_SUBST(all_libraries)
+
+AC_SUBST(AUTODIRS)
+
+
+CFLAGS="$CFLAGS -Wall"
+CXXFLAGS="$CXXFLAGS -Wall"
+
+
+case $host_os in
+bsdi*)
+    CFLAGS="$CFLAGS -DBSDI"
+    thread_LIBS="-lpthread"
+    CFLAGS="$CFLAGS `glib-config --cflags`"
+    LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+freebsd*)
+    CFLAGS="$CFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include"
+    thread_LIBS=""
+    # CFLAGS="$CFLAGS `glib12-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib12-config --libs`"
+    ;;
+hpux*)
+    CFLAGS="$CFLAGS -DSNAKE"
+    test -z "$GCC" && TRY_CFLAGS="$TRY_CFLAGS -Wp,-H600000"
+    thread_LIBS="-lpthread"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+   ;;
+linux*)
+    #CC=g++
+    CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE -O0 -g -DLINUX"
+    CXXFLAGS="$CXXFLAGS  -D_REENTRANT -D_THREAD_SAFE  -O0 -g -DLINUX"
+    LDFLAGS="$LDFLAGS"
+    thread_LIBS="-lpthread"
+    ;;
+openbsd*)
+    LIBS="$LIBS -lcompat"
+    thread_LIBS="-lpthread"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+solaris*)
+    CFLAGS="$CFLAGS -DSOLARIS -D__sun -DSUN -DSUNOS_5"
+    CXXFLAGS="$CXXFLAGS -DSOLARIS -D__sun -DSUN -DSUNOS_5"
+    thread_LIBS="-lpthread"
+    LDFLAGS="$LDFLAGS -lsocket -lnsl -lrt -lresolv"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+sunos4*)
+    CFLAGS="$CFLAGS -DSUN -DSUN4"
+    thread_LIBS="-lpthread"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+darwin*)
+    CFLAGS="$CFLAGS -DDARWIN"
+    CXXFLAGS="$CXXFLAGS -DDARWIN"
+    thread_LIBS="-lpthread"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+esac
+AC_SUBST(thread_LIBS)
+
+
+# Achtung! Wenn LDFLAGS nicht gesetzt wird, verwendet der Linker die
+# Option -s => Alle Debug-Symbole werden entfernt!
+LDFLAGS=""
+#CC="/opt/gcc3.1/bin/g++"
+#CPP="/opt/gcc3.1/bin/g++ -E"
+#CXX="/opt/gcc3.1/bin/g++"
+#CFLAGS="$CFLAGS -ansi"
+#CC="g++"
+#CPP="g++ -E"
+#CXX="g++"
+
+
+# Check if kernel SCTP should be used
+AC_ARG_ENABLE(kernel-sctp,
+[  --enable-kernel-sctp Use kernel SCTP instead of sctplib [default=no]],enable_kernel_sctp=$enableval,enable_kernel_sctp=no)
+
+
+if test "$enable_kernel_sctp" = "no"; then
+   ac_sctplib_includes=NO ac_sctplib_libraries=NO ac_sctplib_bindir=NO
+   sctplib_libraries=""
+   sctplib_includes=""
+   AC_ARG_WITH(sctplib,
+      [  --with-sctplib=DIR       where the root of sctplib is installed ],
+      [  ac_sctplib_includes="$withval"/include
+         ac_sctplib_libraries="$withval"/lib
+         ac_sctplib_bindir="$withval"/bin
+      ])
+
+   if test "$ac_sctplib_libraries" = "NO"; then
+      ac_sctplib_defaultdir="/usr/local"
+      ac_sctplib_includes="$ac_sctplib_defaultdir"/include
+      ac_sctplib_libraries="$ac_sctplib_defaultdir"/lib
+      ac_sctplib_bindir="$ac_sctplib_defaultdir"/bin
+   fi
+
+   if test ! -e "$ac_sctplib_includes/sctp.h" ; then
+      AC_MSG_ERROR([No sctplib installation found ($ac_sctplib_includes/sctp.h)!])
+   fi
+   if test ! -e $ac_sctplib_libraries/libsctp.a ; then
+      AC_MSG_ERROR([No sctplib installation found ($ac_sctplib_libraries/libsctp.a)!])
+   fi
+fi
+
+
+ac_socketapi_includes=NO ac_socketapi_libraries=NO ac_socketapi_bindir=NO
+socketapi_libraries=""
+socketapi_includes=""
+AC_ARG_WITH(socketapi,
+   [  --with-socketapi=DIR       where the root of socketapi is installed ],
+   [  ac_socketapi_includes="$withval"/include
+      ac_socketapi_libraries="$withval"/lib
+      ac_socketapi_bindir="$withval"/bin
+   ])
+
+if test "$ac_socketapi_libraries" = "NO"; then
+   ac_socketapi_defaultdir="/usr/local"
+   ac_socketapi_includes="$ac_socketapi_defaultdir"/include
+   ac_socketapi_libraries="$ac_socketapi_defaultdir"/lib
+   ac_socketapi_bindir="$ac_socketapi_defaultdir"/bin
+fi
+
+if test ! -e "$ac_socketapi_includes/ext_socket.h" ; then
+   AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_includes/ext_socket.h)!])
+fi
+
+
+if test "$enable_kernel_sctp" = "no"; then
+   if test ! -e $ac_socketapi_libraries/libsctpsocket.a ; then
+      AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_libraries/libsctpsocket.a)!])
+   fi
+   sctplib_LIBS="$ac_sctplib_libraries/libsctp.a"
+   socketapi_LIBS="$ac_socketapi_libraries/libsctpsocket.a -lstdc++"
+else
+   sctplib_LIBS=""
+   socketapi_LIBS=""
+   CFLAGS="$CFLAGS -DHAVE_KERNEL_SCTP"
+   CXXFLAGS="$CXXFLAGS -DHAVE_KERNEL_SCTP"
+fi
+AC_SUBST(sctplib_LIBS)
+AC_SUBST(socketapi_LIBS)
+
+
+RSPLIB_CURRENT=0
+RSPLIB_REVISION=5
+RSPLIB_AGE=0
+RSPLIB_RELEASE=500
+
+AC_SUBST(RSPLIB_CURRENT)
+AC_SUBST(RSPLIB_REVISION)
+AC_SUBST(RSPLIB_AGE)
+AC_SUBST(RSPLIB_RELEASE)
+
+
+# perform program name transformation
+# AC_ARG_PROGRAM
+
+# add here all your Makefiles. These will be created by configure
+AC_OUTPUT(Makefile rsplib/Makefile )
+
+
+echo ""
+echo "The rsplib package has been configured with the following options:"
+echo "   Use kernel SCTP     : $enable_kernel_sctp"
+echo "   sctplib libraries   : $sctplib_LIBS"
+echo "   socketapi libraries : $socketapi_LIBS"
+echo "   thread libraries    : $thread_LIBS"
+echo "   CFLAGS              : $CFLAGS"
+echo "   CXXFLAGS            : $CXXFLAGS"
+echo "   LDFLAGS             : $LDFLAGS"

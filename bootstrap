@@ -1,0 +1,26 @@
+#! /bin/sh
+set -x
+mv -f admin/config.guess admin/config.guess.save
+mv -f admin/config.sub  admin/config.sub.save
+if [ -e /usr/bin/glibtoolize ] ; then
+   glibtoolize --force
+elif [ -e /usr/bin/libtoolize ] ; then
+   libtoolize --force
+else
+   mv -f admin/config.guess.save admin/config.guess
+   mv -f admin/config.sub.save  admin/config.sub
+   echo "ERROR: I cannot find libtoolize or glibtoolize!"
+   exit 1
+fi
+rm -f admin/config.guess admin/config.sub
+mv -f admin/config.guess.save admin/config.guess
+mv -f admin/config.sub.save admin/config.sub
+
+if [ -e /usr/local/share/aclocal ] ; then
+   aclocal -I admin -I /usr/local/share/aclocal -I /usr/share/aclocal
+else
+   aclocal -I admin -I /usr/share/aclocal
+fi
+autoheader 
+automake --gnu --add-missing --copy
+autoconf

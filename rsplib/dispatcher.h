@@ -1,0 +1,214 @@
+/*
+ *  $Id: dispatcher.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *
+ * RSerPool implementation.
+ *
+ * Realized in co-operation between Siemens AG
+ * and University of Essen, Institute of Computer Networking Technology.
+ *
+ * Acknowledgement
+ * This work was partially funded by the Bundesministerium für Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * The authors alone are responsible for the contents.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * There are two mailinglists available at http://www.sctp.de/rserpool.html
+ * which should be used for any discussion related to this implementation.
+ *
+ * Contact: rsplib-discussion@sctp.de
+ *          dreibh@exp-math.uni-essen.de
+ *
+ * Purpose: Dispatcher
+ *
+ */
+
+
+#ifndef DISPATCHER_H
+#define DISPATCHER_H
+
+
+#include "tdtypes.h"
+#include "timer.h"
+
+#include <glib.h>
+#include <sys/time.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
+struct Dispatcher
+{
+   void (*Lock)(struct Dispatcher* dispatcher, void* userData);
+   void (*Unlock)(struct Dispatcher* dispatcher, void* userData);
+   void* LockUserData;
+
+   GList* TimerList;
+   GList* SocketList;
+   bool   AddRemove;
+};
+
+
+enum FDCallbackEvents
+{
+   FDCE_Read      = (1 << 0),
+   FDCE_Write     = (1 << 1),
+   FDCE_Exception = (1 << 2)
+};
+
+
+/**
+  * Constructor.
+  *
+  * @param lock Lock function (default: dispatcherDefaultLock).
+  * @param unlock Unlock function (default: dispatcherDefaultUnlock).
+  * @param lockUserData User data for lock and unlock function.
+  *
+  * @see dispatcherDefaultLock
+  * @see dispatcherDefaultUnlock
+  */
+struct Dispatcher* dispatcherNew(void (*lock)(struct Dispatcher* dispatcher, void* userData),
+                                 void (*unlock)(struct Dispatcher* dispatcher, void* userData),
+                                 void* lockUserData);
+
+/**
+  * Destructor.
+  *
+  * @param dispatcher Dispatcher.
+  */
+void dispatcherDelete(struct Dispatcher* dispatcher);
+
+/**
+  * Default dispatcher lock function. This is a dummy function and does nothing!
+  */
+void dispatcherDefaultLock(struct Dispatcher* dispatcher, void* userData);
+
+/**
+  * Default dispatcher unlock function. This is a dummy function and does nothing!
+  */
+void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData);
+
+/**
+  * Lock dispatcher.
+  *
+  * @param dispatcher Dispatcher.
+  */
+void dispatcherLock(struct Dispatcher* dispatcher);
+
+/**
+  * Unlock dispatcher.
+  *
+  * @param dispatcher Dispatcher.
+  */
+void dispatcherUnlock(struct Dispatcher* dispatcher);
+
+/**
+  * Get select() parameters for user-controlled select() loop.
+  *
+  * @param dispatcher Dispatcher.
+  * @param n n.
+  * @param readfdset readfdset.
+  * @param writefdset writefdset.
+  * @param exceptfdset exceptfdset.
+  * @param timeout timeout.
+  */
+void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
+                                   int*               n,
+                                   fd_set*            readfdset,
+                                   fd_set*            writefdset,
+                                   fd_set*            exceptfdset,
+                                   fd_set*            testfdset,
+                                   card64*            testTS,
+                                   struct timeval*    timeout);
+
+/**
+  * Handle results of select() call.
+  *
+  * @param dispatcher Dispatcher.
+  * @param result Result value returned by select().
+  * @param readfdset readfdset.
+  * @param writefdset writefdset.
+  * @param exceptfdset exceptfdset.
+  * @param timeout timeout.
+  */
+void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
+                                  int                result,
+                                  fd_set*            readfdset,
+                                  fd_set*            writefdset,
+                                  fd_set*            exceptfdset,
+                                  fd_set*            testfdset,
+                                  const card64       testTS);
+
+/**
+  * Event loop calling dispatcherGetSelectParameters(), select() and dispatcherHandleSelectResult().
+  *
+  * @param dispatcher Dispatcher.
+  *
+  * @see dispatcherGetSelectParameters
+  * @see dispatcherHandleSelectResult
+  */
+void dispatcherEventLoop(struct Dispatcher* dispatcher);
+
+/**
+  * Add file descriptor callback.
+  *
+  * @param dispatcher Dispatcher.
+  * @param fd File descriptor.
+  * @param eventMask Event mask.
+  * @param callback Callback.
+  * @param userData User data for callback.
+  * @param true for success; false otherwise.
+  */
+bool dispatcherAddFDCallback(struct Dispatcher* dispatcher,
+                             int                fd,
+                             int                eventMask,
+                             void               (*callback)(struct Dispatcher* dispatcher,
+                                                            int                fd,
+                                                            int                eventMask,
+                                                            void*              userData),
+                             void*              userData);
+
+/**
+  * Update existing file descriptor callback with new event mask.
+  *
+  * @param dispatcher Dispatcher.
+  * @param fd File descriptor.
+  * @param eventMask Event mask.
+  */
+void dispatcherUpdateFDCallback(struct Dispatcher* dispatcher,
+                                int                fd,
+                                int                eventMask);
+
+/**
+  * Remove file descriptor callback.
+  *
+  * @param dispatcher Dispatcher.
+  * @param fd File descriptor.
+  */
+void dispatcherRemoveFDCallback(struct Dispatcher* dispatcher,
+                                int                fd);
+
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif

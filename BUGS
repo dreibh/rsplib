@@ -1,0 +1,11 @@
+- Deregistration:
+The deregistration of a non-existing Pool Element fails: The
+nameserver closes the connection and prints an error.
+Reason: The current ASAP standard does not allow to return
+a DEREGISTRATION_RESPONSE message, since this would require
+the "Pool Element Parameter" of the non-existing pool element.
+This requires update of the ASAP draft.
+
+- Well-known port for nameserver is assumed to be 9999 for now.
+You must use this port number for the nameserver if you want to
+use multicast Server Hunt.

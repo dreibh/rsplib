@@ -1,0 +1,13 @@
+autom4te.cache
+aclocal.m4
+config.h
+config.h.in
+config.log
+config.status
+configure
+libtool
+Makefile
+Makefile.in
+*.tar.gz
+stamp-h1
+

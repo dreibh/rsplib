@@ -1,0 +1,15 @@
+Makefile
+Makefile.in
+*.moc.cpp
+*.moc
+*.lo
+*.la
+examplepe
+examplepu
+fork
+nameserver
+simpleexamplepu
+simpleexamplepe
+.libs
+.gdb_history
+.deps
