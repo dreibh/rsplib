@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.31 2005/03/02 13:34:16 dreibh Exp $
+ *  $Id: rspsession.c,v 1.32 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -104,7 +104,7 @@ struct SessionDescriptor
 
    unsigned long long            ConnectionTimeStamp;
    unsigned long long            ConnectTimeout;
-   unsigned long long            NameResolutionRetryDelay;
+   unsigned long long            HandleResolutionRetryDelay;
 
    struct MessageBuffer*         MessageBuffer;
    struct TagItem*               Tags;
@@ -523,7 +523,7 @@ static struct SessionDescriptor* rspSessionNew(
       session->StatusTextText[0]         = 0x00;
       session->ConnectionTimeStamp      = 0;
       session->ConnectTimeout           = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
-      session->NameResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
+      session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
       if(session->PoolElement != NULL) {
          threadSafetyLock(&session->PoolElement->Mutex);
          session->PoolElement->SessionList =
@@ -705,17 +705,17 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       }
    }
 
-   /* ====== Do name resolution ============================================= */
+   /* ====== Do handle resolution ======================================== */
    if(session->Handle.Size > 0) {
       LOG_ACTION
-      fputs("Doing name resolution\n", stdlog);
+      fputs("Doing handle resolution\n", stdlog);
       LOG_END
-      result = rspNameResolution((unsigned char*)&session->Handle.Handle,
+      result = rspHandleResolution((unsigned char*)&session->Handle.Handle,
                                  session->Handle.Size,
                                  &eai, NULL);
       if(result == RSPERR_OKAY) {
 
-         /* ====== Establish connection ======================================== */
+         /* ====== Establish connection ================================== */
          eai2 = eai;
          while(eai2 != NULL) {
             LOG_VERBOSE
@@ -765,7 +765,7 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
             eai2 = eai2->ai_next;
          }
 
-         /* ====== Free name resolution result ================================= */
+         /* ====== Free handle resolution result ========================= */
          rspFreeEndpointAddressArray(eai);
 
          if(session->Socket >= 0) {
@@ -785,14 +785,14 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       else if(result == RSPERR_NOT_FOUND) {
          LOG_ACTION
          fprintf(stdlog,
-                 "Name resolution did not find new pool element. Waiting %lluus...\n",
-                 session->NameResolutionRetryDelay);
+                 "Handle resolution did not find new pool element. Waiting %lluus...\n",
+                 session->HandleResolutionRetryDelay);
          LOG_END
-         usleep((unsigned int)session->NameResolutionRetryDelay);
+         usleep((unsigned int)session->HandleResolutionRetryDelay);
       }
       else {
          LOG_WARNING
-         fputs("Name resolution not successful: ", stdlog);
+         fputs("Handle resolution not successful: ", stdlog);
          rserpoolErrorPrint(result, stdlog);
          fputs("\n", stdlog);
          LOG_END

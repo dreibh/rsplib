@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.8 2004/12/16 16:16:59 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.9 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -87,7 +87,7 @@
 #define TAG_RspIO_MsgIsCookieEcho (TAG_USER + 8008)
 
 #define TAG_RspSession_ConnectTimeout           (TAG_USER + 7000)
-#define TAG_RspSession_NameResolutionRetryDelay (TAG_USER + 7001)
+#define TAG_RspSession_HandleResolutionRetryDelay (TAG_USER + 7001)
 
 #define TAG_RspSession_FailoverCallback         (TAG_USER + 7005)
 #define TAG_RspSession_FailoverUserData         (TAG_USER + 7006)

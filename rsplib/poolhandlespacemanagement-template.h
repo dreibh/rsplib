@@ -113,12 +113,12 @@ unsigned int ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
                 const struct PoolHandle*                    poolHandle,
                 const PoolElementIdentifierType             poolElementIdentifier);
 
-unsigned int ST_CLASS(poolHandlespaceManagementNameResolution)(
+unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
                 struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                 const struct PoolHandle*                    poolHandle,
                 struct ST_CLASS(PoolElementNode)**          poolElementNodeArray,
                 size_t*                                     poolElementNodes,
-                const size_t                                maxNameResolutionItems,
+                const size_t                                maxHandleResolutionItems,
                 const size_t                                maxIncrement);
 
 
@@ -126,7 +126,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementNameResolution)(
 #define NTEF_START                 (1 << 0)
 #define NTEF_OWNCHILDSONLY         (1 << 1)
 
-struct ST_CLASS(NameTableExtract)
+struct ST_CLASS(HandleTableExtract)
 {
    struct PoolHandle                 LastPoolHandle;
    PoolElementIdentifierType         LastPoolElementIdentifier;
@@ -135,10 +135,10 @@ struct ST_CLASS(NameTableExtract)
 };
 
 
-int ST_CLASS(poolHandlespaceManagementGetNameTable)(
+int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
-       struct ST_CLASS(NameTableExtract)*          nameTableExtract,
+       struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
        const unsigned int                          flags);
 
 

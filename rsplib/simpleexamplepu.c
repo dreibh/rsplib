@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.8 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.9 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -61,7 +61,7 @@ static card64   ConnectTimeout     = 3000000;
 
 
 
-/* ###### Clean-up ########################################################## */
+/* ###### Clean-up ####################################################### */
 static void cleanUp()
 {
    if(DataSocket >= 0) {
@@ -72,7 +72,7 @@ static void cleanUp()
 }
 
 
-/* ###### Initialize ######################################################## */
+/* ###### Initialize ##################################################### */
 static void initAll()
 {
    if(rspInitialize(NULL) != 0) {
@@ -90,7 +90,7 @@ static void initAll()
 }
 
 
-/* ###### Do failover to new pool element ################################### */
+/* ###### Do failover to new pool element ################################ */
 static void connectToPoolElement()
 {
    /* struct TagItem              tags[16]; */
@@ -98,7 +98,7 @@ static void connectToPoolElement()
    struct EndpointAddressInfo* eai2;
    unsigned int                result;
 
-   /* ====== Close existing connection and report failure =================== */
+   /* ====== Close existing connection and report failure ================ */
    if(DataSocket >= 0) {
       rspReportFailure((unsigned char*)PoolName, strlen(PoolName), Identifier, NULL);
       ext_close(DataSocket);
@@ -106,14 +106,14 @@ static void connectToPoolElement()
       Identifier = 0x00000000;
    }
 
-   /* ====== Do name resolution ============================================= */
-   result = rspNameResolution((unsigned char*)PoolName, strlen(PoolName), &eai, NULL);
+   /* ====== Do handle resolution ======================================== */
+   result = rspHandleResolution((unsigned char*)PoolName, strlen(PoolName), &eai, NULL);
    if(result != RSPERR_OKAY) {
-      printf("Name resolution failed - %s.\n",rspGetErrorDescription(result));
+      printf("Handle resolution failed - %s.\n",rspGetErrorDescription(result));
       return;
    }
 
-   /* ====== Establish connection =========================================== */
+   /* ====== Establish connection ====================================== */
    eai2 = eai;
    while(eai2 != NULL) {
       DataSocket = establish(eai2->ai_family,
@@ -161,7 +161,7 @@ static void connectToPoolElement()
       eai2 = eai2->ai_next;
    }
 
-   /* ====== Free name resolution result ==================================== */
+   /* ====== Free handle resolution result =============================== */
    rspFreeEndpointAddressArray(eai);
 }
 
@@ -198,7 +198,7 @@ static void sendToPoolElement(char* buffer)
 }
 
 
-/* ###### Handle standard input ############################################# */
+/* ###### Handle standard input ########################################## */
 static void handleStdIn()
 {
    char   buffer[8192];
@@ -219,7 +219,7 @@ static void handleStdIn()
 }
 
 
-/* ###### Automatic mode #################################################### */
+/* ###### Automatic mode ################################################# */
 static void handleAutoTimer()
 {
    char   buffer[512];
@@ -236,7 +236,7 @@ static void handleAutoTimer()
 }
 
 
-/* ###### Handle server reply ############################################### */
+/* ###### Handle server reply ############################################ */
 static void handleServerReply()
 {
    char          buffer[8193];
@@ -284,7 +284,7 @@ static void handleServerReply()
 
 
 
-/* ###### Main program ###################################################### */
+/* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
    int            n = 0;

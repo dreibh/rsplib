@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.15 2004/12/09 15:29:05 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.16 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -156,7 +156,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
   * @param poolElementNodes Reference to variable containing maximum amount of pool element nodes to obtain. After function call, this variable contains actual amount of pool element nodes obtained.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapInstanceNameResolution(
+unsigned int asapInstanceHandleResolution(
                 struct ASAPInstance*               asapInstanceInstance,
                 struct PoolHandle*                 poolHandle,
                 struct ST_CLASS(PoolElementNode)** poolElementNodeArray,

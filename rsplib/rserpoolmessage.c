@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.13 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.14 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -119,7 +119,7 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
       }
       message->TransportAddressBlockListPtr = NULL;
       if(message->PoolElementPtrArrayAutoDelete) {
-         CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
+         CHECK(message->PoolElementPtrArraySize < MAX_MAX_HANDLE_RESOLUTION_ITEMS);
          for(i = 0;i < message->PoolElementPtrArraySize;i++) {
             if(message->PoolElementPtrArray[i]) {
                ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);

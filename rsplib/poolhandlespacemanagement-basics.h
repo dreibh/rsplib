@@ -40,8 +40,7 @@ extern "C" {
 #endif
 
 
-#define MAX_PE_TRANSPORTADDRESSES      32
-#define MAX_MAX_NAME_RESOLUTION_ITEMS 128
+#define MAX_PE_TRANSPORTADDRESSES 32
 
 
 typedef uint32_t RegistrarIdentifierType;
@@ -50,12 +49,12 @@ typedef uint32_t PoolElementChecksumType;
 typedef uint32_t PoolElementSeqNumberType;
 
 #define UNDEFINED_POOL_ELEMENT_IDENTIFIER 0
-#define UNDEFINED_NAME_SERVER_IDENTIFIER  0
+#define UNDEFINED_REGISTRAR_IDENTIFIER    0
 
 
 #define PENPO_POLICYINFO             (1 << 0)   /* constants set by PE      */
 #define PENPO_POLICYSTATE            (1 << 1)   /* current policy state     */
-#define PENPO_HOME_NS                (1 << 2)   /* Home NS identifier       */
+#define PENPO_HOME_PR                (1 << 2)   /* Home PR identifier       */
 #define PENPO_REGLIFE                (1 << 3)   /* Registration lifetime    */
 #define PENPO_UR_REPORTS             (1 << 4)   /* Unreachability reports   */
 #define PENPO_LASTUPDATE             (1 << 5)   /* Last update time stamp   */

@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.3 2005/03/05 00:03:43 tuexen Exp $
+ *  $Id: ext_socket.h,v 1.4 2005/03/08 12:51:03 dreibh Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -57,7 +57,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  1
-#define SOCKETAPI_MINOR_VERSION  3000
+#define SOCKETAPI_MINOR_VERSION  4000
 
 
 
@@ -283,11 +283,21 @@ struct sctp_setstrm_timeout
 };
 
 
+#define SPP_HB_ENABLED         (1 << 0)
+#define SPP_HB_DISABLED        (1 << 1)
+#define SPP_PMTUD_ENABLED      (1 << 2)
+#define SPP_PMTUD_DISABLED     (1 << 3)
+#define SPP_SACKDELAY_ENABLED  (1 << 4)
+#define SPP_SACKDELAY_DISABLED (1 << 5)
+
 struct sctp_paddrparams {
    sctp_assoc_t            spp_assoc_id;
    struct sockaddr_storage spp_address;
    uint32_t                spp_hbinterval;
    uint16_t                spp_pathmaxrxt;
+   uint32_t                spp_pathmtu;
+   uint32_t                spp_sackdelay;
+   uint32_t                spp_flags;
 };
 
 
@@ -300,6 +310,7 @@ struct sctp_paddrinfo {
    uint32_t                spinfo_rto;
    uint32_t                spinfo_mtu;
 };
+
 
 #define SCTP_INACTIVE 0
 #define SCTP_ACTIVE   1
@@ -341,14 +352,12 @@ struct sctp_event_subscribe
 #define SCTP_SET_STREAM_TIMEOUTS    1014
 #define SCTP_PEER_ADDR_PARAMS       1015
 #define SCTP_STATUS                 1016
-#define SCTP_PEER_ADDR_INFO         1017
-#define SCTP_GET_PEER_ADDR_INFO     SCTP_PEER_ADDR_INFO /* This can be removed */
+#define SCTP_GET_PEER_ADDR_INFO     1017
 
 #define SCTP_NODELAY                1018
 #define SCTP_SET_DEFAULT_SEND_PARAM 1019
 #define SCTP_EVENTS                 1020
 
-#define SCTP_GET_PEER_ADDR_PARAMS   1021
 
 
 #ifdef __cplusplus

@@ -132,7 +132,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       while(poolElementNode != NULL) {
          fprintf(fd, "   - idx:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
-         fputs("\n", fd);
+         puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
       }
    }
@@ -143,7 +143,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       while(poolElementNode != NULL) {
          fprintf(fd, "   - sel:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
-         fputs("\n", fd);
+         puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
       }
    }

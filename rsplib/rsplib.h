@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.12 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rsplib.h,v 1.13 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -67,7 +67,7 @@ extern "C" {
 
 
 #define RSPLIB_VERSION  0
-#define RSPLIB_REVISION 5000
+#define RSPLIB_REVISION 8001
 
 
 #define RspSelect_Read   (1 << 0)
@@ -81,7 +81,7 @@ struct EndpointAddressInfo {
    int                         ai_protocol;
    size_t                      ai_addrlen;
    size_t                      ai_addrs;
-   union sockaddr_union*    ai_addr;
+   union sockaddr_union*       ai_addr;
    struct EndpointAddressInfo* ai_next;
    uint32_t                    ai_pe_id;
 };
@@ -127,7 +127,7 @@ const char* rspGetErrorDescription(const unsigned int errorCode);
   * @param poolHandleSize Size of pool handle.
   * @param endpointAddressInfo Pool element's address information.
   * @param tags Additional parameters.
-  * @return Pool element identifier or 0 in case of error.  ??????????
+  * @return Success.
   *
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
@@ -146,7 +146,7 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
   * @param poolHandleSize Size of pool handle.
   * @param identifier Pool element identifier.
   * @param tags Additional parameters.
-  * @return Success.  ??????????
+  * @return Success.
   */
 unsigned int rspDeregister(const unsigned char* poolHandle,
                            const size_t         poolHandleSize,
@@ -154,7 +154,7 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
                            struct TagItem*      tags CPP_DEFAULT(NULL));
 
 /**
-  * Do name resolution for given pool handle and select one pool element
+  * Do handle resolution for given pool handle and select one pool element
   * by policy. The resolved address structure is stored to a variable
   * given as reference parameter. This structure must be freed after usage
   * using rspFreeEndpointAddressArray().
@@ -166,23 +166,23 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
   * @param poolHandleSize Size of pool handle.
   * @param endpointAddressInfo Pool element's address information.
   * @param tags Additional parameters.
-  * @return Pool element identifier or 0 in case of error.  ??????????
+  * @return Success.
   *
   * @rspFreeEndpointAddressArray
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
   */
-unsigned int rspNameResolution(const unsigned char*         poolHandle,
-                               const size_t                 poolHandleSize,
-                               struct EndpointAddressInfo** endpointAddressInfo,
-                               struct TagItem*              tags CPP_DEFAULT(NULL));
+unsigned int rspHandleResolution(const unsigned char*         poolHandle,
+                                 const size_t                 poolHandleSize,
+                                 struct EndpointAddressInfo** endpointAddressInfo,
+                                 struct TagItem*              tags CPP_DEFAULT(NULL));
 
 /**
-  * Free endpoint address structure created by rspNameResolution().
+  * Free endpoint address structure created by rspHandleResolution().
   *
   * @param endpointAddressInfo Endpoint address structure to be freed.
   *
-  * @see rspNameResolution
+  * @see rspHandleResolution
   */
 void rspFreeEndpointAddressArray(struct EndpointAddressInfo* endpointAddressInfo);
 
@@ -193,7 +193,7 @@ void rspFreeEndpointAddressArray(struct EndpointAddressInfo* endpointAddressInfo
   * @param poolHandleSize Size of pool handle.
   * @param identifier Pool element identifier.
   * @param tags Additional parameters.
-  * @return Success.  ??????????
+  * @return Success.
   */
 unsigned int rspReportFailure(const unsigned char* poolHandle,
                               const size_t         poolHandleSize,

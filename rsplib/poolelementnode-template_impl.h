@@ -23,7 +23,7 @@
 /* ###### Initialize ##################################################### */
 void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                   const PoolElementIdentifierType   identifier,
-                                  const RegistrarIdentifierType          homeRegistrarIdentifier,
+                                  const RegistrarIdentifierType     homeRegistrarIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     userTransport,
@@ -40,7 +40,7 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    poolElementNode->OwnerPoolNode               = NULL;
 
    poolElementNode->Identifier                  = identifier;
-   poolElementNode->HomeRegistrarIdentifier            = homeRegistrarIdentifier;
+   poolElementNode->HomeRegistrarIdentifier     = homeRegistrarIdentifier;
    poolElementNode->RegistrationLife            = registrationLife;
    poolElementNode->PolicySettings              = *pps;
 
@@ -119,7 +119,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
                (unsigned int)poolElementNode->ConnectionAssocID);
       safestrcat(buffer, tmp, bufferSize);
    }
-   if(fields & PENPO_HOME_NS) {
+   if(fields & PENPO_HOME_PR) {
       snprintf((char*)&tmp, sizeof(tmp), " home=$%08x",
                poolElementNode->HomeRegistrarIdentifier);
       safestrcat(buffer, tmp, bufferSize);

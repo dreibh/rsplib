@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.29 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.30 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,7 +45,7 @@
 #include <ext_socket.h>
 
 
-/* ###### Scan next TLV header ############################################## */
+/* ###### Scan next TLV header ########################################### */
 static bool getNextTLV(struct RSerPoolMessage*      message,
                        size_t*                      tlvPosition,
                        struct rserpool_tlv_header** header,
@@ -93,7 +93,7 @@ static bool getNextTLV(struct RSerPoolMessage*      message,
 }
 
 
-/* ###### Handle unknown TLV ################################################ */
+/* ###### Handle unknown TLV ############################################# */
 static bool handleUnknownTLV(struct RSerPoolMessage* message,
                              const uint16_t          tlvType,
                              const size_t            tlvLength)
@@ -149,7 +149,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Check begin of message ############################################ */
+/* ###### Check begin of message ######################################### */
 static size_t checkBeginMessage(struct RSerPoolMessage* message,
                                 size_t*                 startPosition)
 {
@@ -193,7 +193,7 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Check finish of message ########################################### */
+/* ###### Check finish of message ######################################## */
 static bool checkFinishMessage(struct RSerPoolMessage* message,
                                const size_t            startPosition)
 {
@@ -225,7 +225,7 @@ static bool checkFinishMessage(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Check begin of TLV ################################################ */
+/* ###### Check begin of TLV ############################################# */
 static size_t checkBeginTLV(struct RSerPoolMessage* message,
                             size_t*                 tlvPosition,
                             const uint16_t          expectedType,
@@ -253,7 +253,7 @@ static size_t checkBeginTLV(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Check finish of TLV ############################################### */
+/* ###### Check finish of TLV ############################################ */
 static bool checkFinishTLV(struct RSerPoolMessage* message,
                            const size_t            tlvPosition)
 {
@@ -289,7 +289,7 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Scan address parameter ############################################ */
+/* ###### Scan address parameter ######################################### */
 static bool scanAddressParameter(struct RSerPoolMessage* message,
                                  const card16            port,
                                  union sockaddr_union*   address)
@@ -376,7 +376,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Scan user transport parameter ##################################### */
+/* ###### Scan user transport parameter ################################## */
 static bool scanTransportParameter(struct RSerPoolMessage*       message,
                                    struct TransportAddressBlock* transportAddressBlock)
 {
@@ -496,7 +496,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
 }
 
 
-/* ###### Scan poolPolicySettings parameter ############################################# */
+/* ###### Scan Pool Policy parameter ##################################### */
 static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                                 struct PoolPolicySettings* poolPolicySettings)
 {
@@ -815,7 +815,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
 }
 
 
-/* ###### Scan pool element paramter ######################################## */
+/* ###### Scan pool element paramter ##################################### */
 static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                             struct RSerPoolMessage* message)
 {
@@ -894,7 +894,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
 }
 
 
-/* ###### Scan pool handle paramter ######################################### */
+/* ###### Scan pool handle paramter ###################################### */
 static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
                                     struct PoolHandle*      poolHandlePtr)
 {
@@ -934,7 +934,7 @@ static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
 }
 
 
-/* ###### Scan pool element identifier parameter ############################ */
+/* ###### Scan pool element identifier parameter ######################### */
 static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
 {
    uint32_t* identifier;
@@ -967,7 +967,7 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan NS identifier parameter ################################### */
+/* ###### Scan PR identifier parameter ################################### */
 static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
 {
    uint32_t* registrarIdentifier;
@@ -980,7 +980,7 @@ static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
    tlvLength -= sizeof(struct rserpool_tlv_header);
    if(tlvLength != sizeof(uint32_t)) {
       LOG_WARNING
-      fputs("NS Identifier too short!\n", stdlog);
+      fputs("PR Identifier too short!\n", stdlog);
       LOG_END
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -993,14 +993,14 @@ static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
    message->RegistrarIdentifier = ntohl(*registrarIdentifier);
 
    LOG_VERBOSE3
-   fprintf(stdlog, "Scanned NS Identifier $%08x\n", message->Identifier);
+   fprintf(stdlog, "Scanned PR Identifier $%08x\n", message->Identifier);
    LOG_END
 
    return(checkFinishTLV(message, tlvPosition));
 }
 
 
-/* ###### Scan pool element checksum parameter ############################ */
+/* ###### Scan pool element checksum parameter ########################### */
 static bool scanPoolElementChecksumParameter(struct RSerPoolMessage* message)
 {
    uint32_t* checksum;
@@ -1033,7 +1033,7 @@ static bool scanPoolElementChecksumParameter(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan error parameter ############################################## */
+/* ###### Scan error parameter ########################################### */
 static bool scanErrorParameter(struct RSerPoolMessage* message)
 {
    struct rserpool_errorcause* aec;
@@ -1079,7 +1079,7 @@ static bool scanErrorParameter(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan cookie parameter ############################################# */
+/* ###### Scan cookie parameter ########################################## */
 static bool scanCookieParameter(struct RSerPoolMessage* message)
 {
    void*     cookie;
@@ -1190,7 +1190,7 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
 }
 
 
-/* ###### Scan endpoint keepalive message ################################### */
+/* ###### Scan endpoint keepalive message ################################ */
 static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1203,7 +1203,7 @@ static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan endpoint keepalive acknowledgement message ################### */
+/* ###### Scan endpoint keepalive acknowledgement message ################ */
 static bool scanEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1216,7 +1216,7 @@ static bool scanEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan endpoint unreachable message ################################# */
+/* ###### Scan endpoint unreachable message ############################## */
 static bool scanEndpointUnreachableMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1229,7 +1229,7 @@ static bool scanEndpointUnreachableMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan registration message ######################################### */
+/* ###### Scan registration message ###################################### */
 static bool scanRegistrationMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1249,7 +1249,7 @@ static bool scanRegistrationMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan deregistration message ####################################### */
+/* ###### Scan deregistration message #################################### */
 static bool scanDeregistrationMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1262,7 +1262,7 @@ static bool scanDeregistrationMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan registration response message ################################ */
+/* ###### Scan registration response message ############################# */
 static bool scanRegistrationResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1280,7 +1280,7 @@ static bool scanRegistrationResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan deregistration response message ############################## */
+/* ###### Scan deregistration response message ########################### */
 static bool scanDeregistrationResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
@@ -1298,8 +1298,8 @@ static bool scanDeregistrationResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan name resolution message ###################################### */
-static bool scanNameResolutionMessage(struct RSerPoolMessage* message)
+/* ###### Scan handle resolution message ################################# */
+static bool scanHandleResolutionMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1308,8 +1308,8 @@ static bool scanNameResolutionMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan name resolution response message ############################# */
-static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
+/* ###### Scan handle resolution response message ######################## */
+static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1322,9 +1322,9 @@ static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
 
       message->PoolElementPtrArraySize = 0;
       while(message->Position < message->BufferSize) {
-         if(message->PoolElementPtrArraySize >= MAX_MAX_NAME_RESOLUTION_ITEMS) {
+         if(message->PoolElementPtrArraySize >= MAX_MAX_HANDLE_RESOLUTION_ITEMS) {
             LOG_WARNING
-            fputs("Too many Pool Element Parameters in Name Resolution Response\n", stdlog);
+            fputs("Too many Pool Element Parameters in Handle Resolution Response\n", stdlog);
             LOG_END
             return(false);
          }
@@ -1341,7 +1341,7 @@ static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan name resolution response message ############################# */
+/* ###### Scan handle resolution response message ############################# */
 static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(1)];
@@ -1402,7 +1402,7 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
    message->PoolElementPtrArraySize = 0;
    while(message->Position < message->BufferSize) {
       while(message->Position < message->BufferSize) {
-         if(message->PoolElementPtrArraySize >= MAX_MAX_NAME_RESOLUTION_ITEMS) {
+         if(message->PoolElementPtrArraySize >= MAX_MAX_HANDLE_RESOLUTION_ITEMS) {
             LOG_WARNING
             fputs("Too many Pool Element Parameters in Business Card\n", stdlog);
             LOG_END
@@ -1520,8 +1520,8 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan peer name table request message ########################### */
-static bool scanPeerNameTableRequestMessage(struct RSerPoolMessage* message)
+/* ###### Scan peer handle table request message ########################### */
+static bool scanPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1537,8 +1537,8 @@ static bool scanPeerNameTableRequestMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan peer name table response message ########################## */
-static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
+/* ###### Scan peer handle table response message ########################## */
+static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*  sp;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -1585,7 +1585,7 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
                                 &newPoolElementNode);
             if(message->Error != RSPERR_OKAY) {
                LOG_WARNING
-               fputs("NameTableResponse contains bad/inconsistent entry: ", stdlog);
+               fputs("HandleTableResponse contains bad/inconsistent entry: ", stdlog);
                ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
                fputs(" - Unable to use it: ", stdlog);
                rserpoolErrorPrint(message->Error, stdlog);
@@ -1599,7 +1599,7 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 
          if(scannedPoolElementParameters == 0) {
             LOG_WARNING
-            fputs("PeerNameTableResponse contains empty pool\n", stdlog);
+            fputs("PeerHandleTableResponse contains empty pool\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
@@ -1611,7 +1611,7 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan peer name table response message ########################## */
+/* ###### Scan peer handle table response message ########################## */
 static bool scanPeerNameUpdateMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_peernameupdateparameter* pnup;
@@ -1863,19 +1863,19 @@ static bool scanMessage(struct RSerPoolMessage* message)
 
    switch(message->Type) {
       /* ====== ASAP ===================================================== */
-      case AHT_NAME_RESOLUTION:
+      case AHT_HANDLE_RESOLUTION:
          LOG_VERBOSE2
-         fputs("Scanning NameResolution message...\n", stdlog);
+         fputs("Scanning HandleResolution message...\n", stdlog);
          LOG_END
-         if(scanNameResolutionMessage(message) == false) {
+         if(scanHandleResolutionMessage(message) == false) {
             return(false);
          }
        break;
-      case AHT_NAME_RESOLUTION_RESPONSE:
+      case AHT_HANDLE_RESOLUTION_RESPONSE:
          LOG_VERBOSE2
-         fputs("Scanning NameResolutionResponse message...\n", stdlog);
+         fputs("Scanning HandleResolutionResponse message...\n", stdlog);
          LOG_END
-         if(scanNameResolutionResponseMessage(message) == false) {
+         if(scanHandleResolutionResponseMessage(message) == false) {
             return(false);
          }
        break;
@@ -1987,17 +1987,17 @@ static bool scanMessage(struct RSerPoolMessage* message)
         break;
        case EHT_PEER_NAME_TABLE_REQUEST:
           LOG_VERBOSE2
-          fputs("Scanning PeerNameTableRequest message...\n", stdlog);
+          fputs("Scanning PeerHandleTableRequest message...\n", stdlog);
           LOG_END
-          if(scanPeerNameTableRequestMessage(message) == false) {
+          if(scanPeerHandleTableRequestMessage(message) == false) {
              return(false);
           }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
           LOG_VERBOSE2
-          fputs("Scanning PeerNameTableResponse message...\n", stdlog);
+          fputs("Scanning PeerHandleTableResponse message...\n", stdlog);
           LOG_END
-          if(scanPeerNameTableResponseMessage(message) == false) {
+          if(scanPeerHandleTableResponseMessage(message) == false) {
              return(false);
           }
         break;

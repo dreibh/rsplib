@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.21 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.22 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -500,7 +500,7 @@ static bool createPoolElementIdentifierParameter(
 }
 
 
-/* ###### Create NS identifier parameter ################################# */
+/* ###### Create PR identifier parameter ################################# */
 static bool createRegistrarIdentifierParameter(
                struct RSerPoolMessage*       message,
                const RegistrarIdentifierType registrarIdentifier)
@@ -787,10 +787,10 @@ static bool createDeregistrationResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Create name resolution message ################################# */
-static bool createNameResolutionMessage(struct RSerPoolMessage* message)
+/* ###### Create handle resolution message ################################# */
+static bool createHandleResolutionMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_NAME_RESOLUTION, message->Flags & 0x00, PPID_ASAP) == NULL) {
+   if(beginMessage(message, AHT_HANDLE_RESOLUTION, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
    if(createPoolHandleParameter(message, &message->Handle) == false) {
@@ -800,13 +800,13 @@ static bool createNameResolutionMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Create name resolution response message ######################## */
-static bool createNameResolutionResponseMessage(struct RSerPoolMessage* message)
+/* ###### Create handle resolution response message ######################## */
+static bool createHandleResolutionResponseMessage(struct RSerPoolMessage* message)
 {
    size_t i;
 
-   CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
-   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, message->Flags & 0x00, PPID_ASAP) == NULL) {
+   CHECK(message->PoolElementPtrArraySize < MAX_MAX_HANDLE_RESOLUTION_ITEMS);
+   if(beginMessage(message, AHT_HANDLE_RESOLUTION_RESPONSE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
 
@@ -841,7 +841,7 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
    size_t i;
 
    CHECK(message->PoolElementPtrArraySize > 0);
-   CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
+   CHECK(message->PoolElementPtrArraySize < MAX_MAX_HANDLE_RESOLUTION_ITEMS);
    if(beginMessage(message, AHT_BUSINESS_CARD, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
@@ -999,8 +999,8 @@ static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Create peer name table request ################################# */
-static bool createPeerNameTableRequestMessage(struct RSerPoolMessage* message)
+/* ###### Create peer handle table request ################################# */
+static bool createPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1021,11 +1021,11 @@ static bool createPeerNameTableRequestMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Create peer name table response ################################ */
-static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
+/* ###### Create peer handle table response ################################ */
+static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*   sp;
-   struct ST_CLASS(NameTableExtract)* nte;
+   struct ST_CLASS(HandleTableExtract)* nte;
    struct PoolHandle*                 lastPoolHandle;
    unsigned int                       flags;
    int                                result;
@@ -1049,10 +1049,10 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 
    if(message->PeerListNodePtr) {
       flags = (message->Action & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? NTEF_OWNCHILDSONLY : 0;
-      nte = (struct ST_CLASS(NameTableExtract)*)message->PeerListNodePtr->UserData;
+      nte = (struct ST_CLASS(HandleTableExtract)*)message->PeerListNodePtr->UserData;
       if(nte == NULL) {
          flags |= NTEF_START;
-         nte = (struct ST_CLASS(NameTableExtract)*)malloc(sizeof(struct ST_CLASS(NameTableExtract)));
+         nte = (struct ST_CLASS(HandleTableExtract)*)malloc(sizeof(struct ST_CLASS(HandleTableExtract)));
          if(nte == NULL) {
             return(false);
          }
@@ -1060,7 +1060,7 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
       }
 
       oldPosition = message->Position;
-      result = ST_CLASS(poolHandlespaceManagementGetNameTable)(
+      result = ST_CLASS(poolHandlespaceManagementGetHandleTable)(
                   message->HandlespacePtr,
                   message->HandlespacePtr->Handlespace.HomeRegistrarIdentifier,
                   nte,
@@ -1241,7 +1241,7 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    }
 
    oldPosition = message->Position;
-   result = ST_CLASS(poolHandlespaceManagementGetNameTable)(
+   result = ST_CLASS(poolHandlespaceManagementGetHandleTable)(
                message->HandlespacePtr,
                message->RegistrarIdentifier,
                message->ExtractContinuation,
@@ -1338,19 +1338,19 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
 
    switch(message->Type) {
       /* ====== ASAP ===================================================== */
-      case AHT_NAME_RESOLUTION:
+      case AHT_HANDLE_RESOLUTION:
           LOG_VERBOSE2
-          fputs("Creating NameResolution message...\n", stdlog);
+          fputs("Creating HandleResolution message...\n", stdlog);
           LOG_END
-          if(createNameResolutionMessage(message) == true) {
+          if(createHandleResolutionMessage(message) == true) {
              return(message->Position);
           }
        break;
-      case AHT_NAME_RESOLUTION_RESPONSE:
+      case AHT_HANDLE_RESOLUTION_RESPONSE:
           LOG_VERBOSE2
-          fputs("Creating NameResolutionResponse message...\n", stdlog);
+          fputs("Creating HandleResolutionResponse message...\n", stdlog);
           LOG_END
-          if(createNameResolutionResponseMessage(message) == true) {
+          if(createHandleResolutionResponseMessage(message) == true) {
              return(message->Position);
           }
        break;
@@ -1462,17 +1462,17 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
         break;
        case EHT_PEER_NAME_TABLE_REQUEST:
           LOG_VERBOSE2
-          fputs("Creating PeerNameTableRequest message...\n", stdlog);
+          fputs("Creating PeerHandleTableRequest message...\n", stdlog);
           LOG_END
-          if(createPeerNameTableRequestMessage(message) == true) {
+          if(createPeerHandleTableRequestMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
           LOG_VERBOSE2
-          fputs("Creating PeerNameTableResponse message...\n", stdlog);
+          fputs("Creating PeerHandleTableResponse message...\n", stdlog);
           LOG_END
-          if(createPeerNameTableResponseMessage(message) == true) {
+          if(createPeerHandleTableResponseMessage(message) == true) {
              return(message->Position);
           }
         break;

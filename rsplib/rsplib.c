@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.23 2005/03/02 13:34:16 dreibh Exp $
+ *  $Id: rsplib.c,v 1.24 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -265,11 +265,11 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
 }
 
 
-/* ###### Name resolution ################################################ */
-unsigned int rspNameResolution(const unsigned char*         poolHandle,
-                               const size_t                 poolHandleSize,
-                               struct EndpointAddressInfo** endpointAddressInfo,
-                               struct TagItem*              tags)
+/* ###### Handle resolution ############################################## */
+unsigned int rspHandleResolution(const unsigned char*         poolHandle,
+                                 const size_t                 poolHandleSize,
+                                 struct EndpointAddressInfo** endpointAddressInfo,
+                                 struct TagItem*              tags)
 {
    struct PoolHandle                 myPoolHandle;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -282,7 +282,7 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
 
       poolElementNodes = 1;
-      result = asapInstanceNameResolution(
+      result = asapInstanceHandleResolution(
                   gAsapInstance,
                   &myPoolHandle,
                   (struct ST_CLASS(PoolElementNode)**)&poolElementNode,

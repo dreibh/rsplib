@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.5 2005/03/02 17:01:02 dreibh Exp $
+ *  $Id: registrar.c,v 1.6 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -527,7 +527,7 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 {
    /* struct Registrar* registrar = (struct Registrar*)userData; */
    if(peerListNode->UserData) {
-      /* A peer name table request state is still saved. Free its memory. */
+      /* A peer handle table request state is still saved. Free its memory. */
       free(peerListNode->UserData);
       peerListNode->UserData = NULL;
    }
@@ -734,7 +734,7 @@ void registrarDumpHandlespace(struct Registrar* registrar)
    printTimeStamp(stdlog);
    fputs("\n", stdlog);
    ST_CLASS(poolHandlespaceManagementPrint)(&registrar->Handlespace, stdlog,
-            PNNPO_POOLS_INDEX|PNNPO_POOLS_SELECTION|PNNPO_POOLS_TIMER|PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
+            PNNPO_POOLS_INDEX|PNNPO_POOLS_SELECTION|PNNPO_POOLS_TIMER|PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_PR);
    fputs("**********************************************\n", stdlog);
 }
 
@@ -933,8 +933,8 @@ static void sendPeerListRequest(struct Registrar*           registrar,
 }
 
 
-/* ###### Send ENRP peer name table request message ###################### */
-static void sendPeerNameTableRequest(struct Registrar*           registrar,
+/* ###### Send ENRP peer handle table request message ###################### */
+static void sendPeerHandleTableRequest(struct Registrar*           registrar,
                                      int                         sd,
                                      const sctp_assoc_t          assocID,
                                      int                         msgSendFlags,
@@ -957,7 +957,7 @@ static void sendPeerNameTableRequest(struct Registrar*           registrar,
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, message) == false) {
          LOG_WARNING
-         fputs("Sending PeerNameTableRequest failed\n", stdlog);
+         fputs("Sending PeerHandleTableRequest failed\n", stdlog);
          LOG_END
       }
       rserpoolMessageDelete(message);
@@ -1751,33 +1751,33 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle name resolution request ################################# */
-#define NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS 16
-#define NAMERESOLUTION_MAX_INCREMENT              1
-static void handleNameResolutionRequest(struct Registrar*       registrar,
-                                        int                     fd,
-                                        sctp_assoc_t            assocID,
-                                        struct RSerPoolMessage* message)
+/* ###### Handle handle resolution request ################################# */
+#define HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS 16
+#define HANDLERESOLUTION_MAX_INCREMENT              1
+static void handleHandleResolutionRequest(struct Registrar*       registrar,
+                                          int                     fd,
+                                          sctp_assoc_t            assocID,
+                                          struct RSerPoolMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS];
-   size_t                            poolElementNodes = NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS;
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS];
+   size_t                            poolElementNodes = HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS;
    size_t                            i;
 
    LOG_ACTION
-   fprintf(stdlog, "Name Resolution request for pool ");
+   fprintf(stdlog, "Handle Resolution request for pool ");
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   message->Type  = AHT_NAME_RESOLUTION_RESPONSE;
+   message->Type  = AHT_HANDLE_RESOLUTION_RESPONSE;
    message->Flags = 0x00;
-   message->Error = ST_CLASS(poolHandlespaceManagementNameResolution)(
+   message->Error = ST_CLASS(poolHandlespaceManagementHandleResolution)(
                        &registrar->Handlespace,
                        &message->Handle,
                        (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
                        &poolElementNodes,
-                       NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS,
-                       NAMERESOLUTION_MAX_INCREMENT);
+                       HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS,
+                       HANDLERESOLUTION_MAX_INCREMENT);
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE
       fprintf(stdlog, "Got %u element(s):\n", (unsigned int)poolElementNodes);
@@ -1785,7 +1785,7 @@ static void handleNameResolutionRequest(struct Registrar*       registrar,
          fprintf(stdlog, "#%02u: ", (unsigned int)i + 1);
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
                   stdlog,
-                  PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
+                  PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_PR);
          fputs("\n", stdlog);
       }
       LOG_END
@@ -1802,7 +1802,7 @@ static void handleNameResolutionRequest(struct Registrar*       registrar,
    }
    else {
       LOG_WARNING
-      fprintf(stdlog, "Name Resolution request for pool ");
+      fprintf(stdlog, "Handle Resolution request for pool ");
       poolHandlePrint(&message->Handle, stdlog);
       fputs(" failed: ", stdlog);
       rserpoolErrorPrint(message->Error, stdlog);
@@ -1812,7 +1812,7 @@ static void handleNameResolutionRequest(struct Registrar*       registrar,
 
    if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
       LOG_WARNING
-      logerror("Sending name resolution response failed");
+      logerror("Sending handle resolution response failed");
       LOG_END
    }
 }
@@ -2019,7 +2019,7 @@ static void handlePeerNameUpdate(struct Registrar*       registrar,
       }
       else {
          LOG_ERROR
-         fprintf(stdlog, "NS $%08x sent me a PeerNameUpdate for a PE owned by myself!",
+         fprintf(stdlog, "PR $%08x sent me a PeerNameUpdate for a PE owned by myself!",
                  message->SenderID);
          LOG_END
       }
@@ -2163,7 +2163,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
                                 peerListNode->AddressBlock->AddressArray,
                                 peerListNode->AddressBlock->Addresses,
                                 peerListNode->Identifier);
-            sendPeerNameTableRequest(registrar,
+            sendPeerHandleTableRequest(registrar,
                                      registrar->ENRPUnicastSocket,
                                      0, 0,
                                      peerListNode->AddressBlock->AddressArray,
@@ -2342,7 +2342,7 @@ static void sendPeerOwnershipChange(struct Registrar*            registrar,
                                     const RegistrarIdentifierType targetID)
 {
    struct RSerPoolMessage*           message;
-   struct ST_CLASS(NameTableExtract) nte;
+   struct ST_CLASS(HandleTableExtract) nte;
 
    message = rserpoolMessageNew(NULL, 250);  /* ?????????????? */
    if(message) {
@@ -2426,7 +2426,7 @@ static void doTakeover(struct Registrar*       registrar,
    }
 
 
-   /* ====== Update PEs' home NS identifier ============================== */
+   /* ====== Update PEs' home PR identifier ============================== */
    poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                         &registrar->Handlespace.Handlespace, takeoverProcess->TargetID);
    while(poolElementNode) {
@@ -2683,8 +2683,8 @@ static void handlePeerListResponse(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle peer name table request ################################# */
-static void handlePeerNameTableRequest(struct Registrar*       registrar,
+/* ###### Handle peer handle table request ################################# */
+static void handlePeerHandleTableRequest(struct Registrar*       registrar,
                                        int                     fd,
                                        sctp_assoc_t            assocID,
                                        struct RSerPoolMessage* message)
@@ -2695,13 +2695,13 @@ static void handlePeerNameTableRequest(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own PeerNameTableRequest message\n", stdlog);
+      fputs("Skipping our own PeerHandleTableRequest message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got PeerNameTableRequest from peer $%08x\n",
+   fprintf(stdlog, "Got PeerHandleTableRequest from peer $%08x\n",
            message->SenderID);
    LOG_END
 
@@ -2710,7 +2710,7 @@ static void handlePeerNameTableRequest(struct Registrar*       registrar,
                      message->SenderID,
                      NULL);
 
-   /* We allow only 1400 bytes per NameTableResponse... */
+   /* We allow only 1400 bytes per HandleTableResponse... */
    response = rserpoolMessageNew(NULL, 1400);
    if(response != NULL) {
       response->Type                      = EHT_PEER_NAME_TABLE_RESPONSE;
@@ -2728,19 +2728,19 @@ static void handlePeerNameTableRequest(struct Registrar*       registrar,
       if(peerListNode == NULL) {
          message->Flags |= EHT_PEER_NAME_TABLE_RESPONSE_REJECT;
          LOG_WARNING
-         fprintf(stdlog, "PeerNameTableRequest from peer $%08x -> This peer is unknown, rejecting request!\n",
+         fprintf(stdlog, "PeerHandleTableRequest from peer $%08x -> This peer is unknown, rejecting request!\n",
                  message->SenderID);
          LOG_END
       }
 
       LOG_VERBOSE
-      fprintf(stdlog, "Sending PeerNameTableResponse to peer $%08x...\n",
+      fprintf(stdlog, "Sending PeerHandleTableResponse to peer $%08x...\n",
               message->SenderID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              fd, assocID, 0, 0, response) == false) {
          LOG_WARNING
-         fputs("Sending PeerNameTableResponse failed\n", stdlog);
+         fputs("Sending PeerHandleTableResponse failed\n", stdlog);
          LOG_END
       }
 
@@ -2749,8 +2749,8 @@ static void handlePeerNameTableRequest(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle name table response ##################################### */
-static void handlePeerNameTableResponse(struct Registrar*       registrar,
+/* ###### Handle handle table response ##################################### */
+static void handlePeerHandleTableResponse(struct Registrar*       registrar,
                                         int                     fd,
                                         sctp_assoc_t            assocID,
                                         struct RSerPoolMessage* message)
@@ -2762,13 +2762,13 @@ static void handlePeerNameTableResponse(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own NameTableResponse message\n", stdlog);
+      fputs("Skipping our own HandleTableResponse message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got NameTableResponse from peer $%08x\n",
+   fprintf(stdlog, "Got HandleTableResponse from peer $%08x\n",
            message->SenderID);
    LOG_END
 
@@ -2820,7 +2820,7 @@ static void handlePeerNameTableResponse(struct Registrar*       registrar,
             }
             else {
                LOG_ERROR
-               fprintf(stdlog, "NS $%08x sent me a NameTableResponse containing a PE owned by myself: ",
+               fprintf(stdlog, "PR $%08x sent me a HandleTableResponse containing a PE owned by myself: ",
                        message->SenderID);
                ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
                fputs("\n", stdlog);
@@ -2844,10 +2844,10 @@ static void handlePeerNameTableResponse(struct Registrar*       registrar,
 
          if(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND) {
             LOG_VERBOSE
-            fprintf(stdlog, "NameTableResponse has MoreToSend flag set -> sending NameTableRequest to peer $%08x to get more data\n",
+            fprintf(stdlog, "HandleTableResponse has MoreToSend flag set -> sending HandleTableRequest to peer $%08x to get more data\n",
                     message->SenderID);
             LOG_END
-            sendPeerNameTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
+            sendPeerHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
          }
          else {
             if((registrar->InInitializationPhase) &&
@@ -2863,7 +2863,7 @@ static void handlePeerNameTableResponse(struct Registrar*       registrar,
    }
    else {
       LOG_ACTION
-      fprintf(stdlog, "Rejected PeerNameTableResponse from peer $%08x\n",
+      fprintf(stdlog, "Rejected PeerHandleTableResponse from peer $%08x\n",
               message->SenderID);
       LOG_END
    }
@@ -2879,8 +2879,8 @@ static void handleMessage(struct Registrar*       registrar,
       case AHT_REGISTRATION:
          handleRegistrationRequest(registrar, sd, message->AssocID, message);
        break;
-      case AHT_NAME_RESOLUTION:
-         handleNameResolutionRequest(registrar, sd, message->AssocID, message);
+      case AHT_HANDLE_RESOLUTION:
+         handleHandleResolutionRequest(registrar, sd, message->AssocID, message);
        break;
       case AHT_DEREGISTRATION:
          handleDeregistrationRequest(registrar, sd, message->AssocID, message);
@@ -2904,10 +2904,10 @@ static void handleMessage(struct Registrar*       registrar,
          handlePeerListResponse(registrar, sd, message->AssocID, message);
        break;
       case EHT_PEER_NAME_TABLE_REQUEST:
-         handlePeerNameTableRequest(registrar, sd, message->AssocID, message);
+         handlePeerHandleTableRequest(registrar, sd, message->AssocID, message);
        break;
       case EHT_PEER_NAME_TABLE_RESPONSE:
-         handlePeerNameTableResponse(registrar, sd, message->AssocID, message);
+         handlePeerHandleTableResponse(registrar, sd, message->AssocID, message);
        break;
       case EHT_PEER_INIT_TAKEOVER:
          handlePeerInitTakeover(registrar, sd, message->AssocID, message);

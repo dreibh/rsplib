@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.29 2004/11/22 18:07:53 dreibh Exp $
+ *  $Id: servertable.c,v 1.30 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -135,7 +135,7 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
 
 /* ###### Server announce callback for FDCallback ######################## */
 /* This function is only called to "flush" the socket's buffer into the
-   cache when there is *no* NS hunt in progress. The NS hunt itself may
+   cache when there is *no* PR hunt in progress. The PR hunt itself may
    *not* use the Dispatcher's select() procedure -> This may case
    recursive invocation! Therefore, serverTableFindServer() simply
    calls ext_select() and manually calls handleServerAnnounceCallback()

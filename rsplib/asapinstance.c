@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.33 2004/12/09 15:29:05 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.34 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -332,7 +332,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
             }
             else if( ((response->Type == AHT_REGISTRATION_RESPONSE)    && (message->Type == AHT_REGISTRATION))   ||
                      ((response->Type == AHT_DEREGISTRATION_RESPONSE)  && (message->Type == AHT_DEREGISTRATION)) ||
-                     ((response->Type == AHT_NAME_RESOLUTION_RESPONSE) && (message->Type == AHT_NAME_RESOLUTION)) ) {
+                     ((response->Type == AHT_HANDLE_RESOLUTION_RESPONSE) && (message->Type == AHT_HANDLE_RESOLUTION)) ) {
                LOG_VERBOSE2
                fprintf(stdlog, "Request trial #%u - Success\n", (unsigned int)i + 1);
                LOG_END
@@ -578,7 +578,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 
 
 /* ###### Do name lookup ################################################# */
-static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstance,
+static unsigned int asapInstanceDoHandleResolution(struct ASAPInstance* asapInstance,
                                                  struct PoolHandle*   poolHandle)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
@@ -590,7 +590,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
 
    message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
-      message->Type   = AHT_NAME_RESOLUTION;
+      message->Type   = AHT_HANDLE_RESOLUTION;
       message->Flags  = 0x00;
       message->Handle = *poolHandle;
 
@@ -598,7 +598,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
       if(result == RSPERR_OKAY) {
          if(registrarResult == RSPERR_OKAY) {
             LOG_VERBOSE
-            fprintf(stdlog, "Got %u elements in name resolution response\n",
+            fprintf(stdlog, "Got %u elements in handle resolution response\n",
                     (unsigned int)response->PoolElementPtrArraySize);
             LOG_END
             for(i = 0;i < response->PoolElementPtrArraySize;i++) {
@@ -636,7 +636,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
          }
          else {
             LOG_WARNING
-            fprintf(stdlog, "Name Resolution at registrar for pool ");
+            fprintf(stdlog, "Handle Resolution at registrar for pool ");
             poolHandlePrint(poolHandle, stdlog);
             fputs(" failed: ", stdlog);
             rserpoolErrorPrint(registrarResult, stdlog);
@@ -648,7 +648,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
       }
       else {
          LOG_WARNING
-         fprintf(stdlog, "Name Resolution at registrar for pool ");
+         fprintf(stdlog, "Handle Resolution at registrar for pool ");
          poolHandlePrint(poolHandle, stdlog);
          fputs(" failed: ", stdlog);
          rserpoolErrorPrint(registrarResult, stdlog);
@@ -666,7 +666,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
 
 
 /* ###### Do name lookup from cache ###################################### */
-static unsigned int asapInstanceNameResolutionFromCache(
+static unsigned int asapInstanceHandleResolutionFromCache(
                        struct ASAPInstance*               asapInstance,
                        struct PoolHandle*                 poolHandle,
                        struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
@@ -676,7 +676,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
    size_t       i;
 
    LOG_ACTION
-   fprintf(stdlog, "Name Resolution for pool ");
+   fprintf(stdlog, "Handle Resolution for pool ");
    poolHandlePrint(poolHandle, stdlog);
    fputs(":\n", stdlog);
    ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->Cache,
@@ -690,7 +690,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
    fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
    LOG_END
 
-   if(ST_CLASS(poolHandlespaceManagementNameResolution)(
+   if(ST_CLASS(poolHandlespaceManagementHandleResolution)(
          &asapInstance->Cache,
          poolHandle,
          poolElementNodeArray,
@@ -716,8 +716,8 @@ static unsigned int asapInstanceNameResolutionFromCache(
 }
 
 
-/* ###### Do name resolution for given pool handle ####################### */
-unsigned int asapInstanceNameResolution(
+/* ###### Do handle resolution for given pool handle ##################### */
+unsigned int asapInstanceHandleResolution(
                 struct ASAPInstance*               asapInstance,
                 struct PoolHandle*                 poolHandle,
                 struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
@@ -729,32 +729,32 @@ unsigned int asapInstanceNameResolution(
    dispatcherLock(asapInstance->StateMachine);
 
    LOG_VERBOSE
-   fputs("Trying name resolution from cache...\n", stdlog);
+   fputs("Trying handle resolution from cache...\n", stdlog);
    LOG_END
 
-   result = asapInstanceNameResolutionFromCache(
+   result = asapInstanceHandleResolutionFromCache(
                asapInstance, poolHandle,
                poolElementNodeArray,
                poolElementNodes);
    if(result != RSPERR_OKAY) {
       LOG_VERBOSE
-      fputs("No results in cache. Trying name resolution at registrar...\n", stdlog);
+      fputs("No results in cache. Trying handle resolution at registrar...\n", stdlog);
       LOG_END
 
-      /* The amount is now 0 (since name resolution was not successful).
+      /* The amount is now 0 (since handle resolution was not successful).
          Set it to its original value. */
       *poolElementNodes = originalPoolElementNodes;
 
-      result = asapInstanceDoNameResolution(asapInstance, poolHandle);
+      result = asapInstanceDoHandleResolution(asapInstance, poolHandle);
       if(result == RSPERR_OKAY) {
-         result = asapInstanceNameResolutionFromCache(
+         result = asapInstanceHandleResolutionFromCache(
                      asapInstance, poolHandle,
                      poolElementNodeArray,
                      poolElementNodes);
       }
       else {
          LOG_VERBOSE
-         fputs("Name resolution not succesful\n", stdlog);
+         fputs("Handle resolution not succesful\n", stdlog);
          LOG_END
       }
    }

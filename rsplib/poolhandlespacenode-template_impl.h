@@ -22,14 +22,14 @@
 
 /* ###### Initialize ##################################################### */
 void ST_CLASS(poolHandlespaceNodeNew)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                      const RegistrarIdentifierType            homeRegistrarIdentifier)
+                                      const RegistrarIdentifierType         homeRegistrarIdentifier)
 {
    ST_METHOD(New)(&poolHandlespaceNode->PoolIndexStorage, ST_CLASS(poolIndexStorageNodePrint), ST_CLASS(poolIndexStorageNodeComparison));
    ST_METHOD(New)(&poolHandlespaceNode->PoolElementTimerStorage, ST_CLASS(poolElementTimerStorageNodePrint), ST_CLASS(poolElementTimerStorageNodeComparison));
    ST_METHOD(New)(&poolHandlespaceNode->PoolElementOwnershipStorage, ST_CLASS(poolElementOwnershipStorageNodePrint), ST_CLASS(poolElementOwnershipStorageNodeComparison));
    ST_METHOD(New)(&poolHandlespaceNode->PoolElementConnectionStorage, ST_CLASS(poolElementConnectionStorageNodePrint), ST_CLASS(poolElementConnectionStorageNodeComparison));
    poolHandlespaceNode->HomeRegistrarIdentifier = homeRegistrarIdentifier;
-   poolHandlespaceNode->PoolElements     = 0;
+   poolHandlespaceNode->PoolElements            = 0;
 }
 
 
@@ -176,7 +176,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElement
                                      const RegistrarIdentifierType         homeRegistrarIdentifier);
 
 
-/* ###### Get prev ownership of same home NS identifier ################## */
+/* ###### Get prev ownership of same home PR identifier ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode)
@@ -194,7 +194,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElement
 }
 
 
-/* ###### Get next ownership of same home NS identifier ################## */
+/* ###### Get next ownership of same home PR identifier ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode)
@@ -272,7 +272,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
 }
 
 
-/* ###### Get prev connection of same home NS identifier ################## */
+/* ###### Get prev connection of same home PR identifier ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNodeForSameConnection)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode)
@@ -291,7 +291,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElement
 }
 
 
-/* ###### Get next connection of same home NS identifier ################## */
+/* ###### Get next connection of same home PR identifier ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNodeForSameConnection)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode)
@@ -969,7 +969,7 @@ void ST_CLASS(poolHandlespaceNodeClear)(struct ST_CLASS(PoolHandlespaceNode)* po
 }
 
 
-/* ###### Get first ownership node of given home NS identifier ########### */
+/* ###### Get first ownership node of given home PR identifier ########### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      const RegistrarIdentifierType         homeRegistrarIdentifier)
@@ -1006,7 +1006,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
 }
 
 
-/* ###### Get last ownership node of given home NS identifier ########### */
+/* ###### Get last ownership node of given home PR identifier ########### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      const RegistrarIdentifierType         homeRegistrarIdentifier)

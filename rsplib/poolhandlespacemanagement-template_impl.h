@@ -375,13 +375,13 @@ unsigned int ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
 }
 
 
-/* ###### Name Resolution ################################################ */
-unsigned int ST_CLASS(poolHandlespaceManagementNameResolution)(
+/* ###### Handle Resolution ############################################## */
+unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
                 struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                 const struct PoolHandle*                    poolHandle,
                 struct ST_CLASS(PoolElementNode)**          poolElementNodeArray,
                 size_t*                                     poolElementNodes,
-                const size_t                                maxNameResolutionItems,
+                const size_t                                maxHandleResolutionItems,
                 const size_t                                maxIncrement)
 {
    unsigned int errorCode;
@@ -389,7 +389,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementNameResolution)(
                           &poolHandlespaceManagement->Handlespace,
                           poolHandle,
                           poolElementNodeArray,
-                          maxNameResolutionItems, maxIncrement,
+                          maxHandleResolutionItems, maxIncrement,
                           &errorCode);
 #ifdef VERIFY
    ST_CLASS(poolHandlespaceNodeVerify)(&poolHandlespaceManagement->Handlespace);
@@ -414,9 +414,9 @@ unsigned int ST_CLASS(poolHandlespaceManagementNameResolution)(
 
 
 /* ###### Get name table from handlespace ################################## */
-static int ST_CLASS(getOwnershipNameTable)(
+static int ST_CLASS(getOwnershipHandleTable)(
               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-              struct ST_CLASS(NameTableExtract)*          nameTableExtract,
+              struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
               const RegistrarIdentifierType               homeRegistrarIdentifier,
               const unsigned int                          flags)
 {
@@ -430,53 +430,53 @@ static int ST_CLASS(getOwnershipNameTable)(
       poolElementNode = ST_CLASS(poolHandlespaceNodeFindNearestNextPoolElementOwnershipNode)(
                            &poolHandlespaceManagement->Handlespace,
                            homeRegistrarIdentifier,
-                           &nameTableExtract->LastPoolHandle,
-                           nameTableExtract->LastPoolElementIdentifier);
+                           &handleTableExtract->LastPoolHandle,
+                           handleTableExtract->LastPoolElementIdentifier);
    }
 
-   nameTableExtract->PoolElementNodes = 0;
+   handleTableExtract->PoolElementNodes = 0;
    while(poolElementNode != NULL) {
-      nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes++] = poolElementNode;
-      if(nameTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
+      handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes++] = poolElementNode;
+      if(handleTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
          break;
       }
       poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
                            &poolHandlespaceManagement->Handlespace, poolElementNode);
    }
 
-   if(nameTableExtract->PoolElementNodes > 0) {
-      struct ST_CLASS(PoolElementNode)* lastPoolElementNode = nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes - 1];
+   if(handleTableExtract->PoolElementNodes > 0) {
+      struct ST_CLASS(PoolElementNode)* lastPoolElementNode = handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      nameTableExtract->LastPoolHandle                      = lastPoolNode->Handle;
-      nameTableExtract->LastPoolElementIdentifier           = lastPoolElementNode->Identifier;
+      handleTableExtract->LastPoolHandle                      = lastPoolNode->Handle;
+      handleTableExtract->LastPoolElementIdentifier           = lastPoolElementNode->Identifier;
    }
 
 #ifdef PRINT_GETNAMETABLE_RESULT
-   printf("GetOwnershipNameTable result: %u items\n", nameTableExtract->PoolElementNodes);
-   for(size_t i = 0;i < nameTableExtract->PoolElementNodes;i++) {
-      poolElementNode = nameTableExtract->PoolElementNodeArray[i];
+   printf("GetOwnershipHandleTable result: %u items\n", handleTableExtract->PoolElementNodes);
+   for(size_t i = 0;i < handleTableExtract->PoolElementNodes;i++) {
+      poolElementNode = handleTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
       printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->HandleSize, poolElementNode->Identifier);
       puts("");
    }
 #endif
-   return(nameTableExtract->PoolElementNodes > 0);
+   return(handleTableExtract->PoolElementNodes > 0);
 }
 
 
 /* ###### Get name table from handlespace ################################## */
-static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-                                        struct ST_CLASS(NameTableExtract)*          nameTableExtract,
+static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                        struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
                                         const unsigned int                          flags)
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
-   nameTableExtract->PoolElementNodes = 0;
+   handleTableExtract->PoolElementNodes = 0;
    if(flags & NTEF_START) {
-      nameTableExtract->LastPoolElementIdentifier = 0;
-      nameTableExtract->LastPoolHandle.Size       = 0;
+      handleTableExtract->LastPoolElementIdentifier = 0;
+      handleTableExtract->LastPoolHandle.Size       = 0;
       poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&poolHandlespaceManagement->Handlespace);
       if(poolNode == NULL) {
          return(0);
@@ -486,18 +486,18 @@ static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolHandlespaceManagemen
    else {
       poolNode = ST_CLASS(poolHandlespaceNodeFindPoolNode)(
                     &poolHandlespaceManagement->Handlespace,
-                    &nameTableExtract->LastPoolHandle);
+                    &handleTableExtract->LastPoolHandle);
       if(poolNode == NULL) {
          poolNode = ST_CLASS(poolHandlespaceNodeFindNearestNextPoolNode)(
                        &poolHandlespaceManagement->Handlespace,
-                       &nameTableExtract->LastPoolHandle);
+                       &handleTableExtract->LastPoolHandle);
       }
       if(poolNode == NULL) {
          return(0);
       }
-      if(poolHandleComparison(&nameTableExtract->LastPoolHandle,
+      if(poolHandleComparison(&handleTableExtract->LastPoolHandle,
                               &poolNode->Handle) == 0) {
-         poolElementNode = ST_CLASS(poolNodeFindNearestNextPoolElementNode)(poolNode, nameTableExtract->LastPoolElementIdentifier);
+         poolElementNode = ST_CLASS(poolNodeFindNearestNextPoolElementNode)(poolNode, handleTableExtract->LastPoolElementIdentifier);
       }
       else {
          poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
@@ -507,8 +507,8 @@ static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolHandlespaceManagemen
 
    for(;;) {
       while(poolElementNode != NULL) {
-         nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes++] = poolElementNode;
-         if(nameTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
+         handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes++] = poolElementNode;
+         if(handleTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
             goto finish;
          }
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
@@ -525,18 +525,18 @@ static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolHandlespaceManagemen
 
 
 finish:
-   if(nameTableExtract->PoolElementNodes > 0) {
-      struct ST_CLASS(PoolElementNode)* lastPoolElementNode = nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes - 1];
+   if(handleTableExtract->PoolElementNodes > 0) {
+      struct ST_CLASS(PoolElementNode)* lastPoolElementNode = handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      nameTableExtract->LastPoolHandle            = lastPoolNode->Handle;
-      nameTableExtract->LastPoolElementIdentifier = lastPoolElementNode->Identifier;
+      handleTableExtract->LastPoolHandle            = lastPoolNode->Handle;
+      handleTableExtract->LastPoolElementIdentifier = lastPoolElementNode->Identifier;
    }
 
 
 #ifdef PRINT_GETNAMETABLE_RESULT
-   printf("GetGlobalNameTable result: %u items\n", nameTableExtract->PoolElementNodes);
-   for(size_t i = 0;i < nameTableExtract->PoolElementNodes;i++) {
-      poolElementNode = nameTableExtract->PoolElementNodeArray[i];
+   printf("GetGlobalHandleTable result: %u items\n", handleTableExtract->PoolElementNodes);
+   for(size_t i = 0;i < handleTableExtract->PoolElementNodes;i++) {
+      poolElementNode = handleTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
       printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle->Size,
@@ -544,25 +544,25 @@ finish:
       puts("");
    }
 #endif
-   return(nameTableExtract->PoolElementNodes > 0);
+   return(handleTableExtract->PoolElementNodes > 0);
 }
 
 
 /* ###### Get name table from handlespace ################################## */
-int ST_CLASS(poolHandlespaceManagementGetNameTable)(
+int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
-       struct ST_CLASS(NameTableExtract)*          nameTableExtract,
+       struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
        const unsigned int                          flags)
 {
    if(flags & NTEF_OWNCHILDSONLY) {
-      return(ST_CLASS(getOwnershipNameTable)(
-                poolHandlespaceManagement, nameTableExtract,
+      return(ST_CLASS(getOwnershipHandleTable)(
+                poolHandlespaceManagement, handleTableExtract,
                 homeRegistrarIdentifier,
                 flags));
    }
-   return(ST_CLASS(getGlobalNameTable)(
-             poolHandlespaceManagement, nameTableExtract, flags));
+   return(ST_CLASS(getGlobalHandleTable)(
+             poolHandlespaceManagement, handleTableExtract, flags));
 }
 
 

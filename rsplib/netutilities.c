@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.47 2005/03/08 10:59:23 dreibh Exp $
+ *  $Id: netutilities.c,v 1.48 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1667,22 +1667,29 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    n = getpaddrsplus(sockfd, assocID, &addrs);
    if(n >= 0) {
       for(i = 0;i < n;i++) {
+         memset(&peerParams, 0, sizeof(peerParams));
          peerParams.spp_assoc_id = assocID;
          memcpy((void*)&(peerParams.spp_address),
                 (const void*)&addrs[i], sizeof(union sockaddr_union));
          size = (socklen_t)sizeof(peerParams);
 
-         if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_INFO,
+         if(sctp_opt_info(sockfd, assocID, SCTP_PEER_ADDR_PARAMS,
                           (void*)&peerParams, &size) == 0) {
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
                     sockfd, (unsigned int)assocID,
-                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
             LOG_END
 
             peerParams.spp_hbinterval = tagListGetData(tags, TAG_TuneSCTP_Heartbeat,  peerParams.spp_hbinterval);
+            if(peerParams.spp_hbinterval > 0) {
+               peerParams.spp_flags |= SPP_HB_ENABLED;
+            }
+            else {
+               peerParams.spp_flags |= SPP_HB_DISABLED;
+            }
             peerParams.spp_pathmaxrxt = tagListGetData(tags, TAG_TuneSCTP_PathMaxRXT, peerParams.spp_pathmaxrxt);;
 
             if(sctp_opt_info(sockfd, 0, SCTP_PEER_ADDR_PARAMS,
@@ -1698,9 +1705,9 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
                LOG_VERBOSE2
                fputs("New peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-               fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+               fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
                         sockfd, (unsigned int)assocID,
-                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
                LOG_END
             }
          }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.12 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.13 2005/03/08 12:51:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -51,6 +51,10 @@ extern "C" {
 #endif
 
 
+/* Set internal limit */
+#define MAX_MAX_HANDLE_RESOLUTION_ITEMS 128
+
+
 #define PORT_ASAP 3863
 #define PORT_ENRP 3864
 
@@ -58,21 +62,21 @@ extern "C" {
 #define PPID_ENRP 12 /* old value: 0xFAEEB5D2 */
 
 
-#define AHT_ASAP_MODIFIER            0xaa00
-#define AHT_REGISTRATION             (0x01 | AHT_ASAP_MODIFIER)
-#define AHT_DEREGISTRATION           (0x02 | AHT_ASAP_MODIFIER)
-#define AHT_REGISTRATION_RESPONSE    (0x03 | AHT_ASAP_MODIFIER)
-#define AHT_DEREGISTRATION_RESPONSE  (0x04 | AHT_ASAP_MODIFIER)
-#define AHT_NAME_RESOLUTION          (0x05 | AHT_ASAP_MODIFIER)
-#define AHT_NAME_RESOLUTION_RESPONSE (0x06 | AHT_ASAP_MODIFIER)
-#define AHT_ENDPOINT_KEEP_ALIVE      (0x07 | AHT_ASAP_MODIFIER)
-#define AHT_ENDPOINT_KEEP_ALIVE_ACK  (0x08 | AHT_ASAP_MODIFIER)
-#define AHT_ENDPOINT_UNREACHABLE     (0x09 | AHT_ASAP_MODIFIER)
-#define AHT_SERVER_ANNOUNCE          (0x0a | AHT_ASAP_MODIFIER)
-#define AHT_COOKIE                   (0x0b | AHT_ASAP_MODIFIER)
-#define AHT_COOKIE_ECHO              (0x0c | AHT_ASAP_MODIFIER)
-#define AHT_BUSINESS_CARD            (0x0d | AHT_ASAP_MODIFIER)
-#define AHT_PEER_ERROR               (0x0e | AHT_ASAP_MODIFIER)
+#define AHT_ASAP_MODIFIER              0xaa00
+#define AHT_REGISTRATION               (0x01 | AHT_ASAP_MODIFIER)
+#define AHT_DEREGISTRATION             (0x02 | AHT_ASAP_MODIFIER)
+#define AHT_REGISTRATION_RESPONSE      (0x03 | AHT_ASAP_MODIFIER)
+#define AHT_DEREGISTRATION_RESPONSE    (0x04 | AHT_ASAP_MODIFIER)
+#define AHT_HANDLE_RESOLUTION          (0x05 | AHT_ASAP_MODIFIER)
+#define AHT_HANDLE_RESOLUTION_RESPONSE (0x06 | AHT_ASAP_MODIFIER)
+#define AHT_ENDPOINT_KEEP_ALIVE        (0x07 | AHT_ASAP_MODIFIER)
+#define AHT_ENDPOINT_KEEP_ALIVE_ACK    (0x08 | AHT_ASAP_MODIFIER)
+#define AHT_ENDPOINT_UNREACHABLE       (0x09 | AHT_ASAP_MODIFIER)
+#define AHT_SERVER_ANNOUNCE            (0x0a | AHT_ASAP_MODIFIER)
+#define AHT_COOKIE                     (0x0b | AHT_ASAP_MODIFIER)
+#define AHT_COOKIE_ECHO                (0x0c | AHT_ASAP_MODIFIER)
+#define AHT_BUSINESS_CARD              (0x0d | AHT_ASAP_MODIFIER)
+#define AHT_PEER_ERROR                 (0x0e | AHT_ASAP_MODIFIER)
 
 
 struct rserpool_header
@@ -343,7 +347,7 @@ struct RSerPoolMessage
    struct TransportAddressBlock*               TransportAddressBlockListPtr;
    bool                                        TransportAddressBlockListPtrAutoDelete;
 
-   struct ST_CLASS(PoolElementNode)*           PoolElementPtrArray[MAX_MAX_NAME_RESOLUTION_ITEMS];
+   struct ST_CLASS(PoolElementNode)*           PoolElementPtrArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
    size_t                                      PoolElementPtrArraySize;
    bool                                        PoolElementPtrArrayAutoDelete;
 
@@ -355,7 +359,7 @@ struct RSerPoolMessage
    struct ST_CLASS(PoolHandlespaceManagement)* HandlespacePtr;
    bool                                        HandlespacePtrAutoDelete;
 
-   struct ST_CLASS(NameTableExtract)*          ExtractContinuation;
+   struct ST_CLASS(HandleTableExtract)*          ExtractContinuation;
 
    sctp_assoc_t                                AssocID;
    unsigned short                              StreamID;
