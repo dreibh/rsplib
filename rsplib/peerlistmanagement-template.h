@@ -83,7 +83,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 const ENRPIdentifierType             nsIdentifier,
                 const unsigned int                   flags,
-                struct TransportAddressBlock*        transportAddressBlock,
+                const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
                 struct ST_CLASS(PeerListNode)**      peerListNode);
 

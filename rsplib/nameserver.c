@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.15 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: nameserver.c,v 1.16 2004/07/26 16:36:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -349,6 +349,44 @@ void nameServerDumpUsers(struct NameServer* nameServer)
 
 }
 
+
+
+
+struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
+                                 int                           asapSocket,
+                                 struct TransportAddressBlock* asapAddress,
+                                 int                           enrpUnicastSocket,
+                                 struct TransportAddressBlock* enrpUnicastAddress,
+                                 const bool                    asapSendAnnounces,
+                                 const union sockaddr_union*   asapAnnounceAddress,
+                                 const bool                    enrpUseMulticast,
+                                 const union sockaddr_union*   enrpMulticastAddress);
+void nameServerDelete(struct NameServer* nameServer);
+
+static void sendPeerNameUpdate(struct NameServer*                nameServer,
+                               struct ST_CLASS(PoolElementNode)* poolElementNode,
+                               const uint16_t                    action);
+
+static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData);
+static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData);
+static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
+                                         struct Timer*      timer,
+                                         void*              userData);
+static void peerActionTimerCallback(struct Dispatcher* dispatcher,
+                                    struct Timer*      timer,
+                                    void*              userData);
+static void nameServerSocketCallback(struct Dispatcher* dispatcher,
+                                     int                fd,
+                                     int                eventMask,
+                                     void*              userData);
+
+
+
+
 static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                     void*                             userData)
 {
@@ -356,6 +394,12 @@ static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElemen
    struct NameServerUserNode* nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
 
    if(nameServerUserNode) {
+
+      /* ====== Send update to peers =============================== */
+      if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
+         sendPeerNameUpdate(nameServer, poolElementNode, PNUP_DEL_PE);
+      }
+
       nameServerRemoveUser(nameServer,
                            nameServerUserNode->Socket,
                            nameServerUserNode->AssocID,
@@ -378,37 +422,10 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 
 
 
-struct NameServer* nameServerNew(int                           asapSocket,
-                                 struct TransportAddressBlock* asapAddress,
-                                 int                           enrpUnicastSocket,
-                                 struct TransportAddressBlock* enrpUnicastAddress,
-                                 const bool                    asapSendAnnounces,
-                                 const union sockaddr_union*   asapAnnounceAddress,
-                                 const bool                    enrpUseMulticast,
-                                 const union sockaddr_union*   enrpMulticastAddress);
-void nameServerDelete(struct NameServer* nameServer);
-
-static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
-                                      struct Timer*      timer,
-                                      void*              userData);
-static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
-                                      struct Timer*      timer,
-                                      void*              userData);
-static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
-                                         struct Timer*      timer,
-                                         void*              userData);
-static void peerActionTimerCallback(struct Dispatcher* dispatcher,
-                                    struct Timer*      timer,
-                                    void*              userData);
-static void nameServerSocketCallback(struct Dispatcher* dispatcher,
-                                     int                fd,
-                                     int                eventMask,
-                                     void*              userData);
-
-
 
 /* ###### Constructor #################################################### */
-struct NameServer* nameServerNew(int                           asapSocket,
+struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
+                                 int                           asapSocket,
                                  struct TransportAddressBlock* asapAddress,
                                  int                           enrpUnicastSocket,
                                  struct TransportAddressBlock* enrpUnicastAddress,
@@ -419,7 +436,10 @@ struct NameServer* nameServerNew(int                           asapSocket,
 {
    struct NameServer* nameServer = (struct NameServer*)malloc(sizeof(struct NameServer));
    if(nameServer != NULL) {
-      nameServer->ServerID     = random32();
+      nameServer->ServerID = serverID;
+      if(nameServer->ServerID == 0) {
+         nameServer->ServerID = random32();
+      }
       nameServer->StateMachine = dispatcherNew(dispatcherDefaultLock, dispatcherDefaultUnlock, NULL);
       if(nameServer->StateMachine == NULL) {
          free(nameServer);
@@ -761,13 +781,24 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
             getMicroTime() + nameServer->KeepAliveTimeoutInterval);
       }
 
-      else if(poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) {
-         LOG_ACTION
-         fprintf(stdlog, "Keep alive timeout expired pool element $%08x of pool ",
-                 poolElementNode->Identifier);
-         poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-         fputs(" -> removing it\n", stdlog);
-         LOG_END
+      else if( (poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) ||
+               (poolElementNode->TimerCode == PENT_EXPIRY) ) {
+         if(poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) {
+            LOG_ACTION
+            fprintf(stdlog, "Keep alive timeout expired pool element $%08x of pool ",
+                  poolElementNode->Identifier);
+            poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+            fputs(" -> removing it\n", stdlog);
+            LOG_END
+         }
+         else {
+            LOG_ACTION
+            fprintf(stdlog, "Expiry timeout expired pool element $%08x of pool ",
+                  poolElementNode->Identifier);
+            poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+            fputs(" -> removing it\n", stdlog);
+            LOG_END
+         }
          result = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                      &nameServer->Namespace,
                      &poolElementNode->OwnerPoolNode->Handle,
@@ -795,6 +826,12 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
          }
       }
 
+      else {
+         LOG_ERROR
+         fputs("Unexpected timer\n", stdlog);
+         LOG_END_FATAL
+      }
+
       poolElementNode = nextPoolElementNode;
    }
 
@@ -813,17 +850,18 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
 }
 
 
-/* ###### Send peer name update for registration ######################### */
-static void sendRegistrationUpdate(struct NameServer*                nameServer,
-                                   struct ST_CLASS(PoolElementNode)* poolElementNode)
+/* ###### Send peer name update ########################################## */
+static void sendPeerNameUpdate(struct NameServer*                nameServer,
+                               struct ST_CLASS(PoolElementNode)* poolElementNode,
+                               const uint16_t                    action)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct RSerPoolMessage*        message;
 
-   message = rserpoolMessageNew(NULL, 1024);
+   message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
       message->Type                     = EHT_PEER_NAME_UPDATE;
-      message->Flags                    = PNUP_ADD_PE;
+      message->Flags                    = action;
       message->SenderID                 = nameServer->ServerID;
       message->Handle                   = poolElementNode->OwnerPoolNode->Handle;
       message->PoolElementPtr           = poolElementNode;
@@ -834,7 +872,7 @@ static void sendRegistrationUpdate(struct NameServer*                nameServer,
       ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL),
       fputs(" of pool ", stdlog);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-      fputs("...\n", stdlog);
+      fprintf(stdlog, ", action $%04...\n", action);
       LOG_END
 
       if(nameServer->ENRPUseMulticast) {
@@ -1049,7 +1087,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
             LOG_END
 
             /* ====== Send update to peers =============================== */
-            sendRegistrationUpdate(nameServer, poolElementNode);
+            sendPeerNameUpdate(nameServer, poolElementNode, PNUP_ADD_PE);
          }
          else {
             LOG_WARNING
@@ -1292,6 +1330,97 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
 }
 
 
+/* ###### Handle peer name update ######################################## */
+static void handlePeerNameUpdate(struct NameServer*      nameServer,
+                                 int                     fd,
+                                 sctp_assoc_t            assocID,
+                                 struct RSerPoolMessage* message)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   int                               result;
+
+   if(message->SenderID == nameServer->ServerID) {
+      /* This is our own message -> skip it! */
+      LOG_VERBOSE5
+      fputs("Skipping our own PeerNameUpdate message\n", stdlog);
+      LOG_END
+      return;
+   }
+
+   LOG_ACTION
+   fputs("Got PeerNameUpdate for pool element ", stdlog);
+   ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+   fputs(" of pool ", stdlog);
+   poolHandlePrint(&message->Handle, stdlog);
+   fprintf(stdlog, ", action $%04x\n", message->Action);
+   LOG_END
+
+   if(message->Action == PNUP_ADD_PE) {
+      result = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                  &nameServer->Namespace,
+                  &message->Handle,
+                  message->PoolElementPtr->HomeNSIdentifier,
+                  message->PoolElementPtr->Identifier,
+                  message->PoolElementPtr->RegistrationLife,
+                  &message->PoolElementPtr->PolicySettings,
+                  message->PoolElementPtr->AddressBlock,
+                  getMicroTime(),
+                  &poolElementNode);
+      if(message->Error == RSPERR_OKAY) {
+         LOG_ACTION
+         fputs("Successfully registered to pool ", stdlog);
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs(" pool element ", stdlog);
+         ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+         fputs("\n", stdlog);
+         LOG_END
+
+         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
+            ST_CLASS(poolNamespaceNodeDeactivateTimer)(
+               &nameServer->Namespace.Namespace,
+               poolElementNode);
+         }
+         ST_CLASS(poolNamespaceNodeActivateTimer)(
+            &nameServer->Namespace.Namespace,
+            poolElementNode,
+            PENT_EXPIRY,
+            getMicroTime() + nameServer->KeepAliveTransmissionInterval);
+         timerRestart(nameServer->NamespaceActionTimer,
+                     ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                        &nameServer->Namespace));
+
+         LOG_VERBOSE3
+         fputs("Namespace content:\n", stdlog);
+         nameServerDumpNamespace(nameServer);
+         fputs("Users:\n", stdlog);
+         nameServerDumpUsers(nameServer);
+         LOG_END
+      }
+      else {
+         LOG_WARNING
+         fputs("Failed to register to pool ", stdlog);
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs(" pool element ", stdlog);
+         ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+         fputs(": ", stdlog);
+         rserpoolErrorPrint(message->Error, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+      }
+   }
+
+   else if(message->Action == PNUP_DEL_PE) {
+   }
+
+   else {
+      LOG_WARNING
+      fprintf(stdlog, "Got PeerNameUpdate with invalid action $%04x\n",
+              message->Action);
+      LOG_END
+   }
+}
+
+
 /* ###### Handle peer presence ########################################### */
 static void handlePeerPresence(struct NameServer*      nameServer,
                                int                     fd,
@@ -1309,7 +1438,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
       return;
    }
 
-   LOG_ACTION
+   LOG_VERBOSE
    fprintf(stdlog, "Got PeerPresence from peer $%08x",
            message->PeerListNodePtr->Identifier);
    if(message->PeerListNodePtr) {
@@ -1333,7 +1462,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
                   &peerListNode);
 
       if(result == RSPERR_OKAY) {
-         LOG_VERBOSE
+         LOG_VERBOSE2
          fputs("Successfully added peer ", stdlog);
          ST_CLASS(peerListNodePrint)(message->PeerListNodePtr, stdlog, PLPO_FULL);
          fputs("\n", stdlog);
@@ -1352,7 +1481,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
                            &nameServer->Namespace));
 #endif
          /* ====== Print debug information ============================ */
-         LOG_VERBOSE
+         LOG_VERBOSE3
          fputs("Peers:\n", stdlog);
          ST_CLASS(peerListManagementPrint)(&nameServer->Peers, stdlog, PLPO_FULL);
          LOG_END
@@ -1393,6 +1522,9 @@ static void handleMessage(struct NameServer*  nameServer,
        break;
       case EHT_PEER_PRESENCE:
          handlePeerPresence(nameServer, sd, message->AssocID, message);
+       break;
+      case EHT_PEER_NAME_UPDATE:
+         handlePeerNameUpdate(nameServer, sd, message->AssocID, message);
        break;
       default:
          LOG_WARNING
@@ -1513,6 +1645,74 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
 }
 
 
+unsigned int nameServerAddStaticPeer(
+                struct NameServer*                  nameServer,
+                const ENRPIdentifierType            identifier,
+                const struct TransportAddressBlock* transportAddressBlock)
+{
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   int                            result;
+
+   result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+               &nameServer->Peers,
+               identifier,
+               PLNF_STATIC,
+               transportAddressBlock,
+               getMicroTime(),
+               &peerListNode);
+
+   return(result);
+}
+
+
+static void addPeer(struct NameServer* nameServer, char* arg)
+{
+   char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct sockaddr_storage       addressArray[MAX_NS_TRANSPORTADDRESSES];
+   size_t                        addresses;
+   char*                         address;
+   char*                         idx;
+
+   addresses = 0;
+   address = arg;
+   while(addresses < MAX_NS_TRANSPORTADDRESSES) {
+      idx = index(address, ',');
+      if(idx) {
+         *idx = 0x00;
+      }
+      if(!string2address(address, &addressArray[addresses])) {
+         printf("ERROR: Bad address %s! Use format <address:port>.\n",address);
+         exit(1);
+      }
+      addresses++;
+      if(idx) {
+         address = idx;
+         address++;
+      }
+      else {
+         break;
+      }
+   }
+   if(addresses < 1) {
+      fprintf(stderr, "ERROR: At least one peer address must be specified (at %s)!\n", arg);
+      exit(1);
+   }
+   transportAddressBlockNew(transportAddressBlock,
+                            IPPROTO_SCTP,
+                            getPort((struct sockaddr*)&addressArray[0]),
+                            0,
+                            (struct sockaddr_storage*)&addressArray,
+                            addresses);
+   if(nameServerAddStaticPeer(nameServer, 0, transportAddressBlock) != RSPERR_OKAY) {
+      fputs("ERROR: Unable to add static peer ", stderr);
+      transportAddressBlockPrint(transportAddressBlock, stderr);
+      fputs("\n", stderr);
+      exit(1);
+   }
+}
+
+
 static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
 {
    struct sockaddr_storage  sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
@@ -1628,6 +1828,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
 int main(int argc, char** argv)
 {
    struct NameServer*            nameServer;
+   uint32_t                      serverID   = 0;
    int                           asapSocket = -1;
    char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapAddress = (struct TransportAddressBlock*)&asapAddressBuffer;
@@ -1662,6 +1863,12 @@ int main(int argc, char** argv)
             fputs("ERROR: ASAP address given twice!", stdlog);
             exit(1);
          }
+      }
+      else if(!(strncasecmp(argv[i], "-serverid=", 10))) {
+         serverID = atol((char*)&argv[i][10]);
+      }
+      else if(!(strncasecmp(argv[i], "-peer=",6))) {
+         /* to be handled later */
       }
       else if(!(strcasecmp(argv[i], "-asapannounce=auto"))) {
          string2address("239.0.0.1:3863", &asapAnnounceAddress);
@@ -1719,13 +1926,19 @@ int main(int argc, char** argv)
 
 
    /* ====== Initialize NameServer ======================================= */
-   nameServer = nameServerNew(asapSocket, asapAddress,
+   nameServer = nameServerNew(serverID,
+                              asapSocket, asapAddress,
                               enrpUnicastSocket, enrpUnicastAddress,
                               asapSendAnnounces, (union sockaddr_union*)&asapAnnounceAddress,
                               enrpUseMulticast, (union sockaddr_union*)&enrpMulticastAddress);
    if(nameServer == NULL) {
       fprintf(stderr, "ERROR: Unable to initialize NameServer object!\n");
       exit(1);
+   }
+   for(i = 1;i < argc;i++) {
+      if(!(strncasecmp(argv[i], "-peer=",6))) {
+         addPeer(nameServer, (char*)&argv[i][6]);
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
