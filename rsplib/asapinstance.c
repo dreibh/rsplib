@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.10 2004/07/25 10:40:04 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.11 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -237,8 +237,6 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapIns
    LOG_WARNING
    fputs("Receiving response failed\n", stdlog);
    LOG_END
-puts("STOP!");
-exit(1);
    return(RSPERR_READ_ERROR);
 }
 
@@ -536,8 +534,8 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                                                  struct PoolHandle*   poolHandle)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
-   struct RSerPoolMessage*               message;
-   struct RSerPoolMessage*               response;
+   struct RSerPoolMessage*           message;
+   struct RSerPoolMessage*           response;
    unsigned int                      result;
    uint16_t                          nameServerResult;
    size_t                            i;
@@ -581,9 +579,6 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                   LOG_END
                }
             }
-// ???????????????????????????
-//            rserpoolMessageDelete(response);
-puts("response nicht gelöscht!");
          }
          else {
             LOG_WARNING
@@ -595,6 +590,7 @@ puts("response nicht gelöscht!");
             LOG_END
             result = nameServerResult;
          }
+         rserpoolMessageDelete(response);
       }
       else {
          LOG_WARNING
@@ -605,7 +601,7 @@ puts("response nicht gelöscht!");
          fputs("\n", stdlog);
          LOG_END
       }
-      rserpoolMessageDelete(response);
+      rserpoolMessageDelete(message);
    }
    else {
       result = RSPERR_NO_RESOURCES;

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: examplepu.c,v 1.3 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,7 +47,7 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-#define FAST_BREAK
+// #define FAST_BREAK
 
 
 struct SessionDescriptor* Session;
@@ -156,10 +156,10 @@ int main(int argc, char** argv)
    struct SessionDescriptor* sessionArray[1];
    unsigned int              statusArray[1];
    fd_set                    readfdset;
-   char*                     poolHandle   = "EchoPool";
-   card64                    autoInterval = 0;
-   card64                    selectTimeout=0;
-   card64                    nextAutoSend=0;
+   char*                     poolHandle    = "EchoPool";
+   card64                    autoInterval  = 0;
+   card64                    selectTimeout = 0;
+   card64                    nextAutoSend  = 250000;
    card64                    now;
    int                       result;
    int                       i, n;
@@ -191,6 +191,9 @@ int main(int argc, char** argv)
       puts("ERROR: Unable to initialize rsplib!");
       exit(1);
    }
+#ifndef FAST_BREAK
+   installBreakDetector();
+#endif
 
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
    tags[0].Data = 1000;
@@ -229,7 +232,7 @@ int main(int argc, char** argv)
             n = 0;
          }
          else {
-            FD_SET(STDIN_FILENO,&readfdset);
+            FD_SET(STDIN_FILENO, &readfdset);
             n = STDIN_FILENO;
          }
 
@@ -258,7 +261,7 @@ int main(int argc, char** argv)
                handleServerReply();
             }
             if(!autoInterval) {
-               if(FD_ISSET(STDIN_FILENO,&readfdset)) {
+               if(FD_ISSET(STDIN_FILENO, &readfdset)) {
                   handleStdIn();
                }
             }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.5 2004/07/22 15:48:24 dreibh Exp $
+ *  $Id: rsplib.c,v 1.6 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -470,5 +470,3 @@ int rspSelect(int             n,
 
    return(result);
 }
-
-

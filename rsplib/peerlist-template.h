@@ -173,7 +173,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
                                   unsigned int*                   errorCode);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)* peerList,
-                                  const ENRPIdentifierType   identifier);
+                                  const ENRPIdentifierType   identifier,
+                                  const unsigned int         staticNumber);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
+                                  struct ST_CLASS(PeerList)* peerList,
+                                  const ENRPIdentifierType   identifier,
+                                  const unsigned int         staticNumber);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
                                   struct ST_CLASS(PeerList)*        peerList,
                                   struct ST_CLASS(PeerListNode)* peerListNode);

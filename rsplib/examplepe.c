@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.5 2004/07/25 10:40:04 dreibh Exp $
+ *  $Id: examplepe.c,v 1.6 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,7 +48,7 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-#define FAST_BREAK
+// #define FAST_BREAK
 
 
 struct Client

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.4 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.5 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -741,12 +741,6 @@ static bool createDeregistrationMessage(struct RSerPoolMessage* message)
 /* ###### Create deregistration response message ######################### */
 static bool createDeregistrationResponseMessage(struct RSerPoolMessage* message)
 {
-   if(message->PoolElementPtr == NULL)  {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END_FATAL
-      return(false);
-   }
    if(beginMessage(message, AHT_DEREGISTRATION_RESPONSE,
                    message->Flags & AHF_DEREGISTRATION_REJECT, PPID_ASAP) == false) {
       return(false);

@@ -39,6 +39,12 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1, const voi
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
+   if(node1->StaticNumber < node2->StaticNumber) {
+      return(-1);
+   }
+   else if(node1->StaticNumber > node2->StaticNumber) {
+      return(1);
+   }
    return(0);
 }
 
@@ -72,6 +78,12 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const voi
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
+   if(node1->StaticNumber < node2->StaticNumber) {
+      return(-1);
+   }
+   else if(node1->StaticNumber > node2->StaticNumber) {
+      return(1);
+   }
    return(0);
 }
 
@@ -79,6 +91,7 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const voi
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
                                const ENRPIdentifierType       identifier,
+                               const unsigned int             staticNumber,
                                const unsigned int             flags,
                                struct TransportAddressBlock*  transportAddressBlock)
 {
@@ -88,6 +101,7 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
    peerListNode->OwnerPeerList       = NULL;
 
    peerListNode->Identifier          = identifier;
+   peerListNode->StaticNumber        = staticNumber;
    peerListNode->Flags               = flags;
 
    peerListNode->LastUpdateTimeStamp = 0;
@@ -135,8 +149,9 @@ void ST_CLASS(peerListNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize,
-            "$%08x upd=%Lu flgs=",
+            "$%08x.%u upd=%Lu flgs=",
             peerListNode->Identifier,
+            peerListNode->StaticNumber,
             peerListNode->LastUpdateTimeStamp);
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {
       safestrcat(buffer, "static", bufferSize);

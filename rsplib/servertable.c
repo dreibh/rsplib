@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.9 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: servertable.c,v 1.10 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,7 @@
 #include "netutilities.h"
 #include "asapinstance.h"
 #include "rserpoolmessage.h"
+#include "rsplib.h"
 #include "rsplib-tags.h"
 
 #include <ext_socket.h>
@@ -141,11 +142,13 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                            &serverTable->List,
                            message->NSIdentifier,
+                           0,
                            PLNF_DYNAMIC,
                            message->TransportAddressBlockListPtr,
                            getMicroTime(),
                            &peerListNode);
                if(result == RSPERR_OKAY) {
+                  serverTable->LastAnnounce = getMicroTime();
                   ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
                      &serverTable->List,
                      peerListNode,
@@ -182,7 +185,8 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
    struct sockaddr_storage  defaultAnnounceAddress;
    struct ServerTable*      serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
-      serverTable->Dispatcher = dispatcher;
+      serverTable->Dispatcher   = dispatcher;
+      serverTable->LastAnnounce = 0;
       ST_CLASS(peerListManagementNew)(&serverTable->List, 0, NULL, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
@@ -261,22 +265,32 @@ void serverTableDelete(struct ServerTable* serverTable)
 
 
 /* ###### Try more nameservers ############################################## */
-static void tryNextBlock(struct ServerTable*             serverTable,
-                         struct ST_CLASS(PeerListNode)** nextPeerListNode,
-                         int*                            sd,
-                         card64*                         timeout)
+static void tryNextBlock(struct ServerTable* serverTable,
+                         ENRPIdentifierType* lastNSIdentifier,
+                         unsigned int*       lastStaticNumber,
+                         int*                sd,
+                         card64*             timeout)
 {
-   struct TransportAddressBlock* transportAddressBlock;
-   struct sockaddr_storage       addressArray[MAX_PE_TRANSPORTADDRESSES];
-   size_t                        addresses;
-   int                           status;
-   size_t                        i, j;
-   void*                         a;
+   struct TransportAddressBlock*  transportAddressBlock;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct sockaddr_storage        addressArray[MAX_PE_TRANSPORTADDRESSES];
+   size_t                         addresses;
+   int                            status;
+   size_t                         i, j;
+   void*                          a;
 
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       if(sd[i] < 0) {
-         if(*nextPeerListNode) {
-            transportAddressBlock = (*nextPeerListNode)->AddressBlock;
+         peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
+                           &serverTable->List,
+                           *lastNSIdentifier,
+                           *lastStaticNumber);
+
+         if(peerListNode != NULL) {
+            *lastNSIdentifier = peerListNode->Identifier;
+            *lastStaticNumber = peerListNode->StaticNumber;
+
+            transportAddressBlock = peerListNode->AddressBlock;
             while(transportAddressBlock != NULL) {
                if(transportAddressBlock->Protocol == IPPROTO_SCTP) {
                   break;
@@ -339,15 +353,11 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                   LOG_END
                }
             }
-
-            *nextPeerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                   &serverTable->List.List);
          }
 
-         if(*nextPeerListNode == NULL) {
-            *nextPeerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                   &serverTable->List.List);
-         }
+         *lastNSIdentifier = 0;
+         *lastStaticNumber = 0;
+         break;
       }
    }
 }
@@ -356,19 +366,20 @@ static void tryNextBlock(struct ServerTable*             serverTable,
 /* ###### Find nameserver ################################################### */
 int serverTableFindServer(struct ServerTable* serverTable)
 {
-   struct timeval                 selectTimeout;
-   struct sockaddr_storage        peerAddress;
-   socklen_t                      peerAddressLength;
-   int                            sd[MAX_SIMULTANEOUS_REQUESTS];
-   card64                         timeout[MAX_SIMULTANEOUS_REQUESTS];
-   card64                         start;
-   card64                         nextTimeout;
-   struct ST_CLASS(PeerListNode)* nextPeerListNode;
-   fd_set                         rfdset;
-   fd_set                         wfdset;
-   unsigned int                   trials;
-   unsigned int                   i, j;
-   int                            n, result;
+   struct timeval          selectTimeout;
+   struct sockaddr_storage peerAddress;
+   socklen_t               peerAddressLength;
+   int                     sd[MAX_SIMULTANEOUS_REQUESTS];
+   card64                  timeout[MAX_SIMULTANEOUS_REQUESTS];
+   ENRPIdentifierType      lastNSIdentifier;
+   unsigned int            lastStaticNumber;
+   card64                  start;
+   card64                  nextTimeout;
+   fd_set                  rfdset;
+   fd_set                  wfdset;
+   unsigned int            trials;
+   unsigned int            i, j;
+   int                     n, result;
 
    if(serverTable == NULL) {
       return(-1);
@@ -384,22 +395,23 @@ int serverTableFindServer(struct ServerTable* serverTable)
    LOG_END
 
    trials           = 0;
-   nextPeerListNode = NULL;
+   lastNSIdentifier = 0;
+   lastStaticNumber = 0;
    start            = 0;
 
    for(;;) {
-      if(nextPeerListNode == NULL) {
+      if((lastNSIdentifier == 0) && (lastStaticNumber == 0)) {
          /* Start new trial, when
             - First time
             - A new server announce has been added to the list
             - The current trial has been running for at least serverTable->NameServerConnectTimeout */
-         if( (start == 0)                                           ||
-/* ?????             (serverTable->NameServerAnnounceListAddition >= start) || */
+         if( (start == 0) ||
+             (serverTable->LastAnnounce >= start) ||
              (start + serverTable->NameServerConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > serverTable->NameServerConnectMaxTrials) {
                LOG_ERROR
-               fputs("No nameserver found!\n",  stdlog);
+               fputs("No nameserver found!\n", stdlog);
                LOG_END
                for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                   if(sd[j] >= 0) {
@@ -408,8 +420,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
                }
                return(-1);
             }
-            nextPeerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                  &serverTable->List.List);
+
             start = getMicroTime();
             LOG_ACTION
             fprintf(stdlog, "Trial #%u...\n", trials);
@@ -419,7 +430,8 @@ int serverTableFindServer(struct ServerTable* serverTable)
 
       /* Try next block of addresses */
       tryNextBlock(serverTable,
-                   &nextPeerListNode,
+                   &lastNSIdentifier,
+                   &lastStaticNumber,
                    (int*)&sd, (card64*)&timeout);
 
       /* Wait for event */
@@ -443,9 +455,9 @@ int serverTableFindServer(struct ServerTable* serverTable)
       LOG_VERBOSE3
       fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
       LOG_END
-      result = ext_select(n + 1,
-                          &rfdset, &wfdset, NULL,
-                          &selectTimeout);
+      result = rspSelect(n + 1,
+                         &rfdset, &wfdset, NULL,
+                         &selectTimeout);
       LOG_VERBOSE3
       fprintf(stdlog, "select() result=%d\n", result);
       LOG_END
@@ -497,14 +509,6 @@ int serverTableFindServer(struct ServerTable* serverTable)
                   sd[i] = -1;
                }
             }
-         }
-         if((serverTable->AnnounceSocket >= 0) &&
-            FD_ISSET(serverTable->AnnounceSocket, &rfdset)) {
-puts("ACHTUNG: Hier kein PURGE durchführen!!!");
-            handleServerAnnounceCallback(serverTable->Dispatcher,
-                                         serverTable->AnnounceSocket,
-                                         FDCE_Read,
-                                         serverTable);
          }
       }
    }

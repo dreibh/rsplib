@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.11 2004/07/25 10:40:04 dreibh Exp $
+ *  $Id: nameserver.c,v 1.12 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -56,7 +56,7 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-#define FAST_BREAK
+// #define FAST_BREAK
 
 #define MAX_NS_TRANSPORTADDRESSES                                   16
 #define NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL              2111111

@@ -85,6 +85,7 @@ void ST_CLASS(peerListManagementClear)(
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 const ENRPIdentifierType             nsIdentifier,
+                const unsigned int                   staticNumber,
                 const unsigned int                   flags,
                 struct TransportAddressBlock*        transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
@@ -104,6 +105,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
       PeerListNode is added! */
    ST_CLASS(peerListNodeNew)(peerListManagement->NewPeerListNode,
                              nsIdentifier,
+                             staticNumber,
                              flags,
                              (struct TransportAddressBlock*)transportAddressBlock);
    *peerListNode = ST_CLASS(peerListAddOrUpdatePeerListNode)(&peerListManagement->List,
@@ -155,11 +157,13 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
 /* ###### Deregistration ################################################# */
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const ENRPIdentifierType             nsIdentifier)
+                const ENRPIdentifierType             nsIdentifier,
+                const unsigned int                   staticNumber)
 {
    struct ST_CLASS(PeerListNode)* peerListNode = ST_CLASS(peerListFindPeerListNode)(
                                                           &peerListManagement->List,
-                                                          nsIdentifier);
+                                                          nsIdentifier,
+                                                          staticNumber);
    if(peerListNode) {
       return(ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 peerListManagement,

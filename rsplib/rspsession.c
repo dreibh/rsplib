@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.7 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: rspsession.c,v 1.8 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -274,6 +274,7 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
       LOG_ACTION
       fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
       LOG_END
+printf("(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
    }
    else {
       LOG_WARNING
@@ -544,6 +545,18 @@ static void rspSessionDelete(struct SessionDescriptor* session)
       if(session->Socket >= 0) {
          ext_close(session->Socket);
          session->Socket = -1;
+      }
+      if(session->MessageBuffer) {
+         messageBufferDelete(session->MessageBuffer);
+         session->MessageBuffer = NULL;
+      }
+      if(session->Tags) {
+         tagListFree(session->Tags);
+         session->Tags = NULL;
+      }
+      if(session->Cookie) {
+         free(session->Cookie);
+         session->Cookie = NULL;
       }
       threadSafetyDestroy(&session->Mutex);
       free(session);

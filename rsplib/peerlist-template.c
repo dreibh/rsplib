@@ -146,6 +146,17 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
       return(NULL);
    }
 
+   if((peerListNode->Identifier != 0) &&
+      (peerListNode->StaticNumber != 0)) {
+      *errorCode = RSPERR_INVALID_ID;
+      return(NULL);
+   }
+   if((peerListNode->Identifier == 0) &&
+      (peerListNode->StaticNumber == 0)) {
+      *errorCode = RSPERR_INVALID_ID;
+      return(NULL);
+   }
+
    result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                               &peerListNode->PeerListIndexStorageNode);
    if(result == &peerListNode->PeerListIndexStorageNode) {
@@ -205,13 +216,34 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
 /* ###### Find PeerListNode ############################################## */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)* peerList,
-                                  const ENRPIdentifierType   identifier)
+                                  const ENRPIdentifierType   identifier,
+                                  const unsigned int         staticNumber)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
 
-   cmpElement.Identifier = identifier;
+   cmpElement.Identifier   = identifier;
+   cmpElement.StaticNumber = staticNumber;
    struct STN_CLASSNAME* result = ST_METHOD(Find)(&peerList->PeerListIndexStorage,
                                                   &cmpElement.PeerListIndexStorageNode);
+   if(result) {
+      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest next PeerListNode ################################# */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
+                                  struct ST_CLASS(PeerList)* peerList,
+                                  const ENRPIdentifierType   identifier,
+                                  const unsigned int         staticNumber)
+{
+   struct ST_CLASS(PeerListNode) cmpElement;
+
+   cmpElement.Identifier   = identifier;
+   cmpElement.StaticNumber = staticNumber;
+   struct STN_CLASSNAME* result = ST_METHOD(GetNearestNext)(&peerList->PeerListIndexStorage,
+                                                            &cmpElement.PeerListIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
    }

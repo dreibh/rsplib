@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.3 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.4 2004/07/25 15:26:28 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -125,6 +125,8 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          for(i = 0;i < message->PoolElementPtrArraySize;i++) {
             if(message->PoolElementPtrArray[i]) {
                ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);
+               transportAddressBlockDelete(message->PoolElementPtrArray[i]->AddressBlock);
+               free(message->PoolElementPtrArray[i]->AddressBlock);
                free(message->PoolElementPtrArray[i]);
                message->PoolElementPtrArray[i] = NULL;
             }
