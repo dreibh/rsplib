@@ -28,6 +28,7 @@ ssize_t sendStatus(const union sockaddr_union*             statusMonitorAddress,
       csph->Associations = htonl(associations);
       for(i = 0;i < associations;i++) {
          csph->AssociationArray[i].ReceiverID = hton64(associationArray[i].ReceiverID);
+         csph->AssociationArray[i].Duration   = hton64(associationArray[i].Duration);
          csph->AssociationArray[i].Flags      = htons(associationArray[i].Flags);
          csph->AssociationArray[i].ProtocolID = htons(associationArray[i].ProtocolID);
          csph->AssociationArray[i].PPID       = htonl(associationArray[i].PPID);

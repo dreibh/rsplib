@@ -8,6 +8,7 @@
 struct ComponentAssociationEntry
 {
    uint64_t ReceiverID;
+   uint64_t Duration;
    uint16_t Flags;
    uint16_t ProtocolID;
    uint32_t PPID;
