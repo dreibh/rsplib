@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.27 2004/11/18 12:30:38 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.28 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -968,9 +968,9 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
 
 
 /* ###### Scan NS identifier parameter ################################### */
-static bool scanNSIdentifierParameter(struct RSerPoolMessage* message)
+static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
 {
-   uint32_t* nsIdentifier;
+   uint32_t* registrarIdentifier;
    size_t    tlvPosition = 0;
    size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_NS_IDENTIFIER, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
@@ -986,11 +986,11 @@ static bool scanNSIdentifierParameter(struct RSerPoolMessage* message)
       return(false);
    }
 
-   nsIdentifier = (uint32_t*)getSpace(message, tlvLength);
-   if(nsIdentifier == NULL) {
+   registrarIdentifier = (uint32_t*)getSpace(message, tlvLength);
+   if(registrarIdentifier == NULL) {
       return(false);
    }
-   message->Identifier = ntohl(*nsIdentifier);
+   message->Identifier = ntohl(*registrarIdentifier);
 
    LOG_VERBOSE3
    fprintf(stdlog, "Scanned NS Identifier $%08x\n", message->Identifier);
@@ -1358,8 +1358,8 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(scanNSIdentifierParameter(message) == false) {
-      message->NSIdentifier = 0;
+   if(scanRegistrarIdentifierParameter(message) == false) {
+      message->RegistrarIdentifier = 0;
    }
 
    return(true);
@@ -1554,12 +1554,12 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
    if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
-      message->NamespacePtr = (struct ST_CLASS(PoolNamespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolNamespaceManagement)));
-      if(message->NamespacePtr == NULL) {
+      message->HandlespacePtr = (struct ST_CLASS(PoolHandlespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolHandlespaceManagement)));
+      if(message->HandlespacePtr == NULL) {
          message->Error = RSPERR_OUT_OF_MEMORY;
          return(false);
       }
-      ST_CLASS(poolNamespaceManagementNew)(message->NamespacePtr, 0, NULL, NULL, NULL);
+      ST_CLASS(poolHandlespaceManagementNew)(message->HandlespacePtr, 0, NULL, NULL, NULL);
 
       while(scanPoolHandleParameter(message, &message->Handle)) {
          scannedPoolElementParameters = 0;
@@ -1571,10 +1571,10 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
             }
             scannedPoolElementParameters++;
 
-            message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                                message->NamespacePtr,
+            message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+                                message->HandlespacePtr,
                                 &message->Handle,
-                                poolElementNode->HomeNSIdentifier,
+                                poolElementNode->HomeRegistrarIdentifier,
                                 poolElementNode->Identifier,
                                 poolElementNode->RegistrationLife,
                                 &poolElementNode->PolicySettings,
@@ -1653,7 +1653,7 @@ static bool scanPeerInitTakeoverMessage(struct RSerPoolMessage* message)
    }
    message->SenderID     = ntohl(tp->tp_sender_id);
    message->ReceiverID   = ntohl(tp->tp_receiver_id);
-   message->NSIdentifier = ntohl(tp->tp_target_id);
+   message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);
 }
@@ -1671,7 +1671,7 @@ static bool scanPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
    }
    message->SenderID     = ntohl(tp->tp_sender_id);
    message->ReceiverID   = ntohl(tp->tp_receiver_id);
-   message->NSIdentifier = ntohl(tp->tp_target_id);
+   message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);
 }
@@ -1689,7 +1689,7 @@ static bool scanPeerTakeoverServerMessage(struct RSerPoolMessage* message)
    }
    message->SenderID     = ntohl(tp->tp_sender_id);
    message->ReceiverID   = ntohl(tp->tp_receiver_id);
-   message->NSIdentifier = ntohl(tp->tp_target_id);
+   message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);
 }
@@ -1714,12 +1714,12 @@ static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    message->SenderID     = ntohl(sp->sp_sender_id);
    message->ReceiverID   = ntohl(sp->sp_receiver_id);
 
-   message->NamespacePtr = (struct ST_CLASS(PoolNamespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolNamespaceManagement)));
-   if(message->NamespacePtr == NULL) {
+   message->HandlespacePtr = (struct ST_CLASS(PoolHandlespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolHandlespaceManagement)));
+   if(message->HandlespacePtr == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
    }
-   ST_CLASS(poolNamespaceManagementNew)(message->NamespacePtr, 0, NULL, NULL, NULL);
+   ST_CLASS(poolHandlespaceManagementNew)(message->HandlespacePtr, 0, NULL, NULL, NULL);
 
 
    poolPolicySettingsNew(&dummyPoolPolicySettings);
@@ -1735,8 +1735,8 @@ static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
       while(scanPoolElementIdentifierParameter(message)) {
          scannedPoolElementIdentifiers++;
 
-         message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                             message->NamespacePtr,
+         message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+                             message->HandlespacePtr,
                              &message->Handle,
                              0,
                              message->Identifier,
@@ -2102,7 +2102,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       (*message)->CookiePtrAutoDelete                    = true;
       (*message)->PoolElementPtrArrayAutoDelete          = true;
       (*message)->TransportAddressBlockListPtrAutoDelete = true;
-      (*message)->NamespacePtrAutoDelete                 = true;
+      (*message)->HandlespacePtrAutoDelete                 = true;
       (*message)->PeerListNodePtrAutoDelete              = true;
       (*message)->PeerListPtrAutoDelete                  = true;
 

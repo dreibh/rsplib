@@ -590,13 +590,13 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+      else if(!(strncmp(argv[i], "-registrar=" ,11))) {
          /* Process this later */
       }
       else {
          std::cerr << "Bad argument \"" << argv[i] << "\"!"  << std::endl;
          std::cerr << "Usage: " << argv[0]
-                   << " {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}";
+                   << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}";
 #ifdef ENABLE_CSP
          std::cerr << "{-cspreportaddress=Address} {-cspreportinterval=Microseconds} ";
 #endif
@@ -620,9 +620,9 @@ int main(int argc, char** argv)
 #endif
 
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-nameserver=" ,12))) {
-         if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
-            std::cerr << "ERROR: Bad name server setting: "
+      if(!(strncmp(argv[i], "-registrar=" ,11))) {
+         if(rspAddStaticRegistrar((char*)&argv[i][11]) != RSPERR_OKAY) {
+            std::cerr << "ERROR: Bad registrar setting: "
                       << argv[i] << "!" << std::endl;
             exit(1);
          }

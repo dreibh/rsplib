@@ -21,7 +21,7 @@
  */
 
 #ifndef INTERNAL_POOLTEMPLATE
-#error Do not include this file directly, use poolnamespacemanagement.h
+#error Do not include this file directly, use poolhandlespacemanagement.h
 #endif
 
 
@@ -43,7 +43,7 @@ struct ST_CLASS(PeerListManagement)
 
 void ST_CLASS(peerListManagementNew)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
-        const ENRPIdentifierType             ownNSIdentifier,
+        const RegistrarIdentifierType             ownRegistrarIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
                                              void*                          userData),
         void* disposerUserData);
@@ -61,29 +61,29 @@ size_t ST_CLASS(peerListManagementGetPeers)(
           const struct ST_CLASS(PeerListManagement)* peerListManagement);
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const ENRPIdentifierType             nsIdentifier,
+                const RegistrarIdentifierType             registrarIdentifier,
                 const unsigned int                   flags,
                 const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
                 struct ST_CLASS(PeerListNode)**      peerListNode);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const ENRPIdentifierType             nsIdentifier,
+                                  const RegistrarIdentifierType             registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const ENRPIdentifierType             nsIdentifier,
+                                  const RegistrarIdentifierType             registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                         const ENRPIdentifierType             nsIdentifier,
+                                         const RegistrarIdentifierType             registrarIdentifier,
                                          const struct TransportAddressBlock*  transportAddressBlock);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const ENRPIdentifierType             nsIdentifier,
+                const RegistrarIdentifierType             registrarIdentifier,
                 const struct TransportAddressBlock*  transportAddressBlock);
 unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                       struct ST_CLASS(PeerListManagement)* peerListManagement);

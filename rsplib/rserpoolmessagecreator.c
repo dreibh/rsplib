@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.19 2004/11/18 12:30:38 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.20 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -457,7 +457,7 @@ static bool createPoolElementParameter(
    }
 
    pep->pep_identifier   = htonl(poolElement->Identifier);
-   pep->pep_homeserverid = htonl(poolElement->HomeNSIdentifier);
+   pep->pep_homeserverid = htonl(poolElement->HomeRegistrarIdentifier);
    pep->pep_reg_life     = htonl(poolElement->RegistrationLife);
 
    if(createTransportParameter(message, poolElement->UserTransport) == false) {
@@ -501,9 +501,9 @@ static bool createPoolElementIdentifierParameter(
 
 
 /* ###### Create NS identifier parameter ################################# */
-static bool createNSIdentifierParameter(
+static bool createRegistrarIdentifierParameter(
                struct RSerPoolMessage*  message,
-               const ENRPIdentifierType nsIdentifier)
+               const RegistrarIdentifierType registrarIdentifier)
 {
    uint32_t* identifier;
    size_t    tlvPosition;
@@ -517,7 +517,7 @@ static bool createNSIdentifierParameter(
    if(identifier == NULL) {
       return(false);
    }
-   *identifier = htonl(nsIdentifier);
+   *identifier = htonl(registrarIdentifier);
 
    return(finishTLV(message, tlvPosition));
 }
@@ -868,7 +868,7 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
-   if(createNSIdentifierParameter(message, message->NSIdentifier) == false) {
+   if(createRegistrarIdentifierParameter(message, message->RegistrarIdentifier) == false) {
       return(false);
    }
    return(finishMessage(message));
@@ -1060,9 +1060,9 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
       }
 
       oldPosition = message->Position;
-      result = ST_CLASS(poolNamespaceManagementGetNameTable)(
-                  message->NamespacePtr,
-                  message->NamespacePtr->Namespace.HomeNSIdentifier,
+      result = ST_CLASS(poolHandlespaceManagementGetNameTable)(
+                  message->HandlespacePtr,
+                  message->HandlespacePtr->Handlespace.HomeRegistrarIdentifier,
                   nte,
                   flags);
       if(result > 0) {
@@ -1160,7 +1160,7 @@ static bool createPeerInitTakeoverMessage(struct RSerPoolMessage* message)
    }
    tp->tp_sender_id   = htonl(message->SenderID);
    tp->tp_receiver_id = htonl(message->ReceiverID);
-   tp->tp_target_id   = htonl(message->NSIdentifier);
+   tp->tp_target_id   = htonl(message->RegistrarIdentifier);
 
    return(finishMessage(message));
 }
@@ -1183,7 +1183,7 @@ static bool createPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
    }
    tp->tp_sender_id   = htonl(message->SenderID);
    tp->tp_receiver_id = htonl(message->ReceiverID);
-   tp->tp_target_id   = htonl(message->NSIdentifier);
+   tp->tp_target_id   = htonl(message->RegistrarIdentifier);
 
    return(finishMessage(message));
 }
@@ -1206,7 +1206,7 @@ static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
    }
    tp->tp_sender_id   = htonl(message->SenderID);
    tp->tp_receiver_id = htonl(message->ReceiverID);
-   tp->tp_target_id   = htonl(message->NSIdentifier);
+   tp->tp_target_id   = htonl(message->RegistrarIdentifier);
 
    return(finishMessage(message));
 }
@@ -1241,9 +1241,9 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    }
 
    oldPosition = message->Position;
-   result = ST_CLASS(poolNamespaceManagementGetNameTable)(
-               message->NamespacePtr,
-               message->NSIdentifier,
+   result = ST_CLASS(poolHandlespaceManagementGetNameTable)(
+               message->HandlespacePtr,
+               message->RegistrarIdentifier,
                message->ExtractContinuation,
                flags);
    if(result > 0) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.18 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: examplepe.c,v 1.19 2004/11/19 16:42:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -326,12 +326,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+      else if(!(strncmp(argv[i], "-registrar=" ,11))) {
          /* Process this later */
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[i]);
-         printf("Usage: %s {-nameserver=Nameserver address(es)} {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}"
+         printf("Usage: %s {-registrar=Registrar address(es)} {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}"
 #ifdef ENABLE_CSP
                 " {-cspreportaddress=Address} {-cspreportinterval=Microseconds} "
 #endif
@@ -355,9 +355,9 @@ int main(int argc, char** argv)
 #endif
 
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-nameserver=" ,12))) {
-         if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[i]);
+      if(!(strncmp(argv[i], "-registrar=" ,12))) {
+         if(rspAddStaticRegistrar((char*)&argv[i][12]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad registrar setting: %s\n", argv[i]);
             exit(1);
          }
       }

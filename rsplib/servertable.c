@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.25 2004/11/16 21:37:06 tuexen Exp $
+ *  $Id: servertable.c,v 1.26 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,7 +50,7 @@
 
 
 
-/* Maximum number of simultaneous nameserver connection trials */
+/* Maximum number of simultaneous registrar connection trials */
 #define MAX_SIMULTANEOUS_REQUESTS 3
 
 
@@ -69,7 +69,7 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
    size_t                         i;
 
    LOG_VERBOSE2
-   fputs("Trying to receive name server announce...\n",  stdlog);
+   fputs("Trying to receive registrar announce...\n",  stdlog);
    LOG_END
 
    senderAddressLength = sizeof(senderAddress);
@@ -78,9 +78,6 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
-puts("SOURCE=");
-fputaddress(   (struct sockaddr*)&senderAddress,1,stdout);
-puts("\n\n");
       result = rserpoolPacket2Message((char*)&buffer,
                                       &senderAddress,
                                       PPID_ASAP,
@@ -100,7 +97,7 @@ puts("\n\n");
 
                   result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                               &serverTable->ServerList,
-                              message->NSIdentifier,
+                              message->RegistrarIdentifier,
                               PLNF_DYNAMIC,
                               message->TransportAddressBlockListPtr,
                               getMicroTime(),
@@ -110,7 +107,7 @@ puts("\n\n");
                      ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
                         &serverTable->ServerList,
                         peerListNode,
-                        serverTable->NameServerAnnounceTimeout);
+                        serverTable->RegistrarAnnounceTimeout);
                   }
                   else {
                      LOG_ERROR
@@ -172,27 +169,27 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       ST_CLASS(peerListManagementNew)(&serverTable->ServerList, 0, NULL, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
-      serverTable->NameServerConnectMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerConnectMaxTrials,
+      serverTable->RegistrarConnectMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarConnectMaxTrials,
                                                                ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS);
-      serverTable->NameServerConnectTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerConnectTimeout,
+      serverTable->RegistrarConnectTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
                                                                      ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT);
-      serverTable->NameServerAnnounceTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerAnnounceTimeout,
+      serverTable->RegistrarAnnounceTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
                                                                       ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT);
 
       CHECK(string2address(ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
-      announceAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddress,
+      announceAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceAddress,
                                                                  (tagdata_t)&defaultAnnounceAddress);
       memcpy(&serverTable->AnnounceAddress, announceAddress, sizeof(serverTable->AnnounceAddress));
 
       /* ====== Show results ================================================ */
       LOG_VERBOSE3
       fputs("New ServerTable's configuration:\n",  stdlog);
-      fprintf(stdlog, "nameserver.announce.timeout  = %llu [us]\n",  serverTable->NameServerAnnounceTimeout);
-      fputs("nameserver.announce.address  = ",  stdlog);
+      fprintf(stdlog, "registrar.announce.timeout  = %llu [us]\n",  serverTable->RegistrarAnnounceTimeout);
+      fputs("registrar.announce.address  = ",  stdlog);
       fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
       fputs("\n",  stdlog);
-      fprintf(stdlog, "nameserver.connect.maxtrials = %u\n",        serverTable->NameServerConnectMaxTrials);
-      fprintf(stdlog, "nameserver.connect.timeout   = %llu [us]\n",  serverTable->NameServerConnectTimeout);
+      fprintf(stdlog, "registrar.connect.maxtrials = %u\n",        serverTable->RegistrarConnectMaxTrials);
+      fprintf(stdlog, "registrar.connect.timeout   = %llu [us]\n",  serverTable->RegistrarConnectTimeout);
       LOG_END
 
 
@@ -237,7 +234,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       }
       else {
          LOG_ERROR
-         fputs("Creating a socket for name server announces failed\n",  stdlog);
+         fputs("Creating a socket for registrar announces failed\n",  stdlog);
          LOG_END
       }
    }
@@ -261,7 +258,7 @@ void serverTableDelete(struct ServerTable* serverTable)
 }
 
 
-/* ###### Add static name server entry ################################### */
+/* ###### Add static registrar entry ################################### */
 unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
                                        union sockaddr_union* addressArray,
                                        size_t                addresses)
@@ -302,13 +299,13 @@ unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
 }
 
 
-/* ###### Try more nameservers ########################################### */
+/* ###### Try more registrars ########################################### */
 static void tryNextBlock(struct ServerTable*            serverTable,
-                         ENRPIdentifierType*            lastNSIdentifier,
+                         RegistrarIdentifierType*            lastRegistrarIdentifier,
                          struct TransportAddressBlock** lastTransportAddressBlock,
                          int*                           sd,
                          card64*                        timeout,
-                         ENRPIdentifierType*            identifier)
+                         RegistrarIdentifierType*            identifier)
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -322,11 +319,11 @@ static void tryNextBlock(struct ServerTable*            serverTable,
       if(sd[i] < 0) {
          peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                            &serverTable->ServerList,
-                           *lastNSIdentifier,
+                           *lastRegistrarIdentifier,
                            *lastTransportAddressBlock);
 
          if(peerListNode != NULL) {
-            *lastNSIdentifier = peerListNode->Identifier;
+            *lastRegistrarIdentifier = peerListNode->Identifier;
             if(*lastTransportAddressBlock) {
                transportAddressBlockDelete(*lastTransportAddressBlock);
                free(*lastTransportAddressBlock);
@@ -342,7 +339,7 @@ static void tryNextBlock(struct ServerTable*            serverTable,
             }
             if(transportAddressBlock != NULL) {
                LOG_VERBOSE2
-               fputs("Trying name server at ",  stdlog);
+               fputs("Trying registrar at ",  stdlog);
                transportAddressBlockPrint(transportAddressBlock, stdlog);
                fputs("\n",  stdlog);
                LOG_END
@@ -371,7 +368,7 @@ static void tryNextBlock(struct ServerTable*            serverTable,
                                     SOCK_STREAM,
                                     transportAddressBlock->Protocol);
                   if(sd[i] >= 0) {
-                     timeout[i]    = getMicroTime() + serverTable->NameServerConnectTimeout;
+                     timeout[i]    = getMicroTime() + serverTable->RegistrarConnectTimeout;
                      identifier[i] = peerListNode->Identifier;
                      setNonBlocking(sd[i]);
 
@@ -400,7 +397,7 @@ static void tryNextBlock(struct ServerTable*            serverTable,
             }
          }
 
-         *lastNSIdentifier = 0;
+         *lastRegistrarIdentifier = 0;
          *lastTransportAddressBlock = NULL;
          break;
       }
@@ -408,17 +405,17 @@ static void tryNextBlock(struct ServerTable*            serverTable,
 }
 
 
-/* ###### Find nameserver ################################################### */
+/* ###### Find registrar ################################################### */
 int serverTableFindServer(struct ServerTable* serverTable,
-                          ENRPIdentifierType* nsIdentifier)
+                          RegistrarIdentifierType* registrarIdentifier)
 {
    struct timeval                 selectTimeout;
    union sockaddr_union           peerAddress;
    socklen_t                      peerAddressLength;
    int                            sd[MAX_SIMULTANEOUS_REQUESTS];
    card64                         timeout[MAX_SIMULTANEOUS_REQUESTS];
-   ENRPIdentifierType             identifier[MAX_SIMULTANEOUS_REQUESTS];
-   ENRPIdentifierType             lastNSIdentifier;
+   RegistrarIdentifierType             identifier[MAX_SIMULTANEOUS_REQUESTS];
+   RegistrarIdentifierType             lastRegistrarIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
    card64                         start;
@@ -429,7 +426,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
    unsigned int                   i, j;
    int                            n, result;
 
-   *nsIdentifier = 0;
+   *registrarIdentifier = 0;
    if(serverTable == NULL) {
       return(-1);
    }
@@ -441,17 +438,17 @@ int serverTableFindServer(struct ServerTable* serverTable,
 
 
    LOG_ACTION
-   fputs("Looking for nameserver...\n",  stdlog);
+   fputs("Looking for registrar...\n",  stdlog);
    LOG_END
 
    trials                    = 0;
-   lastNSIdentifier          = 0;
+   lastRegistrarIdentifier          = 0;
    lastTransportAddressBlock = NULL;
    start                     = 0;
 
    peerListNode = ST_CLASS(peerListGetRandomPeerNode)(&serverTable->ServerList.List);
    if(peerListNode) {
-      lastNSIdentifier          = peerListNode->Identifier;
+      lastRegistrarIdentifier          = peerListNode->Identifier;
       lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);
       LOG_NOTE
       fputs("Randomized server hunt start: ", stdlog);
@@ -461,18 +458,18 @@ int serverTableFindServer(struct ServerTable* serverTable,
    }
 
    for(;;) {
-      if((lastNSIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
+      if((lastRegistrarIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
          /* Start new trial, when
             - First time
             - A new server announce has been added to the list
-            - The current trial has been running for at least serverTable->NameServerConnectTimeout */
+            - The current trial has been running for at least serverTable->RegistrarConnectTimeout */
          if( (start == 0) ||
              (serverTable->LastAnnounceHeard >= start) ||
-             (start + serverTable->NameServerConnectTimeout < getMicroTime()) ) {
+             (start + serverTable->RegistrarConnectTimeout < getMicroTime()) ) {
             trials++;
-            if(trials > serverTable->NameServerConnectMaxTrials) {
+            if(trials > serverTable->RegistrarConnectMaxTrials) {
                LOG_ERROR
-               fputs("No nameserver found!\n", stdlog);
+               fputs("No registrar found!\n", stdlog);
                LOG_END
                for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                   if(sd[j] >= 0) {
@@ -495,15 +492,15 @@ int serverTableFindServer(struct ServerTable* serverTable,
 
       /* Try next block of addresses */
       tryNextBlock(serverTable,
-                   &lastNSIdentifier,
+                   &lastRegistrarIdentifier,
                    &lastTransportAddressBlock,
-                   (int*)&sd, (card64*)&timeout, (ENRPIdentifierType*)&identifier);
+                   (int*)&sd, (card64*)&timeout, (RegistrarIdentifierType*)&identifier);
 
       /* Wait for event */
       n = 0;
       FD_ZERO(&rfdset);
       FD_ZERO(&wfdset);
-      nextTimeout = serverTable->NameServerConnectTimeout;
+      nextTimeout = serverTable->RegistrarConnectTimeout;
       for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
          if(sd[i] >= 0) {
             FD_SET(sd[i], &wfdset);
@@ -527,7 +524,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
       /*
          Important: rspSelect() may *not* be used here!
          serverTableFindServer() may be called from within a
-         session timer + from within name server socket callback
+         session timer + from within registrar socket callback
          => Strange things will happen when these callbacks are
             invoked recursively!
       */
@@ -565,7 +562,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
                   peerAddressLength = sizeof(peerAddress);
                   if(ext_getpeername(sd[i], (struct sockaddr*)&peerAddress, &peerAddressLength) >= 0) {
                      LOG_ACTION
-                     fputs("Successfully found nameserver at ",  stdlog);
+                     fputs("Successfully found registrar at ",  stdlog);
                      fputaddress((struct sockaddr*)&peerAddress, true, stdlog);
                      fprintf(stdlog, ",  socket %d\n",  sd[i]);
                      LOG_END
@@ -578,7 +575,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
                         transportAddressBlockDelete(lastTransportAddressBlock);
                         free(lastTransportAddressBlock);
                      }
-                     *nsIdentifier = identifier[i];
+                     *registrarIdentifier = identifier[i];
                      return(sd[i]);
                   }
                   else {

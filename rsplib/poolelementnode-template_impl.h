@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 /* ###### Initialize ##################################################### */
 void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                   const PoolElementIdentifierType   identifier,
-                                  const ENRPIdentifierType          homeNSIdentifier,
+                                  const RegistrarIdentifierType          homeRegistrarIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     userTransport,
@@ -40,7 +40,7 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    poolElementNode->OwnerPoolNode               = NULL;
 
    poolElementNode->Identifier                  = identifier;
-   poolElementNode->HomeNSIdentifier            = homeNSIdentifier;
+   poolElementNode->HomeRegistrarIdentifier            = homeRegistrarIdentifier;
    poolElementNode->RegistrationLife            = registrationLife;
    poolElementNode->PolicySettings              = *pps;
 
@@ -89,7 +89,7 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    poolElementNode->ConnectionSocketDescriptor = -1;
    poolElementNode->ConnectionAssocID          = 0;
    /* Do not clear UserTransport, RegistratorTransport, UserData,
-      Identifier and HomeNSIdentifier yet -
+      Identifier and HomeRegistrarIdentifier yet -
       they may be necessary for user-specific dispose function! */
 
    STN_METHOD(Delete)(&poolElementNode->PoolElementConnectionStorageNode);
@@ -121,7 +121,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
    }
    if(fields & PENPO_HOME_NS) {
       snprintf((char*)&tmp, sizeof(tmp), " home=$%08x",
-               poolElementNode->HomeNSIdentifier);
+               poolElementNode->HomeRegistrarIdentifier);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_REGLIFE) {
@@ -303,10 +303,10 @@ int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, co
    const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr2);
    int                                     cmpResult;
 
-   if(node1->HomeNSIdentifier < node2->HomeNSIdentifier) {
+   if(node1->HomeRegistrarIdentifier < node2->HomeRegistrarIdentifier) {
       return(-1);
    }
-   else if(node1->HomeNSIdentifier > node2->HomeNSIdentifier) {
+   else if(node1->HomeRegistrarIdentifier > node2->HomeRegistrarIdentifier) {
       return(1);
    }
    cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);

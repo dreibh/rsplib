@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *
  */
 
-#include "poolnamespacemanagement-basics.h"
+#include "poolhandlespacemanagement-basics.h"
 #include "stringutilities.h"
 #include "randomizer.h"
 
@@ -29,7 +29,7 @@ const PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
 
 
 /* ###### Get textual description of error code ########################## */
-const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode)
+const char* poolHandlespaceManagementGetErrorDescription(const unsigned int errorCode)
 {
    return(rserpoolErrorGetDescription(errorCode));
 }

@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@
 #include <arpa/inet.h>
 
 
-#ifndef FAKE_ADDRESSCMP
+#ifndef HAVE_TEST
 #include "netutilities.h"
 #else
 /* ###### Convert address to string ###################################### */
@@ -234,7 +234,7 @@ struct TransportAddressBlock* transportAddressBlockDuplicate(const struct Transp
 }
 
 
-#ifdef FAKE_ADDRESSCMP
+#ifdef HAVE_TEST
 int addresscmp(const struct sockaddr* address1, const struct sockaddr* address2, const bool port)
 {
    const struct sockaddr_testaddr* test1 = (const struct sockaddr_testaddr*)address1;
@@ -309,6 +309,7 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
 }
 
 
+#ifndef HAVE_TEST
 /* ###### Get addresses from SCTP socket ################################# */
 #define MAX_ADDRESSES 128
 size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
@@ -340,3 +341,4 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
    }
    return(sctpAddresses);
 }
+#endif

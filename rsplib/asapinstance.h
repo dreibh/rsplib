@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.13 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.14 2004/11/19 16:42:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,7 +43,7 @@
 #include "tagitem.h"
 #include "rserpoolmessage.h"
 #include "messagebuffer.h"
-#include "poolnamespacemanagement.h"
+#include "poolhandlespacemanagement.h"
 #include "servertable.h"
 
 
@@ -55,25 +55,25 @@ extern "C" {
 struct ASAPInstance
 {
    struct Dispatcher*                       StateMachine;
-   unsigned long long                       NameServerConnectionTimeStamp;
-   int                                      NameServerSocket;
-   ENRPIdentifierType                       NameServerID;
-   int                                      NameServerSocketProtocol;
+   unsigned long long                       RegistrarConnectionTimeStamp;
+   int                                      RegistrarSocket;
+   RegistrarIdentifierType                       RegistrarID;
+   int                                      RegistrarSocketProtocol;
 
-   struct ServerTable*                      NameServerTable;
-   struct ST_CLASS(PoolNamespaceManagement) Cache;
-   struct ST_CLASS(PoolNamespaceManagement) OwnPoolElements;
+   struct ServerTable*                      RegistrarTable;
+   struct ST_CLASS(PoolHandlespaceManagement) Cache;
+   struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
 
    char*                                    AsapServerAnnounceConfigFile;
-   char*                                    AsapNameServersConfigFile;
+   char*                                    AsapRegistrarsConfigFile;
 
    unsigned long long                       CacheElementTimeout;
    unsigned long long                       CacheMaintenanceInterval;
 
-   struct FDCallback                        NameServerFDCallback;
-   size_t                                   NameServerRequestMaxTrials;
-   unsigned long long                       NameServerRequestTimeout;
-   unsigned long long                       NameServerResponseTimeout;
+   struct FDCallback                        RegistrarFDCallback;
+   size_t                                   RegistrarRequestMaxTrials;
+   unsigned long long                       RegistrarRequestTimeout;
+   unsigned long long                       RegistrarResponseTimeout;
 
    struct MessageBuffer*                    Buffer;
 };

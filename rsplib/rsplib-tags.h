@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.6 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.7 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -54,13 +54,13 @@
 #define TAG_RspLib_CSPReportInterval (TAG_USER + 10012)
 
 #define TAG_RspLib_CacheElementTimeout                   (TAG_USER + 7000)
-#define TAG_RspLib_NameServerAnnounceAddress             (TAG_USER + 7001)
-#define TAG_RspLib_NameServerAnnounceTimeout             (TAG_USER + 7002)
-#define TAG_RspLib_NameServerConnectMaxTrials            (TAG_USER + 7003)
-#define TAG_RspLib_NameServerConnectTimeout              (TAG_USER + 7004)
-#define TAG_RspLib_NameServerRequestMaxTrials            (TAG_USER + 7005)
-#define TAG_RspLib_NameServerRequestTimeout              (TAG_USER + 7006)
-#define TAG_RspLib_NameServerResponseTimeout             (TAG_USER + 7007)
+#define TAG_RspLib_RegistrarAnnounceAddress             (TAG_USER + 7001)
+#define TAG_RspLib_RegistrarAnnounceTimeout             (TAG_USER + 7002)
+#define TAG_RspLib_RegistrarConnectMaxTrials            (TAG_USER + 7003)
+#define TAG_RspLib_RegistrarConnectTimeout              (TAG_USER + 7004)
+#define TAG_RspLib_RegistrarRequestMaxTrials            (TAG_USER + 7005)
+#define TAG_RspLib_RegistrarRequestTimeout              (TAG_USER + 7006)
+#define TAG_RspLib_RegistrarResponseTimeout             (TAG_USER + 7007)
 
 #define TAG_PoolPolicy_Type                          (TAG_USER + 1000)
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.10 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.11 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,7 +41,7 @@
 
 
 #include "tdtypes.h"
-#include "poolnamespacemanagement.h"
+#include "poolhandlespacemanagement.h"
 
 #include <ext_socket.h>
 
@@ -329,10 +329,10 @@ struct RSerPoolMessage
    struct PoolPolicySettings                 PolicySettings;
    struct PoolHandle                         Handle;
 
-   ENRPIdentifierType                        NSIdentifier;
+   RegistrarIdentifierType                        RegistrarIdentifier;
    unsigned int                              NSFlags;
-   ENRPIdentifierType                        SenderID;
-   ENRPIdentifierType                        ReceiverID;
+   RegistrarIdentifierType                        SenderID;
+   RegistrarIdentifierType                        ReceiverID;
 
    struct ST_CLASS(PoolElementNode)*         PoolElementPtr;
    bool                                      PoolElementPtrAutoDelete;
@@ -353,8 +353,8 @@ struct RSerPoolMessage
    struct ST_CLASS(PeerList)*                PeerListPtr;
    bool                                      PeerListPtrAutoDelete;
 
-   struct ST_CLASS(PoolNamespaceManagement)* NamespacePtr;
-   bool                                      NamespacePtrAutoDelete;
+   struct ST_CLASS(PoolHandlespaceManagement)* HandlespacePtr;
+   bool                                      HandlespacePtrAutoDelete;
 
    struct ST_CLASS(NameTableExtract)*        ExtractContinuation;
 

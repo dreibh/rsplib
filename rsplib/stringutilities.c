@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify

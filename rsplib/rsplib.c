@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.21 2004/11/16 21:37:06 tuexen Exp $
+ *  $Id: rsplib.c,v 1.22 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,10 +58,10 @@ static struct ThreadSafety  gThreadSafety;
 size_t rspSessionCreateComponentStatus(
           struct ComponentAssociationEntry** caeArray,
           char*                              statusText,
-          const int                          nameServerSocket,
-          const ENRPIdentifierType           nameServerID,
-          const int                          nameServerSocketProtocol,
-          const unsigned long long           nameServerConnectionTimeStamp);
+          const int                          registrarSocket,
+          const RegistrarIdentifierType           registrarID,
+          const int                          registrarSocketProtocol,
+          const unsigned long long           registrarConnectionTimeStamp);
 
 
 /* ###### Lock mutex ###################################################### */
@@ -125,8 +125,8 @@ const char* rspGetErrorDescription(const unsigned int errorCode)
 }
 
 
-/* ###### Add static name server entry ################################### */
-unsigned int rspAddStaticNameServer(const char* addressString)
+/* ###### Add static registrar entry ################################### */
+unsigned int rspAddStaticRegistrar(const char* addressString)
 {
    union sockaddr_union addressArray[MAX_PE_TRANSPORTADDRESSES];
    char                 str[1024];
@@ -160,7 +160,7 @@ unsigned int rspAddStaticNameServer(const char* addressString)
       }
 
       return(serverTableAddStaticEntry(
-                gAsapInstance->NameServerTable,
+                gAsapInstance->RegistrarTable,
                 (union sockaddr_union*)&addressArray,
                 addresses));
    }
@@ -521,8 +521,8 @@ size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
 {
    return(rspSessionCreateComponentStatus(caeArray,
                                           statusText,
-                                          gAsapInstance->NameServerSocket,
-                                          gAsapInstance->NameServerID,
-                                          gAsapInstance->NameServerSocketProtocol,
-                                          gAsapInstance->NameServerConnectionTimeStamp));
+                                          gAsapInstance->RegistrarSocket,
+                                          gAsapInstance->RegistrarID,
+                                          gAsapInstance->RegistrarSocketProtocol,
+                                          gAsapInstance->RegistrarConnectionTimeStamp));
 }

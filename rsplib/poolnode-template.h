@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  */
 
 #ifndef INTERNAL_POOLTEMPLATE
-#error Do not include this file directly, use poolnamespacemanagement.h
+#error Do not include this file directly, use poolhandlespacemanagement.h
 #endif
 
 
@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 
-struct ST_CLASS(PoolNamespaceNode);
+struct ST_CLASS(PoolHandlespaceNode);
 
 
 #define PNF_CONTROLCHANNEL (1 << 0)
@@ -40,7 +40,7 @@ struct ST_CLASS(PoolNode)
    struct STN_CLASSNAME                PoolIndexStorageNode;
    struct ST_CLASSNAME                 PoolElementSelectionStorage;
    struct ST_CLASSNAME                 PoolElementIndexStorage;
-   struct ST_CLASS(PoolNamespaceNode)* OwnerPoolNamespaceNode;
+   struct ST_CLASS(PoolHandlespaceNode)* OwnerPoolHandlespaceNode;
 
    struct PoolHandle                   Handle;
    const struct ST_CLASS(PoolPolicy)*  Policy;

@@ -417,9 +417,9 @@ int main(int argc, char** argv)
    }
 #endif
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-nameserver=" ,12))) {
-         if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[i]);
+      if(!(strncmp(argv[i], "-registrar=" ,11))) {
+         if(rspAddStaticRegistrar((char*)&argv[i][11]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad registrar setting: %s\n", argv[i]);
             exit(1);
          }
       }

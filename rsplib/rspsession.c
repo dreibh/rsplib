@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.24 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rspsession.c,v 1.25 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1257,10 +1257,10 @@ void rspSessionSetStatusText(struct SessionDescriptor* session,
 size_t rspSessionCreateComponentStatus(
           struct ComponentAssociationEntry** caeArray,
           char*                              statusText,
-          const int                          nameServerSocket,
-          const ENRPIdentifierType           nameServerID,
-          const int                          nameServerSocketProtocol,
-          const unsigned long long           nameServerConnectionTimeStamp)
+          const int                          registrarSocket,
+          const RegistrarIdentifierType           registrarID,
+          const int                          registrarSocketProtocol,
+          const unsigned long long           registrarConnectionTimeStamp)
 {
    size_t                            caeArraySize;
    GList*                            list;
@@ -1278,11 +1278,11 @@ size_t rspSessionCreateComponentStatus(
    caeArraySize = 0;
    if(*caeArray) {
       statusText[0] = 0x00;
-      if(nameServerSocket >= 0) {
-         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
-         (*caeArray)[caeArraySize].Duration   = getMicroTime() - nameServerConnectionTimeStamp;
+      if(registrarSocket >= 0) {
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, registrarID);
+         (*caeArray)[caeArraySize].Duration   = getMicroTime() - registrarConnectionTimeStamp;
          (*caeArray)[caeArraySize].Flags      = 0;
-         (*caeArray)[caeArraySize].ProtocolID = nameServerSocketProtocol;
+         (*caeArray)[caeArraySize].ProtocolID = registrarSocketProtocol;
          (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
          caeArraySize++;
       }

@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,12 +47,11 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_BUFFERSIZE_EXCEEDED,           "buffer size exceeded (message too long)" },
    { RSPERR_READ_ERROR,                    "read() error" },
    { RSPERR_WRITE_ERROR,                   "write() error" },
-   { RSPERR_CONNECTION_FAILURE_UNUSABLE,   "???" },
    { RSPERR_CONNECTION_FAILURE_SOCKET,     "socket() failure" },
    { RSPERR_CONNECTION_FAILURE_CONNECT,    "connect() failure" },
-   { RSPERR_NO_NAMESERVER,                 "no nameserver available" },
+   { RSPERR_NO_REGISTRAR,                  "no registrar available" },
 
-   /* Namespace-management specific error causes */
+   /* Handlespace-management specific error causes */
    { RSPERR_NO_RESOURCES,                  "no resources" },
    { RSPERR_NOT_FOUND,                     "object not found" },
    { RSPERR_INVALID_ID,                    "invalid ID" },

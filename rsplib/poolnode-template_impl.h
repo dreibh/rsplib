@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ void ST_CLASS(poolNodeNew)(struct ST_CLASS(PoolNode)*         poolNode,
    poolNode->Flags                  = flags;
    poolNode->GlobalSeqNumber        = SeqNumberStart;
    poolNode->UserData               = NULL;
-   poolNode->OwnerPoolNamespaceNode = NULL;
+   poolNode->OwnerPoolHandlespaceNode = NULL;
    ST_METHOD(New)(&poolNode->PoolElementSelectionStorage, ST_CLASS(poolElementSelectionStorageNodePrint), ST_CLASS(poolElementSelectionStorageNodeComparison));
    ST_METHOD(New)(&poolNode->PoolElementIndexStorage, ST_CLASS(poolElementIndexStorageNodePrint), ST_CLASS(poolElementIndexStorageNodeComparison));
 }
@@ -157,8 +157,8 @@ void ST_CLASS(poolNodeClear)(struct ST_CLASS(PoolNode)* poolNode,
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(poolNode);
    while(poolElementNode != NULL) {
-      if(poolNode->OwnerPoolNamespaceNode) {
-         ST_CLASS(poolNamespaceNodeRemovePoolElementNode)(poolNode->OwnerPoolNamespaceNode, poolElementNode);
+      if(poolNode->OwnerPoolHandlespaceNode) {
+         ST_CLASS(poolHandlespaceNodeRemovePoolElementNode)(poolNode->OwnerPoolHandlespaceNode, poolElementNode);
       }
       else {
          ST_CLASS(poolNodeRemovePoolElementNode)(poolNode, poolElementNode);

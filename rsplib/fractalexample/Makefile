@@ -1,4 +1,4 @@
-CXXFLAGS = -O0 -g -Wall
+CXXFLAGS = -O0 -g -Wall -DHAVE_CONFIG_H
 CPP=g++
 MOC=/usr/lib/qt3/bin/moc
 

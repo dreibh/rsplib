@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.10 2004/09/28 12:30:26 dreibh Exp $
+ *  $Id: servertable.h,v 1.11 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,7 +45,7 @@
 #include "sockaddrunion.h"
 #include "dispatcher.h"
 #include "timer.h"
-#include "poolnamespacemanagement.h"
+#include "poolhandlespacemanagement.h"
 #include "rserpoolmessage.h"
 
 
@@ -64,9 +64,9 @@ struct ServerTable
    struct FDCallback                   AnnounceSocketFDCallback;
    unsigned long long                  LastAnnounceHeard;
 
-   unsigned long long                  NameServerAnnounceTimeout;
-   unsigned long long                  NameServerConnectTimeout;
-   unsigned int                        NameServerConnectMaxTrials;
+   unsigned long long                  RegistrarAnnounceTimeout;
+   unsigned long long                  RegistrarConnectTimeout;
+   unsigned int                        RegistrarConnectMaxTrials;
 };
 
 
@@ -88,7 +88,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 void serverTableDelete(struct ServerTable* ServerTable);
 
 /**
-  * Add static name server entry.
+  * Add static registrar entry.
   *
   * @param serverTable ServerTable.
   * @param addressArray Addresses.
@@ -103,11 +103,11 @@ unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
   * Do server hunt.
   *
   * @param serverTable ServerTable.
-  * @param nsIdentifier Reference to store new NS's identifier to.
-  * @return Socket description for name server connection or -1 in case of error.
+  * @param registrarIdentifier Reference to store new NS's identifier to.
+  * @return Socket description for registrar connection or -1 in case of error.
   */
 int serverTableFindServer(struct ServerTable* serverTable,
-                          ENRPIdentifierType* nsIdentifier);
+                          RegistrarIdentifierType* registrarIdentifier);
 
 
 #ifdef __cplusplus

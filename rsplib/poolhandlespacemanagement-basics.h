@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@ extern "C" {
 #define MAX_MAX_NAME_RESOLUTION_ITEMS 128
 
 
-typedef uint32_t ENRPIdentifierType;
+typedef uint32_t RegistrarIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
 typedef uint32_t PoolElementChecksumType;
 typedef uint32_t PoolElementSeqNumberType;
@@ -88,7 +88,7 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PLPO_ONLY_INDEX     (PLPO_PEERS_INDEX)
 
 
-const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode);
+const char* poolHandlespaceManagementGetErrorDescription(const unsigned int errorCode);
 PoolElementIdentifierType getPoolElementIdentifier();
 
 

@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,12 +46,11 @@ extern "C" {
 #define RSPERR_OUT_OF_MEMORY                 0x1002
 #define RSPERR_READ_ERROR                    0x1003
 #define RSPERR_WRITE_ERROR                   0x1004
-#define RSPERR_CONNECTION_FAILURE_UNUSABLE   0x1005
-#define RSPERR_CONNECTION_FAILURE_SOCKET     0x1006
-#define RSPERR_CONNECTION_FAILURE_CONNECT    0x1007
-#define RSPERR_NO_NAMESERVER                 0x1008
+#define RSPERR_CONNECTION_FAILURE_SOCKET     0x1005
+#define RSPERR_CONNECTION_FAILURE_CONNECT    0x1006
+#define RSPERR_NO_REGISTRAR                  0x1007
 
-/* Namespace-management specific error causes */
+/* Handlespace-management specific error causes */
 #define RSPERR_NO_RESOURCES                  0xf002
 #define RSPERR_NOT_FOUND                     0xf003
 #define RSPERR_INVALID_ID                    0xf004

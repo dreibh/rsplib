@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.9 2004/11/12 16:28:52 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.10 2004/11/19 16:42:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,7 +58,7 @@ static void getDescriptionForID(const uint64_t id,
    switch(CID_GROUP(id)) {
       case CID_GROUP_NAMESERVER:
          snprintf(buffer, bufferSize,
-                  "Name Server  $%08Lx",
+                  "Registrar  $%08Lx",
                   CID_OBJECT(id));
          break;
       case CID_GROUP_POOLELEMENT:

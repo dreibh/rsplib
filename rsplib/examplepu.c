@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.14 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: examplepu.c,v 1.15 2004/11/19 16:42:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -213,12 +213,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+      else if(!(strncmp(argv[i], "-registrar=" ,11))) {
          /* Process this later */
       }
       else {
          puts("Bad arguments!");
-         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}"
+         printf("Usage: %s {-registrar=Registrar address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}"
 #ifdef ENABLE_CSP
                 " {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PU Identifier (used for CSP only)}"
 #endif
@@ -245,9 +245,9 @@ int main(int argc, char** argv)
 #endif
 
    for(n = 1;n < argc;n++) {
-      if(!(strncmp(argv[n], "-nameserver=" ,12))) {
-         if(rspAddStaticNameServer((char*)&argv[n][12]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[n]);
+      if(!(strncmp(argv[n], "-registrar=" ,11))) {
+         if(rspAddStaticRegistrar((char*)&argv[n][11]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad registrar setting: %s\n", argv[n]);
             exit(1);
          }
       }

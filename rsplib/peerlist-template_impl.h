@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)* peerList,
-                           const ENRPIdentifierType   ownIdentifier)
+                           const RegistrarIdentifierType   ownIdentifier)
 {
    ST_METHOD(New)(&peerList->PeerListIndexStorage,
                   ST_CLASS(peerListIndexStorageNodePrint),
@@ -352,7 +352,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
 /* ###### Find PeerListNode ############################################## */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
@@ -372,7 +372,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
 /* ###### Find nearest prev PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
@@ -392,7 +392,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
 /* ###### Find nearest next PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;

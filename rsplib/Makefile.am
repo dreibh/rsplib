@@ -53,14 +53,14 @@ poolelementnode-template.h \
 poolelementnode-template_impl.h \
 poolhandle.h \
 poolhandle.c \
-poolnamespacemanagement-basics.c \
-poolnamespacemanagement-basics.h \
-poolnamespacemanagement.c \
-poolnamespacemanagement.h \
-poolnamespacemanagement-template.h \
-poolnamespacemanagement-template_impl.h \
-poolnamespacenode-template.h \
-poolnamespacenode-template_impl.h \
+poolhandlespacemanagement-basics.c \
+poolhandlespacemanagement-basics.h \
+poolhandlespacemanagement.c \
+poolhandlespacemanagement.h \
+poolhandlespacemanagement-template.h \
+poolhandlespacemanagement-template_impl.h \
+poolhandlespacenode-template.h \
+poolhandlespacenode-template_impl.h \
 poolnode-template.h \
 poolnode-template_impl.h \
 poolpolicysettings.c \
@@ -96,7 +96,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
+noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
 # examplepe2 examplepu2
 
 
@@ -104,8 +104,8 @@ noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu
 # -static wird überall gesetzt. Im configure-Skript sollte besser
 # eingestellt werden können ob statisch oder dynamisch gelinkt wird!
 
-nameserver_SOURCES = nameserver.c
-nameserver_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+registrar_SOURCES = registrar.c
+registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 simpleexamplepe_SOURCES = simpleexamplepe.c
 simpleexamplepe_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
@@ -131,7 +131,7 @@ fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(G
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 
-EXTRA_DIST = nameserver-example poolelement-example pooluser-example
+EXTRA_DIST = registrar-example poolelement-example pooluser-example
 
 #t1_SOURCES = t1.cc
 #t1_LDADD   = librsplib.la -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) $(GLIB_LIBS) -lsctp

@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  */
 
 #ifndef INTERNAL_POOLTEMPLATE
-#error Do not include this file directly, use poolnamespacemanagement.h
+#error Do not include this file directly, use poolhandlespacemanagement.h
 #endif
 
 
@@ -35,14 +35,14 @@ struct ST_CLASS(PeerList)
    struct ST_CLASSNAME PeerListIndexStorage;
    struct ST_CLASSNAME PeerListTimerStorage;
 
-   ENRPIdentifierType  OwnIdentifier;
+   RegistrarIdentifierType  OwnIdentifier;
 
    void*               UserData;
 };
 
 
 void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)* peerList,
-                           const ENRPIdentifierType   ownIdentifier);
+                           const RegistrarIdentifierType   ownIdentifier);
 void ST_CLASS(peerListDelete)(struct ST_CLASS(PeerList)* peerList);
 size_t ST_CLASS(peerListGetPeerListNodes)(
           const struct ST_CLASS(PeerList)* peerList);
@@ -83,15 +83,15 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
                                   struct ST_CLASS(PeerList)* peerList);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const ENRPIdentifierType            identifier,
+                                  const RegistrarIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
                                   struct ST_CLASS(PeerList)*        peerList,

@@ -32,12 +32,12 @@
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListManagementNew)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
-        const ENRPIdentifierType             ownNSIdentifier,
+        const RegistrarIdentifierType             ownRegistrarIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
                                              void*                             userData),
         void* disposerUserData)
 {
-   ST_CLASS(peerListNew)(&peerListManagement->List, ownNSIdentifier);
+   ST_CLASS(peerListNew)(&peerListManagement->List, ownRegistrarIdentifier);
    peerListManagement->NewPeerListNode              = NULL;
    peerListManagement->PeerListNodeUserDataDisposer = peerListNodeUserDataDisposer;
    peerListManagement->DisposerUserData             = disposerUserData;
@@ -76,7 +76,7 @@ void ST_CLASS(peerListManagementDelete)(
 }
 
 
-/* ###### Clear namespace ################################################ */
+/* ###### Clear handlespace ################################################ */
 void ST_CLASS(peerListManagementClear)(
         struct ST_CLASS(PeerListManagement)* peerListManagement)
 {
@@ -115,12 +115,12 @@ size_t ST_CLASS(peerListManagementGetPeers)(
 /* ###### Find PeerListNode ############################################## */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const ENRPIdentifierType             nsIdentifier,
+                                  const RegistrarIdentifierType             registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindPeerListNode)(
              &peerListManagement->List,
-             nsIdentifier,
+             registrarIdentifier,
              transportAddressBlock));
 }
 
@@ -128,12 +128,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
 /* ###### Find nearest prev PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const ENRPIdentifierType             nsIdentifier,
+                                  const RegistrarIdentifierType             registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindNearestPrevPeerListNode)(
              &peerListManagement->List,
-             nsIdentifier,
+             registrarIdentifier,
              transportAddressBlock));
 }
 
@@ -141,12 +141,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerLis
 /* ###### Find nearest next PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const ENRPIdentifierType             nsIdentifier,
+                                  const RegistrarIdentifierType             registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindNearestNextPeerListNode)(
              &peerListManagement->List,
-             nsIdentifier,
+             registrarIdentifier,
              transportAddressBlock));
 }
 
@@ -168,7 +168,7 @@ unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
 /* ###### Registration ################################################### */
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const ENRPIdentifierType             nsIdentifier,
+                const RegistrarIdentifierType             registrarIdentifier,
                 const unsigned int                   flags,
                 const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
@@ -187,7 +187,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    /* Attention: transportAddressBlock MUST be copied when this
       PeerListNode is added! */
    ST_CLASS(peerListNodeNew)(peerListManagement->NewPeerListNode,
-                             nsIdentifier,
+                             registrarIdentifier,
                              flags,
                              (struct TransportAddressBlock*)transportAddressBlock);
    *peerListNode = ST_CLASS(peerListAddOrUpdatePeerListNode)(&peerListManagement->List,
@@ -239,12 +239,12 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
 /* ###### Deregistration ################################################# */
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const ENRPIdentifierType             nsIdentifier,
+                const RegistrarIdentifierType             registrarIdentifier,
                 const struct TransportAddressBlock*  transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode)* peerListNode = ST_CLASS(peerListFindPeerListNode)(
                                                           &peerListManagement->List,
-                                                          nsIdentifier,
+                                                          registrarIdentifier,
                                                           transportAddressBlock);
    if(peerListNode) {
       return(ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
@@ -270,7 +270,7 @@ void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
 }
 
 
-/* ###### Purge namespace from expired PE entries ######################## */
+/* ###### Purge handlespace from expired PE entries ######################## */
 size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
           struct ST_CLASS(PeerListManagement)* peerListManagement,
           const unsigned long long             currentTimeStamp)

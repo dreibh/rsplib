@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.12 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.13 2004/11/19 16:42:47 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -147,11 +147,11 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
                               message->PeerListPtr);
          }
       }
-      if((message->NamespacePtrAutoDelete) && (message->NamespacePtr)) {
-         ST_CLASS(poolNamespaceManagementClear)(message->NamespacePtr);
-         ST_CLASS(poolNamespaceManagementDelete)(message->NamespacePtr);
-         free(message->NamespacePtr);
-         message->NamespacePtr = NULL;
+      if((message->HandlespacePtrAutoDelete) && (message->HandlespacePtr)) {
+         ST_CLASS(poolHandlespaceManagementClear)(message->HandlespacePtr);
+         ST_CLASS(poolHandlespaceManagementDelete)(message->HandlespacePtr);
+         free(message->HandlespacePtr);
+         message->HandlespacePtr = NULL;
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
          free(message->OffendingParameterTLV);

@@ -1,5 +1,5 @@
 /*
- * An Efficient RSerPool Pool Namespace Management Implementation
+ * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  */
 
 #ifndef INTERNAL_POOLTEMPLATE
-#error Do not include this file directly, use poolnamespacemanagement.h
+#error Do not include this file directly, use poolhandlespacemanagement.h
 #endif
 
 
@@ -52,7 +52,7 @@ struct ST_CLASS(PoolElementNode)
    struct ST_CLASS(PoolNode)*    OwnerPoolNode;
 
    PoolElementIdentifierType     Identifier;
-   ENRPIdentifierType            HomeNSIdentifier;
+   RegistrarIdentifierType            HomeRegistrarIdentifier;
    unsigned int                  RegistrationLife;
    struct PoolPolicySettings     PolicySettings;
 
@@ -79,7 +79,7 @@ struct ST_CLASS(PoolElementNode)
 
 void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                   const PoolElementIdentifierType   identifier,
-                                  const ENRPIdentifierType          homeNSIdentifier,
+                                  const RegistrarIdentifierType          homeRegistrarIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     userTransport,
