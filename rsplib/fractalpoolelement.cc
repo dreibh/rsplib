@@ -50,16 +50,25 @@ class ServiceThread : public TDThread
       return(Session == NULL);
    }
 
-   static void handleCookieEcho(void* userData, void* cookieData, const size_t cookieSize);
+   public:
+   static void handleCookieEcho(void*        userData,
+                                void*        cookieData,
+                                const size_t cookieSize);
 
    private:
    void run();
+   bool handleParameter(const FractalGeneratorParameter* parameter);
+   bool sendCookie();
+   bool sendData(FractalGeneratorData* data);
 
-   unsigned int       ID;
-   bool               IsNewSession;
+   unsigned int           ID;
+   bool                   IsNewSession;
+   FractalGeneratorStatus Status;
+   unsigned long long     LastCookieTimeStamp;
+   unsigned long long     LastSendTimeStamp;
 
    public:
-   SessionDescriptor* Session;
+   SessionDescriptor*  Session;
 };
 
 
@@ -69,6 +78,8 @@ ServiceThread::ServiceThread()
    ID           = ++IDCounter;
    Session      = NULL;
    IsNewSession = true;
+   LastSendTimeStamp = 0;
+   LastCookieTimeStamp = 0;
    std::cout << "Created thread " << ID << "..." << std::endl;
 }
 
@@ -82,6 +93,35 @@ ServiceThread::~ServiceThread()
    waitForFinish();
    std::cout << "Thread " << ID << " has been stopped." << std::endl;
 }
+
+
+bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter)
+{
+   Status.Parameter.Width         = ntohl(parameter->Width);
+   Status.Parameter.Height        = ntohl(parameter->Height);
+   Status.Parameter.C1Real        = parameter->C1Real;
+   Status.Parameter.C2Real        = parameter->C2Real;
+   Status.Parameter.C1Imag        = parameter->C1Imag;
+   Status.Parameter.C2Imag        = parameter->C2Imag;
+   Status.Parameter.MaxIterations = ntohl(parameter->MaxIterations);
+   Status.Parameter.AlgorithmID   = ntohl(parameter->AlgorithmID);
+   Status.CurrentX                = 0;
+   Status.CurrentY                = 0;
+   std::cout << "Start: w=" << Status.Parameter.Width
+            << " h=" << Status.Parameter.Width
+            << " c1=" << std::complex<double>(Status.Parameter.C1Real, Status.Parameter.C1Imag)
+            << " c2=" << std::complex<double>(Status.Parameter.C2Real, Status.Parameter.C2Imag)
+            << " maxIterations=" << Status.Parameter.MaxIterations
+            << " algorithmID=" << Status.Parameter.AlgorithmID << std::endl;
+   if((Status.Parameter.Width > 65536)           ||
+      (Status.Parameter.Height > 65536)          ||
+      (Status.Parameter.MaxIterations > 1000000)) {
+      std::cerr << "Bad parameters!" << std::endl;
+      return(false);
+   }
+   return(true);
+}
+
 
 void ServiceThread::handleCookieEcho(void* userData, void* cookieData, const size_t cookieSize)
 {
@@ -106,6 +146,55 @@ void ServiceThread::handleCookieEcho(void* userData, void* cookieData, const siz
    }
 }
 
+bool ServiceThread::sendCookie()
+{
+   FractalGeneratorCookie cookie;
+   strncpy((char*)&cookie.ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID));
+   cookie.Parameter.Width         = htonl(Status.Parameter.Width);
+   cookie.Parameter.Height        = htonl(Status.Parameter.Height);
+   cookie.Parameter.MaxIterations = htonl(Status.Parameter.MaxIterations);
+   cookie.Parameter.AlgorithmID   = htonl(Status.Parameter.AlgorithmID);
+   cookie.Parameter.C1Real        = Status.Parameter.C1Real;
+   cookie.Parameter.C2Real        = Status.Parameter.C2Real;
+   cookie.Parameter.C1Imag        = Status.Parameter.C1Imag;
+   cookie.Parameter.C2Imag        = Status.Parameter.C2Imag;
+   cookie.CurrentX                = htonl(Status.CurrentX);
+   cookie.CurrentY                = htonl(Status.CurrentY);
+   if(rspSessionSendCookie(Session,
+                           (unsigned char*)&cookie,
+                           sizeof(cookie), NULL) == 0) {
+      std::cerr << "Writing cookie failed!" << std::endl;
+      return(false);
+   }
+   LastCookieTimeStamp = getMicroTime();
+   return(true);
+}
+
+bool ServiceThread::sendData(FractalGeneratorData* data)
+{
+   const size_t dataSize = getFractalGeneratorDataSize(data->Points);
+   for(size_t i = 0;i < data->Points;i++) {
+      data->Buffer[i] = htonl(data->Buffer[i]);
+   }
+   data->Points = htonl(data->Points);
+   data->StartX = htonl(data->StartX);
+   data->StartY = htonl(data->StartY);
+
+   if(rspSessionWrite(Session,
+                      data,
+                      dataSize,
+                      NULL) < 0) {
+      std::cerr << "Writing data failed!" << std::endl;
+      return(false);
+   }
+   data->Points = 0;
+   data->StartX = 0;
+   data->StartY = 0;
+   LastSendTimeStamp = getMicroTime();
+   return(true);
+}
+
+
 void ServiceThread::run()
 {
    // ====== Handle command =================================================
@@ -113,54 +202,40 @@ void ServiceThread::run()
    struct FractalGeneratorParameter parameter;
    struct FractalGeneratorData      data;
    ssize_t                          received;
-   unsigned long long               lastCookieTimeStamp;
-   unsigned long long               lastSendTimeStamp;
-
-   size_t                           width;
-   size_t                           height;
-   std::complex<double>             c1;
-   std::complex<double>             c2;
-   size_t                           maxIterations;
-   unsigned int                     algorithmID;
-   size_t                           x, y, i;
-
    double                           stepX;
    double                           stepY;
    std::complex<double>             z;
-
+   size_t                           i;
 
    for(;;) {
       tags[0].Tag  = TAG_RspIO_Timeout;
       tags[0].Data = (tagdata_t)5000000;
       tags[1].Tag  = TAG_DONE;
       received = rspSessionRead(Session, (char*)&parameter, sizeof(parameter), (struct TagItem*)&tags);
+printf("RECV=%d\n",received);
       if(received == sizeof(parameter)) {
          IsNewSession = false;
 
-         width         = ntohl(parameter.Width);
-         height        = ntohl(parameter.Height);
-         c1            = std::complex<double>(parameter.C1Real, parameter.C1Imag);
-         c2            = std::complex<double>(parameter.C2Real, parameter.C2Imag);
-         maxIterations = ntohl(parameter.MaxIterations);
-         algorithmID   = ntohl(parameter.AlgorithmID);
-         std::cout << "Start: w=" << width << " h=" << height
-                  << " c1=" << c1
-                  << " c2=" << c2
-                  << " maxIterations=" << maxIterations
-                  << " algorithmID=" << algorithmID << std::endl;
+         if(!handleParameter(&parameter)) {
+            goto finish;
+         }
 
          data.Points = 0;
-         stepX = (c2.real() - c1.real()) / width;
-         stepY = (c2.imag() - c1.imag()) / height;
-         lastCookieTimeStamp = lastSendTimeStamp = getMicroTime();
-         for(y = 0;y < height;y++) {
-            for(x = 0;x < width;x++) {
+         stepX = (Status.Parameter.C2Real - Status.Parameter.C1Real) / Status.Parameter.Width;
+         stepY = (Status.Parameter.C2Imag - Status.Parameter.C1Imag) / Status.Parameter.Height;
+         LastCookieTimeStamp = LastSendTimeStamp = getMicroTime();
+
+         if(!sendCookie()) {
+            goto finish;
+         }
+         for(Status.CurrentY = 0;Status.CurrentY < Status.Parameter.Height;Status.CurrentY++) {
+            for(Status.CurrentX = 0;Status.CurrentX < Status.Parameter.Width;Status.CurrentX++) {
                const std::complex<double> c =
-                  std::complex<double>(c1.real() + ((double)x * stepX),
-                                       c1.imag() + ((double)y * stepY));
+                  std::complex<double>(Status.Parameter.C1Real + ((double)Status.CurrentX * stepX),
+                                       Status.Parameter.C1Imag + ((double)Status.CurrentY * stepY));
                z = std::complex<double>(0.0, 0.0);
 
-               for(i = 0;i < maxIterations;i++) {
+               for(i = 0;i < Status.Parameter.MaxIterations;i++) {
                   z = z*z - c;
                   if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
                      break;
@@ -168,69 +243,34 @@ void ServiceThread::run()
                }
 
                if(data.Points == 0) {
-                  data.StartX = x;
-                  data.StartY = y;
+                  data.StartX = Status.CurrentX;
+                  data.StartY = Status.CurrentY;
                }
                data.Buffer[data.Points] = i;
                data.Points++;
 
                if( (data.Points >= FGD_MAX_POINTS) ||
-                  (lastSendTimeStamp + 1000000 < getMicroTime()) ) {
-                  if(rspSessionWrite(Session,
-                                    &data,
-                                    getFractalGeneratorDataSize(data.Points),
-                                    NULL) < 0) {
-                     std::cerr << "Writing data failed!" << std::endl;
+                  (LastSendTimeStamp + 1000000 < getMicroTime()) ) {
+                  if(!sendData(&data)) {
                      goto finish;
-                     break;
                   }
-                  lastSendTimeStamp = getMicroTime();
-                  data.Points = 0;
                }
-               if(lastCookieTimeStamp + 1000000 < getMicroTime()) {
-                  FractalGeneratorCookie cookie;
-                  strncpy((char*)&cookie.ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID));
-                  cookie.Parameter.Width         = htonl(width);
-                  cookie.Parameter.Height        = htonl(height);
-                  cookie.Parameter.MaxIterations = htonl(maxIterations);
-                  cookie.Parameter.AlgorithmID   = htonl(algorithmID);
-                  cookie.Parameter.C1Real        = c1.real();
-                  cookie.Parameter.C2Real        = c2.real();
-                  cookie.Parameter.C1Imag        = c1.imag();
-                  cookie.Parameter.C2Imag        = c2.imag();
-                  cookie.CurrentX                = htonl(x);
-                  cookie.CurrentY                = htonl(y);
-                  if(rspSessionSendCookie(Session,
-                                          (unsigned char*)&cookie,
-                                          sizeof(cookie), NULL) == 0) {
-                     std::cerr << "Writing cookie failed!" << std::endl;
+               if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
+                  if(!sendCookie()) {
                      goto finish;
-                     break;
                   }
-                  lastCookieTimeStamp = getMicroTime();
                }
             }
          }
-
          if(data.Points > 0) {
-            if(rspSessionWrite(Session,
-                                 &data,
-                                 getFractalGeneratorDataSize(data.Points),
-                                 NULL) < 0) {
-               std::cerr << "Writing data failed!" << std::endl;
+            if(!sendData(&data)) {
                goto finish;
             }
-            data.Points = 0;
          }
 
          data.StartX = ~0;
          data.StartY = ~0;
-         data.Points = 0;
-         if(rspSessionWrite(Session,
-                              &data,
-                              getFractalGeneratorDataSize(data.Points),
-                              NULL) < 0) {
-            std::cerr << "Writing data failed!" << std::endl;
+         if(!sendData(&data)) {
             goto finish;
          }
       }
@@ -242,6 +282,7 @@ void ServiceThread::run()
 
    // ====== Shutdown connection ==========================================
 finish:
+   std::cerr << "Thread-Ende!" << std::endl;
    rspDeleteSession(Session);
    Session = NULL;
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.29 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: nameserver.c,v 1.30 2004/08/27 11:51:50 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1851,7 +1851,7 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
          if(message->Error == RSPERR_OKAY) {
             LOG_ACTION
             fprintf(stdlog, "Successfully deregistered pool element $%08x from pool ",
-                  message->PoolElementPtr->Identifier);
+                  message->Identifier);
             poolHandlePrint(&message->Handle, stdlog);
             fputs("\n", stdlog);
             LOG_END
@@ -1859,7 +1859,7 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
          else {
             LOG_WARNING
             fprintf(stdlog, "Failed to deregister pool element $%08x from pool ",
-                  message->PoolElementPtr->Identifier);
+                  message->Identifier);
             poolHandlePrint(&message->Handle, stdlog);
             fputs(": ", stdlog);
             rserpoolErrorPrint(result, stdlog);

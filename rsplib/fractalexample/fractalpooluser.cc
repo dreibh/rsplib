@@ -38,35 +38,34 @@ class FractalPU : public QWidget,
    inline void setPoint(const size_t x, const size_t y, const unsigned int value) {
       Image->setPixel(x, y, value);
    }
-
+/*
    inline size_t width() const {
-      return(Width);
+      return(Parameter.Width);
    }
 
    inline size_t height() const {
-      return(Height);
+      return(Parameter.Height);
    }
-
+*/
    protected:
    void paintImage(const size_t startY, const size_t endY);
    void resizeEvent(QResizeEvent* resizeEvent);
    void paintEvent(QPaintEvent* paintEvent);
 
    private:
+   bool sendParameter();
+   bool handleData(const FractalGeneratorData* data);
+
    virtual void run();
 
-   bool                 Running;
-   size_t               Width;
-   size_t               Height;
-   QImage*              Image;
+   bool                      Running;
+   QImage*                   Image;
 
-   unsigned char*       PoolHandle;
-   size_t               PoolHandleSize;
-   SessionDescriptor*   Session;
-   std::complex<double> C1;
-   std::complex<double> C2;
-   size_t               MaxIterations;
-   unsigned int         AlgorithmID;
+   unsigned char*            PoolHandle;
+   size_t                    PoolHandleSize;
+   SessionDescriptor*        Session;
+   FractalGeneratorParameter Parameter;
+   size_t                    Run;
 };
 
 
@@ -76,11 +75,11 @@ FractalPU::FractalPU(const size_t width,
                      const char*  name)
    : QWidget(parent, name)
 {
-   Running  = true;
-   Width    = width;
-   Height   = height;
+   Running          = true;
+   Parameter.Width  = width;
+   Parameter.Height = height;
    resize(width, height);
-   Image  = new QImage(Width, Height, 32);
+   Image  = new QImage(Parameter.Width, Parameter.Height, 32);
    Q_CHECK_PTR(Image);
    reset();
    start();
@@ -118,7 +117,7 @@ void FractalPU::paintImage(const size_t startY, const size_t endY)
    p.drawImage(0, startY,
                *Image,
                0, startY,
-               Width, endY + 1);
+               Parameter.Width, endY + 1);
    p.end();
 }
 
@@ -137,27 +136,95 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
 }
 
 
+bool FractalPU::sendParameter()
+{
+   FractalGeneratorParameter parameter;
+   TagItem                   tags[16];
+
+   parameter.Width         = htonl(Parameter.Width);
+   parameter.Height        = htonl(Parameter.Height);
+   parameter.AlgorithmID   = htonl(Parameter.AlgorithmID);
+   parameter.MaxIterations = htonl(Parameter.MaxIterations);
+   parameter.C1Real        = Parameter.C1Real;
+   parameter.C1Imag        = Parameter.C1Imag;
+   parameter.C2Real        = Parameter.C2Real;
+   parameter.C2Imag        = Parameter.C2Imag;
+
+   tags[0].Tag  = TAG_RspIO_Timeout;
+   tags[0].Data = (tagdata_t)2000000;
+   tags[1].Tag  = TAG_DONE;
+   if(rspSessionWrite(Session, &parameter, sizeof(parameter),
+                      (TagItem*)&tags) <= 0) {
+      puts("ERROR: SessionWrite failed!");
+      return(false);
+   }
+   return(true);
+}
+
+
+bool FractalPU::handleData(const FractalGeneratorData* data)
+{
+   size_t p      = 0;
+   size_t x      = ntohl(data->StartX);
+   size_t y      = ntohl(data->StartY);
+   size_t points = ntohl(data->Points);
+   if(x >= Parameter.Width) {
+      return(false);
+   }
+   if(y >= Parameter.Height) {
+      return(false);
+   }
+   if(points > FGD_MAX_POINTS) {
+      return(false);
+   }
+   while(y < Parameter.Height) {
+      while(x < Parameter.Width) {
+         if(p > points) {
+            break;
+         }
+
+         const uint32_t point = ntohl(data->Buffer[p]);
+
+         const QColor color(((point + Run) % 72) * 5, 255, 255, QColor::Hsv);
+         setPoint(x, y, color.rgb());
+         p++;
+
+         x++;
+      }
+      x = 0;
+      y++;
+   }
+   paintImage(ntohl(data->StartY), y);
+   return(true);
+}
+
+
 void FractalPU::run()
 {
-   size_t  run = 0;
    TagItem tags[16];
 
+/*
    for(size_t x = 0;x < Width;x++) {
       for(size_t y = 0;y < Height;y++) {
-         setPoint(x, y, qRgb(16* run, x % 256, y % 256));
+         setPoint(x, y, qRgb((x*y)%256, x % 256, y % 256));
       }
    }
    update();
+*/
 
-   C1            = std::complex<double>(-1.5,1.5);
-   C2            = std::complex<double>(1.5,-1.5);
-   MaxIterations = 150;
-   AlgorithmID   = FGPA_MANDELBROT;
+puts("start...");
+   Run                     = 0;
+   Parameter.C1Real        = -1.5;
+   Parameter.C1Imag        = 1.5;
+   Parameter.C2Real        = 1.5;
+   Parameter.C2Imag        = -1.5;
+   Parameter.MaxIterations = 150;
+   Parameter.AlgorithmID   = FGPA_MANDELBROT;
 
    PoolHandle     = (unsigned char*)"FractalGeneratorPool";
    PoolHandleSize = strlen((const char*)PoolHandle);
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
-   tags[0].Data = 100;
+   tags[0].Data = 250;
    tags[1].Tag = TAG_TuneSCTP_MaxRTO;
    tags[1].Data = 500;
    tags[2].Tag = TAG_TuneSCTP_InitialRTO;
@@ -176,33 +243,16 @@ void FractalPU::run()
    */
    tags[6].Tag = TAG_DONE;
 
-puts("Creating session...");
-   Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
-   if(Session) {
-      for(;;) {
+   puts("Creating session...");
+   for(;;) {
+      Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
+      if(Session) {
          puts("Sending parameter command...");
-         run++;
+         Run++;
 
          bool success = false;
          do {
-            FractalGeneratorParameter parameter;
-            parameter.Width         = htonl(Width);
-            parameter.Height        = htonl(Height);
-            parameter.AlgorithmID   = htonl(AlgorithmID);
-            parameter.MaxIterations = htonl(MaxIterations);
-            parameter.C1Real        = C1.real();
-            parameter.C1Imag        = C1.imag();
-            parameter.C2Real        = C2.real();
-            parameter.C2Imag        = C2.imag();
-
-            tags[0].Tag  = TAG_RspIO_Timeout;
-            tags[0].Data = (tagdata_t)2000000;
-            tags[1].Tag  = TAG_DONE;
-            if(rspSessionWrite(Session, &parameter, sizeof(parameter),
-                              (TagItem*)&tags) <= 0) {
-               puts("ERROR: SessionWrite failed!");
-            }
-            else {
+            if(sendParameter()) {
                FractalGeneratorData data;
 
                tags[0].Tag  = TAG_RspIO_Timeout;
@@ -211,33 +261,16 @@ puts("Creating session...");
                ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
                for(;;) {
                   if( (received >= (ssize_t)getFractalGeneratorDataSize(0)) &&
-                      (received >= (ssize_t)getFractalGeneratorDataSize(data.Points)) ) {
-                     if(data.Points == 0) {
+                      (received >= (ssize_t)getFractalGeneratorDataSize(ntohl(data.Points))) ) {
+                     if(ntohl(data.Points) == 0) {
                         puts("ENDE!");
                         success = true;
                         break;
                      }
-                     size_t p = 0;
-                     size_t x = data.StartX;
-                     size_t y = data.StartY;
-                     while(y < Height) {
-                        while(x < Width) {
-                           if(p > data.Points) {
-                              break;
-                           }
-
-                           const QColor color(((data.Buffer[p] + run) % 72) * 5, 255, 255, QColor::Hsv);
-                           setPoint(x, y, color.rgb());
-                           p++;
-
-                           x++;
-                        }
-                        x = 0;
-                        y++;
-                     }
-                     paintImage(data.StartY, y);
+                     handleData(&data);
                   }
                   else {
+                     printf("received=%d\n",received);
                      if(errno != EAGAIN) {
                         puts("ERROR!");
                         break;
@@ -255,10 +288,11 @@ puts("Creating session...");
             usleep(5000000);
          } while(success == false);
 
+         rspDeleteSession(Session);
+         Session = NULL;
+
          usleep(2000000);
       }
-      rspDeleteSession(Session);
-      Session = NULL;
    }
 }
 

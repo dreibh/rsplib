@@ -46,4 +46,11 @@ struct FractalGeneratorCookie
 };
 
 
+struct FractalGeneratorStatus {
+   struct FractalGeneratorParameter Parameter;
+   uint32_t                         CurrentX;
+   uint32_t                         CurrentY;
+};
+
+
 #endif
