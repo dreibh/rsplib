@@ -439,6 +439,7 @@ int main(int argc, char** argv)
    uint64_t                      cspIdentifier;
    unsigned int                  cspReportInterval = 0;
    union sockaddr_union          cspReportAddress;
+   unsigned int                  reregInterval     = 5000;
    struct PoolElementDescriptor* poolElement;
    struct TagItem                tags[16];
    pthread_t                     rsplibThread;
@@ -562,6 +563,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
+         reregInterval = atol((char*)&argv[i][15]);
+         if(reregInterval < 250) {
+            reregInterval = 250;
+         }
+      }
       else if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
@@ -624,7 +631,7 @@ int main(int argc, char** argv)
    tags[6].Tag  = TAG_PoolElement_LocalPort;
    tags[6].Data = port;
    tags[7].Tag  = TAG_PoolElement_ReregistrationInterval;
-   tags[7].Data = 45000;
+   tags[7].Data = reregInterval;
    tags[8].Tag  = TAG_PoolElement_RegistrationLife;
    tags[8].Data = (3 * 45000) + 5000;
    tags[9].Tag  = TAG_PoolElement_Identifier;

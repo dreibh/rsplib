@@ -279,3 +279,19 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
    peerListNode->OwnerPeerList = NULL;
    return(peerListNode);
 }
+
+
+/* ###### Get random PeerListNode from Index ############################# */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
+                                  struct ST_CLASS(PeerList)* peerList)
+{
+   const LeafLinkedTreapNodeValueType maxValue = ST_METHOD(GetValueSum)(
+                                                    &peerList->PeerListIndexStorage);
+   if(maxValue < 1) {
+      return(NULL);
+   }
+
+   const LeafLinkedTreapNodeValueType value = random64() % maxValue;
+   return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(
+             ST_METHOD(GetNodeByValue)(&peerList->PeerListIndexStorage, value)));
+}

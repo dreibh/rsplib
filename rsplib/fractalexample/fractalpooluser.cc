@@ -19,7 +19,7 @@
 
 
 
-class FractalPU : public QWidget,
+class FractalPU : public QMainWindow,
                   public QThread
 {
    Q_OBJECT
@@ -50,6 +50,7 @@ class FractalPU : public QWidget,
    void paintImage(const size_t startY, const size_t endY);
    void resizeEvent(QResizeEvent* resizeEvent);
    void paintEvent(QPaintEvent* paintEvent);
+   void closeEvent(QCloseEvent* closeEvent);
 
 
    private:
@@ -82,7 +83,7 @@ FractalPU::FractalPU(const size_t width,
                      const size_t height,
                      QWidget*     parent,
                      const char*  name)
-   : QWidget(parent, name)
+   : QMainWindow(parent, name)
 {
    Running          = true;
    Parameter.Width  = width;
@@ -90,6 +91,8 @@ FractalPU::FractalPU(const size_t width,
 
    setMinimumSize(Parameter.Width, Parameter.Height);
    setMaximumSize(Parameter.Width, Parameter.Height);
+   setCaption("Fractal Pool User");
+   statusBar()->message("Welcome to Fractal PU!", 3000);
 
    Image  = new QImage(Parameter.Width, Parameter.Height, 32);
    Q_CHECK_PTR(Image);
@@ -153,6 +156,13 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
                paintEvent->rect().width(),
                paintEvent->rect().height());
    p.end();
+}
+
+
+void FractalPU::closeEvent(QCloseEvent* closeEvent)
+{
+   std::cout << "Good bye!" << std::endl;
+   qApp->exit(0);
 }
 
 
@@ -269,11 +279,12 @@ void FractalPU::run()
       LastPoolElementID = 0;
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {
-         rspSessionSetCSPStatus(Session, "Sending parameter command...");
-
-         std::cerr << "Sending parameter command..." << std::endl;
          Run++;
          PoolElementUsages = 0;
+
+         rspSessionSetCSPStatus(Session, "Sending parameter command...");
+         statusBar()->message("Sending parameter command...");
+         std::cerr << "Sending parameter command..." << std::endl;
 
          if(sendParameter()) {
             TimeoutTimer->start(2000, TRUE);
@@ -307,6 +318,7 @@ void FractalPU::run()
                         snprintf((char*)&statusText, sizeof(statusText),
                                  "Processed data packet #%u...", packets);
                         rspSessionSetCSPStatus(Session, statusText);
+                        statusBar()->message(statusText);
                       break;
                   }
                }
@@ -316,9 +328,11 @@ void FractalPU::run()
 
 finish:
          TimeoutTimer->stop();
-         rspSessionSetCSPStatus(Session, "Image completed!");
 
+         rspSessionSetCSPStatus(Session, "Image completed!");
+         statusBar()->message("Image completed!");
          std::cout << "Image completed!" << std::endl;
+
          rspDeleteSession(Session);
          Session = NULL;
 
@@ -406,13 +420,8 @@ int main(int argc, char** argv)
    }
 
    QApplication application(argc, argv);
-   QMainWindow* mainWindow = new QMainWindow;
-   Q_CHECK_PTR(mainWindow);
-   FractalPU* fractalPU = new FractalPU(400, 250, mainWindow);
+   FractalPU* fractalPU = new FractalPU(400, 250);
    Q_CHECK_PTR(fractalPU);
-   mainWindow->setCaption("Fractal Pool User");
-   (mainWindow->statusBar())->message("Welcome to Fractal PU!", 3000);
-   mainWindow->setCentralWidget(fractalPU);
-   mainWindow->show();
+   fractalPU->show();
    return(application.exec());
 }

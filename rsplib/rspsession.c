@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.17 2004/09/23 10:37:17 dreibh Exp $
+ *  $Id: rspsession.c,v 1.18 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -103,8 +103,9 @@ struct SessionDescriptor
    size_t                        CookieEchoSize;
    bool                          Incoming;
 
-   card64                        ConnectTimeout;
-   card64                        NameResolutionRetryDelay;
+   unsigned long long            ConnectionTimeStamp;
+   unsigned long long            ConnectTimeout;
+   unsigned long long            NameResolutionRetryDelay;
 
    struct MessageBuffer*         MessageBuffer;
    struct TagItem*               Tags;
@@ -324,7 +325,7 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
    threadSafetyLock(&ped->Mutex);
    rspPoolElementUpdateRegistration(ped);
    timerStart(&ped->ReregistrationTimer,
-              getMicroTime() + ((card64)1000 * (card64)ped->ReregistrationInterval));
+              getMicroTime() + ((unsigned long long)1000 * (unsigned long long)ped->ReregistrationInterval));
    threadSafetyUnlock(&ped->Mutex);
    LOG_VERBOSE3
    fputs("Reregistration completed\n", stdlog);
@@ -463,7 +464,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
 
       /* Okay -> start reregistration timer */
       timerStart(&ped->ReregistrationTimer,
-                 getMicroTime() + ((card64)1000 * (card64)ped->ReregistrationInterval));
+                 getMicroTime() + ((unsigned long long)1000 * (unsigned long long)ped->ReregistrationInterval));
    }
 
    return(ped);
@@ -519,8 +520,9 @@ static struct SessionDescriptor* rspSessionNew(
       session->CookieEcho               = NULL;
       session->CookieEchoSize           = 0;
       session->CSPStatusText[0]         = 0x00;
-      session->ConnectTimeout           = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
-      session->NameResolutionRetryDelay = (card64)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
+      session->ConnectionTimeStamp      = 0;
+      session->ConnectTimeout           = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
+      session->NameResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
       if(session->PoolElement != NULL) {
          threadSafetyLock(&session->PoolElement->Mutex);
          session->PoolElement->SessionList =
@@ -596,7 +598,7 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       result = rserpoolMessageSend(session->SocketProtocol,
                                    session->Socket,
                                    0, 0,
-                                   (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
+                                   (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
                                    message);
       threadSafetyUnlock(&session->Mutex);
       rserpoolMessageDelete(message);
@@ -664,7 +666,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       fprintf(stdlog, "Closing socket %d\n", session->Socket);
       LOG_END
       ext_close(session->Socket);
-      session->Socket = -1;
+      session->Socket              = -1;
+      session->ConnectionTimeStamp = 0;
 
       /* ====== Report failure ============================================== */
       if(!session->Incoming) {
@@ -737,7 +740,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
                   session->Socket = -1;
                }
                else {
-                  session->Identifier = eai2->ai_pe_id;
+                  session->ConnectionTimeStamp = getMicroTime();
+                  session->Identifier          = eai2->ai_pe_id;
                   setNonBlocking(session->Socket);
                   LOG_ACTION
                   fprintf(stdlog, "Socket %d connected to ", session->Socket);
@@ -975,12 +979,12 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
                        const size_t              length,
                        struct TagItem*           tags)
 {
-   const card64   timeout = (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0);
-   uint32_t       ppid;
-   sctp_assoc_t   assocID;
-   unsigned short streamID;
-   ssize_t        result;
-   int            flags;
+   const unsigned long long timeout = (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0);
+   uint32_t                 ppid;
+   sctp_assoc_t             assocID;
+   unsigned short           streamID;
+   ssize_t                  result;
+   int                      flags;
 
    tagListSetData(tags, TAG_RspIO_MsgIsCookie, 0);
    LOG_VERBOSE2
@@ -1093,7 +1097,7 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
                      struct PoolElementDescriptor** pedArray,
                      unsigned int*                  pedStatusArray,
                      const size_t                   peds,
-                     const card64                   timeout,
+                     const unsigned long long       timeout,
                      struct TagItem*                tags)
 {
    struct TagItem mytags[16];
@@ -1251,6 +1255,7 @@ void rspSessionSetCSPStatus(struct SessionDescriptor* session,
 void rspSendCSPReport(const int                   nameServerSocket,
                       const ENRPIdentifierType    nameServerID,
                       const int                   nameServerSocketProtocol,
+                      const unsigned long long    nameServerConnectionTimeStamp,
                       const uint64_t              cspIdentifier,
                       const union sockaddr_union* cspReportAddress,
                       const unsigned long long    cspReportInterval)
@@ -1275,7 +1280,7 @@ void rspSendCSPReport(const int                   nameServerSocket,
       statusText[0] = 0x00;
       if(nameServerSocket >= 0) {
          caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
-         caeArray[caeArraySize].Duration   = ~0;
+         caeArray[caeArraySize].Duration   = getMicroTime() - nameServerConnectionTimeStamp;
          caeArray[caeArraySize].Flags      = 0;
          caeArray[caeArraySize].ProtocolID = nameServerSocketProtocol;
          caeArray[caeArraySize].PPID       = PPID_ASAP;
@@ -1285,14 +1290,10 @@ void rspSendCSPReport(const int                   nameServerSocket,
       list = g_list_first(gSessionList);
       while(list != NULL) {
          session = (struct SessionDescriptor*)list->data;
-LOG_ACTION
-fputs("t-02b\n",stdlog);
-LOG_END
-
          if(!session->Incoming) {
             if(session->Socket >= 0) {
                caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Identifier);
-               caeArray[caeArraySize].Duration   = ~0;
+               caeArray[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
                caeArray[caeArraySize].Flags      = 0;
                caeArray[caeArraySize].ProtocolID = session->SocketProtocol;
                caeArray[caeArraySize].PPID       = 0;

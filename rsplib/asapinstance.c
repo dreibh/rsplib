@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.23 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.24 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,6 +50,7 @@
 extern void rspSendCSPReport(const int                   nameServerSocket,
                              const ENRPIdentifierType    nameServerID,
                              const int                   nameServerSocketProtocol,
+                             const unsigned long long    nameServerConnectionTimeStamp,
                              const uint64_t              cspIdentifier,
                              const union sockaddr_union* cspReportAddress,
                              const unsigned long long    cspReportInterval);
@@ -116,9 +117,10 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
 
          asapInstanceConfigure(asapInstance, tags);
 
-         asapInstance->NameServerSocket         = -1;
-         asapInstance->NameServerID             = 0;
-         asapInstance->NameServerSocketProtocol = 0;
+         asapInstance->NameServerConnectionTimeStamp = 0;
+         asapInstance->NameServerSocket              = -1;
+         asapInstance->NameServerID                  = 0;
+         asapInstance->NameServerSocketProtocol      = 0;
          ST_CLASS(poolNamespaceManagementNew)(&asapInstance->Cache,
                                               0x00000000,
                                               NULL, NULL, NULL);
@@ -190,7 +192,8 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
          serverTableFindServer(asapInstance->NameServerTable,
                                &asapInstance->NameServerID);
       if(asapInstance->NameServerSocket >= 0) {
-         asapInstance->NameServerSocketProtocol = protocol;
+         asapInstance->NameServerConnectionTimeStamp = getMicroTime();
+         asapInstance->NameServerSocketProtocol      = protocol;
 
          /* ====== Enable data IO events ================================= */
          if(asapInstance->NameServerSocketProtocol == IPPROTO_SCTP) {
@@ -236,9 +239,10 @@ static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstan
       LOG_NOTE
       fputs("Disconnected from nameserver\n", stdlog);
       LOG_END
-      asapInstance->NameServerSocket         = -1;
-      asapInstance->NameServerID             = 0;
-      asapInstance->NameServerSocketProtocol = 0;
+      asapInstance->NameServerConnectionTimeStamp = 0;
+      asapInstance->NameServerSocket              = -1;
+      asapInstance->NameServerID                  = 0;
+      asapInstance->NameServerSocketProtocol      = 0;
    }
 }
 
@@ -260,9 +264,9 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapIns
                                    asapInstance->NameServerResponseTimeout,
                                    asapInstance->NameServerResponseTimeout);
       LOG_VERBOSE2
-      fprintf(stdlog, "received=%d\n", received);
+      fprintf(stdlog, "received=%d, timeout=%Ld\n", received, asapInstance->NameServerResponseTimeout);
       LOG_END
-   } while((received == RspRead_PartialRead) || (received == RspRead_Timeout));
+   } while(received == RspRead_PartialRead);
 
    if(received > 0) {
       result = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
@@ -331,7 +335,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
 {
    struct RSerPoolMessage* response;
    unsigned int            result = RSPERR_OKAY;
-   cardinal                i;
+   size_t                  i;
 
    *responsePtr = NULL;
    *error = RSPERR_OKAY;
@@ -883,6 +887,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
    rspSendCSPReport(asapInstance->NameServerSocket,
                     asapInstance->NameServerID,
                     asapInstance->NameServerSocketProtocol,
+                    asapInstance->NameServerConnectionTimeStamp,
                     asapInstance->CSPIdentifier,
                     &asapInstance->CSPReportAddress,
                     asapInstance->CSPReportInterval);

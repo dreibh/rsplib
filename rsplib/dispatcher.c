@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.5 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.6 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -241,8 +241,15 @@ void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
       dispatcherLock(dispatcher);
 
       /* ====== Handle events ============================================ */
-      dispatcherHandleTimerEvents(dispatcher);
+      /* We handle the FD callbacks first, because their corresponding FD's
+         state has been returned by ext_select(), since a timer callback
+         might modify them (e.g. writing to a socket and reading the
+         complete results).
+      */
       if(result > 0) {
+         LOG_VERBOSE3
+         fputs("Handling FD events...\n", stdlog);
+         LOG_END
          dispatcher->AddRemove = false;
          node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
          while(node != NULL) {
@@ -293,6 +300,14 @@ void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
             node = leafLinkedRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
          }
       }
+
+      /* Timers must be handled after the FD callbacks, since
+         they might modify the FDs' states (e.g. completely
+         reading their buffers, establishing new associations, ...)! */
+      LOG_VERBOSE3
+      fputs("Handling timer events...\n", stdlog);
+      LOG_END
+      dispatcherHandleTimerEvents(dispatcher);
 
       dispatcherUnlock(dispatcher);
    }

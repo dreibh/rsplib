@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.4 2004/09/21 11:44:56 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.5 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -111,10 +111,16 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    for(i = 0;i < cspObject->Associations;i++) {
       getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
                           (char*)&str, sizeof(str));
-      fprintf(fd,"   -> %s proto=%4u ppid=$%08x\n",
+      fprintf(fd,"   -> %s proto=%4u ppid=$%08x",
               str,
               cspObject->AssociationArray[i].ProtocolID,
               cspObject->AssociationArray[i].PPID);
+      if(cspObject->AssociationArray[i].Duration != ~0ULL) {
+         fprintf(fd, "  duration=%4Lu.%03Lu",
+                 cspObject->AssociationArray[i].Duration / 1000000,
+                 (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
+      }
+      fputs("\n", fd);
    }
    fputs("\x1b[0m\n", fd);
 }
@@ -200,7 +206,8 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
                cspObject = (struct CSPObject*)malloc(sizeof(struct CSPObject));
                if(cspObject) {
                   leafLinkedRedBlackTreeNodeNew(&cspObject->Node);
-                  cspObject->ID = csph->SenderID;
+                  cspObject->ID               = csph->SenderID;
+                  cspObject->AssociationArray = NULL;
                }
             }
             if(cspObject) {
@@ -239,6 +246,7 @@ int main(int argc, char** argv)
    fd_set                 readfdset;
    LeafLinkedRedBlackTree objectStorage;
    struct timeval         timeout;
+   int                    reuse;
 
    if(checkIPv6()) {
       string2address("[::]:0", &localAddress);
@@ -272,6 +280,10 @@ int main(int argc, char** argv)
    if(sd < 0) {
       perror("Unable to create socket");
       exit(1);
+   }
+   reuse = 1;
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+      perror("setsockopt() with SO_REUSEADDR failed");
    }
    if(bindplus(sd, &localAddress, 1) == false) {
       fputs("ERROR: Unable to bind socket to local address\n", stderr);

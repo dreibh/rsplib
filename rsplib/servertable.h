@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.9 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: servertable.h,v 1.10 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -61,7 +61,7 @@ struct ServerTable
    struct ST_CLASS(PeerListManagement) ServerList;
    int                                 AnnounceSocket;
    union sockaddr_union                AnnounceAddress;
-   struct FDCallback                   AnnounceSocketFDCallback; // !!!!!! WEG!!!!!!?????????
+   struct FDCallback                   AnnounceSocketFDCallback;
    unsigned long long                  LastAnnounceHeard;
 
    unsigned long long                  NameServerAnnounceTimeout;

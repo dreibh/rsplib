@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.37 2004/09/21 11:44:56 dreibh Exp $
+ *  $Id: nameserver.c,v 1.38 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,6 +59,7 @@
 /* Exit immediately on Ctrl-C. No clean shutdown. */
 // #define FAST_BREAK
 
+
 #define MAX_NS_TRANSPORTADDRESSES                                           16
 #define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       2111111
@@ -72,7 +73,14 @@
 #define NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
 
 
-
+unsigned long long randomizeCycle(const unsigned long long interval)
+{
+   const double originalInterval = (double)interval;
+   const double variation    = 0.250 * originalInterval;
+   const double nextInterval = originalInterval - (variation / 2.0) +
+                               variation * ((double)rand() / (double)RAND_MAX);
+   return((unsigned long long)nextInterval);
+}
 
 
 
@@ -766,7 +774,7 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       }
       rserpoolMessageDelete(message);
    }
-   timerStart(timer, getMicroTime() + nameServer->ServerAnnounceCycle);
+   timerStart(timer, getMicroTime() + randomizeCycle(nameServer->ServerAnnounceCycle));
 }
 
 
@@ -992,7 +1000,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                         peerListNode);
    }
 
-   timerStart(timer, getMicroTime() + nameServer->PeerHeartbeatCycle);
+   timerStart(timer, getMicroTime() + randomizeCycle(nameServer->PeerHeartbeatCycle));
 }
 
 

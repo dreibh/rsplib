@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.19 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: servertable.c,v 1.20 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -86,7 +86,7 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
          if(result == RSPERR_OKAY) {
             if(message->Type == AHT_SERVER_ANNOUNCE) {
                if(message->Error == RSPERR_OKAY) {
-                  LOG_VERBOSE2
+                  LOG_NOTE
                   fputs("ServerAnnounce from ",  stdlog);
                   address2string((struct sockaddr*)&senderAddress,
                                  (char*)&buffer, sizeof(buffer), true);
@@ -129,6 +129,28 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
          rserpoolMessageDelete(message);
       }
    }
+}
+
+
+/* ###### Server announce callback for FDCallback ######################## */
+/* This function is only called to "flush" the socket's buffer into the
+   cache when there is *no* NS hunt in progress. The NS hunt itself may
+   *not* use the Dispatcher's select() procedure -> This may case
+   recursive invocation! Therefore, serverTableFindServer() simply
+   calls ext_select() and manually calls handleServerAnnounceCallback()
+   to read from the announce socket. */
+static void serverAnnouceFDCallback(struct Dispatcher* dispatcher,
+                                    int                fd,
+                                    unsigned int       eventMask,
+                                    void*              userData)
+{
+   LOG_VERBOSE3
+   fputs("Entering serverAnnouceFDCallback()...\n", stdlog);
+   LOG_END
+   handleServerAnnounceCallback((struct ServerTable*)userData, fd);
+   LOG_VERBOSE3
+   fputs("Leaving serverAnnouceFDCallback()\n", stdlog);
+   LOG_END
 }
 
 
@@ -176,6 +198,12 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                       &serverTable->AnnounceAddress,
                                       true)) {
+            fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
+                          serverTable->Dispatcher,
+                          serverTable->AnnounceSocket,
+                          FDCE_Read,
+                          serverAnnouceFDCallback,
+                          serverTable);
          }
          else {
             LOG_ERROR
@@ -202,6 +230,7 @@ void serverTableDelete(struct ServerTable* serverTable)
 {
    if(serverTable != NULL) {
       if(serverTable->AnnounceSocket >= 0) {
+         fdCallbackDelete(&serverTable->AnnounceSocketFDCallback);
          ext_close(serverTable->AnnounceSocket);
          serverTable->AnnounceSocket = -1;
       }
@@ -371,6 +400,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
    ENRPIdentifierType             identifier[MAX_SIMULTANEOUS_REQUESTS];
    ENRPIdentifierType             lastNSIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
+   struct ST_CLASS(PeerListNode)* peerListNode;
    card64                         start;
    card64                         nextTimeout;
    fd_set                         rfdset;
@@ -398,6 +428,17 @@ int serverTableFindServer(struct ServerTable* serverTable,
    lastNSIdentifier          = 0;
    lastTransportAddressBlock = NULL;
    start                     = 0;
+
+   peerListNode = ST_CLASS(peerListGetRandomPeerNode)(&serverTable->ServerList.List);
+   if(peerListNode) {
+      lastNSIdentifier          = peerListNode->Identifier;
+      lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);
+      LOG_NOTE
+      fputs("Randomized server hunt start: ", stdlog);
+      ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+      fputs("\n", stdlog);
+      LOG_END
+   }
 
    for(;;) {
       if((lastNSIdentifier == 0) && (lastTransportAddressBlock == NULL)) {

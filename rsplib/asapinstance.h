@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.11 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.12 2004/09/28 12:30:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -55,6 +55,7 @@ extern "C" {
 struct ASAPInstance
 {
    struct Dispatcher*                       StateMachine;
+   unsigned long long                       NameServerConnectionTimeStamp;
    int                                      NameServerSocket;
    ENRPIdentifierType                       NameServerID;
    int                                      NameServerSocketProtocol;
