@@ -25,8 +25,8 @@ extern "C" {
 
 struct ComponentAssociationEntry
 {
-   u_int64_t ReceiverID;
-   u_int64_t Duration;
+   uint64_t ReceiverID;
+   uint64_t Duration;
    uint16_t Flags;
    uint16_t ProtocolID;
    uint32_t PPID;
@@ -41,9 +41,9 @@ struct ComponentStatusProtocolHeader
    uint16_t                         Version;
    uint32_t                         Length;
 
-   u_int64_t                        SenderID;
-   u_int64_t                        ReportInterval;
-   u_int64_t                        SenderTimeStamp;
+   uint64_t                        SenderID;
+   uint64_t                        ReportInterval;
+   uint64_t                        SenderTimeStamp;
 
    char                             StatusText[CSPH_STATUS_TEXT_SIZE];
 
