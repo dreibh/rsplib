@@ -1,5 +1,5 @@
 /*
- *  $Id: localaddresses.c,v 1.4 2004/11/12 00:01:49 dreibh Exp $
+ *  $Id: localaddresses.c,v 1.5 2004/11/12 00:02:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,7 +47,6 @@
 #include <netinet/ip6.h>
 #else
 /* include files for IPv6 header structs */
-#endif
 #endif
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
