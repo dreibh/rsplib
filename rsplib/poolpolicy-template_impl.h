@@ -143,9 +143,11 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
           const size_t                       maxPoolElementNodes,
           const size_t                       maxIncrement)
 {
-   const size_t poolElements       = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
-   size_t       poolElementNodes   = 0;
-   size_t       i;
+   LeafLinkedTreapNodeValueType maxValue;
+   LeafLinkedTreapNodeValueType value;
+   const size_t                 poolElements       = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
+   size_t                       poolElementNodes   = 0;
+   size_t                       i;
 
 
    /* Check, if resequencing is necessary. However, using 64 bit counters,
@@ -163,12 +165,12 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
 
 
    for(i = 0;i < ((poolElements < maxPoolElementNodes) ? poolElements : maxPoolElementNodes);i++) {
-      const LeafLinkedTreapNodeValueType maxValue = ST_METHOD(GetValueSum)(&poolNode->PoolElementSelectionStorage);
+      maxValue = ST_METHOD(GetValueSum)(&poolNode->PoolElementSelectionStorage);
       if(maxValue < 1) {
          break;
       }
 
-      const LeafLinkedTreapNodeValueType value = random64() % maxValue;
+      value = random64() % maxValue;
       poolElementNodeArray[poolElementNodes] =
          (struct ST_CLASS(PoolElementNode)*)ST_METHOD(GetNodeByValue)(
             &poolNode->PoolElementSelectionStorage, value);

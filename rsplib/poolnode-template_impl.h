@@ -438,10 +438,11 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeFindPoolElementNode)(
                                      const PoolElementIdentifierType identifier)
 {
    struct ST_CLASS(PoolElementNode) cmpElement;
+   struct STN_CLASSNAME*            result;
 
    cmpElement.Identifier = identifier;
-   struct STN_CLASSNAME* result = ST_METHOD(Find)(&poolNode->PoolElementIndexStorage,
-                                                  &cmpElement.PoolElementIndexStorageNode);
+   result = ST_METHOD(Find)(&poolNode->PoolElementIndexStorage,
+                            &cmpElement.PoolElementIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(result));
    }
@@ -455,10 +456,11 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeFindNearestNextPoolElementNod
                                      const PoolElementIdentifierType identifier)
 {
    struct ST_CLASS(PoolElementNode) cmpElement;
+   struct STN_CLASSNAME*            result;
 
    cmpElement.Identifier = identifier;
-   struct STN_CLASSNAME* result = ST_METHOD(GetNearestNext)(&poolNode->PoolElementIndexStorage,
-                                                            &cmpElement.PoolElementIndexStorageNode);
+   result = ST_METHOD(GetNearestNext)(&poolNode->PoolElementIndexStorage,
+                                      &cmpElement.PoolElementIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(result));
    }

@@ -295,7 +295,8 @@ hpux*)
     # LDFLAGS="$LDFLAGS `glib-config --libs`"
    ;;
 linux*)
-    # CC=g++
+    #CC=gcc-2.96
+    #CXX=g++-2.96
     CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE -O0 -g -DLINUX"
     CXXFLAGS="$CXXFLAGS  -D_REENTRANT -D_THREAD_SAFE  -O0 -g -DLINUX"
     LDFLAGS="$LDFLAGS"

@@ -356,11 +356,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
+   struct STN_CLASSNAME*         result;
 
    cmpElement.Identifier   = identifier;
    cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
-   struct STN_CLASSNAME* result = ST_METHOD(Find)(&peerList->PeerListIndexStorage,
-                                                  &cmpElement.PeerListIndexStorageNode);
+   result = ST_METHOD(Find)(&peerList->PeerListIndexStorage,
+                            &cmpElement.PeerListIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
    }
@@ -375,11 +376,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
+   struct STN_CLASSNAME*         result;
 
    cmpElement.Identifier   = identifier;
    cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
-   struct STN_CLASSNAME* result = ST_METHOD(GetNearestPrev)(&peerList->PeerListIndexStorage,
-                                                            &cmpElement.PeerListIndexStorageNode);
+   result = ST_METHOD(GetNearestPrev)(&peerList->PeerListIndexStorage,
+                                      &cmpElement.PeerListIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
    }
@@ -394,11 +396,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
+   struct STN_CLASSNAME*         result;
 
    cmpElement.Identifier   = identifier;
    cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
-   struct STN_CLASSNAME* result = ST_METHOD(GetNearestNext)(&peerList->PeerListIndexStorage,
-                                                            &cmpElement.PeerListIndexStorageNode);
+   result = ST_METHOD(GetNearestNext)(&peerList->PeerListIndexStorage,
+                                      &cmpElement.PeerListIndexStorageNode);
    if(result) {
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
    }
@@ -431,13 +434,14 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
                                   struct ST_CLASS(PeerList)* peerList)
 {
+   const LeafLinkedTreapNodeValueType value;
    const LeafLinkedTreapNodeValueType maxValue = ST_METHOD(GetValueSum)(
                                                     &peerList->PeerListIndexStorage);
    if(maxValue < 1) {
       return(NULL);
    }
 
-   const LeafLinkedTreapNodeValueType value = random64() % maxValue;
+   value = random64() % maxValue;
    return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(
              ST_METHOD(GetNodeByValue)(&peerList->PeerListIndexStorage, value)));
 }

@@ -265,6 +265,7 @@ int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const 
 {
    const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromTimerStorageNode)((void*)nodePtr1);
    const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromTimerStorageNode)((void*)nodePtr2);
+   int cmpResult;
 
    if(node1->TimerTimeStamp < node2->TimerTimeStamp) {
       return(-1);
@@ -273,7 +274,7 @@ int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const 
       return(1);
    }
 
-   const int cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
+   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
    if(cmpResult != 0) {
       return(cmpResult);
    }
