@@ -545,7 +545,7 @@ int main(int argc, char** argv)
 
 
 #ifdef ENABLE_CSP
-   if(cspReportInterval > 0) {
+   if((cspReportInterval > 0) && (cspIdentifier != 0)) {
       cspReporterDelete(&cspReporter);
    }
 #endif
