@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.24 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rsplib.c,v 1.25 2005/03/08 17:10:06 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -313,6 +313,8 @@ unsigned int rspHandleResolution(const unsigned char*         poolHandle,
                for(i = 0;i < poolElementNode->UserTransport->Addresses;i++) {
                   memcpy((void*)ptr, (void*)&poolElementNode->UserTransport->AddressArray[i],
                          sizeof(union sockaddr_union));
+                  if (poolElementNode->UserTransport->AddressArray[i].sa.sa_family == AF_INET6)
+                    (*endpointAddressInfo)->ai_family = AF_INET6;
                   ptr = (char*)((long)ptr + (long)sizeof(union sockaddr_union));
                }
             }
