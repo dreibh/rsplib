@@ -3,10 +3,14 @@
 
 #include "sockaddrunion.h"
 
+#define CID_GROUP(id)  ((id >> 56) & (0xffff))
+#define CID_OBJECT(id) (id & 0xffffffffffffffLL)
 
-#define CID_NAMESERVER(id)  (((uint64_t)0x01 << 32) | id)
-#define CID_POOLELEMENT(id) (((uint64_t)0x02 << 32) | id)
-#define CID_POOLUSER(id)    (((uint64_t)0x03 << 32) | id)
+#define CID_GROUP_NAMESERVER  0x0001
+#define CID_GROUP_POOLELEMENT 0x0002
+#define CID_GROUP_POOLUSER    0x0003
+
+#define CID_COMPOUND(group, object)  (((uint64_t)group << 56) | object)
 
 
 struct ComponentAssociationEntry

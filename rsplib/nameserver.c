@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.33 2004/09/02 15:30:52 dreibh Exp $
+ *  $Id: nameserver.c,v 1.34 2004/09/15 09:47:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3066,7 +3066,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
              (!(peerListNode->Flags & PLNF_MULTICAST)) ) {
          }
 
-         caeArray[caeArraySize].ReceiverID = CID_NAMESERVER(peerListNode->Identifier);
+         caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, peerListNode->Identifier);
          caeArray[caeArraySize].Duration   = ~0;
          caeArray[caeArraySize].Flags      = 0;
          caeArray[caeArraySize].ProtocolID = IPPROTO_SCTP;
@@ -3080,7 +3080,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
 
       if(componentStatusSend(&nameServer->CSPReportAddress,
                              nameServer->CSPReportInterval,
-                             CID_NAMESERVER(nameServer->ServerID),
+                             CID_COMPOUND(CID_GROUP_NAMESERVER, nameServer->ServerID),
                              (const char*)&statusText,
                              (struct ComponentAssociationEntry*)&caeArray,
                              caeArraySize) < 0) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.12 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rsplib.c,v 1.13 2004/09/15 09:47:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -84,7 +84,6 @@ unsigned int rspInitialize(struct TagItem* tags)
       tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
       tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
       tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
-CHECK(threadSafetyIsAvailable()); // ????????????????????
       return(RSPERR_OKAY);
    }
    else {

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.4 2004/08/30 08:32:41 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.5 2004/09/15 09:47:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,11 +43,13 @@
 #include "tagitem.h"
 
 
-#define TAG_RspLib_GetVersion   (TAG_USER + 10000)
-#define TAG_RspLib_GetRevision  (TAG_USER + 10001)
-#define TAG_RspLib_GetBuildDate (TAG_USER + 10002)
-#define TAG_RspLib_GetBuildTime (TAG_USER + 10003)
-#define TAG_RspLib_IsThreadSafe (TAG_USER + 10004)
+#define TAG_RspLib_GetVersion        (TAG_USER + 10000)
+#define TAG_RspLib_GetRevision       (TAG_USER + 10001)
+#define TAG_RspLib_GetBuildDate      (TAG_USER + 10002)
+#define TAG_RspLib_GetBuildTime      (TAG_USER + 10003)
+#define TAG_RspLib_IsThreadSafe      (TAG_USER + 10004)
+#define TAG_RspLib_CSPReportAddress  (TAG_USER + 10005)
+#define TAG_RspLib_CSPReportInterval (TAG_USER + 10006)
 
 #define TAG_RspLib_CacheElementTimeout                   (TAG_USER + 7000)
 #define TAG_RspLib_NameServerAnnounceAddress             (TAG_USER + 7001)

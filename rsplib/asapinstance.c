@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.21 2004/09/02 15:30:52 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.22 2004/09/15 09:47:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,6 +41,7 @@
 #include "asapinstance.h"
 #include "rserpoolmessage.h"
 #include "timeutilities.h"
+#include "netutilities.h"
 #include "rsplib-tags.h"
 
 #include <ext_socket.h>
@@ -53,28 +54,43 @@ static void handleNameServerConnectionEvent(struct Dispatcher* dispatcher,
 static void asapInstanceHandleEndpointKeepAlive(
                struct ASAPInstance*    asapInstance,
                struct RSerPoolMessage* message);
+static void cspReportCallback(struct Dispatcher* dispatcher,
+                              struct Timer*      timer,
+                              void*              userData);
 
 
 /* ###### Get configuration from file #################################### */
 static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagItem* tags)
 {
+   union sockaddr_union* cspReportAddress;
+
    /* ====== ASAP Instance settings ======================================= */
    asapInstance->NameServerRequestMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerRequestMaxTrials,
-                                                     ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS);
+                                                             ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS);
    asapInstance->NameServerRequestTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerRequestTimeout,
-                                                           ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT);
+                                                                   ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT);
    asapInstance->NameServerResponseTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerResponseTimeout,
-                                                            ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT);
+                                                                    ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT);
    asapInstance->CacheElementTimeout = (card64)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
-                                                      ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
+                                                              ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
+
+   cspReportAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_CSPReportAddress, (tagdata_t)NULL);
+   if(cspReportAddress) {
+      memcpy(&asapInstance->CSPReportAddress,
+             cspReportAddress,
+             getSocklen(&cspReportAddress->sa));
+   }
+   asapInstance->CSPReportInterval = tagListGetData(tags, TAG_RspLib_CSPReportInterval, 0);
+
 
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",       asapInstance->NameServerRequestMaxTrials);
-   fprintf(stdlog, "nameserver.request.timeout     = %Lu [탎]\n", asapInstance->NameServerRequestTimeout);
-   fprintf(stdlog, "nameserver.response.timeout    = %Lu [탎]\n", asapInstance->NameServerResponseTimeout);
-   fprintf(stdlog, "cache.elementtimeout           = %Lu [탎]\n", asapInstance->CacheElementTimeout);
+   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",    asapInstance->NameServerRequestMaxTrials);
+   fprintf(stdlog, "nameserver.request.timeout     = %Lu탎\n", asapInstance->NameServerRequestTimeout);
+   fprintf(stdlog, "nameserver.response.timeout    = %Lu탎\n", asapInstance->NameServerResponseTimeout);
+   fprintf(stdlog, "cache.elementtimeout           = %Lu탎\n", asapInstance->CacheElementTimeout);
+   fprintf(stdlog, "cspreportinterval              = %Lu탎\n", asapInstance->CSPReportInterval);
    LOG_END
 }
 
@@ -106,6 +122,15 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
             asapInstanceDelete(asapInstance);
             asapInstance = NULL;
          }
+
+         if(asapInstance->CSPReportInterval > 0) {
+            timerNew(&asapInstance->CSPReportTimer,
+                     asapInstance->StateMachine,
+                     cspReportCallback,
+                     (void*)asapInstance);
+            timerStart(&asapInstance->CSPReportTimer,
+                       getMicroTime() + asapInstance->CSPReportInterval);
+         }
       }
    }
    return(asapInstance);
@@ -116,6 +141,9 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
 void asapInstanceDelete(struct ASAPInstance* asapInstance)
 {
    if(asapInstance) {
+      if(asapInstance->CSPReportInterval > 0) {
+         timerDelete(&asapInstance->CSPReportTimer);
+      }
       ST_CLASS(poolNamespaceManagementClear)(&asapInstance->OwnPoolElements);
       ST_CLASS(poolNamespaceManagementDelete)(&asapInstance->OwnPoolElements);
       ST_CLASS(poolNamespaceManagementClear)(&asapInstance->Cache);
@@ -832,4 +860,16 @@ static void handleNameServerConnectionEvent(
    LOG_END
 
    dispatcherUnlock(asapInstance->StateMachine);
+}
+
+
+/* ###### Report status ################################################## */
+static void cspReportCallback(struct Dispatcher* dispatcher,
+                              struct Timer*      timer,
+                              void*              userData)
+{
+   struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
+puts("CSP...");
+   timerStart(&asapInstance->CSPReportTimer,
+              getMicroTime() + asapInstance->CSPReportInterval);
 }
