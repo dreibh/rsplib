@@ -113,26 +113,6 @@ static void leafLinkedRedBlackTreeUpdateValueSumsUpToRoot(
 }
 
 
-/* ##### Internal printing function ###################################### */
-void leafLinkedRedBlackTreeInternalPrint(struct LeafLinkedRedBlackTree*     llrbt,
-                                         struct LeafLinkedRedBlackTreeNode* node,
-                                         FILE*                              fd)
-{
-   if(node != &llrbt->NullNode) {
-      leafLinkedRedBlackTreeInternalPrint(llrbt, node->LeftSubtree, fd);
-      leafLinkedRedBlackTreePrintNode(llrbt, node, fd);
-      leafLinkedRedBlackTreeInternalPrint(llrbt, node->RightSubtree, fd);
-   }
-}
-
-
-/* ###### Is treap empty? ################################################ */
-int leafLinkedRedBlackTreeIsEmpty(struct LeafLinkedRedBlackTree* llrbt)
-{
-   return(llrbt->NullNode.LeftSubtree == &llrbt->NullNode);
-}
-
-
 /* ###### Internal method for printing a node ############################# */
 static void leafLinkedRedBlackTreePrintNode(struct LeafLinkedRedBlackTree*     llrbt,
                                             struct LeafLinkedRedBlackTreeNode* node,
@@ -169,6 +149,26 @@ static void leafLinkedRedBlackTreePrintNode(struct LeafLinkedRedBlackTree*     l
    }
    fputs("\n", fd);
 #endif
+}
+
+
+/* ##### Internal printing function ###################################### */
+void leafLinkedRedBlackTreeInternalPrint(struct LeafLinkedRedBlackTree*     llrbt,
+                                         struct LeafLinkedRedBlackTreeNode* node,
+                                         FILE*                              fd)
+{
+   if(node != &llrbt->NullNode) {
+      leafLinkedRedBlackTreeInternalPrint(llrbt, node->LeftSubtree, fd);
+      leafLinkedRedBlackTreePrintNode(llrbt, node, fd);
+      leafLinkedRedBlackTreeInternalPrint(llrbt, node->RightSubtree, fd);
+   }
+}
+
+
+/* ###### Is treap empty? ################################################ */
+int leafLinkedRedBlackTreeIsEmpty(struct LeafLinkedRedBlackTree* llrbt)
+{
+   return(llrbt->NullNode.LeftSubtree == &llrbt->NullNode);
 }
 
 

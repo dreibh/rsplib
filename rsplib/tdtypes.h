@@ -1,5 +1,5 @@
 /*
- *  $Id: tdtypes.h,v 1.3 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: tdtypes.h,v 1.4 2004/11/10 14:44:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -49,6 +49,10 @@
 #include <errno.h>
 #include <ctype.h>
 #include <math.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 
 /* ????? In configure-Skript verschieben! ????? */

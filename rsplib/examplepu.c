@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.8 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: examplepu.c,v 1.9 2004/11/10 14:44:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -184,13 +184,13 @@ int main(int argc, char** argv)
          autoInterval = 1000 * (card64)atol((char*)&argv[i][6]);
       }
 #ifdef ENABLE_CSP
-      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+      else if(!(strncmp(argv[i], "-identifier=", 12))) {
          cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
       }
-      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
+      else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
          cspReportInterval = atol((char*)&argv[i][19]);
       }
-      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
+      else if(!(strncmp(argv[i], "-cspreportaddress=", 18))) {
          if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
             fprintf(stderr,
                     "ERROR: Bad CSP report address %s! Use format <address:port>.\n",

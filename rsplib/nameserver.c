@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.40 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: nameserver.c,v 1.41 2004/11/10 14:44:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3196,7 +3196,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
    size_t                   i;
 
     sctpAddresses = 0;
-    if(!(strncasecmp(arg, "auto", 4))) {
+    if(!(strncmp(arg, "auto", 4))) {
        sockFD = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
        if(sockFD >= 0) {
           if(bindplus(sockFD, NULL, 0) == false) {
@@ -3328,11 +3328,11 @@ int main(int argc, char** argv)
    string2address("127.0.0.1:2960", &cspReportAddress);
 #endif
    for(i = 1;i < argc;i++) {
-      if(!(strncasecmp(argv[i], "-tcp=",5))) {
+      if(!(strncmp(argv[i], "-tcp=",5))) {
          fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
          exit(1);
       }
-      else if(!(strncasecmp(argv[i], "-asap=",6))) {
+      else if(!(strncmp(argv[i], "-asap=",6))) {
          if(asapSocket < 0) {
             asapSocket = getSCTPSocket((char*)&argv[i][6], asapAddress);
          }
@@ -3341,20 +3341,20 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+      else if(!(strncmp(argv[i], "-identifier=", 12))) {
          serverID = atol((char*)&argv[i][12]);
       }
-      else if(!(strncasecmp(argv[i], "-peer=",6))) {
+      else if(!(strncmp(argv[i], "-peer=",6))) {
          /* to be handled later */
       }
-      else if(!(strncasecmp(argv[i], "-maxbadpereports=",17))) {
+      else if(!(strncmp(argv[i], "-maxbadpereports=",17))) {
          /* to be handled later */
       }
 #ifdef ENABLE_CSP
-      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
+      else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
          cspReportInterval = atol((char*)&argv[i][19]);
       }
-      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
+      else if(!(strncmp(argv[i], "-cspreportaddress=", 18))) {
          if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
             fprintf(stderr,
                     "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
@@ -3366,16 +3366,16 @@ int main(int argc, char** argv)
          }
       }
 #else
-      else if((!(strncasecmp(argv[i], "-cspreportinterval=", 19))) ||
-              (!(strncasecmp(argv[i], "-cspreportaddress=", 18)))) {
+      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
+              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
          fprintf(stderr, "WARNING: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
       }
 #endif
-      else if(!(strcasecmp(argv[i], "-asapannounce=auto"))) {
+      else if(!(strcmp(argv[i], "-asapannounce=auto"))) {
          string2address("239.0.0.1:3863", &asapAnnounceAddress);
          asapSendAnnounces = true;
       }
-      else if(!(strncasecmp(argv[i], "-asapannounce=", 14))) {
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
          if(!string2address((char*)&argv[i][14], &asapAnnounceAddress)) {
             fprintf(stderr,
                     "ERROR: Bad ASAP announce address %s! Use format <address:port>.\n",
@@ -3384,7 +3384,7 @@ int main(int argc, char** argv)
          }
          asapSendAnnounces = true;
       }
-      else if(!(strncasecmp(argv[i], "-enrp=",6))) {
+      else if(!(strncmp(argv[i], "-enrp=",6))) {
          if(enrpUnicastSocket < 0) {
             enrpUnicastSocket = getSCTPSocket((char*)&argv[i][6], enrpUnicastAddress);
          }
@@ -3393,11 +3393,11 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strcasecmp(argv[i], "-enrpmulticast=auto"))) {
+      else if(!(strcmp(argv[i], "-enrpmulticast=auto"))) {
          string2address("239.0.0.1:3864", &enrpMulticastAddress);
          enrpAnnounceViaMulticast = true;
       }
-      else if(!(strncasecmp(argv[i], "-enrpmulticast=", 15))) {
+      else if(!(strncmp(argv[i], "-enrpmulticast=", 15))) {
          if(!string2address((char*)&argv[i][15], &enrpMulticastAddress)) {
             fprintf(stderr,
                     "ERROR: Bad ENRP announce address %s! Use format <address:port>.\n",
@@ -3406,10 +3406,10 @@ int main(int argc, char** argv)
          }
          enrpAnnounceViaMulticast = true;
       }
-      else if(!(strcasecmp(argv[i], "-multicast=on"))) {
+      else if(!(strcmp(argv[i], "-multicast=on"))) {
          enrpUseMulticast = true;
       }
-      else if(!(strcasecmp(argv[i], "-multicast=off"))) {
+      else if(!(strcmp(argv[i], "-multicast=off"))) {
          enrpUseMulticast = false;
       }
       else if(!(strncmp(argv[i], "-log",4))) {
@@ -3451,10 +3451,10 @@ int main(int argc, char** argv)
       exit(1);
    }
    for(i = 1;i < argc;i++) {
-      if(!(strncasecmp(argv[i], "-peer=",6))) {
+      if(!(strncmp(argv[i], "-peer=",6))) {
          addPeer(nameServer, (char*)&argv[i][6]);
       }
-      else if(!(strncasecmp(argv[i], "-maxbadpereports=",17))) {
+      else if(!(strncmp(argv[i], "-maxbadpereports=",17))) {
          nameServer->MaxBadPEReports = atol((char*)&argv[i][17]);
          if(nameServer->MaxBadPEReports < 1) {
             nameServer->MaxBadPEReports = 1;

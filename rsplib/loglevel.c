@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.c,v 1.4 2004/08/30 08:32:41 dreibh Exp $
+ *  $Id: loglevel.c,v 1.5 2004/11/10 14:44:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,6 +39,7 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "threadsafety.h"
+#include "stringutilities.h"
 
 
 #ifdef HAVE_STDERR_FILEPTR
@@ -103,7 +104,7 @@ bool initLogging(const char* parameter)
       gLogLevel = min(atol((char*)&parameter[10]),MAX_LOGLEVEL);
    }
    else if(!(strncmp(parameter,"-logcolor=",10))) {
-      if(!(strcasecmp((char*)&parameter[10],"off"))) {
+      if(!(strcmp((char*)&parameter[10],"off"))) {
          gColorMode = false;
       }
       else {

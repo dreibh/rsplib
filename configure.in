@@ -328,13 +328,6 @@ AC_SUBST(thread_LIBS)
 # Achtung! Wenn LDFLAGS nicht gesetzt wird, verwendet der Linker die
 # Option -s => Alle Debug-Symbole werden entfernt!
 LDFLAGS=""
-#CC="/opt/gcc3.1/bin/g++"
-#CPP="/opt/gcc3.1/bin/g++ -E"
-#CXX="/opt/gcc3.1/bin/g++"
-#CFLAGS="$CFLAGS -ansi"
-#CC="g++"
-#CPP="g++ -E"
-#CXX="g++"
 
 
 # Check if kernel SCTP should be used
