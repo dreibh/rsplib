@@ -19,6 +19,8 @@ binarytree.c \
 binarytree.h \
 breakdetector.c \
 breakdetector.h \
+componentstatusprotocol.h \
+componentstatusprotocol.c \
 debug.h \
 dispatcher.c \
 dispatcher.h \

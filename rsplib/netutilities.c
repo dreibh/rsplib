@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.16 2004/08/30 08:32:41 dreibh Exp $
+ *  $Id: netutilities.c,v 1.17 2004/09/01 09:55:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1125,7 +1125,7 @@ int recvfromplus(int              sockfd,
 
 
 /* ###### Get socklen for given address ################################## */
-size_t getSocklen(struct sockaddr* address)
+size_t getSocklen(const struct sockaddr* address)
 {
    switch(address->sa_family) {
       case AF_INET:

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.7 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: netutilities.h,v 1.8 2004/09/01 09:55:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,6 +47,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ext_socket.h>
+#include <byteswap.h>
 
 
 #ifdef __cplusplus
@@ -61,6 +62,30 @@ extern "C" {
 #ifndef IPV6_LEAVE_GROUP
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
 #endif
+
+
+/**
+  * Convert 64-bit value to network byte order.
+  *
+  * @param value Value in host byte order.
+  * @return Value in network byte order.
+  */
+inline uint64_t hton64(const uint64_t value)
+{
+   return(bswap_64(value));
+}
+
+
+/**
+  * Convert 64-bit value to host byte order.
+  *
+  * @param value Value in network byte order.
+  * @return Value in host byte order.
+  */
+inline uint64_t ntoh64(const uint64_t value)
+{
+   return(bswap_64(value));
+}
 
 
 /**
@@ -229,7 +254,7 @@ bool setNonBlocking(int fd);
   * @param address Address.
   * @return Length of structure.
   */
-size_t getSocklen(struct sockaddr* address);
+size_t getSocklen(const struct sockaddr* address);
 
 
 /**
