@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.31 2004/11/12 00:25:16 dreibh Exp $
+ *  $Id: netutilities.c,v 1.32 2004/11/12 14:41:35 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -940,7 +940,7 @@ int sendtoplus(int                      sockfd,
    if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
       sri.sinfo_assoc_id   = assocID;
       sri.sinfo_stream     = streamID;
-      sri.sinfo_ppid       = ppid;
+      sri.sinfo_ppid       = htonl(ppid);
       sri.sinfo_flags      = flags;
       sri.sinfo_ssn        = 0;
       sri.sinfo_tsn        = 0;
@@ -1153,7 +1153,7 @@ int recvfromplus(int                      sockfd,
          (cmsg->cmsg_level == IPPROTO_SCTP)                             &&
          (cmsg->cmsg_type  == SCTP_SNDRCV)) {
          sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
-         if(ppid     != NULL) *ppid     = sri->sinfo_ppid;
+         if(ppid     != NULL) *ppid     = ntohl(sri->sinfo_ppid);
          if(streamID != NULL) *streamID = sri->sinfo_stream;
          if(assocID  != NULL) *assocID  = sri->sinfo_assoc_id;
          LOG_VERBOSE4
