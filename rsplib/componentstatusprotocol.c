@@ -3,11 +3,29 @@
 #include "netutilities.h"
 
 
-ssize_t sendStatus(const union sockaddr_union*             statusMonitorAddress,
-                   const uint64_t                          senderID,
-                   const char*                             statusText,
-                   const struct ComponentAssociationEntry* associationArray,
-                   const size_t                            associations)
+struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t elements)
+{
+   struct ComponentAssociationEntry* associationArray =
+      (struct ComponentAssociationEntry*)malloc(elements * sizeof(struct ComponentAssociationEntry));
+   if(associationArray) {
+      memset(associationArray, 0xff, elements * sizeof(struct ComponentAssociationEntry));
+   }
+   return(associationArray);
+}
+
+
+void componentAssociationEntryArrayDelete(struct ComponentAssociationEntry* associationArray)
+{
+   free(associationArray);
+}
+
+
+ssize_t componentStatusSend(const union sockaddr_union*             reportAddress,
+                            const uint64_t                          reportInterval,
+                            const uint64_t                          senderID,
+                            const char*                             statusText,
+                            const struct ComponentAssociationEntry* associationArray,
+                            const size_t                            associations)
 {
    struct ComponentStatusProtocolHeader* csph;
    size_t       i;
@@ -20,10 +38,11 @@ ssize_t sendStatus(const union sockaddr_union*             statusMonitorAddress,
    csph   = (struct ComponentStatusProtocolHeader*)malloc(length);
    if(csph) {
       csph->Type            = htons(CSPHT_STATUS);
-      csph->Flags           = 0;
+      csph->Version         = htons(CSP_VERSION);
       csph->Length          = htonl(length);
       csph->SenderID        = hton64(senderID);
       csph->SenderTimeStamp = hton64(getMicroTime());
+      csph->ReportInterval  = hton64(reportInterval);
       strncpy((char*)&csph->StatusText, statusText, sizeof(csph->StatusText));
       csph->Associations = htonl(associations);
       for(i = 0;i < associations;i++) {
@@ -34,17 +53,15 @@ ssize_t sendStatus(const union sockaddr_union*             statusMonitorAddress,
          csph->AssociationArray[i].PPID       = htonl(associationArray[i].PPID);
       }
 
-      sd = socket(statusMonitorAddress->sa.sa_family,
+      sd = socket(reportAddress->sa.sa_family,
                   SOCK_DGRAM,
                   IPPROTO_UDP);
       if(sd >= 0) {
          result = sendto(sd, csph, length, 0,
-                         &statusMonitorAddress->sa,
-                         getSocklen(&statusMonitorAddress->sa));
-if(result < 0) perror("send");
+                         &reportAddress->sa,
+                         getSocklen(&reportAddress->sa));
          close(sd);
       }
-      else perror("socket");
 
       free(csph);
    }

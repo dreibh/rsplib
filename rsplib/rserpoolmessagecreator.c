@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.14 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.15 2004/09/01 15:49:26 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -837,6 +837,7 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
 static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    struct TransportAddressBlock* transportAddressBlock;
+   uint32_t*                     nsIdentifier;
 
    if(message->TransportAddressBlockListPtr == NULL) {
       LOG_ERROR
@@ -848,6 +849,14 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
+
+   // ?????? Non-standard ??????
+   nsIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(nsIdentifier == NULL) {
+      return(false);
+   }
+   *nsIdentifier = htonl(message->NSIdentifier);
+   // ??????????????????????????
 
    transportAddressBlock = message->TransportAddressBlockListPtr;
    while(transportAddressBlock != NULL) {

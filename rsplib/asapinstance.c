@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.19 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.20 2004/09/01 15:49:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -92,6 +92,7 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          asapInstanceConfigure(asapInstance, tags);
 
          asapInstance->NameServerSocket         = -1;
+         asapInstance->NameServerID             = 0;
          asapInstance->NameServerSocketProtocol = 0;
          ST_CLASS(poolNamespaceManagementNew)(&asapInstance->Cache,
                                               0x00000000,
@@ -198,6 +199,7 @@ static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstan
       fputs("Disconnected from nameserver\n", stdlog);
       LOG_END
       asapInstance->NameServerSocket         = -1;
+      asapInstance->NameServerID             = 0;
       asapInstance->NameServerSocketProtocol = 0;
    }
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.16 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: servertable.c,v 1.17 2004/09/01 15:49:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -173,14 +173,6 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                       &serverTable->AnnounceAddress,
                                       true)) {
-/* =???????????? WEG!
-            fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
-                          serverTable->Dispatcher,
-                          serverTable->AnnounceSocket,
-                          FDCE_Read,
-                          handleServerAnnounceCallback,
-                          (void*)serverTable);
-*/
          }
          else {
             LOG_ERROR
@@ -207,7 +199,6 @@ void serverTableDelete(struct ServerTable* serverTable)
 {
    if(serverTable != NULL) {
       if(serverTable->AnnounceSocket >= 0) {
-// ????????? WEG!         fdCallbackDelete(&serverTable->AnnounceSocketFDCallback);
          ext_close(serverTable->AnnounceSocket);
          serverTable->AnnounceSocket = -1;
       }

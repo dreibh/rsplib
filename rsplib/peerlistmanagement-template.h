@@ -72,7 +72,7 @@ void ST_CLASS(peerListManagementClear)(
 
 
 /* ###### Get number of pools ############################################ */
-inline size_t ST_CLASS(peerListManagementGetPeerListNodes)(
+inline size_t ST_CLASS(peerListManagementGetPeers)(
                  const struct ST_CLASS(PeerListManagement)* peerListManagement)
 {
    return(ST_CLASS(peerListGetPeerListNodes)(&peerListManagement->List));

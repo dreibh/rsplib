@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.17 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.18 2004/09/01 15:49:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -255,7 +255,7 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
 {
    struct rserpool_tlv_header* header = (struct rserpool_tlv_header*)&message->Buffer[tlvPosition];
    const size_t                length = (size_t)ntohs(header->atlv_length);
-   const size_t                endPos = tlvPosition + length + getPadding(length,4);
+   const size_t                endPos = tlvPosition + length + getPadding(length, 4);
 
    if(message->Position > endPos ) {
       LOG_WARNING
@@ -311,7 +311,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
    switch(PURE_ATT_TYPE(tlvType)) {
       case ATT_IPv4_ADDRESS:
          if(tlvLength >= 4) {
-            space = (char*)getSpace(message,4);
+            space = (char*)getSpace(message, 4);
             if(space == NULL) {
                LOG_WARNING
                fputs("Unexpected end of IPv4 address TLV!\n", stdlog);
@@ -335,7 +335,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
 #ifdef HAVE_IPV6
       case ATT_IPv6_ADDRESS:
          if(tlvLength >= 16) {
-            space = (char*)getSpace(message,16);
+            space = (char*)getSpace(message, 16);
             if(space == NULL) {
                LOG_WARNING
                fputs("Unexpected end of IPv6 address TLV!\n", stdlog);
@@ -1282,6 +1282,15 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
    struct TransportAddressBlock* transportAddressBlock     = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct TransportAddressBlock* lastTransportAddressBlock = NULL;
    struct TransportAddressBlock* newTransportAddressBlock;
+   uint32_t*                     nsIdentifier;
+
+   // ?????? Non-standard ??????
+   nsIdentifier = (uint32_t*)getSpace(message, sizeof(nsIdentifier));
+   if(nsIdentifier == NULL) {
+      return(false);
+   }
+   message->NSIdentifier = ntohl(*nsIdentifier);
+   // ??????????????????????????
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
