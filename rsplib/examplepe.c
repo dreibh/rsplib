@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.7 2004/07/25 16:55:03 dreibh Exp $
+ *  $Id: examplepe.c,v 1.8 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -290,9 +290,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[n], "-nameserver=" ,12))) {
+         /* Process this later */
+      }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp|-tcp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }
@@ -304,6 +307,16 @@ int main(int argc, char** argv)
       finishLogging();
       exit(1);
    }
+
+   for(n = 1;n < argc;n++) {
+      if(!(strncmp(argv[n], "-nameserver=" ,12))) {
+         if(rspAddStaticNameServer((char*)&argv[n][12]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[n]);
+            exit(1);
+         }
+      }
+   }
+
 
    if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
       puts("ERROR: Unable to create rsplib main loop thread!");

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.10 2004/07/30 11:01:45 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.11 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -198,15 +198,16 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
 static bool checkFinishMessage(struct RSerPoolMessage* message,
                                const size_t            startPosition)
 {
-   struct rserpool_header* header = (struct rserpool_header*)&message->Buffer[startPosition];
-   const size_t            length = (size_t)ntohs(header->ah_length);
-   const size_t            endPos = startPosition + length;
+   struct rserpool_header* header  = (struct rserpool_header*)&message->Buffer[startPosition];
+   const size_t            length  = (size_t)ntohs(header->ah_length);
+   const size_t            endPos  = startPosition + length;
+   const size_t            padding = getPadding(endPos, 4);
 
-   if(message->Position != endPos ) {
+   if(message->Position != endPos + padding) {
       LOG_WARNING
       fputs("Message length invalid!\n", stdlog);
-      fprintf(stdlog, "position=%u expected=%u\n",
-              (unsigned int)message->Position, (unsigned int)endPos);
+      fprintf(stdlog, "position=%u expected=%u padding=%u\n",
+              (unsigned int)message->Position, (unsigned int)endPos, padding);
       LOG_END
       message->Error = RSPERR_INVALID_VALUES;
       return(false);

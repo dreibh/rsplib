@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.18 2004/07/29 16:32:55 dreibh Exp $
+ *  $Id: nameserver.c,v 1.19 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1772,6 +1772,85 @@ static void handlePeerListRequest(struct NameServer*      nameServer,
 }
 
 
+/* ###### Handle peer list response ###################################### */
+static void handlePeerListResponse(struct NameServer*      nameServer,
+                                   int                     fd,
+                                   sctp_assoc_t            assocID,
+                                   struct RSerPoolMessage* message)
+{
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct ST_CLASS(PeerListNode)* newPeerListNode;
+   int                            result;
+
+   if(message->SenderID == nameServer->ServerID) {
+      /* This is our own message -> skip it! */
+      LOG_VERBOSE5
+      fputs("Skipping our own PeerListResponse message\n", stdlog);
+      LOG_END
+      return;
+   }
+
+   LOG_VERBOSE
+   fprintf(stdlog, "Got PeerListResponse from peer $%08x\n",
+           message->SenderID);
+   LOG_END
+
+   if(!(message->Flags & EHT_PEER_LIST_RESPONSE_REJECT)) {
+      if(message->PeerListPtr) {
+         peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                           message->PeerListPtr);
+         while(peerListNode) {
+
+
+            result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                        &nameServer->Peers,
+                        peerListNode->Identifier,
+                        peerListNode->Flags,
+                        peerListNode->AddressBlock,
+                        getMicroTime(),
+                        &newPeerListNode);
+            if((result == RSPERR_OKAY) &&
+               (!STN_METHOD(IsLinked)(&newPeerListNode->PeerListTimerStorageNode))) {
+               /* ====== Activate keep alive timer ======================= */
+               ST_CLASS(peerListActivateTimer)(
+                  &nameServer->Peers.List,
+                  newPeerListNode,
+                  PLNT_EXPIRY,
+                  getMicroTime() + nameServer->PeerTimeoutInterval);
+
+               /* ====== New peer -> Send Peer Presence ================== */
+               sendPeerPresence(nameServer,
+                                nameServer->ENRPUnicastSocket, 0, 0,
+                                newPeerListNode->AddressBlock->AddressArray,
+                                newPeerListNode->AddressBlock->Addresses,
+                                newPeerListNode->Identifier,
+                                false);
+            }
+
+            peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                              message->PeerListPtr, peerListNode);
+         }
+      }
+
+      timerRestart(nameServer->PeerActionTimer,
+                  ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                     &nameServer->Peers));
+
+      /* ====== Print debug information ============================ */
+      LOG_VERBOSE3
+      fputs("Peers:\n", stdlog);
+      nameServerDumpPeers(nameServer);
+      LOG_END
+   }
+   else {
+      LOG_ACTION
+      fprintf(stdlog, "Rejected PeerListResponse from peer $%08x\n",
+            message->SenderID);
+      LOG_END
+   }
+}
+
+
 /* ###### Handle peer name table request ################################# */
 static void handlePeerNameTableRequest(struct NameServer*      nameServer,
                                        int                     fd,
@@ -1836,6 +1915,37 @@ static void handlePeerNameTableRequest(struct NameServer*      nameServer,
 }
 
 
+/* ###### Handle name table response ##################################### */
+static void handlePeerNameTableResponse(struct NameServer*      nameServer,
+                                        int                     fd,
+                                        sctp_assoc_t            assocID,
+                                        struct RSerPoolMessage* message)
+{
+   if(message->SenderID == nameServer->ServerID) {
+      /* This is our own message -> skip it! */
+      LOG_VERBOSE5
+      fputs("Skipping our own NameTableResponse message\n", stdlog);
+      LOG_END
+      return;
+   }
+
+   LOG_VERBOSE
+   fprintf(stdlog, "Got NameTableResponse from peer $%08x\n",
+           message->SenderID);
+   LOG_END
+
+   if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
+
+   }
+   else {
+      LOG_ACTION
+      fprintf(stdlog, "Rejected PeerNameTableResponse from peer $%08x\n",
+            message->SenderID);
+      LOG_END
+   }
+}
+
+
 /* ###### Handle incoming message ######################################## */
 static void handleMessage(struct NameServer*      nameServer,
                           struct RSerPoolMessage* message,
@@ -1866,8 +1976,14 @@ static void handleMessage(struct NameServer*      nameServer,
       case EHT_PEER_LIST_REQUEST:
          handlePeerListRequest(nameServer, sd, message->AssocID, message);
        break;
+      case EHT_PEER_LIST_RESPONSE:
+         handlePeerListResponse(nameServer, sd, message->AssocID, message);
+       break;
       case EHT_PEER_NAME_TABLE_REQUEST:
          handlePeerNameTableRequest(nameServer, sd, message->AssocID, message);
+       break;
+      case EHT_PEER_NAME_TABLE_RESPONSE:
+         handlePeerNameTableResponse(nameServer, sd, message->AssocID, message);
        break;
       default:
          LOG_WARNING

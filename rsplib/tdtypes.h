@@ -1,5 +1,5 @@
 /*
- *  $Id: tdtypes.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: tdtypes.h,v 1.2 2004/08/04 01:02:39 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -147,7 +147,7 @@ typedef unsigned char bool;
 
 
 #ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
+// typedef int socklen_t;
 #endif
 
 

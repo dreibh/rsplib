@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.12 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: servertable.c,v 1.13 2004/08/04 01:02:39 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -222,7 +222,48 @@ void serverTableDelete(struct ServerTable* serverTable)
 }
 
 
-/* ###### Try more nameservers ############################################## */
+/* ###### Add static name server entry ################################### */
+unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
+                                       union sockaddr_union* addressArray,
+                                       size_t                addresses)
+{
+   char                           transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*  transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   int                            result;
+
+   transportAddressBlockNew(transportAddressBlock,
+                            IPPROTO_SCTP,
+                            getPort((struct sockaddr*)&addressArray[0]),
+                            0,
+                            addressArray,
+                            addresses);
+   result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+               &serverTable->List,
+               0,
+               PLNF_STATIC,
+               transportAddressBlock,
+               getMicroTime(),
+               &peerListNode);
+   if(result == RSPERR_OKAY) {
+      LOG_VERBOSE
+      fputs("Added static entry to server table: ", stdlog);
+      ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+      fputs("\n", stdlog);
+      LOG_END
+   }
+   else {
+      LOG_WARNING
+      fputs("Unable to add static entry to server table: ", stdlog);
+      transportAddressBlockPrint(transportAddressBlock, stdlog);
+      fputs("\n", stdlog);
+      LOG_END
+   }
+   return(result);
+}
+
+
+/* ###### Try more nameservers ########################################### */
 static void tryNextBlock(struct ServerTable*     serverTable,
                          ENRPIdentifierType*     lastNSIdentifier,
                          TransportAddressBlock** lastTransportAddressBlock,
@@ -404,10 +445,6 @@ int serverTableFindServer(struct ServerTable* serverTable)
       n = 0;
       FD_ZERO(&rfdset);
       FD_ZERO(&wfdset);
-      if(serverTable->AnnounceSocket >= 0) {
-         FD_SET(serverTable->AnnounceSocket, &rfdset);
-         n = max(n, serverTable->AnnounceSocket);
-      }
       nextTimeout = serverTable->NameServerConnectTimeout;
       for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
          if(sd[i] >= 0) {
@@ -415,6 +452,13 @@ int serverTableFindServer(struct ServerTable* serverTable)
             n           = max(n, sd[i]);
             nextTimeout = min(nextTimeout, timeout[i]);
          }
+      }
+      if(n == 0) {
+         nextTimeout = 500000;
+      }
+      if(serverTable->AnnounceSocket >= 0) {
+         FD_SET(serverTable->AnnounceSocket, &rfdset);
+         n = max(n, serverTable->AnnounceSocket);
       }
       selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
       selectTimeout.tv_usec = nextTimeout % (card64)1000000;

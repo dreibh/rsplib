@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.5 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: servertable.h,v 1.6 2004/08/04 01:02:39 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,7 @@
 
 #include "tdtypes.h"
 #include "tagitem.h"
+#include "sockaddrunion.h"
 #include "dispatcher.h"
 #include "timer.h"
 #include "poolnamespacemanagement.h"
@@ -84,6 +85,18 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
   * @param serverTable ServerTable.
   */
 void serverTableDelete(struct ServerTable* ServerTable);
+
+/**
+  * Add static name server entry.
+  *
+  * @param serverTable ServerTable.
+  * @param addressArray Addresses.
+  * @param addresses Number of addresses.
+  * @return Error code.
+  */
+unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
+                                       union sockaddr_union* addressArray,
+                                       size_t                addresses);
 
 /**
   * Do server hunt.

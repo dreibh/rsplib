@@ -375,7 +375,7 @@ static int ST_CLASS(leastUsedDegradationComparison)(
                                             poolElementNode1->Degradation, 0);
    const unsigned int v2 = ST_CLASS(getSum)(poolElementNode2->PolicySettings.Load,
                                             poolElementNode2->Degradation, 0);
-   COMPARE_KEY_DESCENDING(v1, v2);
+   COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
    return(0);
 }
@@ -407,7 +407,7 @@ static int ST_CLASS(priorityLeastUsedComparison)(
                                             poolElementNode1->PolicySettings.LoadDegradation, 0);
    const unsigned int v2 = ST_CLASS(getSum)(poolElementNode2->PolicySettings.Load,
                                             poolElementNode2->PolicySettings.LoadDegradation, 0);
-   COMPARE_KEY_DESCENDING(v1, v2);
+   COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
    return(0);
 }
@@ -430,7 +430,7 @@ static int ST_CLASS(priorityLeastUsedDegradationComparison)(
    const unsigned int v2 = ST_CLASS(getSum)(poolElementNode2->PolicySettings.Load,
                                             poolElementNode2->PolicySettings.LoadDegradation,
                                             poolElementNode2->Degradation);
-   COMPARE_KEY_DESCENDING(v1, v2);
+   COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
    return(0);
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.4 2004/07/25 16:55:03 dreibh Exp $
+ *  $Id: examplepu.c,v 1.5 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -176,9 +176,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+         /* Process this later */
+      }
       else {
          puts("Bad arguments!");
-         printf("Usage: %s {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
+         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
          exit(1);
       }
    }
@@ -194,6 +197,15 @@ int main(int argc, char** argv)
 #ifndef FAST_BREAK
    installBreakDetector();
 #endif
+
+   for(n = 1;n < argc;n++) {
+      if(!(strncmp(argv[n], "-nameserver=" ,12))) {
+         if(rspAddStaticNameServer((char*)&argv[n][12]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[n]);
+            exit(1);
+         }
+      }
+   }
 
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
    tags[0].Data = 100;

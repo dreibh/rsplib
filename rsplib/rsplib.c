@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rsplib.c,v 1.8 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -70,7 +70,7 @@ static void unlock(struct Dispatcher* dispatcher, void* userData)
 
 
 /* ###### Initialize library ############################################# */
-int rspInitialize(struct TagItem* tags)
+unsigned int rspInitialize(struct TagItem* tags)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
@@ -85,7 +85,7 @@ int rspInitialize(struct TagItem* tags)
          tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
          tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
          tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
-         return(0);
+         return(RSPERR_OKAY);
       }
       else {
          dispatcherDelete(gDispatcher);
@@ -93,7 +93,7 @@ int rspInitialize(struct TagItem* tags)
       }
    }
 
-   return(ENOMEM);
+   return(RSPERR_OUT_OF_MEMORY);
 }
 
 
@@ -109,6 +109,54 @@ void rspCleanUp()
 
       /* Give sctplib some time to cleanly shut down all associations */
       usleep(250000);
+   }
+}
+
+
+/* ###### Add static name server entry ################################### */
+unsigned int rspAddStaticNameServer(const char* addressString)
+{
+   union sockaddr_union addressArray[MAX_PE_TRANSPORTADDRESSES];
+   char                 str[1024];
+   size_t               addresses;
+   char*                address;
+   char*                idx;
+
+   if(gAsapInstance) {
+      safestrcpy((char*)&str, addressString, sizeof(str));
+      addresses = 0;
+      address = str;
+      while(addresses < MAX_PE_TRANSPORTADDRESSES) {
+         idx = index(address, ',');
+         if(idx) {
+            *idx = 0x00;
+         }
+         if(!string2address(address, &addressArray[addresses])) {
+            return(RSPERR_UNRECOGNIZED_PARAMETER);
+         }
+         addresses++;
+         if(idx) {
+            address = idx;
+            address++;
+         }
+         else {
+            break;
+         }
+      }
+      if(addresses < 1) {
+         return(RSPERR_INVALID_VALUES);
+      }
+
+      return(serverTableAddStaticEntry(
+                gAsapInstance->NameServerTable,
+                (union sockaddr_union*)&addressArray,
+                addresses));
+   }
+   else {
+      LOG_ERROR
+      fputs("rsplib is not initialized\n", stdlog);
+      LOG_END
+      return(RSPERR_NOT_INITIALIZED);
    }
 }
 

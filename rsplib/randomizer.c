@@ -1,5 +1,5 @@
 /*
- *  $Id: randomizer.c,v 1.5 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: randomizer.c,v 1.6 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *

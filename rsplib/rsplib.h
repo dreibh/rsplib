@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.4 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rsplib.h,v 1.5 2004/08/04 01:02:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -92,7 +92,15 @@ struct EndpointAddressInfo {
   * @param tags Additional parameters.
   * @return 0 in case of success, <>0 in case of error.
   */
-int rspInitialize(struct TagItem* tags CPP_DEFAULT(NULL));
+unsigned int rspInitialize(struct TagItem* tags CPP_DEFAULT(NULL));
+
+/**
+  * Add static name server entry.
+  *
+  * @addressString Comma-separated list of transport addresses.
+  * @return Error code.
+  */
+unsigned int rspAddStaticNameServer(const char* addressString);
 
 /**
   * Clean up rsplib.
