@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.45 2005/03/04 13:25:26 dreibh Exp $
+ *  $Id: netutilities.c,v 1.46 2005/03/05 00:03:43 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -1584,13 +1584,13 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    struct sctp_paddrparams peerParams;
    struct sctp_assocparams assocParams;
    union sockaddr_union*   addrs;
-   size_t                  size;
+   socklen_t               size;
    int                     i, n;
    bool                    result = true;
 
-   size = sizeof(rtoinfo);
+   size = (socklen_t)sizeof(rtoinfo);
    rtoinfo.srto_assoc_id = assocID;
-   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0) {
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, &size) == 0) {
       LOG_VERBOSE3
       fprintf(stdlog, "  Current RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
       fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
@@ -1602,7 +1602,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       rtoinfo.srto_max     = tagListGetData(tags, TAG_TuneSCTP_MaxRTO,     rtoinfo.srto_max);
       rtoinfo.srto_initial = tagListGetData(tags, TAG_TuneSCTP_InitialRTO, rtoinfo.srto_initial);
 
-      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, sizeof(rtoinfo)) < 0) {
+      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t)sizeof(rtoinfo)) < 0) {
          result = false;
          LOG_WARNING
          perror("SCTP_RTOINFO");
@@ -1624,9 +1624,9 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       LOG_END
    }
 
-   size = sizeof(assocParams);
+   size = (socklen_t)sizeof(assocParams);
    assocParams.sasoc_assoc_id = assocID;
-   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t *)&size) == 0) {
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, &size) == 0) {
       LOG_VERBOSE3
       fprintf(stdlog, "Current Assoc info of socket %d, assoc %u:\n", sockfd, (unsigned int)assocParams.sasoc_assoc_id);
       fprintf(stdlog, "  AssocMaxRXT:       %u\n", assocParams.sasoc_asocmaxrxt);
@@ -1640,7 +1640,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       assocParams.sasoc_local_rwnd  = tagListGetData(tags, TAG_TuneSCTP_LocalRWND,   assocParams.sasoc_local_rwnd);
       assocParams.sasoc_cookie_life = tagListGetData(tags, TAG_TuneSCTP_CookieLife,  assocParams.sasoc_cookie_life);
 
-      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, sizeof(assocParams)) < 0) {
+      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t)sizeof(assocParams)) < 0) {
          result = false;
          LOG_WARNING
          perror("SCTP_ASSOCINFO");
@@ -1670,9 +1670,9 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
          peerParams.spp_assoc_id = assocID;
          memcpy((void*)&(peerParams.spp_address),
                 (const void*)&addrs[i], sizeof(union sockaddr_union));
-         size = sizeof(peerParams);
+         size = (socklen_t)sizeof(peerParams);
 
-         if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_PARAMS,
+         if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_INFO,
                           (void*)&peerParams, &size) == 0) {
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);

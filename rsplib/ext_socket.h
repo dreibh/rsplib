@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.2 2004/11/11 21:41:57 dreibh Exp $
+ *  $Id: ext_socket.h,v 1.3 2005/03/05 00:03:43 tuexen Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -59,10 +59,6 @@
 #define SOCKETAPI_MAJOR_VERSION  1
 #define SOCKETAPI_MINOR_VERSION  3000
 
-
-#if defined(__APPLE__)
-typedef int socklen_t;
-#endif
 
 
 
@@ -345,7 +341,8 @@ struct sctp_event_subscribe
 #define SCTP_SET_STREAM_TIMEOUTS    1014
 #define SCTP_PEER_ADDR_PARAMS       1015
 #define SCTP_STATUS                 1016
-#define SCTP_GET_PEER_ADDR_INFO     1017
+#define SCTP_PEER_ADDR_INFO         1017
+#define SCTP_GET_PEER_ADDR_INFO     SCTP_PEER_ADDR_INFO /* This can be removed */
 
 #define SCTP_NODELAY                1018
 #define SCTP_SET_DEFAULT_SEND_PARAM 1019
