@@ -81,8 +81,8 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     transportAddressBlock,
-                                  const int                         registratorSocketDescriptor,
-                                  const sctp_assoc_t                registratorAssocID);
+                                  const int                         connectionSocketDescriptor,
+                                  const sctp_assoc_t                connectionAssocID);
 void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolElementNode);
 void ST_CLASS(poolElementNodeGetDescription)(
         struct ST_CLASS(PoolElementNode)* poolElementNode,

@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.24 2004/08/24 09:38:49 dreibh Exp $
+ *  $Id: nameserver.c,v 1.25 2004/08/24 11:54:08 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -70,42 +70,6 @@
 #define NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
 
 
-struct NameServerUserNode
-{
-   struct STN_CLASSNAME      Node;
-   struct ST_CLASSNAME       PoolElementNodeReferenceStorage;
-
-   int                       Socket;
-   sctp_assoc_t              AssocID;
-};
-
-int nameServerUserNodeComparison(const void* nodePtr1, const void* nodePtr2)
-{
-   const struct NameServerUserNode* node1 = (const struct NameServerUserNode*)nodePtr1;
-   const struct NameServerUserNode* node2 = (const struct NameServerUserNode*)nodePtr2;
-   if(node1->AssocID < node2->AssocID) {
-      return(-1);
-   }
-   else if(node1->AssocID > node2->AssocID) {
-      return(1);
-   }
-   if(node1->Socket < node2->Socket) {
-      return(-1);
-   }
-   else if(node1->Socket > node2->Socket) {
-      return(1);
-   }
-   return(0);
-}
-
-void nameServerUserNodePrint(const void* nodePtr, FILE* fd)
-{
-   const struct NameServerUserNode* node = (const struct NameServerUserNode*)nodePtr;
-   fprintf(fd, "User socket %d, assoc %u has %u pool elements:\n",
-           node->Socket, node->AssocID,
-           ST_METHOD(GetElements)(&node->PoolElementNodeReferenceStorage));
-   ST_METHOD(Print)((struct ST_CLASSNAME*)&node->PoolElementNodeReferenceStorage, fd);
-}
 
 
 struct NameServer
@@ -117,7 +81,6 @@ struct NameServer
    struct ST_CLASS(PeerListManagement)      Peers;
    struct Timer*                            NamespaceActionTimer;
    struct Timer*                            PeerActionTimer;
-   ST_CLASSNAME                             UserStorage;
 
    int                                      ASAPAnnounceSocket;
    union sockaddr_union                     ASAPAnnounceAddress;
@@ -149,219 +112,7 @@ struct NameServer
 };
 
 
-struct PoolElementNodeReference
-{
-   struct STN_CLASSNAME              Node;
-   struct PoolHandle                 Handle;
-   struct ST_CLASS(PoolElementNode)* Reference;
-};
-
-
 void nameServerDumpNamespace(struct NameServer* nameServer);
-void nameServerDumpUsers(struct NameServer* nameServer);
-
-
-static int poolElementNodeReferenceComparison(const void* nodePtr1, const void* nodePtr2)
-{
-   const struct PoolElementNodeReference* node1 =
-      (const struct PoolElementNodeReference*)nodePtr1;
-   const struct PoolElementNodeReference* node2 =
-      (const struct PoolElementNodeReference*)nodePtr2;
-
-   if((long)node1->Reference < (long)node2->Reference) {
-      return(-1);
-   }
-   else if((long)node1->Reference > (long)node2->Reference) {
-      return(1);
-   }
-   return(0);
-}
-
-static void poolElementNodeReferencePrint(const void* nodePtr, FILE* fd)
-{
-   struct PoolElementNodeReference* node =
-      (struct PoolElementNodeReference*)nodePtr;
-   ST_CLASS(poolElementNodePrint)(node->Reference, fd,
-            PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
-}
-
-
-
-struct NameServerUserNode* nameServerAddUser(
-                              struct NameServer*                nameServer,
-                              const int                         sd,
-                              const sctp_assoc_t                assocID,
-                              struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct NameServerUserNode*       nameServerUserNode;
-   struct PoolElementNodeReference* poolElementNodeReference;
-   struct NameServerUserNode        cmpNameServerUserNode;
-   struct PoolElementNodeReference  cmpPoolElementNodeReference;
-
-   cmpNameServerUserNode.Socket  = sd;
-   cmpNameServerUserNode.AssocID = assocID;
-   nameServerUserNode = (struct NameServerUserNode*)ST_METHOD(Find)(
-                                                       &nameServer->UserStorage,
-                                                       &cmpNameServerUserNode.Node);
-   if(nameServerUserNode == NULL) {
-      nameServerUserNode = (struct NameServerUserNode*)malloc(sizeof(struct NameServerUserNode));
-      if(nameServerUserNode != NULL) {
-         STN_METHOD(New)(&nameServerUserNode->Node);
-         ST_METHOD(New)(&nameServerUserNode->PoolElementNodeReferenceStorage,
-                         poolElementNodeReferencePrint,
-                         poolElementNodeReferenceComparison);
-         nameServerUserNode->Socket  = sd;
-         nameServerUserNode->AssocID = assocID;
-         ST_METHOD(Insert)(&nameServer->UserStorage,
-                           &nameServerUserNode->Node);
-      }
-   }
-
-   if(nameServerUserNode != NULL) {
-      cmpPoolElementNodeReference.Reference = poolElementNode;
-      poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(Find)(
-                                    &nameServerUserNode->PoolElementNodeReferenceStorage,
-                                    &cmpPoolElementNodeReference.Node);
-      if(poolElementNodeReference == NULL) {
-         poolElementNodeReference = (struct PoolElementNodeReference*)malloc(sizeof(struct PoolElementNodeReference));
-         if(poolElementNodeReference != NULL) {
-            STN_METHOD(New)(&poolElementNodeReference->Node);
-            poolElementNodeReference->Reference = poolElementNode;
-            poolElementNodeReference->Handle    = poolElementNode->OwnerPoolNode->Handle;
-            ST_METHOD(Insert)(&nameServerUserNode->PoolElementNodeReferenceStorage,
-                              &poolElementNodeReference->Node);
-         }
-         else {
-            nameServerUserNode = NULL;
-         }
-      }
-   }
-
-   return(nameServerUserNode);
-}
-
-void nameServerRemoveUser(struct NameServer*                nameServer,
-                          const int                         sd,
-                          const sctp_assoc_t                assocID,
-                          struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   /*
-      WARNING: Do not use poolElementNode here,
-               it may point to already deallocated memory!
-   */
-   struct NameServerUserNode*       nameServerUserNode;
-   struct PoolElementNodeReference* poolElementNodeReference;
-   struct NameServerUserNode        cmpNameServerUserNode;
-   struct PoolElementNodeReference  cmpPoolElementNodeReference;
-
-   cmpNameServerUserNode.Socket  = sd;
-   cmpNameServerUserNode.AssocID = assocID;
-   nameServerUserNode = (struct NameServerUserNode*)ST_METHOD(Find)(
-                                                      &nameServer->UserStorage,
-                                                      &cmpNameServerUserNode.Node);
-   if(nameServerUserNode != NULL) {
-      cmpPoolElementNodeReference.Reference = poolElementNode;
-      poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(Find)(
-                                    &nameServerUserNode->PoolElementNodeReferenceStorage,
-                                    &cmpPoolElementNodeReference.Node);
-      if(poolElementNodeReference != NULL) {
-         ST_METHOD(Remove)(&nameServerUserNode->PoolElementNodeReferenceStorage,
-                           &poolElementNodeReference->Node);
-         free(poolElementNodeReference);
-      }
-      if(ST_METHOD(GetElements)(&nameServerUserNode->PoolElementNodeReferenceStorage) == 0) {
-         ST_METHOD(Remove)(&nameServer->UserStorage,
-                           &nameServerUserNode->Node);
-         free(nameServerUserNode);
-      }
-   }
-}
-
-void nameServerCleanUser(struct NameServer* nameServer,
-                         const int          sd,
-                         const sctp_assoc_t assocID)
-{
-   struct PoolElementNodeReference* poolElementNodeReference;
-   struct PoolElementNodeReference* nextPoolElementNodeReference;
-   struct NameServerUserNode*       nameServerUserNode;
-   struct NameServerUserNode        cmpNameServerUserNode;
-   unsigned int                     result;
-
-   cmpNameServerUserNode.Socket  = sd;
-   cmpNameServerUserNode.AssocID = assocID;
-   nameServerUserNode = (struct NameServerUserNode*)ST_METHOD(Find)(
-                                                      &nameServer->UserStorage,
-                                                      &cmpNameServerUserNode.Node);
-   if(nameServerUserNode != NULL) {
-      LOG_ACTION
-      fprintf(stdlog,
-              "Removing all pool elements registered by user socket %u, assoc %u...\n",
-              sd, assocID);
-      LOG_END
-
-      poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(GetFirst)(
-                                    &nameServerUserNode->PoolElementNodeReferenceStorage);
-      while(poolElementNodeReference != NULL) {
-         nextPoolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(GetNext)(
-                                      &nameServerUserNode->PoolElementNodeReferenceStorage,
-                                      &poolElementNodeReference->Node);
-         LOG_VERBOSE
-         fprintf(stdlog, "Removing pool element $%08x of pool ",
-                 &poolElementNodeReference->Reference->Identifier);
-         poolHandlePrint(&poolElementNodeReference->Reference->OwnerPoolNode->Handle, stdlog);
-         fputs("\n", stdlog);
-         LOG_END
-         result = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
-                     &nameServer->Namespace,
-                     &poolElementNodeReference->Reference->OwnerPoolNode->Handle,
-                     poolElementNodeReference->Reference->Identifier);
-         if(result == RSPERR_OKAY) {
-            LOG_ACTION
-            fputs("User clean-up successfully completed\n", stdlog);
-            LOG_END
-            LOG_VERBOSE3
-            fputs("Namespace content:\n", stdlog);
-            nameServerDumpNamespace(nameServer);
-            fputs("Users:\n", stdlog);
-            nameServerDumpUsers(nameServer);
-            LOG_END
-         }
-         else {
-            LOG_ERROR
-            fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
-                    poolElementNodeReference->Reference->Identifier);
-            poolHandlePrint(&poolElementNodeReference->Reference->OwnerPoolNode->Handle, stdlog);
-            fputs(": ", stdlog);
-            rserpoolErrorPrint(result, stdlog);
-            fputs("\n", stdlog);
-            LOG_END_FATAL
-         }
-
-         poolElementNodeReference = nextPoolElementNodeReference;
-      }
-
-      LOG_ACTION
-      fprintf(stdlog,
-               "All pool elements registered by user socket %u, assoc %u have been removed\n",
-               sd, assocID);
-      LOG_END
-   }
-   else {
-      LOG_VERBOSE
-      fprintf(stdlog,
-              "No pool elements are registered by user socket %u, assoc %u -> nothing to do\n",
-              sd, assocID);
-      LOG_END
-   }
-}
-
-void nameServerDumpUsers(struct NameServer* nameServer)
-{
-   fputs("*************** User Dump ********************\n", stdlog);
-   ST_METHOD(Print)(&nameServer->UserStorage, stdlog);
-   fputs("**********************************************\n", stdlog);
-}
-
 
 void nameServerDumpPeers(struct NameServer* nameServer)
 {
@@ -370,9 +121,6 @@ void nameServerDumpPeers(struct NameServer* nameServer)
    fputs("******************************************\n", stdlog);
 
 }
-
-
-
 
 struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                  int                           asapSocket,
@@ -410,59 +158,10 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      void*              userData);
 
 
-
-
 static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                     void*                             userData)
 {
-   struct NameServer*               nameServer         = (struct NameServer*)userData;
-   struct NameServerUserNode*       nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
-   struct PoolElementNodeReference* poolElementNodeReference;
-   struct PoolElementNodeReference  cmpPoolElementNodeReference;
-   struct ST_CLASS(PoolNode)        delPoolNode;
-   struct ST_CLASS(PoolElementNode) delPoolElementNode;
-
-   if(nameServerUserNode) {
-      /* ====== Send PeerNameUpdate to delete PE ========================= */
-      if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
-         /* The ASAP draft wants a full Pool Element Parameter, so
-            we have to fill it. AddressBlock is still valid, we
-            set the policy to default (RR), since it is already gone. */
-         cmpPoolElementNodeReference.Reference = poolElementNode;
-         poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(Find)(
-                                       &nameServerUserNode->PoolElementNodeReferenceStorage,
-                                       &cmpPoolElementNodeReference.Node);
-         if(poolElementNodeReference) {
-            delPoolNode.Handle                  = poolElementNodeReference->Handle;
-            delPoolElementNode.Identifier       = poolElementNode->Identifier;
-            delPoolElementNode.HomeNSIdentifier = nameServer->ServerID;
-            delPoolElementNode.RegistrationLife = 0;
-            delPoolElementNode.AddressBlock     = poolElementNode->AddressBlock;
-            delPoolElementNode.OwnerPoolNode    = &delPoolNode;
-            poolPolicySettingsNew(&delPoolElementNode.PolicySettings);
-            delPoolElementNode.PolicySettings.PolicyType = PPT_ROUNDROBIN;
-            sendPeerNameUpdate(nameServer, &delPoolElementNode, PNUP_DEL_PE);
-         }
-         else {
-            LOG_ERROR
-            fprintf(stderr, "Reference to PE $%08x not found\n", poolElementNode->Identifier);
-            LOG_END_FATAL
-         }
-      }
-
-
-      nameServerRemoveUser(nameServer,
-                           nameServerUserNode->Socket,
-                           nameServerUserNode->AssocID,
-                           poolElementNode);
-
-      LOG_VERBOSE3
-      fputs("Users:\n", stdlog);
-      nameServerDumpUsers(nameServer);
-      LOG_END
-   }
 }
-
 
 static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
                                  void*                          userData)
@@ -510,9 +209,6 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                       nameServer->ServerID,
                                       peerListNodeDisposer,
                                       nameServer);
-      ST_METHOD(New)(&nameServer->UserStorage,
-                     nameServerUserNodePrint,
-                     nameServerUserNodeComparison);
 
       nameServer->InInitializationPhase    = true;
       nameServer->MentorServerID           = 0;
@@ -648,7 +344,6 @@ void nameServerDelete(struct NameServer* nameServer)
          ext_close(nameServer->ENRPMulticastSocket >= 0);
          nameServer->ENRPMulticastSocket = -1;
       }
-      ST_METHOD(Delete)(&nameServer->UserStorage);
       if(nameServer->StateMachine) {
          dispatcherDelete(nameServer->StateMachine);
          nameServer->StateMachine = NULL;
@@ -711,6 +406,71 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       rserpoolMessageDelete(message);
    }
    timerStart(timer, getMicroTime() + nameServer->ServerAnnounceCycle);
+}
+
+
+/* ###### Remove all PEs registered via a given connection ############### */
+static void nameServerRemovePoolElementsOfConnection(struct NameServer* nameServer,
+                                                     const int          sd,
+                                                     const sctp_assoc_t assocID)
+{
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+   struct ST_CLASS(PoolElementNode)* poolElementNode =
+      ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
+         &nameServer->Namespace.Namespace,
+         sd, assocID);
+   unsigned int                      result;
+
+   if(poolElementNode) {
+      LOG_ACTION
+      fprintf(stdlog,
+              "Removing all pool elements registered by user socket %u, assoc %u...\n",
+              sd, assocID);
+      LOG_END
+
+      do {
+         nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNodeForSameConnection)(
+                                  &nameServer->Namespace.Namespace,
+                                  poolElementNode);
+         LOG_VERBOSE
+         fprintf(stdlog, "Removing pool element $%08x of pool ",
+                 poolElementNode->Identifier);
+         poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+
+         if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
+            /* We own this PE -> send PeerNameUpdate for its removal. */
+            sendPeerNameUpdate(nameServer, poolElementNode, PNUP_DEL_PE);
+         }
+
+         result = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
+                     &nameServer->Namespace,
+                     poolElementNode);
+         if(result == RSPERR_OKAY) {
+            LOG_VERBOSE2
+            fputs("Pool element successfully removed\n", stdlog);
+            LOG_END
+         }
+         else {
+            LOG_ERROR
+            fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
+                    poolElementNode->Identifier);
+            poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(result, stdlog);
+            fputs("\n", stdlog);
+            LOG_END_FATAL
+         }
+
+         poolElementNode = nextPoolElementNode;
+      } while(poolElementNode != NULL);
+
+      LOG_VERBOSE3
+      fputs("Namespace content:\n", stdlog);
+      nameServerDumpNamespace(nameServer);
+      LOG_END
+   }
 }
 
 
@@ -868,41 +628,38 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
 
 /* ###### Send Endpoint Keep Alive ####################################### */
 static void sendEndpointEndpointKeepAlive(struct NameServer*                nameServer,
-                                  struct ST_CLASS(PoolElementNode)* poolElementNode)
+                                          struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   struct NameServerUserNode* nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
-   struct RSerPoolMessage*    message;
+   struct RSerPoolMessage* message;
 
-   if(nameServerUserNode) {
-      message = rserpoolMessageNew(NULL, 1024);
-      if(message != NULL) {
-         LOG_VERBOSE2
+   message = rserpoolMessageNew(NULL, 1024);
+   if(message != NULL) {
+      LOG_VERBOSE2
+      fprintf(stdlog, "Sending EndpointKeepAlive for pool element $%08x in pool ",
+              poolElementNode->Identifier);
+      poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+      fputs("\n", stdlog);
+      LOG_END
+
+      message->Handle     = poolElementNode->OwnerPoolNode->Handle;
+      message->Identifier = poolElementNode->Identifier;
+      message->Type       = AHT_ENDPOINT_KEEP_ALIVE;
+      message->Flags      = 0x00;
+      if(rserpoolMessageSend(IPPROTO_SCTP,
+                             poolElementNode->ConnectionSocketDescriptor,
+                             poolElementNode->ConnectionAssocID,
+                             0, 0,
+                             message) == false) {
+         LOG_ERROR
          fprintf(stdlog, "Sending EndpointKeepAlive for pool element $%08x in pool ",
-                 poolElementNode->Identifier);
+                  poolElementNode->Identifier);
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-         fputs("\n", stdlog);
+         fputs(" failed\n", stdlog);
          LOG_END
-
-         message->Handle     = poolElementNode->OwnerPoolNode->Handle;
-         message->Identifier = poolElementNode->Identifier;
-         message->Type       = AHT_ENDPOINT_KEEP_ALIVE;
-         message->Flags      = 0x00;
-         if(rserpoolMessageSend(IPPROTO_SCTP,
-                                nameServerUserNode->Socket,
-                                nameServerUserNode->AssocID,
-                                0, 0,
-                                message) == false) {
-            LOG_ERROR
-            fprintf(stdlog, "Sending EndpointKeepAlive for pool element $%08x in pool ",
-                     poolElementNode->Identifier);
-            poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-            fputs(" failed\n", stdlog);
-            LOG_END
-            return;
-         }
-
-         rserpoolMessageDelete(message);
+         return;
       }
+
+      rserpoolMessageDelete(message);
    }
 }
 
@@ -957,6 +714,12 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
             fputs(" -> removing it\n", stdlog);
             LOG_END
          }
+
+         if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
+            /* We own this PE -> send PeerNameUpdate for its removal. */
+            sendPeerNameUpdate(nameServer, poolElementNode, PNUP_DEL_PE);
+         }
+
          result = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
                      &nameServer->Namespace,
                      poolElementNode);
@@ -967,8 +730,6 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
             LOG_VERBOSE3
             fputs("Namespace content:\n", stdlog);
             nameServerDumpNamespace(nameServer);
-            fputs("Users:\n", stdlog);
-            nameServerDumpUsers(nameServer);
             LOG_END
          }
          else {
@@ -1265,7 +1026,6 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
    char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct NameServerUserNode*        nameServerUserNode;
    union sockaddr_union*             addressArray;
    struct TagItem                    tags[8];
    int                               addresses;
@@ -1331,20 +1091,6 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
             fputs("\n", stdlog);
             LOG_END
 
-            /* ====== Add user =========================================== */
-            nameServerUserNode = nameServerAddUser(nameServer, fd, assocID, poolElementNode);
-            if((poolElementNode->UserData != NULL) &&
-               (poolElementNode->UserData != nameServerUserNode)) {
-               LOG_WARNING
-               fputs("NameServerUserNode changed for pool element ", stdlog);
-               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
-               fputs(" in pool ", stdlog);
-               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
-               fputs("\n", stdlog);
-               LOG_END
-            }
-            poolElementNode->UserData = nameServerUserNode;
-
             /* ====== Tune SCTP association ============================== */
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
             tags[0].Data = 500;
@@ -1385,8 +1131,6 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
             LOG_VERBOSE3
             fputs("Namespace content:\n", stdlog);
             nameServerDumpNamespace(nameServer);
-            fputs("Users:\n", stdlog);
-            nameServerDumpUsers(nameServer);
             LOG_END
 
             /* ====== Send update to peers =============================== */
@@ -1438,6 +1182,10 @@ static void handleDeregistrationRequest(struct NameServer*      nameServer,
                                         sctp_assoc_t            assocID,
                                         struct RSerPoolMessage* message)
 {
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)  delPoolElementNode;
+   struct ST_CLASS(PoolNode)         delPoolNode;
+
    LOG_ACTION
    fprintf(stdlog, "Deregistration request for pool element $%08x of pool ",
            message->Identifier);
@@ -1447,31 +1195,72 @@ static void handleDeregistrationRequest(struct NameServer*      nameServer,
 
    message->Type  = AHT_DEREGISTRATION_RESPONSE;
    message->Flags = AHF_DEREGISTRATION_REJECT;
-   message->Error = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
-                       &nameServer->Namespace,
-                       &message->Handle,
-                       message->Identifier);
-   if(message->Error == RSPERR_OKAY) {
-      message->Flags = 0x00;
 
-      LOG_ACTION
-      fputs("Deregistration successfully completed\n", stdlog);
-      LOG_END
-      LOG_VERBOSE3
-      fputs("Namespace content:\n", stdlog);
-      nameServerDumpNamespace(nameServer);
-      fputs("Users:\n", stdlog);
-      nameServerDumpUsers(nameServer);
-      LOG_END
+   poolElementNode = ST_CLASS(poolNamespaceManagementFindPoolElement)(
+                        &nameServer->Namespace,
+                        &message->Handle,
+                        message->Identifier);
+   if(poolElementNode != NULL) {
+      /*
+         The ASAP draft says that PeerNameUpdate has to include a full
+         Pool Element Parameter, even if this is unnecessary for
+         a removal (ID would be sufficient). Since we cannot guarantee
+         that deregistration in the namespace is successful, we have
+         to copy all data before!
+         Obviously, this is a waste of CPU cycles, memory and bandwidth...
+      */
+      delPoolNode                      = *(poolElementNode->OwnerPoolNode);
+      delPoolElementNode               = *poolElementNode;
+      delPoolElementNode.OwnerPoolNode = &delPoolNode;
+      delPoolElementNode.AddressBlock  = transportAddressBlockDuplicate(poolElementNode->AddressBlock);
+      if(delPoolElementNode.AddressBlock != NULL) {
+
+         message->Error = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
+                             &nameServer->Namespace,
+                             poolElementNode);
+         if(message->Error == RSPERR_OKAY) {
+            message->Flags = 0x00;
+
+            if(delPoolElementNode.HomeNSIdentifier == nameServer->ServerID) {
+               /* We own this PE -> send PeerNameUpdate for its removal. */
+               sendPeerNameUpdate(nameServer, &delPoolElementNode, PNUP_DEL_PE);
+            }
+
+            LOG_ACTION
+            fputs("Deregistration successfully completed\n", stdlog);
+            LOG_END
+            LOG_VERBOSE3
+            fputs("Namespace content:\n", stdlog);
+            nameServerDumpNamespace(nameServer);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
+                    message->Identifier);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(message->Error, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
+
+         transportAddressBlockDelete(delPoolElementNode.AddressBlock);
+         free(delPoolElementNode.AddressBlock);
+         delPoolElementNode.AddressBlock = NULL;
+      }
+      else {
+         message->Error = RSPERR_OUT_OF_MEMORY;
+      }
    }
    else {
+      message->Flags = 0x00;
+      message->Error = RSPERR_OKAY;
       LOG_WARNING
-      fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
-            message->Identifier);
+      fprintf(stdlog, "Deregistration request for non-existing pool element $%08x of pool ",
+              message->Identifier);
       poolHandlePrint(&message->Handle, stdlog);
-      fputs(": ", stdlog);
-      rserpoolErrorPrint(message->Error, stdlog);
-      fputs("\n", stdlog);
+      fputs(". Reporting success, since it seems to be already gone.\n", stdlog);
       LOG_END
    }
 
@@ -1629,6 +1418,12 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
          poolHandlePrint(&message->Handle, stdlog);
          fputs(" -> limit reached, removing it\n", stdlog);
          LOG_END
+
+         if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
+            /* We own this PE -> send PeerNameUpdate for its removal. */
+            sendPeerNameUpdate(nameServer, poolElementNode, PNUP_DEL_PE);
+         }
+
          result = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
                      &nameServer->Namespace,
                      poolElementNode);
@@ -1728,8 +1523,6 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
             LOG_VERBOSE3
             fputs("Namespace content:\n", stdlog);
             nameServerDumpNamespace(nameServer);
-            fputs("Users:\n", stdlog);
-            nameServerDumpUsers(nameServer);
             LOG_END
          }
          else {
@@ -2453,8 +2246,8 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                              notification->sn_assoc_change.sac_assoc_id);
 
                      LOG_END
-                     nameServerCleanUser(nameServer, fd,
-                                         notification->sn_assoc_change.sac_assoc_id);
+                     nameServerRemovePoolElementsOfConnection(nameServer, fd,
+                                                              notification->sn_assoc_change.sac_assoc_id);
                   }
                   else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
                      LOG_ACTION
@@ -2463,19 +2256,19 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                              notification->sn_assoc_change.sac_assoc_id);
 
                      LOG_END
-                     nameServerCleanUser(nameServer, fd,
-                                         notification->sn_assoc_change.sac_assoc_id);
+                     nameServerRemovePoolElementsOfConnection(nameServer, fd,
+                                                              notification->sn_assoc_change.sac_assoc_id);
                   }
                 break;
                case SCTP_SHUTDOWN_EVENT:
-                     LOG_ACTION
-                     fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
-                             nameServer->ASAPSocket,
-                             notification->sn_assoc_change.sac_assoc_id);
+                  LOG_ACTION
+                  fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
+                          nameServer->ASAPSocket,
+                          notification->sn_assoc_change.sac_assoc_id);
 
-                     LOG_END
-                  nameServerCleanUser(nameServer, fd,
-                                      notification->sn_shutdown_event.sse_assoc_id);
+                  LOG_END
+                  nameServerRemovePoolElementsOfConnection(nameServer, fd,
+                                                           notification->sn_shutdown_event.sse_assoc_id);
                 break;
             }
          }

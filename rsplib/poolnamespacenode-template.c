@@ -175,7 +175,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolE
 /* ###### Find nearest prev connection #################################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID,
                                      const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier)
@@ -186,7 +186,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolE
 
    poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
    cmpPoolElementNode.OwnerPoolNode               = &cmpPoolNode;
-   cmpPoolElementNode.ConnectionSocketDescriptor = registratorSocketDescriptor;
+   cmpPoolElementNode.ConnectionSocketDescriptor = connectionSocketDescriptor;
    cmpPoolElementNode.ConnectionAssocID          = assocID;
    cmpPoolElementNode.Identifier                  = poolElementIdentifier;
 
@@ -202,7 +202,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolE
 /* ###### Find nearest next connection ################################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID,
                                      const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier)
@@ -213,7 +213,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolE
 
    poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
    cmpPoolElementNode.OwnerPoolNode               = &cmpPoolNode;
-   cmpPoolElementNode.ConnectionSocketDescriptor = registratorSocketDescriptor;
+   cmpPoolElementNode.ConnectionSocketDescriptor = connectionSocketDescriptor;
    cmpPoolElementNode.ConnectionAssocID          = assocID;
    cmpPoolElementNode.Identifier                  = poolElementIdentifier;
 
@@ -656,7 +656,7 @@ size_t ST_CLASS(poolNamespaceNodeGetOwnershipNodesForIdentifier)(
 /* ###### Get first connection node of given connection ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -666,14 +666,14 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementC
    poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
    poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementConnectionNode)(
                         poolNamespaceNode,
-                        registratorSocketDescriptor, assocID,
+                        connectionSocketDescriptor, assocID,
                         &lastPoolHandle,
                         0);
    if(poolElementNode) {
       prevPoolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementConnectionNode)(
                                poolNamespaceNode, poolElementNode);
       while(prevPoolElementNode) {
-         if((prevPoolElementNode->ConnectionSocketDescriptor == registratorSocketDescriptor) &&
+         if((prevPoolElementNode->ConnectionSocketDescriptor == connectionSocketDescriptor) &&
             (prevPoolElementNode->ConnectionAssocID          == assocID)) {
             poolElementNode = prevPoolElementNode;
          }
@@ -685,7 +685,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementC
       }
    }
    if((poolElementNode                              != NULL) &&
-      (poolElementNode->ConnectionSocketDescriptor == registratorSocketDescriptor) &&
+      (poolElementNode->ConnectionSocketDescriptor == connectionSocketDescriptor) &&
       (poolElementNode->ConnectionAssocID          == assocID)) {
       return(poolElementNode);
    }
@@ -696,7 +696,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementC
 /* ###### Get last connection node of given connection ################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolElementConnectionNodeForConnection)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID)
 {
 CHECK(false);
@@ -712,7 +712,7 @@ CHECK(false);
    else {
       poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementConnectionNode)(
                            poolNamespaceNode,
-                           registratorSocketDescriptor, assocID,
+                           connectionSocketDescriptor, assocID,
                            &lastPoolHandle,
                            0);
    }
@@ -720,7 +720,7 @@ CHECK(false);
       nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNode)(
                                poolNamespaceNode, poolElementNode);
       while(nextPoolElementNode) {
-         if((nextPoolElementNode->SocketDescriptor == registratorSocketDescriptor) &&
+         if((nextPoolElementNode->SocketDescriptor == connectionSocketDescriptor) &&
             (nextPoolElementNode->AssocID          == assocID)) {
             poolElementNode = nextPoolElementNode;
          }
@@ -732,7 +732,7 @@ CHECK(false);
       }
    }
    if((poolElementNode                   != NULL) &&
-      (poolElementNode->SocketDescriptor == registratorSocketDescriptor) &&
+      (poolElementNode->SocketDescriptor == connectionSocketDescriptor) &&
       (poolElementNode->AssocID          == assocID)) {
       return(poolElementNode);
    }
@@ -744,14 +744,14 @@ CHECK(false);
 /* ###### Get number of connection nodes ################################# */
 size_t ST_CLASS(poolNamespaceNodeGetConnectionNodesForConnection)(
                  struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                 const int                           registratorSocketDescriptor,
+                 const int                           connectionSocketDescriptor,
                  const sctp_assoc_t                  assocID)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t                            nodes = 0;
 
    poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
-                        poolNamespaceNode, registratorSocketDescriptor, assocID);
+                        poolNamespaceNode, connectionSocketDescriptor, assocID);
    while(poolElementNode != NULL) {
       nodes++;
       poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNodeForSameConnection)(

@@ -1,5 +1,5 @@
 /*
- *  $Id: testregistrator.c,v 1.1 2004/08/23 16:17:59 dreibh Exp $
+ *  $Id: testregistrator.c,v 1.2 2004/08/24 11:54:08 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,9 +48,6 @@
 #include <glib.h>
 
 
-/* Exit immediately on Ctrl-C. No clean shutdown. */
-/* #define FAST_BREAK */
-
 #define MAX_POOL_ELEMENTS 1024
 
 
@@ -88,6 +85,8 @@ int main(int argc, char** argv)
    unsigned int                  policyParameterLoadDegradation = 0;
    unsigned int                  newPoolAfter                   = 1000000;
    size_t                        count                          = 10;
+   bool                          fastBreak                      = false;
+   bool                          noDeregistration               = false;
    size_t                        pools;
    int                           n;
    size_t                        i;
@@ -107,6 +106,12 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[n], "-port=" ,6))) {
          port = atol((char*)&argv[n][6]);
+      }
+      else if(!(strcmp(argv[n], "-fastbreak"))) {
+         fastBreak = true;
+      }
+      else if(!(strcmp(argv[n], "-noderegistration"))) {
+         noDeregistration = true;
       }
       else if(!(strncmp(argv[n], "-ph=" ,4))) {
          poolHandle = (char*)&argv[n][4];
@@ -205,7 +210,7 @@ int main(int argc, char** argv)
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-newpoolafter=count} {-ph=Pool Handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }
@@ -263,13 +268,17 @@ int main(int argc, char** argv)
    }
 
 
-   installBreakDetector();
+   if(!fastBreak) {
+      installBreakDetector();
+   }
    while(!breakDetected()) {
       usleep(250000);
    }
 
-   for(i = 0;i < count;i++) {
-      rspDeletePoolElement(poolElementArray[i], NULL);
+   if(!noDeregistration) {
+      for(i = 0;i < count;i++) {
+         rspDeletePoolElement(poolElementArray[i], NULL);
+      }
    }
 
 

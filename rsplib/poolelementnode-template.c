@@ -27,8 +27,8 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     transportAddressBlock,
-                                  const int                         registratorSocketDescriptor,
-                                  const sctp_assoc_t                registratorAssocID)
+                                  const int                         connectionSocketDescriptor,
+                                  const sctp_assoc_t                connectionAssocID)
 {
    STN_METHOD(New)(&poolElementNode->PoolElementSelectionStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementIndexStorageNode);
@@ -55,8 +55,8 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    poolElementNode->TimerTimeStamp              = 0;
    poolElementNode->TimerCode                   = 0;
 
-   poolElementNode->ConnectionSocketDescriptor = registratorSocketDescriptor;
-   poolElementNode->ConnectionAssocID          = registratorAssocID;
+   poolElementNode->ConnectionSocketDescriptor = connectionSocketDescriptor;
+   poolElementNode->ConnectionAssocID          = connectionAssocID;
 
    poolElementNode->AddressBlock                = transportAddressBlock;
    poolElementNode->UserData                    = 0;

@@ -123,8 +123,8 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 const unsigned int                        registrationLife,
                 const struct PoolPolicySettings*          poolPolicySettings,
                 const struct TransportAddressBlock*       transportAddressBlock,
-                const int                                 registratorSocketDescriptor,
-                const sctp_assoc_t                        registratorAssocID,
+                const int                                 connectionSocketDescriptor,
+                const sctp_assoc_t                        connectionAssocID,
                 const unsigned long long                  currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**        poolElementNode);
 

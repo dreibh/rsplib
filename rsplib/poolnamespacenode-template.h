@@ -237,7 +237,7 @@ inline size_t ST_CLASS(poolNamespaceNodeGetConnectionNodes)(
 
 size_t ST_CLASS(poolNamespaceNodeGetConnectionNodesForConnection)(
           struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-          const int                           registratorSocketDescriptor,
+          const int                           connectionSocketDescriptor,
           const sctp_assoc_t                  assocID);
 
 
@@ -267,13 +267,13 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolEl
 
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID,
                                      const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID,
                                      const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier);
@@ -309,11 +309,11 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetNextPoolEl
 
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolElementConnectionNodeForConnection)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const int                           registratorSocketDescriptor,
+                                     const int                           connectionSocketDescriptor,
                                      const sctp_assoc_t                  assocID);
 
 
