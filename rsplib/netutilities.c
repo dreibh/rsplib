@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.49 2005/03/08 17:04:41 tuexen Exp $
+ *  $Id: netutilities.c,v 1.50 2005/04/02 18:44:26 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -1934,11 +1934,11 @@ size_t getpaddrsplus(const int              fd,
 
 
 /* ###### Convert byte order of 64 bit value ############################# */
-static uint64_t byteswap64(const uint64_t x)
+static uint64_t byteswap64(const uint64_t value)
 {
 #if (__BYTE_ORDER == __LITTLE_ENDIAN)
-   const uint32_t a = (uint32_t)(x >> 32);
-   const uint32_t b = (uint32_t)(x & 0xffffffff);
+   const uint32_t a = (uint32_t)(value >> 32);
+   const uint32_t b = (uint32_t)(value & 0xffffffff);
    return( (int64_t)((a << 24) | ((a & 0x0000ff00) << 8) |
            ((a & 0x00ff0000) >> 8) | (a >> 24)) |
            ((int64_t)((b << 24) | ((b & 0x0000ff00) << 8) |
