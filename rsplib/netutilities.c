@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.28 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: netutilities.c,v 1.29 2004/11/12 00:01:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -55,6 +55,80 @@
 
 #ifndef HAVE_IPV6
 #error **** No IPv6 support?! Check configure scripts ****
+#endif
+
+
+#ifndef HAVE_SCTP_CONNECTX
+int sctp_connectx(int                    sockfd,
+                  const struct sockaddr* addrs,
+                  int                    addrcnt)
+{
+   return(ext_connect(sockfd, addrs, getSocklen(addrs)));
+}
+#endif
+
+#ifndef HAVE_SCTP_SEND
+ssize_t sctp_send(int                           sd,
+                  const void*                   data,
+                  size_t                        len,
+                  const struct sctp_sndrcvinfo* sinfo,
+                  int                           flags)
+{
+   struct sctp_sndrcvinfo* sri;
+   struct iovec            iov = { (char*)data, len };
+   struct cmsghdr*         cmsg;
+   size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
+   char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
+   struct msghdr msg = {
+      NULL, 0,
+      &iov, 1,
+      cbuf, cmsglen,
+      flags
+   };
+
+   cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
+   cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
+   cmsg->cmsg_level = IPPROTO_SCTP;
+   cmsg->cmsg_type  = SCTP_SNDRCV;
+
+   sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
+   memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
+
+   return(ext_sendmsg(sd, &msg, 0));
+}
+#endif
+
+#ifndef HAVE_SCTP_SENDX
+ssize_t sctp_sendx(int                           sd,
+                   const void*                   data,
+                   size_t                        len,
+                   const struct sockaddr*        addrs,
+                   int                           addrcnt,
+                   const struct sctp_sndrcvinfo* sinfo,
+                   int                           flags)
+{
+   struct sctp_sndrcvinfo* sri;
+   struct iovec            iov = { (char*)data, len };
+   struct cmsghdr*         cmsg;
+   size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
+   char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
+   struct msghdr msg = {
+      (struct sockaddr*)addrs, getSocklen(addrs),
+      &iov, 1,
+      cbuf, cmsglen,
+      flags
+   };
+
+   cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
+   cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
+   cmsg->cmsg_level = IPPROTO_SCTP;
+   cmsg->cmsg_type  = SCTP_SNDRCV;
+
+   sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
+   memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
+
+   return(ext_sendmsg(sd, &msg, 0));
+}
 #endif
 
 
@@ -223,10 +297,8 @@ bool address2string(const struct sockaddr* address,
                     const bool             port)
 {
    struct sockaddr_in*  ipv4address;
-#ifdef HAVE_IPV6
    struct sockaddr_in6* ipv6address;
    char                 str[128];
-#endif
 
    switch(address->sa_family) {
       case AF_INET:
@@ -240,7 +312,6 @@ bool address2string(const struct sockaddr* address,
          }
          return(true);
        break;
-#ifdef HAVE_IPV6
       case AF_INET6:
          ipv6address = (struct sockaddr_in6*)address;
          ipv6address->sin6_scope_id = 0;
@@ -255,7 +326,6 @@ bool address2string(const struct sockaddr* address,
             return(true);
          }
        break;
-#endif
       case AF_UNSPEC:
          safestrcpy(buffer, "(unspecified)",length);
          return(true);
@@ -276,9 +346,7 @@ bool string2address(const char* string, union sockaddr_union* address)
    char                 host[128];
    char                 port[128];
    struct sockaddr_in*  ipv4address = (struct sockaddr_in*)address;
-#ifdef HAVE_IPV6
    struct sockaddr_in6* ipv6address = (struct sockaddr_in6*)address;
-#endif
    char*                p1;
    int                  portNumber;
 
@@ -376,14 +444,12 @@ bool string2address(const char* string, union sockaddr_union* address)
          ipv4address->sin_len  = sizeof(struct sockaddr_in);
 #endif
        break;
-#ifdef HAVE_IPV6
       case AF_INET6:
          ipv6address->sin6_port = htons(portNumber);
 #ifdef HAVE_SA_LEN
          ipv6address->sin_len  = sizeof(struct sockaddr_in6);
 #endif
        break;
-#endif
       default:
          LOG_ERROR
          fprintf(stdlog, "Unsupported address family #%d\n",
@@ -450,7 +516,6 @@ static unsigned int scopeIPv4(const uint32_t* address)
 
 
 /* ###### Get IPv6 address scope ######################################### */
-#ifdef HAVE_IPV6
 static unsigned int scopeIPv6(const struct in6_addr* address)
 {
    if(IN6_IS_ADDR_V4MAPPED(address)) {
@@ -489,7 +554,6 @@ static unsigned int scopeIPv6(const struct in6_addr* address)
    }
    return(10);
 }
-#endif
 
 
 /* ###### Get address scope ############################################## */
@@ -498,11 +562,9 @@ unsigned int getScope(const struct sockaddr* address)
    if(address->sa_family == AF_INET) {
       return(scopeIPv4((uint32_t*)&((struct sockaddr_in*)address)->sin_addr));
    }
-#ifdef HAVE_IPV6
    else if(address->sa_family == AF_INET6) {
       return(scopeIPv6(&((struct sockaddr_in6*)address)->sin6_addr));
    }
-#endif
    else {
       LOG_ERROR
       fprintf(stdlog, "Unsupported address family #%d\n",
@@ -530,12 +592,8 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
    fputs("\n",stdlog);
    LOG_END
 
-#ifdef HAVE_IPV6
    if( ((a1->sa_family == AF_INET) || (a1->sa_family == AF_INET6)) &&
        ((a2->sa_family == AF_INET) || (a2->sa_family == AF_INET6)) ) {
-#else
-   if( (a1->sa_family == AF_INET) && (a2->sa_family == AF_INET) ) {
-#endif
       s1 = 1000000 - getScope((struct sockaddr*)a1);
       s2 = 1000000 - getScope((struct sockaddr*)a2);
       if(s1 < s2) {
@@ -551,33 +609,25 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
          return(1);
       }
 
-#ifdef HAVE_IPV6
       if(a1->sa_family == AF_INET6) {
          memcpy((void*)&x1, (void*)&((struct sockaddr_in6*)a1)->sin6_addr, 16);
       }
       else {
-#endif
          x1[0] = 0;
          x1[1] = 0;
          x1[2] = htonl(0xffff);
          x1[3] = *((uint32_t*)&((struct sockaddr_in*)a1)->sin_addr);
-#ifdef HAVE_IPV6
       }
-#endif
 
-#ifdef HAVE_IPV6
       if(a2->sa_family == AF_INET6) {
          memcpy((void*)&x2, (void*)&((struct sockaddr_in6*)a2)->sin6_addr, 16);
       }
       else {
-#endif
          x2[0] = 0;
          x2[1] = 0;
          x2[2] = htonl(0xffff);
          x2[3] = *((uint32_t*)&((struct sockaddr_in*)a2)->sin_addr);
-#ifdef HAVE_IPV6
       }
-#endif
 
       result = memcmp((void*)&x1,(void*)&x2,16);
       if(result != 0) {
@@ -629,11 +679,9 @@ uint16_t getPort(struct sockaddr* address)
          case AF_INET:
             return(ntohs(((struct sockaddr_in*)address)->sin_port));
           break;
-#ifdef HAVE_IPV6
          case AF_INET6:
             return(ntohs(((struct sockaddr_in6*)address)->sin6_port));
           break;
-#endif
          default:
             LOG_ERROR
             fprintf(stdlog, "Unsupported address family #%d\n",
@@ -655,12 +703,10 @@ bool setPort(struct sockaddr* address, uint16_t port)
             ((struct sockaddr_in*)address)->sin_port = htons(port);
             return(true);
           break;
-#ifdef HAVE_IPV6
          case AF_INET6:
             ((struct sockaddr_in6*)address)->sin6_port = htons(port);
             return(true);
           break;
-#endif
          default:
             LOG_ERROR
             fprintf(stdlog, "Unsupported address family #%d\n",
@@ -749,13 +795,11 @@ uint32_t hton24(const uint32_t value)
 /* ###### Check for support of IPv6 ###################################### */
 bool checkIPv6()
 {
-#ifdef HAVE_IPV6
    int sd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
    if(sd >= 0) {
       close(sd);
       return(true);
    }
-#endif
    return(false);
 }
 
@@ -1159,9 +1203,7 @@ static bool multicastGroupMgt(int              sockfd,
 {
    struct ip_mreq   mreq;
    struct ifreq     ifr;
-#ifdef HAVE_IPV6
    struct ipv6_mreq mreq6;
-#endif
 
    if(address->sa_family == AF_INET) {
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
@@ -1179,7 +1221,6 @@ static bool multicastGroupMgt(int              sockfd,
                             add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
                             &mreq, sizeof(mreq)) == 0);
    }
-#ifdef HAVE_IPV6
    else if(address->sa_family == AF_INET6) {
       memcpy((char*)&mreq6.ipv6mr_multiaddr,
              (char*)&((struct sockaddr_in6*)address)->sin6_addr,
@@ -1194,7 +1235,6 @@ static bool multicastGroupMgt(int              sockfd,
                             add ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP,
                             &mreq6, sizeof(mreq6)) == 0);
    }
-#endif
    CHECK(false);
    return(false);
 }

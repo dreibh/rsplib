@@ -1,5 +1,5 @@
 /*
- *  $Id: localaddresses.c,v 1.3 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: localaddresses.c,v 1.4 2004/11/12 00:01:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,7 +43,6 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 
-#ifdef HAVE_IPV6
 #ifdef LINUX_IPV6
 #include <netinet/ip6.h>
 #else
@@ -75,7 +74,6 @@ static bool filterAddress(union sockaddr_union* address,
             return(false);
          }
        break;
-#ifdef HAVE_IPV6
       case AF_INET6 :
         if((!IN6_IS_ADDR_LOOPBACK(&(address->in6.sin6_addr))  && (flags & ASF_HideAllExceptLoopback))  ||
            (IN6_IS_ADDR_LOOPBACK(&(address->in6.sin6_addr))   && (flags & ASF_HideLoopback))           ||
@@ -88,7 +86,6 @@ static bool filterAddress(union sockaddr_union* address,
             return(false);
         }
        break;
-#endif
       default:
          return(false);
        break;
@@ -275,15 +272,13 @@ bool gatherLocalAddresses(union sockaddr_union** addressArray,
                   dup = 1;
                   break;
                }
-#ifdef HAVE_IPV6
             } else {
-                if(IN6_ARE_ADDR_EQUAL(&(((struct sockaddr_in6*)(toUse))->sin6_addr),
-                                      &(((struct sockaddr_in6*)&(localAddresses[j]))->sin6_addr))) {
-                    /* set the flag and break, it is a dup */
-                    dup = 1;
-                    break;
-                }
-#endif
+               if(IN6_ARE_ADDR_EQUAL(&(((struct sockaddr_in6*)(toUse))->sin6_addr),
+                                    &(((struct sockaddr_in6*)&(localAddresses[j]))->sin6_addr))) {
+                  /* set the flag and break, it is a dup */
+                  dup = 1;
+                  break;
+               }
             }
          }
          if(dup) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: testregistrator.c,v 1.4 2004/11/11 22:44:20 dreibh Exp $
+ *  $Id: testregistrator.c,v 1.5 2004/11/12 00:01:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-newpoolafter=count} {-ph=Pool Handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-count=Count} {-newpoolafter=count} {-ph=Pool Handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }

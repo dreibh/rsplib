@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.11 2004/11/09 20:00:31 dreibh Exp $
+ *  $Id: netutilities.h,v 1.12 2004/11/12 00:01:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -60,6 +60,34 @@ extern "C" {
 #endif
 #ifndef IPV6_LEAVE_GROUP
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
+#endif
+
+
+#ifndef HAVE_SCTP_CONNECTX
+#warning No sctp_connectx() available - Using only the first address!
+int sctp_connectx(int                    sockfd,
+                  const struct sockaddr* addrs,
+                  int                    addrcnt);
+#endif
+
+#ifndef HAVE_SCTP_SEND
+#warning No sctp_send() available - Using wrapper!
+ssize_t sctp_send(int                           sd,
+                  const void*                   data,
+                  size_t                        len,
+                  const struct sctp_sndrcvinfo* sinfo,
+                  int                           flags);
+#endif
+
+#ifndef HAVE_SCTP_SENDX
+#warning No sctp_send() available - Using only the first address!
+ssize_t sctp_sendx(int                           sd,
+                   const void*                   data,
+                   size_t                        len,
+                   const struct sockaddr*        addrs,
+                   int                           addrcnt,
+                   const struct sctp_sndrcvinfo* sinfo,
+                   int                           flags);
 #endif
 
 
