@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.19 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: rspsession.c,v 1.20 2004/11/09 20:00:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -110,7 +110,7 @@ struct SessionDescriptor
    struct MessageBuffer*         MessageBuffer;
    struct TagItem*               Tags;
 
-   char                          CSPStatusText[128];
+   char                          StatusTextText[128];
 };
 
 
@@ -519,7 +519,7 @@ static struct SessionDescriptor* rspSessionNew(
       session->CookieSize               = 0;
       session->CookieEcho               = NULL;
       session->CookieEchoSize           = 0;
-      session->CSPStatusText[0]         = 0x00;
+      session->StatusTextText[0]         = 0x00;
       session->ConnectionTimeStamp      = 0;
       session->ConnectTimeout           = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->NameResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
@@ -1240,13 +1240,13 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
 
 
 /* ###### Set session's CSP status text ################################## */
-void rspSessionSetCSPStatus(struct SessionDescriptor* session,
-                            const char*               statusText)
+void rspSessionSetStatusText(struct SessionDescriptor* session,
+                             const char*               statusText)
 {
    threadSafetyLock(&session->Mutex);
-   safestrcpy((char*)&session->CSPStatusText,
+   safestrcpy((char*)&session->StatusTextText,
               statusText,
-              sizeof(session->CSPStatusText));
+              sizeof(session->StatusTextText));
    threadSafetyUnlock(&session->Mutex);
 }
 
@@ -1297,9 +1297,9 @@ size_t rspSessionCreateComponentStatus(
                (*caeArray)[caeArraySize].PPID       = 0;
                caeArraySize++;
             }
-            if(session->CSPStatusText[0] != 0x00) {
+            if(session->StatusTextText[0] != 0x00) {
                safestrcpy(statusText,
-                          session->CSPStatusText,
+                          session->StatusTextText,
                           CSPH_STATUS_TEXT_SIZE);
             }
          }

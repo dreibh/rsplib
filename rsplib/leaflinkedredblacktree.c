@@ -24,11 +24,45 @@
 #include <stdio.h>
 
 #include "leaflinkedredblacktree.h"
+#include "debug.h"
 
 
 #ifdef __cplusplus
-extern "C" {
+{
 #endif
+
+
+/* ###### Initialize ##################################################### */
+void leafLinkedRedBlackTreeNodeNew(struct LeafLinkedRedBlackTreeNode* node)
+{
+   doubleLinkedRingListNodeNew(&node->ListNode);
+   node->Parent       = NULL;
+   node->LeftSubtree  = NULL;
+   node->RightSubtree = NULL;
+   node->Color        = Black;
+   node->Value        = 0;
+   node->ValueSum     = 0;
+}
+
+
+/* ###### Invalidate ##################################################### */
+void leafLinkedRedBlackTreeNodeDelete(struct LeafLinkedRedBlackTreeNode* node)
+{
+   node->Parent       = NULL;
+   node->LeftSubtree  = NULL;
+   node->RightSubtree = NULL;
+   node->Color        = Black;
+   node->Value        = 0;
+   node->ValueSum     = 0;
+   doubleLinkedRingListNodeDelete(&node->ListNode);
+}
+
+
+/* ###### Is node linked? ################################################ */
+int leafLinkedRedBlackTreeNodeIsLinked(struct LeafLinkedRedBlackTreeNode* node)
+{
+   return(node->LeftSubtree != NULL);
+}
 
 
 /* ##### Initialize ###################################################### */
@@ -61,14 +95,14 @@ void leafLinkedRedBlackTreeDelete(struct LeafLinkedRedBlackTree* llrbt)
 
 
 /* ##### Update value sum ################################################ */
-inline static void leafLinkedRedBlackTreeUpdateValueSum(struct LeafLinkedRedBlackTreeNode* node)
+static void leafLinkedRedBlackTreeUpdateValueSum(struct LeafLinkedRedBlackTreeNode* node)
 {
    node->ValueSum = node->LeftSubtree->ValueSum + node->Value + node->RightSubtree->ValueSum;
 }
 
 
 /* ##### Update value sum for node and all parents up to tree root ####### */
-inline static void leafLinkedRedBlackTreeUpdateValueSumsUpToRoot(
+static void leafLinkedRedBlackTreeUpdateValueSumsUpToRoot(
                       struct LeafLinkedRedBlackTree*     llrbt,
                       struct LeafLinkedRedBlackTreeNode* node)
 {
@@ -92,8 +126,243 @@ void leafLinkedRedBlackTreeInternalPrint(struct LeafLinkedRedBlackTree*     llrb
 }
 
 
+/* ###### Is treap empty? ################################################ */
+int leafLinkedRedBlackTreeIsEmpty(struct LeafLinkedRedBlackTree* llrbt)
+{
+   return(llrbt->NullNode.LeftSubtree == &llrbt->NullNode);
+}
+
+
+/* ###### Internal method for printing a node ############################# */
+static void leafLinkedRedBlackTreePrintNode(struct LeafLinkedRedBlackTree*     llrbt,
+                                            struct LeafLinkedRedBlackTreeNode* node,
+                                            FILE*                              fd)
+{
+   llrbt->PrintFunction(node, fd);
+#ifdef DEBUG
+   fprintf(fd, " ptr=%p c=%s v=%Lu vsum=%Lu",
+           node, ((node->Color == Red) ? "Red" : "Black"),
+           node->Value, node->ValueSum);
+   if(node->LeftSubtree != &llrbt->NullNode) {
+      fprintf(fd, " l=%p[", node->LeftSubtree);
+      llrbt->PrintFunction(node->LeftSubtree, fd);
+      fprintf(fd, "]");
+   }
+   else {
+      fprintf(fd, " l=()");
+   }
+   if(node->RightSubtree != &llrbt->NullNode) {
+      fprintf(fd, " r=%p[", node->RightSubtree);
+      llrbt->PrintFunction(node->RightSubtree, fd);
+      fprintf(fd, "]");
+   }
+   else {
+      fprintf(fd, " r=()");
+   }
+   if(node->Parent != &llrbt->NullNode) {
+      fprintf(fd, " p=%p[", node->Parent);
+      llrbt->PrintFunction(node->Parent, fd);
+      fprintf(fd, "]   ");
+   }
+   else {
+      fprintf(fd, " p=())   ");
+   }
+   fputs("\n", fd);
+#endif
+}
+
+
+/* ###### Print treap ##################################################### */
+void leafLinkedRedBlackTreePrint(struct LeafLinkedRedBlackTree* llrbt,
+                                 FILE*                          fd)
+{
+#ifdef DEBUG
+   fprintf(fd, "\n\nroot=%p[", llrbt->NullNode.LeftSubtree);
+   llrbt->PrintFunction(llrbt->NullNode.LeftSubtree, fd);
+   fprintf(fd, "] null=%p   \n", &llrbt->NullNode);
+#endif
+   leafLinkedRedBlackTreeInternalPrint(llrbt, llrbt->NullNode.LeftSubtree, fd);
+   fputs("\n", fd);
+}
+
+
+/* ###### Get first node ################################################## */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetFirst(
+                                      const struct LeafLinkedRedBlackTree* llrbt)
+{
+   struct DoubleLinkedRingListNode* node = llrbt->List.Node.Next;
+   if(node != llrbt->List.Head) {
+      return((struct LeafLinkedRedBlackTreeNode*)node);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get last node ################################################### */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetLast(
+                                      const struct LeafLinkedRedBlackTree* llrbt)
+{
+   struct DoubleLinkedRingListNode* node = llrbt->List.Node.Prev;
+   if(node != llrbt->List.Head) {
+      return((struct LeafLinkedRedBlackTreeNode*)node);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get previous node ############################################### */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetPrev(
+                                      const struct LeafLinkedRedBlackTree* llrbt,
+                                      struct LeafLinkedRedBlackTreeNode*   node)
+{
+   struct DoubleLinkedRingListNode* prev = node->ListNode.Prev;
+   if(prev != llrbt->List.Head) {
+      return((struct LeafLinkedRedBlackTreeNode*)prev);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get next node ################################################## */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNext(
+                                      const struct LeafLinkedRedBlackTree* llrbt,
+                                      struct LeafLinkedRedBlackTreeNode*   node)
+{
+   struct DoubleLinkedRingListNode* next = node->ListNode.Next;
+   if(next != llrbt->List.Head) {
+      return((struct LeafLinkedRedBlackTreeNode*)next);
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest previous node ##################################### */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNearestPrev(
+                                      struct LeafLinkedRedBlackTree*     llrbt,
+                                      struct LeafLinkedRedBlackTreeNode* cmpNode)
+{
+   struct LeafLinkedRedBlackTreeNode* result;
+   result = leafLinkedRedBlackTreeInternalGetNearestPrev(
+               llrbt, &llrbt->NullNode.LeftSubtree, &llrbt->NullNode, cmpNode);
+   if(result != &llrbt->NullNode) {
+      return(result);
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest next node ######################################### */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNearestNext(
+                                      struct LeafLinkedRedBlackTree*     llrbt,
+                                      struct LeafLinkedRedBlackTreeNode* cmpNode)
+{
+   struct LeafLinkedRedBlackTreeNode* result;
+   result = leafLinkedRedBlackTreeInternalGetNearestNext(
+               llrbt, &llrbt->NullNode.LeftSubtree, &llrbt->NullNode, cmpNode);
+   if(result != &llrbt->NullNode) {
+      return(result);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get number of elements ########################################## */
+size_t leafLinkedRedBlackTreeGetElements(const struct LeafLinkedRedBlackTree* llrbt)
+{
+   return(llrbt->Elements);
+}
+
+
+/* ###### Get prev node by walking through the tree (does *not* use list!) */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalFindPrev(
+                                             const struct LeafLinkedRedBlackTree* llrbt,
+                                             struct LeafLinkedRedBlackTreeNode*   cmpNode)
+{
+   struct LeafLinkedRedBlackTreeNode* node = cmpNode->LeftSubtree;
+   struct LeafLinkedRedBlackTreeNode* parent;
+
+   if(node != &llrbt->NullNode) {
+      while(node->RightSubtree != &llrbt->NullNode) {
+         node = node->RightSubtree;
+      }
+      return(node);
+   }
+   else {
+      node   = cmpNode;
+      parent = cmpNode->Parent;
+      while((parent != &llrbt->NullNode) && (node == parent->LeftSubtree)) {
+         node   = parent;
+         parent = parent->Parent;
+      }
+      return(parent);
+   }
+}
+
+
+/* ###### Get next node by walking through the tree (does *not* use list!) */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalFindNext(
+                                      const struct LeafLinkedRedBlackTree* llrbt,
+                                      struct LeafLinkedRedBlackTreeNode*   cmpNode)
+{
+   struct LeafLinkedRedBlackTreeNode* node = cmpNode->RightSubtree;
+   struct LeafLinkedRedBlackTreeNode* parent;
+
+   if(node != &llrbt->NullNode) {
+      while(node->LeftSubtree != &llrbt->NullNode) {
+         node = node->LeftSubtree;
+      }
+      return(node);
+   }
+   else {
+      node   = cmpNode;
+      parent = cmpNode->Parent;
+      while((parent != &llrbt->NullNode) && (node == parent->RightSubtree)) {
+         node   = parent;
+         parent = parent->Parent;
+      }
+      return(parent);
+   }
+}
+
+
+/* ###### Find node ####################################################### */
+struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeFind(
+                                      const struct LeafLinkedRedBlackTree*     llrbt,
+                                      const struct LeafLinkedRedBlackTreeNode* cmpNode)
+{
+#ifdef DEBUG
+   printf("find: ");
+   llrbt->PrintFunction(cmpNode, stdout);
+   printf("\n");
+#endif
+
+   struct LeafLinkedRedBlackTreeNode* node = llrbt->NullNode.LeftSubtree;
+   while(node != &llrbt->NullNode) {
+      const int cmpResult = llrbt->ComparisonFunction(cmpNode, node);
+      if(cmpResult == 0) {
+         return(node);
+      }
+      else if(cmpResult < 0) {
+         node = node->LeftSubtree;
+      }
+      else {
+         node = node->RightSubtree;
+      }
+   }
+   return(NULL);
+}
+
+
+/* ###### Get value sum from root node ################################### */
+LeafLinkedRedBlackTreeNodeValueType leafLinkedRedBlackTreeGetValueSum(
+                                       const struct LeafLinkedRedBlackTree* llrbt)
+{
+   return(llrbt->NullNode.LeftSubtree->ValueSum);
+}
+
+
 /* ##### Rotation with left subtree ###################################### */
-inline static void leafLinkedRedBlackTreeRotateLeft(
+static void leafLinkedRedBlackTreeRotateLeft(
                       struct LeafLinkedRedBlackTreeNode* node)
 {
    struct LeafLinkedRedBlackTreeNode* lower;
@@ -121,7 +390,7 @@ inline static void leafLinkedRedBlackTreeRotateLeft(
 
 
 /* ##### Rotation with ripht subtree ##################################### */
-inline static void leafLinkedRedBlackTreeRotateRight(
+static void leafLinkedRedBlackTreeRotateRight(
                       struct LeafLinkedRedBlackTreeNode* node)
 {
    struct LeafLinkedRedBlackTreeNode* lower;

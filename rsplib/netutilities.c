@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.19 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: netutilities.c,v 1.20 2004/11/09 20:00:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,6 +48,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <fcntl.h>
+#include <byteswap.h>
 
 #include <ext_socket.h>
 #include <sys/uio.h>
@@ -1534,4 +1535,18 @@ size_t getpaddrsplus(const int              fd,
       sctp_freepaddrs(packedAddresses);
    }
    return(addrs);
+}
+
+
+/* ###### Convert byte order of 64 bit value ############################# */
+uint64_t hton64(const uint64_t value)
+{
+   return(bswap_64(value));
+}
+
+
+/* ###### Convert byte order of 64 bit value ############################# */
+uint64_t ntoh64(const uint64_t value)
+{
+   return(bswap_64(value));
 }

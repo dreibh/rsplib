@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.10 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: netutilities.h,v 1.11 2004/11/09 20:00:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,7 +47,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ext_socket.h>
-#include <byteswap.h>
 
 
 #ifdef __cplusplus
@@ -70,10 +69,7 @@ extern "C" {
   * @param value Value in host byte order.
   * @return Value in network byte order.
   */
-inline uint64_t hton64(const uint64_t value)
-{
-   return(bswap_64(value));
-}
+uint64_t hton64(const uint64_t value);
 
 
 /**
@@ -82,10 +78,7 @@ inline uint64_t hton64(const uint64_t value)
   * @param value Value in network byte order.
   * @return Value in host byte order.
   */
-inline uint64_t ntoh64(const uint64_t value)
-{
-   return(bswap_64(value));
-}
+uint64_t ntoh64(const uint64_t value);
 
 
 /**

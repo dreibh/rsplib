@@ -39,19 +39,8 @@ struct DoubleLinkedRingListNode
 };
 
 
-/* ====== Initialize ====================================================== */
-inline void doubleLinkedRingListNodeNew(struct DoubleLinkedRingListNode* node)
-{
-   node->Prev = NULL;
-   node->Next = NULL;
-}
-
-/* ====== Invalidate ====================================================== */
-inline void doubleLinkedRingListNodeDelete(struct DoubleLinkedRingListNode* node)
-{
-   node->Prev = NULL;
-   node->Next = NULL;
-}
+void doubleLinkedRingListNodeNew(struct DoubleLinkedRingListNode* node);
+void doubleLinkedRingListNodeDelete(struct DoubleLinkedRingListNode* node);
 
 
 struct DoubleLinkedRingList
@@ -61,59 +50,15 @@ struct DoubleLinkedRingList
 };
 
 
-/* ====== Initialize ====================================================== */
-inline void doubleLinkedRingListNew(struct DoubleLinkedRingList* list)
-{
-   list->Node.Prev     = &list->Node;
-   list->Node.Next     = &list->Node;
-   list->Head          = &list->Node;
-}
-
-
-/* ====== Invalidate ====================================================== */
-inline void doubleLinkedRingListDelete(struct DoubleLinkedRingList* list)
-{
-   list->Head      = NULL;
-   list->Node.Prev = NULL;
-   list->Node.Next = NULL;
-}
-
-
-/* ====== Insert node after given node ==================================== */
-inline void doubleLinkedRingListAddAfter(struct DoubleLinkedRingListNode* after,
-                                         struct DoubleLinkedRingListNode* node)
-{
-   node->Next        = after->Next;
-   node->Prev        = after;
-   after->Next->Prev = node;
-   after->Next       = node;
-}
-
-
-/* ====== Insert node at head ============================================= */
-inline void doubleLinkedRingListAddHead(struct DoubleLinkedRingList*     list,
-                                        struct DoubleLinkedRingListNode* node)
-{
-   doubleLinkedRingListAddAfter(&list->Node, node);
-}
-
-
-/* ====== Insert node at tail ============================================= */
-inline void doubleLinkedRingListAddTail(struct DoubleLinkedRingList*     list,
-                                        struct DoubleLinkedRingListNode* node)
-{
-   doubleLinkedRingListAddAfter(list->Node.Prev, node);
-}
-
-
-/* ====== Remove node ===================================================== */
-inline void doubleLinkedRingListRemNode(struct DoubleLinkedRingListNode* node)
-{
-   node->Prev->Next = node->Next;
-   node->Next->Prev = node->Prev;
-   node->Prev = NULL;
-   node->Next = NULL;
-}
+void doubleLinkedRingListNew(struct DoubleLinkedRingList* list);
+void doubleLinkedRingListDelete(struct DoubleLinkedRingList* list);
+void doubleLinkedRingListAddAfter(struct DoubleLinkedRingListNode* after,
+                                  struct DoubleLinkedRingListNode* node);
+void doubleLinkedRingListAddHead(struct DoubleLinkedRingList*     list,
+                                 struct DoubleLinkedRingListNode* node);
+void doubleLinkedRingListAddTail(struct DoubleLinkedRingList*     list,
+                                 struct DoubleLinkedRingListNode* node);
+void doubleLinkedRingListRemNode(struct DoubleLinkedRingListNode* node);
 
 
 #ifdef __cplusplus

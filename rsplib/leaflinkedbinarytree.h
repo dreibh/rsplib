@@ -57,35 +57,9 @@ struct LeafLinkedBinaryTree
 };
 
 
-/* ###### Initialize ##################################################### */
-inline void leafLinkedBinaryTreeNodeNew(struct LeafLinkedBinaryTreeNode* node)
-{
-   doubleLinkedRingListNodeNew(&node->ListNode);
-   node->Parent       = NULL;
-   node->LeftSubtree  = NULL;
-   node->RightSubtree = NULL;
-   node->Value        = 0;
-   node->ValueSum     = 0;
-}
-
-
-/* ###### Invalidate ##################################################### */
-inline void leafLinkedBinaryTreeNodeDelete(struct LeafLinkedBinaryTreeNode* node)
-{
-   node->Parent       = NULL;
-   node->LeftSubtree  = NULL;
-   node->RightSubtree = NULL;
-   node->Value        = 0;
-   node->ValueSum     = 0;
-   doubleLinkedRingListNodeDelete(&node->ListNode);
-}
-
-
-/* ###### Is node linked? ################################################ */
-inline int leafLinkedBinaryTreeNodeIsLinked(struct LeafLinkedBinaryTreeNode* node)
-{
-   return(node->LeftSubtree != NULL);
-}
+void leafLinkedBinaryTreeNodeNew(struct LeafLinkedBinaryTreeNode* node);
+void leafLinkedBinaryTreeNodeDelete(struct LeafLinkedBinaryTreeNode* node);
+int leafLinkedBinaryTreeNodeIsLinked(struct LeafLinkedBinaryTreeNode* node);
 
 
 void leafLinkedBinaryTreeNew(struct LeafLinkedBinaryTree* llbt,
@@ -117,297 +91,34 @@ struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInternalRemove(
                                     struct LeafLinkedBinaryTreeNode*  node);
 
 
-/* ###### Is treap empty? ################################################ */
-inline int leafLinkedBinaryTreeIsEmpty(struct LeafLinkedBinaryTree* llbt)
-{
-   return(llbt->TreeRoot == &llbt->NullNode);
-}
-
-
-/* ###### Internal method for printing a node ############################# */
-inline static void leafLinkedBinaryTreePrintNode(struct LeafLinkedBinaryTree*     llbt,
-                                                 struct LeafLinkedBinaryTreeNode* node,
-                                                 FILE*                            fd)
-{
-   llbt->PrintFunction(node, fd);
-#ifdef DEBUG
-   fprintf(fd, " ptr=%p v=%Lu vsum=%Lu", node, node->Value, node->ValueSum);
-   if(node->LeftSubtree != &llbt->NullNode) {
-      fprintf(fd, " l=%p", node->LeftSubtree);
-   }
-   else {
-      fprintf(fd, " l=()");
-   }
-   if(node->RightSubtree != &llbt->NullNode) {
-      fprintf(fd, " r=%p", node->RightSubtree);
-   }
-   else {
-      fprintf(fd, " r=()");
-   }
-   if(node->Parent != &llbt->NullNode) {
-      fprintf(fd, " p=%p ", node->Parent);
-   }
-   else {
-      fprintf(fd, " p=())   ");
-   }
-#endif
-}
-
-
-/* ###### Print treap ##################################################### */
-inline void leafLinkedBinaryTreePrint(struct LeafLinkedBinaryTree* llbt,
-                                      FILE*                        fd)
-{
-#ifdef DEBUG
-   printf("root=%p null=%p   ", llbt->TreeRoot, &llbt->NullNode);
-#endif
-   leafLinkedBinaryTreeInternalPrint(llbt, llbt->TreeRoot, fd);
-   puts("");
-}
-
-
-/* ###### Get first node ################################################## */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetFirst(const struct LeafLinkedBinaryTree* llbt)
-{
-   struct DoubleLinkedRingListNode* node = llbt->List.Node.Next;
-   if(node != llbt->List.Head) {
-      return((struct LeafLinkedBinaryTreeNode*)node);
-   }
-   return(NULL);
-}
-
-
-/* ###### Get last node ################################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetLast(const struct LeafLinkedBinaryTree* llbt)
-{
-   struct DoubleLinkedRingListNode* node = llbt->List.Node.Prev;
-   if(node != llbt->List.Head) {
-      return((struct LeafLinkedBinaryTreeNode*)node);
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous node ############################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetPrev(const struct LeafLinkedBinaryTree* llbt,
-                                                                    struct LeafLinkedBinaryTreeNode*   node)
-{
-   struct DoubleLinkedRingListNode* prev = node->ListNode.Prev;
-   if(prev != llbt->List.Head) {
-      return((struct LeafLinkedBinaryTreeNode*)prev);
-   }
-   return(NULL);
-}
-
-
-/* ###### Get next node ################################################## */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNext(const struct LeafLinkedBinaryTree* llbt,
-                                                                    struct LeafLinkedBinaryTreeNode*   node)
-{
-   struct DoubleLinkedRingListNode* next = node->ListNode.Next;
-   if(next != llbt->List.Head) {
-      return((struct LeafLinkedBinaryTreeNode*)next);
-   }
-   return(NULL);
-}
-
-
-/* ###### Find nearest previous node ##################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNearestPrev(
-                                           struct LeafLinkedBinaryTree*     llbt,
-                                           struct LeafLinkedBinaryTreeNode* cmpNode)
-{
-   struct LeafLinkedBinaryTreeNode* result;
-   result = leafLinkedBinaryTreeInternalGetNearestPrev(
-               llbt, &llbt->TreeRoot, &llbt->NullNode, cmpNode);
-   if(result != &llbt->NullNode) {
-      return(result);
-   }
-   return(NULL);
-}
-
-
-/* ###### Find nearest next node ######################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNearestNext(
-                                           struct LeafLinkedBinaryTree*     llbt,
-                                           struct LeafLinkedBinaryTreeNode* cmpNode)
-{
-   struct LeafLinkedBinaryTreeNode* result;
-   result = leafLinkedBinaryTreeInternalGetNearestNext(
-               llbt, &llbt->TreeRoot, &llbt->NullNode, cmpNode);
-   if(result != &llbt->NullNode) {
-      return(result);
-   }
-   return(NULL);
-}
-
-
-/* ###### Get number of elements ########################################## */
-inline size_t leafLinkedBinaryTreeGetElements(const struct LeafLinkedBinaryTree* llbt)
-{
-   return(llbt->Elements);
-}
-
-
-/* ###### Get prev node by walking through the tree (does *not* use list!) */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInternalFindPrev(const struct LeafLinkedBinaryTree* llbt,
-                                                                             struct LeafLinkedBinaryTreeNode*   cmpNode)
-{
-   struct LeafLinkedBinaryTreeNode* node = cmpNode->LeftSubtree;
-   struct LeafLinkedBinaryTreeNode* parent;
-
-   if(node != &llbt->NullNode) {
-      while(node->RightSubtree != &llbt->NullNode) {
-         node = node->RightSubtree;
-      }
-      return(node);
-   }
-   else {
-      node   = cmpNode;
-      parent = cmpNode->Parent;
-      while((parent != &llbt->NullNode) && (node == parent->LeftSubtree)) {
-         node   = parent;
-         parent = parent->Parent;
-      }
-      return(parent);
-   }
-}
-
-
-/* ###### Get next node by walking through the tree (does *not* use list!) */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInternalFindNext(const struct LeafLinkedBinaryTree* llbt,
-                                                                             struct LeafLinkedBinaryTreeNode*   cmpNode)
-{
-   struct LeafLinkedBinaryTreeNode* node = cmpNode->RightSubtree;
-   struct LeafLinkedBinaryTreeNode* parent;
-
-   if(node != &llbt->NullNode) {
-      while(node->LeftSubtree != &llbt->NullNode) {
-         node = node->LeftSubtree;
-      }
-      return(node);
-   }
-   else {
-      node   = cmpNode;
-      parent = cmpNode->Parent;
-      while((parent != &llbt->NullNode) && (node == parent->RightSubtree)) {
-         node   = parent;
-         parent = parent->Parent;
-      }
-      return(parent);
-   }
-}
-
-
-/* ###### Insert node ##################################################### */
-/*
-   returns node, if node has been inserted. Otherwise, duplicate node
-   already in treap is returned.
-*/
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInsert(struct LeafLinkedBinaryTree*     llbt,
-                                                                   struct LeafLinkedBinaryTreeNode* node)
-{
-   struct LeafLinkedBinaryTreeNode* result;
-   struct LeafLinkedBinaryTreeNode* prev;
-#ifdef DEBUG
-   printf("insert: ");
-   llbt->PrintFunction(node);
-   printf("\n");
-#endif
-
-   result = leafLinkedBinaryTreeInternalInsert(llbt, &llbt->TreeRoot, &llbt->NullNode, node);
-   if(result == node) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
-      llbt->NullNode.Parent = &llbt->NullNode;
-
-      prev = leafLinkedBinaryTreeInternalFindPrev(llbt, node);
-      if(prev != &llbt->NullNode) {
-         doubleLinkedRingListAddAfter(&prev->ListNode, &node->ListNode);
-      }
-      else {
-         doubleLinkedRingListAddHead(&llbt->List, &node->ListNode);
-      }
-#ifdef DEBUG
-      leafLinkedBinaryTreePrint(llbt, stdout);
-#endif
-#ifdef VERIFY
-      leafLinkedBinaryTreeVerify(llbt);
-#endif
-   }
-   return(result);
-}
-
-
-/* ###### Remove node ##################################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeRemove(struct LeafLinkedBinaryTree*     llbt,
-                                                                   struct LeafLinkedBinaryTreeNode* node)
-{
-   struct LeafLinkedBinaryTreeNode* result;
-#ifdef DEBUG
-   printf("remove: ");
-   llbt->PrintFunction(node);
-   printf("\n");
-#endif
-
-   result = leafLinkedBinaryTreeInternalRemove(llbt, &llbt->TreeRoot, node);
-   if(result) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
-      llbt->NullNode.Parent = &llbt->NullNode;
-
-      doubleLinkedRingListRemNode(&node->ListNode);
-      node->ListNode.Prev = NULL;
-      node->ListNode.Next = NULL;
-
-#ifdef DEBUG
-      leafLinkedBinaryTreePrint(llbt, stdout);
-#endif
-#ifdef VERIFY
-      leafLinkedBinaryTreeVerify(llbt);
-#endif
-   }
-   return(result);
-}
-
-
-/* ###### Find node ####################################################### */
-inline struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeFind(const struct LeafLinkedBinaryTree*     llbt,
-                                                                 const struct LeafLinkedBinaryTreeNode* cmpNode)
-{
-#ifdef DEBUG
-   printf("find: ");
-   llbt->PrintFunction(cmpNode);
-   printf("\n");
-#endif
-
-   struct LeafLinkedBinaryTreeNode* node = llbt->TreeRoot;
-   while(node != &llbt->NullNode) {
-      const int cmpResult = llbt->ComparisonFunction(cmpNode, node);
-      if(cmpResult == 0) {
-         return(node);
-      }
-      else if(cmpResult < 0) {
-         node = node->LeftSubtree;
-      }
-      else {
-         node = node->RightSubtree;
-      }
-   }
-   return(NULL);
-}
-
-
-/* ###### Get value sum from root node ################################### */
-inline LeafLinkedBinaryTreeNodeValueType leafLinkedBinaryTreeGetValueSum(
-                                            const struct LeafLinkedBinaryTree* llbt)
-{
-   return(llbt->TreeRoot->ValueSum);
-}
-
-
+int leafLinkedBinaryTreeIsEmpty(struct LeafLinkedBinaryTree* llbt);
+void leafLinkedBinaryTreePrint(struct LeafLinkedBinaryTree* llbt,
+                               FILE*                        fd);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetFirst(const struct LeafLinkedBinaryTree* llbt);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetLast(const struct LeafLinkedBinaryTree* llbt);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetPrev(const struct LeafLinkedBinaryTree* llbt,
+                                                             struct LeafLinkedBinaryTreeNode*   node);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNext(const struct LeafLinkedBinaryTree* llbt,
+                                                             struct LeafLinkedBinaryTreeNode*   node);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNearestPrev(
+                                    struct LeafLinkedBinaryTree*     llbt,
+                                    struct LeafLinkedBinaryTreeNode* cmpNode);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNearestNext(
+                                    struct LeafLinkedBinaryTree*     llbt,
+                                    struct LeafLinkedBinaryTreeNode* cmpNode);
+size_t leafLinkedBinaryTreeGetElements(const struct LeafLinkedBinaryTree* llbt);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInternalFindPrev(const struct LeafLinkedBinaryTree* llbt,
+                                                                      struct LeafLinkedBinaryTreeNode*   cmpNode);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInternalFindNext(const struct LeafLinkedBinaryTree* llbt,
+                                                                      struct LeafLinkedBinaryTreeNode*   cmpNode);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInsert(struct LeafLinkedBinaryTree*     llbt,
+                                                            struct LeafLinkedBinaryTreeNode* node);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeRemove(struct LeafLinkedBinaryTree*     llbt,
+                                                            struct LeafLinkedBinaryTreeNode* node);
+struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeFind(const struct LeafLinkedBinaryTree*     llbt,
+                                                          const struct LeafLinkedBinaryTreeNode* cmpNode);
+LeafLinkedBinaryTreeNodeValueType leafLinkedBinaryTreeGetValueSum(
+                                     const struct LeafLinkedBinaryTree* llbt);
 struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeGetNodeByValue(
                                     struct LeafLinkedBinaryTree*      llbt,
                                     LeafLinkedBinaryTreeNodeValueType value);

@@ -284,7 +284,7 @@ void FractalPU::run()
          Run++;
          PoolElementUsages = 0;
 
-         rspSessionSetCSPStatus(Session, "Sending parameter command...");
+         rspSessionSetStatusText(Session, "Sending parameter command...");
          statusBar()->message("Sending parameter command...");
          std::cerr << "Sending parameter command..." << std::endl;
 
@@ -319,7 +319,7 @@ void FractalPU::run()
                         packets++;
                         snprintf((char*)&statusText, sizeof(statusText),
                                  "Processed data packet #%u...", packets);
-                        rspSessionSetCSPStatus(Session, statusText);
+                        rspSessionSetStatusText(Session, statusText);
                         statusBar()->message(statusText);
                       break;
                   }
@@ -331,7 +331,7 @@ void FractalPU::run()
 finish:
          TimeoutTimer->stop();
 
-         rspSessionSetCSPStatus(Session, "Image completed!");
+         rspSessionSetStatusText(Session, "Image completed!");
          statusBar()->message("Image completed!");
          std::cout << "Image completed!" << std::endl;
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.16 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: rsplib.c,v 1.17 2004/11/09 20:00:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,6 +39,7 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "rsplib.h"
+#include "rsplib-internals.h"
 #include "asapinstance.h"
 #include "netutilities.h"
 #include "threadsafety.h"

@@ -5,7 +5,7 @@ libcppthreadinclude_HEADERS = mutex.h thread.h
 libcppthread_la_SOURCES     = mutex.cc thread.cc
 
 librsplibincludedir      = $(prefix)/include/rserpool
-librsplibinclude_HEADERS = rsplib.h rsplib-tags.h
+librsplibinclude_HEADERS = rsplib.h rsplib-tags.h rsplib-internals.h
 librsplib_la_SOURCES = \
 rserpoolmessagecreator.c \
 rserpoolmessagecreator.h \
@@ -25,6 +25,7 @@ debug.h \
 dispatcher.c \
 dispatcher.h \
 doublelinkedringlist.h \
+doublelinkedringlist.c \
 fdcallback.c \
 fdcallback.h \
 leaflinkedbinarytree.c \

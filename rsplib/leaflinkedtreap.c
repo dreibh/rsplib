@@ -32,6 +32,44 @@ extern "C" {
 #endif
 
 
+static void leafLinkedTreapPrintNode(struct LeafLinkedTreap*     llt,
+                                     struct LeafLinkedTreapNode* node,
+                                     FILE*                       fd);
+
+
+/* ###### Initialize ##################################################### */
+void leafLinkedTreapNodeNew(struct LeafLinkedTreapNode* node)
+{
+   doubleLinkedRingListNodeNew(&node->ListNode);
+   node->Parent       = NULL;
+   node->LeftSubtree  = NULL;
+   node->RightSubtree = NULL;
+   node->Priority     = 0;
+   node->Value        = 0;
+   node->ValueSum     = 0;
+}
+
+
+/* ###### Invalidate ##################################################### */
+void leafLinkedTreapNodeDelete(struct LeafLinkedTreapNode* node)
+{
+   node->Parent       = NULL;
+   node->LeftSubtree  = NULL;
+   node->RightSubtree = NULL;
+   node->Priority     = 0;
+   node->Value        = 0;
+   node->ValueSum     = 0;
+   doubleLinkedRingListNodeDelete(&node->ListNode);
+}
+
+
+/* ###### Is node linked? ################################################ */
+int leafLinkedTreapNodeIsLinked(struct LeafLinkedTreapNode* node)
+{
+   return(node->LeftSubtree != NULL);
+}
+
+
 /* ##### Initialize ###################################################### */
 void leafLinkedTreapNew(struct LeafLinkedTreap* llt,
                         void                    (*printFunction)(const void* node, FILE* fd),
@@ -63,15 +101,305 @@ void leafLinkedTreapDelete(struct LeafLinkedTreap* llt)
 }
 
 
+/* ###### Is treap empty? ################################################ */
+int leafLinkedTreapIsEmpty(struct LeafLinkedTreap* llt)
+{
+   return(llt->TreeRoot == &llt->NullNode);
+}
+
+
+/* ###### Internal method for printing a node ############################# */
+static void leafLinkedTreapPrintNode(struct LeafLinkedTreap*     llt,
+                                            struct LeafLinkedTreapNode* node,
+                                            FILE*                       fd)
+{
+   llt->PrintFunction(node, fd);
+#ifdef DEBUG
+   fprintf(fd, " ptr=%p v=%Lu vsum=%Lu", node, node->Value, node->ValueSum);
+   if(node->LeftSubtree != &llt->NullNode) {
+      fprintf(fd, " l=%p", node->LeftSubtree);
+   }
+   else {
+      fprintf(fd, " l=()");
+   }
+   if(node->RightSubtree != &llt->NullNode) {
+      fprintf(fd, " r=%p", node->RightSubtree);
+   }
+   else {
+      fprintf(fd, " r=()");
+   }
+   if(node->Parent != &llt->NullNode) {
+      fprintf(fd, " p=%p ", node->Parent);
+   }
+   else {
+      fprintf(fd, " p=())   ");
+   }
+#endif
+}
+
+
+/* ###### Print treap ##################################################### */
+void leafLinkedTreapPrint(struct LeafLinkedTreap* llt, FILE* fd)
+{
+#ifdef DEBUG
+   fprintf(fd, "root=%p null=%p   ", llt->TreeRoot, &llt->NullNode);
+#endif
+   leafLinkedTreapInternalPrint(llt, llt->TreeRoot, fd);
+   fputs("\n", fd);
+}
+
+
+/* ###### Get first node ################################################## */
+struct LeafLinkedTreapNode* leafLinkedTreapGetFirst(const struct LeafLinkedTreap* llt)
+{
+   struct DoubleLinkedRingListNode* node = llt->List.Node.Next;
+   if(node != llt->List.Head) {
+      return((struct LeafLinkedTreapNode*)node);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get last node ################################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapGetLast(const struct LeafLinkedTreap* llt)
+{
+   struct DoubleLinkedRingListNode* node = llt->List.Node.Prev;
+   if(node != llt->List.Head) {
+      return((struct LeafLinkedTreapNode*)node);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get previous node ############################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapGetPrev(const struct LeafLinkedTreap* llt,
+                                                          struct LeafLinkedTreapNode*   node)
+{
+   struct DoubleLinkedRingListNode* prev = node->ListNode.Prev;
+   if(prev != llt->List.Head) {
+      return((struct LeafLinkedTreapNode*)prev);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get next node ################################################## */
+struct LeafLinkedTreapNode* leafLinkedTreapGetNext(const struct LeafLinkedTreap* llt,
+                                                          struct LeafLinkedTreapNode*   node)
+{
+   struct DoubleLinkedRingListNode* next = node->ListNode.Next;
+   if(next != llt->List.Head) {
+      return((struct LeafLinkedTreapNode*)next);
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest previous node ##################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapGetNearestPrev(
+                                      struct LeafLinkedTreap*     llt,
+                                      struct LeafLinkedTreapNode* cmpNode)
+{
+   struct LeafLinkedTreapNode* result;
+   result = leafLinkedTreapInternalGetNearestPrev(
+               llt, &llt->TreeRoot, &llt->NullNode, cmpNode);
+   if(result != &llt->NullNode) {
+      return(result);
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest next node ######################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapGetNearestNext(
+                                      struct LeafLinkedTreap*     llt,
+                                      struct LeafLinkedTreapNode* cmpNode)
+{
+   struct LeafLinkedTreapNode* result;
+   result = leafLinkedTreapInternalGetNearestNext(
+               llt, &llt->TreeRoot, &llt->NullNode, cmpNode);
+   if(result != &llt->NullNode) {
+      return(result);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get number of elements ########################################## */
+size_t leafLinkedTreapGetElements(const struct LeafLinkedTreap* llt)
+{
+   return(llt->Elements);
+}
+
+
+/* ###### Get prev node by walking through the tree (does *not* use list!) */
+struct LeafLinkedTreapNode* leafLinkedTreapInternalFindPrev(const struct LeafLinkedTreap* llt,
+                                                                   struct LeafLinkedTreapNode*   cmpNode)
+{
+   struct LeafLinkedTreapNode* node = cmpNode->LeftSubtree;
+   struct LeafLinkedTreapNode* parent;
+
+   if(node != &llt->NullNode) {
+      while(node->RightSubtree != &llt->NullNode) {
+         node = node->RightSubtree;
+      }
+      return(node);
+   }
+   else {
+      node   = cmpNode;
+      parent = cmpNode->Parent;
+      while((parent != &llt->NullNode) && (node == parent->LeftSubtree)) {
+         node   = parent;
+         parent = parent->Parent;
+      }
+      return(parent);
+   }
+}
+
+
+/* ###### Get next node by walking through the tree (does *not* use list!) */
+struct LeafLinkedTreapNode* leafLinkedTreapInternalFindNext(const struct LeafLinkedTreap* llt,
+                                                                   struct LeafLinkedTreapNode*   cmpNode)
+{
+   struct LeafLinkedTreapNode* node = cmpNode->RightSubtree;
+   struct LeafLinkedTreapNode* parent;
+
+   if(node != &llt->NullNode) {
+      while(node->LeftSubtree != &llt->NullNode) {
+         node = node->LeftSubtree;
+      }
+      return(node);
+   }
+   else {
+      node   = cmpNode;
+      parent = cmpNode->Parent;
+      while((parent != &llt->NullNode) && (node == parent->RightSubtree)) {
+         node   = parent;
+         parent = parent->Parent;
+      }
+      return(parent);
+   }
+}
+
+
+/* ###### Insert node ##################################################### */
+/*
+   returns node, if node has been inserted. Otherwise, duplicate node
+   already in treap is returned.
+*/
+struct LeafLinkedTreapNode* leafLinkedTreapInsert(struct LeafLinkedTreap*     llt,
+                                                         struct LeafLinkedTreapNode* node)
+{
+   struct LeafLinkedTreapNode* result;
+   struct LeafLinkedTreapNode* prev;
+#ifdef DEBUG
+   printf("insert: ");
+   llt->PrintFunction(node);
+   printf("\n");
+#endif
+
+   result = leafLinkedTreapInternalInsert(llt, &llt->TreeRoot, &llt->NullNode, node);
+   if(result == node) {
+      // Important: The NullNode's parent pointer may be modified during rotations.
+      // We reset it here. This is much more efficient than if-clauses in the
+      // rotation functions.
+      llt->NullNode.Parent = &llt->NullNode;
+
+      prev = leafLinkedTreapInternalFindPrev(llt, node);
+      if(prev != &llt->NullNode) {
+         doubleLinkedRingListAddAfter(&prev->ListNode, &node->ListNode);
+      }
+      else {
+         doubleLinkedRingListAddHead(&llt->List, &node->ListNode);
+      }
+#ifdef DEBUG
+      leafLinkedTreapPrint(llt);
+#endif
+#ifdef VERIFY
+      leafLinkedTreapVerify(llt);
+#endif
+   }
+   return(result);
+}
+
+
+/* ###### Remove node ##################################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapRemove(struct LeafLinkedTreap*     llt,
+                                                         struct LeafLinkedTreapNode* node)
+{
+   struct LeafLinkedTreapNode* result;
+#ifdef DEBUG
+   printf("remove: ");
+   llt->PrintFunction(node);
+   printf("\n");
+#endif
+
+   result = leafLinkedTreapInternalRemove(llt, &llt->TreeRoot, node);
+   if(result) {
+      // Important: The NullNode's parent pointer may be modified during rotations.
+      // We reset it here. This is much more efficient than if-clauses in the
+      // rotation functions.
+      llt->NullNode.Parent = &llt->NullNode;
+
+      doubleLinkedRingListRemNode(&node->ListNode);
+      node->ListNode.Prev = NULL;
+      node->ListNode.Next = NULL;
+
+#ifdef DEBUG
+      leafLinkedTreapPrint(llt);
+#endif
+#ifdef VERIFY
+      leafLinkedTreapVerify(llt);
+#endif
+   }
+   return(result);
+}
+
+
+/* ###### Find node ####################################################### */
+struct LeafLinkedTreapNode* leafLinkedTreapFind(const struct LeafLinkedTreap*     llt,
+                                                       const struct LeafLinkedTreapNode* cmpNode)
+{
+#ifdef DEBUG
+   printf("find: ");
+   llt->PrintFunction(cmpNode);
+   printf("\n");
+#endif
+
+   struct LeafLinkedTreapNode* node = llt->TreeRoot;
+   while(node != &llt->NullNode) {
+      const int cmpResult = llt->ComparisonFunction(cmpNode, node);
+      if(cmpResult == 0) {
+         return(node);
+      }
+      else if(cmpResult < 0) {
+         node = node->LeftSubtree;
+      }
+      else {
+         node = node->RightSubtree;
+      }
+   }
+   return(NULL);
+}
+
+
+/* ###### Get value sum from root node ################################### */
+LeafLinkedTreapNodeValueType leafLinkedTreapGetValueSum(
+                                       const struct LeafLinkedTreap* llt)
+{
+   return(llt->TreeRoot->ValueSum);
+}
+
+
 /* ##### Update value sum ################################################ */
-inline static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
+static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
 {
    node->ValueSum = node->LeftSubtree->ValueSum + node->Value + node->RightSubtree->ValueSum;
 }
 
 
 /* ##### Update value sum of left and right subtree + current ones ####### */
-inline static void leafLinkedTreapUpdateLeftAndRightValueSums(
+static void leafLinkedTreapUpdateLeftAndRightValueSums(
                       struct LeafLinkedTreapNode* node)
 {
    leafLinkedTreapUpdateValueSum(node->LeftSubtree);
@@ -96,7 +424,7 @@ void leafLinkedTreapInternalPrint(struct LeafLinkedTreap*     llt,
 
 
 /* ##### Rotation with left subtree ###################################### */
-inline static void leafLinkedTreapRotateWithLeftSubtree(
+static void leafLinkedTreapRotateWithLeftSubtree(
                       struct LeafLinkedTreapNode** node2)
 {
    struct LeafLinkedTreapNode* parent = (*node2)->Parent;
@@ -114,7 +442,7 @@ inline static void leafLinkedTreapRotateWithLeftSubtree(
 
 
 /* ##### Rotation with ripht subtree ##################################### */
-inline static void leafLinkedTreapRotateWithRightSubtree(
+static void leafLinkedTreapRotateWithRightSubtree(
                       struct LeafLinkedTreapNode** node1)
 {
    struct LeafLinkedTreapNode* parent = (*node1)->Parent;
