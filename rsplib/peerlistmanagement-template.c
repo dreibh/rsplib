@@ -181,7 +181,7 @@ void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
                                      peerListNode);
    ST_CLASS(peerListActivateTimer)(&peerListManagement->List,
                                    peerListNode,
-                                   PLNT_EXPIRY,
+                                   PLNT_MAX_TIME_NO_RESPONSE,
                                    peerListNode->LastUpdateTimeStamp + expiryTimeout);
 }
 
@@ -199,7 +199,7 @@ size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
    while(peerListNode != NULL) {
       nextPeerListNode = ST_CLASS(peerListGetNextPeerListNodeFromTimerStorage)(&peerListManagement->List, peerListNode);
 
-      CHECK(peerListNode->TimerCode == PLNT_EXPIRY);
+      CHECK(peerListNode->TimerCode == PLNT_MAX_TIME_NO_RESPONSE);
       CHECK(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode));
       if(peerListNode->TimerTimeStamp <= currentTimeStamp) {
          ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(

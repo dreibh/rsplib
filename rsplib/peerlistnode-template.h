@@ -37,9 +37,8 @@ struct ST_CLASS(PeerList);
 #define PLNF_DYNAMIC   (1 << 0)
 #define PLNF_MULTICAST (1 << 1)
 
-#define PLNT_EXPIRY                 2000
-#define PLNT_KEEPALIVE_TRANSMISSION 2001
-#define PLNT_KEEPALIVE_TIMEOUT      2002
+#define PLNT_MAX_TIME_LAST_HEARD    3000
+#define PLNT_MAX_TIME_NO_RESPONSE   3001
 
 
 struct ST_CLASS(PeerListNode)

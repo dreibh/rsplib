@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.21 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: nameserver.c,v 1.22 2004/08/23 16:10:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,14 +58,15 @@
 /* Exit immediately on Ctrl-C. No clean shutdown. */
 // #define FAST_BREAK
 
-#define MAX_NS_TRANSPORTADDRESSES                                   16
-#define NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL              2111111
-#define NAMESERVER_DEFAULT_ENRP_ANNOUNCE_INTERVAL              2444444
-#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL                   10000000 // ???????
-#define NAMESERVER_DEFAULT_PEER_TIMEOUT_INTERVAL               7500000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL    5000000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL         500000000   // ???????
-#define NAMESERVER_DEFAULT_MENTOR_DISCOVERY_INTERVAL           5000000
+#define MAX_NS_TRANSPORTADDRESSES                                           16
+#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_INTERVAL                    2111111
+#define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000   // ???????
+#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
+#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000   // ???????
+#define NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE                        2444444
+#define NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
+#define NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   2000000
+#define NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
 
 
 struct NameServerUserNode
@@ -135,14 +136,14 @@ struct NameServer
    bool                                     InInitializationPhase;
    ENRPIdentifierType                       MentorServerID;
 
-   card64                                   ASAPAnnounceInterval;
-   card64                                   ENRPAnnounceInterval;
-   card64                                   HeartbeatInterval;
-   card64                                   KeepAliveTransmissionInterval;
-   card64                                   KeepAliveTimeoutInterval;
-   card64                                   MentorDiscoveryInterval;
-   card64                                   PeerTimeoutInterval;
-   card64                                   MessageReceptionTimeout;
+   card64                                   ServerAnnounceInterval;
+   card64                                   EndpointMonitoringHeartbeatInterval;
+   card64                                   EndpointKeepAliveTransmissionInterval;
+   card64                                   EndpointKeepAliveTimeoutInterval;
+   card64                                   PeerHeartbeatCycle;
+   card64                                   PeerMaxTimeLastHeard;
+   card64                                   PeerMaxTimeNoResponse;
+   card64                                   MentorHuntTimeout;
 };
 
 
@@ -386,6 +387,8 @@ void nameServerDelete(struct NameServer* nameServer);
 static void sendPeerNameUpdate(struct NameServer*                nameServer,
                                struct ST_CLASS(PoolElementNode)* poolElementNode,
                                const uint16_t                    action);
+static void sendPeerInitTakeover(struct NameServer*       nameServer,
+                                 const ENRPIdentifierType targetID);
 
 static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
@@ -519,13 +522,14 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->ENRPUseMulticast         = enrpUseMulticast;
       nameServer->ENRPAnnounceViaMulticast = enrpAnnounceViaMulticast;
 
-      nameServer->KeepAliveTransmissionInterval = NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
-      nameServer->KeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL;
-      nameServer->PeerTimeoutInterval           = NAMESERVER_DEFAULT_PEER_TIMEOUT_INTERVAL;
-      nameServer->ASAPAnnounceInterval          = NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL;
-      nameServer->ENRPAnnounceInterval          = NAMESERVER_DEFAULT_ENRP_ANNOUNCE_INTERVAL;
-      nameServer->HeartbeatInterval             = NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL;
-      nameServer->MentorDiscoveryInterval       = NAMESERVER_DEFAULT_MENTOR_DISCOVERY_INTERVAL;
+      nameServer->ServerAnnounceInterval                = NAMESERVER_DEFAULT_SERVER_ANNOUNCE_INTERVAL;
+      nameServer->EndpointMonitoringHeartbeatInterval   = NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
+      nameServer->EndpointKeepAliveTransmissionInterval = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
+      nameServer->EndpointKeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
+      nameServer->PeerMaxTimeLastHeard                  = NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD;
+      nameServer->PeerMaxTimeNoResponse                 = NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
+      nameServer->PeerHeartbeatCycle                    = NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE;
+      nameServer->MentorHuntTimeout                     = NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT;
 
       memcpy(&nameServer->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(union sockaddr_union));
       if(nameServer->ASAPAnnounceAddress.in6.sin6_family == AF_INET6) {
@@ -574,7 +578,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
          nameServerDelete(nameServer);
          return(NULL);
       }
-      timerStart(nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorDiscoveryInterval);
+      timerStart(nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
       if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
          if(joinOrLeaveMulticastGroup(nameServer->ENRPMulticastSocket,
                                       &nameServer->ENRPMulticastAddress,
@@ -703,7 +707,7 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       }
       rserpoolMessageDelete(message);
    }
-   timerStart(timer, getMicroTime() + nameServer->ASAPAnnounceInterval);
+   timerStart(timer, getMicroTime() + nameServer->ServerAnnounceInterval);
 }
 
 
@@ -823,10 +827,10 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    if(nameServer->InInitializationPhase) {
       nameServer->InInitializationPhase = false;
       LOG_NOTE
-      fputs("Initialization phase ended after ENRP announce timeout. The name server is ready!\n", stdlog);
+      fputs("Initialization phase ended after ENRP mentor discovery timeout. The name server is ready!\n", stdlog);
       LOG_END
       if(nameServer->ASAPSendAnnounces) {
-         timerStart(nameServer->ASAPAnnounceTimer, getMicroTime() + nameServer->MentorDiscoveryInterval);
+         timerStart(nameServer->ASAPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
       }
    }
 
@@ -855,12 +859,12 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                         peerListNode);
    }
 
-   timerStart(timer, getMicroTime() + nameServer->ENRPAnnounceInterval);
+   timerStart(timer, getMicroTime() + nameServer->PeerHeartbeatCycle);
 }
 
 
 /* ###### Send Endpoint Keep Alive ####################################### */
-static void sendEndpointKeepAlive(struct NameServer*                nameServer,
+static void sendEndpointEndpointKeepAlive(struct NameServer*                nameServer,
                                   struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    struct NameServerUserNode* nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
@@ -870,7 +874,7 @@ static void sendEndpointKeepAlive(struct NameServer*                nameServer,
       message = rserpoolMessageNew(NULL, 1024);
       if(message != NULL) {
          LOG_VERBOSE2
-         fprintf(stdlog, "Sending KeepAlive for pool element $%08x in pool ",
+         fprintf(stdlog, "Sending EndpointKeepAlive for pool element $%08x in pool ",
                  poolElementNode->Identifier);
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
          fputs("\n", stdlog);
@@ -886,7 +890,7 @@ static void sendEndpointKeepAlive(struct NameServer*                nameServer,
                                 0, 0,
                                 message) == false) {
             LOG_ERROR
-            fprintf(stdlog, "Sending KeepAlive for pool element $%08x in pool ",
+            fprintf(stdlog, "Sending EndpointKeepAlive for pool element $%08x in pool ",
                      poolElementNode->Identifier);
             poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
             fputs(" failed\n", stdlog);
@@ -923,13 +927,13 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
             &nameServer->Namespace.Namespace,
             poolElementNode);
 
-         sendEndpointKeepAlive(nameServer, poolElementNode);
+         sendEndpointEndpointKeepAlive(nameServer, poolElementNode);
 
          ST_CLASS(poolNamespaceNodeActivateTimer)(
             &nameServer->Namespace.Namespace,
             poolElementNode,
             PENT_KEEPALIVE_TIMEOUT,
-            getMicroTime() + nameServer->KeepAliveTimeoutInterval);
+            getMicroTime() + nameServer->EndpointKeepAliveTimeoutInterval);
       }
 
       else if( (poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) ||
@@ -1009,12 +1013,38 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                             &nameServer->Peers.List,
                             peerListNode);
 
-      if(peerListNode->TimerCode == PLNT_EXPIRY) {
+      if(peerListNode->TimerCode == PLNT_MAX_TIME_LAST_HEARD) {
          LOG_ACTION
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fputs(" has timed out -> removing it\n", stdlog);
+         fprintf(stdlog, " not head since MaxTimeLastHeard=%Luµs -> requesting immediate PeerPresence\n",
+                 nameServer->PeerMaxTimeLastHeard);
          LOG_END
+         sendPeerPresence(nameServer,
+                          nameServer->ENRPUnicastSocket,
+                          0, 0,
+                          peerListNode->AddressBlock->AddressArray,
+                          peerListNode->AddressBlock->Addresses,
+                          peerListNode->Identifier,
+                          true);
+         ST_CLASS(peerListDeactivateTimer)(
+            &nameServer->Peers.List,
+            peerListNode);
+         ST_CLASS(peerListActivateTimer)(
+            &nameServer->Peers.List,
+            peerListNode,
+            PLNT_MAX_TIME_NO_RESPONSE,
+            getMicroTime() + nameServer->PeerMaxTimeNoResponse);
+      }
+      else if(peerListNode->TimerCode == PLNT_MAX_TIME_NO_RESPONSE) {
+         LOG_ACTION
+         fputs("Peer ", stdlog);
+         ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+         fprintf(stdlog, " did not answer in MaxTimeNoResponse=%Luµs -> removing it\n",
+                 nameServer->PeerMaxTimeLastHeard);
+         LOG_END
+
+         sendPeerInitTakeover(nameServer, peerListNode->Identifier);
 
          result = ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                      &nameServer->Peers,
@@ -1050,6 +1080,61 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
    timerRestart(nameServer->PeerActionTimer,
                ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                   &nameServer->Peers));
+}
+
+
+/* ###### Send peer init takeover ######################################## */
+static void sendPeerInitTakeover(struct NameServer*       nameServer,
+                                 const ENRPIdentifierType targetID)
+{
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct RSerPoolMessage*        message;
+
+   message = rserpoolMessageNew(NULL, 65536);
+   if(message != NULL) {
+      message->Type         = EHT_PEER_INIT_TAKEOVER;
+      message->Flags        = 0x00;
+      message->SenderID     = nameServer->ServerID;
+      message->ReceiverID   = 0;
+      message->NSIdentifier = targetID;
+
+      if(nameServer->ENRPUseMulticast) {
+         LOG_VERBOSE2
+         fputs("Sending PeerInitTakeover via ENRP multicast socket...\n", stdlog);
+         LOG_END
+         message->ReceiverID    = 0;
+         message->AddressArray  = &nameServer->ENRPMulticastAddress;
+         message->Addresses     = 1;
+         if(rserpoolMessageSend(IPPROTO_UDP,
+                                nameServer->ENRPMulticastSocket,
+                                0, 0, 0,
+                                message) == false) {
+            LOG_WARNING
+            fputs("Sending PeerNameUpdate via ENRP multicast socket failed\n", stdlog);
+            LOG_END
+         }
+      }
+
+      peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&nameServer->Peers.List);
+      while(peerListNode != NULL) {
+         if(!(peerListNode->Flags & PLNF_MULTICAST)) {
+            message->ReceiverID   = peerListNode->Identifier;
+            message->AddressArray = peerListNode->AddressBlock->AddressArray;
+            message->Addresses    = peerListNode->AddressBlock->Addresses;
+            LOG_VERBOSE
+            fprintf(stdlog, "Sending PeerInitTakeover to unicast peer $%08x...\n",
+                    peerListNode->Identifier);
+            LOG_END
+            rserpoolMessageSend(IPPROTO_SCTP,
+                                nameServer->ENRPUnicastSocket,
+                                0, 0, 0,
+                                message);
+         }
+         peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                           &nameServer->Peers.List,
+                           peerListNode);
+      }
+   }
 }
 
 
@@ -1099,15 +1184,16 @@ static void sendPeerNameUpdate(struct NameServer*                nameServer,
       peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&nameServer->Peers.List);
       while(peerListNode != NULL) {
          if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-            message->ReceiverID = 0;
+            message->ReceiverID   = peerListNode->Identifier;
+            message->AddressArray = peerListNode->AddressBlock->AddressArray;
+            message->Addresses    = peerListNode->AddressBlock->Addresses;
             LOG_VERBOSE
             fprintf(stdlog, "Sending PeerNameUpdate to unicast peer $%08x...\n",
                     peerListNode->Identifier);
             LOG_END
             rserpoolMessageSend(IPPROTO_SCTP,
                                 nameServer->ENRPUnicastSocket,
-                                0, MSG_SEND_TO_ALL,
-                                0,
+                                0, 0, 0,
                                 message);
          }
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
@@ -1263,7 +1349,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
             tags[2].Tag = TAG_TuneSCTP_InitialRTO;
             tags[2].Data = 750;
             tags[3].Tag = TAG_TuneSCTP_Heartbeat;
-            tags[3].Data = (nameServer->HeartbeatInterval / 1000);
+            tags[3].Data = (nameServer->EndpointMonitoringHeartbeatInterval / 1000);
             tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
             tags[4].Data = 3;
             tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
@@ -1286,7 +1372,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
                &nameServer->Namespace.Namespace,
                poolElementNode,
                PENT_KEEPALIVE_TRANSMISSION,
-               getMicroTime() + nameServer->KeepAliveTransmissionInterval);
+               getMicroTime() + nameServer->EndpointKeepAliveTransmissionInterval);
             timerRestart(nameServer->NamespaceActionTimer,
                          ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
                             &nameServer->Namespace));
@@ -1461,7 +1547,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
 
 
 /* ###### Handle endpoint keepalive acknowledgement ###################### */
-static void handleEndpointKeepAliveAck(struct NameServer*      nameServer,
+static void handleEndpointEndpointKeepAliveAck(struct NameServer*      nameServer,
                                        int                     fd,
                                        sctp_assoc_t            assocID,
                                        struct RSerPoolMessage* message)
@@ -1469,7 +1555,7 @@ static void handleEndpointKeepAliveAck(struct NameServer*      nameServer,
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got EndpointKeepAliveAck for pool element $%08x of pool ",
+   fprintf(stdlog, "Got EndpointEndpointKeepAliveAck for pool element $%08x of pool ",
            message->Identifier);
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
@@ -1481,7 +1567,7 @@ static void handleEndpointKeepAliveAck(struct NameServer*      nameServer,
                         message->Identifier);
    if(poolElementNode != NULL) {
       LOG_VERBOSE2
-      fputs("KeepAlive successful, resetting timer\n", stdlog);
+      fputs("EndpointKeepAlive successful, resetting timer\n", stdlog);
       LOG_END
 
       ST_CLASS(poolNamespaceNodeDeactivateTimer)(
@@ -1491,7 +1577,7 @@ static void handleEndpointKeepAliveAck(struct NameServer*      nameServer,
          &nameServer->Namespace.Namespace,
          poolElementNode,
          PENT_KEEPALIVE_TRANSMISSION,
-         getMicroTime() + nameServer->KeepAliveTransmissionInterval);
+         getMicroTime() + nameServer->EndpointKeepAliveTransmissionInterval);
       timerRestart(nameServer->NamespaceActionTimer,
                   ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
                      &nameServer->Namespace));
@@ -1499,7 +1585,7 @@ static void handleEndpointKeepAliveAck(struct NameServer*      nameServer,
    else {
       LOG_WARNING
       fprintf(stdlog,
-              "EndpointKeepAliveAck for not-existing pool element $%08x of pool ",
+              "EndpointEndpointKeepAliveAck for not-existing pool element $%08x of pool ",
               message->Identifier);
       poolHandlePrint(&message->Handle, stdlog);
       fputs("\n", stdlog);
@@ -1721,8 +1807,8 @@ static void handlePeerPresence(struct NameServer*      nameServer,
          ST_CLASS(peerListActivateTimer)(
             &nameServer->Peers.List,
             peerListNode,
-            PLNT_EXPIRY,
-            getMicroTime() + nameServer->PeerTimeoutInterval);
+            PLNT_MAX_TIME_LAST_HEARD,
+            getMicroTime() + nameServer->PeerMaxTimeLastHeard);
          timerRestart(nameServer->PeerActionTimer,
                       ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                          &nameServer->Peers));
@@ -1879,8 +1965,8 @@ static void handlePeerListResponse(struct NameServer*      nameServer,
                ST_CLASS(peerListActivateTimer)(
                   &nameServer->Peers.List,
                   newPeerListNode,
-                  PLNT_EXPIRY,
-                  getMicroTime() + nameServer->PeerTimeoutInterval);
+                  PLNT_MAX_TIME_LAST_HEARD,
+                  getMicroTime() + nameServer->PeerMaxTimeLastHeard);
 
                /* ====== New peer -> Send Peer Presence ================== */
                sendPeerPresence(nameServer,
@@ -2115,7 +2201,7 @@ static void handleMessage(struct NameServer*      nameServer,
          handleDeregistrationRequest(nameServer, sd, message->AssocID, message);
        break;
       case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-         handleEndpointKeepAliveAck(nameServer, sd, message->AssocID, message);
+         handleEndpointEndpointKeepAliveAck(nameServer, sd, message->AssocID, message);
        break;
       case AHT_ENDPOINT_UNREACHABLE:
          handleEndpointUnreachable(nameServer, sd, message->AssocID, message);
@@ -2416,7 +2502,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
           perror("setsockopt() for SCTP_EVENTS failed");
           exit(1);
        }
-       autoCloseTimeout = 2 * (NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000);
+       autoCloseTimeout = 5 + (2 * (NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000));
        if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
           perror("setsockopt() for SCTP_AUTOCLOSE failed");
           exit(1);
