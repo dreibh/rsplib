@@ -31,6 +31,7 @@ class FractalPU : public QMainWindow,
    public:
    FractalPU(const size_t width,
              const size_t height,
+             const char*  poolHandle,
              QWidget*     parent = NULL,
              const char*  name   = NULL);
    ~FractalPU();
@@ -72,7 +73,7 @@ class FractalPU : public QMainWindow,
    QImage*                   Image;
    QTimer*                   TimeoutTimer;
 
-   unsigned char*            PoolHandle;
+   const unsigned char*      PoolHandle;
    size_t                    PoolHandleSize;
    SessionDescriptor*        Session;
    uint32_t                  LastPoolElementID;
@@ -84,12 +85,16 @@ class FractalPU : public QMainWindow,
 
 FractalPU::FractalPU(const size_t width,
                      const size_t height,
+                     const char*  poolHandle,
                      QWidget*     parent,
                      const char*  name)
    : QMainWindow(parent, name)
 {
    Image        = NULL;
    TimeoutTimer = NULL;
+
+   PoolHandle     = (const unsigned char*)poolHandle;
+   PoolHandleSize = strlen((const char*)PoolHandle);
 
    resize(width, height);
    setCaption("Fractal Pool User");
@@ -241,8 +246,6 @@ void FractalPU::run()
    Parameter.MaxIterations = 150;
    Parameter.AlgorithmID   = FGPA_MANDELBROT;
 
-   PoolHandle     = (unsigned char*)"FractalGeneratorPool";
-   PoolHandleSize = strlen((const char*)PoolHandle);
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
    tags[0].Data = 250;
    tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -391,6 +394,7 @@ static void* rsplibMainLoop(void* args)
 
 int main(int argc, char** argv)
 {
+   const char*          poolHandle = "FractalGeneratorPool";
 #ifdef ENABLE_CSP
    struct CSPReporter   cspReporter;
    uint64_t             cspIdentifier     = 0;
@@ -402,8 +406,11 @@ int main(int argc, char** argv)
 
    string2address("127.0.0.1:2960", &cspReportAddress);
    for(i = 1;i < argc;i++) {
+      if(!(strncmp(argv[i],"-ph=",4))) {
+         poolHandle = (char*)&argv[i][4];
+      }
 #ifdef ENABLE_CSP
-      if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
       }
       else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
@@ -459,7 +466,7 @@ int main(int argc, char** argv)
 
 
    QApplication application(argc, argv);
-   FractalPU* fractalPU = new FractalPU(400, 250);
+   FractalPU* fractalPU = new FractalPU(400, 250, poolHandle);
    Q_CHECK_PTR(fractalPU);
    fractalPU->show();
    const int result = application.exec();
