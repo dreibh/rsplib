@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.49 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: nameserver.c,v 1.50 2004/11/16 21:37:05 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -3144,7 +3144,7 @@ static void addPeer(struct NameServer* nameServer, char* arg)
    addresses = 0;
    address = arg;
    while(addresses < MAX_NS_TRANSPORTADDRESSES) {
-      idx = index(address, ',');
+      idx = strindex(address, ',');
       if(idx) {
          *idx = 0x00;
       }
@@ -3220,7 +3220,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    else {
       address = sctpAddressParameter;
       while(sctpAddresses < MAX_NS_TRANSPORTADDRESSES) {
-         idx = index(address, ',');
+         idx = strindex(address, ',');
          if(idx) {
             *idx = 0x00;
          }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.20 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: rsplib.c,v 1.21 2004/11/16 21:37:06 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -139,7 +139,7 @@ unsigned int rspAddStaticNameServer(const char* addressString)
       addresses = 0;
       address = str;
       while(addresses < MAX_PE_TRANSPORTADDRESSES) {
-         idx = index(address, ',');
+         idx = strindex(address, ',');
          if(idx) {
             *idx = 0x00;
          }

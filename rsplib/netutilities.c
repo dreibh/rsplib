@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.35 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: netutilities.c,v 1.36 2004/11/16 21:37:05 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -51,7 +51,14 @@
 #include <fcntl.h>
 #include <ext_socket.h>
 #include <sys/uio.h>
+#ifdef SOLARIS
+#include <sys/sockio.h>
+#endif
 
+#ifdef SOLARIS
+#define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
+#define CMSG_LEN(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + (len))
+#endif
 
 #ifdef HAVE_KERNEL_SCTP
 #ifndef HAVE_SCTP_CONNECTX
@@ -536,7 +543,9 @@ static unsigned int scopeIPv4(const uint32_t* address)
 static unsigned int scopeIPv6(const struct in6_addr* address)
 {
    if(IN6_IS_ADDR_V4MAPPED(address)) {
-#ifdef LINUX
+#if defined SOLARIS
+      return(scopeIPv4(&address->_S6_un._S6_u32[3]));
+#elif defined LINUX
       return(scopeIPv4(&address->s6_addr32[3]));
 #else
       return(scopeIPv4(&address->__u6_addr.__u6_addr32[3]));
@@ -1263,7 +1272,6 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const bool                  add)
 {
    union sockaddr_union localAddress;
-   int                  on;
 
    memset((char*)&localAddress, 0, sizeof(localAddress));
    localAddress.sa.sa_family = groupAddress->sa.sa_family;
@@ -1274,18 +1282,8 @@ bool joinOrLeaveMulticastGroup(int                         sd,
       CHECK(groupAddress->in.sin_family == AF_INET);
       localAddress.in.sin_port = groupAddress->in.sin_port;
    }
-
    setReusable(sd, 1);
 
-   if(ext_bind(sd, (struct sockaddr*)&localAddress,
-               getSocklen((struct sockaddr*)&localAddress)) != 0) {
-      LOG_ERROR
-      fputs("Unable to bind multicast socket to address ",  stdlog);
-      fputaddress((struct sockaddr*)&localAddress, true, stdlog);
-      fputs("\n",  stdlog);
-      LOG_END
-      return(false);
-   }
    if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false) {
       return(false);
    }
@@ -1299,7 +1297,7 @@ bool setReusable(int sd, int on)
    if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
       return(false);
    }
-#if !defined (LINUX)
+#if !defined (LINUX) && !defined (SOLARIS)
    if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
       return(false);
    }
@@ -1583,7 +1581,11 @@ size_t getladdrsplus(const int              fd,
                      union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses;
+#ifdef SOLARIS
+   size_t addrs = sctp_getladdrs(fd, assocID, (void **)&packedAddresses);
+#else
    size_t addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
+#endif
    if(addrs > 0) {
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
@@ -1598,7 +1600,11 @@ size_t getpaddrsplus(const int              fd,
                      union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses;
+#ifdef SOLARIS
+   size_t addrs = sctp_getpaddrs(fd, assocID, (void **)&packedAddresses);
+#else
    size_t addrs = sctp_getpaddrs(fd, assocID, &packedAddresses);
+#endif
    if(addrs > 0) {
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freepaddrs(packedAddresses);

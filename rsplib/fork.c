@@ -1,5 +1,5 @@
 /*
- *  $Id: fork.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: fork.c,v 1.3 2004/11/16 21:37:05 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -149,32 +149,32 @@ int main(int argc, char** argv)
                      exit(1);
                   }
                   else {
-                     printf("Started process #%d.\n",process[i].PID);
+                     printf("Started process #%d.\n", (int)process[i].PID);
                   }
                }
              break;
             case FPS_Running:
                if(isExisting(process[i].PID)) {
                   if(process[i].End <= now) {
-                     printf("Interrupting process #%d.\n",process[i].PID);
+                     printf("Interrupting process #%d.\n", (int)process[i].PID);
                      kill(process[i].PID,SIGINT);
                      process[i].Status = FPS_Interrupted;
                   }
                }
                else {
-                  printf("Process #%d is no longer existing.\n",process[i].PID);
+                  printf("Process #%d is no longer existing.\n", (int)process[i].PID);
                   process[i].Status = FPS_Interrupted;
                }
              break;
             case FPS_Interrupted:
                if(isExisting(process[i].PID)) {
                   if(process[i].Kill <= now) {
-                     printf("Killing process #%d.\n",process[i].PID);
+                     printf("Killing process #%d.\n", (int)process[i].PID);
                      kill(process[i].PID,SIGKILL);
                   }
                }
                else {
-                  printf("Process #%d has terminated.\n",process[i].PID);
+                  printf("Process #%d has terminated.\n", (int)process[i].PID);
                   process[i].Start  = now;
                   process[i].End    = now + vary(timeout);
                   process[i].Kill   = process[i].End + INTERRUPT_TIMEOUT;

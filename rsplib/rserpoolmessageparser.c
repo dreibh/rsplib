@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.25 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.26 2004/11/16 21:37:05 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -67,14 +67,14 @@ static bool getNextTLV(struct RSerPoolMessage*      message,
 
    LOG_VERBOSE5
    fprintf(stdlog, "TLV: Type $%04x, length %u at position %u\n",
-           *tlvType, (unsigned int)*tlvLength, (unsigned int)message->Position - sizeof(struct rserpool_tlv_header));
+           *tlvType, (unsigned int)*tlvLength, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
    LOG_END
 
    if(message->Position + *tlvLength - sizeof(struct rserpool_tlv_header) > message->BufferSize) {
       LOG_WARNING
       fprintf(stdlog, "TLV length exceeds message size!\n"
              "p=%u + l=%u > size=%u   type=$%02x\n",
-             (unsigned int)message->Position - sizeof(struct rserpool_tlv_header), (unsigned int)*tlvLength, (unsigned int)message->BufferSize, *tlvType);
+             (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)), (unsigned int)*tlvLength, (unsigned int)message->BufferSize, *tlvType);
       LOG_END
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -105,7 +105,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       if(ptr != NULL) {
          LOG_VERBOSE3
          fprintf(stdlog, "Silently skipping TLV type $%02x at position %u\n",
-                 tlvType, (unsigned int)message->Position - sizeof(struct rserpool_tlv_header));
+                 tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
          return(true);
       }
@@ -115,7 +115,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       if(ptr != NULL) {
          LOG_VERBOSE3
          fprintf(stdlog, "Skipping TLV type $%02x at position %u\n",
-                 tlvType, (unsigned int)message->Position - sizeof(struct rserpool_tlv_header));
+                 tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
 
          /*

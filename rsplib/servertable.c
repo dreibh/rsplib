@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.24 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: servertable.c,v 1.25 2004/11/16 21:37:06 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -78,6 +78,9 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
+puts("SOURCE=");
+fputaddress(   (struct sockaddr*)&senderAddress,1,stdout);
+puts("\n\n");
       result = rserpoolPacket2Message((char*)&buffer,
                                       &senderAddress,
                                       PPID_ASAP,
@@ -161,6 +164,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 {
    union sockaddr_union* announceAddress;
    union sockaddr_union  defaultAnnounceAddress;
+   union sockaddr_union  localAddress;
    struct ServerTable*   serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
       serverTable->Dispatcher        = dispatcher;
@@ -196,24 +200,39 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       serverTable->AnnounceSocket = ext_socket(serverTable->AnnounceAddress.sa.sa_family,
                                                SOCK_DGRAM, IPPROTO_UDP);
       if(serverTable->AnnounceSocket >= 0) {
-         if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
-                                      &serverTable->AnnounceAddress,
-                                      true)) {
-            fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
-                          serverTable->Dispatcher,
-                          serverTable->AnnounceSocket,
-                          FDCE_Read,
-                          serverAnnouceFDCallback,
-                          serverTable);
+         memset(&localAddress, 0, sizeof(localAddress));
+         localAddress.sa.sa_family = serverTable->AnnounceAddress.sa.sa_family;
+         setPort(&localAddress.sa, getPort(&serverTable->AnnounceAddress.sa));
+         if(ext_bind(serverTable->AnnounceSocket,
+                     (struct sockaddr*)&localAddress,
+                     getSocklen((struct sockaddr*)&localAddress)) == 0) {
+            if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
+                                         &serverTable->AnnounceAddress,
+                                         true)) {
+               fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
+                           serverTable->Dispatcher,
+                           serverTable->AnnounceSocket,
+                           FDCE_Read,
+                           serverAnnouceFDCallback,
+                           serverTable);
+            }
+            else {
+               LOG_ERROR
+               fputs("Joining multicast group ",  stdlog);
+               fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
+               fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+               LOG_END
+               ext_close(serverTable->AnnounceSocket);
+               serverTable->AnnounceSocket = -1;
+            }
          }
          else {
             LOG_ERROR
-            fputs("Joining multicast group ",  stdlog);
-            fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
-            fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+            fputs("Unable to bind multicast socket to address ",  stdlog);
+            fputaddress((struct sockaddr*)&localAddress, true, stdlog);
+            fputs("\n",  stdlog);
             LOG_END
-            ext_close(serverTable->AnnounceSocket);
-            serverTable->AnnounceSocket = -1;
+            return(false);
          }
       }
       else {
