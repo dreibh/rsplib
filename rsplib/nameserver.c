@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.9 2004/07/22 16:37:46 dreibh Exp $
+ *  $Id: nameserver.c,v 1.10 2004/07/22 17:30:14 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,7 +59,8 @@
 #define FAST_BREAK
 
 #define MAX_NS_TRANSPORTADDRESSES                                   16
-#define NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL                   2000000
+#define NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL              2111111
+#define NAMESERVER_DEFAULT_ENRP_ANNOUNCE_INTERVAL              2444444
 #define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL                   100000
 #define NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL    5000000
 #define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL         5000000
@@ -106,22 +107,28 @@ void nameServerUserNodePrint(const void* nodePtr, FILE* fd)
 struct NameServer
 {
    ENRPIdentifierType                       ServerID;
+
    struct Dispatcher*                       StateMachine;
    struct ST_CLASS(PoolNamespaceManagement) Namespace;
+   struct Timer*                            NamespaceActionTimer;
+   ST_CLASSNAME                             UserStorage;
 
    int                                      ASAPAnnounceSocket;
    union sockaddr_union                     ASAPAnnounceAddress;
-   bool                                     SendASAPAnnounces;
-
+   bool                                     ASAPSendAnnounces;
    int                                      ASAPSocket;
    struct TransportAddressBlock*            ASAPAddress;
+   struct Timer*                            ASAPAnnounceTimer;
 
-   struct Timer*                            AnnounceTimer;
-   struct Timer*                            NamespaceActionTimer;
+   int                                      ENRPMulticastSocket;
+   union sockaddr_union                     ENRPMulticastAddress;
+   int                                      ENRPUnicastSocket;
+   struct TransportAddressBlock*            ENRPUnicastAddress;
+   bool                                     ENRPUseMulticast;
+   struct Timer*                            ENRPAnnounceTimer;
 
-   ST_CLASSNAME                             UserStorage;
-
-   card64                                   AnnounceInterval;
+   card64                                   ASAPAnnounceInterval;
+   card64                                   ENRPAnnounceInterval;
    card64                                   HeartbeatInterval;
    card64                                   KeepAliveTransmissionInterval;
    card64                                   KeepAliveTimeoutInterval;
@@ -364,17 +371,20 @@ static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElemen
 
 struct NameServer* nameServerNew(int                           asapSocket,
                                  struct TransportAddressBlock* asapAddress,
-                                 int                           enrpSocket,
-                                 struct TransportAddressBlock* enrpAddress,
-                                 const bool                    sendASAPAnnounces,
+                                 int                           enrpUnicastSocket,
+                                 struct TransportAddressBlock* enrpUnicastAddress,
+                                 const bool                    asapSendAnnounces,
                                  const union sockaddr_union*   asapAnnounceAddress,
-                                 const bool                    sendENRPAnnounces,
-                                 const union sockaddr_union*   enrpAnnounceAddress);
+                                 const bool                    enrpUseMulticast,
+                                 const union sockaddr_union*   enrpMulticastAddress);
 void nameServerDelete(struct NameServer* nameServer);
 
-static void announceTimerCallback(struct Dispatcher* dispatcher,
-                                  struct Timer*      timer,
-                                  void*              userData);
+static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData);
+static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData);
 static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
                                          struct Timer*      timer,
                                          void*              userData);
@@ -388,12 +398,12 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
 /* ###### Constructor #################################################### */
 struct NameServer* nameServerNew(int                           asapSocket,
                                  struct TransportAddressBlock* asapAddress,
-                                 int                           enrpSocket,
-                                 struct TransportAddressBlock* enrpAddress,
-                                 const bool                    sendASAPAnnounces,
+                                 int                           enrpUnicastSocket,
+                                 struct TransportAddressBlock* enrpUnicastAddress,
+                                 const bool                    asapSendAnnounces,
                                  const union sockaddr_union*   asapAnnounceAddress,
-                                 const bool                    sendENRPAnnounces,
-                                 const union sockaddr_union*   enrpAnnounceAddress)
+                                 const bool                    enrpUseMulticast,
+                                 const union sockaddr_union*   enrpMulticastAddress)
 {
    struct NameServer* nameServer = (struct NameServer*)malloc(sizeof(struct NameServer));
    if(nameServer != NULL) {
@@ -414,14 +424,16 @@ struct NameServer* nameServerNew(int                           asapSocket,
 
       nameServer->ASAPSocket        = asapSocket;
       nameServer->ASAPAddress       = asapAddress;
-      nameServer->SendASAPAnnounces = sendASAPAnnounces;
+      nameServer->ASAPSendAnnounces = asapSendAnnounces;
+      nameServer->ENRPUnicastSocket        = enrpUnicastSocket;
+      nameServer->ENRPUnicastAddress       = enrpUnicastAddress;
+      nameServer->ENRPUseMulticast = enrpUseMulticast;
 
       nameServer->KeepAliveTransmissionInterval = NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
       nameServer->KeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL;
-      nameServer->AnnounceInterval              = NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL;
+      nameServer->ASAPAnnounceInterval          = NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL;
+      nameServer->ENRPAnnounceInterval          = NAMESERVER_DEFAULT_ENRP_ANNOUNCE_INTERVAL;
       nameServer->HeartbeatInterval             = NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL;
-
-??????? ENRP-SCOKET:::..
 
       memcpy(&nameServer->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(union sockaddr_union));
       if(nameServer->ASAPAnnounceAddress.in6.sin6_family == AF_INET6) {
@@ -437,21 +449,41 @@ struct NameServer* nameServerNew(int                           asapSocket,
          setNonBlocking(nameServer->ASAPAnnounceSocket);
       }
 
-      nameServer->AnnounceTimer = timerNew(nameServer->StateMachine,
-                                           announceTimerCallback,
-                                           (void*)nameServer);
+      memcpy(&nameServer->ENRPMulticastAddress, enrpMulticastAddress, sizeof(union sockaddr_union));
+      if(nameServer->ENRPMulticastAddress.in6.sin6_family == AF_INET6) {
+         nameServer->ENRPMulticastSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+      }
+      else if(nameServer->ENRPMulticastAddress.in.sin_family == AF_INET) {
+         nameServer->ENRPMulticastSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+      }
+      else {
+         nameServer->ENRPMulticastSocket = -1;
+      }
+      if(nameServer->ENRPMulticastSocket >= 0) {
+         setNonBlocking(nameServer->ENRPMulticastSocket);
+      }
+
+      nameServer->ASAPAnnounceTimer = timerNew(nameServer->StateMachine,
+                                               asapAnnounceTimerCallback,
+                                               (void*)nameServer);
+      nameServer->ENRPAnnounceTimer = timerNew(nameServer->StateMachine,
+                                               enrpAnnounceTimerCallback,
+                                               (void*)nameServer);
       nameServer->NamespaceActionTimer = timerNew(nameServer->StateMachine,
                                                   namespaceActionTimerCallback,
                                                   (void*)nameServer);
-      if((nameServer->AnnounceTimer == NULL) ||
+      if((nameServer->ASAPAnnounceTimer == NULL) ||
+         (nameServer->ENRPAnnounceTimer == NULL) ||
          (nameServer->NamespaceActionTimer == NULL)) {
          nameServerDelete(nameServer);
          return(NULL);
       }
-      if(nameServer->SendASAPAnnounces) {
-         timerStart(nameServer->AnnounceTimer, 0);
+      if(nameServer->ASAPSendAnnounces) {
+         timerStart(nameServer->ASAPAnnounceTimer, 0);
       }
-
+      if(nameServer->ENRPUseMulticast) {
+         timerStart(nameServer->ENRPAnnounceTimer, 0);
+      }
       dispatcherAddFDCallback(nameServer->StateMachine,
                               nameServer->ASAPSocket,
                               FDCE_Read|FDCE_Exception,
@@ -467,9 +499,13 @@ void nameServerDelete(struct NameServer* nameServer)
 {
    if(nameServer) {
       dispatcherRemoveFDCallback(nameServer->StateMachine, nameServer->ASAPSocket);
-      if(nameServer->AnnounceTimer) {
-         timerDelete(nameServer->AnnounceTimer);
-         nameServer->AnnounceTimer = NULL;
+      if(nameServer->ASAPAnnounceTimer) {
+         timerDelete(nameServer->ASAPAnnounceTimer);
+         nameServer->ASAPAnnounceTimer = NULL;
+      }
+      if(nameServer->ENRPAnnounceTimer) {
+         timerDelete(nameServer->ENRPAnnounceTimer);
+         nameServer->ENRPAnnounceTimer = NULL;
       }
       if(nameServer->NamespaceActionTimer) {
          timerDelete(nameServer->NamespaceActionTimer);
@@ -478,6 +514,10 @@ void nameServerDelete(struct NameServer* nameServer)
       if(nameServer->ASAPAnnounceSocket >= 0) {
          ext_close(nameServer->ASAPAnnounceSocket >= 0);
          nameServer->ASAPAnnounceSocket = -1;
+      }
+      if(nameServer->ENRPMulticastSocket >= 0) {
+         ext_close(nameServer->ENRPMulticastSocket >= 0);
+         nameServer->ENRPMulticastSocket = -1;
       }
       ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
       ST_CLASS(poolNamespaceManagementDelete)(&nameServer->Namespace);
@@ -503,16 +543,16 @@ void nameServerDumpNamespace(struct NameServer* nameServer)
 }
 
 
-/* ###### Send announcement messages ###################################### */
-static void announceTimerCallback(struct Dispatcher* dispatcher,
-                                  struct Timer*      timer,
-                                  void*              userData)
+/* ###### Send ASAP announcement message ################################# */
+static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData)
 {
-   struct NameServer*  nameServer = (struct NameServer*)userData;
+   struct NameServer*      nameServer = (struct NameServer*)userData;
    struct RSerPoolMessage* message;
-   size_t              messageLength;
+   size_t                  messageLength;
 
-   CHECK(nameServer->SendASAPAnnounces == true);
+   CHECK(nameServer->ASAPSendAnnounces == true);
    CHECK(nameServer->ASAPAnnounceSocket >= 0);
 
    message = rserpoolMessageNew(NULL, 65536);
@@ -542,7 +582,20 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
       }
       rserpoolMessageDelete(message);
    }
-   timerStart(timer, getMicroTime() + nameServer->AnnounceInterval);
+   timerStart(timer, getMicroTime() + nameServer->ASAPAnnounceInterval);
+}
+
+
+/* ###### Send ENRP peer presence message ################################ */
+static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
+                                      struct Timer*      timer,
+                                      void*              userData)
+{
+   struct NameServer* nameServer = (struct NameServer*)userData;
+
+
+
+   timerStart(timer, getMicroTime() + nameServer->ENRPAnnounceInterval);
 }
 
 
@@ -1191,6 +1244,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
    int                      sctpSocket;
    int                      autoCloseTimeout;
    int                      sockFD;
+   size_t                   i;
 
     sctpAddresses = 0;
     if(!(strncasecmp(arg, "auto", 4))) {
@@ -1208,6 +1262,10 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
           memcpy(&sctpAddressArray, localAddressArray, sctpAddresses * sizeof(struct sockaddr_storage));
           free(localAddressArray);
           ext_close(sockFD);
+
+          for(i = 0; i < sctpAddresses;i++) {
+             setPort((struct sockaddr*)&sctpAddressArray[i], 0);
+          }
        }
        else {
           puts("ERROR: SCTP is unavailable. Install SCTP!");
@@ -1237,16 +1295,6 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
     }
     if(sctpAddresses < 1) {
        puts("ERROR: At least one SCTP address must be specified!\n");
-       exit(1);
-    }
-    transportAddressBlockNew(sctpAddress,
-                             IPPROTO_SCTP,
-                             getPort((struct sockaddr*)&sctpAddressArray[0]),
-                             0,
-                             (struct sockaddr_storage*)&sctpAddressArray,
-                             sctpAddresses);
-    if(sctpAddress == NULL) {
-       puts("ERROR: Unable to handle socket address(es)!");
        exit(1);
     }
 
@@ -1280,6 +1328,13 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
           perror("setsockopt() for SCTP_AUTOCLOSE failed");
           exit(1);
        }
+
+       transportAddressBlockNew(sctpAddress,
+                                IPPROTO_SCTP,
+                                getPort((struct sockaddr*)&sctpAddressArray[0]),
+                                0,
+                                (struct sockaddr_storage*)&sctpAddressArray,
+                                sctpAddresses);
     }
     else {
        puts("ERROR: Unable to create SCTP socket!");
@@ -1297,12 +1352,12 @@ int main(int argc, char** argv)
    char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapAddress = (struct TransportAddressBlock*)&asapAddressBuffer;
    struct sockaddr_storage       asapAnnounceAddress;
-   bool                          hasASAPASAPAnnounceAddress = false;
-   int                           enrpSocket = -1;
-   char                          enrpAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock* enrpAddress = (struct TransportAddressBlock*)&enrpAddressBuffer;
-   struct sockaddr_storage       enrpAnnounceAddress;
-   bool                          hasENRPASAPAnnounceAddress = false;
+   bool                          asapSendAnnounces = false;
+   int                           enrpUnicastSocket = -1;
+   char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* enrpUnicastAddress = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
+   struct sockaddr_storage       enrpMulticastAddress;
+   bool                          enrpUseMulticast = false;
    int                           result;
    struct timeval                timeout;
    fd_set                        readfdset;
@@ -1329,19 +1384,19 @@ int main(int argc, char** argv)
                     (char*)&argv[i][10]);
             exit(1);
          }
-         hasASAPASAPAnnounceAddress = true;
+         asapSendAnnounces = true;
       }
       else if(!(strncasecmp(argv[i], "-enrp=",6))) {
-         enrpSocket = getSCTPSocket((char*)&argv[i][6], enrpAddress);
+         enrpUnicastSocket = getSCTPSocket((char*)&argv[i][6], enrpUnicastAddress);
       }
-      else if(!(strncasecmp(argv[i], "-enrpannounce=", 14))) {
-         if(!string2address((char*)&argv[i][14], &enrpAnnounceAddress)) {
+      else if(!(strncasecmp(argv[i], "-enrpmulticast=", 15))) {
+         if(!string2address((char*)&argv[i][15], &enrpMulticastAddress)) {
             fprintf(stderr,
                     "ERROR: Bad ENRP announce address %s! Use format <address:port>.\n",
                     (char*)&argv[i][10]);
             exit(1);
          }
-         hasENRPASAPAnnounceAddress = true;
+         enrpUseMulticast = true;
       }
       else if(!(strncmp(argv[i], "-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -1349,7 +1404,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpannounce=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
+         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
          exit(1);
       }
    }
@@ -1357,7 +1412,7 @@ int main(int argc, char** argv)
       fprintf(stderr, "ERROR: No ASAP socket opened. Use parameter \"-asap=...\"!\n");
       exit(1);
    }
-   if(enrpSocket <= 0) {
+   if(enrpUnicastSocket <= 0) {
       fprintf(stderr, "ERROR: No ENRP socket opened. Use parameter \"-enrp=...\"!\n");
       exit(1);
    }
@@ -1365,9 +1420,9 @@ int main(int argc, char** argv)
 
    /* ====== Initialize NameServer ======================================= */
    nameServer = nameServerNew(asapSocket, asapAddress,
-                              enrpSocket, enrpAddress,
-                              hasASAPASAPAnnounceAddress, (union sockaddr_union*)&asapAnnounceAddress,
-                              hasENRPASAPAnnounceAddress, (union sockaddr_union*)&enrpAnnounceAddress);
+                              enrpUnicastSocket, enrpUnicastAddress,
+                              asapSendAnnounces, (union sockaddr_union*)&asapAnnounceAddress,
+                              enrpUseMulticast, (union sockaddr_union*)&enrpMulticastAddress);
    if(nameServer == NULL) {
       fprintf(stderr, "ERROR: Unable to initialize NameServer object!\n");
       exit(1);
@@ -1379,23 +1434,23 @@ int main(int argc, char** argv)
    /* ====== Print information =========================================== */
    puts("The rsplib Name Server - Version 1.00");
    puts("=====================================\n");
-   printf("ASAP Address:          ");
+   printf("ASAP Address:           ");
    transportAddressBlockPrint(asapAddress, stdout);
    puts("");
-   printf("ENRP Address:          ");
-   transportAddressBlockPrint(enrpAddress, stdout);
+   printf("ENRP Address:           ");
+   transportAddressBlockPrint(enrpUnicastAddress, stdout);
    puts("");
-   printf("ASAP Announce Address: ");
-   if(hasASAPASAPAnnounceAddress) {
+   printf("ASAP Announce Address:  ");
+   if(asapSendAnnounces) {
       fputaddress((struct sockaddr*)&asapAnnounceAddress, true, stdout);
       puts("");
    }
    else {
       puts("(none)");
    }
-   printf("ENRP Announce Address: ");
-   if(hasENRPASAPAnnounceAddress) {
-      fputaddress((struct sockaddr*)&enrpAnnounceAddress, true, stdout);
+   printf("ENRP Multicast Address: ");
+   if(enrpUseMulticast) {
+      fputaddress((struct sockaddr*)&enrpMulticastAddress, true, stdout);
       puts("");
    }
    else {
