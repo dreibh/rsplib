@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.32 2004/12/08 14:54:48 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.33 2004/12/09 15:29:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,9 +74,9 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",     (unsigned int)asapInstance->RegistrarRequestMaxTrials);
-   fprintf(stdlog, "registrar.request.timeout     = %lluus\n", asapInstance->RegistrarRequestTimeout);
-   fprintf(stdlog, "registrar.response.timeout    = %lluus\n", asapInstance->RegistrarResponseTimeout);
+   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",      (unsigned int)asapInstance->RegistrarRequestMaxTrials);
+   fprintf(stdlog, "registrar.request.timeout     = %lluus\n",  asapInstance->RegistrarRequestTimeout);
+   fprintf(stdlog, "registrar.response.timeout    = %lluus\n",  asapInstance->RegistrarResponseTimeout);
    fprintf(stdlog, "cache.elementtimeout           = %lluus\n", asapInstance->CacheElementTimeout);
    LOG_END
 }
@@ -99,12 +99,12 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          asapInstance->RegistrarID                  = 0;
          asapInstance->RegistrarSocketProtocol      = 0;
          ST_CLASS(poolHandlespaceManagementNew)(&asapInstance->Cache,
-                                              0x00000000,
-                                              NULL, NULL, NULL);
+                                                0x00000000,
+                                                NULL, NULL, NULL);
          ST_CLASS(poolHandlespaceManagementNew)(&asapInstance->OwnPoolElements,
-                                              0x00000000,
-                                              NULL, NULL, NULL);
-         asapInstance->Buffer          = messageBufferNew(65536);
+                                                0x00000000,
+                                                NULL, NULL, NULL);
+         asapInstance->Buffer         = messageBufferNew(65536);
          asapInstance->RegistrarTable = serverTableNew(asapInstance->StateMachine, tags);
          if((asapInstance->Buffer == NULL) || (asapInstance->RegistrarTable == NULL)) {
             asapInstanceDelete(asapInstance);
@@ -488,9 +488,9 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
          }
 
          handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
-                                 &asapInstance->OwnPoolElements,
-                                 poolHandle,
-                                 identifier);
+                                   &asapInstance->OwnPoolElements,
+                                   poolHandle,
+                                   identifier);
          if(handlespaceMgtResult != RSPERR_OKAY) {
             LOG_ERROR
             fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
@@ -581,7 +581,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstance,
                                                  struct PoolHandle*   poolHandle)
 {
-   struct ST_CLASS(PoolElementNode)* newPoolElementNodeNode;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
    struct RSerPoolMessage*           response;
    unsigned int                      result;
@@ -618,7 +618,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                            NULL,
                            -1, 0,
                            getMicroTime(),
-                           &newPoolElementNodeNode);
+                           &newPoolElementNode);
                if(result != RSPERR_OKAY) {
                   LOG_WARNING
                   fputs("Failed to add pool element to cache: ", stdlog);
@@ -628,6 +628,10 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                   fputs("\n", stdlog);
                   LOG_END
                }
+               ST_CLASS(poolHandlespaceManagementRestartPoolElementExpiryTimer)(
+                  &asapInstance->Cache,
+                  newPoolElementNode,
+                  asapInstance->CacheElementTimeout);
             }
          }
          else {
@@ -676,7 +680,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
    poolHandlePrint(poolHandle, stdlog);
    fputs(":\n", stdlog);
    ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->Cache,
-                                          stdlog, PENPO_ONLY_POLICY);
+                                            stdlog, PENPO_ONLY_POLICY);
    LOG_END
 
    i = ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(

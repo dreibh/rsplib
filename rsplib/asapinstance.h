@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.14 2004/11/19 16:42:46 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.15 2004/12/09 15:29:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -54,32 +54,32 @@ extern "C" {
 
 struct ASAPInstance
 {
-   struct Dispatcher*                       StateMachine;
-   unsigned long long                       RegistrarConnectionTimeStamp;
-   int                                      RegistrarSocket;
-   RegistrarIdentifierType                       RegistrarID;
-   int                                      RegistrarSocketProtocol;
+   struct Dispatcher*                         StateMachine;
+   unsigned long long                         RegistrarConnectionTimeStamp;
+   int                                        RegistrarSocket;
+   RegistrarIdentifierType                    RegistrarID;
+   int                                        RegistrarSocketProtocol;
 
-   struct ServerTable*                      RegistrarTable;
+   struct ServerTable*                        RegistrarTable;
    struct ST_CLASS(PoolHandlespaceManagement) Cache;
    struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
 
-   char*                                    AsapServerAnnounceConfigFile;
-   char*                                    AsapRegistrarsConfigFile;
+   char*                                      AsapServerAnnounceConfigFile;
+   char*                                      AsapRegistrarsConfigFile;
 
-   unsigned long long                       CacheElementTimeout;
-   unsigned long long                       CacheMaintenanceInterval;
+   unsigned long long                         CacheElementTimeout;
+   unsigned long long                         CacheMaintenanceInterval;
 
-   struct FDCallback                        RegistrarFDCallback;
-   size_t                                   RegistrarRequestMaxTrials;
-   unsigned long long                       RegistrarRequestTimeout;
-   unsigned long long                       RegistrarResponseTimeout;
+   struct FDCallback                          RegistrarFDCallback;
+   size_t                                     RegistrarRequestMaxTrials;
+   unsigned long long                         RegistrarRequestTimeout;
+   unsigned long long                         RegistrarResponseTimeout;
 
-   struct MessageBuffer*                    Buffer;
+   struct MessageBuffer*                      Buffer;
 };
 
 
-#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT               30000000
+#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT                5000000
 #define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS "239.0.0.1:3863"
 #define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT         30000000
 #define ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS               3
