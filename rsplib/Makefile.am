@@ -132,6 +132,7 @@ fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(G
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 
+EXTRA_DIST = nameserver-example poolelement-example pooluser-example
 
 #t1_SOURCES = t1.cc
 #t1_LDADD   = librsplib.la -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) $(GLIB_LIBS) -lsctp
