@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.13 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: netutilities.c,v 1.14 2004/08/24 09:38:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -34,7 +34,6 @@
  * Purpose: Network Utilities
  *
  */
-
 
 #include "tdtypes.h"
 #include "loglevel.h"

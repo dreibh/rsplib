@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.23 2004/08/24 09:20:16 dreibh Exp $
+ *  $Id: nameserver.c,v 1.24 2004/08/24 09:38:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1257,9 +1257,9 @@ static size_t filterValidAddresses(
 
 
 /* ###### Handle registration request #################################### */
-static void handleRegistrationRequest(struct NameServer*  nameServer,
-                                      int                 fd,
-                                      sctp_assoc_t        assocID,
+static void handleRegistrationRequest(struct NameServer*      nameServer,
+                                      int                     fd,
+                                      sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
 {
    char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
@@ -1316,6 +1316,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
                              message->PoolElementPtr->RegistrationLife,
                              &message->PoolElementPtr->PolicySettings,
                              validAddressBlock,
+                             fd, assocID,
                              getMicroTime(),
                              &poolElementNode);
          if(message->Error == RSPERR_OKAY) {
@@ -1698,6 +1699,7 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
                      message->PoolElementPtr->RegistrationLife,
                      &message->PoolElementPtr->PolicySettings,
                      message->PoolElementPtr->AddressBlock,
+                     -1, 0,
                      getMicroTime(),
                      &newPoolElementNode);
          if(result == RSPERR_OKAY) {
@@ -2242,6 +2244,7 @@ static void handlePeerNameTableResponse(struct NameServer*      nameServer,
                            poolElementNode->RegistrationLife,
                            &poolElementNode->PolicySettings,
                            poolElementNode->AddressBlock,
+                           -1, 0,
                            getMicroTime(),
                            &newPoolElementNode);
                if(result == RSPERR_OKAY) {

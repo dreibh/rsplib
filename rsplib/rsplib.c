@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.8 2004/08/04 01:02:38 dreibh Exp $
+ *  $Id: rsplib.c,v 1.9 2004/08/24 09:38:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -214,7 +214,8 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
          0,
          tagListGetData(tags, TAG_PoolElement_RegistrationLife, 300000000),
          &myPolicySettings,
-         myTransportAddressBlock);
+         myTransportAddressBlock,
+         -1, 0);
 
       LOG_ACTION
       fputs("Trying to register ", stdlog);

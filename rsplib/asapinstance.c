@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.15 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.16 2004/08/24 09:38:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -386,6 +386,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                                     message->PoolElementPtr->RegistrationLife,
                                     &message->PoolElementPtr->PolicySettings,
                                     message->PoolElementPtr->AddressBlock,
+                                    -1, 0,
                                     getMicroTime(),
                                     &newPoolElement);
             if(namespaceMgtResult == RSPERR_OKAY) {
@@ -571,6 +572,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                            response->PoolElementPtrArray[i]->RegistrationLife,
                            &response->PoolElementPtrArray[i]->PolicySettings,
                            response->PoolElementPtrArray[i]->AddressBlock,
+                           -1, 0,
                            getMicroTime(),
                            &newPoolElementNode);
                if(result != RSPERR_OKAY) {

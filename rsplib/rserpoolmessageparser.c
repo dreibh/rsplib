@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.14 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.15 2004/08/24 09:38:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -861,7 +861,8 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                 ntohl(pep->pep_homeserverid),
                                 ntohl(pep->pep_reg_life),
                                 &poolPolicySettings,
-                                newTransportAddressBlock);
+                                newTransportAddressBlock,
+                                -1, 0);
    return(poolElementNode);
 }
 
@@ -1520,7 +1521,9 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
                                 poolElementNode->RegistrationLife,
                                 &poolElementNode->PolicySettings,
                                 poolElementNode->AddressBlock,
-                                0, &newPoolElementNode);
+                                -1, 0,
+                                0,
+                                &newPoolElementNode);
             if(message->Error != RSPERR_OKAY) {
                LOG_WARNING
                fputs("NameTableResponse contains bad/inconsistent entry: ", stdlog);
