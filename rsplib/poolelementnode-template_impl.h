@@ -143,7 +143,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_POLICYSTATE) {
-      snprintf((char*)&tmp, sizeof(tmp), "   seq=%Lu val=%Lu rd=%u vrt=%u deg=$%x {sel=%Lu s/w=%1.1f}",
+      snprintf((char*)&tmp, sizeof(tmp), "   seq=%llu val=%llu rd=%u vrt=%u deg=$%x {sel=%llu s/w=%1.1f}",
                (unsigned long long)poolElementNode->SeqNumber,
                poolElementNode->PoolElementSelectionStorageNode.Value,
                poolElementNode->RoundCounter,
@@ -154,7 +154,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_LASTUPDATE) {
-      snprintf((char*)&tmp, sizeof(tmp), "   upd=%Lu",
+      snprintf((char*)&tmp, sizeof(tmp), "   upd=%llu",
                poolElementNode->LastUpdateTimeStamp);
       safestrcat(buffer, tmp, bufferSize);
    }

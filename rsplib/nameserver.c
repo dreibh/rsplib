@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.44 2004/11/11 19:33:48 dreibh Exp $
+ *  $Id: nameserver.c,v 1.45 2004/11/11 21:25:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1227,7 +1227,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          LOG_ACTION
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fprintf(stdlog, " not head since MaxTimeLastHeard=%Lu탎 -> requesting immediate PeerPresence\n",
+         fprintf(stdlog, " not head since MaxTimeLastHeard=%llu탎 -> requesting immediate PeerPresence\n",
                  nameServer->PeerMaxTimeLastHeard);
          LOG_END
          sendPeerPresence(nameServer,
@@ -1250,7 +1250,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          LOG_ACTION
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fprintf(stdlog, " did not answer in MaxTimeNoResponse=%Lu탎 -> removing it\n",
+         fprintf(stdlog, " did not answer in MaxTimeNoResponse=%llu탎 -> removing it\n",
                  nameServer->PeerMaxTimeLastHeard);
          LOG_END
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.20 2004/09/28 12:30:26 dreibh Exp $
+ *  $Id: servertable.c,v 1.21 2004/11/11 21:25:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -182,12 +182,12 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       /* ====== Show results ================================================ */
       LOG_VERBOSE3
       fputs("New ServerTable's configuration:\n",  stdlog);
-      fprintf(stdlog, "nameserver.announce.timeout  = %Lu [탎]\n",  serverTable->NameServerAnnounceTimeout);
+      fprintf(stdlog, "nameserver.announce.timeout  = %llu [탎]\n",  serverTable->NameServerAnnounceTimeout);
       fputs("nameserver.announce.address  = ",  stdlog);
       fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
       fputs("\n",  stdlog);
       fprintf(stdlog, "nameserver.connect.maxtrials = %u\n",        serverTable->NameServerConnectMaxTrials);
-      fprintf(stdlog, "nameserver.connect.timeout   = %Lu [탎]\n",  serverTable->NameServerConnectTimeout);
+      fprintf(stdlog, "nameserver.connect.timeout   = %llu [탎]\n",  serverTable->NameServerConnectTimeout);
       LOG_END
 
 

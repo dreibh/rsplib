@@ -120,7 +120,7 @@ static void leafLinkedRedBlackTreePrintNode(struct LeafLinkedRedBlackTree*     l
 {
    llrbt->PrintFunction(node, fd);
 #ifdef DEBUG
-   fprintf(fd, " ptr=%p c=%s v=%Lu vsum=%Lu",
+   fprintf(fd, " ptr=%p c=%s v=%llu vsum=%llu",
            node, ((node->Color == Red) ? "Red" : "Black"),
            node->Value, node->ValueSum);
    if(node->LeftSubtree != &llrbt->NullNode) {

@@ -889,7 +889,7 @@ void ST_CLASS(poolNamespaceNodePrint)(
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_ONLY_ID);
-         fprintf(fd, " code=%u ts=%Lu\n", poolElementNode->TimerCode, poolElementNode->TimerTimeStamp);
+         fprintf(fd, " code=%u ts=%llu\n", poolElementNode->TimerCode, poolElementNode->TimerTimeStamp);
          poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementTimerNode)(poolNamespaceNode, poolElementNode);
       }
    }

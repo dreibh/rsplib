@@ -121,7 +121,7 @@ static void linearListPrintNode(struct LinearList*     ll,
    ll->PrintFunction(node, fd);
    fprintf(fd, " ");
 #ifdef DEBUG
-   fprintf(fd, " v=%Lu   ", node->Value);
+   fprintf(fd, " v=%llu   ", node->Value);
 #endif
 }
 

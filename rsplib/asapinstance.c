@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.25 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.26 2004/11/11 21:25:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -75,9 +75,9 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
    fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",    asapInstance->NameServerRequestMaxTrials);
-   fprintf(stdlog, "nameserver.request.timeout     = %Lu탎\n", asapInstance->NameServerRequestTimeout);
-   fprintf(stdlog, "nameserver.response.timeout    = %Lu탎\n", asapInstance->NameServerResponseTimeout);
-   fprintf(stdlog, "cache.elementtimeout           = %Lu탎\n", asapInstance->CacheElementTimeout);
+   fprintf(stdlog, "nameserver.request.timeout     = %llu탎\n", asapInstance->NameServerRequestTimeout);
+   fprintf(stdlog, "nameserver.response.timeout    = %llu탎\n", asapInstance->NameServerResponseTimeout);
+   fprintf(stdlog, "cache.elementtimeout           = %llu탎\n", asapInstance->CacheElementTimeout);
    LOG_END
 }
 

@@ -107,7 +107,7 @@ static void leafLinkedBinaryTreePrintNode(struct LeafLinkedBinaryTree*     llbt,
 {
    llbt->PrintFunction(node, fd);
 #ifdef DEBUG
-   fprintf(fd, " ptr=%p v=%Lu vsum=%Lu", node, node->Value, node->ValueSum);
+   fprintf(fd, " ptr=%p v=%llu vsum=%llu", node, node->Value, node->ValueSum);
    if(node->LeftSubtree != &llbt->NullNode) {
       fprintf(fd, " l=%p", node->LeftSubtree);
    }

@@ -161,7 +161,7 @@ void ST_CLASS(peerListNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize,
-            "$%08x upd=%Lu flgs=",
+            "$%08x upd=%llu flgs=",
             peerListNode->Identifier,
             peerListNode->LastUpdateTimeStamp);
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {

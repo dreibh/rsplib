@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.7 2004/11/09 22:03:29 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.8 2004/11/11 21:25:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -116,7 +116,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
               cspObject->AssociationArray[i].ProtocolID,
               cspObject->AssociationArray[i].PPID);
       if(cspObject->AssociationArray[i].Duration != ~0ULL) {
-         fprintf(fd, "  duration=%4Lu.%03Lus",
+         fprintf(fd, "  duration=%4llu.%03llus",
                  cspObject->AssociationArray[i].Duration / 1000000,
                  (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
       }
