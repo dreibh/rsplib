@@ -87,7 +87,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = t1 t2 nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
+noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
 # examplepe2 examplepu2
 
 
@@ -132,10 +132,10 @@ cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIB
 cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 
 
-t1_SOURCES = t1.cc
-t1_LDADD   = librsplib.la -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) $(GLIB_LIBS) -lsctp
-t1_LDFLAGS = -static $(all_libraries) -L.
+#t1_SOURCES = t1.cc
+#t1_LDADD   = librsplib.la -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) $(GLIB_LIBS) -lsctp
+#t1_LDFLAGS = -static $(all_libraries) -L.
 
-t2_SOURCES = t2.cc
-t2_LDADD   = libcppthread.la dispatcher.o fdcallback.o timer.o timeutilities.o loglevel.o leaflinkedredblacktree.o threadsafety.o -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) -lsctp $(GLIB_LIBS)
-t2_LDFLAGS = -static $(all_libraries) -L.
+#t2_SOURCES = t2.cc
+#t2_LDADD   = libcppthread.la dispatcher.o fdcallback.o timer.o timeutilities.o loglevel.o leaflinkedredblacktree.o threadsafety.o -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) -lsctp $(GLIB_LIBS)
+#t2_LDFLAGS = -static $(all_libraries) -L.
