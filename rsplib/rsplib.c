@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.4 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: rsplib.c,v 1.5 2004/07/22 15:48:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -352,6 +352,13 @@ int rspSelect(int             n,
    int            result;
 
    if(gDispatcher) {
+      /* ====== Schedule ================================================= */
+      /* pthreads seem to have the property that scheduling is quite
+         unfair -> If the main loop only invokes rspSelect(), this
+         may block other threads forever => explicitly let other threads
+         do their work now, then lock! */
+      sched_yield();
+
       /* ====== Collect data for ext_select() call ======================= */
       lock(gDispatcher, NULL);
       if(timeout == NULL) {
@@ -407,10 +414,7 @@ int rspSelect(int             n,
       LOG_END
 
       /* ====== Do ext_select() call ===================================== */
-      unlock(gDispatcher, NULL);
-sched_yield();
       result = ext_select(myn, &myreadfds, &mywritefds, &myexceptfds, &mytimeout);
-      lock(gDispatcher, NULL);
 
       /* ====== Print results ============================================= */
       LOG_VERBOSE5

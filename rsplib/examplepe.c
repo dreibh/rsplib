@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.3 2004/07/22 09:47:43 dreibh Exp $
+ *  $Id: examplepe.c,v 1.4 2004/07/22 15:48:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -156,10 +156,8 @@ static void* rsplibMainLoop(void* args)
    struct timeval timeout;
    while(!RsplibThreadStop) {
       timeout.tv_sec  = 0;
-      timeout.tv_usec = 1000000;
-      puts("rspsel...");
+      timeout.tv_usec = 50000;
       rspSelect(0, NULL, NULL, NULL, &timeout);
-      puts("rspsel... ok!");
    }
    return(NULL);
 }
@@ -370,13 +368,6 @@ int main(int argc, char** argv)
                                    1,
                                    500000,
                                    (struct TagItem*)&tags);
-
-puts("---");
-for(i = 0;i < sessions;i++) {
-   printf("%d: %d\n",i, (sessionStatusArray[i] & RspSelect_Read));
-}
-puts("--ü");
-
 
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {

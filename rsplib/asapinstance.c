@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.8 2004/07/22 09:47:43 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.9 2004/07/22 15:48:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -172,10 +172,10 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
          LOG_END
       }
       else {
-         result = false;
          LOG_ERROR
-         fputs("Unable to connect to an name server server\n", stdlog);
+         fputs("Unable to connect to a name server server\n", stdlog);
          LOG_END
+         result = false;
       }
    }
 
@@ -349,13 +349,15 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                                   struct PoolHandle*                poolHandle,
                                   struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   struct RSerPoolMessage*               message;
+   struct RSerPoolMessage*           message;
    struct ST_CLASS(PoolElementNode)* newPoolElement;
    unsigned int                      result;
    uint16_t                          nameServerResult;
    unsigned int                      namespaceMgtResult;
 
+//puts("WAITING...");
    dispatcherLock(asapInstance->StateMachine);
+//   puts("WAITING... OK!!!");
 
    LOG_ACTION
    fputs("Trying to register to pool ", stdlog);

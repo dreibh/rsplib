@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.7 2004/07/22 09:47:44 dreibh Exp $
+ *  $Id: servertable.c,v 1.8 2004/07/22 15:48:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -343,43 +343,8 @@ int serverTableFindServer(struct ServerTable* serverTable)
    unsigned int                   i, j;
    int                            n, result;
 
-   for(trials = 0; trials < 20;trials++) {
-      /* Wait for event */
-      n = 0;
-      FD_ZERO(&rfdset);
-      FD_ZERO(&wfdset);
-      if(serverTable->AnnounceSocket >= 0) {
-         FD_SET(serverTable->AnnounceSocket, &rfdset);
-         n = max(n, serverTable->AnnounceSocket);
-      }
-      nextTimeout = serverTable->NameServerConnectTimeout;
-      /*
-      for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
-         if(sd[i] >= 0) {
-            FD_SET(sd[i], &wfdset);
-            n           = max(n, sd[i]);
-            nextTimeout = min(nextTimeout, timeout[i]);
-         }
-      }
-      */
-      selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
-      selectTimeout.tv_usec = nextTimeout % (card64)1000000;
-      LOG_VERBOSE3
-      fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
-      LOG_END
-      result = ext_select(n + 1,
-                          &rfdset, &wfdset, NULL,
-                          &selectTimeout);
-      LOG_VERBOSE3
-      fprintf(stdlog, "select() result=%d\n", result);
-      LOG_END
-   }
-   exit(1);
-#if 0
-
-
    if(serverTable == NULL) {
-      return(0);
+      return(-1);
    }
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       sd[i]      = -1;
@@ -391,9 +356,9 @@ int serverTableFindServer(struct ServerTable* serverTable)
    fputs("Looking for nameserver...\n",  stdlog);
    LOG_END
 
-   trials       = 0;
+   trials           = 0;
    nextPeerListNode = NULL;
-   start        = 0;
+   start            = 0;
 
    for(;;) {
       if(nextPeerListNode == NULL) {
@@ -414,7 +379,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
                      ext_close(sd[j]);
                   }
                }
-               return(0);
+               return(-1);
             }
             nextPeerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                                   &serverTable->List.List);
@@ -426,11 +391,9 @@ int serverTableFindServer(struct ServerTable* serverTable)
       }
 
       /* Try next block of addresses */
-      /*
       tryNextBlock(serverTable,
                    &nextPeerListNode,
                    (int*)&sd, (card64*)&timeout);
-*/
 
       /* Wait for event */
       n = 0;
@@ -518,5 +481,4 @@ puts("ACHTUNG: Hier kein PURGE durchführen!!!");
          }
       }
    }
-#endif
 }
