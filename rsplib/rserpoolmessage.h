@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.2 2004/07/23 12:57:24 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.3 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -256,7 +256,16 @@ struct rserpool_peerpresenceparameter
    uint32_t ppp_checksum;
 };
 
-#define AHF_PEER_PRESENCE_REPLYREQUIRED (1 << 0)
+struct rserpool_peernameupdateparameter
+{
+   uint32_t pnup_sender_id;
+   uint32_t pnup_receiver_id;
+   uint16_t pnup_update_action;
+   uint16_t pnup_pad;
+};
+
+#define PNUP_ADD_PE 0x0000
+#define PNUP_DEL_PE 0x0001
 
 
 struct rserpool_serverinfoparameter
@@ -282,14 +291,19 @@ struct rserpool_targetparameter
 };
 
 
-#define RMF_PEER_PRESENCE_REPLY_REQUIRED              (1 << 0)
-#define RMF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY (1 << 0)
+#define EHF_PEER_PRESENCE_REPLY_REQUIRED              (1 << 0)
+#define EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY (1 << 0)
+#define EHT_PEER_LIST_RESPONSE_REJECT                 (1 << 0)
+#define EHT_PEER_NAME_TABLE_RESPONSE_REJECT           (1 << 0)
+#define EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND     (1 << 1)
+
 
 struct RSerPoolMessage
 {
    unsigned int                      Type;
    uint16_t                          Error;
    uint8_t                           Flags;
+   uint16_t                          Action;
 
    char*                             OperationErrorData;
    size_t                            OperationErrorLength;
@@ -330,6 +344,11 @@ struct RSerPoolMessage
    struct ST_CLASS(PoolElementNode)* PoolElementPtrArray[MAX_MAX_NAME_RESOLUTION_ITEMS];
    size_t                            PoolElementPtrArraySize;
    bool                              PoolElementPtrArrayAutoDelete;
+
+   struct ST_CLASS(PeerListNode)*    PeerListNodePtr;
+   bool                              PeerListNodePtrAutoDelete;
+   struct ST_CLASS(PeerList)*        PeerListPtr;
+   bool                              PeerListPtrAutoDelete;
 
    sctp_assoc_t                      AssocID;
    unsigned short                    StreamID;

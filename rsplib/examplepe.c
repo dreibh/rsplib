@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.4 2004/07/22 15:48:24 dreibh Exp $
+ *  $Id: examplepe.c,v 1.5 2004/07/25 10:40:04 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -128,7 +128,7 @@ static void handleServiceRequest(GList**        clientList,
    if(received > 0) {
       client->IsNewClient = false;
       buffer[received]  = 0x00;
-      printf("Echo %u %u> %s" , client->CounterStart,
+      printf("Echo %u %u> %s", client->CounterStart,
                                client->Counter,
                                buffer);
       client->Counter++;

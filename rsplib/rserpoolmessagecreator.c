@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.3 2004/07/23 12:57:24 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.4 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -594,7 +594,8 @@ static bool createCookieParameter(struct RSerPoolMessage* message,
 
 
 /* ###### Create server information parameter ############################## */
-static bool createServerInformationParameter(struct RSerPoolMessage* message)
+static bool createServerInformationParameter(struct RSerPoolMessage*        message,
+                                             struct ST_CLASS(PeerListNode)* peerListNode)
 {
    struct rserpool_serverinfoparameter* sip;
    size_t                               tlvPosition = 0;
@@ -607,10 +608,10 @@ static bool createServerInformationParameter(struct RSerPoolMessage* message)
       return(false);
    }
 
-   sip->sip_server_id = message->NSIdentifier;
-   sip->sip_flags     = message->NSFlags;
+   sip->sip_server_id = peerListNode->Identifier;
+   sip->sip_flags     = peerListNode->Flags;
 
-   if(createUserTransportParameter(message, message->TransportAddressBlockListPtr) == false) {
+   if(createUserTransportParameter(message, peerListNode->AddressBlock) == false) {
       return(false);
    }
 
@@ -621,14 +622,13 @@ static bool createServerInformationParameter(struct RSerPoolMessage* message)
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
    if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
@@ -640,11 +640,11 @@ static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 /* ###### Create endpoint keepalive acknowledgement message ############## */
 static bool createEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE_ACK, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE_ACK, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
@@ -658,11 +658,11 @@ static bool createEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointUnreachableMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_ENDPOINT_UNREACHABLE, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_UNREACHABLE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
@@ -676,14 +676,14 @@ static bool createEndpointUnreachableMessage(struct RSerPoolMessage* message)
 /* ###### Create registration message #################################### */
 static bool createRegistrationMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_REGISTRATION, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_REGISTRATION,
+                   message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-
    if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
       return(false);
    }
@@ -703,20 +703,17 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
    }
 
    if(beginMessage(message, AHT_REGISTRATION_RESPONSE,
-                   (message->Error != 0) ? AHF_REGISTRATION_REJECT : 0, PPID_ASAP) == false) {
+                   message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
    if(message->Error != 0x00) {
-      if(createErrorParameter(message) == false) {
-         return(false);
-      }
    }
 
    return(finishMessage(message));
@@ -726,14 +723,13 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
 /* ###### Create deregistration message ################################## */
 static bool createDeregistrationMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_DEREGISTRATION, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_DEREGISTRATION, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
@@ -752,11 +748,11 @@ static bool createDeregistrationResponseMessage(struct RSerPoolMessage* message)
       return(false);
    }
    if(beginMessage(message, AHT_DEREGISTRATION_RESPONSE,
-                   (message->Error != 0) ? AHF_DEREGISTRATION_REJECT : 0, PPID_ASAP) == false) {
+                   message->Flags & AHF_DEREGISTRATION_REJECT, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
@@ -775,10 +771,10 @@ static bool createDeregistrationResponseMessage(struct RSerPoolMessage* message)
 /* ###### Create name resolution message ################################# */
 static bool createNameResolutionMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_NAME_RESOLUTION, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_NAME_RESOLUTION, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    return(finishMessage(message));
@@ -791,11 +787,11 @@ static bool createNameResolutionResponseMessage(struct RSerPoolMessage* message)
    size_t i;
 
    CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
-   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
 
@@ -827,11 +823,11 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
 
    CHECK(message->PoolElementPtrArraySize > 0);
    CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
-   if(beginMessage(message, AHT_BUSINESS_CARD, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_BUSINESS_CARD, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(createPolicyParameter(message, &message->PolicySettings) == false) {
@@ -860,7 +856,7 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(beginMessage(message, AHT_SERVER_ANNOUNCE, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -885,7 +881,7 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 /* ###### Create cookie message ########################################### */
 static bool createCookieMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_COOKIE, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_COOKIE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
    if(createCookieParameter(message, message->CookiePtr, message->CookieSize) == false) {
@@ -898,7 +894,7 @@ static bool createCookieMessage(struct RSerPoolMessage* message)
 /* ###### Create cookie echo message ###################################### */
 static bool createCookieEchoMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_COOKIE_ECHO, 0x00, PPID_ASAP) == false) {
+   if(beginMessage(message, AHT_COOKIE_ECHO, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
    if(createCookieParameter(message, message->CookiePtr, message->CookieSize) == false) {
@@ -911,22 +907,31 @@ static bool createCookieEchoMessage(struct RSerPoolMessage* message)
 /* ###### Create peer presence ########################################### */
 static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, EHT_PEER_PRESENCE, message->Flags, PPID_ENRP) == false) {
+   if(beginMessage(message, EHT_PEER_PRESENCE,
+                   message->Flags & EHF_PEER_PRESENCE_REPLY_REQUIRED,
+                   PPID_ENRP) == false) {
       return(false);
    }
-   if(createServerInformationParameter(message) == false) {
+
+   if(createPoolElementChecksumParameter(message, message->Checksum) == false) {
       return(false);
    }
+   if(createServerInformationParameter(message, message->PeerListNodePtr) == false) {
+      return(false);
+   }
+
    return(finishMessage(message));
 }
 
 
-/* ###### Create list request ########################################### */
+/* ###### Create peer list request ####################################### */
 static bool createPeerListRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
-   if(beginMessage(message, EHT_PEER_LIST_REQUEST, message->Flags, PPID_ENRP) == false) {
+   if(beginMessage(message, EHT_PEER_LIST_REQUEST,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
       return(false);
    }
 
@@ -936,6 +941,248 @@ static bool createPeerListRequestMessage(struct RSerPoolMessage* message)
    }
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer list response ###################################### */
+static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+   struct ST_CLASS(PeerListNode)*   peerListNode;
+
+   if(message->PeerListPtr == NULL) {
+      LOG_ERROR
+      fputs("Invalid parameters\n", stdlog);
+      LOG_END_FATAL
+      return(false);
+   }
+
+   if(beginMessage(message, EHT_PEER_LIST_RESPONSE,
+                   message->Flags & EHT_PEER_LIST_RESPONSE_REJECT,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
+
+   peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                     message->PeerListPtr);
+   while(peerListNode != NULL) {
+      if(createServerInformationParameter(message, peerListNode) == false) {
+         return(false);
+      }
+      peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                        message->PeerListPtr,
+                        peerListNode);
+   }
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer name table request ################################# */
+static bool createPeerNameTableRequestMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   if(beginMessage(message, EHT_PEER_NAME_TABLE_REQUEST,
+                   message->Flags & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
+
+puts("???? STOP!");
+exit(1);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer name table response ################################ */
+static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   if(beginMessage(message, EHT_PEER_NAME_TABLE_RESPONSE,
+                   message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
+
+puts("???? STOP!");
+exit(1);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer name update ######################################## */
+static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_peernameupdateparameter* pnup;
+
+   if(beginMessage(message, EHT_PEER_NAME_UPDATE,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   pnup = (struct rserpool_peernameupdateparameter*)getSpace(message, sizeof(struct rserpool_peernameupdateparameter));
+   if(pnup == NULL) {
+      return(false);
+   }
+   pnup->pnup_sender_id     = htonl(message->SenderID);
+   pnup->pnup_receiver_id   = htonl(message->ReceiverID);
+   pnup->pnup_update_action = htons(message->Action);
+   pnup->pnup_pad           = 0x0000;
+
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
+      return(false);
+   }
+   if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
+      return(false);
+   }
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer init takeover ###################################### */
+static bool createPeerInitTakeoverMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   if(beginMessage(message, EHT_PEER_INIT_TAKEOVER,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      return(false);
+   }
+   tp->tp_sender_id   = htonl(message->SenderID);
+   tp->tp_receiver_id = htonl(message->ReceiverID);
+   tp->tp_target_id   = htonl(message->NSIdentifier);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer init takeover acknowledgement ###################### */
+static bool createPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   if(beginMessage(message, EHT_PEER_INIT_TAKEOVER_ACK,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      return(false);
+   }
+   tp->tp_sender_id   = htonl(message->SenderID);
+   tp->tp_receiver_id = htonl(message->ReceiverID);
+   tp->tp_target_id   = htonl(message->NSIdentifier);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer takeover server #################################### */
+static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   if(beginMessage(message, EHT_PEER_TAKEOVER_SERVER,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      return(false);
+   }
+   tp->tp_sender_id   = htonl(message->SenderID);
+   tp->tp_receiver_id = htonl(message->ReceiverID);
+   tp->tp_target_id   = htonl(message->NSIdentifier);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer ownership change ################################### */
+static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   if(beginMessage(message, EHT_PEER_OWNERSHIP_CHANGE,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
+
+puts("???? STOP!");
+exit(1);
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create peer error ############################################## */
+static bool createPeerErrorMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   if(beginMessage(message, EHT_PEER_ERROR,
+                   message->Flags & 0x00,
+                   PPID_ENRP) == false) {
+      return(false);
+   }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
+
+   if(createErrorParameter(message) == false) {
+      return(false);
+   }
 
    return(finishMessage(message));
 }
@@ -1066,51 +1313,81 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          LOG_VERBOSE2
          fputs("Creating PeerNameTableRequest message...\n", stdlog);
          LOG_END
+         if(createPeerNameTableRequestMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
          LOG_VERBOSE2
          fputs("Creating PeerNameTableResponse message...\n", stdlog);
          LOG_END
+         if(createPeerNameTableResponseMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_NAME_UPDATE:
          LOG_VERBOSE2
          fputs("Creating PeerNameUpdate message...\n", stdlog);
          LOG_END
+         if(createPeerNameUpdateMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_LIST_REQUEST:
          LOG_VERBOSE2
          fputs("Creating PeerListRequest message...\n", stdlog);
          LOG_END
+         if(createPeerListRequestMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_LIST_RESPONSE:
          LOG_VERBOSE2
          fputs("Creating PeerListResponse message...\n", stdlog);
          LOG_END
+         if(createPeerListResponseMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_INIT_TAKEOVER:
          LOG_VERBOSE2
          fputs("Creating PeerInitTakeover message...\n", stdlog);
          LOG_END
+         if(createPeerInitTakeoverMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_INIT_TAKEOVER_ACK:
          LOG_VERBOSE2
          fputs("Creating PeerInitTakeoverAck message...\n", stdlog);
          LOG_END
+         if(createPeerInitTakeoverAckMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_TAKEOVER_SERVER:
          LOG_VERBOSE2
          fputs("Creating PeerTakeoverServer message...\n", stdlog);
          LOG_END
+         if(createPeerTakeoverServerMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_OWNERSHIP_CHANGE:
          LOG_VERBOSE2
          fputs("Creating PeerOwnershipChange message...\n", stdlog);
          LOG_END
+         if(createPeerOwnershipChangeMessage(message) == true) {
+            return(message->Position);
+         }
         break;
        case EHT_PEER_ERROR:
          LOG_VERBOSE2
          fputs("Creating PeerError message...\n", stdlog);
          LOG_END
+         if(createPeerErrorMessage(message) == true) {
+            return(message->Position);
+         }
         break;
 
        /* ====== Unknown ================================================= */

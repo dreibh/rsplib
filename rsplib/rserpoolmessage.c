@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.2 2004/07/22 09:47:43 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.3 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -94,12 +94,13 @@ void rserpoolMessageDelete(struct RSerPoolMessage* message)
 /* ###### Clear RSerPoolMessage ########################################## */
 void rserpoolMessageClearAll(struct RSerPoolMessage* message)
 {
-   struct TransportAddressBlock* transportAddressBlock;
-   struct TransportAddressBlock* nextTransportAddressBlock;
-   char*                         buffer;
-   size_t                        originalBufferSize;
-   bool                          bufferAutoDelete;
-   size_t                        i;
+   struct TransportAddressBlock*  transportAddressBlock;
+   struct TransportAddressBlock*  nextTransportAddressBlock;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   char*                          buffer;
+   size_t                         originalBufferSize;
+   bool                           bufferAutoDelete;
+   size_t                         i;
 
    if(message != NULL) {
       if((message->PoolElementPtr) && (message->PoolElementPtrAutoDelete)) {
@@ -127,6 +128,22 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
                free(message->PoolElementPtrArray[i]);
                message->PoolElementPtrArray[i] = NULL;
             }
+         }
+      }
+      if((message->PeerListNodePtrAutoDelete) && (message->PeerListNodePtr)) {
+         ST_CLASS(peerListNodeDelete)(message->PeerListNodePtr);
+         free(message->PeerListNodePtr);
+      }
+      if(message->PeerListPtrAutoDelete) {
+         peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                           message->PeerListPtr);
+         while(peerListNode != NULL) {
+            ST_CLASS(peerListNodeDelete)(peerListNode);
+            transportAddressBlockDelete(peerListNode->AddressBlock);
+            free(peerListNode->AddressBlock);
+            free(message->PeerListNodePtr);
+            peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                              message->PeerListPtr);
          }
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
@@ -202,7 +219,7 @@ bool rserpoolMessageSend(int                     fd,
       if(sent == (ssize_t)messageLength) {
          LOG_VERBOSE
          fprintf(stdlog, "Successfully sent ASAP message: "
-                 "AssocID=%u PPID=$%08x, Type=$%02x\n",
+                 "assoc=%u PPID=$%08x, Type=$%02x\n",
                  (unsigned int)assocID,
                  message->PPID,
                  message->Type);
@@ -271,7 +288,7 @@ struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
 
                LOG_VERBOSE
                fprintf(stdlog,"Successfully received ASAP message\n"
-                       "PPID=$%08x AssocID=%d StreamID=%d, ASAP Type = $%02x\n",
+                       "PPID=$%08x assoc=%d StreamID=%d, ASAP Type = $%02x\n",
                        ppid, (unsigned int)assocID, streamID,
                        message->Type);
                LOG_END

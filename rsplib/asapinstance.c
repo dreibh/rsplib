@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.9 2004/07/22 15:48:24 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.10 2004/07/25 10:40:04 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -237,6 +237,8 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapIns
    LOG_WARNING
    fputs("Receiving response failed\n", stdlog);
    LOG_END
+puts("STOP!");
+exit(1);
    return(RSPERR_READ_ERROR);
 }
 
@@ -370,6 +372,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
    message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type           = AHT_REGISTRATION;
+      message->Flags          = 0x00;
       message->Handle         = *poolHandle;
       message->PoolElementPtr = poolElementNode;
 
@@ -441,6 +444,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
    message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type       = AHT_DEREGISTRATION;
+      message->Flags      = 0x00;
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
 
@@ -516,6 +520,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
    message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type       = AHT_ENDPOINT_UNREACHABLE;
+      message->Flags      = 0x00;
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
       result = asapInstanceSendRequest(asapInstance, message);
@@ -540,6 +545,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
    message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type   = AHT_NAME_RESOLUTION;
+      message->Flags  = 0x00;
       message->Handle = *poolHandle;
 
       result = asapInstanceDoIO(asapInstance, message, &response, &nameServerResult);
@@ -726,6 +732,7 @@ static void asapInstanceHandleEndpointKeepAlive(
                         message->Identifier);
    if(poolElementNode) {
       message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
+      message->Flags      = 0x00;
       message->Identifier = poolElementNode->Identifier;
 
       LOG_VERBOSE2
@@ -765,7 +772,6 @@ static void handleNameServerConnectionEvent(
       result = asapInstanceReceiveResponse(asapInstance, &message);
       if(result == RSPERR_OKAY) {
          if(message->Type == AHT_ENDPOINT_KEEP_ALIVE) {
-puts("KEEP-ALIVE!!!!");
             asapInstanceHandleEndpointKeepAlive(asapInstance, message);
          }
          else {

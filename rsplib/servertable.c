@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.8 2004/07/22 15:48:24 dreibh Exp $
+ *  $Id: servertable.c,v 1.9 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -267,8 +267,11 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                          card64*                         timeout)
 {
    struct TransportAddressBlock* transportAddressBlock;
+   struct sockaddr_storage       addressArray[MAX_PE_TRANSPORTADDRESSES];
+   size_t                        addresses;
    int                           status;
-   unsigned int                  i;
+   size_t                        i, j;
+   void*                         a;
 
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       if(sd[i] < 0) {
@@ -280,36 +283,60 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                }
                transportAddressBlock = transportAddressBlock->Next;
             }
-            LOG_VERBOSE2
-            fputs("Trying name server at ",  stdlog);
-            transportAddressBlockPrint(transportAddressBlock, stdlog);
-            fputs("\n",  stdlog);
-            LOG_END
-
             if(transportAddressBlock != NULL) {
-               sd[i] = ext_socket(checkIPv6() ? AF_INET6 : AF_INET,
-                                  SOCK_STREAM,
-                                  transportAddressBlock->Protocol);
-               if(sd[i] >= 0) {
-                  timeout[i] = getMicroTime() + serverTable->NameServerConnectTimeout;
-                  setNonBlocking(sd[i]);
+               LOG_VERBOSE2
+               fputs("Trying name server at ",  stdlog);
+               transportAddressBlockPrint(transportAddressBlock, stdlog);
+               fputs("\n",  stdlog);
+               LOG_END
 
-                  LOG_VERBOSE2
-                  fprintf(stdlog, "Connecting socket %d to ",  sd[i]);
-                  fputaddress((struct sockaddr*)&transportAddressBlock->AddressArray[0],
-                              true, stdlog);
-                  fprintf(stdlog, " via %s...\n", (transportAddressBlock->Protocol == IPPROTO_SCTP) ? "SCTP" : "TCP");
-                  LOG_END
-                  status = ext_connect(sd[i],
-                                       (struct sockaddr*)&transportAddressBlock->AddressArray[0],
-                                       getSocklen((struct sockaddr*)&transportAddressBlock->AddressArray[0]));
-                  if( ((status < 0) && (errno == EINPROGRESS)) || (status == 0) ) {
+               addresses = 0;
+               a = &addressArray;
+               CHECK(transportAddressBlock->Addresses <= MAX_PE_TRANSPORTADDRESSES);
+               for(j = 0;j < transportAddressBlock->Addresses;j++) {
+                  switch(transportAddressBlock->AddressArray[j].sa.sa_family) {
+                     case AF_INET:
+                        memcpy((void*)a, (void*)&transportAddressBlock->AddressArray[j],
+                               sizeof(struct sockaddr_in));
+                        a = (void*)((long)a + (long)sizeof(struct sockaddr_in));
+                     break;
+                     case AF_INET6:
+                        memcpy((void*)a, (void*)&transportAddressBlock->AddressArray[j],
+                               sizeof(struct sockaddr_in6));
+                        a = (void*)((long)a + (long)sizeof(struct sockaddr_in6));
                      break;
                   }
+                  addresses++;
+               }
 
-                  ext_close(sd[i]);
-                  sd[i]      = -1;
-                  timeout[i] = (card64)-1;
+               if(addresses == transportAddressBlock->Addresses) {
+                  sd[i] = ext_socket(checkIPv6() ? AF_INET6 : AF_INET,
+                                    SOCK_STREAM,
+                                    transportAddressBlock->Protocol);
+                  if(sd[i] >= 0) {
+                     timeout[i] = getMicroTime() + serverTable->NameServerConnectTimeout;
+                     setNonBlocking(sd[i]);
+
+                     LOG_VERBOSE2
+                     fprintf(stdlog, "Connecting socket %d to ", sd[i]);
+                     transportAddressBlockPrint(transportAddressBlock, stdlog);
+                     fputs("...\n", stdlog);
+                     LOG_END
+
+                     status = sctp_connectx(sd[i], (struct sockaddr*)addressArray, addresses);
+                     if( ((status < 0) && (errno == EINPROGRESS)) || (status == 0) ) {
+                        break;
+                     }
+
+                     ext_close(sd[i]);
+                     sd[i]      = -1;
+                     timeout[i] = (card64)-1;
+                  }
+               }
+               else {
+                  LOG_ERROR
+                  fputs("Unknown address type in TransportAddressBlock\n", stdlog);
+                  LOG_END
                }
             }
 

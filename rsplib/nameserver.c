@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.10 2004/07/22 17:30:14 dreibh Exp $
+ *  $Id: nameserver.c,v 1.11 2004/07/25 10:40:04 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -97,7 +97,7 @@ int nameServerUserNodeComparison(const void* nodePtr1, const void* nodePtr2)
 void nameServerUserNodePrint(const void* nodePtr, FILE* fd)
 {
    const struct NameServerUserNode* node = (const struct NameServerUserNode*)nodePtr;
-   fprintf(fd, "User socket %d, AssocID %u has %u pool elements:\n",
+   fprintf(fd, "User socket %d, assoc %u has %u pool elements:\n",
            node->Socket, node->AssocID,
            ST_METHOD(GetElements)(&node->PoolElementNodeReferenceStorage));
    ST_METHOD(Print)((struct ST_CLASSNAME*)&node->PoolElementNodeReferenceStorage, fd);
@@ -279,7 +279,7 @@ void nameServerCleanUser(struct NameServer* nameServer,
    if(nameServerUserNode != NULL) {
       LOG_ACTION
       fprintf(stdlog,
-              "Removing all pool elements registered by user socket %u, AssocID %u...\n",
+              "Removing all pool elements registered by user socket %u, assoc %u...\n",
               sd, assocID);
       LOG_END
 
@@ -327,14 +327,14 @@ void nameServerCleanUser(struct NameServer* nameServer,
 
       LOG_ACTION
       fprintf(stdlog,
-               "All pool elements registered by user socket %u, AssocID %u have been removed\n",
+               "All pool elements registered by user socket %u, assoc %u have been removed\n",
                sd, assocID);
       LOG_END
    }
    else {
       LOG_VERBOSE
       fprintf(stdlog,
-              "No pool elements are registered by user socket %u, AssocID %u -> nothing to do\n",
+              "No pool elements are registered by user socket %u, assoc %u -> nothing to do\n",
               sd, assocID);
       LOG_END
    }
@@ -558,6 +558,7 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
       message->Type                         = AHT_SERVER_ANNOUNCE;
+      message->Flags                        = 0x00;
       message->NSIdentifier                 = nameServer->ServerID;
       message->TransportAddressBlockListPtr = nameServer->ASAPAddress;
       messageLength = rserpoolMessage2Packet(message);
@@ -619,6 +620,7 @@ static void sendEndpointKeepAlive(struct NameServer*                nameServer,
          message->Handle     = poolElementNode->OwnerPoolNode->Handle;
          message->Identifier = poolElementNode->Identifier;
          message->Type       = AHT_ENDPOINT_KEEP_ALIVE;
+         message->Flags      = 0x00;
          if(rserpoolMessageSend(nameServerUserNode->Socket,
                                 nameServerUserNode->AssocID,
                                 0,
@@ -784,6 +786,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
 
 
    message->Type       = AHT_REGISTRATION_RESPONSE;
+   message->Flags      = AHF_REGISTRATION_REJECT;
    message->Error      = RSPERR_OKAY;
    message->Identifier = message->PoolElementPtr->Identifier;
 
@@ -822,6 +825,8 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
                              &poolElementNode);
          if(message->Error == RSPERR_OKAY) {
             /* ====== Successful registration ============================ */
+            message->Flags = 0x00;
+
             LOG_ACTION
             fputs("Successfully registered to pool ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
@@ -918,7 +923,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
    }
    else {
       LOG_ERROR
-      fprintf(stdlog, "Unable to obtain peer addresses of FD %d, AssocID %u\n",
+      fprintf(stdlog, "Unable to obtain peer addresses of FD %d, assoc %u\n",
               fd, assocID);
       LOG_END
    }
@@ -939,11 +944,14 @@ static void handleDeregistrationRequest(struct NameServer*      nameServer,
    LOG_END
 
    message->Type  = AHT_DEREGISTRATION_RESPONSE;
+   message->Flags = AHF_DEREGISTRATION_REJECT;
    message->Error = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                        &nameServer->Namespace,
                        &message->Handle,
                        message->Identifier);
    if(message->Error == RSPERR_OKAY) {
+      message->Flags = 0x00;
+
       LOG_ACTION
       fputs("Deregistration successfully completed\n", stdlog);
       LOG_END
@@ -992,6 +1000,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
    LOG_END
 
    message->Type  = AHT_NAME_RESOLUTION_RESPONSE;
+   message->Flags = 0x00;
    message->Error = ST_CLASS(poolNamespaceManagementNameResolution)(
                        &nameServer->Namespace,
                        &message->Handle,
@@ -1377,6 +1386,10 @@ int main(int argc, char** argv)
       else if(!(strncasecmp(argv[i], "-asap=",6))) {
          asapSocket = getSCTPSocket((char*)&argv[i][6], asapAddress);
       }
+      else if(!(strcasecmp(argv[i], "-asapannounce=auto"))) {
+         string2address("239.0.0.1:3863", &asapAnnounceAddress);
+         asapSendAnnounces = true;
+      }
       else if(!(strncasecmp(argv[i], "-asapannounce=", 14))) {
          if(!string2address((char*)&argv[i][14], &asapAnnounceAddress)) {
             fprintf(stderr,
@@ -1388,6 +1401,10 @@ int main(int argc, char** argv)
       }
       else if(!(strncasecmp(argv[i], "-enrp=",6))) {
          enrpUnicastSocket = getSCTPSocket((char*)&argv[i][6], enrpUnicastAddress);
+      }
+      else if(!(strcasecmp(argv[i], "-enrpmulticast=auto"))) {
+         string2address("239.0.0.1:3864", &enrpMulticastAddress);
+         enrpUseMulticast = true;
       }
       else if(!(strncasecmp(argv[i], "-enrpmulticast=", 15))) {
          if(!string2address((char*)&argv[i][15], &enrpMulticastAddress)) {

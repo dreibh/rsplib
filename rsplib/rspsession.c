@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.6 2004/07/22 09:47:44 dreibh Exp $
+ *  $Id: rspsession.c,v 1.7 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -708,11 +708,12 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
                   session->Socket = -1;
                }
                else {
+                  session->Identifier = eai2->ai_pe_id;
                   setNonBlocking(session->Socket);
                   LOG_ACTION
                   fprintf(stdlog, "Socket %d connected to ", session->Socket);
                   fputaddress((struct sockaddr*)&eai2->ai_addr[0], true, stdlog);
-                  fprintf(stdlog, ", Pool Element $%08x\n", eai2->ai_pe_id);
+                  fprintf(stdlog, ", Pool Element $%08x\n", session->Identifier);
                   LOG_END
                   break;
                }
@@ -856,7 +857,7 @@ static void handleRSerPoolMessage(struct SessionDescriptor* session,
       LOG_END
       switch(message->Type) {
          case AHT_COOKIE:
-            LOG_ACTION
+            LOG_VERBOSE
             fputs("Got cookie\n", stdlog);
             LOG_END
             message->CookiePtrAutoDelete = false;

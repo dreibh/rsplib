@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.3 2004/07/23 12:57:24 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.4 2004/07/25 10:40:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -188,6 +188,7 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
       return(0);
    }
 
+   message->Flags                     = header->ah_flags;
    message->OffendingMessageTLVLength = length;
    return(length);
 }
@@ -811,11 +812,11 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                             struct RSerPoolMessage* message)
 {
    struct rserpool_poolelementparameter* pep;
-   char                              transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock*     transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
-   struct TransportAddressBlock*     newTransportAddressBlock;
-   struct PoolPolicySettings         poolPolicySettings;
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   char                                  transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*         transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct TransportAddressBlock*         newTransportAddressBlock;
+   struct PoolPolicySettings             poolPolicySettings;
+   struct ST_CLASS(PoolElementNode)*     poolElementNode;
 
    size_t tlvPosition = 0;
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT, true);
@@ -1358,9 +1359,199 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
 /* ###### Scan peer presence message ##################################### */
 static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
 {
+   if(scanPoolElementChecksumParameter(message) == false) {
+      return(false);
+   }
    if(scanServerInformationParameter(message) == false) {
       return(false);
    }
+   return(true);
+}
+
+
+/* ###### Scan peer list request message ################################# */
+static bool scanPeerListRequestMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer list response message ################################ */
+static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer name table request message ########################### */
+static bool scanPeerNameTableRequestMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer name table response message ########################## */
+static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer name table response message ########################## */
+static bool scanPeerNameUpdateMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_peernameupdateparameter* pnup;
+
+   pnup = (struct rserpool_peernameupdateparameter*)getSpace(message, sizeof(struct rserpool_peernameupdateparameter));
+   if(pnup == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(pnup->pnup_sender_id);
+   message->ReceiverID = ntohl(pnup->pnup_receiver_id);
+   message->Action     = ntohs(pnup->pnup_update_action);
+
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
+      return(false);
+   }
+   message->PoolElementPtr = scanPoolElementParameter(message);
+   if(message->PoolElementPtr == NULL) {
+      return(false);
+   }
+
+   return(true);
+}
+
+
+/* ###### Scan peer init takeover message ################################ */
+static bool scanPeerInitTakeoverMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID     = ntohl(tp->tp_sender_id);
+   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->NSIdentifier = ntohl(tp->tp_target_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer init takeover acknowledgement message ################ */
+static bool scanPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID     = ntohl(tp->tp_sender_id);
+   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->NSIdentifier = ntohl(tp->tp_target_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer takeover server message ############################## */
+static bool scanPeerTakeoverServerMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID     = ntohl(tp->tp_sender_id);
+   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->NSIdentifier = ntohl(tp->tp_target_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer take ownership message ############################### */
+static bool scanPeerTakeOwnershipMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_targetparameter* tp;
+
+   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
+   if(tp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID     = ntohl(tp->tp_sender_id);
+   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->NSIdentifier = ntohl(tp->tp_target_id);
+
+   return(true);
+}
+
+
+/* ###### Scan peer error message ######################################## */
+static bool scanPeerErrorMessage(struct RSerPoolMessage* message)
+{
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   if(!scanErrorParameter(message)) {
+      return(false);
+   }
+
    return(true);
 }
 
@@ -1542,51 +1733,81 @@ static bool scanMessage(struct RSerPoolMessage* message)
          LOG_VERBOSE2
          fputs("Scanning PeerNameTableRequest message...\n", stdlog);
          LOG_END
+         if(scanPeerNameTableRequestMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
          LOG_VERBOSE2
          fputs("Scanning PeerNameTableResponse message...\n", stdlog);
          LOG_END
+         if(scanPeerNameTableResponseMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_NAME_UPDATE:
          LOG_VERBOSE2
          fputs("Scanning PeerNameUpdate message...\n", stdlog);
          LOG_END
+         if(scanPeerNameUpdateMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_LIST_REQUEST:
          LOG_VERBOSE2
          fputs("Scanning PeerListRequest message...\n", stdlog);
          LOG_END
+         if(scanPeerListRequestMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_LIST_RESPONSE:
          LOG_VERBOSE2
          fputs("Scanning PeerListResponse message...\n", stdlog);
          LOG_END
+         if(scanPeerListResponseMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_INIT_TAKEOVER:
          LOG_VERBOSE2
          fputs("Scanning PeerInitTakeover message...\n", stdlog);
          LOG_END
+         if(scanPeerInitTakeoverMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_INIT_TAKEOVER_ACK:
          LOG_VERBOSE2
          fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
          LOG_END
+         if(scanPeerInitTakeoverAckMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_TAKEOVER_SERVER:
          LOG_VERBOSE2
          fputs("Scanning PeerTakeoverServer message...\n", stdlog);
          LOG_END
+         if(scanPeerTakeoverServerMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_OWNERSHIP_CHANGE:
          LOG_VERBOSE2
          fputs("Scanning PeerOwnershipChange message...\n", stdlog);
          LOG_END
+         if(scanPeerTakeOwnershipMessage(message) == false) {
+            return(false);
+         }
         break;
        case EHT_PEER_ERROR:
          LOG_VERBOSE2
          fputs("Scanning PeerError message...\n", stdlog);
          LOG_END
+         if(scanPeerErrorMessage(message) == false) {
+            return(false);
+         }
         break;
 
        /* ====== Unknown ================================================= */

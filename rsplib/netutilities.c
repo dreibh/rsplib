@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.8 2004/07/22 17:30:14 dreibh Exp $
+ *  $Id: netutilities.c,v 1.9 2004/07/25 10:40:04 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -308,7 +308,7 @@ bool string2address(const char* string, struct sockaddr_storage* address)
          if((p1[1] == ':') || (p1[1] == '!')) {
             strcpy((char*)&port, &p1[2]);
          }
-         strncpy((char*)&host,(char*)&host[1],(long)p1 - (long)host - 1);
+         memmove((char*)&host, (char*)&host[1], (long)p1 - (long)host - 1);
          host[(long)p1 - (long)host - 1] = 0x00;
       }
    }
@@ -941,6 +941,15 @@ int sendtoplus(int                 sockfd,
          fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
                  sockfd, assocID, (unsigned int)iov.iov_len);
          LOG_END
+         msg.msg_name       = to;
+         msg.msg_namelen    = tolen;
+         iov.iov_base       = (char*)buffer;
+         iov.iov_len        = length;
+         msg.msg_iov        = &iov;
+         msg.msg_iovlen     = 1;
+         msg.msg_control    = cbuf;
+         msg.msg_controllen = cmsglen;
+         msg.msg_flags      = flags;
          cc = ext_sendmsg(sockfd, &msg, flags);
       }
       else {
@@ -1024,6 +1033,15 @@ int recvfromplus(int              sockfd,
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
          LOG_END
+         msg.msg_name       = from;
+         msg.msg_namelen    = (fromlen != NULL) ? *fromlen : 0;
+         iov.iov_base       = (char*)buffer;
+         iov.iov_len        = length;
+         msg.msg_iov        = &iov;
+         msg.msg_iovlen     = 1;
+         msg.msg_control    = cbuf;
+         msg.msg_controllen = cmsglen;
+         msg.msg_flags      = *flags;
          cc = ext_recvmsg(sockfd, &msg, *flags);
       }
       else {
@@ -1148,7 +1166,6 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
 
    size = sizeof(rtoinfo);
    rtoinfo.srto_assoc_id = assocID;
-printf("ASSSOC=%d\n",assocID);
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0) {
       LOG_VERBOSE3
       fprintf(stdlog, "  Current RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
@@ -1223,7 +1240,7 @@ printf("ASSSOC=%d\n",assocID);
       LOG_END
    }
 
-   n = getpaddrsplus(sockfd, 0, &addrs);
+   n = getpaddrsplus(sockfd, assocID, &addrs);
    if(n >= 0) {
       for(i = 0;i < n;i++) {
          peerParams.spp_assoc_id = assocID;
@@ -1231,13 +1248,14 @@ printf("ASSSOC=%d\n",assocID);
                 (const void*)&addrs[i], sizeof(struct sockaddr_storage));
          size = sizeof(peerParams);
 
-         if(sctp_opt_info(sockfd, 0, SCTP_PEER_ADDR_PARAMS,
+         if(sctp_opt_info(sockfd, assocID, SCTP_PEER_ADDR_PARAMS,
                           (void*)&peerParams, (socklen_t *)&size) == 0) {
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-            fprintf(stdlog, " on socket %d: hb=%d maxrxt=%d\n",
-                    sockfd, peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                    sockfd, (unsigned int)assocID,
+                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
             LOG_END
 
             peerParams.spp_hbinterval = tagListGetData(tags, TAG_TuneSCTP_Heartbeat,  peerParams.spp_hbinterval);
@@ -1248,15 +1266,17 @@ printf("ASSSOC=%d\n",assocID);
                LOG_VERBOSE2
                fputs("Unable to set peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-               fprintf(stdlog, " on socket %d\n", sockfd);
+               fprintf(stdlog, " on socket %d, assoc %u\n",
+                       sockfd, (unsigned int)assocID);
                LOG_END
             }
             else {
                LOG_VERBOSE3
                fputs("New peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-               fprintf(stdlog, " on socket %d: hb=%d maxrxt=%d\n",
-                       sockfd, peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+               fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                        sockfd, (unsigned int)assocID,
+                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
                LOG_END
             }
          }
@@ -1264,15 +1284,16 @@ printf("ASSSOC=%d\n",assocID);
             LOG_VERBOSE2
             fputs("Unable to get peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-            fprintf(stdlog, " on socket %d\n", sockfd);
+            fprintf(stdlog, " on socket %d, assoc %u\n",
+                    sockfd, (unsigned int)assocID);
             LOG_END
          }
       }
       free(addrs);
    }
    else {
-      //LOG_VERBOSE2  ?????
-      LOG_ERROR
+      result = false;
+      LOG_VERBOSE2
       fputs("No peer addresses -> skipping peer parameters\n", stdlog);
       LOG_END
    }
