@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.7 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.8 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -93,7 +93,7 @@ static void initAll()
 /* ###### Do failover to new pool element ################################### */
 static void connectToPoolElement()
 {
-   struct TagItem              tags[16];
+   /* struct TagItem              tags[16]; */
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;
    unsigned int                result;

@@ -37,8 +37,6 @@ leaflinkedtreap.c \
 leaflinkedtreap.h \
 linearlist.c \
 linearlist.h \
-localaddresses.c \
-localaddresses.h \
 loglevel.c \
 loglevel.h \
 messagebuffer.c \

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.33 2004/11/12 15:15:59 dreibh Exp $
+ *  $Id: netutilities.c,v 1.34 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -264,6 +264,25 @@ size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
    }
 
    return((size_t)addresses);
+}
+
+
+/* ###### Gather local addresses ######################################### */
+size_t gatherLocalAddresses(union sockaddr_union** addressArray)
+{
+   union sockaddr_union anyAddress;
+   size_t               addresses = 0;
+   int                  sd;
+
+   string2address(checkIPv6() ? "[::]" : "0.0.0.0", &anyAddress);
+   sd = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+   if(sd >= 0) {
+      if(ext_bind(sd, (struct sockaddr*)&anyAddress, getSocklen(&anyAddress.sa)) == 0) {
+         addresses = getAddressesFromSocket(sd, addressArray);
+      }
+      ext_close(sd);
+   }
+   return(addresses);
 }
 
 

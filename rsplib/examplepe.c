@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.16 2004/11/12 00:25:16 dreibh Exp $
+ *  $Id: examplepe.c,v 1.17 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,6 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "localaddresses.h"
 #include "breakdetector.h"
 #include "rsplib.h"
 #ifdef ENABLE_CSP

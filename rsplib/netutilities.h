@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.14 2004/11/12 15:15:59 dreibh Exp $
+ *  $Id: netutilities.h,v 1.15 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -119,6 +119,15 @@ uint64_t ntoh64(const uint64_t value);
   * @see deleteAddressArray
   */
 size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray);
+
+/**
+  * Gather local addresses. The obtained address array will be stored
+  * to the variable addressArray. It has to be freed using free().
+  *
+  * @param addressArray Reference to store address array to.
+  * @return Number of obtained addresses or 0 in case of error.
+  */
+size_t gatherLocalAddresses(union sockaddr_union** addressArray);
 
 /**
   * Delete address array.

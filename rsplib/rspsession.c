@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.22 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: rspsession.c,v 1.23 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,6 @@
 #include "loglevel.h"
 #include "dispatcher.h"
 #include "netutilities.h"
-#include "localaddresses.h"
 #include "threadsafety.h"
 #include "rserpoolmessage.h"
 #include "messagebuffer.h"
@@ -201,7 +200,8 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    /* ====== Get local addresses for TCP/UDP socket ========================= */
    if(eai->ai_addrs <= 0) {
       /* Get addresses of all local interfaces */
-      if(gatherLocalAddresses(&localAddressArray, (size_t *)&localAddresses, ASF_HideMulticast) == false) {
+      localAddresses = gatherLocalAddresses(&localAddressArray);
+      if(localAddresses == 0) {
          LOG_ERROR
          fputs("Unable to find out local addresses -> No registration possible\n", stdlog);
          LOG_END

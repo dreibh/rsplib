@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.8 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.9 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,6 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "localaddresses.h"
 #include "breakdetector.h"
 #include "rsplib.h"
 
@@ -133,7 +132,8 @@ static void doRegistration()
    /* ====== Get local addresses for TCP/UDP socket ========================= */
    if(eai->ai_addrs <= 0) {
       /* Get addresses of all local interfaces */
-      if(gatherLocalAddresses(&localAddressArray, (size_t *)&localAddresses, ASF_HideMulticast) == false) {
+      localAddresses = gatherLocalAddresses(&localAddressArray);
+      if(localAddresses == 0) {
          puts("ERROR: Unable to find out local addresses -> No registration possible!");
          return;
       }

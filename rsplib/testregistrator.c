@@ -1,5 +1,5 @@
 /*
- *  $Id: testregistrator.c,v 1.5 2004/11/12 00:01:49 dreibh Exp $
+ *  $Id: testregistrator.c,v 1.6 2004/11/12 15:56:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,6 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "localaddresses.h"
 #include "breakdetector.h"
 #include "rsplib.h"
 
