@@ -45,9 +45,13 @@ messagebuffer.h \
 netutilities.c \
 netutilities.h \
 peerlistmanagement-template.h \
+peerlistmanagement-template_impl.h \
 peerlistnode-template.h \
+peerlistnode-template_impl.h \
 peerlist-template.h \
+peerlist-template_impl.h \
 poolelementnode-template.h \
+poolelementnode-template_impl.h \
 poolhandle.h \
 poolhandle.c \
 poolnamespacemanagement-basics.c \
@@ -55,11 +59,15 @@ poolnamespacemanagement-basics.h \
 poolnamespacemanagement.c \
 poolnamespacemanagement.h \
 poolnamespacemanagement-template.h \
+poolnamespacemanagement-template_impl.h \
 poolnamespacenode-template.h \
+poolnamespacenode-template_impl.h \
 poolnode-template.h \
+poolnode-template_impl.h \
 poolpolicysettings.c \
 poolpolicysettings.h \
 poolpolicy-template.h \
+poolpolicy-template_impl.h \
 randomizer.c \
 randomizer.h \
 rserpoolerror.c \
@@ -72,6 +80,7 @@ servertable.c \
 servertable.h \
 stringutilities.c \
 stringutilities.h \
+sockaddrunion.h \
 timeutilities.c \
 timeutilities.h \
 tagitem.c \
@@ -114,7 +123,7 @@ testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-fractalpoolelement_SOURCES = fractalpoolelement.cc
+fractalpoolelement_SOURCES = fractalpoolelement.cc fractalgeneratorexample.h
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 fork_SOURCES = fork.c

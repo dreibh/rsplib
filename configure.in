@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR(admin)
 
 AC_CANONICAL_SYSTEM
 
-AM_INIT_AUTOMAKE(rsplib, 0.5.0)
+AM_INIT_AUTOMAKE(rsplib, 0.8.0)
 
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
@@ -382,11 +382,6 @@ if test "$ac_socketapi_libraries" = "NO"; then
    ac_socketapi_bindir="$ac_socketapi_defaultdir"/bin
 fi
 
-if test ! -e "$ac_socketapi_includes/ext_socket.h" ; then
-   AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_includes/ext_socket.h)!])
-fi
-
-
 if test "$enable_kernel_sctp" = "no"; then
    if test ! -e $ac_socketapi_libraries/libsctpsocket.a ; then
       AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_libraries/libsctpsocket.a)!])
@@ -404,9 +399,9 @@ AC_SUBST(socketapi_LIBS)
 
 
 RSPLIB_CURRENT=0
-RSPLIB_REVISION=5
+RSPLIB_REVISION=8
 RSPLIB_AGE=0
-RSPLIB_RELEASE=500
+RSPLIB_RELEASE=800
 
 AC_SUBST(RSPLIB_CURRENT)
 AC_SUBST(RSPLIB_REVISION)

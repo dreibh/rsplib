@@ -59,14 +59,14 @@
 #include "peerlistmanagement-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
-#include "poolpolicy-template.c"
-#include "poolelementnode-template.c"
-#include "poolnode-template.c"
-#include "poolnamespacenode-template.c"
-#include "poolnamespacemanagement-template.c"
-#include "peerlistnode-template.c"
-#include "peerlist-template.c"
-#include "peerlistmanagement-template.c"
+#include "poolpolicy-template_impl.h"
+#include "poolelementnode-template_impl.h"
+#include "poolnode-template_impl.h"
+#include "poolnamespacenode-template_impl.h"
+#include "poolnamespacemanagement-template_impl.h"
+#include "peerlistnode-template_impl.h"
+#include "peerlist-template_impl.h"
+#include "peerlistmanagement-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -95,14 +95,14 @@
 #include "peerlistmanagement-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
-#include "poolpolicy-template.c"
-#include "poolelementnode-template.c"
-#include "poolnode-template.c"
-#include "poolnamespacenode-template.c"
-#include "poolnamespacemanagement-template.c"
-#include "peerlistnode-template.c"
-#include "peerlist-template.c"
-#include "peerlistmanagement-template.c"
+#include "poolpolicy-template_impl.h"
+#include "poolelementnode-template_impl.h"
+#include "poolnode-template_impl.h"
+#include "poolnamespacenode-template_impl.h"
+#include "poolnamespacemanagement-template_impl.h"
+#include "peerlistnode-template_impl.h"
+#include "peerlist-template_impl.h"
+#include "peerlistmanagement-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -132,14 +132,14 @@
 #include "peerlistmanagement-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
-#include "poolpolicy-template.c"
-#include "poolelementnode-template.c"
-#include "poolnode-template.c"
-#include "poolnamespacenode-template.c"
-#include "poolnamespacemanagement-template.c"
-#include "peerlistnode-template.c"
-#include "peerlist-template.c"
-#include "peerlistmanagement-template.c"
+#include "poolpolicy-template_impl.h"
+#include "poolelementnode-template_impl.h"
+#include "poolnode-template_impl.h"
+#include "poolnamespacenode-template_impl.h"
+#include "poolnamespacemanagement-template_impl.h"
+#include "peerlistnode-template_impl.h"
+#include "peerlist-template_impl.h"
+#include "peerlistmanagement-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -169,14 +169,14 @@
 #include "peerlistmanagement-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
-#include "poolpolicy-template.c"
-#include "poolelementnode-template.c"
-#include "poolnode-template.c"
-#include "poolnamespacenode-template.c"
-#include "poolnamespacemanagement-template.c"
-#include "peerlistnode-template.c"
-#include "peerlist-template.c"
-#include "peerlistmanagement-template.c"
+#include "poolpolicy-template_impl.h"
+#include "poolelementnode-template_impl.h"
+#include "poolnode-template_impl.h"
+#include "poolnamespacenode-template_impl.h"
+#include "poolnamespacemanagement-template_impl.h"
+#include "peerlistnode-template_impl.h"
+#include "peerlist-template_impl.h"
+#include "peerlistmanagement-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -206,14 +206,14 @@
 #include "peerlistmanagement-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
-#include "poolpolicy-template.c"
-#include "poolelementnode-template.c"
-#include "poolnode-template.c"
-#include "poolnamespacenode-template.c"
-#include "poolnamespacemanagement-template.c"
-#include "peerlistnode-template.c"
-#include "peerlist-template.c"
-#include "peerlistmanagement-template.c"
+#include "poolpolicy-template_impl.h"
+#include "poolelementnode-template_impl.h"
+#include "poolnode-template_impl.h"
+#include "poolnamespacenode-template_impl.h"
+#include "poolnamespacemanagement-template_impl.h"
+#include "peerlistnode-template_impl.h"
+#include "peerlist-template_impl.h"
+#include "peerlistmanagement-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
