@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: netutilities.h,v 1.2 2004/07/13 14:23:37 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,7 @@
 
 #include "tdtypes.h"
 #include "tagitem.h"
+#include "sockaddrunion.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -61,15 +62,6 @@ extern "C" {
 #ifndef IPV6_LEAVE_GROUP
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
 #endif
-
-
-
-union sockaddr_union {
-   struct sockaddr     sa;
-   struct sockaddr_in  in;
-   struct sockaddr_in6 in6;
-};
-
 
 
 /**

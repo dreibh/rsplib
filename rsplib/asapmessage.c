@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: asapmessage.c,v 1.2 2004/07/13 14:23:37 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -95,28 +95,42 @@ void asapMessageDelete(struct ASAPMessage* message)
 /* ###### Clear ASAPMessage ############################################## */
 void asapMessageClearAll(struct ASAPMessage* message)
 {
-   char*  buffer;
-   size_t originalBufferSize;
-   bool   bufferAutoDelete;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct TransportAddressBlock*     transportAddressBlock;
+   GList*                            list;
+   char*                             buffer;
+   size_t                            originalBufferSize;
+   bool                              bufferAutoDelete;
 
    if(message != NULL) {
-      if((message->PoolPtr) && (message->PoolPtrAutoDelete)) {
-         poolDelete(message->PoolPtr);
-      }
       if((message->PoolElementPtr) && (message->PoolElementPtrAutoDelete)) {
-         poolElementDelete(message->PoolElementPtr);
-      }
-      if((message->PoolHandlePtr) && (message->PoolHandlePtrAutoDelete)) {
-         poolHandleDelete(message->PoolHandlePtr);
-      }
-      if((message->PoolPolicyPtr) && (message->PoolPolicyPtrAutoDelete)) {
-         poolPolicyDelete(message->PoolPolicyPtr);
+         ST_CLASS(poolElementNodeDelete)(message->PoolElementPtr);
+         free(message->PoolElementPtr);
       }
       if((message->CookiePtr) && (message->CookiePtrAutoDelete)) {
          free(message->CookiePtr);
       }
-      if((message->TransportAddressListPtr) && (message->TransportAddressListPtrAutoDelete)) {
-         transportAddressListDelete(message->TransportAddressListPtr);
+      if((message->TransportAddressBlockListPtr) && (message->TransportAddressBlockListPtrAutoDelete)) {
+         list = g_list_first(message->TransportAddressBlockListPtr);
+         while(list != NULL) {
+            transportAddressBlock = (struct TransportAddressBlock*)list->data;
+            message->TransportAddressBlockListPtr = g_list_remove(message->TransportAddressBlockListPtr,
+                                                                  transportAddressBlock);
+            transportAddressBlockDelete(transportAddressBlock);
+            free(transportAddressBlock);
+            list = g_list_first(message->TransportAddressBlockListPtr);
+         }
+      }
+      if((message->PoolElementListPtr) && (message->PoolElementListPtrAutoDelete)) {
+         list = g_list_first(message->PoolElementListPtr);
+         while(list != NULL) {
+            poolElementNode = (struct ST_CLASS(PoolElementNode)*)list->data;
+            message->PoolElementListPtr = g_list_remove(message->PoolElementListPtr,
+                                                        poolElementNode);
+            ST_CLASS(poolElementNodeDelete)(poolElementNode);
+            free(poolElementNode);
+            list = g_list_first(message->PoolElementListPtr);
+         }
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
          free(message->OffendingParameterTLV);

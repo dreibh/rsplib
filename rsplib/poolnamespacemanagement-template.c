@@ -150,7 +150,7 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
    /*
       Attention:
       transportAddressBlock is given as TransportAddressBlock here, since
-      poolNamespaceManagementAddOrUpdatePoolElementNode must be able to check it
+      poolNamespaceNodeAddOrUpdatePoolElementNode must be able to check it
       for compatibility to the pool.
       If the node is inserted as new pool element node, the AddressBlock field
       *must* be updated with a duplicate of transportAddressBlock's data!

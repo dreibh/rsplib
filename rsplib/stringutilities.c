@@ -20,7 +20,8 @@
  *
  */
 
-#include "string.h"
+#include <string.h>
+#include <stdlib.h>
 
 
 /* ###### Length-checking strcpy() ###################################### */
@@ -52,4 +53,95 @@ int safestrcat(char* dest, const char* src, const size_t size)
       safestrcpy(dest,src,size);
    }
    return(0);
+}
+
+
+/* ###### Find first occurrence of character in string ################### */
+char* strindex(char* string, const char character)
+{
+   if(string != NULL) {
+      while(*string != character) {
+         if(*string == 0x00) {
+            return(NULL);
+         }
+         string++;
+      }
+      return(string);
+   }
+   return(NULL);
+}
+
+
+/* ###### Find last occurrence of character in string #################### */
+char* strrindex(char* string, const char character)
+{
+   const char* original = string;
+
+   if(original != NULL) {
+      string = (char*)&string[strlen(string)];
+      while(*string != character) {
+         if(string == original) {
+            return(NULL);
+         }
+         string--;
+      }
+      return(string);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get next word of text string ################################### */
+int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t* position)
+{
+   size_t      i;
+   char*       c;
+   int        result;
+   const char* end;
+
+   end = strindex((char*)&input[*position],' ');
+   if(end != NULL) {
+      i = 0;
+      for(c = (char*)&input[*position];c < end;c++) {
+         if(i < bufferSize) {
+            buffer[i++] = *c;
+         }
+         else {
+            return(0);
+            break;
+         }
+      }
+      if(i < bufferSize) {
+         buffer[i++] = 0x00;
+      }
+      else {
+         return(0);
+      }
+      *position = (size_t)((long)end - (long)input);
+      while(input[*position] == ' ') {
+         (*position)++;
+      }
+      return(1);
+   }
+   else {
+      i = strlen((char*)&input[*position]);
+      if(i > 0) {
+         result = safestrcpy(buffer,(char*)&input[*position],bufferSize);
+         *position += i;
+         return(result);
+      }
+      safestrcpy(buffer,"",bufferSize);
+   }
+   return(0);
+}
+
+
+/* ###### Memory duplicator ############################################## */
+void* memdup(const void* source, const size_t size)
+{
+   void* dest = malloc(size);
+   if(dest != NULL) {
+      memcpy(dest,source,size);
+   }
+   return(dest);
 }

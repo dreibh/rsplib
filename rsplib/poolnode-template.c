@@ -190,6 +190,11 @@ unsigned int ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(
       return(PENC_WRONG_PROTOCOL);
    }
 
+   if((poolElementNode->AddressBlock->Addresses < 1) ||
+      (poolElementNode->AddressBlock->Addresses > MAX_PE_TRANSPORTADDRESSES)) {
+      return(PENC_INVALID_ADDRESSES);
+   }
+
    if(poolNode->Flags & PNF_CONTROLCHANNEL) {
       if(!poolElementNode->AddressBlock->Flags & TABF_CONTROLCHANNEL) {
          return(PENC_WRONG_CONTROLCHANNEL_HANDLING);

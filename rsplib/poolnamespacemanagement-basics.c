@@ -38,7 +38,8 @@ static const char* errorDescriptionArray[] =
    "incompatible control channel handling",
    "incompatible pool policy",
    "invalid pool policy",
-   "invalid pool handle (too long)"
+   "invalid pool handle (too long)",
+   "invalid transport address(es)"
 };
 
 

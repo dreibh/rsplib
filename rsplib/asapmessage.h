@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: asapmessage.h,v 1.2 2004/07/13 14:23:37 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,9 +41,9 @@
 
 
 #include "tdtypes.h"
-#include "pool.h"
-#include "poolelement.h"
+#include "poolnamespacemanagement.h"
 #include <ext_socket.h>
+#include <glib.h>
 
 
 #ifdef __cplusplus
@@ -215,51 +215,46 @@ struct asap_errorcause
 
 struct ASAPMessage
 {
-   uint8_t               Type;
-   uint16_t              Error;
+   uint8_t                             Type;
+   uint16_t                            Error;
 
-   char*                 OperationErrorData;
-   size_t                OperationErrorLength;
+   char*                               OperationErrorData;
+   size_t                              OperationErrorLength;
 
-   char*                 OffendingParameterTLV;
-   size_t                OffendingParameterTLVLength;
-   bool                  OffendingParameterTLVAutoDelete;
-   char*                 OffendingMessageTLV;
-   size_t                OffendingMessageTLVLength;
-   bool                  OffendingMessageTLVAutoDelete;
+   char*                               OffendingParameterTLV;
+   size_t                              OffendingParameterTLVLength;
+   bool                                OffendingParameterTLVAutoDelete;
+   char*                               OffendingMessageTLV;
+   size_t                              OffendingMessageTLVLength;
+   bool                                OffendingMessageTLVAutoDelete;
 
-   char*                 Buffer;
-   bool                  BufferAutoDelete;
-   size_t                BufferSize;
-   size_t                OriginalBufferSize;
-   size_t                Position;
+   char*                               Buffer;
+   bool                                BufferAutoDelete;
+   size_t                              BufferSize;
+   size_t                              OriginalBufferSize;
+   size_t                              Position;
 
-   PoolElementIdentifierType Identifier;
+   PoolElementIdentifierType           Identifier;
+   struct PoolPolicySettings           PolicySettings;
+   unsigned char                       PoolHandle[MAX_POOLHANDLESIZE];
+   size_t                              PoolHandleSize;
 
-   struct ST_CLASS(PoolPolicy)* PoolPolicyPtr;
-   bool                         PoolPolicyPtrAutoDelete;
+   struct ST_CLASS(PoolElementNode)*   PoolElementPtr;
+   bool                                PoolElementPtrAutoDelete;
 
-   unsigned char*    PoolHandlePtr;
-   bool                  PoolHandlePtrAutoDelete;
+   void*                               CookiePtr;
+   bool                                CookiePtrAutoDelete;
+   size_t                              CookieSize;
 
-   struct ST_CLASS(Pool*          PoolPtr;
-   bool                  PoolPtrAutoDelete;
+   GList*                              TransportAddressBlockListPtr;
+   bool                                TransportAddressBlockListPtrAutoDelete;
 
-   struct PoolElement*   PoolElementPtr;
-   bool                  PoolElementPtrAutoDelete;
+   GList*                              PoolElementListPtr;
+   bool                                PoolElementListPtrAutoDelete;
 
-   void*                 CookiePtr;
-   bool                  CookiePtrAutoDelete;
-   size_t                CookieSize;
-
-   GList*                TransportAddressListPtr;
-   bool                  TransportAddressListPtrAutoDelete;
-
-   sctp_assoc_t          AssocID;
-   unsigned short        StreamID;
-   uint32_t              PPID;
-
-   GList*                ResumeList;
+   sctp_assoc_t                        AssocID;
+   unsigned short                      StreamID;
+   uint32_t                            PPID;
 };
 
 

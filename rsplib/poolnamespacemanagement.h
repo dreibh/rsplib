@@ -227,6 +227,43 @@
 #define TMPL_METHOD(x, c) c##x
 
 
+#ifdef USE_TREAP
+#define STN_CLASSNAME LeafLinkedTreapNode
+#define STN_METHOD(x) leafLinkedTreapNode##x
+#define ST_CLASSNAME LeafLinkedTreap
+#define ST_CLASS(x) x##_LeafLinkedTreap
+#define ST_METHOD(x) leafLinkedTreap##x
+#endif
+#ifdef USE_LEAFLINKEDREDBLACKTREE
+#define STN_CLASSNAME LeafLinkedRedBlackTreeNode
+#define STN_METHOD(x) leafLinkedRedBlackTreeNode##x
+#define ST_CLASSNAME LeafLinkedRedBlackTree
+#define ST_CLASS(x) x##_LeafLinkedRedBlackTree
+#define ST_METHOD(x) leafLinkedRedBlackTree##x
+#endif
+#ifdef USE_LEAFLINKEDBINARYTREE
+#define STN_CLASSNAME LeafLinkedBinaryTreeNode
+#define STN_METHOD(x) leafLinkedBinaryTreeNode##x
+#define ST_CLASSNAME LeafLinkedBinaryTree
+#define ST_CLASS(x) x##_LeafLinkedBinaryTree
+#define ST_METHOD(x) leafLinkedBinaryTree##x
+#endif
+#ifdef USE_BINARYTREE
+#define STN_CLASSNAME BinaryTreeNode
+#define STN_METHOD(x) binaryTreeNode##x
+#define ST_CLASSNAME BinaryTree
+#define ST_CLASS(x) x##_BinaryTree
+#define ST_METHOD(x) binaryTree##x
+#endif
+#ifdef USE_LIST
+#define STN_CLASSNAME LinearListNode
+#define STN_METHOD(x) linearListNode##x
+#define ST_CLASSNAME LinearList
+#define ST_CLASS(x) x##_LinearList
+#define ST_METHOD(x) linearList##x
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

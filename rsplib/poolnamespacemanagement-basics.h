@@ -36,7 +36,8 @@ extern "C" {
 #endif
 
 
-#define MAX_POOLHANDLESIZE 32
+#define MAX_POOLHANDLESIZE         32
+#define MAX_PE_TRANSPORTADDRESSES 128
 
 typedef uint32_t ENRPIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
@@ -53,8 +54,9 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PENC_INCOMPATIBLE_POOL_POLICY       7
 #define PENC_INVALID_POOL_POLICY            8
 #define PENC_INVALID_POOL_HANDLE            9
+#define PENC_INVALID_ADDRESSES             10
 
-#define _PENC_LAST_CODE                    10
+#define _PENC_LAST_CODE                    11
 
 
 #define PENPO_POLICYINFO      (1 << 0)   /* constants set by PE      */

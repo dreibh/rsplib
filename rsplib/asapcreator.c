@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: asapcreator.c,v 1.2 2004/07/13 14:23:37 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -73,8 +73,8 @@ static bool finishMessage(struct ASAPMessage* message)
    if(message->BufferSize >= sizeof(struct asap_header)) {
       header->ah_length = htons((uint16_t)message->Position);
 
-      pad = (char*)getSpace(message,padding);
-      memset(pad,0,padding);
+      pad = (char*)getSpace(message, padding);
+      memset(pad, 0, padding);
       return(true);
    }
    return(false);
@@ -89,7 +89,7 @@ static bool beginTLV(struct ASAPMessage* message,
    struct asap_tlv_header* header;
 
    *tlvPosition = message->Position;
-   header = (struct asap_tlv_header*)getSpace(message,sizeof(struct asap_tlv_header));
+   header = (struct asap_tlv_header*)getSpace(message, sizeof(struct asap_tlv_header));
    if(header == NULL) {
       return(false);
    }
@@ -112,8 +112,8 @@ static bool finishTLV(struct ASAPMessage* message,
    if(message->BufferSize >= sizeof(struct asap_tlv_header)) {
       header->atlv_length = htons(length);
 
-      pad = (char*)getSpace(message,padding);
-      memset(pad,0,padding);
+      pad = (char*)getSpace(message, padding);
+      memset(pad, 0, padding);
       return(true);
    }
    return(false);
@@ -121,8 +121,9 @@ static bool finishTLV(struct ASAPMessage* message,
 
 
 /* ###### Create pool handle parameter ################################### */
-static bool createPoolHandleParameter(struct ASAPMessage*      message,
-                                      const struct PoolHandle* poolHandle)
+static bool createPoolHandleParameter(struct ASAPMessage*  message,
+                                      const unsigned char* poolHandle,
+                                      const size_t         poolHandleSize)
 {
    char*    handle;
    size_t tlvPosition = 0;
@@ -134,23 +135,23 @@ static bool createPoolHandleParameter(struct ASAPMessage*      message,
       return(false);
    }
 
-   if(beginTLV(message,&tlvPosition,ATT_POOL_HANDLE) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_POOL_HANDLE) == false) {
       return(false);
    }
 
-   handle = (char*)getSpace(message,poolHandle->Length);
+   handle = (char*)getSpace(message, poolHandleSize);
    if(handle == NULL) {
       return(false);
    }
-   memcpy(handle,(char*)&poolHandle->Handle,poolHandle->Length);
+   memcpy(handle, poolHandle, poolHandleSize);
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
 /* ###### Create address parameter ####################################### */
-static bool createAddressParameter(struct ASAPMessage* message,
-                                   struct sockaddr*    address)
+static bool createAddressParameter(struct ASAPMessage*    message,
+                                   const struct sockaddr* address)
 {
    size_t               tlvPosition = 0;
    char*                output;
@@ -161,27 +162,27 @@ static bool createAddressParameter(struct ASAPMessage* message,
 
    switch(address->sa_family) {
       case AF_INET:
-         if(beginTLV(message,&tlvPosition,ATT_IPv4_ADDRESS) == false) {
+         if(beginTLV(message, &tlvPosition, ATT_IPv4_ADDRESS) == false) {
             return(false);
          }
          in = (struct sockaddr_in*)address;
-         output = (char*)getSpace(message,4);
+         output = (char*)getSpace(message, 4);
          if(output == NULL) {
             return(false);
          }
-         memcpy(output,&in->sin_addr,4);
+         memcpy(output, &in->sin_addr, 4);
        break;
 #ifdef HAVE_IPV6
       case AF_INET6:
-         if(beginTLV(message,&tlvPosition,ATT_IPv6_ADDRESS) == false) {
+         if(beginTLV(message, &tlvPosition, ATT_IPv6_ADDRESS) == false) {
             return(false);
          }
          in6 = (struct sockaddr_in6*)address;
-         output = (char*)getSpace(message,16);
+         output = (char*)getSpace(message, 16);
          if(output == NULL) {
             return(false);
          }
-         memcpy(output,&in6->sin6_addr,16);
+         memcpy(output, &in6->sin6_addr, 16);
        break;
 #endif
       default:
@@ -192,30 +193,30 @@ static bool createAddressParameter(struct ASAPMessage* message,
        break;
    }
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
 /* ###### Create transport parameter ###################################### */
-static bool createTransportParameter(struct ASAPMessage*      message,
-                                     struct TransportAddress* transportAddress,
-                                     const uint16_t           transportUse)
+static bool createTransportParameter(struct ASAPMessage*                 message,
+                                     const struct TransportAddressBlock* transportAddressBlock)
 {
    size_t                              tlvPosition = 0;
    struct asap_udptransportparameter*  utp;
    struct asap_tcptransportparameter*  ttp;
    struct asap_sctptransportparameter* stp;
    uint16_t                            type;
+   uint16_t                            transportUse;
    size_t                              i;
 
-   if(transportAddress == NULL) {
+   if(transportAddressBlock == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
       LOG_END
       return(false);
    }
 
-   switch(transportAddress->Protocol) {
+   switch(transportAddressBlock->Protocol) {
       case IPPROTO_SCTP:
          type = ATT_SCTP_TRANSPORT;
        break;
@@ -227,47 +228,54 @@ static bool createTransportParameter(struct ASAPMessage*      message,
        break;
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unknown protocol #%d\n",transportAddress->Protocol);
+         fprintf(stdlog,"Unknown protocol #%d\n",transportAddressBlock->Protocol);
          LOG_END
          return(false);
        break;
    }
 
-   if(beginTLV(message,&tlvPosition,type) == false) {
+   if(transportAddressBlock->Flags & TABF_CONTROLCHANNEL) {
+      transportUse = UTP_DATA_PLUS_CONTROL;
+   }
+   else {
+      transportUse = UTP_DATA_ONLY;
+   }
+
+   if(beginTLV(message, &tlvPosition, type) == false) {
       return(false);
    }
 
    switch(type) {
       case ATT_SCTP_TRANSPORT:
-         stp = (struct asap_sctptransportparameter*)getSpace(message,sizeof(struct asap_sctptransportparameter));
+         stp = (struct asap_sctptransportparameter*)getSpace(message, sizeof(struct asap_sctptransportparameter));
          if(stp == NULL) {
             return(false);
          }
-         stp->stp_port          = htons(transportAddress->Port);
+         stp->stp_port          = htons(transportAddressBlock->Port);
          stp->stp_transport_use = htons(transportUse);
        break;
 
       case ATT_TCP_TRANSPORT:
-         ttp = (struct asap_tcptransportparameter*)getSpace(message,sizeof(struct asap_tcptransportparameter));
+         ttp = (struct asap_tcptransportparameter*)getSpace(message, sizeof(struct asap_tcptransportparameter));
          if(ttp == NULL) {
             return(false);
          }
-         ttp->ttp_port          = htons(transportAddress->Port);
+         ttp->ttp_port          = htons(transportAddressBlock->Port);
          ttp->ttp_transport_use = htons(transportUse);
        break;
 
       case ATT_UDP_TRANSPORT:
-         utp = (struct asap_udptransportparameter*)getSpace(message,sizeof(struct asap_udptransportparameter));
+         utp = (struct asap_udptransportparameter*)getSpace(message, sizeof(struct asap_udptransportparameter));
          if(utp == NULL) {
             return(false);
          }
-         utp->utp_port     = htons(transportAddress->Port);
+         utp->utp_port     = htons(transportAddressBlock->Port);
          utp->utp_reserved = 0;
        break;
    }
 
-   for(i = 0;i < transportAddress->Addresses;i++) {
-      if(createAddressParameter(message,(struct sockaddr*)&transportAddress->AddressArray[i]) == false) {
+   for(i = 0;i < transportAddressBlock->Addresses;i++) {
+      if(createAddressParameter(message, (struct sockaddr*)&transportAddressBlock->AddressArray[i]) == false) {
          return(false);
       }
       if((i > 0) && (type != ATT_SCTP_TRANSPORT)) {
@@ -279,13 +287,13 @@ static bool createTransportParameter(struct ASAPMessage*      message,
    }
 
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
 /* ###### Create policy parameter ######################################## */
-static bool createPolicyParameter(struct ASAPMessage* message,
-                                  struct PoolPolicy*  policyInfo)
+static bool createPolicyParameter(struct ASAPMessage*              message,
+                                  const struct PoolPolicySettings* poolPolicySettings)
 {
    size_t                                    tlvPosition = 0;
    struct asap_policy_roundrobin*            rr;
@@ -299,65 +307,65 @@ static bool createPolicyParameter(struct ASAPMessage* message,
       return(false);
    }
 
-   if(policyInfo == NULL) {
+   if(poolPolicySettings == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
       LOG_END
       return(false);
    }
 
-   switch(policyInfo->Type) {
+   switch(poolPolicySettings->PolicyType) {
       case PPT_RANDOM:
-          rd = (struct asap_policy_random*)getSpace(message,sizeof(struct asap_policy_random));
+          rd = (struct asap_policy_random*)getSpace(message, sizeof(struct asap_policy_random));
           if(rd == NULL) {
              return(false);
           }
-          rd->pp_rd_policy = policyInfo->Type;
+          rd->pp_rd_policy = poolPolicySettings->PolicyType;
           rd->pp_rd_pad    = 0;
        break;
       case PPT_WEIGHTED_RANDOM:
-          wrd = (struct asap_policy_weighted_random*)getSpace(message,sizeof(struct asap_policy_weighted_random));
+          wrd = (struct asap_policy_weighted_random*)getSpace(message, sizeof(struct asap_policy_weighted_random));
           if(wrd == NULL) {
              return(false);
           }
-          wrd->pp_wrd_policy = policyInfo->Type;
-          wrd->pp_wrd_weight = hton24(policyInfo->Weight);
+          wrd->pp_wrd_policy = poolPolicySettings->PolicyType;
+          wrd->pp_wrd_weight = hton24(poolPolicySettings->Weight);
        break;
       case PPT_ROUNDROBIN:
-          rr = (struct asap_policy_roundrobin*)getSpace(message,sizeof(struct asap_policy_roundrobin));
+          rr = (struct asap_policy_roundrobin*)getSpace(message, sizeof(struct asap_policy_roundrobin));
           if(rr == NULL) {
              return(false);
           }
-          rr->pp_rr_policy = policyInfo->Type;
+          rr->pp_rr_policy = poolPolicySettings->PolicyType;
           rr->pp_rr_pad    = 0;
        break;
       case PPT_WEIGHTED_ROUNDROBIN:
-          wrr = (struct asap_policy_weighted_roundrobin*)getSpace(message,sizeof(struct asap_policy_weighted_roundrobin));
+          wrr = (struct asap_policy_weighted_roundrobin*)getSpace(message, sizeof(struct asap_policy_weighted_roundrobin));
           if(wrr == NULL) {
              return(false);
           }
-          wrr->pp_wrr_policy = policyInfo->Type;
-          wrr->pp_wrr_weight = hton24(policyInfo->Weight);
+          wrr->pp_wrr_policy = poolPolicySettings->PolicyType;
+          wrr->pp_wrr_weight = hton24(poolPolicySettings->Weight);
        break;
       case PPT_LEASTUSED:
-          lu = (struct asap_policy_leastused*)getSpace(message,sizeof(struct asap_policy_leastused));
+          lu = (struct asap_policy_leastused*)getSpace(message, sizeof(struct asap_policy_leastused));
           if(lu == NULL) {
              return(false);
           }
-          lu->pp_lu_policy = policyInfo->Type;
-          lu->pp_lu_load   = hton24(policyInfo->Load);
+          lu->pp_lu_policy = poolPolicySettings->PolicyType;
+          lu->pp_lu_load   = hton24(poolPolicySettings->Load);
        break;
       case PPT_LEASTUSED_DEGRADATION:
-          lud = (struct asap_policy_leastused_degradation*)getSpace(message,sizeof(struct asap_policy_leastused_degradation));
+          lud = (struct asap_policy_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_leastused_degradation));
           if(lud == NULL) {
              return(false);
           }
-          lud->pp_lud_policy = policyInfo->Type;
-          lud->pp_lud_load   = hton24(policyInfo->Load);
+          lud->pp_lud_policy = poolPolicySettings->PolicyType;
+          lud->pp_lud_load   = hton24(poolPolicySettings->Load);
        break;
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unknown policy #$%02x\n",policyInfo->Type);
+         fprintf(stdlog,"Unknown policy #$%02x\n",poolPolicySettings->PolicyType);
          LOG_END
          return(false);
        break;
@@ -368,13 +376,11 @@ static bool createPolicyParameter(struct ASAPMessage* message,
 
 
 /* ###### Create pool element parameter ################################## */
-static bool createPoolElementParameter(struct ASAPMessage* message,
-                                       struct PoolElement* poolElement)
+static bool createPoolElementParameter(struct ASAPMessage*                     message,
+                                       const struct ST_CLASS(PoolElementNode)* poolElement)
 {
    size_t                            tlvPosition = 0;
-   struct TransportAddress*          transportAddress;
    struct asap_poolelementparameter* pep;
-   GList*                            list;
 
    if(poolElement == NULL) {
       LOG_ERROR
@@ -383,55 +389,49 @@ static bool createPoolElementParameter(struct ASAPMessage* message,
       return(false);
    }
 
-   if(beginTLV(message,&tlvPosition,ATT_POOL_ELEMENT) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_POOL_ELEMENT) == false) {
       return(false);
    }
 
-   pep = (struct asap_poolelementparameter*)getSpace(message,sizeof(struct asap_poolelementparameter));
+   pep = (struct asap_poolelementparameter*)getSpace(message, sizeof(struct asap_poolelementparameter));
    if(pep == NULL) {
       return(false);
    }
 
    pep->pep_identifier   = htonl(poolElement->Identifier);
-   pep->pep_homeserverid = htonl(poolElement->HomeENRPServerID);
+   pep->pep_homeserverid = htonl(poolElement->HomeNSIdentifier);
    pep->pep_reg_life     = htonl(poolElement->RegistrationLife);
 
-   list = g_list_first(poolElement->TransportAddressList);
-   while(list != NULL) {
-      transportAddress = (struct TransportAddress*)list->data;
-      if(createTransportParameter(message, transportAddress,
-                                  (poolElement->HasControlChannel) ? UTP_DATA_PLUS_CONTROL : UTP_DATA_ONLY) == false) {
-         return(false);
-      }
-      list = g_list_next(list);
-   }
-
-   if(createPolicyParameter(message,poolElement->Policy) == false) {
+   if(createTransportParameter(message, poolElement->AddressBlock)) {
       return(false);
    }
 
-   return(finishTLV(message,tlvPosition));
+   if(createPolicyParameter(message, &poolElement->PolicySettings) == false) {
+      return(false);
+   }
+
+   return(finishTLV(message, tlvPosition));
 }
 
 
 /* ###### Create pool element identifier parameter ####################### */
-static bool createPoolElementIdentifierParameter(struct ASAPMessage*         message,
-                                                 const PoolElementIdentifier poolElementIdentifier)
+static bool createPoolElementIdentifierParameter(struct ASAPMessage*             message,
+                                                 const PoolElementIdentifierType poolElementIdentifier)
 {
    uint32_t* identifier;
    size_t    tlvPosition;
 
-   if(beginTLV(message,&tlvPosition,ATT_POOL_ELEMENT_IDENTIFIER) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_IDENTIFIER) == false) {
       return(false);
    }
 
-   identifier = (uint32_t*)getSpace(message,sizeof(uint32_t));
+   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
    if(identifier == NULL) {
       return(false);
    }
    *identifier = htonl(poolElementIdentifier);
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
@@ -510,18 +510,11 @@ static bool createCookieParameter(struct ASAPMessage* message,
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct ASAPMessage* message)
 {
-   if(message->PoolHandlePtr == NULL) {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
-      return(false);
-   }
-
    if(beginMessage(message,AHT_ENDPOINT_KEEP_ALIVE,0x00) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message,message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
@@ -532,22 +525,15 @@ static bool createEndpointKeepAliveMessage(struct ASAPMessage* message)
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointUnreachableMessage(struct ASAPMessage* message)
 {
-   if(message->PoolHandlePtr == NULL) {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
-      return(false);
-   }
-
    if(beginMessage(message,AHT_ENDPOINT_UNREACHABLE,0x00) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
-   if(createPoolElementIdentifierParameter(message,message->Identifier) == false) {
+   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
 
@@ -558,18 +544,11 @@ static bool createEndpointUnreachableMessage(struct ASAPMessage* message)
 /* ###### Create endpoint keepalive acknowledgement message ############## */
 static bool createEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 {
-   if(message->PoolHandlePtr == NULL) {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
-      return(false);
-   }
-
    if(beginMessage(message,AHT_ENDPOINT_KEEP_ALIVE_ACK,0x00) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
@@ -584,22 +563,15 @@ static bool createEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 /* ###### Create registration message #################################### */
 static bool createRegistrationMessage(struct ASAPMessage* message)
 {
-   if((message->PoolHandlePtr == NULL) || (message->PoolElementPtr == NULL))  {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
-      return(false);
-   }
-
    if(beginMessage(message,AHT_REGISTRATION,0x00) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
-   if(createPoolElementParameter(message,message->PoolElementPtr) == false) {
+   if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
       return(false);
    }
 
@@ -610,7 +582,7 @@ static bool createRegistrationMessage(struct ASAPMessage* message)
 /* ###### Create registration response message ########################### */
 static bool createRegistrationResponseMessage(struct ASAPMessage* message)
 {
-   if((message->PoolHandlePtr == NULL) || (message->PoolElementPtr == NULL))  {
+   if(message->PoolElementPtr == NULL)  {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
       LOG_END
@@ -622,11 +594,11 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
-   if(createPoolElementIdentifierParameter(message,message->Identifier) == false) {
+   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
 
@@ -643,18 +615,11 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Create deregistration message ################################## */
 static bool createDeregistrationMessage(struct ASAPMessage* message)
 {
-   if(message->PoolHandlePtr == NULL)  {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
+   if(beginMessage(message, AHT_DEREGISTRATION, 0x00) == false) {
       return(false);
    }
 
-   if(beginMessage(message,AHT_DEREGISTRATION,0x00) == false) {
-      return(false);
-   }
-
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
@@ -669,23 +634,23 @@ static bool createDeregistrationMessage(struct ASAPMessage* message)
 /* ###### Create deregistration response message ######################### */
 static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
 {
-   if((message->PoolHandlePtr == NULL) || (message->PoolElementPtr == NULL))  {
+   if(message->PoolElementPtr == NULL)  {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
       LOG_END
       return(false);
    }
 
-   if(beginMessage(message,AHT_DEREGISTRATION_RESPONSE,
+   if(beginMessage(message, AHT_DEREGISTRATION_RESPONSE,
                    (message->Error != 0) ? AHF_DEREGISTRATION_REJECT : 0) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
-   if(createPoolElementIdentifierParameter(message,message->Identifier) == false) {
+   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
 
@@ -702,11 +667,11 @@ static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Create name resolution message ################################# */
 static bool createNameResolutionMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_NAME_RESOLUTION,0x00) == false) {
+   if(beginMessage(message, AHT_NAME_RESOLUTION, 0x00) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandlePtr) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
@@ -717,61 +682,29 @@ static bool createNameResolutionMessage(struct ASAPMessage* message)
 /* ###### Create name resolution response message ######################## */
 static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
 {
-   struct PoolElement* poolElement;
-   GList*              list;
-   size_t              oldPosition;
-   size_t              elementCount;
+   struct ST_CLASS(PoolElementNode)* poolElement;
+   GList*                            list;
 
-   if(beginMessage(message,AHT_NAME_RESOLUTION_RESPONSE,0x00) == false) {
+   CHECK(message->PoolElementListPtr != NULL);
+   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, 0x00) == false) {
       return(false);
    }
 
-   if(message->PoolPtr) {
-      if(createPoolHandleParameter(message,message->PoolPtr->Handle) == false) {
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+      return(false);
+   }
+
+   if(createPolicyParameter(message, &message->PolicySettings) == false) {
+      return(false);
+   }
+
+   list = g_list_first(message->PoolElementListPtr);
+   while(list != NULL) {
+      poolElement = (struct ST_CLASS(PoolElementNode)*)list->data;
+      if(createPoolElementParameter(message,poolElement) == false) {
          return(false);
       }
-
-      if(message->PoolPtr->Policy != NULL) {
-         if(createPolicyParameter(message,message->PoolPtr->Policy) == false) {
-            return(false);
-         }
-      }
-
-      elementCount = 0;
-      if(message->ResumeList) {
-         list = message->ResumeList;
-         LOG_VERBOSE3
-         fputs("Resuming Pool Parameter\n", stdlog);
-         LOG_END
-      }
-      else {
-         list = g_list_first(message->PoolPtr->PoolElementList);
-      }
-      message->ResumeList = NULL;
-
-      while(list != NULL) {
-         poolElement = (struct PoolElement*)list->data;
-
-         oldPosition = message->Position;
-         if(createPoolElementParameter(message,poolElement) == false) {
-            if(elementCount > 0) {
-               LOG_VERBOSE3
-               fputs("Splitting Pool Parameter\n", stdlog);
-               LOG_END
-               message->Position   = oldPosition;
-               message->ResumeList = list;
-               break;
-            }
-            else {
-               LOG_ERROR
-               fputs("Pool Parameter creation failed - Splitting problem?\n", stdlog);
-               LOG_END
-            }
-            return(false);
-         }
-         elementCount++;
-         list = g_list_next(list);
-      }
+      list = g_list_next(list);
    }
 
    if(message->Error != 0x00) {
@@ -787,31 +720,26 @@ static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
 /* ###### Create business card message #################################### */
 static bool createBusinessCardMessage(struct ASAPMessage* message)
 {
-   struct PoolElement* poolElement;
-   GList*              list;
+   struct ST_CLASS(PoolElementNode)* poolElement;
+   GList*                            list;
 
-   if(message->PoolPtr == NULL) {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END
+   CHECK(message->PoolElementListPtr != NULL);
+   if(beginMessage(message, AHT_BUSINESS_CARD, 0x00) == false) {
       return(false);
    }
 
-   if(beginMessage(message,AHT_BUSINESS_CARD,0x00) == false) {
+
+   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolPtr->Handle) == false) {
+   if(createPolicyParameter(message, &message->PolicySettings) == false) {
       return(false);
    }
 
-   if(createPolicyParameter(message,message->PoolPtr->Policy) == false) {
-      return(false);
-   }
-
-   list = g_list_first(message->PoolPtr->PoolElementList);
+   list = g_list_first(message->PoolElementListPtr);
    while(list != NULL) {
-      poolElement = (struct PoolElement*)list->data;
+      poolElement = (struct ST_CLASS(PoolElementNode)*)list->data;
       if(createPoolElementParameter(message,poolElement) == false) {
          return(false);
       }
@@ -825,24 +753,24 @@ static bool createBusinessCardMessage(struct ASAPMessage* message)
 /* ###### Create server announce message ################################## */
 static bool createServerAnnounceMessage(struct ASAPMessage* message)
 {
-   struct TransportAddress* transportAddress;
-   GList*                   list;
+   struct TransportAddressBlock* transportAddressBlock;
+   GList*                        list;
 
-   if(message->TransportAddressListPtr == NULL) {
+   if(message->TransportAddressBlockListPtr == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
       LOG_END
       return(false);
    }
 
-   if(beginMessage(message,AHT_SERVER_ANNOUNCE,0x00) == false) {
+   if(beginMessage(message, AHT_SERVER_ANNOUNCE, 0x00) == false) {
       return(false);
    }
 
-   list = g_list_first(message->TransportAddressListPtr);
+   list = g_list_first(message->TransportAddressBlockListPtr);
    while(list != NULL) {
-      transportAddress = (struct TransportAddress*)list->data;
-      if(createTransportParameter(message, transportAddress, false) == false) {
+      transportAddressBlock = (struct TransportAddressBlock*)list->data;
+      if(createTransportParameter(message, transportAddressBlock) == false) {
          return(false);
       }
       list = g_list_next(list);
@@ -855,7 +783,7 @@ static bool createServerAnnounceMessage(struct ASAPMessage* message)
 /* ###### Create cookie message ########################################### */
 static bool createCookieMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_COOKIE,0x00) == false) {
+   if(beginMessage(message, AHT_COOKIE, 0x00) == false) {
       return(false);
    }
 
@@ -870,7 +798,7 @@ static bool createCookieMessage(struct ASAPMessage* message)
 /* ###### Create cookie echo message ###################################### */
 static bool createCookieEchoMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_COOKIE_ECHO,0x00) == false) {
+   if(beginMessage(message, AHT_COOKIE_ECHO, 0x00) == false) {
       return(false);
    }
 
