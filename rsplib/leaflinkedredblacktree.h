@@ -50,7 +50,7 @@ struct LeafLinkedRedBlackTreeNode
    struct LeafLinkedRedBlackTreeNode*       RightSubtree;
    enum LeafLinkedRedBlackTreeNodeColorType Color;
    LeafLinkedRedBlackTreeNodeValueType      Value;
-   LeafLinkedRedBlackTreeNodeValueType      ValueSum;  // ValueSum := LeftSubtree->Value + Value + RightSubtree->Value
+   LeafLinkedRedBlackTreeNodeValueType      ValueSum;  /* ValueSum := LeftSubtree->Value + Value + RightSubtree->Value */
 };
 
 struct LeafLinkedRedBlackTree

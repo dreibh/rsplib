@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.42 2004/11/10 21:31:26 dreibh Exp $
+ *  $Id: nameserver.c,v 1.43 2004/11/10 22:07:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,15 +59,15 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-// #define FAST_BREAK
+/* #define FAST_BREAK */
 
 
 #define MAX_NS_TRANSPORTADDRESSES                                           16
 #define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       2111111
-#define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000   // ???????
+#define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
 #define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
-#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000   // ???????
+#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000
 #define NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE                        2444444
 #define NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
 #define NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   2000000
@@ -100,7 +100,7 @@ struct TakeoverProcess
 
 
 /* ###### Get takeover process from index storage node ################### */
-inline struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN_CLASSNAME* node)
+struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN_CLASSNAME* node)
 {
    const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
    long n = (long)node - ((long)&dummy->IndexStorageNode - (long)dummy);
@@ -109,7 +109,7 @@ inline struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN
 
 
 /* ###### Get takeover process from timer storage node ################### */
-inline struct TakeoverProcess* getTakeoverProcessFromTimerStorageNode(struct STN_CLASSNAME* node)
+struct TakeoverProcess* getTakeoverProcessFromTimerStorageNode(struct STN_CLASSNAME* node)
 {
    const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
    long n = (long)node - ((long)&dummy->TimerStorageNode - (long)dummy);
@@ -213,7 +213,7 @@ void takeoverProcessListPrint(struct TakeoverProcessList* takeoverProcessList,
 
 
 /* ###### Get next takeover process's expiry time stamp ################## */
-inline unsigned long long takeoverProcessListGetNextTimerTimeStamp(
+unsigned long long takeoverProcessListGetNextTimerTimeStamp(
                              struct TakeoverProcessList* takeoverProcessList)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessTimerStorage);
@@ -225,7 +225,7 @@ inline unsigned long long takeoverProcessListGetNextTimerTimeStamp(
 
 
 /* ###### Get earliest takeover process from list ######################## */
-inline struct TakeoverProcess* takeoverProcessListGetEarliestTakeoverProcess(
+struct TakeoverProcess* takeoverProcessListGetEarliestTakeoverProcess(
                                   struct TakeoverProcessList* takeoverProcessList)
 {
    struct STN_CLASSNAME* node =
@@ -238,7 +238,7 @@ inline struct TakeoverProcess* takeoverProcessListGetEarliestTakeoverProcess(
 
 
 /* ###### Get first takeover process from list ########################### */
-inline struct TakeoverProcess* takeoverProcessListGetFirstTakeoverProcess(
+struct TakeoverProcess* takeoverProcessListGetFirstTakeoverProcess(
                                   struct TakeoverProcessList* takeoverProcessList)
 {
    struct STN_CLASSNAME* node =
@@ -251,7 +251,7 @@ inline struct TakeoverProcess* takeoverProcessListGetFirstTakeoverProcess(
 
 
 /* ###### Get last takeover process from list ############################ */
-inline struct TakeoverProcess* takeoverProcessListGetLastTakeoverProcess(
+struct TakeoverProcess* takeoverProcessListGetLastTakeoverProcess(
                                   struct TakeoverProcessList* takeoverProcessList)
 {
    struct STN_CLASSNAME* node =
@@ -264,7 +264,7 @@ inline struct TakeoverProcess* takeoverProcessListGetLastTakeoverProcess(
 
 
 /* ###### Get next takeover process from list ############################ */
-inline struct TakeoverProcess* takeoverProcessListGetNextTakeoverProcess(
+struct TakeoverProcess* takeoverProcessListGetNextTakeoverProcess(
                                   struct TakeoverProcessList* takeoverProcessList,
                                   struct TakeoverProcess*     takeoverProcess)
 {
@@ -279,7 +279,7 @@ inline struct TakeoverProcess* takeoverProcessListGetNextTakeoverProcess(
 
 
 /* ###### Get previous takeover process from list ######################## */
-inline struct TakeoverProcess* takeoverProcessListGetPrevTakeoverProcess(
+struct TakeoverProcess* takeoverProcessListGetPrevTakeoverProcess(
                                   struct TakeoverProcessList* takeoverProcessList,
                                   struct TakeoverProcess*     takeoverProcess)
 {
@@ -520,7 +520,7 @@ static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElemen
 static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
                                  void*                          userData)
 {
-   // struct NameServer* nameServer = (struct NameServer*)userData;
+   /* struct NameServer* nameServer = (struct NameServer*)userData; */
    if(peerListNode->UserData) {
       /* A peer name table request state is still saved. Free its memory. */
       free(peerListNode->UserData);
@@ -2363,7 +2363,7 @@ static void sendPeerOwnershipChange(struct NameServer*          nameServer,
    struct RSerPoolMessage*           message;
    struct ST_CLASS(NameTableExtract) nte;
 
-   message = rserpoolMessageNew(NULL, 250);  // ??????????????
+   message = rserpoolMessageNew(NULL, 250);  /* ?????????????? */
    if(message) {
       message->Type                   = EHT_PEER_OWNERSHIP_CHANGE;
       message->PPID                   = PPID_ENRP;
@@ -3253,7 +3253,7 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
          perror("listen() call failed");
          exit(1);
       }
-      bzero(&sctpEvents, sizeof(sctpEvents));
+      memset(&sctpEvents, 0, sizeof(sctpEvents));
       sctpEvents.sctp_data_io_event          = 1;
       sctpEvents.sctp_association_event      = 1;
       sctpEvents.sctp_address_event          = 1;
@@ -3543,7 +3543,7 @@ int main(int argc, char** argv)
    }
 
 
-   // ====== Clean up ========================================================
+   /* ====== Clean up ==================================================== */
    nameServerDelete(nameServer);
    finishLogging();
    puts("\nTerminated!");

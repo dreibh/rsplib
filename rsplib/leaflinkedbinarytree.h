@@ -43,7 +43,7 @@ struct LeafLinkedBinaryTreeNode
    struct LeafLinkedBinaryTreeNode*  LeftSubtree;
    struct LeafLinkedBinaryTreeNode*  RightSubtree;
    LeafLinkedBinaryTreeNodeValueType Value;
-   LeafLinkedBinaryTreeNodeValueType ValueSum;  // ValueSum := LeftSubtree->Value + Value + RightSubtree->Value
+   LeafLinkedBinaryTreeNodeValueType ValueSum;  /* ValueSum := LeftSubtree->Value + Value + RightSubtree->Value */
 };
 
 struct LeafLinkedBinaryTree

@@ -45,7 +45,7 @@ struct LeafLinkedTreapNode
    struct LeafLinkedTreapNode*     RightSubtree;
    LeafLinkedTreapNodePriorityType Priority;
    LeafLinkedTreapNodeValueType    Value;
-   LeafLinkedTreapNodeValueType    ValueSum;  // ValueSum := LeftSubtree->Value + Value + RightSubtree->Value
+   LeafLinkedTreapNodeValueType    ValueSum;  /* ValueSum := LeftSubtree->Value + Value + RightSubtree->Value */
 };
 
 struct LeafLinkedTreap

@@ -28,9 +28,9 @@
 
 
 /* ###### Calculate sum of 3 values and ensure datatype limit ############ */
-static inline unsigned int ST_CLASS(getSum)(const unsigned int v1,
-                                            const unsigned int v2,
-                                            const unsigned int v3)
+static unsigned int ST_CLASS(getSum)(const unsigned int v1,
+                                     const unsigned int v2,
+                                     const unsigned int v3)
 {
    const long long v1_64 = (long long)v1;
    const long long v2_64 = (long long)v2;
@@ -47,11 +47,11 @@ static inline unsigned int ST_CLASS(getSum)(const unsigned int v1,
 
 
 /* ###### Get fraction of base for difference ############################ */
-static inline LeafLinkedTreapNodeValueType ST_CLASS(getValueFraction)(
-                                              const unsigned int base,
-                                              const unsigned int v1,
-                                              const unsigned int v2,
-                                              const unsigned int v3)
+static LeafLinkedTreapNodeValueType ST_CLASS(getValueFraction)(
+                                       const unsigned int base,
+                                       const unsigned int v1,
+                                       const unsigned int v2,
+                                       const unsigned int v3)
 {
    const long long base_64 = (long long)base;
    const long long v1_64   = (long long)v1;

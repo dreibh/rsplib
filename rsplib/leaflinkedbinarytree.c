@@ -100,6 +100,36 @@ static void leafLinkedBinaryTreeUpdateValueSum(
 }
 
 
+/* ###### Internal method for printing a node ############################# */
+static void leafLinkedBinaryTreePrintNode(struct LeafLinkedBinaryTree*     llbt,
+                                          struct LeafLinkedBinaryTreeNode* node,
+                                          FILE*                            fd)
+{
+   llbt->PrintFunction(node, fd);
+#ifdef DEBUG
+   fprintf(fd, " ptr=%p v=%Lu vsum=%Lu", node, node->Value, node->ValueSum);
+   if(node->LeftSubtree != &llbt->NullNode) {
+      fprintf(fd, " l=%p", node->LeftSubtree);
+   }
+   else {
+      fprintf(fd, " l=()");
+   }
+   if(node->RightSubtree != &llbt->NullNode) {
+      fprintf(fd, " r=%p", node->RightSubtree);
+   }
+   else {
+      fprintf(fd, " r=()");
+   }
+   if(node->Parent != &llbt->NullNode) {
+      fprintf(fd, " p=%p ", node->Parent);
+   }
+   else {
+      fprintf(fd, " p=())   ");
+   }
+#endif
+}
+
+
 /* ##### Internal printing function ###################################### */
 void leafLinkedBinaryTreeInternalPrint(struct LeafLinkedBinaryTree*     llbt,
                                        struct LeafLinkedBinaryTreeNode* node,
@@ -408,36 +438,6 @@ int leafLinkedBinaryTreeIsEmpty(struct LeafLinkedBinaryTree* llbt)
 }
 
 
-/* ###### Internal method for printing a node ############################# */
-static void leafLinkedBinaryTreePrintNode(struct LeafLinkedBinaryTree*     llbt,
-                                          struct LeafLinkedBinaryTreeNode* node,
-                                          FILE*                            fd)
-{
-   llbt->PrintFunction(node, fd);
-#ifdef DEBUG
-   fprintf(fd, " ptr=%p v=%Lu vsum=%Lu", node, node->Value, node->ValueSum);
-   if(node->LeftSubtree != &llbt->NullNode) {
-      fprintf(fd, " l=%p", node->LeftSubtree);
-   }
-   else {
-      fprintf(fd, " l=()");
-   }
-   if(node->RightSubtree != &llbt->NullNode) {
-      fprintf(fd, " r=%p", node->RightSubtree);
-   }
-   else {
-      fprintf(fd, " r=()");
-   }
-   if(node->Parent != &llbt->NullNode) {
-      fprintf(fd, " p=%p ", node->Parent);
-   }
-   else {
-      fprintf(fd, " p=())   ");
-   }
-#endif
-}
-
-
 /* ###### Print treap ##################################################### */
 void leafLinkedBinaryTreePrint(struct LeafLinkedBinaryTree* llbt,
                                FILE*                        fd)
@@ -601,9 +601,11 @@ struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeInsert(struct LeafLinkedBin
 
    result = leafLinkedBinaryTreeInternalInsert(llbt, &llbt->TreeRoot, &llbt->NullNode, node);
    if(result == node) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
+      /*
+         Important: The NullNode's parent pointer may be modified during rotations.
+         We reset it here. This is much more efficient than if-clauses in the
+         rotation functions.
+      */
       llbt->NullNode.Parent = &llbt->NullNode;
 
       prev = leafLinkedBinaryTreeInternalFindPrev(llbt, node);
@@ -637,9 +639,11 @@ struct LeafLinkedBinaryTreeNode* leafLinkedBinaryTreeRemove(struct LeafLinkedBin
 
    result = leafLinkedBinaryTreeInternalRemove(llbt, &llbt->TreeRoot, node);
    if(result) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
+      /*
+         Important: The NullNode's parent pointer may be modified during rotations.
+         We reset it here. This is much more efficient than if-clauses in the
+         rotation functions.
+      */
       llbt->NullNode.Parent = &llbt->NullNode;
 
       doubleLinkedRingListRemNode(&node->ListNode);

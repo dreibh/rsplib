@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.20 2004/11/09 13:54:17 tuexen Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.21 2004/11/10 22:07:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1311,13 +1311,13 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
    struct TransportAddressBlock* newTransportAddressBlock;
    uint32_t*                     nsIdentifier;
 
-   // ?????? Non-standard ??????
+   /* ?????? Non-standard ?????? */
    nsIdentifier = (uint32_t*)getSpace(message, sizeof(nsIdentifier));
    if(nsIdentifier == NULL) {
       return(false);
    }
    message->NSIdentifier = ntohl(*nsIdentifier);
-   // ??????????????????????????
+   /* ?????????????????????????? */
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {

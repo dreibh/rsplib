@@ -1,2 +1,2 @@
 #!/bin/sh
-./bootstrap && ./configure && gmake
+./bootstrap && ./configure --disable-shared --enable-static && gmake

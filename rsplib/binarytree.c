@@ -562,9 +562,11 @@ struct BinaryTreeNode* binaryTreeInsert(struct BinaryTree*     bt,
 
    result = binaryTreeInternalInsert(bt, &bt->TreeRoot, &bt->NullNode, node);
    if(result == node) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
+      /*
+         Important: The NullNode's parent pointer may be modified during rotations.
+         We reset it here. This is much more efficient than if-clauses in the
+         rotation functions.
+      */
       bt->NullNode.Parent = &bt->NullNode;
 #ifdef DEBUG
       binaryTreePrint(bt);

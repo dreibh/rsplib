@@ -41,7 +41,7 @@ struct BinaryTreeNode
    struct BinaryTreeNode*  LeftSubtree;
    struct BinaryTreeNode*  RightSubtree;
    BinaryTreeNodeValueType Value;
-   BinaryTreeNodeValueType ValueSum;  // ValueSum := LeftSubtree->Value + Value + RightSubtree->Value
+   BinaryTreeNodeValueType ValueSum;  /* ValueSum := LeftSubtree->Value + Value + RightSubtree->Value */
 };
 
 struct BinaryTree

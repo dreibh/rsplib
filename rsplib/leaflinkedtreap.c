@@ -300,9 +300,11 @@ struct LeafLinkedTreapNode* leafLinkedTreapInsert(struct LeafLinkedTreap*     ll
 
    result = leafLinkedTreapInternalInsert(llt, &llt->TreeRoot, &llt->NullNode, node);
    if(result == node) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
+      /*
+         Important: The NullNode's parent pointer may be modified during rotations.
+         We reset it here. This is much more efficient than if-clauses in the
+         rotation functions.
+      */
       llt->NullNode.Parent = &llt->NullNode;
 
       prev = leafLinkedTreapInternalFindPrev(llt, node);
@@ -336,9 +338,11 @@ struct LeafLinkedTreapNode* leafLinkedTreapRemove(struct LeafLinkedTreap*     ll
 
    result = leafLinkedTreapInternalRemove(llt, &llt->TreeRoot, node);
    if(result) {
-      // Important: The NullNode's parent pointer may be modified during rotations.
-      // We reset it here. This is much more efficient than if-clauses in the
-      // rotation functions.
+      /*
+         Important: The NullNode's parent pointer may be modified during rotations.
+         We reset it here. This is much more efficient than if-clauses in the
+         rotation functions.
+      */
       llt->NullNode.Parent = &llt->NullNode;
 
       doubleLinkedRingListRemNode(&node->ListNode);

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.9 2004/11/10 14:44:38 dreibh Exp $
+ *  $Id: examplepu.c,v 1.10 2004/11/10 22:07:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,7 +50,7 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-// #define FAST_BREAK
+/* #define FAST_BREAK */
 
 
 struct SessionDescriptor* Session;

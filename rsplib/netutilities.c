@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.24 2004/11/10 19:33:55 dreibh Exp $
+ *  $Id: netutilities.c,v 1.25 2004/11/10 22:07:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,6 +41,7 @@
 #include "stringutilities.h"
 #include "randomizer.h"
 
+#include <stdio.h>
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

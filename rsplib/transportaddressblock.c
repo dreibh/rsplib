@@ -323,7 +323,6 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
    union sockaddr_union  sctpAddressArray[MAX_ADDRESSES];
    union sockaddr_union* localAddressArray;
    size_t                sctpAddresses;
-   size_t                i;
 
    sctpAddresses = getladdrsplus(sockFD, 0, (union sockaddr_union**)&localAddressArray);
    if(sctpAddresses > 0) {

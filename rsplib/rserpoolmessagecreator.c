@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.16 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.17 2004/11/10 22:07:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -860,13 +860,13 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   // ?????? Non-standard ??????
+   /* ?????? Non-standard ?????? */
    nsIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
    if(nsIdentifier == NULL) {
       return(false);
    }
    *nsIdentifier = htonl(message->NSIdentifier);
-   // ??????????????????????????
+   /* ?????????????????????????? */
 
    transportAddressBlock = message->TransportAddressBlockListPtr;
    while(transportAddressBlock != NULL) {
@@ -1240,7 +1240,7 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-   flags = NTEF_OWNCHILDSONLY;  // ????????? sollte anders heißen!!!!
+   flags = NTEF_OWNCHILDSONLY;
    if(message->ExtractContinuation->LastPoolElementIdentifier == 0) {
       flags |= NTEF_START;
    }
