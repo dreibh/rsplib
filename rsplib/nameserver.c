@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.13 2004/07/25 16:55:03 dreibh Exp $
+ *  $Id: nameserver.c,v 1.14 2004/07/25 18:02:32 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -424,12 +424,12 @@ struct NameServer* nameServerNew(int                           asapSocket,
                      nameServerUserNodePrint,
                      nameServerUserNodeComparison);
 
-      nameServer->ASAPSocket        = asapSocket;
-      nameServer->ASAPAddress       = asapAddress;
-      nameServer->ASAPSendAnnounces = asapSendAnnounces;
-      nameServer->ENRPUnicastSocket        = enrpUnicastSocket;
-      nameServer->ENRPUnicastAddress       = enrpUnicastAddress;
-      nameServer->ENRPUseMulticast = enrpUseMulticast;
+      nameServer->ASAPSocket         = asapSocket;
+      nameServer->ASAPAddress        = asapAddress;
+      nameServer->ASAPSendAnnounces  = asapSendAnnounces;
+      nameServer->ENRPUnicastSocket  = enrpUnicastSocket;
+      nameServer->ENRPUnicastAddress = enrpUnicastAddress;
+      nameServer->ENRPUseMulticast   = enrpUseMulticast;
 
       nameServer->KeepAliveTransmissionInterval = NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
       nameServer->KeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL;
@@ -594,9 +594,49 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct NameServer* nameServer = (struct NameServer*)userData;
+   struct NameServer*      nameServer = (struct NameServer*)userData;
+   struct RSerPoolMessage* message;
+   size_t                  messageLength;
+   ST_CLASS(PeerListNode)  peerListNode;
 
+   CHECK(nameServer->ENRPUseMulticast == true);
+   CHECK(nameServer->ENRPMulticastSocket >= 0);
 
+   message = rserpoolMessageNew(NULL, 65536);
+   if(message) {
+      message->Type                      = EHT_PEER_PRESENCE;
+      message->Flags                     = 0x00;
+      message->PeerListNodePtr           = &peerListNode;
+      message->PeerListNodePtrAutoDelete = false;
+
+      ST_CLASS(peerListNodeNew)(&peerListNode,
+                                nameServer->ServerID,
+                                0,
+                                0x00,
+                                nameServer->ENRPUnicastAddress);
+
+      messageLength = rserpoolMessage2Packet(message);
+      if(messageLength > 0) {
+         if(nameServer->ENRPMulticastSocket) {
+            LOG_VERBOSE2
+            fputs("Sending peer presence to address ", stdlog);
+            fputaddress((struct sockaddr*)&nameServer->ENRPMulticastAddress, true, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            if(ext_sendto(nameServer->ENRPMulticastSocket,
+                          message->Buffer,
+                          messageLength,
+                          0,
+                          (struct sockaddr*)&nameServer->ENRPMulticastAddress,
+                          getSocklen((struct sockaddr*)&nameServer->ENRPMulticastAddress)) < (ssize_t)messageLength) {
+               LOG_WARNING
+               logerror("Unable to send peer presence");
+               LOG_END
+            }
+         }
+      }
+      rserpoolMessageDelete(message);
+   }
 
    timerStart(timer, getMicroTime() + nameServer->ENRPAnnounceInterval);
 }

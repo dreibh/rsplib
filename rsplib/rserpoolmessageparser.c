@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.5 2004/07/25 16:55:03 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.6 2004/07/25 18:02:32 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1058,10 +1058,12 @@ static bool scanCookieParameter(struct RSerPoolMessage* message)
 
 
 /* ###### Scan server information paramter ############################### */
-static bool scanServerInformationParameter(struct RSerPoolMessage* message)
+static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMessage* message)
 {
    char                                 transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*        transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct TransportAddressBlock*        newTransportAddressBlock;
+   ST_CLASS(PeerListNode)*              peerListNode;
    struct rserpool_serverinfoparameter* sip;
    size_t                               tlvPosition = 0;
    size_t                               tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_SERVER_INFORMATION, true);
@@ -1084,27 +1086,45 @@ static bool scanServerInformationParameter(struct RSerPoolMessage* message)
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   message->NSIdentifier = sip->sip_server_id;
-   message->NSFlags      = sip->sip_flags;
 
    if(scanUserTransportParameter(message, transportAddressBlock) == false) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
 
-   message->TransportAddressBlockListPtr = transportAddressBlockDuplicate(transportAddressBlock);
-   if(message->TransportAddressBlockListPtr == NULL) {
+   peerListNode = (ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
+   if(peerListNode == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
    }
 
+   newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
+   if(newTransportAddressBlock == NULL) {
+      message->Error = RSPERR_OUT_OF_MEMORY;
+      free(peerListNode);
+      return(false);
+   }
+
+   ST_CLASS(peerListNodeNew)(peerListNode,
+                             ntohl(sip->sip_server_id),
+                             0,
+                             ntohl(sip->sip_flags),
+                             newTransportAddressBlock);
+
    LOG_VERBOSE3
-   fprintf(stdlog, "Scanned server information parameter for NS $%08x, flags=$%08x, address=");
-   transportAddressBlockPrint(message->TransportAddressBlockListPtr, stdlog);
+   fprintf(stdlog, "Scanned server information parameter for NS $%08x, flags=$%08x, address=",
+           peerListNode->Identifier, peerListNode->Flags);
+   transportAddressBlockPrint(transportAddressBlock, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   return(checkFinishTLV(message, tlvPosition));
+   if(checkFinishTLV(message, tlvPosition) == false) {
+      free(newTransportAddressBlock);
+      free(peerListNode);
+      return(false);
+   }
+
+   return(peerListNode);
 }
 
 
@@ -1362,9 +1382,12 @@ static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
    if(scanPoolElementChecksumParameter(message) == false) {
       return(false);
    }
-   if(scanServerInformationParameter(message) == false) {
+
+   message->PeerListNodePtr = scanServerInformationParameter(message);
+   if(message->PeerListNodePtr == NULL) {
       return(false);
    }
+
    return(true);
 }
 
