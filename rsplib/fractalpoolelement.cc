@@ -260,14 +260,32 @@ void ServiceThread::run()
                const std::complex<double> c =
                   std::complex<double>(Status.Parameter.C1Real + ((double)Status.CurrentX * stepX),
                                        Status.Parameter.C1Imag + ((double)Status.CurrentY * stepY));
-               z = std::complex<double>(0.0, 0.0);
 
-               for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                  z = z*z - c;
-                  if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
-                     break;
-                  }
+               // ====== Algorithms =========================================
+               switch(Status.Parameter.AlgorithmID) {
+                  case FGPA_MANDELBROT:
+                     z = std::complex<double>(0.0, 0.0);
+                     for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                        z = z*z - c;
+                        if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                           break;
+                        }
+                     }
+                   break;
+                  case FGPA_MANDELBROTN:
+                     z = std::complex<double>(0.0, 0.0);
+                     for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                        z = pow(z, (int)rint(Status.Parameter.N)) - c;
+                        if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                           break;
+                        }
+                     }
+                   break;
+                  default:
+                     i = 0;
+                   break;
                }
+               // ===========================================================
 
                if(data.Points == 0) {
                   data.StartX = Status.CurrentX;
