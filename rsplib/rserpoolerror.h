@@ -31,6 +31,9 @@ extern "C" {
 #endif
 
 
+/* No error */
+#define RSPERR_OKAY                               0
+
 /* Protocol-specific error causes */
 #define RSPERR_UNRECOGNIZED_PARAMETER        0x0001
 #define RSPERR_UNRECOGNIZED_MESSAGE          0x0002
@@ -49,7 +52,6 @@ extern "C" {
 #define RSPERR_NO_NAMESERVER                 0x1008
 
 /* Namespace-management specific error causes */
-#define RSPERR_OKAY                          0xf001
 #define RSPERR_NO_RESOURCES                  0xf002
 #define RSPERR_NOT_FOUND                     0xf003
 #define RSPERR_INVALID_ID                    0xf004

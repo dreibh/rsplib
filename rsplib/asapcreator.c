@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: asapcreator.c,v 1.5 2004/07/19 16:24:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -752,6 +752,7 @@ static bool createBusinessCardMessage(struct ASAPMessage* message)
 static bool createServerAnnounceMessage(struct ASAPMessage* message)
 {
    struct TransportAddressBlock* transportAddressBlock;
+   uint32_t*                     identifier;
 
    if(message->TransportAddressBlockListPtr == NULL) {
       LOG_ERROR
@@ -763,6 +764,12 @@ static bool createServerAnnounceMessage(struct ASAPMessage* message)
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, 0x00) == false) {
       return(false);
    }
+
+   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(identifier == NULL) {
+      return(false);
+   }
+   *identifier = htonl(message->NSIdentifier);
 
    transportAddressBlock = message->TransportAddressBlockListPtr;
    while(transportAddressBlock != NULL) {

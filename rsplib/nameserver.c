@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.3 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: nameserver.c,v 1.4 2004/07/19 16:24:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -232,6 +232,7 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
    message = asapMessageNew(NULL, 65536);
    if(message) {
       message->Type                         = AHT_SERVER_ANNOUNCE;
+      message->NSIdentifier                 = nameServer->ServerID;
       message->TransportAddressBlockListPtr = nameServer->NameServerAddress;
       messageLength = asapMessage2Packet(message);
       if(messageLength > 0) {

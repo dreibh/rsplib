@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: asapparser.c,v 1.5 2004/07/19 16:24:05 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -68,7 +68,7 @@ static bool getNextTLV(struct ASAPMessage*      message,
    *tlvType   = ntohs((*header)->atlv_type);
    *tlvLength = (size_t)ntohs((*header)->atlv_length);
 
-   LOG_NOTE
+   LOG_VERBOSE5
    fprintf(stdlog,"TLV: Type $%04x, length %u at position %u\n",
            *tlvType, (unsigned int)*tlvLength, (unsigned int)message->Position);
    LOG_END
@@ -173,10 +173,10 @@ static size_t checkBeginMessage(struct ASAPMessage* message,
 
    length = (size_t)ntohs(header->ah_length);
 
-   if(message->Position + length > message->BufferSize) {
+   if(message->Position + length - sizeof(struct asap_header) > message->BufferSize) {
       LOG_WARNING
       fprintf(stdlog,"Message length exceeds message size!\n"
-             "p=%u + l=%u > size=%u\n",
+             "p=%u + l=%u - 4 > size=%u\n",
              (unsigned int)message->Position, (unsigned int)length, (unsigned int)message->BufferSize);
       LOG_END
       message->Error = AEC_INVALID_VALUES;
@@ -385,7 +385,7 @@ static bool scanTransportParameter(struct ASAPMessage*           message,
    bool                                hasControlChannel = false;
 
    size_t  tlvPosition = 0;
-   size_t  tlvLength   = checkBeginTLV(message, &tlvPosition,0,false);
+   size_t  tlvLength   = checkBeginTLV(message,  &tlvPosition, 0, false);
    if(tlvLength < sizeof(struct asap_tlv_header)) {
       message->Error = AEC_INVALID_VALUES;
       return(false);
@@ -1017,12 +1017,19 @@ static bool scanServerAnnounceMessage(struct ASAPMessage* message)
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct TransportAddressBlock* lastTransportAddressBlock = NULL;
    struct TransportAddressBlock* newTransportAddressBlock;
+   uint32_t*                     identifier;
+
+   identifier = (uint32_t*)getSpace(message, sizeof(identifier));
+   if(identifier == NULL) {
+      return(false);
+   }
+   message->NSIdentifier = ntohl(*identifier);
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
       if(scanTransportParameter(message, transportAddressBlock)) {
          newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
-         if(newTransportAddressBlock) {
+         if(newTransportAddressBlock == NULL) {
             message->Error = AEC_OUT_OF_MEMORY;
             return(false);
          }
@@ -1035,7 +1042,7 @@ static bool scanServerAnnounceMessage(struct ASAPMessage* message)
          lastTransportAddressBlock = newTransportAddressBlock;
       }
       else {
-         return(false);
+         break;
       }
    }
    if(message->TransportAddressBlockListPtr == NULL) {
@@ -1043,6 +1050,7 @@ static bool scanServerAnnounceMessage(struct ASAPMessage* message)
       return(false);
    }
 
+puts("OKAY!!!");
    return(true);
 }
 
@@ -1106,6 +1114,38 @@ static bool scanMessage(struct ASAPMessage* message)
    struct asap_header* header;
    size_t              startPosition;
    size_t              length;
+   size_t              i, j;
+
+   LOG_VERBOSE5
+   fprintf(stdlog, "Incoming message (%u bytes):\n", message->BufferSize);
+   for(i = 0;i < message->BufferSize;i += 32) {
+      fprintf(stdlog, "%4u: ", i);
+      for(j = 0;j < 32;j++) {
+         if(i + j < message->BufferSize) {
+            fprintf(stdlog, "%02x", message->Buffer[i + j]);
+         }
+         else {
+            fputs("  ", stdlog);
+         }
+         if(((j + 1) % 4) == 0) fputs(" ", stdlog);
+      }
+      for(j = 0;j < 32;j++) {
+         if(i + j < message->BufferSize) {
+            if(isprint(message->Buffer[i + j])) {
+               fprintf(stdlog, "%c", message->Buffer[i + j]);
+            }
+            else {
+               fputs(".", stdlog);
+            }
+         }
+         else {
+            fputs("  ", stdlog);
+         }
+      }
+      fputs("\n", stdlog);
+   }
+   LOG_END
+
 
    length = checkBeginMessage(message, &startPosition);
    if(length < sizeof(struct asap_header)) {
