@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.22 2004/11/10 19:25:12 dreibh Exp $
+ *  $Id: netutilities.c,v 1.23 2004/11/10 19:31:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1537,7 +1537,7 @@ size_t getpaddrsplus(const int              fd,
    return(addrs);
 }
 
-#ifdef HAVE_BYTESWAP_H
+
 /* ###### Convert byte order of 64 bit value ############################# */
 static uint64_t byteswap64(const uint64_t x)
 {
@@ -1568,4 +1568,3 @@ uint64_t ntoh64(const uint64_t value)
 {
    return(byteswap64(value));
 }
-#endif
