@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.21 2004/11/10 16:46:14 tuexen Exp $
+ *  $Id: netutilities.c,v 1.22 2004/11/10 19:25:12 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,9 +48,6 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <fcntl.h>
-#ifdef HAVE_BYTESWAP_H
-#include <byteswap.h>
-#endif
 #include <ext_socket.h>
 #include <sys/uio.h>
 
@@ -899,6 +896,15 @@ int sendtoplus(int                      sockfd,
 
    setNonBlocking(sockfd);
    if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+      sri.sinfo_assoc_id   = assocID;
+      sri.sinfo_stream     = streamID;
+      sri.sinfo_ppid       = ppid;
+      sri.sinfo_flags      = flags;
+      sri.sinfo_ssn        = 0;
+      sri.sinfo_tsn        = 0;
+      sri.sinfo_context    = 0;
+      sri.sinfo_timetolive = timeToLive;
+
       if(toaddrs) {
          p = (char*)&addressArray[0];
          addresses = min(toaddrcnt, MAX_TRANSPORTADDRESSES);
@@ -925,26 +931,18 @@ int sendtoplus(int                      sockfd,
             }
          }
          LOG_VERBOSE5
-         fputs("Calling sctp_sendmsgx()...\n", stdlog);
+         fputs("Calling sctp_sendx() with addresses...\n", stdlog);
          LOG_END
-         result = sctp_sendmsgx(sockfd, buffer, length,
-                                (struct sockaddr*)&addressArray, addresses,
-                                ppid, flags, streamID, timeToLive, 0);
+         result = sctp_sendx(sockfd, buffer, length,
+                             (struct sockaddr*)&addressArray, addresses,
+                             &sri, flags);
       }
       else {
-         sri.sinfo_assoc_id   = assocID;
-         sri.sinfo_stream     = streamID;
-         sri.sinfo_ppid       = ppid;
-         sri.sinfo_flags      = flags;
-         sri.sinfo_ssn        = 0;
-         sri.sinfo_tsn        = 0;
-         sri.sinfo_context    = 0;
-         sri.sinfo_timetolive = timeToLive;
          LOG_VERBOSE5
-         fputs("Calling sctp_send()...\n", stdlog);
+         fputs("Calling sctp_send() with AssocID...\n", stdlog);
          LOG_END
-         result = sctp_sendfkt(sockfd, buffer, length,
-                               &sri, flags);
+         result = sctp_send(sockfd, buffer, length,
+                            &sri, flags);
       }
    }
    else {
@@ -952,7 +950,8 @@ int sendtoplus(int                      sockfd,
       fputs("Calling sendto()...\n", stdlog);
       LOG_END
       result = ext_sendto(sockfd, buffer, length, flags,
-                          (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
+                          (struct sockaddr*)toaddrs,
+                          (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
    }
 
    if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
@@ -976,18 +975,18 @@ int sendtoplus(int                      sockfd,
          if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
             if(toaddrs) {
                LOG_VERBOSE5
-               fputs("Calling sctp_sendmsgx()...\n", stdlog);
+               fputs("Calling sctp_sendx() with addresses...\n", stdlog);
                LOG_END
-               result = sctp_sendmsgx(sockfd, buffer, length,
-                                      (struct sockaddr*)&addressArray, addresses,
-                                      ppid, flags, streamID, timeToLive, 0);
+               result = sctp_sendx(sockfd, buffer, length,
+                                   (struct sockaddr*)&addressArray, addresses,
+                                   &sri, flags);
             }
             else {
                LOG_VERBOSE5
-               fputs("Calling sctp_send()...\n", stdlog);
+               fputs("Calling sctp_send() with AssocID...\n", stdlog);
                LOG_END
-               result = sctp_sendfkt(sockfd, buffer, length,
-                                    &sri, flags);
+               result = sctp_send(sockfd, buffer, length,
+                                  &sri, flags);
             }
          }
          else {
@@ -1524,7 +1523,7 @@ size_t getladdrsplus(const int              fd,
 }
 
 
-/* ###### Get peer addresses ################################################ */
+/* ###### Get peer addresses ############################################# */
 size_t getpaddrsplus(const int              fd,
                      const sctp_assoc_t     assocID,
                      union sockaddr_union** addressArray)
@@ -1540,15 +1539,33 @@ size_t getpaddrsplus(const int              fd,
 
 #ifdef HAVE_BYTESWAP_H
 /* ###### Convert byte order of 64 bit value ############################# */
+static uint64_t byteswap64(const uint64_t x)
+{
+#if (__BYTE_ORDER == LITTLE_ENDIAN)
+   const uint32_t a = (uint32_t)(x >> 32);
+   const uint32_t b = (uint32_t)(x & 0xffffffff);
+   return( (int64_t)((a << 24) | ((a & 0x0000ff00) << 8) |
+           ((a & 0x00ff0000) >> 8) | (a >> 24)) |
+           ((int64_t)((b << 24) | ((b & 0x0000ff00) << 8) |
+           ((b & 0x00ff0000) >> 8) | (b >> 24)) << 32) );
+#elif (__BYTE_ORDER == BIG_ENDIAN)
+   return(value);
+#else
+#error Byte order undefined!
+#endif
+}
+
+
+/* ###### Convert byte order of 64 bit value ############################# */
 uint64_t hton64(const uint64_t value)
 {
-   return(bswap_64(value));
+   return(byteswap64(value));
 }
 
 
 /* ###### Convert byte order of 64 bit value ############################# */
 uint64_t ntoh64(const uint64_t value)
 {
-   return(bswap_64(value));
+   return(byteswap64(value));
 }
 #endif
