@@ -122,9 +122,11 @@ void transportAddressBlockNew(struct TransportAddressBlock*  transportAddressBlo
          case AF_INET6:
             ((struct sockaddr_in6*)&transportAddressBlock->AddressArray[i])->sin6_port = htons(port);
           break;
+#ifdef HAVE_TEST
          case AF_TEST:
             ((struct sockaddr_testaddr*)&transportAddressBlock->AddressArray[i])->ta_port = port;
           break;
+#endif
          default:
             fprintf(stderr,"Unsupported address family #%d\n",((struct sockaddr*)&addressArray[i])->sa_family);
           break;

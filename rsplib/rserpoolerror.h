@@ -26,6 +26,11 @@
 #include <stdio.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /* Protocol-specific error causes */
 #define RSPERR_UNRECOGNIZED_PARAMETER        0x0001
 #define RSPERR_UNRECOGNIZED_MESSAGE          0x0002
@@ -33,14 +38,15 @@
 #define RSPERR_INVALID_VALUES                0x0004
 
 /* Implementation-specific error causes */
-#define RSPERR_BUFFERSIZE_EXCEEDED           0x1000
-#define RSPERR_OUT_OF_MEMORY                 0x1001
-#define RSPERR_READ_ERROR                    0x1010
-#define RSPERR_WRITE_ERROR                   0x1011
-#define RSPERR_CONNECTION_FAILURE_UNUSABLE   0x1012
-#define RSPERR_CONNECTION_FAILURE_SOCKET     0x1013
-#define RSPERR_CONNECTION_FAILURE_CONNECT    0x1014
-#define RSPERR_NO_NAMESERVER                 0x1021
+#define RSPERR_NOT_INITIALIZED               0x1000
+#define RSPERR_BUFFERSIZE_EXCEEDED           0x1001
+#define RSPERR_OUT_OF_MEMORY                 0x1002
+#define RSPERR_READ_ERROR                    0x1003
+#define RSPERR_WRITE_ERROR                   0x1004
+#define RSPERR_CONNECTION_FAILURE_UNUSABLE   0x1005
+#define RSPERR_CONNECTION_FAILURE_SOCKET     0x1006
+#define RSPERR_CONNECTION_FAILURE_CONNECT    0x1007
+#define RSPERR_NO_NAMESERVER                 0x1008
 
 /* Namespace-management specific error causes */
 #define RSPERR_OKAY                          0xf001
@@ -57,8 +63,12 @@
 
 
 const char* rserpoolErrorGetDescription(const unsigned int error);
-const char* rserpoolErrorPrint(const unsigned int error,
-                               FILE*              fd);
+void rserpoolErrorPrint(const unsigned int error,
+                        FILE*              fd);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -38,11 +38,12 @@ extern "C" {
 
 struct TransportAddressBlock
 {
-   int                  Protocol;
-   uint16_t             Port;
-   uint16_t             Flags;
-   size_t               Addresses;
-   union sockaddr_union AddressArray[];
+   struct TransportAddressBlock* Next;
+   int                           Protocol;
+   uint16_t                      Port;
+   uint16_t                      Flags;
+   size_t                        Addresses;
+   union sockaddr_union          AddressArray[];
 };
 
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.c,v 1.2 2004/07/13 14:23:37 dreibh Exp $
+ *  $Id: asapcreator.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "asapcreator.h"
 
@@ -121,9 +120,8 @@ static bool finishTLV(struct ASAPMessage* message,
 
 
 /* ###### Create pool handle parameter ################################### */
-static bool createPoolHandleParameter(struct ASAPMessage*  message,
-                                      const unsigned char* poolHandle,
-                                      const size_t         poolHandleSize)
+static bool createPoolHandleParameter(struct ASAPMessage*      message,
+                                      const struct PoolHandle* poolHandle)
 {
    char*    handle;
    size_t tlvPosition = 0;
@@ -139,11 +137,11 @@ static bool createPoolHandleParameter(struct ASAPMessage*  message,
       return(false);
    }
 
-   handle = (char*)getSpace(message, poolHandleSize);
+   handle = (char*)getSpace(message, poolHandle->Size);
    if(handle == NULL) {
       return(false);
    }
-   memcpy(handle, poolHandle, poolHandleSize);
+   memcpy(handle, &poolHandle->Handle, poolHandle->Size);
 
    return(finishTLV(message, tlvPosition));
 }
@@ -514,7 +512,7 @@ static bool createEndpointKeepAliveMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message,message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
 
@@ -529,7 +527,7 @@ static bool createEndpointUnreachableMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -548,7 +546,7 @@ static bool createEndpointKeepAliveAckMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -567,7 +565,7 @@ static bool createRegistrationMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -594,7 +592,7 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -619,7 +617,7 @@ static bool createDeregistrationMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -646,7 +644,7 @@ static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -671,7 +669,7 @@ static bool createNameResolutionMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -690,7 +688,7 @@ static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 
@@ -729,7 +727,7 @@ static bool createBusinessCardMessage(struct ASAPMessage* message)
    }
 
 
-   if(createPoolHandleParameter(message, message->PoolHandle, message->PoolHandleSize) == false) {
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
    }
 

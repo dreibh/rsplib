@@ -20,6 +20,8 @@
  *
  */
 
+#include "stringutilities.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -32,7 +34,7 @@ int safestrcpy(char* dest, const char* src, const size_t size)
       dest[size - 1] = 0x00;
       return(strlen(dest) < size);
    }
-   return(false);
+   return(0);
 }
 
 
@@ -44,7 +46,7 @@ int safestrcat(char* dest, const char* src, const size_t size)
 
    if(l1 + l2 < (int)size) {
       strcat(dest,src);
-      return(true);
+      return(1);
    }
    else if((int)size > l2) {
       strcat((char*)&dest[size - l2],src);
@@ -52,7 +54,7 @@ int safestrcat(char* dest, const char* src, const size_t size)
    else {
       safestrcpy(dest,src,size);
    }
-   return(false);
+   return(0);
 }
 
 
@@ -107,7 +109,7 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
             buffer[i++] = *c;
          }
          else {
-            return(false);
+            return(0);
             break;
          }
       }
@@ -115,13 +117,13 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
          buffer[i++] = 0x00;
       }
       else {
-         return(false);
+         return(0);
       }
       *position = (size_t)((long)end - (long)input);
       while(input[*position] == ' ') {
          (*position)++;
       }
-      return(true);
+      return(1);
    }
    else {
       i = strlen((char*)&input[*position]);
@@ -132,7 +134,7 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
       }
       safestrcpy(buffer,"",bufferSize);
    }
-   return(false);
+   return(0);
 }
 
 

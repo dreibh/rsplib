@@ -26,6 +26,11 @@
 #include <string.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /**
   * strcpy() with length check. The result is truncated if the destination
   * length is not sufficient. It will always be 0-terminated, except for
@@ -88,5 +93,9 @@ void* memdup(const void* source, const size_t size);
   */
 int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t* position);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -20,54 +20,30 @@
  *
  */
 
-#ifndef RANDOMIZER_H
-#define RANDOMIZER_H
-
-#ifdef FreeBSD
-#include <sys/types.h>
-#else
-#include <stdint.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "timeutilities.h"
+#include <sys/time.h>
+#include <time.h>
 
 
-
-/**
-  * Get 8-bit random value.
-  *
-  * @return Random value.
-  */
-uint8_t random8();
-
-/**
-  * Get162-bit random value.
-  *
-  * @return Random value.
-  */
-uint16_t random16();
-
-/**
-  * Get 32-bit random value.
-  *
-  * @return Random value.
-  */
-uint32_t random32();
-
-/**
-  * Get 64-bit random value.
-  *
-  * @return Random value.
-  */
-uint64_t random64();
-
-
-
-#ifdef __cplusplus
+/* ###### Get current timer ############################################## */
+unsigned long long getMicroTime()
+{
+  struct timeval tv;
+  gettimeofday(&tv,NULL);
+  return(((unsigned long long)tv.tv_sec * (unsigned long long)1000000) +
+         (unsigned long long)tv.tv_usec);
 }
-#endif
 
 
-#endif
+/* ###### Print time stamp ############################################### */
+void printTimeStamp(FILE* fd)
+{
+   char                     str[64];
+   const unsigned long long microTime = getMicroTime();
+   const time_t             timeStamp = microTime / 1000000;
+   const struct tm*         timeptr   = localtime(&timeStamp);
+
+   strftime((char*)&str,sizeof(str),"%d-%b-%Y %H:%M:%S",timeptr);
+   fprintf(fd,str);
+   fprintf(fd,".%04d: ",(unsigned int)(microTime % 1000000) / 100);
+}

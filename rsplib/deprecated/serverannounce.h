@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: serverannounce.h,v 1.1 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,21 +31,17 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: Server Table
+ * Purpose: Server Announce
  *
  */
 
 
-#ifndef SERVERTABLE_H
-#define SERVERTABLE_H
+#ifndef SERVERANNOUNCE_H
+#define SERVERANNOUNCE_H
 
 
 #include "tdtypes.h"
-#include "tagitem.h"
-#include "dispatcher.h"
-#include "timer.h"
-#include "poolnamespacemanagement.h"
-#include "asapmessage.h"
+#include "transportaddressblock.h"
 
 
 #ifdef __cplusplus
@@ -53,17 +49,14 @@ extern "C" {
 #endif
 
 
-struct ServerTable
+#define SIF_DYNAMIC (1 << 0)
+
+
+struct ServerAnnounce
 {
-   struct Dispatcher*                  Dispatcher;
-
-   struct ST_CLASS(PeerListManagement) List;
-   int                                 AnnounceSocket;
-   union sockaddr_union                AnnounceAddress;
-
-   card64                              NameServerAnnounceTimeout;
-   card64                              NameServerConnectTimeout;
-   unsigned int                        NameServerConnectMaxTrials;
+   card64       LastUpdate;
+   GList*       TransportAddressList;
+   unsigned int Flags;
 };
 
 
@@ -71,29 +64,45 @@ struct ServerTable
 /**
   * Constructor.
   *
-  * @param dispatcher Dispatcher.
-  * @param tags TagItem array.
+  * @param transportAddressList Transport address list.
+  * @param flags Flags.
+  * @return ServerAnnounce or NULL in case of error.
   */
-struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
-                                   struct TagItem*    tags);
-
+struct ServerAnnounce* serverAnnounceNew(GList*             transportAddressList,
+                                         const unsigned int flags);
 
 /**
   * Destructor.
   *
-  * @param serverTable ServerTable.
+  * @param ServerAnnounce ServerAnnounce.
   */
-void serverTableDelete(struct ServerTable* ServerTable);
+void serverAnnounceDelete(struct ServerAnnounce* ServerAnnounce);
 
 /**
-  * Do server hunt.
+  * Duplicate ServerAnnounce.
   *
-  * @param serverTable ServerTable.
-  * @param protocol Desired nameserver protocol (SCTP or TCP).
-  * @return Number of valid servers seen.
+  * @param ServerAnnounce ServerAnnounce.
+  * @return Copy of ServerAnnounce or NULL in case of error.
   */
-unsigned int serverTableFindServer(struct ServerTable* serverTable,
-                                   const int           protocol);
+struct ServerAnnounce* serverAnnounceDuplicate(struct ServerAnnounce* ServerAnnounce);
+
+/**
+  * Print ServerAnnounce.
+  *
+  * @param ServerAnnounce ServerAnnounce.
+  * @param fd File to write ServerAnnounce to (e.g. stdout, stderr, ...).
+  */
+void serverAnnouncePrint(struct ServerAnnounce* ServerAnnounce, FILE* fd);
+
+/**
+  * ServerAnnounce comparision function.
+  *
+  * @param a ServerAnnounce 1.
+  * @param a ServerAnnounce 2.
+  * @return Comparision result.
+  */
+gint serverAnnounceCompareFunc(gconstpointer a, gconstpointer b);
+
 
 
 #ifdef __cplusplus

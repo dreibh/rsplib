@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.c,v 1.2 2004/07/13 14:23:37 dreibh Exp $
+ *  $Id: asapparser.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "asapparser.h"
 
@@ -713,8 +712,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMes
 
 /* ###### Scan pool handle paramter ######################################### */
 static bool scanPoolHandleParameter(struct ASAPMessage* message,
-                                    unsigned char*      poolHandlePtr,
-                                    size_t*             poolHandleSize)
+                                    struct PoolHandle*  poolHandlePtr)
 {
    unsigned char* poolHandle;
    size_t tlvPosition = 0;
@@ -737,17 +735,15 @@ static bool scanPoolHandleParameter(struct ASAPMessage* message,
       message->Error = AEC_INVALID_VALUES;
       return(false);
    }
-
-   *poolHandleSize = tlvLength;
-   if(*poolHandleSize > MAX_POOLHANDLESIZE) {
+   if(tlvLength > MAX_POOLHANDLESIZE) {
       message->Error = AEC_INVALID_VALUES;
    }
-   memcpy(poolHandlePtr, poolHandle, *poolHandleSize);
+   poolHandleNew(poolHandlePtr, poolHandle, tlvLength);
 
    LOG_VERBOSE3
    fprintf(stdlog,"Scanned pool handle ");
-   poolHandlePrint(poolHandlePtr, *poolHandleSize, stdlog);
-   fprintf(stdlog,", length=%u.\n",(unsigned int)*poolHandleSize);
+   poolHandlePrint(poolHandlePtr, stdlog);
+   fprintf(stdlog,", length=%u.\n",poolHandlePtr->Size);
    LOG_END
 
    return(checkFinishTLV(message, tlvPosition));
@@ -877,7 +873,7 @@ static bool scanCookieParameter(struct ASAPMessage* message)
 /* ###### Scan endpoint keepalive message ################################### */
 static bool scanEndpointKeepAliveMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    return(true);
@@ -887,7 +883,7 @@ static bool scanEndpointKeepAliveMessage(struct ASAPMessage* message)
 /* ###### Scan endpoint keepalive acknowledgement message ################### */
 static bool scanEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
 
@@ -901,7 +897,7 @@ static bool scanEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 /* ###### Scan endpoint unreachable message ################################# */
 static bool scanEndpointUnreachableMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPoolElementIdentifierParameter(message) == false) {
@@ -914,7 +910,7 @@ static bool scanEndpointUnreachableMessage(struct ASAPMessage* message)
 /* ###### Scan registration message ######################################### */
 static bool scanRegistrationMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPoolElementParameter(message) == false) {
@@ -927,7 +923,7 @@ static bool scanRegistrationMessage(struct ASAPMessage* message)
 /* ###### Scan deregistration message ####################################### */
 static bool scanDeregistrationMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPoolElementIdentifierParameter(message) == false) {
@@ -940,7 +936,7 @@ static bool scanDeregistrationMessage(struct ASAPMessage* message)
 /* ###### Scan registration response message ################################ */
 static bool scanRegistrationResponseMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPoolElementIdentifierParameter(message) == false) {
@@ -958,7 +954,7 @@ static bool scanRegistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Scan deregistration response message ############################## */
 static bool scanDeregistrationResponseMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPoolElementIdentifierParameter(message) == false) {
@@ -976,7 +972,7 @@ static bool scanDeregistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Scan name resolution message ###################################### */
 static bool scanNameResolutionMessage(struct ASAPMessage* message)
 {
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    return(true);
@@ -990,7 +986,7 @@ static bool scanNameResolutionResponseMessage(struct ASAPMessage* message)
    struct PoolPolicySettings         poolPolicySettings;
 
    if(!scanErrorParameter(message)) {
-      if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+      if(scanPoolHandleParameter(message, &message->Handle) == false) {
          return(false);
       }
       if(scanPolicyParameter(message, &poolPolicySettings) == false) {
@@ -1066,10 +1062,10 @@ static bool scanBusinessCardMessage(struct ASAPMessage* message)
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct PoolPolicySettings         poolPolicySettings;
 
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   if(scanPoolHandleParameter(message, (unsigned char*)&message->PoolHandle, &message->PoolHandleSize) == false) {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    if(scanPolicyParameter(message, &poolPolicySettings) == false) {
@@ -1227,11 +1223,11 @@ struct ASAPMessage* asapPacket2Message(char* packet, const size_t packetSize, co
 {
    struct ASAPMessage* message = asapMessageNew(packet, packetSize);
    if(message != NULL) {
-      message->OriginalBufferSize                = max(packetSize, minBufferSize);
-      message->Position                          = 0;
-      message->PoolElementPtrAutoDelete          = true;
-      message->CookiePtrAutoDelete               = true;
-      message->PoolElementListAutoDelete         = true;
+      message->OriginalBufferSize                     = max(packetSize, minBufferSize);
+      message->Position                               = 0;
+      message->PoolElementPtrAutoDelete               = true;
+      message->CookiePtrAutoDelete                    = true;
+      message->PoolElementListPtrAutoDelete           = true;
       message->TransportAddressBlockListPtrAutoDelete = true;
 
       LOG_VERBOSE3

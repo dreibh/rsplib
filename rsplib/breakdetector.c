@@ -1,5 +1,5 @@
 /*
- *  $Id: breakdetector.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: breakdetector.c,v 1.2 2004/07/18 15:30:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,7 @@
 
 #include "tdtypes.h"
 #include "breakdetector.h"
-#include "utilities.h"
+#include "timeutilities.h"
 
 #include <signal.h>
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: examplepu.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "rsplib.h"
 #include "breakdetector.h"
@@ -211,7 +210,8 @@ int main(int argc, char** argv)
    tags[7].Data = (tagdata_t)NULL;
    tags[8].Tag = TAG_DONE;
 
-   Session = rspCreateSession(poolHandle, strlen(poolHandle), NULL, (struct TagItem*)&tags);
+   Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
+                              NULL, (struct TagItem*)&tags);
    if(Session != NULL) {
       puts("Example Pool User - Version 2.0");
       puts("-------------------------------\n");

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rsplib.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -40,7 +40,6 @@
 #include "loglevel.h"
 #include "rsplib.h"
 #include "asapinstance.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "threadsafety.h"
 
@@ -52,7 +51,7 @@
 
 struct Dispatcher*          gDispatcher   = NULL;
 static struct ASAPInstance* gAsapInstance = NULL;
-static enum ASAPError       gLastError    = ASAP_Okay;
+static unsigned int         gLastError    = RSPERR_OKAY;
 static struct ThreadSafety  gThreadSafety;
 
 
@@ -79,7 +78,7 @@ int rspInitialize(struct TagItem* tags)
    threadSafetyInit(&gThreadSafety, "RsplibInstance");
    gDispatcher = dispatcherNew(lock, unlock, NULL);
    if(gDispatcher) {
-      gAsapInstance = asapNew(gDispatcher, tags);
+      gAsapInstance = asapInstanceNew(gDispatcher, tags);
       if(gAsapInstance) {
          tagListSetData(tags, TAG_RspLib_GetVersion,   (tagdata_t)RSPLIB_VERSION);
          tagListSetData(tags, TAG_RspLib_GetRevision,  (tagdata_t)RSPLIB_REVISION);
@@ -102,7 +101,7 @@ int rspInitialize(struct TagItem* tags)
 void rspCleanUp()
 {
    if(gAsapInstance) {
-      asapDelete(gAsapInstance);
+      asapInstanceDelete(gAsapInstance);
       dispatcherDelete(gDispatcher);
       threadSafetyDestroy(&gThreadSafety);
       gAsapInstance = NULL;
@@ -124,257 +123,170 @@ unsigned int rspGetLastError()
 /* ###### Get last error description ##################################### */
 const char* rspGetLastErrorDescription()
 {
-   return(asapErrorGetDescription(gLastError));
+   return(rserpoolErrorGetDescription(gLastError));
 }
 
 
 /* ###### Register pool element ########################################## */
-uint32_t rspRegister(const char*                       poolHandle,
-                     const size_t                      poolHandleSize,
-                     const struct EndpointAddressInfo* endpointAddressInfo,
-                     struct TagItem*                   tags)
+unsigned int rspRegister(const unsigned char*        poolHandle,
+                         const size_t                poolHandleSize,
+                         struct EndpointAddressInfo* endpointAddressInfo,
+                         struct TagItem*             tags)
 {
-   struct PoolHandle*                myPoolHandle;
-   struct PoolElement*               myPoolElement;
-   struct PoolPolicy*                myPolicy;
-   PoolElementIdentifier             myIdentifier = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
-   struct TransportAddress*          transportAddress;
-   const struct EndpointAddressInfo* endpointAddress;
-   size_t                            addresses;
-   struct sockaddr_storage           addressArray[MAX_ADDRESSES_PER_ENDPOINT];
-   char*                             ptr;
-   int                               error = 0;
-   size_t                            i;
+   struct PoolHandle                myPoolHandle;
+   struct ST_CLASS(PoolElementNode) myPoolElementNode;
+   struct PoolPolicySettings        myPolicySettings;
+   char                             myTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*    myTransportAddressBlock = (struct TransportAddressBlock*)&myTransportAddressBlockBuffer;
+   unsigned int                     result;
 
-   gLastError = ASAP_Okay;
    if(gAsapInstance) {
-      myPoolHandle = poolHandleNew(poolHandle,poolHandleSize);
-      if(myPoolHandle) {
-         myIdentifier = endpointAddressInfo->ai_pe_id;
-         if(myIdentifier == UNDEFINED_POOL_ELEMENT_IDENTIFIER) {
-            myIdentifier = getPoolElementIdentifier();
-         }
-         myPolicy = poolPolicyNew((uint8_t)tagListGetData(tags,TAG_PoolPolicy_Type,TAGDATA_PoolPolicy_Type_RoundRobin));
-         if(myPolicy) {
-            myPolicy->Weight = (unsigned int)tagListGetData(tags,TAG_PoolPolicy_Parameter_Weight,1);
-            myPolicy->Load   = (unsigned int)tagListGetData(tags,TAG_PoolPolicy_Parameter_Load,0);
-            myPoolElement = poolElementNew(myIdentifier, myPolicy,
-                                           tagListGetData(tags, TAG_UserTransport_HasControlChannel, false));
-            if(myPoolElement != NULL) {
-               endpointAddress = endpointAddressInfo;
-               while(endpointAddress != NULL) {
-                  addresses = endpointAddress->ai_addrs;
-                  if(addresses > MAX_ADDRESSES_PER_ENDPOINT) {
-                     error = EINVAL;
-                     LOG_ERROR
-                     fprintf(stdlog,"Too many addresses: %d\n",(int)addresses);
-                     LOG_END
-                     break;
-                  }
-                  if(endpointAddress->ai_addrlen > sizeof(struct sockaddr_storage)) {
-                     error = EINVAL;
-                     LOG_ERROR
-                     fprintf(stdlog,"Bad address length: %d\n",(int)endpointAddress->ai_addrlen);
-                     LOG_END
-                     break;
-                  }
-
-                  ptr = (char*)endpointAddress->ai_addr;
-                  for(i = 0;i < addresses;i++) {
-                     memcpy((void*)&addressArray[i],
-                            (void*)ptr,
-                            endpointAddress->ai_addrlen);
-                     ptr = (char*)((long)ptr + (long)endpointAddress->ai_addrlen);
-                  }
-
-                  transportAddress = transportAddressNew(endpointAddress->ai_protocol,
-                                                         getPort((struct sockaddr*)endpointAddress->ai_addr),
-                                                         (struct sockaddr_storage*)&addressArray,
-                                                         addresses);
-                  if(transportAddress == NULL) {
-                     error = ENOMEM;
-                     break;
-                  }
-
-                  poolElementAddTransportAddress(myPoolElement,transportAddress);
-
-                  endpointAddress = endpointAddress->ai_next;
-               }
-
-
-               if(error == 0) {
-                  LOG_ACTION
-                  fputs("Trying to register ",stdlog);
-                  poolElementPrint(myPoolElement,stdlog);
-                  LOG_END
-
-                  gLastError = asapRegister(gAsapInstance,myPoolHandle,myPoolElement);
-                  if(gLastError != ASAP_Okay) {
-                     switch(gLastError) {
-                        default:
-                           error = EIO;
-                         break;
-                     }
-                  }
-               }
-
-               poolElementDelete(myPoolElement);
-            }
-            else {
-               error = ENOMEM;
-            }
-
-            poolPolicyDelete(myPolicy);
-         }
-         else {
-            error = ENOMEM;
-         }
-
-         poolHandleDelete(myPoolHandle);
+      if(endpointAddressInfo->ai_pe_id == UNDEFINED_POOL_ELEMENT_IDENTIFIER) {
+         endpointAddressInfo->ai_pe_id = getPoolElementIdentifier();
       }
-      else {
-         error = ENOMEM;
+
+      poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
+
+      poolPolicySettingsNew(&myPolicySettings);
+      myPolicySettings.PolicyType      = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Type, TAGDATA_PoolPolicy_Type_RoundRobin);
+      myPolicySettings.Weight          = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight, 1);
+      myPolicySettings.Load            = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Load, 0);
+      myPolicySettings.LoadDegradation = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_LoadDegradation, 0);
+
+      transportAddressBlockNew(myTransportAddressBlock,
+                               endpointAddressInfo->ai_protocol,
+                               getPort((struct sockaddr*)endpointAddressInfo->ai_addr),
+                               (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
+                               endpointAddressInfo->ai_addr,
+                               endpointAddressInfo->ai_addrs);
+
+      ST_CLASS(poolElementNodeNew)(
+         &myPoolElementNode,
+         endpointAddressInfo->ai_pe_id,
+         0,
+         tagListGetData(tags, TAG_PoolElement_RegistrationLife, 300000000),
+         &myPolicySettings,
+         myTransportAddressBlock);
+
+      LOG_ACTION
+      fputs("Trying to register ", stdlog);
+      ST_CLASS(poolElementNodePrint)(&myPoolElementNode, stdlog, PENPO_FULL);
+      fputs(" to pool ", stdlog);
+      poolHandlePrint(&myPoolHandle, stdlog);
+      fputs("...\n", stdlog);
+      LOG_END
+
+      result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode);
+      if(result != RSPERR_OKAY) {
+         endpointAddressInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
       }
    }
    else {
-      error = EPERM;
       LOG_ERROR
-      fputs("rsplib is not initialized\n",stdlog);
+      fputs("rsplib is not initialized\n", stdlog);
       LOG_END
+      result = RSPERR_NOT_INITIALIZED;
    }
 
-   if(error) {
-      errno = error;
-      return(0);
-   }
-   return(myIdentifier);
+   return(result);
 }
 
 
 /* ###### Deregister pool element ######################################## */
-int rspDeregister(const char*     poolHandle,
-                  const size_t    poolHandleSize,
-                  const uint32_t  identifier,
-                  struct TagItem* tags)
+unsigned int rspDeregister(const unsigned char* poolHandle,
+                           const size_t         poolHandleSize,
+                           const uint32_t       identifier,
+                           struct TagItem*      tags)
 {
-   struct PoolHandle* myPoolHandle;
-   int                error;
+   struct PoolHandle myPoolHandle;
+   unsigned int      result;
 
-   error = 0;
-   gLastError = ASAP_Okay;
    if(gAsapInstance) {
-      myPoolHandle = poolHandleNew(poolHandle,poolHandleSize);
-      if(myPoolHandle) {
-         gLastError = asapDeregister(gAsapInstance,myPoolHandle,identifier);
-         if(gLastError != ASAP_Okay) {
-            switch(gLastError) {
-               default:
-                  error = EIO;
-                break;
-            }
-         }
-         poolHandleDelete(myPoolHandle);
-      }
-      else {
-         error = ENOMEM;
-      }
+      poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
+      result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier);
    }
    else {
-      error = EPERM;
+      result = RSPERR_NOT_INITIALIZED;
       LOG_ERROR
-      fputs("rsplib is not initialized\n",stdlog);
+      fputs("rsplib is not initialized\n", stdlog);
       LOG_END
    }
 
-   errno = error;
-   return(error);
+   return(result);
 }
 
 
 /* ###### Name resolution ################################################ */
-int rspNameResolution(const char*                  poolHandle,
+int rspNameResolution(const unsigned char*         poolHandle,
                       const size_t                 poolHandleSize,
                       struct EndpointAddressInfo** endpointAddressInfo,
                       struct TagItem*              tags)
 {
-   struct PoolHandle*          myPoolHandle;
+   struct PoolHandle           myPoolHandle;
    struct PoolElement*         poolElement;
    struct TransportAddress*    transportAddress;
    struct EndpointAddressInfo* endpointAddress;
-   GList*                      list;
-   int                         error;
-   size_t                      i;
-   char*                       ptr;
+   unsigned int                result;
 
-   error                = 0;
-   gLastError           = ASAP_Okay;
-   *endpointAddressInfo = NULL;
    if(gAsapInstance) {
-      myPoolHandle = poolHandleNew(poolHandle,poolHandleSize);
-      if(myPoolHandle) {
-         poolElement = asapSelectPoolElement(gAsapInstance,myPoolHandle,&gLastError);
-         if(poolElement != NULL) {
-            list = g_list_last(poolElement->TransportAddressList);
-            while(list != NULL) {
-               transportAddress = (struct TransportAddress*)list->data;
-               if(transportAddress->Addresses > 0) {
-                  endpointAddress = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
-                  if(endpointAddress != NULL) {
-                     endpointAddress->ai_next     = *endpointAddressInfo;
-                     endpointAddress->ai_pe_id    = poolElement->Identifier;
-                     endpointAddress->ai_family   = transportAddress->AddressArray[0].sa.sa_family;
-                     endpointAddress->ai_protocol = transportAddress->Protocol;
-                     switch(transportAddress->Protocol) {
-                        case IPPROTO_SCTP:
-                        case IPPROTO_TCP:
-                           endpointAddress->ai_socktype = SOCK_STREAM;
-                         break;
-                        default:
-                           endpointAddress->ai_socktype = SOCK_DGRAM;
-                         break;
+      poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
+puts("STOP!");
+exit(1);
+#if 0
+      poolElement = asapSelectPoolElement(gAsapInstance,myPoolHandle,&gLastError);
+      if(poolElement != NULL) {
+         list = g_list_last(poolElement->TransportAddressList);
+         while(list != NULL) {
+            transportAddress = (struct TransportAddress*)list->data;
+            if(transportAddress->Addresses > 0) {
+               endpointAddress = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
+               if(endpointAddress != NULL) {
+                  endpointAddress->ai_next     = *endpointAddressInfo;
+                  endpointAddress->ai_pe_id    = poolElement->Identifier;
+                  endpointAddress->ai_family   = transportAddress->AddressArray[0].sa.sa_family;
+                  endpointAddress->ai_protocol = transportAddress->Protocol;
+                  switch(transportAddress->Protocol) {
+                     case IPPROTO_SCTP:
+                     case IPPROTO_TCP:
+                        endpointAddress->ai_socktype = SOCK_STREAM;
+                        break;
+                     default:
+                        endpointAddress->ai_socktype = SOCK_DGRAM;
+                        break;
+                  }
+                  endpointAddress->ai_addrlen = sizeof(struct sockaddr_storage);
+                  endpointAddress->ai_addrs   = transportAddress->Addresses;
+                  endpointAddress->ai_addr    = (struct sockaddr_storage*)malloc(endpointAddress->ai_addrs * sizeof(struct sockaddr_storage));
+                  if(endpointAddress->ai_addr != NULL) {
+                     ptr = (char*)endpointAddress->ai_addr;
+                     for(i = 0;i < transportAddress->Addresses;i++) {
+                        memcpy((void*)ptr, (void*)&transportAddress->AddressArray[i], sizeof(union sockaddr_union));
+                        ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
                      }
-                     endpointAddress->ai_addrlen = sizeof(struct sockaddr_storage);
-                     endpointAddress->ai_addrs   = transportAddress->Addresses;
-                     endpointAddress->ai_addr    = (struct sockaddr_storage*)malloc(endpointAddress->ai_addrs * sizeof(struct sockaddr_storage));
-                     if(endpointAddress->ai_addr != NULL) {
-                        ptr = (char*)endpointAddress->ai_addr;
-                        for(i = 0;i < transportAddress->Addresses;i++) {
-                           memcpy((void*)ptr, (void*)&transportAddress->AddressArray[i], sizeof(union sockaddr_union));
-                           ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
-                        }
 
-                        *endpointAddressInfo = endpointAddress;
-                     }
-                     else {
-                        free(endpointAddress);
-                        endpointAddress = NULL;
-                     }
+                     *endpointAddressInfo = endpointAddress;
+                  }
+                  else {
+                     free(endpointAddress);
+                     endpointAddress = NULL;
                   }
                }
-
-               list = g_list_previous(list);
             }
 
-            poolElementDelete(poolElement);
+            list = g_list_previous(list);
          }
-         else {
-            error = ENOENT;
-         }
-         poolHandleDelete(myPoolHandle);
-      }
-      else {
-         error = ENOMEM;
-      }
+
+         poolElementDelete(poolElement);
+#endif
    }
    else {
-      error = EPERM;
       LOG_ERROR
-      fputs("rsplib is not initialized\n",stdlog);
+      fputs("rsplib is not initialized\n", stdlog);
       LOG_END
+      result = RSPERR_NOT_INITIALIZED;
    }
 
-   errno = error;
-   return(error);
+   return(result);
 }
 
 
@@ -398,20 +310,26 @@ void rspFreeEndpointAddressArray(struct EndpointAddressInfo* endpointAddressInfo
 
 
 /* ###### Report pool element failure #################################### */
-void rspFailure(const char*     poolHandle,
-                const size_t    poolHandleSize,
-                const uint32_t  identifier,
-                struct TagItem* tags)
+unsigned int rspReportFailure(const unsigned char* poolHandle,
+                              const size_t         poolHandleSize,
+                              const uint32_t       identifier,
+                              struct TagItem*      tags)
 {
-   struct PoolHandle* myPoolHandle;
+   struct PoolHandle myPoolHandle;
+   unsigned int      result;
 
    if(gAsapInstance) {
-       myPoolHandle = poolHandleNew(poolHandle,poolHandleSize);
-       if(myPoolHandle) {
-          asapFailure(gAsapInstance,myPoolHandle,identifier);
-          poolHandleDelete(myPoolHandle);
-       }
+      poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
+      result = asapInstanceReportFailure(gAsapInstance, &myPoolHandle, identifier);
    }
+   else {
+      result = RSPERR_NOT_INITIALIZED;
+      LOG_ERROR
+      fputs("rsplib is not initialized\n", stdlog);
+      LOG_END
+   }
+
+   return(result);
 }
 
 

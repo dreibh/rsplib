@@ -20,54 +20,42 @@
  *
  */
 
-#ifndef RANDOMIZER_H
-#define RANDOMIZER_H
+#ifndef POOLHANDLE_H
+#define POOLHANDLE_H
 
-#ifdef FreeBSD
-#include <sys/types.h>
-#else
-#include <stdint.h>
-#endif
+#include <ctype.h>
+#include <stdio.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+#define MAX_POOLHANDLESIZE 32
 
-/**
-  * Get 8-bit random value.
-  *
-  * @return Random value.
-  */
-uint8_t random8();
+struct PoolHandle
+{
+   size_t        Size;
+   unsigned char Handle[MAX_POOLHANDLESIZE];
+};
 
-/**
-  * Get162-bit random value.
-  *
-  * @return Random value.
-  */
-uint16_t random16();
 
-/**
-  * Get 32-bit random value.
-  *
-  * @return Random value.
-  */
-uint32_t random32();
-
-/**
-  * Get 64-bit random value.
-  *
-  * @return Random value.
-  */
-uint64_t random64();
-
+void poolHandleNew(struct PoolHandle*   poolHandle,
+                   const unsigned char* handle,
+                   const size_t         size);
+void poolHandleDelete(struct PoolHandle* poolHandle);
+void poolHandleGetDescription(const struct PoolHandle* poolHandle,
+                              char*                    buffer,
+                              const size_t             bufferSize);
+void poolHandlePrint(const struct PoolHandle* poolHandle,
+                     FILE*                    fd);
+int poolHandleComparison(const struct PoolHandle* poolHandle1,
+                         const struct PoolHandle* poolHandle2);
 
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

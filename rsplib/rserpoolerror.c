@@ -42,6 +42,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_INVALID_VALUES,                "invalid values" },
 
    /* Implementation-specific error causes */
+   { RSPERR_NOT_INITIALIZED,               "not initialized" },
    { RSPERR_BUFFERSIZE_EXCEEDED,           "buffer size exceeded (message too long)" },
    { RSPERR_READ_ERROR,                    "read() error" },
    { RSPERR_WRITE_ERROR,                   "write() error" },
@@ -81,8 +82,8 @@ const char* rserpoolErrorGetDescription(const unsigned int error)
 
 
 /* ###### Print error description ######################################## */
-const char* rserpoolErrorPrint(const unsigned int error,
-                               FILE*              fd)
+void rserpoolErrorPrint(const unsigned int error,
+                        FILE*              fd)
 {
    fprintf(fd, "$%04x: %s", error, rserpoolErrorGetDescription(error));
 }

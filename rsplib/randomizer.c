@@ -1,5 +1,5 @@
 /*
- *  $Id: randomizer.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: randomizer.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,11 +35,11 @@
  *
  */
 
-
 #include "randomizer.h"
-#include "utilities.h"
+#include "timeutilities.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 
 /*
@@ -58,7 +58,7 @@
 
 
 
-int          RandomSource = RS_TRY_DEVICE;
+static int   RandomSource = RS_TRY_DEVICE;
 static FILE* RandomDevice = NULL;
 
 
@@ -91,7 +91,7 @@ uint32_t random32()
 
    switch(RandomSource) {
       case RS_DEVICE:
-         if(fread(&number,sizeof(number),1,RandomDevice) == 1) {
+         if(fread(&number, sizeof(number), 1, RandomDevice) == 1) {
             return(number);
          }
          RandomSource = RS_CLIB;
@@ -99,9 +99,9 @@ uint32_t random32()
          return(random());
        break;
       case RS_TRY_DEVICE:
-         RandomDevice = fopen("/dev/urandom","r");
+         RandomDevice = fopen("/dev/urandom", "r");
          if(RandomDevice != NULL) {
-            if(fread(&number,sizeof(number),1,RandomDevice) == 1) {
+            if(fread(&number, sizeof(number), 1, RandomDevice) == 1) {
                srandom(number);
                RandomSource = RS_DEVICE;
                return(number);
@@ -109,7 +109,7 @@ uint32_t random32()
             fclose(RandomDevice);
          }
          RandomSource = RS_CLIB;
-         srandom((unsigned int)(getMicroTime() & (card64)0xffffffff));
+         srandom((unsigned int)(getMicroTime() & (uint64_t)0xffffffff));
       break;
    }
    return(random());

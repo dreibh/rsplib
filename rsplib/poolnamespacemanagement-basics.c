@@ -22,24 +22,15 @@
 
 #include "poolnamespacemanagement-basics.h"
 #include "stringutilities.h"
+#include "randomizer.h"
 
 
 PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
 
 
-/* ###### Get 64-bit random number ####################################### */
-unsigned long long random64()
-{
-   unsigned int       a      = random();
-   unsigned int       b      = random();
-   unsigned long long result = (((unsigned long long)a) << 32) | b;
-   return(result);
-}
-
-
 /* ###### Get pool element identifier #################################### */
 PoolElementIdentifierType getPoolElementIdentifier()
 {
-   PoolElementIdentifierType poolElementIdentifier = 1 + (random() % 0xfffffffe);
+   PoolElementIdentifierType poolElementIdentifier = 1 + (random32() % 0xfffffffe);
    return(poolElementIdentifier);
 }

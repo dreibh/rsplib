@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: timer.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,12 +35,9 @@
  *
  */
 
-
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "timer.h"
-#include "utilities.h"
-
 
 
 /* ###### Constructor #################################################### */

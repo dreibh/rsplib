@@ -30,6 +30,8 @@
 #include <string.h>
 #include <netinet/in.h>
 
+#include "rserpoolerror.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +43,9 @@ extern "C" {
 typedef uint32_t ENRPIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
 typedef uint32_t PoolElementSeqNumberType;
+
+#define UNDEFINED_POOL_ELEMENT_IDENTIFIER 0
+#define UNDEFINED_NAME_SERVER_IDENTIFIER  0
 
 
 #define PENPO_POLICYINFO      (1 << 0)   /* constants set by PE      */
@@ -75,7 +80,11 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PLPO_ONLY_INDEX     (PLPO_PEERS_INDEX)
 
 
-const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode);
+inline const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode)
+{
+   return(rserpoolErrorGetDescription(errorCode));
+}
+
 
 PoolElementIdentifierType getPoolElementIdentifier();
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,16 +50,13 @@
 #define TAG_RspLib_IsThreadSafe (TAG_USER + 10004)
 
 #define TAG_RspLib_CacheElementTimeout                   (TAG_USER + 7000)
-#define TAG_RspLib_CacheMaintenanceInterval              (TAG_USER + 7001)
-#define TAG_RspLib_NameServerAnnounceAddressIPv4         (TAG_USER + 7002)
-#define TAG_RspLib_NameServerAnnounceAddressIPv6         (TAG_USER + 7003)
-#define TAG_RspLib_NameServerAnnounceTimeout             (TAG_USER + 7004)
-#define TAG_RspLib_NameServerAnnounceMaintenanceInterval (TAG_USER + 7005)
-#define TAG_RspLib_NameServerConnectMaxTrials            (TAG_USER + 7006)
-#define TAG_RspLib_NameServerConnectTimeout              (TAG_USER + 7007)
-#define TAG_RspLib_NameServerRequestMaxTrials            (TAG_USER + 7008)
-#define TAG_RspLib_NameServerRequestTimeout              (TAG_USER + 7009)
-#define TAG_RspLib_NameServerResponseTimeout             (TAG_USER + 7010)
+#define TAG_RspLib_NameServerAnnounceAddress             (TAG_USER + 7001)
+#define TAG_RspLib_NameServerAnnounceTimeout             (TAG_USER + 7002)
+#define TAG_RspLib_NameServerConnectMaxTrials            (TAG_USER + 7003)
+#define TAG_RspLib_NameServerConnectTimeout              (TAG_USER + 7004)
+#define TAG_RspLib_NameServerRequestMaxTrials            (TAG_USER + 7005)
+#define TAG_RspLib_NameServerRequestTimeout              (TAG_USER + 7006)
+#define TAG_RspLib_NameServerResponseTimeout             (TAG_USER + 7007)
 
 #define TAG_PoolPolicy_Type                          (TAG_USER + 1000)
 #define TAGDATA_PoolPolicy_Type_RoundRobin           0x01
@@ -71,6 +68,7 @@
 
 #define TAG_PoolPolicy_Parameter_Weight              (TAG_USER + 1001)
 #define TAG_PoolPolicy_Parameter_Load                (TAG_USER + 1002)
+#define TAG_PoolPolicy_Parameter_LoadDegradation     (TAG_USER + 1003)
 
 #define TAG_PoolElement_ReregistrationInterval (TAG_USER + 2000)
 #define TAG_PoolElement_RegistrationLife       (TAG_USER + 2001)

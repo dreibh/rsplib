@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: utilities.h,v 1.1 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,21 +31,20 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: Server Table
+ * Purpose: Utilities
  *
  */
 
 
-#ifndef SERVERTABLE_H
-#define SERVERTABLE_H
+#ifndef UTILITIES_H
+#define UTILITIES_H
 
 
 #include "tdtypes.h"
-#include "tagitem.h"
-#include "dispatcher.h"
-#include "timer.h"
-#include "poolnamespacemanagement.h"
-#include "asapmessage.h"
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <glib.h>
 
 
 #ifdef __cplusplus
@@ -53,47 +52,25 @@ extern "C" {
 #endif
 
 
-struct ServerTable
-{
-   struct Dispatcher*                  Dispatcher;
-
-   struct ST_CLASS(PeerListManagement) List;
-   int                                 AnnounceSocket;
-   union sockaddr_union                AnnounceAddress;
-
-   card64                              NameServerAnnounceTimeout;
-   card64                              NameServerConnectTimeout;
-   unsigned int                        NameServerConnectMaxTrials;
-};
-
-
+/**
+  * File descriptor comparision pointer function.
+  *
+  * @param a Pointer to file descriptor 1.
+  * @param b Pointer to file descriptor 2.
+  * @return Comparision result.
+  */
+gint fdCompareFunc(gconstpointer a,
+                   gconstpointer b);
 
 /**
-  * Constructor.
+  * Get first available key/value pair from tree.
   *
-  * @param dispatcher Dispatcher.
-  * @param tags TagItem array.
+  * @param tree GTree.
+  * @param key Reference to store found key.
+  * @param value Reference to store found value.
+  * @return true if key/value pair has been found; false if tree is empty.
   */
-struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
-                                   struct TagItem*    tags);
-
-
-/**
-  * Destructor.
-  *
-  * @param serverTable ServerTable.
-  */
-void serverTableDelete(struct ServerTable* ServerTable);
-
-/**
-  * Do server hunt.
-  *
-  * @param serverTable ServerTable.
-  * @param protocol Desired nameserver protocol (SCTP or TCP).
-  * @return Number of valid servers seen.
-  */
-unsigned int serverTableFindServer(struct ServerTable* serverTable,
-                                   const int           protocol);
+bool getFirstTreeElement(GTree* tree, gpointer* key, gpointer* value);
 
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: servertable.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,6 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "servertable.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "asapcreator.h"
 #include "asapparser.h"
@@ -51,108 +50,62 @@
 
 
 
-/* Maximum number of simultaneos nameserver connection trials */
+/* Maximum number of simultaneous nameserver connection trials */
 #define MAX_SIMULTANEOUS_REQUESTS 3
 
 
 
 /* ###### Add nameserver announcement source ################################ */
-static bool addAnnounceSource(int         sockFD,
-                              const char* address)
+static bool joinAnnounceMulticastGroup(int                         sd,
+                                       const union sockaddr_union* groupAddress,
+                                       const bool                  join)
 {
-   struct sockaddr_storage multicastAddress;
-   struct sockaddr_storage localAddress;
-   int                     on;
+   union sockaddr_union localAddress;
+   int                  on;
 
-   if(!string2address(address,&multicastAddress)) {
-      return(false);
+   memset((char*)&localAddress, 0, sizeof(localAddress));
+   localAddress.sa.sa_family = groupAddress->sa.sa_family;
+   if(groupAddress->in6.sin6_family == AF_INET6) {
+      localAddress.in6.sin6_port = groupAddress->in6.sin6_port;
    }
-   memset((char*)&localAddress,0,sizeof(localAddress));
-   ((struct sockaddr*)&localAddress)->sa_family = ((struct sockaddr*)&multicastAddress)->sa_family;
-   switch(((struct sockaddr*)&multicastAddress)->sa_family) {
-      case AF_INET:
-         ((struct sockaddr_in*)&localAddress)->sin_port = ((struct sockaddr_in*)&multicastAddress)->sin_port;
-       break;
-#ifdef HAVE_IPV6
-      case AF_INET6:
-         ((struct sockaddr_in6*)&localAddress)->sin6_port = ((struct sockaddr_in6*)&multicastAddress)->sin6_port;
-       break;
-#endif
-      default:
-         LOG_ERROR
-         fprintf(stdlog,"Multicast address %s must be IPv4 or IPv6\n",address);
-         LOG_END
-       break;
+   else {
+      CHECK(groupAddress->in.sin_family == AF_INET);
+      localAddress.in.sin_port = groupAddress->in.sin_port;
    }
 
    on = 1;
-   if(ext_setsockopt(sockFD,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)) != 0) {
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
       return(false);
    }
 #if !defined (LINUX)
-   if(ext_setsockopt(sockFD,SOL_SOCKET,SO_REUSEPORT,&on,sizeof(on)) != 0) {
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
       return(false);
    }
 #endif
-   if(ext_bind(sockFD,(struct sockaddr*)&localAddress,getSocklen((struct sockaddr*)&localAddress)) != 0) {
+
+   if(ext_bind(sd, (struct sockaddr*)&localAddress,
+               getSocklen((struct sockaddr*)&localAddress)) != 0) {
       LOG_ERROR
-      fprintf(stdlog,"Unable to bind multicast socket to address %s\n",address);
+      fputs("Unable to bind multicast socket to address ", stdlog);
+      fputaddress((struct sockaddr*)&localAddress, true, stdlog);
+      fputs("\n", stdlog);
       LOG_END
       return(false);
    }
-   if(multicastGroupMgt(sockFD,&multicastAddress,NULL,true) == false) {
+   if(multicastGroupMgt(sd, (struct sockaddr*)&groupAddress, NULL, join) == false) {
       return(false);
    }
    return(true);
 }
 
 
-/* ###### Add nameserver to list ############################################ */
-static void addServer(struct ServerTable* serverTable,
-                      GList*              transportAddressList,
-                      const unsigned int  flags)
+/* ###### Server announce callback  ######################################### */
+static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
+                                         int                sd,
+                                         int                eventMask,
+                                         void*              userData)
 {
-   struct ServerAnnounce* serverAnnounce;
-   GList*                 found;
-
-   serverAnnounce = serverAnnounceNew(transportAddressList,flags);
-   if(serverAnnounce) {
-      LOG_VERBOSE5
-      fputs("Try adding ServerAnnounce:\n",stdlog);
-      serverAnnouncePrint(serverAnnounce,stdlog);
-      LOG_END
-
-      found = g_list_find_custom(serverTable->NameServerAnnounceList,
-                                 serverAnnounce,
-                                 serverAnnounceCompareFunc);
-      if(found) {
-         serverAnnounceDelete(serverAnnounce);
-         serverAnnounce = (struct ServerAnnounce*)found->data;
-         LOG_VERBOSE3
-         fputs("ServerAnnounce already in list -> updating timestamp\n",stdlog);
-         LOG_END
-         serverAnnounce->LastUpdate = getMicroTime();
-      }
-      else {
-         serverTable->NameServerAnnounceList = g_list_prepend(serverTable->NameServerAnnounceList,
-                                                          serverAnnounce);
-         serverTable->NameServerAnnounceListAddition = getMicroTime();
-         LOG_VERBOSE2
-         fputs("New ServerAnnounce successfully added:\n",stdlog);
-         serverAnnouncePrint(serverAnnounce,stdlog);
-         LOG_END
-      }
-   }
-   else {
-      transportAddressListDelete(transportAddressList);
-   }
-}
-
-
-/* ###### Receive server announce ########################################### */
-static void receiveServerAnnounce(struct ServerTable* serverTable,
-                           int                 sd)
-{
+   struct ServerTable*      serverTable = (struct ServerTable*)userData;
    struct ASAPMessage*      message;
    struct TransportAddress* transportAddress;
    GList*                   transportAddressList;
@@ -161,8 +114,8 @@ static void receiveServerAnnounce(struct ServerTable* serverTable,
    char                     buffer[1024];
    ssize_t                  received;
 
-   LOG_VERBOSE2
-   fprintf(stdlog,"Reading response from socket %d...\n",sd);
+   LOG_VERBOSE
+   fputs("Trying to receive name server announce...\n", stdlog);
    LOG_END
 
    senderAddressLength = sizeof(senderAddress);
@@ -171,18 +124,10 @@ static void receiveServerAnnounce(struct ServerTable* serverTable,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
-      message = asapPacket2Message((char*)&buffer,received,sizeof(buffer));
+      message = asapPacket2Message((char*)&buffer, received, sizeof(buffer));
       if(message != NULL) {
          if(message->Type == AHT_SERVER_ANNOUNCE) {
-            if(message->Error == 0) {
-
-               /* For TCP socket: Try to get peer address if not specified. */
-               if(senderAddressLength == 0) {
-                  senderAddressLength = sizeof(senderAddress);
-                  ext_getpeername(sd,(struct sockaddr*)&senderAddress,
-                                  &senderAddressLength);
-               }
-
+            if(message->Error != 0) {
                LOG_VERBOSE
                fputs("ServerAnnounce from ",stdlog);
                address2string((struct sockaddr*)&senderAddress,
@@ -191,6 +136,7 @@ static void receiveServerAnnounce(struct ServerTable* serverTable,
                fputs(" received\n",stdlog);
                LOG_END
 
+               /*
                if(message->TransportAddressListPtr) {
                   message->TransportAddressListPtrAutoDelete = false;
                   transportAddressList = message->TransportAddressListPtr;
@@ -205,14 +151,8 @@ static void receiveServerAnnounce(struct ServerTable* serverTable,
                      transportAddressList = g_list_append(transportAddressList,transportAddress);
                   }
                }
-
-               addServer(serverTable,transportAddressList,SIF_DYNAMIC);
+               */
             }
-         }
-         else {
-            LOG_WARNING
-            fprintf(stdlog,"Unsupported message type $%02x!\n",message->Type);
-            LOG_END
          }
          asapMessageDelete(message);
       }
@@ -220,138 +160,70 @@ static void receiveServerAnnounce(struct ServerTable* serverTable,
 }
 
 
-/* ###### Server announce callback  ######################################### */
-static void receiveServerAnnounceCallback(struct Dispatcher* dispatcher,
-                                          int                sd,
-                                          int                eventMask,
-                                          void*              userData)
-{
-   struct ServerTable* serverTable = (struct ServerTable*)userData;
-   receiveServerAnnounce(serverTable,sd);
-}
-
-
-/* ###### Server maintenance timer ########################################## */
-static void serverMaintenanceTimer(struct Dispatcher* dispatcher,
-                                       struct Timer*      timer,
-                                       void*              userData)
-{
-   struct ServerTable*    serverTable = (struct ServerTable*)userData;
-   struct ServerAnnounce* serverAnnounce;
-   GList*                 list;
-
-   dispatcherLock(dispatcher);
-
-   LOG_VERBOSE3
-   fputs("Starting ServerAnnounce list maintenance\n",stdlog);
-   LOG_END
-
-   list = g_list_first(serverTable->NameServerAnnounceList);
-   while(list != NULL) {
-      serverAnnounce = (struct ServerAnnounce*)list->data;
-      if((serverAnnounce->Flags & SIF_DYNAMIC) &&
-         (serverAnnounce->LastUpdate + serverTable->NameServerAnnounceTimeout < getMicroTime())) {
-         LOG_VERBOSE2
-         fputs("Timeout for this entry:\n",stdlog);
-         serverAnnouncePrint(serverAnnounce,stdlog);
-         LOG_END
-         serverTable->NameServerAnnounceList = g_list_remove(serverTable->NameServerAnnounceList,
-                                                         serverAnnounce);
-         serverAnnounceDelete(serverAnnounce);
-         list = g_list_first(serverTable->NameServerAnnounceList);
-      }
-      else {
-         list = g_list_next(list);
-      }
-   }
-
-   timerRestart(timer,serverTable->NameServerAnnounceMaintenanceInterval);
-
-   LOG_VERBOSE3
-   fputs("Finished ServerAnnounce list maintenance\n",stdlog);
-   LOG_END
-
-   dispatcherUnlock(dispatcher);
-}
-
-
 /* ###### Constructor ####################################################### */
 struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
                                    struct TagItem*    tags)
 {
-   const char*         announceAddress;
-   struct ServerTable* serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
+   struct sockaddr_storage* announceAddress;
+   struct sockaddr_storage  defaultAnnounceAddress;
+   struct ServerTable*      serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
       serverTable->Dispatcher = dispatcher;
+      ST_CLASS(peerListManagementNew)(&serverTable->List, 0, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
       serverTable->NameServerConnectMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerConnectMaxTrials,
-                                                           ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS);
+                                                               ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS);
       serverTable->NameServerConnectTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerConnectTimeout,
-                                                                 ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT);
+                                                                     ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT);
       serverTable->NameServerAnnounceTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerAnnounceTimeout,
-                                                                  ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT);
-      serverTable->NameServerAnnounceMaintenanceInterval = (card64)tagListGetData(tags, TAG_RspLib_NameServerAnnounceMaintenanceInterval,
-                                                                              ASAP_DEFAULT_NAMESERVER_ANNOUNCE_MAINTENANCE_INTERVAL);
+                                                                      ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT);
+
+      CHECK(string2address(ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
+      announceAddress = (struct sockaddr_storage*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddress,
+                                                                 (tagdata_t)&defaultAnnounceAddress);
+      memcpy(&serverTable->AnnounceAddress, announceAddress, sizeof(serverTable->AnnounceAddress));
 
       /* ====== Show results ================================================ */
       LOG_VERBOSE3
       fputs("New ServerTable's configuration:\n", stdlog);
-      fprintf(stdlog, "nameserver.connect.maxtrials   = %u\n",       serverTable->NameServerConnectMaxTrials);
-      fprintf(stdlog, "nameserver.connect.timeout     = %Lu [탎]\n", serverTable->NameServerConnectTimeout);
-      fprintf(stdlog, "nameserver.announce.timeout    = %Lu [탎]\n", serverTable->NameServerAnnounceTimeout);
-      fprintf(stdlog, "nameserver.announce.mtinterval = %Lu\n",       serverTable->NameServerAnnounceMaintenanceInterval);
+      fprintf(stdlog, "nameserver.announce.timeout  = %Lu [탎]\n", serverTable->NameServerAnnounceTimeout);
+      fputs("nameserver.announce.address  = ", stdlog);
+      fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
+      fputs("\n", stdlog);
+      fprintf(stdlog, "nameserver.connect.maxtrials = %u\n",       serverTable->NameServerConnectMaxTrials);
+      fprintf(stdlog, "nameserver.connect.timeout   = %Lu [탎]\n", serverTable->NameServerConnectTimeout);
       LOG_END
 
 
       /* ====== Join announce multicast groups ============================ */
-      serverTable->NameServerAnnounceList         = NULL;
-      serverTable->NameServerAnnounceListAddition = 0;
-      serverTable->NameServerIPv4AnnounceSocket   = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-      if(serverTable->NameServerIPv4AnnounceSocket >= 0) {
-         dispatcherAddFDCallback(serverTable->Dispatcher,
-                                 serverTable->NameServerIPv4AnnounceSocket,
-                                 FDCE_Read,
-                                 receiveServerAnnounceCallback,
-                                 (void*)serverTable);
-         announceAddress = (const char*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddressIPv4,
-                                                       (tagdata_t)ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS_IPv4);
-         if(!addAnnounceSource(serverTable->NameServerIPv4AnnounceSocket,
-                               announceAddress)) {
+      serverTable->AnnounceSocket = ext_socket(serverTable->AnnounceAddress.sa.sa_family,
+                                               SOCK_DGRAM, IPPROTO_UDP);
+      if(serverTable->AnnounceSocket >= 0) {
+         if(joinAnnounceMulticastGroup(serverTable->AnnounceSocket,
+                                       &serverTable->AnnounceAddress,
+                                       true)) {
+            dispatcherAddFDCallback(serverTable->Dispatcher,
+                                    serverTable->AnnounceSocket,
+                                    FDCE_Read,
+                                    handleServerAnnounceCallback,
+                                    (void*)serverTable);
+         }
+         else {
             LOG_ERROR
-            fprintf(stdlog,"Unable to set up IPv4 multicast announce socket for %s\n",
-                    announceAddress);
+            fputs("Joining multicast group ", stdlog);
+            fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
+            fputs(" failed. Check routing (is default route set?) and firewall settings!\n", stdlog);
             LOG_END
          }
+         ext_close(serverTable->AnnounceSocket);
+         serverTable->AnnounceSocket = -1;
       }
-#ifdef HAVE_IPV6
-      serverTable->NameServerIPv6AnnounceSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-      if(serverTable->NameServerIPv6AnnounceSocket >= 0) {
-         dispatcherAddFDCallback(serverTable->Dispatcher,
-                                 serverTable->NameServerIPv6AnnounceSocket,
-                                 FDCE_Read,
-                                 receiveServerAnnounceCallback,
-                                 (void*)serverTable);
-         announceAddress = (const char*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddressIPv6,
-                                                       (tagdata_t)ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS_IPv6);
-         if(!addAnnounceSource(serverTable->NameServerIPv6AnnounceSocket,
-                               announceAddress)) {
-            LOG_ERROR
-            fprintf(stdlog,"Unable to set up IPv6 multicast announce socket for %s\n",
-                    announceAddress);
-            LOG_END
-         }
+      else {
+         LOG_ERROR
+         fputs("Creating a socket for name server announces failed\n", stdlog);
+         LOG_END
       }
-#endif
-      serverTable->NameServerAnnounceMaintenanceTimer = timerNew(serverTable->Dispatcher,
-                                                                 serverMaintenanceTimer,
-                                                                 (void*)serverTable);
-      if(serverTable->NameServerAnnounceMaintenanceTimer == NULL) {
-         serverTableDelete(serverTable);
-         return(NULL);
-      }
-      timerStart(serverTable->NameServerAnnounceMaintenanceTimer,
-                 serverTable->NameServerAnnounceMaintenanceInterval);
    }
    return(serverTable);
 }
@@ -360,33 +232,15 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 /* ###### Destructor ######################################################## */
 void serverTableDelete(struct ServerTable* serverTable)
 {
-   struct ServerAnnounce* serverAnnounce;
-   GList*                 list;
-
    if(serverTable != NULL) {
-      if(serverTable->NameServerAnnounceMaintenanceTimer) {
-         timerDelete(serverTable->NameServerAnnounceMaintenanceTimer);
-      }
-      while(serverTable->NameServerAnnounceList != NULL) {
-         list = g_list_first(serverTable->NameServerAnnounceList);
-         serverAnnounce = (struct ServerAnnounce*)list->data;
-         serverAnnounceDelete(serverAnnounce);
-         serverTable->NameServerAnnounceList = g_list_remove(serverTable->NameServerAnnounceList,serverAnnounce);
-      }
-      if(serverTable->NameServerIPv4AnnounceSocket >= 0) {
+      if(serverTable->AnnounceSocket >= 0) {
          dispatcherRemoveFDCallback(serverTable->Dispatcher,
-                                    serverTable->NameServerIPv4AnnounceSocket);
-         ext_close(serverTable->NameServerIPv4AnnounceSocket);
-         serverTable->NameServerIPv4AnnounceSocket = -1;
+                                    serverTable->AnnounceSocket);
+         ext_close(serverTable->AnnounceSocket);
+         serverTable->AnnounceSocket = -1;
       }
-#ifdef HAVE_IPV6
-      if(serverTable->NameServerIPv6AnnounceSocket >= 0) {
-         dispatcherRemoveFDCallback(serverTable->Dispatcher,
-                                    serverTable->NameServerIPv6AnnounceSocket);
-         ext_close(serverTable->NameServerIPv6AnnounceSocket);
-         serverTable->NameServerIPv6AnnounceSocket = -1;
-      }
-#endif
+      ST_CLASS(peerListManagementClear)(&serverTable->List);
+      ST_CLASS(peerListManagementDelete)(&serverTable->List);
       free(serverTable);
    }
 }
@@ -534,16 +388,10 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
       n = 0;
       FD_ZERO(&rfdset);
       FD_ZERO(&wfdset);
-      if(serverTable->NameServerIPv4AnnounceSocket >= 0) {
-         FD_SET(serverTable->NameServerIPv4AnnounceSocket,&rfdset);
-         n = max(n,serverTable->NameServerIPv4AnnounceSocket);
+      if(serverTable->NameServerAnnounceSocket >= 0) {
+         FD_SET(serverTable->NameServerAnnounceSocket,&rfdset);
+         n = max(n,serverTable->NameServerAnnounceSocket);
       }
-#ifdef HAVE_IPV6
-      if(serverTable->NameServerIPv6AnnounceSocket >= 0) {
-         FD_SET(serverTable->NameServerIPv6AnnounceSocket,&rfdset);
-         n = max(n,serverTable->NameServerIPv6AnnounceSocket);
-      }
-#endif
       nextTimeout = serverTable->NameServerConnectTimeout;
       for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
          if(sd[i] >= 0) {
@@ -598,16 +446,10 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
                }
             }
          }
-         if((serverTable->NameServerIPv4AnnounceSocket >= 0) &&
-            FD_ISSET(serverTable->NameServerIPv4AnnounceSocket,&rfdset)) {
-            receiveServerAnnounce(serverTable,serverTable->NameServerIPv4AnnounceSocket);
+         if((serverTable->NameServerAnnounceSocket >= 0) &&
+            FD_ISSET(serverTable->NameServerAnnounceSocket,&rfdset)) {
+            receiveServerAnnounce(serverTable,serverTable->NameServerAnnounceSocket);
          }
-#ifdef HAVE_IPV6
-         if((serverTable->NameServerIPv6AnnounceSocket >= 0) &&
-            FD_ISSET(serverTable->NameServerIPv6AnnounceSocket,&rfdset)) {
-            receiveServerAnnounce(serverTable,serverTable->NameServerIPv6AnnounceSocket);
-         }
-#endif
       }
    }
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.2 2004/07/16 15:35:40 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.3 2004/07/18 15:30:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -81,20 +81,16 @@ struct ASAPInstance
 };
 
 
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS_IPv4         "239.0.0.1:3863"
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS_IPv6         "[fff5::1]:3863"
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_MAINTENANCE_INTERVAL  1000000
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT              30000000
-#define ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS                    3
-#define ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT                7500000
-#define ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS                    3
-#define ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT                5000000
-#define ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT               4500000
+#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT               30000000
+#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS "239.0.0.1:3863"
+#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT         30000000
+#define ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS               3
+#define ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT           7500000
+#define ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS               3
+#define ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT           5000000
+#define ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT          4500000
 
-#define ASAP_DEFAULT_CACHE_MAINTENANCE_INTERVAL                1000000
-#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT                    30000000
-
-#define ASAP_BUFFER_SIZE                                         65536
+#define ASAP_BUFFER_SIZE                                    65536
 
 
 /**
@@ -104,78 +100,69 @@ struct ASAPInstance
   * @param tags TagItems.
   * @return ASAPInstance or NULL in case of error.
   */
-struct ASAPInstance* asapNew(struct Dispatcher* dispatcher,
-                             struct TagItem*    tags);
+struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
+                                     struct TagItem*    tags);
 
 /**
   * Destructor.
   *
-  * @param asap ASAPInstance.
+  * @param asapInstance ASAPInstance.
   */
-void asapDelete(struct ASAPInstance* asap);
+void asapInstanceDelete(struct ASAPInstance* asapInstance);
 
 /**
   * Register pool element.
   *
-  * @param asap ASAPInstance.
+  * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
   * @param poolElement Pool Element.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapRegister(struct ASAPInstance*               asap,
-                          struct PoolHandle*                 poolHandle,
-                          struct ST_CLASS(PoolElementNode)*  poolElement);
+unsigned int asapInstanceRegister(
+                struct ASAPInstance*              asapInstance,
+                struct PoolHandle*                poolHandle,
+                struct ST_CLASS(PoolElementNode)* poolElement);
 
 /**
   * Deregister pool element.
   *
-  * @param asap ASAPInstance.
+  * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
   * @param identifier Pool element identifier.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapDeregister(struct ASAPInstance*            asap,
-                            struct PoolHandle*              poolHandle,
-                            const PoolElementIdentifierType identifier);
+unsigned int asapInstanceDeregister(
+                struct ASAPInstance*            asapInstance,
+                struct PoolHandle*              poolHandle,
+                const PoolElementIdentifierType identifier);
 
 /**
   * Report failure of pool element.
   *
-  * @param asap ASAPInstance.
+  * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
   * @param identifier Pool element identifier.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapFailure(struct ASAPInstance*            asap,
-                         struct PoolHandle*              poolHandle,
-                         const PoolElementIdentifierType identifier);
-
-/**
-  * Query name server for pool handle and select one pool element
-  * by policy.
-  *
-  * @param asap ASAPInstance.
-  * @param poolHandle Pool handle.
-  * @param error Reference to store error code to.
-  * @return Pool element or NULL in case of error.
-  */
-struct PoolElement* asapSelectPoolElement(struct ASAPInstance* asap,
-                                          struct PoolHandle*   poolHandle,
-                                          unsigned int*        error);
+unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInstance,
+                               struct PoolHandle*              poolHandle,
+                               const PoolElementIdentifierType identifier);
 
 /**
   * Do name resolution of given pool handle. The resulting pool pointer
   * will be stored to the variable poolPtr.
   *
-  * @param asap ASAPInstance.
+  * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
-  * @param ?`???????????????????????
+  * @param poolElementNodeArray Array to store pool element node pointers to.
+  * @param poolElementNodes Reference to variable containing maximum amount of pool element nodes to obtain. After function call, this variable contains actual amount of pool element nodes obtained.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapNameResolution(struct ASAPInstance*               asapInstance,
-                                struct PoolHandle*                 poolHandle,
-                                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
-                                size_t*                            poolElementNodes);
+unsigned int asapInstanceNameResolution(
+                struct ASAPInstance*               asapInstanceInstance,
+                struct PoolHandle*                 poolHandle,
+                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                size_t*                            poolElementNodes);
 
 
 #ifdef __cplusplus

@@ -1,0 +1,6 @@
+#!/bin/sh
+ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 up
+route add default gw 10.0.0.2
+
+ip addr add 2000:1:2:3:4:5:6:7/64 dev dummy0
+route --inet6 add default gw 2000:1:2:3:4:5:6:7777

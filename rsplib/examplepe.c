@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: examplepe.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "localaddresses.h"
 #include "breakdetector.h"
@@ -78,7 +77,7 @@ void sendCookie(struct Client* client)
    strncpy((char*)&cookie.ID, MY_COOKIE_ID, sizeof(MY_COOKIE_ID));
    cookie.Counter = htonl(client->Counter);
    result = rspSessionSendCookie(client->Session,
-                                 (char*)&cookie, sizeof(struct Cookie), NULL);
+                                 (unsigned char*)&cookie, sizeof(struct Cookie), NULL);
    if(result) {
       puts("Cookie sent");
    }
@@ -293,7 +292,7 @@ int main(int argc, char** argv)
    tags[8].Data = (tagdata_t)true;
    tags[9].Tag  = TAG_END;
 
-   poolElement = rspCreatePoolElement(poolHandle, strlen(poolHandle), tags);
+   poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
       puts("Session-Based Example Pool Element - Version 2.0");
       puts("------------------------------------------------\n");

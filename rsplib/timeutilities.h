@@ -20,48 +20,30 @@
  *
  */
 
-#ifndef RANDOMIZER_H
-#define RANDOMIZER_H
+#ifndef TIMEUTILITIES_H
+#define TIMEUTILITIES_H
 
-#ifdef FreeBSD
-#include <sys/types.h>
-#else
-#include <stdint.h>
-#endif
+#include <stdio.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+/**
+  * Get current time: Microseconds since 01 January, 1970.
+  *
+  * @return Current time.
+  */
+unsigned long long getMicroTime();
 
 /**
-  * Get 8-bit random value.
+  * Print time stamp.
   *
-  * @return Random value.
+  * @param fd File to print timestamp to (e.g. stdout, stderr, ...).
   */
-uint8_t random8();
-
-/**
-  * Get162-bit random value.
-  *
-  * @return Random value.
-  */
-uint16_t random16();
-
-/**
-  * Get 32-bit random value.
-  *
-  * @return Random value.
-  */
-uint32_t random32();
-
-/**
-  * Get 64-bit random value.
-  *
-  * @return Random value.
-  */
-uint64_t random64();
+void printTimeStamp(FILE* fd);
 
 
 
@@ -69,5 +51,5 @@ uint64_t random64();
 }
 #endif
 
-
 #endif
+

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rspsession.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,7 +59,7 @@ struct PoolElementDescriptor
 {
    struct ThreadSafety Mutex;
 
-   char*               PoolHandle;
+   unsigned char*      PoolHandle;
    size_t              PoolHandleSize;
    uint32_t            Identifier;
    int                 SocketDomain;
@@ -85,7 +85,7 @@ struct SessionDescriptor
 {
    struct ThreadSafety           Mutex;
 
-   char*                         PoolHandle;
+   unsigned char*                PoolHandle;
    size_t                        PoolHandleSize;
    uint32_t                      Identifier;
    int                           SocketDomain;
@@ -358,9 +358,9 @@ void rspDeletePoolElement(struct PoolElementDescriptor* ped,
 
 
 /* ###### Create pool element ################################################ */
-struct PoolElementDescriptor* rspCreatePoolElement(const char*     poolHandle,
-                                                   const size_t    poolHandleSize,
-                                                   struct TagItem* tags)
+struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHandle,
+                                                   const size_t         poolHandleSize,
+                                                   struct TagItem*      tags)
 {
    struct sockaddr_storage localAddress;
 
@@ -372,7 +372,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const char*     poolHandle,
 
       /* ====== Initialize pool element ===================================== */
       memset((char*)ped, 0, sizeof(struct PoolElementDescriptor));
-      ped->PoolHandle = (char*)memdup(poolHandle, poolHandleSize);
+      ped->PoolHandle = (unsigned char*)memdup(poolHandle, poolHandleSize);
       if(ped->PoolHandle == NULL) {
          LOG_ERROR
          fputs("Out of memory\n", stdlog);
@@ -482,7 +482,7 @@ static struct SessionDescriptor* rspSessionNew(
                                     const int                     socketDescriptor,
                                     const bool                    incoming,
                                     struct PoolElementDescriptor* ped,
-                                    const char*                   poolHandle,
+                                    const unsigned char*          poolHandle,
                                     const size_t                  poolHandleSize,
                                     struct TagItem*               tags)
 {
@@ -501,7 +501,7 @@ static struct SessionDescriptor* rspSessionNew(
          return(NULL);
       }
       if(poolHandle) {
-         session->PoolHandle = (char*)memdup(poolHandle, poolHandleSize);
+         session->PoolHandle = (unsigned char*)memdup(poolHandle, poolHandleSize);
          if(session->PoolHandle == NULL) {
             messageBufferDelete(session->MessageBuffer);
             free(session);
@@ -556,7 +556,7 @@ static void rspSessionDelete(struct SessionDescriptor* session)
 
 /* ###### Send cookie ######################################################## */
 bool rspSessionSendCookie(struct SessionDescriptor* session,
-                          const char*               cookie,
+                          const unsigned char*      cookie,
                           const size_t              cookieSize,
                           struct TagItem*           tags)
 {
@@ -646,8 +646,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
          LOG_ACTION
          fprintf(stdlog, "Reporting failure of pool element $%08x\n", session->Identifier);
          LOG_END
-         rspFailure(session->PoolHandle, session->PoolHandleSize,
-                    session->Identifier, NULL);
+         rspReportFailure(session->PoolHandle, session->PoolHandleSize,
+                          session->Identifier, NULL);
       }
 
       /* ====== Invoke callback ============================================= */
@@ -721,8 +721,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
                LOG_ACTION
                fprintf(stdlog, "Reporting failure of pool element $%08x\n", eai2->ai_pe_id);
                LOG_END
-               rspFailure(session->PoolHandle, session->PoolHandleSize,
-                          eai2->ai_pe_id, NULL);
+               rspReportFailure(session->PoolHandle, session->PoolHandleSize,
+                                eai2->ai_pe_id, NULL);
             }
 
             eai2 = eai2->ai_next;
@@ -806,7 +806,7 @@ struct SessionDescriptor* rspAcceptSession(struct PoolElementDescriptor* ped,
 
 
 /* ###### Create session ##################################################### */
-struct SessionDescriptor* rspCreateSession(const char*                   poolHandle,
+struct SessionDescriptor* rspCreateSession(const unsigned char*          poolHandle,
                                            const size_t                  poolHandleSize,
                                            struct PoolElementDescriptor* ped,
                                            struct TagItem*               tags)

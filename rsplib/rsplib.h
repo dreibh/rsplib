@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rsplib.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -124,10 +124,10 @@ const char* rspGetLastErrorDescription();
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
   */
-uint32_t rspRegister(const char*                       poolHandle,
-                     const size_t                      poolHandleSize,
-                     const struct EndpointAddressInfo* endpointAddressInfo,
-                     struct TagItem*                   tags CPP_DEFAULT(NULL));
+unsigned int rspRegister(const unsigned char*        poolHandle,
+                         const size_t                poolHandleSize,
+                         struct EndpointAddressInfo* endpointAddressInfo,
+                         struct TagItem*             tags CPP_DEFAULT(NULL));
 
 /**
   * Deregister pool element. In case of success, 0 is returned. Otherwise,
@@ -140,10 +140,10 @@ uint32_t rspRegister(const char*                       poolHandle,
   * @param tags Additional parameters.
   * @return Success.
   */
-int rspDeregister(const char*     poolHandle,
-                  const size_t    poolHandleSize,
-                  const uint32_t  identifier,
-                  struct TagItem* tags CPP_DEFAULT(NULL));
+unsigned int rspDeregister(const unsigned char* poolHandle,
+                           const size_t         poolHandleSize,
+                           const uint32_t       identifier,
+                           struct TagItem*      tags CPP_DEFAULT(NULL));
 
 /**
   * Do name resolution for given pool handle and select one pool element
@@ -164,7 +164,7 @@ int rspDeregister(const char*     poolHandle,
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
   */
-int rspNameResolution(const char*                  poolHandle,
+int rspNameResolution(const unsigned char*         poolHandle,
                       const size_t                 poolHandleSize,
                       struct EndpointAddressInfo** endpointAddressInfo,
                       struct TagItem*              tags CPP_DEFAULT(NULL));
@@ -187,10 +187,10 @@ void rspFreeEndpointAddressArray(struct EndpointAddressInfo* endpointAddressInfo
   * @param tags Additional parameters.
   * @return Success.
   */
-void rspFailure(const char*     poolHandle,
-                const size_t    poolHandleSize,
-                const uint32_t  identifier,
-                struct TagItem* tags CPP_DEFAULT(NULL));
+unsigned int rspReportFailure(const unsigned char* poolHandle,
+                              const size_t         poolHandleSize,
+                              const uint32_t       identifier,
+                              struct TagItem*      tags CPP_DEFAULT(NULL));
 
 /**
   * Wrapper to the system's select() function. This function handles
@@ -223,9 +223,9 @@ struct SessionDescriptor;
   * @param tags TagItem array.
   * @return PoolElementDescriptor or NULL in case of error.
   */
-struct PoolElementDescriptor* rspCreatePoolElement(const char*     poolHandle,
-                                                   const size_t    poolHandleSize,
-                                                   struct TagItem* tags CPP_DEFAULT(NULL));
+struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHandle,
+                                                   const size_t         poolHandleSize,
+                                                   struct TagItem*      tags CPP_DEFAULT(NULL));
 
 /**
   * Delete pool element.
@@ -255,7 +255,7 @@ struct SessionDescriptor* rspAcceptSession(struct PoolElementDescriptor* ped,
   * @param tags TagItem array.
   * @return SessionDescriptor or NULL in case of error.
   */
-struct SessionDescriptor* rspCreateSession(const char*                   poolHandle,
+struct SessionDescriptor* rspCreateSession(const unsigned char*          poolHandle,
                                            const size_t                  poolHandleSize,
                                            struct PoolElementDescriptor* ped  CPP_DEFAULT(NULL),
                                            struct TagItem*               tags CPP_DEFAULT(NULL));
@@ -307,7 +307,7 @@ ssize_t rspSessionWrite(struct SessionDescriptor* sd,
   * @return true for success or false in case of error.
   */
 bool rspSessionSendCookie(struct SessionDescriptor* session,
-                          const char*               cookie,
+                          const unsigned char*      cookie,
                           const size_t              cookieSize,
                           struct TagItem*           tags CPP_DEFAULT(NULL));
 

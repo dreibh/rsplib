@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: nameserver.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,20 +38,14 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "dispatcher.h"
 #include "timer.h"
 #include "messagebuffer.h"
 #include "rsplib-tags.h"
 
-#include "pool.h"
-#include "poolelement.h"
-#include "poolnamespace.h"
 #include "asapmessage.h"
-#include "asapcreator.h"
-#include "asapparser.h"
-#include "asaperror.h"
+#include "poolnamespacemanagement.h"
 #include "randomizer.h"
 #include "breakdetector.h"
 
@@ -62,51 +56,32 @@
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-/* #define FAST_BREAK */
+#define FAST_BREAK
 
+#define MAX_NS_TRANSPORTADDRESSES 16
 
-struct NameServerInterface
-{
-   int                      FD;
-   int                      Protocol;
-   struct TransportAddress* Address;
-};
-
-
-struct NameServerUser
-{
-   int                   FD;
-   int                   Protocol;
-   char                  Identifier[128];
-
-   size_t                Registrations;
-   struct NameServer*    Owner;
-   GList*                PoolElementList;
-   struct Timer*         KeepAliveTimer;
-   struct Timer*         UserTimeoutTimer;
-   struct MessageBuffer* Buffer;
-};
 
 
 struct NameServer
 {
-   GTree*                UserTree;
-   GTree*                InterfaceTree;
-   GList*                AnnounceList;
-   struct PoolNamespace* Namespace;
-   struct Dispatcher*    StateMachine;
-   struct Timer*         AnnounceTimer;
-   uint32_t              ServerID;
+   ENRPIdentifierType                       ServerID;
+   struct Dispatcher*                       StateMachine;
+   struct ST_CLASS(PoolNamespaceManagement) Namespace;
 
-   card64                AnnounceInterval;
-   card64                KeepAliveInterval;
-   card64                KeepAliveTimeout;
-   card64                MessageReceptionTimeout;
+   int                                      AnnounceSocket;
+   union sockaddr_union                     AnnounceAddress;
+   bool                                     SendAnnounces;
 
-   int                   IPv4AnnounceSocket;
-#ifdef HAVE_IPV6
-   int                   IPv6AnnounceSocket;
-#endif
+   int                                      NameServerSocket;
+   struct TransportAddressBlock*            NameServerAddress;
+
+   struct Timer*                            AnnounceTimer;
+   struct Timer*                            NamespaceActionTimer;
+
+   card64                                   AnnounceInterval;
+   card64                                   KeepAliveInterval;
+   card64                                   KeepAliveTimeout;
+   card64                                   MessageReceptionTimeout;
 };
 
 
@@ -116,257 +91,88 @@ struct NameServer
 #define NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT  3000000
 
 
-struct NameServer* nameServerNew();
-
+struct NameServer* nameServerNew(int                           nameServerSocket,
+                                 struct TransportAddressBlock* nameServerAddress,
+                                 const bool                    sendAnnounces,
+                                 const union sockaddr_union*   announceAddress);
 void nameServerDelete(struct NameServer* nameServer);
-
-static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
-                                   struct Timer*      timer,
-                                   void*              userData);
-
-static void userTimeoutTimerCallback(struct Dispatcher* dispatcher,
-                                     struct Timer*      timer,
-                                     void*              userData);
 
 static void announceTimerCallback(struct Dispatcher* dispatcher,
                                   struct Timer*      timer,
                                   void*              userData);
-
-static void socketHandler(struct Dispatcher* dispatcher,
-                                    int                fd,
-                                    int                eventMask,
-                                    void*              userData);
-
-
-
-/* ###### Add announce address ################################################### */
-static bool addAnnounceAddress(struct NameServer*             nameServer,
-                               const struct sockaddr_storage* address)
-{
-   struct sockaddr_storage* copy = (struct sockaddr_storage*)memdup(address,sizeof(struct sockaddr_storage));
-   if(copy) {
-      nameServer->AnnounceList = g_list_append(nameServer->AnnounceList,copy);
-      return(true);
-   }
-   return(false);
-}
-
-
-/* ###### Add interface ################################################### */
-static bool addInterface(struct NameServer*       nameServer,
-                         int                      interfaceFD,
-                         struct TransportAddress* transportAddress)
-{
-   if(ext_listen(interfaceFD,10) < 0) {
-      LOG_ERROR
-      logerror("listen() call failed");
-      LOG_END
-      return(false);
-   }
-
-   if(nameServer != NULL) {
-      struct NameServerInterface* interface =
-         (struct NameServerInterface*)malloc(sizeof(struct NameServerInterface));
-      if(interface != NULL) {
-         interface->FD       = interfaceFD;
-         interface->Address  = transportAddress;
-         interface->Protocol = transportAddress->Protocol;
-
-         g_tree_insert(nameServer->InterfaceTree,(gpointer)interface->FD,interface);
-
-         dispatcherAddFDCallback(nameServer->StateMachine,
-                                 interfaceFD,
-                                 FDCE_Read|FDCE_Exception,
-                                 socketHandler,
-                                 (void*)nameServer);
-         return(true);
-      }
-   }
-   return(false);
-}
-
-
-/* ###### Remove interface ################################################## */
-void removeInterface(struct NameServer* nameServer,
-                     int                interfaceFD)
-{
-   struct NameServerInterface* interface =
-      (struct NameServerInterface*)g_tree_lookup(nameServer->InterfaceTree,
-                                                 (gpointer)interfaceFD);
-   if(interface != NULL) {
-      dispatcherRemoveFDCallback(nameServer->StateMachine, interfaceFD);
-      if(interface->Address) {
-         transportAddressDelete(interface->Address);
-      }
-      g_tree_remove(nameServer->InterfaceTree,(gpointer)interfaceFD);
-      free(interface);
-   }
-}
-
-
-/* ###### Remove pool element ############################################ */
-static void removePoolElement(struct NameServer*     nameServer,
-                              struct NameServerUser* user,
-                              struct PoolElement*    poolElement)
-{
-   struct Pool* pool = poolElement->OwnerPool;
-
-   user->PoolElementList = g_list_remove(user->PoolElementList,poolElement);
-   poolRemovePoolElement(pool,poolElement);
-   poolElementDelete(poolElement);
-   poolElement = NULL;
-
-   if(poolIsEmpty(pool)) {
-      poolNamespaceRemovePool(nameServer->Namespace,pool);
-      poolDelete(pool);
-      pool = NULL;
-   }
-}
-
-
-/* ###### Add user ######################################################## */
-static void addUser(struct NameServer* nameServer,
-                    int                fd,
-                    int                protocol)
-{
-   struct sockaddr_storage name;
-   socklen_t               namelen;
-
-   struct NameServerUser* user = (struct NameServerUser*)malloc(sizeof(struct NameServerUser));
-   if(user != NULL) {
-      /* ====== Add user ================================================== */
-      user->FD               = fd;
-      user->Protocol         = protocol;
-      user->PoolElementList  = NULL;
-      user->Owner            = nameServer;
-      user->Registrations    = 0;
-      user->KeepAliveTimer   = timerNew(nameServer->StateMachine,keepAliveTimerCallback,(void*)user);
-      user->UserTimeoutTimer = timerNew(nameServer->StateMachine,userTimeoutTimerCallback,(void*)user);
-      user->Buffer           = messageBufferNew(65536);
-      if((user->KeepAliveTimer != NULL) && (user->UserTimeoutTimer != NULL) && (user->Buffer != NULL)) {
-         g_tree_insert(nameServer->UserTree, (gpointer)user->FD, user);
-         dispatcherAddFDCallback(nameServer->StateMachine,
-                                 fd, FDCE_Read|FDCE_Exception,
-                                 socketHandler,
-                                 (void*)nameServer);
-
-         /* ====== Get information ========================================== */
-         namelen = sizeof(name);
-         if(ext_getpeername(fd, (struct sockaddr*)&name, &namelen) == 0) {
-            if(address2string((struct sockaddr*)&name,
-                              (char*)&user->Identifier,
-                              sizeof(user->Identifier),
-                              true) == false) {
-               strcpy((char*)&user->Identifier,"(bad)");
-            }
-         }
-         else {
-            strcpy((char*)&user->Identifier,"?");
-         }
-
-         printTimeStamp(stdout);
-         printf("Adding new user %s, socket #%d.\n", user->Identifier, user->FD);
-      }
-      else {
-         free(user);
-         ext_close(fd);
-      }
-   }
-   else {
-      ext_close(fd);
-   }
-}
-
-
-/* ###### Remove user ################################################## */
-static void removeUser(struct NameServer*     nameServer,
-                       struct NameServerUser* user)
-{
-   GList*              list;
-   struct PoolElement* poolElement;
-
-   if(user != NULL) {
-      printTimeStamp(stdout);
-      printf("Removing user %s, socket #%d.\n", user->Identifier, user->FD);
-
-      if(user->KeepAliveTimer) {
-         timerDelete(user->KeepAliveTimer);
-         user->KeepAliveTimer = NULL;
-      }
-      if(user->UserTimeoutTimer) {
-         timerDelete(user->UserTimeoutTimer);
-         user->UserTimeoutTimer = NULL;
-      }
-
-      list = g_list_first(user->PoolElementList);
-      while(list != NULL) {
-         poolElement = (struct PoolElement*)list->data;
-
-         printf("Pool element $%08x still registered in pool ",
-                poolElement->Identifier);
-         poolHandlePrint(poolElement->OwnerPool->Handle, stdout);
-         puts(" -> removing");
-
-         removePoolElement(nameServer,user,poolElement);
-         list = g_list_first(user->PoolElementList);
-      }
-
-      if(user->Buffer) {
-         messageBufferDelete(user->Buffer);
-         user->Buffer = NULL;
-      }
-
-      dispatcherRemoveFDCallback(nameServer->StateMachine,user->FD);
-      g_tree_remove(nameServer->UserTree,(gpointer)user->FD);
-      ext_close(user->FD);
-      free(user);
-   }
-}
-
+static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
+                                         struct Timer*      timer,
+                                         void*              userData);
+static void nameServerSocketCallback(struct Dispatcher* dispatcher,
+                                     int                fd,
+                                     int                eventMask,
+                                     void*              userData);
 
 
 
 /* ###### Constructor #################################################### */
-struct NameServer* nameServerNew()
+struct NameServer* nameServerNew(int                           nameServerSocket,
+                                 struct TransportAddressBlock* nameServerAddress,
+                                 const bool                    sendAnnounces,
+                                 const union sockaddr_union*   announceAddress)
 {
    struct NameServer* nameServer = (struct NameServer*)malloc(sizeof(struct NameServer));
    if(nameServer != NULL) {
+      nameServer->ServerID     = random32();
+      nameServer->StateMachine = dispatcherNew(dispatcherDefaultLock,dispatcherDefaultUnlock,NULL);
+      if(nameServer->StateMachine == NULL) {
+         free(nameServer);
+         return(NULL);
+      }
+      ST_CLASS(poolNamespaceManagementNew)(&nameServer->Namespace,
+                                           nameServer->ServerID,
+                                           NULL, NULL);
+
+      nameServer->NameServerSocket        = nameServerSocket;
+      nameServer->NameServerAddress       = nameServerAddress;
+
       nameServer->KeepAliveInterval       = NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL;
       nameServer->KeepAliveTimeout        = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT;
       nameServer->AnnounceInterval        = NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL;
       nameServer->MessageReceptionTimeout = NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT;
-      nameServer->AnnounceTimer      = NULL;
-      nameServer->AnnounceList       = NULL;
-      nameServer->ServerID           = random32();
-      nameServer->UserTree           = g_tree_new(fdCompareFunc);
-      nameServer->InterfaceTree      = g_tree_new(fdCompareFunc);
-      nameServer->Namespace          = poolNamespaceNew();
-      nameServer->StateMachine       = dispatcherNew(dispatcherDefaultLock,dispatcherDefaultUnlock,NULL);
-      nameServer->IPv4AnnounceSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-      if(nameServer->IPv4AnnounceSocket >= 0) {
-         setNonBlocking(nameServer->IPv4AnnounceSocket);
+
+      nameServer->SendAnnounces           = sendAnnounces;
+      memcpy(&nameServer->AnnounceAddress, announceAddress, sizeof(union sockaddr_union));
+      if(nameServer->AnnounceAddress.in6.sin6_family == AF_INET6) {
+         nameServer->AnnounceSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+puts("v6-ann.");
       }
-#ifdef HAVE_IPV6
-      nameServer->IPv6AnnounceSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-      if(nameServer->IPv6AnnounceSocket >= 0) {
-         setNonBlocking(nameServer->IPv6AnnounceSocket);
+      else if(nameServer->AnnounceAddress.in.sin_family == AF_INET) {
+         nameServer->AnnounceSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
       }
-#endif
-      if((nameServer->UserTree      == NULL) ||
-         (nameServer->InterfaceTree == NULL) ||
-         (nameServer->Namespace     == NULL) ||
-         (nameServer->StateMachine  == NULL)) {
-         nameServerDelete(nameServer);
-         nameServer = NULL;
+      else {
+         nameServer->AnnounceSocket = -1;
       }
+      if(nameServer->AnnounceSocket >= 0) {
+         setNonBlocking(nameServer->AnnounceSocket);
+      }
+
       nameServer->AnnounceTimer = timerNew(nameServer->StateMachine,
                                            announceTimerCallback,
                                            (void*)nameServer);
-      if(nameServer->AnnounceTimer == NULL) {
+      nameServer->NamespaceActionTimer = timerNew(nameServer->StateMachine,
+                                                  namespaceActionTimerCallback,
+                                                  (void*)nameServer);
+      if((nameServer->AnnounceTimer == NULL) ||
+         (nameServer->NamespaceActionTimer == NULL)) {
          nameServerDelete(nameServer);
-         nameServer = NULL;
+         return(NULL);
       }
-      timerStart(nameServer->AnnounceTimer,0);
+      if(nameServer->SendAnnounces) {
+puts("ANNOUNCE TIMER...");
+         timerStart(nameServer->AnnounceTimer, 0);
+      }
+
+      dispatcherAddFDCallback(nameServer->StateMachine,
+                              nameServer->NameServerSocket,
+                              FDCE_Read|FDCE_Exception,
+                              nameServerSocketCallback,
+                              (void*)nameServer);
    }
    return(nameServer);
 }
@@ -375,40 +181,22 @@ struct NameServer* nameServerNew()
 /* ###### Destructor ###################################################### */
 void nameServerDelete(struct NameServer* nameServer)
 {
-   gpointer key;
-   gpointer value;
-
    if(nameServer) {
+      dispatcherRemoveFDCallback(nameServer->StateMachine, nameServer->NameServerSocket);
       if(nameServer->AnnounceTimer) {
          timerDelete(nameServer->AnnounceTimer);
          nameServer->AnnounceTimer = NULL;
       }
-      if(nameServer->UserTree) {
-         while(getFirstTreeElement(nameServer->UserTree,&key,&value)) {
-            removeUser(nameServer,(struct NameServerUser*)value);
-         }
-         g_tree_destroy(nameServer->UserTree);
+      if(nameServer->NamespaceActionTimer) {
+         timerDelete(nameServer->NamespaceActionTimer);
+         nameServer->NamespaceActionTimer = NULL;
       }
-      if(nameServer->InterfaceTree) {
-         while(getFirstTreeElement(nameServer->InterfaceTree,&key,&value)) {
-            removeInterface(nameServer,(int)key);
-         }
-         g_tree_destroy(nameServer->InterfaceTree);
+      if(nameServer->AnnounceSocket >= 0) {
+         ext_close(nameServer->AnnounceSocket >= 0);
+         nameServer->AnnounceSocket = -1;
       }
-      if(nameServer->Namespace) {
-         poolNamespaceDelete(nameServer->Namespace);
-         nameServer->Namespace = NULL;
-      }
-      if(nameServer->IPv4AnnounceSocket >= 0) {
-         ext_close(nameServer->IPv4AnnounceSocket);
-         nameServer->IPv4AnnounceSocket = -1;
-      }
-#ifdef HAVE_IPV6
-      if(nameServer->IPv6AnnounceSocket >= 0) {
-         ext_close(nameServer->IPv6AnnounceSocket);
-         nameServer->IPv6AnnounceSocket = -1;
-      }
-#endif
+      ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
+      ST_CLASS(poolNamespaceManagementDelete)(&nameServer->Namespace);
       if(nameServer->StateMachine) {
          dispatcherDelete(nameServer->StateMachine);
          nameServer->StateMachine = NULL;
@@ -424,22 +212,69 @@ void nameServerDump(struct NameServer* nameServer)
    fputs("*************** Namespace Dump ***************\n",stdlog);
    printTimeStamp(stdlog);
    fputs("\n",stdlog);
-   poolNamespacePrint(nameServer->Namespace,stdlog);
+   ST_CLASS(poolNamespaceManagementPrint)(&nameServer->Namespace, stdlog, PENPO_FULL);
    fputs("**********************************************\n",stdlog);
 }
 
 
-/* ###### Main loop ###################################################### */
-void nameServerMainLoop(struct NameServer* nameServer)
+/* ###### Send announcement messages ###################################### */
+static void announceTimerCallback(struct Dispatcher* dispatcher,
+                                  struct Timer*      timer,
+                                  void*              userData)
 {
-   if(nameServer) {
-      for(;;) {
-         dispatcherEventLoop(nameServer->StateMachine);
+   struct NameServer*  nameServer = (struct NameServer*)userData;
+   GList*              transportAddressBlockList;
+   struct ASAPMessage* message;
+   size_t              messageLength;
+
+   CHECK(nameServer->SendAnnounces == true);
+   CHECK(nameServer->AnnounceSocket >= 0);
+
+   transportAddressBlockList = g_list_append(NULL, nameServer->NameServerAddress);
+   if(transportAddressBlockList) {
+      message = asapMessageNew(NULL, 65536);
+      if(message) {
+         message->Type                         = AHT_SERVER_ANNOUNCE;
+         message->TransportAddressBlockListPtr = transportAddressBlockList;
+         messageLength = asapMessage2Packet(message);
+         if(messageLength > 0) {
+            if(nameServer->AnnounceSocket) {
+               LOG_VERBOSE2
+               fputs("Sending announce to address ",stdlog);
+               fputaddress((struct sockaddr*)&nameServer->AnnounceAddress, true, stdlog);
+               fputs("\n",stdlog);
+               LOG_END
+               if(ext_sendto(nameServer->AnnounceSocket,
+                             message->Buffer,
+                             messageLength,
+                             0,
+                             (struct sockaddr*)&nameServer->AnnounceAddress,
+                             getSocklen((struct sockaddr*)&nameServer->AnnounceAddress)) < (ssize_t)messageLength) {
+                  LOG_WARNING
+                  logerror("Unable to send announce");
+                  LOG_END
+               }
+            }
+         }
+         asapMessageDelete(message);
       }
    }
+   timerStart(timer, nameServer->AnnounceInterval);
 }
 
 
+/* ###### Handle namespace management timers ############################# */
+static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
+                                         struct Timer*      timer,
+                                         void*              userData)
+{
+   struct NameServer*  nameServer = (struct NameServer*)userData;
+puts("action CB...");
+}
+
+
+
+#if 0
 /* ###### Filter address array ########################################### */
 static bool filterAddresses(struct PoolElement*            poolElement,
                             const struct sockaddr_storage* addressArray,
@@ -806,114 +641,6 @@ static void endpointKeepAliveAck(struct NameServer*     nameServer,
 }
 
 
-/* ###### Handle events on unicast sockets ############################### */
-static void eventHandler(struct NameServer*     nameServer,
-                         struct NameServerUser* user,
-                         int                    fd)
-{
-   struct ASAPMessage* message;
-   ssize_t             received;
-   bool                reply;
-
-   LOG_ACTION
-   fputs("Entering Unicast Message Handler\n",stdlog);
-   LOG_END
-
-   received = messageBufferRead(user->Buffer, fd,
-                                (user->Protocol == IPPROTO_SCTP) ? PPID_ASAP : 0,
-                                0, nameServer->MessageReceptionTimeout);
-   if(received > 0) {
-      message = asapPacket2Message((char*)&user->Buffer->Buffer, received, user->Buffer->Size);
-      if(message != NULL) {
-         reply = false;
-         switch(message->Type) {
-            case AHT_ENDPOINT_KEEP_ALIVE:
-               puts("KeepAlive request received!");
-             break;
-            case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-               endpointKeepAliveAck(nameServer,user,fd,message);
-             break;
-            case AHT_NAME_RESOLUTION:
-               reply = nameResolutionRequest(nameServer,user,fd,message);
-             break;
-            case AHT_NAME_RESOLUTION_RESPONSE:
-             break;
-            case AHT_REGISTRATION:
-               reply = registrationRequest(nameServer,user,fd,message);
-             break;
-            case AHT_DEREGISTRATION:
-               reply = deregistrationRequest(nameServer,user,fd,message);
-             break;
-            default:
-               LOG_WARNING
-               fprintf(stdlog,"Unsupported message type $%02x!\n",
-                       message->Type);
-               LOG_END
-             break;
-         }
-
-         if(reply) {
-            if(asapMessageSend(fd, 0, message) == false) {
-               LOG_WARNING
-               logerror("Sending reply failed. Closing connection");
-               LOG_END
-               removeUser(nameServer,user);
-            }
-         }
-
-         asapMessageDelete(message);
-      }
-   }
-   else if(received == RspRead_PartialRead) {
-      LOG_VERBOSE2
-      fputs("Partially read message\n", stdlog);
-      LOG_END
-   }
-   else {
-      LOG_WARNING
-      fprintf(stdlog, "Error reading messasge: received=%d\n", received);
-      LOG_END
-      removeUser(nameServer,user);
-   }
-
-   LOG_ACTION
-   fputs("Leaving Unicast Message Handler\n",stdlog);
-   LOG_END
-}
-
-
-/* ###### Handle events on sockets ####################################### */
-static void socketHandler(struct Dispatcher* dispatcher,
-                          int                fd,
-                          int                eventMask,
-                          void*              userData)
-{
-   struct NameServer*          nameServer = (struct NameServer*)userData;
-   struct NameServerUser*      user;
-   struct NameServerInterface* interface;
-   int                         newfd;
-
-   user = (struct NameServerUser*)g_tree_lookup(nameServer->UserTree,(gpointer)fd);
-   if(user != NULL) {
-      eventHandler(nameServer,user,fd);
-   }
-   else {
-      interface = (struct NameServerInterface*)g_tree_lookup(nameServer->InterfaceTree,(gpointer)fd);
-      if(interface != NULL) {
-         newfd = ext_accept(fd,NULL,0);
-         if(newfd >= 0) {
-            if(setNonBlocking(fd)) {
-               addUser(nameServer, newfd, interface->Protocol);
-            }
-            else {
-               ext_close(newfd);
-            }
-         }
-      }
-   }
-}
-
-
 /* ###### Send endpoint keepalive messages ############################### */
 static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
                                    struct Timer*      timer,
@@ -977,123 +704,153 @@ static void userTimeoutTimerCallback(struct Dispatcher* dispatcher,
    removeUser(nameServer,user);
 }
 
+#endif
 
-/* ###### Traverse function for interface list to collect addresses ####### */
-static gint announceAddressListCollector(gpointer key,
-                                         gpointer value,
-                                         gpointer data)
+
+
+/* ###### Handle incoming message ######################################## */
+static void handleMessage(struct NameServer* nameServer,
+                          char*              buffer,
+                          const size_t       receivedSize,
+                          const size_t       bufferSize,
+                          int                sockFD,
+                          const sctp_assoc_t assocID,
+                          const uint32_t     ppid)
 {
-   struct NameServerInterface* interface = (struct NameServerInterface*)value;
-   GList**                     list      = (GList**)data;
-   *list = g_list_append(*list,interface->Address);
+   struct ASAPMessage* message;
+   bool                reply;  // ????????????????????
 
-   LOG_VERBOSE5
-   fputs("Adding address ",stdlog);
-   transportAddressPrint(interface->Address,stdlog);
-   fputs("\n",stdlog);
-   LOG_END
-   return(false);
+   CHECK(receivedSize <= bufferSize);
+   message = asapPacket2Message(buffer, receivedSize, bufferSize);
+   if(message != NULL) {
+      reply = false;
+      switch(message->Type) {
+         case AHT_ENDPOINT_KEEP_ALIVE:
+            puts("KeepAlive request received!");
+          break;
+/*
+         case AHT_ENDPOINT_KEEP_ALIVE_ACK:
+            endpointKeepAliveAck(nameServer,user,fd,message);
+          break;
+         case AHT_NAME_RESOLUTION:
+            reply = nameResolutionRequest(nameServer,user,fd,message);
+          break;
+         case AHT_NAME_RESOLUTION_RESPONSE:
+            break;
+         case AHT_REGISTRATION:
+            reply = registrationRequest(nameServer,user,fd,message);
+          break;
+         case AHT_DEREGISTRATION:
+            reply = deregistrationRequest(nameServer,user,fd,message);
+          break;
+*/
+         default:
+            LOG_WARNING
+            fprintf(stdlog,"Unsupported message type $%02x!\n",
+                     message->Type);
+            LOG_END
+          break;
+      }
+/* ??????????????
+      if(reply) {
+         if(asapMessageSend(fd, 0, message) == false) {
+            LOG_WARNING
+            logerror("Sending reply failed. Closing connection");
+            LOG_END
+            removeUser(nameServer,user);
+         }
+      }
+*/
+      asapMessageDelete(message);
+   }
 }
 
 
-/* ###### Send announcement messages ###################################### */
-static void announceTimerCallback(struct Dispatcher* dispatcher,
-                                  struct Timer*      timer,
-                                  void*              userData)
+/* ###### Handle events on sockets ####################################### */
+static void nameServerSocketCallback(struct Dispatcher* dispatcher,
+                                     int                fd,
+                                     int                eventMask,
+                                     void*              userData)
 {
-   struct NameServer*  nameServer = (struct NameServer*)userData;
-   GList*              announceList;
-   GList*              transportAddressList;
-   struct ASAPMessage* message;
-   size_t              messageLength;
+   struct NameServer*      nameServer = (struct NameServer*)userData;
+   struct sockaddr_storage remoteAddress;
+   socklen_t               remoteAddressLength;
+   sctp_assoc_t            assocID;
+   uint16_t                streamID;
+   uint32_t                ppid;
+   char                    buffer[65536];
+   ssize_t                 received;
 
-   if(nameServer->AnnounceList) {
-      transportAddressList = NULL;
-      g_tree_traverse(nameServer->InterfaceTree,
-                      announceAddressListCollector,
-                      G_PRE_ORDER,
-                      (gpointer)&transportAddressList);
-      if(transportAddressList) {
-         message = asapMessageNew(NULL,65536);
-         if(message) {
-             message->Type                    = AHT_SERVER_ANNOUNCE;
-             message->TransportAddressListPtr = transportAddressList;
-             messageLength = asapMessage2Packet(message);
-             if(messageLength > 0) {
+   if(fd == nameServer->NameServerSocket) {
+      LOG_ACTION
+      fputs("Event on name server socket...\n", stdlog);
+      LOG_END
 
-                announceList = g_list_first(nameServer->AnnounceList);
-                while(announceList) {
-                   switch(((struct sockaddr*)announceList->data)->sa_family) {
-                      case AF_INET:
-                          if(nameServer->IPv4AnnounceSocket) {
-                             LOG_VERBOSE2
-                             fputs("Sending announce via IPv4 socket to ",stdlog);
-                             fputaddress((struct sockaddr*)announceList->data,true,stdlog);
-                             fputs("\n",stdlog);
-                             LOG_END
-                             if(ext_sendto(nameServer->IPv4AnnounceSocket,
-                                           message->Buffer,
-                                           messageLength,
-                                           0,
-                                           (struct sockaddr*)announceList->data,
-                                           getSocklen((struct sockaddr*)announceList->data)) < (ssize_t)messageLength) {
-                                LOG_WARNING
-                                logerror("Unable to send to IPv4 socket");
-                                LOG_END
-                             }
-                          }
-                       break;
-#ifdef HAVE_IPV6
-                      case AF_INET6:
-                          if(nameServer->IPv6AnnounceSocket) {
-                             LOG_VERBOSE2
-                             fputs("Sending announce via IPv6 socket to ",stdlog);
-                             fputaddress((struct sockaddr*)announceList->data,true,stdlog);
-                             fputs("\n",stdlog);
-                             LOG_END
-                             if(ext_sendto(nameServer->IPv6AnnounceSocket,
-                                           message->Buffer,
-                                           messageLength,
-                                           0,
-                                           (struct sockaddr*)announceList->data,
-                                           getSocklen((struct sockaddr*)announceList->data)) < (ssize_t)messageLength) {
-                                LOG_WARNING
-                                logerror("Unable to send to IPv6 socket");
-                                LOG_END
-                             }
-                          }
-                       break;
-#endif
-                   }
-                   announceList = g_list_next(announceList);
-                }
-             }
-             else {
-                LOG_ERROR
-                fputs("Unable to create ServerAnnounce message\n",stdlog);
-                LOG_END
-             }
-            asapMessageDelete(message);
-         }
-         g_list_free(transportAddressList);
+      received = recvfromplus(nameServer->NameServerSocket,
+                              &buffer,
+                              sizeof(buffer),
+                              0,
+                              (struct sockaddr*)&remoteAddress,
+                              &remoteAddressLength,
+                              &ppid,
+                              &assocID,
+                              &streamID,
+                              0);
+      if(received > 0) {
+         LOG_VERBOSE
+         fprintf(stdlog, "Got %u bytes from ", received);
+         fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
+         fprintf(stdlog, ", assoc #%u, PPID $%x\n", assocID, ppid);
+         LOG_END
+
+         handleMessage(nameServer,
+                       (char*)&buffer, received, sizeof(buffer),
+                       nameServer->NameServerSocket, assocID, ppid);
       }
+      else {
+         LOG_WARNING
+         logerror("Unable to read from name server socket");
+         LOG_END
+      }
+
    }
-   timerStart(timer,nameServer->AnnounceInterval);
+   else {
+      CHECK(false);
+   }
 }
 
 
 
 /* ###### Main program ################################################### */
-#define MAX_ADDRESSES 128
-
 int main(int argc, char** argv)
 {
    struct NameServer*       nameServer;
+/*
    struct TransportAddress* transportAddress;
-   bool                     hasSCTPInterface = false;
    bool                     autoSCTP         = false;
-   size_t                   localAddresses;
-   struct sockaddr_storage  localAddressArray[MAX_ADDRESSES];
+   size_t                   sctpAddresses;
+   struct sockaddr_storage  sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
+   fd_set                   testfdset;
+   card64                   testTS;
+   int                      i;
+   int                      n;
+   char*                    address=NULL;
+   char*                    idx;
+   unsigned int             interfaces;
+*/
+   int                           sockFD;
+   int                           sctpSocket = -1;
+   size_t                        sctpAddresses;
+   struct sockaddr_storage       sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
+   char                          sctpAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* sctpAddress = (struct TransportAddressBlock*)&sctpAddressBuffer;
+   struct sockaddr_storage       announceAddress;
+   bool                          hasAnnounceAddress = false;
+
+   struct sockaddr_storage* localAddressArray;
+   char*                    address;
+   char*                    idx;
+
    int                      result;
    struct timeval           timeout;
    fd_set                   readfdset;
@@ -1101,130 +858,97 @@ int main(int argc, char** argv)
    fd_set                   exceptfdset;
    fd_set                   testfdset;
    card64                   testTS;
-   int                      sockFD;
-   int                      i;
-   int                      n;
-   char*                    address=NULL;
-   char*                    idx;
-   unsigned int             interfaces;
+   int                      i, n;
 
 
-   nameServer = nameServerNew();
-   if(nameServer == NULL) {
-      puts("ERROR: Out of memory!");
-      exit(1);
-   }
-
-   puts("The rsplib Name Server - Version 2.0");
-   puts("------------------------------------\n");
-
-   interfaces = 0;
    for(i = 1;i < argc;i++) {
       if(!(strncasecmp(argv[i],"-tcp=",5))) {
-         address = (char*)&argv[i][5];
-         if(!string2address(address,&localAddressArray[0])) {
-            printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
-            exit(1);
-         }
-         transportAddress = transportAddressNew(IPPROTO_TCP,
-                                                getPort((struct sockaddr*)&localAddressArray[0]),
-                                                (struct sockaddr_storage*)&localAddressArray,
-                                                1);
-         if(transportAddress == NULL) {
-            puts("ERROR: Unable to handle socket address(es)!");
-            exit(1);
-         }
-         printf("Adding TCP interface ");
-         transportAddressPrint(transportAddress,stdout);
-         puts("");
-
-         sockFD = ext_socket(((struct sockaddr*)&localAddressArray[0])->sa_family,
-                             SOCK_STREAM,
-                             IPPROTO_TCP);
-         if(sockFD >= 0) {
-            if(ext_bind(sockFD,
-                        (struct sockaddr*)&localAddressArray,
-                        getSocklen((struct sockaddr*)&localAddressArray)) != 0) {
-               perror("ERROR: Unable to bind socket");
-               printf("Used local address %s.\n",address);
-               exit(1);
-            }
-            if(!addInterface(nameServer, sockFD, transportAddress)) {
-               printf("ERROR: Unable to use local address %s.\n",address);
-               exit(1);
-            }
-            interfaces++;
-         }
-         else {
-            puts("ERROR: Unable to create TCP socket!");
-         }
+         fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
+         exit(1);
       }
       else if(!(strncasecmp(argv[i],"-sctp=",6))) {
-         localAddresses = 0;
-         address = (char*)&argv[i][6];
-         while(localAddresses < MAX_ADDRESSES) {
-            idx = index(address,',');
-            if(idx) {
-               *idx = 0x00;
-            }
-            if(!string2address(address,&localAddressArray[localAddresses])) {
-               printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
-               exit(1);
-            }
-            localAddresses++;
-            if(idx) {
-               address = idx;
-               address++;
+         sctpAddresses = 0;
+         if(!(strncasecmp((const char*)&argv[i][6], "auto", 4))) {
+            sockFD = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+            if(sockFD >= 0) {
+               if(bindplus(sockFD, NULL, 0) == false) {
+                  puts("ERROR: Unable to bind SCTP socket!");
+                  exit(1);
+               }
+               sctpAddresses = getladdrsplus(sockFD, 0, (struct sockaddr_storage**)&localAddressArray);
+               if(sctpAddresses > MAX_NS_TRANSPORTADDRESSES) {
+                  puts("ERROR: Too many local addresses -> specify only a subset!");
+                  exit(1);
+               }
+               memcpy(&sctpAddressArray, localAddressArray, sctpAddresses * sizeof(struct sockaddr_storage));
+               free(localAddressArray);
+               ext_close(sockFD);
             }
             else {
-               break;
+               puts("ERROR: SCTP is unavailable. Install SCTP!");
+               exit(1);
             }
          }
-         if(localAddresses < 1) {
+         else {
+            address = (char*)&argv[i][6];
+            while(sctpAddresses < MAX_NS_TRANSPORTADDRESSES) {
+               idx = index(address, ',');
+               if(idx) {
+                  *idx = 0x00;
+               }
+               if(!string2address(address,&sctpAddressArray[sctpAddresses])) {
+                  printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
+                  exit(1);
+               }
+               sctpAddresses++;
+               if(idx) {
+                  address = idx;
+                  address++;
+               }
+               else {
+                  break;
+               }
+            }
+         }
+         if(sctpAddresses < 1) {
             puts("ERROR: At least one SCTP address must be specified!\n");
             exit(1);
          }
-         transportAddress = transportAddressNew(IPPROTO_SCTP,
-                                                getPort((struct sockaddr*)&localAddressArray[0]),
-                                                (struct sockaddr_storage*)&localAddressArray,
-                                                localAddresses);
-         if(transportAddress == NULL) {
+         transportAddressBlockNew(sctpAddress,
+                                  IPPROTO_SCTP,
+                                  getPort((struct sockaddr*)&sctpAddressArray[0]),
+                                  0,
+                                  (struct sockaddr_storage*)&sctpAddressArray,
+                                  sctpAddresses);
+         if(sctpAddress == NULL) {
             puts("ERROR: Unable to handle socket address(es)!");
             exit(1);
          }
-         printf("Adding SCTP interface ");
-         transportAddressPrint(transportAddress,stdout);
-         puts("");
 
-         sockFD = ext_socket(AF_INET,SOCK_STREAM,IPPROTO_SCTP);
-         if(sockFD >= 0) {
-            if(bindplus(sockFD,
-                        (struct sockaddr_storage*)&localAddressArray,
-                        localAddresses) == false) {
-               perror("ERROR: Unable to bind socket");
+         sctpSocket = ext_socket(AF_INET,SOCK_STREAM,IPPROTO_SCTP);
+         if(sctpSocket >= 0) {
+            if(bindplus(sctpSocket,
+                        (struct sockaddr_storage*)&sctpAddressArray,
+                        sctpAddresses) == false) {
+               perror("bindx() call failed");
                exit(1);
             }
-            if(!addInterface(nameServer, sockFD, transportAddress)) {
-               printf("ERROR: Unable to use local address %s.\n",address);
+            if(ext_listen(sctpSocket, 10) < 0) {
+               perror("listen() call failed");
                exit(1);
             }
-            interfaces++;
-            hasSCTPInterface = true;
          }
          else {
             puts("ERROR: Unable to create SCTP socket!");
          }
       }
-      else if(!(strncasecmp(argv[i],"-announce=",10))) {
+      else if(!(strncasecmp(argv[i],"-announce=", 10))) {
          address = (char*)&argv[i][10];
-         if(!string2address(address,&localAddressArray[0])) {
-            printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
+         if(!string2address(address, &announceAddress)) {
+            printf("ERROR: Bad announce address %s! Use format <address:port>.\n",address);
             exit(1);
          }
-         addAnnounceAddress(nameServer,(struct sockaddr_storage*)&localAddressArray[0]);
-      }
-      else if(!(strcmp(argv[i],"-autosctp"))) {
-         autoSCTP = true;
+         hasAnnounceAddress = true;
       }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -1232,63 +956,50 @@ int main(int argc, char** argv)
          }
       }
       else {
-         printf("Usage: %s {-autosctp} {-sctp=address:port{,address}...} {{[-tcp=address:port}} {[-announce=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
+         printf("Usage: %s {-sctp=auto|address:port{,address}...} {[-announce=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
          exit(1);
       }
    }
-   if((!hasSCTPInterface) && (autoSCTP)) {
-      struct sockaddr_storage* socketAddressArray;
-      sockFD = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_STREAM, IPPROTO_SCTP);
-      if(sockFD >= 0) {
-         if(bindplus(sockFD, NULL, 0) == false) {
-            puts("ERROR: Unable to bind SCTP socket!");
-            exit(1);
-         }
-         localAddresses = getladdrsplus(sockFD, 0, (struct sockaddr_storage**)&socketAddressArray);
-         if(localAddresses < 1) {
-            puts("ERROR: Unable to find out local addresses!");
-            exit(1);
-         }
-         transportAddress = transportAddressNew(IPPROTO_SCTP, PORT_ASAP,
-                                                socketAddressArray, localAddresses);
-         if(transportAddress == NULL) {
-            puts("ERROR: Unable to handle socket address(es)!");
-            exit(1);
-         }
-         printf("Adding SCTP interface ");
-         transportAddressPrint(transportAddress,stdout);
-         puts("");
-         if(!addInterface(nameServer, sockFD, transportAddress)) {
-            printf("ERROR: Unable to use local address %s.\n",address);
-            exit(1);
-         }
-         interfaces++;
-         hasSCTPInterface = true;
-         free(socketAddressArray);
-      }
-      else {
-         puts("ERROR: Unable to create SCTP socket!");
-         exit(1);
-      }
-   }
-   if(interfaces == 0) {
-      puts("ERROR: No interfaces given. Exiting!");
+   if(sctpSocket <= 0) {
+      fprintf(stderr, "ERROR: No SCTP socket opened. Use parameter \"-sctp=...\"!\n");
       exit(1);
    }
-   puts("\n");
+
+
+   /* ====== Initialize NameServer ======================================= */
+   nameServer = nameServerNew(sctpSocket, sctpAddress,
+                              hasAnnounceAddress, (union sockaddr_union*)&announceAddress);
+   if(nameServer == NULL) {
+      fprintf(stderr, "ERROR: Unable to initialize NameServer object!\n");
+      exit(1);
+   }
 #ifndef FAST_BREAK
    installBreakDetector();
 #endif
 
+   /* ====== Print information =========================================== */
+   puts("The rsplib Name Server - Version 1.00");
+   puts("=====================================\n");
+   printf("Local Address:    ");
+   transportAddressBlockPrint(sctpAddress, stdout);
+   puts("");
+   printf("Announce Address: ");
+   if(hasAnnounceAddress) {
+      fputaddress((struct sockaddr*)&announceAddress, true, stdout);
+      puts("");
+   }
+   else {
+      puts("(none)");
+   }
+   puts("\n");
 
+
+   /* ====== Main loop =================================================== */
    beginLogging();
-
-
-   // ====== Main loop =======================================================
    while(!breakDetected()) {
       dispatcherGetSelectParameters(nameServer->StateMachine, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
-      timeout.tv_sec  = min(0,timeout.tv_sec);
-      timeout.tv_usec = min(250000,timeout.tv_usec);
+      timeout.tv_sec  = min(0, timeout.tv_sec);
+      timeout.tv_usec = min(250000, timeout.tv_usec);
       result = ext_select(n, &readfdset, &writefdset, &exceptfdset, &timeout);
       dispatcherHandleSelectResult(nameServer->StateMachine, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
       if(errno == EINTR) {

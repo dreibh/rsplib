@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: netutilities.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,8 +38,8 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
+#include "stringutilities.h"
 #include "randomizer.h"
 
 #include <sys/time.h>
@@ -71,7 +71,7 @@ struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray, const size_
    struct sockaddr_storage* newArray;
    size_t                   i;
 
-   newArray = malloc(sizeof(struct sockaddr_storage) * addrs);
+   newArray = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage) * addrs);
    if(newArray) {
       for(i = 0;i < addrs;i++) {
          switch(addrArray->sa_family) {
@@ -504,7 +504,7 @@ unsigned int getScope(const struct sockaddr* address)
    else {
       LOG_ERROR
       fprintf(stdlog,"Unsupported address family #%d\n",
-              ((struct sockaddr*)address)->sa_family);
+              address->sa_family);
       LOG_END
    }
    return(0);
@@ -635,7 +635,7 @@ uint16_t getPort(struct sockaddr* address)
          default:
             LOG_ERROR
             fprintf(stdlog,"Unsupported address family #%d\n",
-                    ((struct sockaddr*)address)->sa_family);
+                    address->sa_family);
             LOG_END
           break;
       }
@@ -662,7 +662,7 @@ bool setPort(struct sockaddr* address, uint16_t port)
          default:
             LOG_ERROR
             fprintf(stdlog,"Unsupported address family #%d\n",
-                    ((struct sockaddr*)address)->sa_family);
+                    address->sa_family);
             LOG_END
           break;
       }
@@ -1062,10 +1062,10 @@ int recvfromplus(int              sockfd,
 
 
 /* ###### Multicast group management ##################################### */
-bool multicastGroupMgt(int                      sockfd,
-                       struct sockaddr_storage* address,
-                       const char*              interface,
-                       const bool               add)
+bool multicastGroupMgt(int              sockfd,
+                       struct sockaddr* address,
+                       const char*      interface,
+                       const bool       add)
 {
    struct ip_mreq   mreq;
    struct ifreq     ifr;
@@ -1073,7 +1073,7 @@ bool multicastGroupMgt(int                      sockfd,
    struct ipv6_mreq mreq6;
 #endif
 
-   if(((struct sockaddr*)address)->sa_family == AF_INET) {
+   if(address->sa_family == AF_INET) {
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
       if(interface != NULL) {
          strcpy(ifr.ifr_name,interface);
@@ -1090,7 +1090,7 @@ bool multicastGroupMgt(int                      sockfd,
                             &mreq, sizeof(mreq)) == 0);
    }
 #ifdef HAVE_IPV6
-   else if(((struct sockaddr*)address)->sa_family == AF_INET6) {
+   else if(address->sa_family == AF_INET6) {
       memcpy((char*)&mreq6.ipv6mr_multiaddr,
              (char*)&((struct sockaddr_in6*)address)->sin6_addr,
              sizeof(((struct sockaddr_in6*)address)->sin6_addr));
@@ -1122,7 +1122,7 @@ size_t getSocklen(struct sockaddr* address)
       default:
          LOG_ERROR
          fprintf(stdlog,"Unsupported address family #%d\n",
-                 ((struct sockaddr*)address)->sa_family);
+                 address->sa_family);
          LOG_END
          return(sizeof(struct sockaddr));
        break;

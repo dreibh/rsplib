@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include "leaflinkedtreap.h"
+#include "randomizer.h"
 
 
 #ifdef __cplusplus
@@ -145,7 +146,7 @@ struct LeafLinkedTreapNode* leafLinkedTreapInternalInsert(
       node->Parent       = parent;
       node->LeftSubtree  = &llt->NullNode;
       node->RightSubtree = &llt->NullNode;
-      node->Priority     = (unsigned int)random();
+      node->Priority     = random32();
       *root = node;
       llt->Elements++;
       leafLinkedTreapUpdateValueSum(*root);

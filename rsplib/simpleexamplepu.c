@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "rsplib.h"
 #include "breakdetector.h"
@@ -101,14 +100,14 @@ static void connectToPoolElement()
 
    /* ====== Close existing connection and report failure =================== */
    if(DataSocket >= 0) {
-      rspFailure(PoolName, strlen(PoolName), Identifier, NULL);
+      rspReportFailure((unsigned char*)PoolName, strlen(PoolName), Identifier, NULL);
       ext_close(DataSocket);
       DataSocket = -1;
       Identifier = 0x00000000;
    }
 
    /* ====== Do name resolution ============================================= */
-   result = rspNameResolution(PoolName,strlen(PoolName),&eai,NULL);
+   result = rspNameResolution((unsigned char*)PoolName, strlen(PoolName), &eai, NULL);
    if(result != 0) {
       printf("Name resolution failed - %s.\n",rspGetLastErrorDescription());
       return;

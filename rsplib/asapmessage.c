@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.2 2004/07/13 14:23:37 dreibh Exp $
+ *  $Id: asapmessage.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,7 +38,6 @@
 
 #include "tdtypes.h"
 #include "loglevel.h"
-#include "utilities.h"
 #include "netutilities.h"
 #include "asapmessage.h"
 #include "asapcreator.h"
