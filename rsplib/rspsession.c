@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.25 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rspsession.c,v 1.26 2004/11/23 11:49:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -182,7 +182,7 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
              ( (((struct sockaddr*)eai->ai_addr)->sa_family == AF_INET6) &&
                 (IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)eai->ai_addr)->sin6_addr))) ) {
             LOG_ERROR
-            fputs("getladdrsplus() replies INADDR_ANY or port 0 -> Update sctplib/socketapi!\n", stdlog);
+            fputs("getladdrsplus() replies INADDR_ANY or port 0\n", stdlog);
             for(i = 0;i < eai->ai_addrs;i++) {
                fprintf(stdlog, "Address[%d] = ", i);
                fputaddress((struct sockaddr*)&eai->ai_addr[i], true, stdlog);

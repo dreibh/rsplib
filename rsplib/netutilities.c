@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.38 2004/11/18 12:23:51 dreibh Exp $
+ *  $Id: netutilities.c,v 1.39 2004/11/23 11:49:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -62,12 +62,55 @@
 
 #ifdef HAVE_KERNEL_SCTP
 #ifndef HAVE_SCTP_CONNECTX
+const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
+                                            int                    addrcnt)
+{
+   const struct sockaddr* bestScopedAddress = addrs;
+   unsigned int           bestScope   = getScope(addrs);
+   unsigned int           newScope;
+   const struct sockaddr* a;
+   size_t                 i;
+
+   LOG_NOTE
+   fputs("Finding best scope out of address set:\n", stdlog);
+   a = addrs;
+   for(i = 0;i < addrcnt;i++) {
+      fputs("   - ", stdlog);
+      fputaddress(a, true, stdlog);
+      fprintf(stdlog, ", scope=%u\n", getScope(a));
+      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
+   }
+   LOG_END
+
+   a = addrs;
+   for(i = 1;i < addrcnt;i++) {
+      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
+      newScope = getScope(a);
+      if(newScope > bestScope) {
+         bestScopedAddress = a;
+         bestScope   = newScope;
+      }
+   }
+
+   LOG_NOTE
+   fputs("Using address ", stdlog);
+   fputaddress(bestScopedAddress, true, stdlog);
+   fprintf(stdlog, ", scope=%u\n", bestScope);
+   LOG_END
+   return(bestScopedAddress);
+}
+#endif
+#endif
+
+#ifdef HAVE_KERNEL_SCTP
+#ifndef HAVE_SCTP_CONNECTX
 #warning No sctp_connectx() available - Using only the first address!
 int sctp_connectx(int                    sockfd,
                   const struct sockaddr* addrs,
                   int                    addrcnt)
 {
-   return(ext_connect(sockfd, addrs, getSocklen(addrs)));
+   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
+   return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
 }
 #endif
 
@@ -119,11 +162,15 @@ ssize_t sctp_sendx(int                           sd,
    size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
    char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
    struct msghdr msg = {
-      (struct sockaddr*)addrs, getSocklen(addrs),
+      NULL, 0,
       &iov, 1,
       cbuf, cmsglen,
       flags
    };
+
+   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
+   msg.msg_name = (struct sockaddr*)bestScopedAddress;
+   msg.msg_namelen = getSocklen(bestScopedAddress);
 
    cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
    cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
@@ -135,6 +182,246 @@ ssize_t sctp_sendx(int                           sd,
 
    return(ext_sendmsg(sd, &msg, 0));
 }
+#endif
+#endif
+
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+
+#define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
+
+enum AddressScopingFlags {
+   ASF_HideLoopback           = (1 << 0),
+   ASF_HideLinkLocal          = (1 << 1),
+   ASF_HideSiteLocal          = (1 << 2),
+   ASF_HideLocal              = ASF_HideLoopback|ASF_HideLinkLocal|ASF_HideSiteLocal,
+   ASF_HideAnycast            = (1 << 3),
+   ASF_HideMulticast          = (1 << 4),
+   ASF_HideBroadcast          = (1 << 5),
+   ASF_HideReserved           = (1 << 6),
+   ASF_Default                = ASF_HideBroadcast|ASF_HideMulticast|ASF_HideAnycast|ASF_HideReserved,
+   ASF_HideAllExceptLoopback  = (1 << 7),
+   ASF_HideAllExceptLinkLocal = (1 << 8),
+   ASF_HideAllExceptSiteLocal = (1 << 9)
+};
+
+
+/* ###### Filter address ################################################# */
+static bool filterAddress(union sockaddr_union* address,
+                          unsigned int          flags)
+{
+   switch (address->sa.sa_family) {
+      case AF_INET :
+         if((IN_MULTICAST(ntohl(address->in.sin_addr.s_addr))         && (flags & ASF_HideMulticast)) ||
+            (IN_EXPERIMENTAL(ntohl(address->in.sin_addr.s_addr))      && (flags & ASF_HideReserved))  ||
+            (IN_BADCLASS(ntohl(address->in.sin_addr.s_addr))          && (flags & ASF_HideReserved))  ||
+            ((INADDR_BROADCAST == ntohl(address->in.sin_addr.s_addr)) && (flags & ASF_HideBroadcast)) ||
+            ((INADDR_LOOPBACK == ntohl(address->in.sin_addr.s_addr))  && (flags & ASF_HideLoopback))  ||
+            ((INADDR_LOOPBACK != ntohl(address->in.sin_addr.s_addr))  && (flags & ASF_HideAllExceptLoopback))) {
+            return(false);
+         }
+       break;
+      case AF_INET6 :
+        if((!IN6_IS_ADDR_LOOPBACK(&(address->in6.sin6_addr))  && (flags & ASF_HideAllExceptLoopback))  ||
+           (IN6_IS_ADDR_LOOPBACK(&(address->in6.sin6_addr))   && (flags & ASF_HideLoopback))           ||
+           (!IN6_IS_ADDR_LINKLOCAL(&(address->in6.sin6_addr)) && (flags & ASF_HideAllExceptLinkLocal)) ||
+           (!IN6_IS_ADDR_SITELOCAL(&(address->in6.sin6_addr)) && (flags & ASF_HideAllExceptSiteLocal)) ||
+           (IN6_IS_ADDR_LINKLOCAL(&(address->in6.sin6_addr))  && (flags & ASF_HideLinkLocal))          ||
+           (IN6_IS_ADDR_SITELOCAL(&(address->in6.sin6_addr))  && (flags & ASF_HideSiteLocal))          ||
+           (IN6_IS_ADDR_MULTICAST(&(address->in6.sin6_addr))  && (flags & ASF_HideMulticast))          ||
+           (IN6_IS_ADDR_UNSPECIFIED(&(address->in6.sin6_addr)))) {
+            return(false);
+        }
+       break;
+      default:
+         return(false);
+       break;
+   }
+   return(true);
+}
+
+
+/* ###### Gather local addresses ######################################### */
+bool obtainLocalAddresses(union sockaddr_union** addressArray,
+                          size_t*                addresses,
+                          const unsigned int     flags)
+{
+   union sockaddr_union* localAddresses = NULL;
+   struct sockaddr*         toUse;
+   struct ifreq             local;
+   struct ifreq*            ifrequest;
+   struct ifreq*            nextif;
+   struct ifconf            cf;
+   char                     buffer[8192];
+   int                      addedNets;
+   char                     addrBuffer[256];
+   char                     addrBuffer2[64];
+   FILE*                    v6list;
+   size_t pos           = 0;
+   size_t copySize      = 0;
+   size_t numAllocAddrs = 0;
+   size_t numIfAddrs    = 0;
+   size_t i;
+   size_t j;
+   size_t dup;
+   int    fd;
+
+
+   *addresses = 0;
+
+   fd = socket(AF_INET,SOCK_DGRAM,0);
+   if(fd < 0) {
+      return(false);
+   }
+
+   /* Now gather the master address information */
+   cf.ifc_buf = buffer;
+   cf.ifc_len = sizeof(buffer);
+   if(ioctl(fd, SIOCGIFCONF, (char *)&cf) == -1) {
+       return(false);
+   }
+
+   numAllocAddrs = cf.ifc_len / sizeof(struct ifreq);
+   ifrequest     = cf.ifc_req;
+   numIfAddrs    = numAllocAddrs;
+
+   addedNets = 0;
+   v6list = fopen(LINUX_PROC_IPV6_FILE,"r");
+   if (v6list != NULL) {
+       while(fgets(addrBuffer,sizeof(addrBuffer),v6list) != NULL) {
+           addedNets++;
+       }
+       fclose(v6list);
+   }
+   numAllocAddrs += addedNets;
+
+   /* now allocate the appropriate memory */
+   localAddresses = (union sockaddr_union*)calloc(numAllocAddrs,sizeof(union sockaddr_union));
+
+   if(localAddresses == NULL) {
+      close(fd);
+      return(false);
+   }
+
+    pos = 0;
+   /* Now we go through and pull each one */
+
+   v6list = fopen(LINUX_PROC_IPV6_FILE,"r");
+   if(v6list != NULL) {
+      struct sockaddr_in6 sin6;
+      memset((char *)&sin6,0,sizeof(sin6));
+      sin6.sin6_family = AF_INET6;
+
+      while(fgets(addrBuffer,sizeof(addrBuffer),v6list) != NULL) {
+         memset(addrBuffer2,0,sizeof(addrBuffer2));
+         strncpy(addrBuffer2,addrBuffer,4);
+         addrBuffer2[4] = ':';
+         strncpy(&addrBuffer2[5],&addrBuffer[4],4);
+         addrBuffer2[9] = ':';
+         strncpy(&addrBuffer2[10],&addrBuffer[8],4);
+         addrBuffer2[14] = ':';
+         strncpy(&addrBuffer2[15],&addrBuffer[12],4);
+         addrBuffer2[19] = ':';
+         strncpy(&addrBuffer2[20],&addrBuffer[16],4);
+         addrBuffer2[24] = ':';
+         strncpy(&addrBuffer2[25],&addrBuffer[20],4);
+         addrBuffer2[29] = ':';
+         strncpy(&addrBuffer2[30],&addrBuffer[24],4);
+         addrBuffer2[34] = ':';
+         strncpy(&addrBuffer2[35],&addrBuffer[28],4);
+
+         if(inet_pton(AF_INET6,addrBuffer2,(void *)&sin6.sin6_addr)) {
+            if(filterAddress((union sockaddr_union*)&sin6,flags) == true) {
+               memcpy(&((localAddresses)[*addresses]),&sin6,sizeof(sin6));
+               (*addresses)++;
+            }
+         }
+      }
+      fclose(v6list);
+   }
+
+   /* set to the start, i.e. buffer[0] */
+   ifrequest = (struct ifreq *)&buffer[pos];
+
+   for(i = 0;i < numIfAddrs;i++,ifrequest = nextif) {
+      nextif = ifrequest + 1;
+      toUse = &ifrequest->ifr_addr;
+
+      memset(&local, 0, sizeof(local));
+      memcpy(local.ifr_name, ifrequest->ifr_name, IFNAMSIZ);
+      if(filterAddress((union sockaddr_union*)toUse, flags) == false) {
+         continue;
+      }
+
+      if(ioctl(fd,SIOCGIFFLAGS,(char*)&local) < 0) {
+         continue;
+      }
+      if(!(local.ifr_flags & IFF_UP)) {
+         /* Device is down. */
+         continue;
+      }
+
+      if(toUse->sa_family == AF_INET) {
+         copySize = sizeof(struct sockaddr_in);
+      }
+      else if (toUse->sa_family == AF_INET6) {
+         copySize = sizeof(struct sockaddr_in6);
+      }
+      else {
+         continue;
+      }
+
+
+      /* Check for duplicates */
+      if(*addresses) {
+         dup = 0;
+         /* scan for the dup */
+         for(j = 0; j < *addresses; j++) {
+            /* family's must match */
+            if(((struct sockaddr*)&(localAddresses[j]))->sa_family != toUse->sa_family) {
+                continue;
+            }
+
+            if(((struct sockaddr*)&(localAddresses[j]))->sa_family == AF_INET) {
+               if(((struct sockaddr_in *)(toUse))->sin_addr.s_addr == ((struct sockaddr_in*)&(localAddresses[j]))->sin_addr.s_addr) {
+                  /* set the flag and break, it is a dup */
+                  dup = 1;
+                  break;
+               }
+            } else {
+                if(IN6_ARE_ADDR_EQUAL(&(((struct sockaddr_in6*)(toUse))->sin6_addr),
+                                      &(((struct sockaddr_in6*)&(localAddresses[j]))->sin6_addr))) {
+                    /* set the flag and break, it is a dup */
+                    dup = 1;
+                    break;
+                }
+            }
+         }
+         if(dup) {
+            /* skip the duplicate name/address we already have it*/
+            continue;
+         }
+      }
+
+      /* copy address and family */
+      memcpy(&localAddresses[*addresses],(char *)toUse,copySize);
+      ((struct sockaddr*)&(localAddresses[*addresses]))->sa_family = toUse->sa_family;
+
+      (*addresses)++;
+   }
+
+   *addressArray = localAddresses;
+   close(fd);
+
+   return(true);
+}
+
 #endif
 #endif
 
@@ -1566,11 +1853,39 @@ size_t getladdrsplus(const int              fd,
 {
    struct sockaddr* packedAddresses;
 #ifdef SOLARIS
-   size_t addrs = sctp_getladdrs(fd, assocID, (void **)&packedAddresses);
+   size_t addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
 #else
    size_t addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
 #endif
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+   uint16_t port;
+   size_t   i;
+#endif
+#endif
+
    if(addrs > 0) {
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+#warning Using getladdrs() INADDR_ANY bugfix for lksctp!
+      if((addrs == 1) &&
+         ( ( (((struct sockaddr*)packedAddresses)->sa_family == AF_INET) &&
+                (((struct sockaddr_in*)packedAddresses)->sin_addr.s_addr == 0) ) ||
+             ( (((struct sockaddr*)packedAddresses)->sa_family == AF_INET6) &&
+                (IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)packedAddresses)->sin6_addr))))) {
+         port = getPort((struct sockaddr*)packedAddresses);
+         sctp_freeladdrs(packedAddresses);
+
+         if(obtainLocalAddresses(addressArray, &addrs, ASF_HideMulticast) == true) {
+            for(i = 0;i < addrs;i++) {
+               setPort(&((*addressArray)[i].sa), port);
+            }
+            return(addrs);
+         }
+         return(0);
+      }
+#endif
+#endif
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
    }
