@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.36 2004/11/16 21:37:05 tuexen Exp $
+ *  $Id: netutilities.c,v 1.37 2004/11/18 12:23:36 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1271,23 +1271,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add)
 {
-   union sockaddr_union localAddress;
-
-   memset((char*)&localAddress, 0, sizeof(localAddress));
-   localAddress.sa.sa_family = groupAddress->sa.sa_family;
-   if(groupAddress->in6.sin6_family == AF_INET6) {
-      localAddress.in6.sin6_port = groupAddress->in6.sin6_port;
-   }
-   else {
-      CHECK(groupAddress->in.sin_family == AF_INET);
-      localAddress.in.sin_port = groupAddress->in.sin_port;
-   }
-   setReusable(sd, 1);
-
-   if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false) {
-      return(false);
-   }
-   return(true);
+   return(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false);
 }
 
 
