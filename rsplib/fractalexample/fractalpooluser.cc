@@ -9,9 +9,13 @@
 #define QT_THREAD_SUPPORT
 #include <qthread.h>
 #include <qmutex.h>
+#include <qfile.h>
 #include <complex>
+#include <qstringlist.h> 
+#include <qdom.h>
 
 #include "rsplib.h"
+#include "randomizer.h"
 #ifdef ENABLE_CSP
 #include "componentstatusprotocol.h"
 #endif
@@ -60,6 +64,7 @@ class FractalPU : public QMainWindow,
    private:
    virtual void run();
    bool sendParameter();
+   void getNextParameters();
 
    enum DataStatus {
       Okay      = 0,
@@ -80,6 +85,9 @@ class FractalPU : public QMainWindow,
    FractalGeneratorParameter Parameter;
    size_t                    Run;
    size_t                    PoolElementUsages;
+   
+   QStringList               ConfigList;
+   
 };
 
 
@@ -96,6 +104,15 @@ FractalPU::FractalPU(const size_t width,
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
 
+
+   QString Buffer;
+   QFile AllconfigFile("liste.conf");
+   while(AllconfigFile.readLine(Buffer, 255))
+   {
+      Buffer = Buffer.stripWhiteSpace();
+      ConfigList.append(Buffer);
+   }
+   
    resize(width, height);
    setCaption("Fractal Pool User");
    statusBar()->message("Welcome to Fractal PU!", 3000);
@@ -166,7 +183,7 @@ bool FractalPU::sendParameter()
    parameter.C1Imag        = Parameter.C1Imag;
    parameter.C2Real        = Parameter.C2Real;
    parameter.C2Imag        = Parameter.C2Imag;
-   parameter.N             = 2.0;
+   parameter.N             = Parameter.N;
 
    tags[0].Tag  = TAG_RspIO_Timeout;
    tags[0].Data = (tagdata_t)2000000;
@@ -231,6 +248,71 @@ void FractalPU::timeoutExpired()
    std::cerr << "##### Timeout expired -> Customer is not satisfied with this service!" << std::endl;
 }
 
+void FractalPU::getNextParameters()
+{
+	if(ConfigList.count() == 0)
+	{
+		std::cerr << "Config file list empty" << std::endl;
+		return;
+	}
+	size_t Element = random32() % ConfigList.count();
+		
+	
+	QString File(ConfigList[Element]);
+  	QDomDocument doc( "XMLFractalSave" );
+  	QFile file( File);//url.prettyURL().mid(5) );
+  	if ( !file.open( IO_ReadOnly ) )
+	{
+		std::cerr << "Config file open failed" << std::endl;
+    		return;
+	}
+      
+  	QString Error;
+  	int Line, Column;
+  	if ( !doc.setContent( &file , false, &Error, &Line, &Column) ) 
+	{
+    		file.close();
+    		std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
+       			<< " and Column: " << QString().setNum(Column) << std::endl;
+    		return;
+  	}
+  	file.close();
+  	
+  	QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
+  	QString AlgorithmName = algorithm.firstChild().toText().data();
+  	if(AlgorithmName == "MandelbrotN")
+  	{
+  		Parameter.AlgorithmID   = FGPA_MANDELBROTN;
+  	}
+	else if(AlgorithmName == "Mandelbrot")
+  	{
+  		Parameter.AlgorithmID   = FGPA_MANDELBROT;
+  	}
+	
+  
+	Parameter.C1Real        = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
+	Parameter.C1Imag        = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
+	Parameter.C2Real        = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
+	Parameter.C2Imag        = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
+  
+  	QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
+  	QDomNode child = useroptions.firstChild();
+  	while(!child.isNull())
+  	{
+		QString Name = child.nodeName();
+	  	QString Value = child.firstChild().toText().data();
+		if(Name == "MaxIterations")
+		{
+			Parameter.MaxIterations = Value.toInt();
+		}
+		else if (Name == "N")
+		{
+			Parameter.N = Value.toInt();
+		}
+		child = child.nextSibling(); 
+  	}	
+}
+
 
 void FractalPU::run()
 {
@@ -271,7 +353,7 @@ void FractalPU::run()
 
          // ====== Initialize image object and timeout timer ================
          lock();
-         Parameter.Width         = width();
+	 Parameter.Width         = width();
          Parameter.Height        = height();
          Parameter.C1Real        = -1.5;
          Parameter.C1Imag        = 1.5;
@@ -279,6 +361,7 @@ void FractalPU::run()
          Parameter.C2Imag        = -1.5;
          Parameter.MaxIterations = 150;
          Parameter.AlgorithmID   = FGPA_MANDELBROT;
+	 getNextParameters();
          if(Image == NULL) {
             Image = new QImage(Parameter.Width, Parameter.Height, 32);
             Q_CHECK_PTR(Image);

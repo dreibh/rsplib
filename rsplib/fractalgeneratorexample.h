@@ -3,6 +3,7 @@
 
 
 #define FGPA_MANDELBROT 1
+#define FGPA_MANDELBROTN 2
 
 struct FractalGeneratorParameter
 {
