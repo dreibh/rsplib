@@ -26,7 +26,8 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const ENRPIdentifierType          homeNSIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
-                                  struct TransportAddressBlock*     transportAddressBlock,
+                                  struct TransportAddressBlock*     userTransport,
+                                  struct TransportAddressBlock*     registratorTransport,
                                   const int                         connectionSocketDescriptor,
                                   const sctp_assoc_t                connectionAssocID)
 {
@@ -55,10 +56,12 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    poolElementNode->TimerTimeStamp              = 0;
    poolElementNode->TimerCode                   = 0;
 
-   poolElementNode->ConnectionSocketDescriptor = connectionSocketDescriptor;
-   poolElementNode->ConnectionAssocID          = connectionAssocID;
+   poolElementNode->ConnectionSocketDescriptor  = connectionSocketDescriptor;
+   poolElementNode->ConnectionAssocID           = connectionAssocID;
 
-   poolElementNode->AddressBlock                = transportAddressBlock;
+   poolElementNode->UserTransport               = userTransport;
+   poolElementNode->RegistratorTransport        = registratorTransport;
+
    poolElementNode->UserData                    = 0;
 }
 
@@ -85,7 +88,8 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    poolElementNode->TimerCode                   = 0;
    poolElementNode->ConnectionSocketDescriptor = -1;
    poolElementNode->ConnectionAssocID          = 0;
-   /* Do not clear AddressBlock, UserData, Identifier and HomeNSIdentifier yet,
+   /* Do not clear UserTransport, RegistratorTransport, UserData,
+      Identifier and HomeNSIdentifier yet -
       they may be necessary for user-specific dispose function! */
 
    STN_METHOD(Delete)(&poolElementNode->PoolElementConnectionStorageNode);
@@ -155,11 +159,20 @@ void ST_CLASS(poolElementNodeGetDescription)(
       safestrcat(buffer, tmp, bufferSize);
    }
    if((fields & PENPO_USERTRANSPORT) &&
-      (poolElementNode->AddressBlock->Addresses > 0)) {
-      transportAddressBlockGetDescription(poolElementNode->AddressBlock,
+      (poolElementNode->UserTransport->Addresses > 0)) {
+      transportAddressBlockGetDescription(poolElementNode->UserTransport,
                                           (char*)&transportAddressDescription,
                                           sizeof(transportAddressDescription));
-      safestrcat(buffer, "\n     addrs: ", bufferSize);
+      safestrcat(buffer, "\n     userT: ", bufferSize);
+      safestrcat(buffer, transportAddressDescription, bufferSize);
+   }
+   if((fields & PENPO_REGISTRATORTRANSPORT) &&
+      (poolElementNode->RegistratorTransport != NULL) &&
+      (poolElementNode->RegistratorTransport->Addresses > 0)) {
+      transportAddressBlockGetDescription(poolElementNode->RegistratorTransport,
+                                          (char*)&transportAddressDescription,
+                                          sizeof(transportAddressDescription));
+      safestrcat(buffer, "\n     regT:  ", bufferSize);
       safestrcat(buffer, transportAddressDescription, bufferSize);
    }
 }
@@ -183,10 +196,6 @@ void ST_CLASS(poolElementNodePrint)(
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source)
 {
-   /* ====== Set amount of unreachability reports to zero ================ */
-   poolElementNode->UnreachabilityReports = 0;
-   // ????? Ist das sinnvoll?????
-
    if(poolPolicySettingsComparison(&poolElementNode->PolicySettings,
                                    &source->PolicySettings) != 0) {
       /* ====== Update policy information ================================ */

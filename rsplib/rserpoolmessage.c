@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.10 2004/08/30 08:32:41 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.11 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -123,8 +123,8 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          for(i = 0;i < message->PoolElementPtrArraySize;i++) {
             if(message->PoolElementPtrArray[i]) {
                ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);
-               transportAddressBlockDelete(message->PoolElementPtrArray[i]->AddressBlock);
-               free(message->PoolElementPtrArray[i]->AddressBlock);
+               transportAddressBlockDelete(message->PoolElementPtrArray[i]->UserTransport);
+               free(message->PoolElementPtrArray[i]->UserTransport);
                free(message->PoolElementPtrArray[i]);
                message->PoolElementPtrArray[i] = NULL;
             }
@@ -182,31 +182,6 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Peek message size from socket ################################## */
-static size_t rserpoolMessagePeekSize(int fd, const card64 timeout)
-{
-   struct rserpool_header header;
-   ssize_t            received;
-   size_t             asapLength;
-   int                flags = MSG_PEEK;
-
-   received = recvfromplus(fd,
-                           (char*)&header, sizeof(header), &flags, NULL, 0,
-                           NULL, NULL, NULL,
-                           timeout);
-   if(received == sizeof(header)) {
-      asapLength = ntohs(header.ah_length);
-      LOG_VERBOSE3
-      fprintf(stdlog,"Incoming ASAP message: type=$%02x flags=$%02x length=%u\n",
-              header.ah_type, header.ah_flags, (unsigned int)asapLength);
-      LOG_END
-      return(asapLength);
-   }
-
-   return(0);
-}
-
-
 /* ###### Send RSerPoolMessage ########################################### */
 bool rserpoolMessageSend(int                     protocol,
                          int                     fd,
@@ -248,85 +223,6 @@ bool rserpoolMessageSend(int                     protocol,
       LOG_END
    }
    return(false);
-}
-
-
-/* ###### Receive RSerPoolMessage ######################################## */
-struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
-                                               const card64     peekTimeout,
-                                               const card64     totalTimeout,
-                                               const size_t     minBufferSize,
-                                               struct sockaddr* senderAddress,
-                                               socklen_t*       senderAddressLength)
-{
-   struct RSerPoolMessage* message;
-   char*               buffer;
-   size_t              length;
-   ssize_t             received;
-   uint32_t            ppid;
-   sctp_assoc_t        assocID;
-   unsigned short      streamID;
-   card64              peekStart;
-   card64              peekTime;
-   card64              timeout;
-   int                 flags;
-
-   peekStart = getMicroTime();
-   length = rserpoolMessagePeekSize(fd,peekTimeout);
-   if(length > 0) {
-      peekTime = getMicroTime() - peekStart;
-      buffer = (char*)malloc(max(length, minBufferSize));
-      if(buffer != NULL) {
-         timeout = totalTimeout;
-         if(timeout < peekTime) {
-            timeout = 0;
-         }
-         else {
-            timeout -= peekTime;
-         }
-         flags = 0;
-         received = recvfromplus(fd,
-                                 buffer, length, &flags,
-                                 senderAddress, senderAddressLength,
-                                 &ppid, &assocID, &streamID,
-                                 timeout);
-         if(received == (ssize_t)length) {
-            message = rserpoolPacket2Message(buffer, ppid, length, max(length, minBufferSize));
-            if(message != NULL) {
-               message->BufferAutoDelete = true;
-               message->PPID             = ppid;
-               message->AssocID          = assocID;
-               message->StreamID         = streamID;
-
-               LOG_VERBOSE2
-               fprintf(stdlog,"Successfully received ASAP message\n"
-                       "PPID=$%08x assoc=%d StreamID=%d, ASAP Type = $%02x\n",
-                       ppid, (unsigned int)assocID, streamID,
-                       message->Type);
-               LOG_END
-               return(message);
-            }
-            else {
-               LOG_WARNING
-               fputs("Received bad packet\n",stdlog);
-               LOG_END
-            }
-         }
-         else {
-            LOG_WARNING
-            fprintf(stdlog,"Read error, read=%d expected=%u\n!",
-                    received, (unsigned int)length);
-            LOG_END
-         }
-         free(buffer);
-      }
-      else {
-         LOG_WARNING
-         fputs("Response too long\n",stdlog);
-         LOG_END
-      }
-   }
-   return(NULL);
 }
 
 

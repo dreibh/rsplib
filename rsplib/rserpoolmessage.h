@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.8 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.9 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -412,26 +412,6 @@ bool rserpoolMessageSend(int                     protocol,
                          int                     flags,
                          const card64            timeout,
                          struct RSerPoolMessage* message);
-
-/**
-  * Read ASAP packet from given file descriptor with given timeouts
-  * and convert it to RSerPoolMessage.
-  *
-  * @param fd File descriptor to read packet from.
-  * @param peekTimeout Timeout for reading the first 4 bytes (length + type).
-  * @param totalTimeout Total timeout for reading the complete packet.
-  * @param minBufferSize Minimum buffer size for the RSerPoolMessage to be created (e.g. for reply message).
-  * @param senderAddress Socket address structure to store the sender's address to (NULL if not required).
-  * @param senderAddressLength Reference to store length of sender address to (NULL if not required).
-  * @return RSerPoolMessage in case of success; NULL otherwise.
-  */
-struct RSerPoolMessage* rserpoolMessageReceive(
-                           int              fd,
-                           const card64     peekTimeout,
-                           const card64     totalTimeout,
-                           const size_t     minBufferSize,
-                           struct sockaddr* senderAddress,
-                           socklen_t*       senderAddressLength);
 
 /**
   * For internal usage only!

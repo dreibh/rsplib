@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.17 2004/09/01 15:49:27 dreibh Exp $
+ *  $Id: servertable.c,v 1.18 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -78,49 +78,52 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
-      message = rserpoolPacket2Message((char*)&buffer,
-                                       PPID_ASAP,
-                                       received, sizeof(buffer));
+      result = rserpoolPacket2Message((char*)&buffer,
+                                      PPID_ASAP,
+                                      received, sizeof(buffer),
+                                      &message);
       if(message != NULL) {
-         if(message->Type == AHT_SERVER_ANNOUNCE) {
-            if(message->Error == RSPERR_OKAY) {
-               LOG_VERBOSE2
-               fputs("ServerAnnounce from ",  stdlog);
-               address2string((struct sockaddr*)&senderAddress,
-                              (char*)&buffer, sizeof(buffer), true);
-               fputs(buffer, stdlog);
-               fputs(" received\n",  stdlog);
-               LOG_END
+         if(result == RSPERR_OKAY) {
+            if(message->Type == AHT_SERVER_ANNOUNCE) {
+               if(message->Error == RSPERR_OKAY) {
+                  LOG_VERBOSE2
+                  fputs("ServerAnnounce from ",  stdlog);
+                  address2string((struct sockaddr*)&senderAddress,
+                                 (char*)&buffer, sizeof(buffer), true);
+                  fputs(buffer, stdlog);
+                  fputs(" received\n",  stdlog);
+                  LOG_END
 
-               result = ST_CLASS(peerListManagementRegisterPeerListNode)(
-                           &serverTable->ServerList,
-                           message->NSIdentifier,
-                           PLNF_DYNAMIC,
-                           message->TransportAddressBlockListPtr,
-                           getMicroTime(),
-                           &peerListNode);
-               if(result == RSPERR_OKAY) {
-                  serverTable->LastAnnounceHeard = getMicroTime();
-                  ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
-                     &serverTable->ServerList,
-                     peerListNode,
-                     serverTable->NameServerAnnounceTimeout);
-               }
-               else {
-                  LOG_ERROR
-                  fputs("Unable to add new peer: ",  stdlog);
-                  rserpoolErrorPrint(result, stdlog);
-                  fputs("\n",  stdlog);
+                  result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                              &serverTable->ServerList,
+                              message->NSIdentifier,
+                              PLNF_DYNAMIC,
+                              message->TransportAddressBlockListPtr,
+                              getMicroTime(),
+                              &peerListNode);
+                  if(result == RSPERR_OKAY) {
+                     serverTable->LastAnnounceHeard = getMicroTime();
+                     ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
+                        &serverTable->ServerList,
+                        peerListNode,
+                        serverTable->NameServerAnnounceTimeout);
+                  }
+                  else {
+                     LOG_ERROR
+                     fputs("Unable to add new peer: ",  stdlog);
+                     rserpoolErrorPrint(result, stdlog);
+                     fputs("\n",  stdlog);
+                     LOG_END
+                  }
+
+                  i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
+                        &serverTable->ServerList,
+                        getMicroTime());
+                  LOG_VERBOSE3
+                  fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  i);
+                  ST_CLASS(peerListManagementPrint)(&serverTable->ServerList, stdlog, PLPO_FULL);
                   LOG_END
                }
-
-               i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
-                      &serverTable->ServerList,
-                      getMicroTime());
-               LOG_VERBOSE3
-               fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  i);
-               ST_CLASS(peerListManagementPrint)(&serverTable->ServerList, stdlog, PLPO_FULL);
-               LOG_END
             }
          }
          rserpoolMessageDelete(message);

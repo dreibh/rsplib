@@ -62,6 +62,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_INCOMPATIBLE_POOL_POLICY,      "incompatible pool policy" },
    { RSPERR_INVALID_POOL_POLICY,           "invalid pool policy" },
    { RSPERR_INVALID_POOL_HANDLE,           "invalid pool handle (too long)" },
+   { RSPERR_INVALID_REGISTRATOR,           "invalid registrator" },
    { RSPERR_INVALID_ADDRESSES,             "invalid address(es)" }
 };
 

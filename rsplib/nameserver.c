@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.32 2004/09/01 15:49:25 dreibh Exp $
+ *  $Id: nameserver.c,v 1.33 2004/09/02 15:30:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1473,11 +1473,12 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
 {
    char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
+   char                              remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*     remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    union sockaddr_union*             addressArray;
    struct TagItem                    tags[8];
    int                               addresses;
-   int                               i;
 
    LOG_ACTION
    fprintf(stdlog, "Registration request to pool ");
@@ -1497,17 +1498,20 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
    /* ====== Get peer addresses ========================================== */
    addresses = getpaddrsplus(fd, assocID, &addressArray);
    if(addresses > 0) {
-      LOG_VERBOSE1
-      fputs("SCTP association's valid peer addresses:\n", stdlog);
-      for(i = 0;i < addresses;i++) {
-         fprintf(stdlog, "%d/%d: ",i + 1,addresses);
-         fputaddress((struct sockaddr*)&addressArray[i],false, stdlog);
-         fputs("\n", stdlog);
-      }
+      transportAddressBlockNew(remoteAddressBlock,
+                               IPPROTO_SCTP,
+                               getPort(&addressArray[0].sa),
+                               0,
+                               addressArray, addresses);
+
+      LOG_VERBOSE2
+      fputs("SCTP association's valid peer addresses: ", stdlog);
+      transportAddressBlockPrint(remoteAddressBlock, stdlog);
+      fputs("\n", stdlog);
       LOG_END
 
       /* ====== Filter addresses ========================================= */
-      if(filterValidAddresses(message->PoolElementPtr->AddressBlock,
+      if(filterValidAddresses(message->PoolElementPtr->UserTransport,
                               addressArray, addresses,
                               validAddressBlock) > 0) {
          LOG_VERBOSE1
@@ -1524,6 +1528,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
                              message->PoolElementPtr->RegistrationLife,
                              &message->PoolElementPtr->PolicySettings,
                              validAddressBlock,
+                             remoteAddressBlock,
                              fd, assocID,
                              getMicroTime(),
                              &poolElementNode);
@@ -1660,8 +1665,8 @@ static void handleDeregistrationRequest(struct NameServer*      nameServer,
       delPoolNode                      = *(poolElementNode->OwnerPoolNode);
       delPoolElementNode               = *poolElementNode;
       delPoolElementNode.OwnerPoolNode = &delPoolNode;
-      delPoolElementNode.AddressBlock  = transportAddressBlockDuplicate(poolElementNode->AddressBlock);
-      if(delPoolElementNode.AddressBlock != NULL) {
+      delPoolElementNode.UserTransport  = transportAddressBlockDuplicate(poolElementNode->UserTransport);
+      if(delPoolElementNode.UserTransport != NULL) {
 
          message->Error = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
                              &nameServer->Namespace,
@@ -1693,9 +1698,9 @@ static void handleDeregistrationRequest(struct NameServer*      nameServer,
             LOG_END
          }
 
-         transportAddressBlockDelete(delPoolElementNode.AddressBlock);
-         free(delPoolElementNode.AddressBlock);
-         delPoolElementNode.AddressBlock = NULL;
+         transportAddressBlockDelete(delPoolElementNode.UserTransport);
+         free(delPoolElementNode.UserTransport);
+         delPoolElementNode.UserTransport = NULL;
       }
       else {
          message->Error = RSPERR_OUT_OF_MEMORY;
@@ -1941,7 +1946,8 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
                      message->PoolElementPtr->Identifier,
                      message->PoolElementPtr->RegistrationLife,
                      &message->PoolElementPtr->PolicySettings,
-                     message->PoolElementPtr->AddressBlock,
+                     message->PoolElementPtr->UserTransport,
+                     message->PoolElementPtr->RegistratorTransport,
                      -1, 0,
                      getMicroTime(),
                      &newPoolElementNode);
@@ -2752,7 +2758,8 @@ static void handlePeerNameTableResponse(struct NameServer*      nameServer,
                            poolElementNode->Identifier,
                            poolElementNode->RegistrationLife,
                            &poolElementNode->PolicySettings,
-                           poolElementNode->AddressBlock,
+                           poolElementNode->UserTransport,
+                           poolElementNode->RegistratorTransport,
                            -1, 0,
                            getMicroTime(),
                            &newPoolElementNode);
@@ -2891,7 +2898,7 @@ static void handleMessage(struct NameServer*      nameServer,
       default:
          LOG_WARNING
          fprintf(stdlog, "Unsupported message type $%02x\n",
-                  message->Type);
+                 message->Type);
          LOG_END
        break;
    }
@@ -2915,6 +2922,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
    sctp_assoc_t             assocID;
    unsigned short           streamID;
    ssize_t                  received;
+   unsigned int             result;
 
    if((fd == nameServer->ASAPSocket) ||
       (fd == nameServer->ENRPUnicastSocket) ||
@@ -2940,21 +2948,39 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                ppid = PPID_ENRP;
             }
 
-            message = rserpoolPacket2Message(buffer, ppid, received, sizeof(buffer));
+            result = rserpoolPacket2Message(buffer, ppid, received, sizeof(buffer), &message);
             if(message != NULL) {
-               message->BufferAutoDelete = false;
-               message->PPID             = ppid;
-               message->AssocID          = assocID;
-               message->StreamID         = streamID;
-               LOG_VERBOSE3
-               fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
-               fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
-               fprintf(stdlog, ", assoc #%u, PPID $%x\n",
-                       message->AssocID, message->PPID);
-               LOG_END
+               if(result == RSPERR_OKAY) {
+                  message->BufferAutoDelete = false;
+                  message->PPID             = ppid;
+                  message->AssocID          = assocID;
+                  message->StreamID         = streamID;
+                  LOG_VERBOSE3
+                  fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
+                  fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
+                  fprintf(stdlog, ", assoc #%u, PPID $%x\n",
+                        message->AssocID, message->PPID);
+                  LOG_END
 
-               handleMessage(nameServer, message, fd);
-
+                  handleMessage(nameServer, message, fd);
+               }
+               else {
+                  if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
+                     /* For ASAP or ENRP messages, we can reply
+                        error message */
+                     message->PPID     = ppid;
+                     message->AssocID  = assocID;
+                     message->StreamID = streamID;
+                     if(message->PPID == PPID_ASAP) {
+                        message->Type = AHT_PEER_ERROR;
+                     }
+                     else if(message->PPID == PPID_ENRP) {
+                        message->Type = EHT_PEER_ERROR;
+                     }
+                     rserpoolMessageSend(IPPROTO_SCTP,
+                                       fd, assocID, 0, 0, message);
+                  }
+               }
                rserpoolMessageDelete(message);
             }
          }

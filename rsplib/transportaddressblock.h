@@ -46,8 +46,6 @@ struct TransportAddressBlock
    union sockaddr_union          AddressArray[];
 };
 
-
-/* ###### Get size of TransportAddressBlock structure for given addr. amount ## */
 #define transportAddressBlockGetSize(addresses) (sizeof(struct TransportAddressBlock) + (addresses * sizeof(union sockaddr_union)))
 
 

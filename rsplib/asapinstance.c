@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.20 2004/09/01 15:49:24 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.21 2004/09/02 15:30:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -209,7 +209,8 @@ static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstan
 static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapInstance,
                                                 struct RSerPoolMessage** message)
 {
-   ssize_t received;
+   ssize_t      received;
+   unsigned int result;
 
    LOG_VERBOSE2
    fputs("Waiting for response...\n",stdlog);
@@ -226,9 +227,16 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapIns
    } while((received == RspRead_PartialRead) || (received == RspRead_Timeout));
 
    if(received > 0) {
-      *message = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
-                                        PPID_ASAP,
-                                        received, asapInstance->Buffer->Size);
+      result = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
+                                      PPID_ASAP,
+                                      received, asapInstance->Buffer->Size,
+                                      message);
+      if(result != RSPERR_OKAY) {
+         if(*message) {
+            rserpoolMessageDelete(*message);
+            *message = NULL;
+         }
+      }
    }
    else {
       *message = NULL;
@@ -381,7 +389,8 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                                     message->PoolElementPtr->Identifier,
                                     message->PoolElementPtr->RegistrationLife,
                                     &message->PoolElementPtr->PolicySettings,
-                                    message->PoolElementPtr->AddressBlock,
+                                    message->PoolElementPtr->UserTransport,
+                                    NULL,
                                     -1, 0,
                                     getMicroTime(),
                                     &newPoolElementNode);
@@ -589,7 +598,8 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                            response->PoolElementPtrArray[i]->Identifier,
                            response->PoolElementPtrArray[i]->RegistrationLife,
                            &response->PoolElementPtrArray[i]->PolicySettings,
-                           response->PoolElementPtrArray[i]->AddressBlock,
+                           response->PoolElementPtrArray[i]->UserTransport,
+                           NULL,
                            -1, 0,
                            getMicroTime(),
                            &newPoolElementNodeNode);

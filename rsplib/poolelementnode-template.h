@@ -70,7 +70,9 @@ struct ST_CLASS(PoolElementNode)
    int                           ConnectionSocketDescriptor;
    sctp_assoc_t                  ConnectionAssocID;
 
-   struct TransportAddressBlock* AddressBlock;
+   struct TransportAddressBlock* UserTransport;
+   struct TransportAddressBlock* RegistratorTransport;
+
    void*                         UserData;
 };
 
@@ -80,7 +82,8 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const ENRPIdentifierType          homeNSIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
-                                  struct TransportAddressBlock*     transportAddressBlock,
+                                  struct TransportAddressBlock*     userTransport,
+                                  struct TransportAddressBlock*     registratorTransport,
                                   const int                         connectionSocketDescriptor,
                                   const sctp_assoc_t                connectionAssocID);
 void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolElementNode);

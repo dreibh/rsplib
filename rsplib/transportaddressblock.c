@@ -221,10 +221,18 @@ void transportAddressBlockPrint(
 /* ###### Duplicate TransportAddressBlock ################################ */
 struct TransportAddressBlock* transportAddressBlockDuplicate(const struct TransportAddressBlock* transportAddressBlock)
 {
-   const size_t                  size      = transportAddressBlockGetSize(transportAddressBlock->Addresses);
-   struct TransportAddressBlock* duplicate = (struct TransportAddressBlock*)malloc(size);
-   if(duplicate) {
-      memcpy(duplicate, transportAddressBlock, size);
+   struct TransportAddressBlock* duplicate;
+   size_t                        size;
+
+   if(transportAddressBlock) {
+      size      = transportAddressBlockGetSize(transportAddressBlock->Addresses);
+      duplicate = (struct TransportAddressBlock*)malloc(size);
+      if(duplicate) {
+         memcpy(duplicate, transportAddressBlock, size);
+      }
+   }
+   else {
+      duplicate = NULL;
    }
    return(duplicate);
 }

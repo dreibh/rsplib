@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.6 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: timer.c,v 1.7 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -118,6 +118,12 @@ int timerComparison(const void* timerPtr1, const void* timerPtr2)
       return(-1);
    }
    else if(timer1->TimeStamp > timer2->TimeStamp) {
+      return(1);
+   }
+   if((long)timer1 < (long)timer2) {
+      return(-1);
+   }
+   if((long)timer1 > (long)timer2) {
       return(1);
    }
    return(0);

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.11 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: rsplib.c,v 1.12 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -212,6 +212,7 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
          tagListGetData(tags, TAG_PoolElement_RegistrationLife, 300000000),
          &myPolicySettings,
          myTransportAddressBlock,
+         NULL,
          -1, 0);
 
       LOG_ACTION
@@ -289,9 +290,9 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
          if(endpointAddressInfo != NULL) {
             (*endpointAddressInfo)->ai_next     = NULL;
             (*endpointAddressInfo)->ai_pe_id    = poolElementNode->Identifier;
-            (*endpointAddressInfo)->ai_family   = poolElementNode->AddressBlock->AddressArray[0].sa.sa_family;
-            (*endpointAddressInfo)->ai_protocol = poolElementNode->AddressBlock->Protocol;
-            switch(poolElementNode->AddressBlock->Protocol) {
+            (*endpointAddressInfo)->ai_family   = poolElementNode->UserTransport->AddressArray[0].sa.sa_family;
+            (*endpointAddressInfo)->ai_protocol = poolElementNode->UserTransport->Protocol;
+            switch(poolElementNode->UserTransport->Protocol) {
                case IPPROTO_SCTP:
                   (*endpointAddressInfo)->ai_socktype = SOCK_STREAM;
                 break;
@@ -303,12 +304,12 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
                 break;
             }
             (*endpointAddressInfo)->ai_addrlen = sizeof(union sockaddr_union);
-            (*endpointAddressInfo)->ai_addrs   = poolElementNode->AddressBlock->Addresses;
+            (*endpointAddressInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
             (*endpointAddressInfo)->ai_addr    = (union sockaddr_union*)malloc((*endpointAddressInfo)->ai_addrs * sizeof(union sockaddr_union));
             if((*endpointAddressInfo)->ai_addr != NULL) {
                ptr = (char*)(*endpointAddressInfo)->ai_addr;
-               for(i = 0;i < poolElementNode->AddressBlock->Addresses;i++) {
-                  memcpy((void*)ptr, (void*)&poolElementNode->AddressBlock->AddressArray[i],
+               for(i = 0;i < poolElementNode->UserTransport->Addresses;i++) {
+                  memcpy((void*)ptr, (void*)&poolElementNode->UserTransport->AddressArray[i],
                          sizeof(union sockaddr_union));
                   ptr = (char*)((long)ptr + (long)sizeof(union sockaddr_union));
                }

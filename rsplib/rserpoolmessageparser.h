@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.h,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessageparser.h,v 1.2 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,29 +39,13 @@
 #ifndef RSERPOOLMESSAGEPARSER_H
 #define RSERPOOLMESSAGEPARSER_H
 
-
 #include "tdtypes.h"
 #include "rserpoolmessage.h"
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-
-/**
-  * Create RSerPoolMessage structure from ASAP packet.
-  *
-  * @param packet Packet.
-  * @param packetSize Size of packet.
-  * @param minBufferSize Minimum size of RSerPoolMessage's buffer (e.g. for reply message).
-  * @return RSerPoolMessage or NULL in case of error.
-  */
-struct RSerPoolMessage* asapPacket2Message(
-                           char*        packet,
-                           const size_t packetSize,
-                           const size_t minBufferSize);
 
 /**
   * Create RSerPoolMessage structure from ENRP packet.
@@ -70,17 +54,18 @@ struct RSerPoolMessage* asapPacket2Message(
   * @param ppid PPID of the packet (ASAP or ENRP).
   * @param packetSize Size of packet.
   * @param minBufferSize Minimum size of RSerPoolMessage's buffer (e.g. for reply message).
-  * @return RSerPoolMessage or NULL in case of error.
+  * @param message Reference to store RSerPoolMessage to.
+  * @return Error code.
   */
-struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
-                                               const uint32_t ppid,
-                                               const size_t   packetSize,
-                                               const size_t   minBufferSize);
+unsigned int rserpoolPacket2Message(char*                    packet,
+                                    const uint32_t           ppid,
+                                    const size_t             packetSize,
+                                    const size_t             minBufferSize,
+                                    struct RSerPoolMessage** message);
 
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.12 2004/08/30 08:32:41 dreibh Exp $
+ *  $Id: rspsession.c,v 1.13 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -575,7 +575,7 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       message->CookiePtr  = (char*)cookie;
       message->CookieSize = (size_t)cookieSize;
       threadSafetyLock(&session->Mutex);
-      LOG_ACTION
+      LOG_VERBOSE
       fputs("Sending Cookie\n", stdlog);
       LOG_END
       result = rserpoolMessageSend(session->SocketProtocol,
@@ -867,6 +867,7 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
    struct RSerPoolMessage* message;
    CookieEchoCallbackPtr   callback;
    unsigned int            type = 0;
+   unsigned int            result;
 
    LOG_VERBOSE
    fputs("Handling ASAP message from control channel...\n", stdlog);
@@ -874,70 +875,72 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
 
    threadSafetyLock(&session->Mutex);
 
-   message = rserpoolPacket2Message(buffer, PPID_ASAP, size, size);
+   result = rserpoolPacket2Message(buffer, PPID_ASAP, size, size, &message);
    if(message != NULL) {
-      LOG_VERBOSE2
-      fprintf(stdlog, "Received ASAP type $%04x from session, socket %d\n",
-              message->Type, session->Socket);
-      LOG_END
-      type = message->Type;
-      switch(message->Type) {
-         case AHT_COOKIE:
-            LOG_VERBOSE
-            fputs("Got cookie\n", stdlog);
-            LOG_END
-            if(session->Cookie) {
-               LOG_VERBOSE2
-               fputs("Replacing existing Cookie with new one\n", stdlog);
+      if(result == RSPERR_OKAY) {
+         LOG_VERBOSE2
+         fprintf(stdlog, "Received ASAP type $%04x from session, socket %d\n",
+               message->Type, session->Socket);
+         LOG_END
+         type = message->Type;
+         switch(message->Type) {
+            case AHT_COOKIE:
+               LOG_VERBOSE
+               fputs("Got cookie\n", stdlog);
                LOG_END
-               free(session->Cookie);
-            }
-            message->CookiePtrAutoDelete = false;
-            session->Cookie     = message->CookiePtr;
-            session->CookieSize = message->CookieSize;
-          break;
-         case AHT_COOKIE_ECHO:
-            if(session->CookieEcho == NULL) {
-               LOG_ACTION
-               fputs("Got cookie echo\n", stdlog);
-               LOG_END
+               if(session->Cookie) {
+                  LOG_VERBOSE2
+                  fputs("Replacing existing Cookie with new one\n", stdlog);
+                  LOG_END
+                  free(session->Cookie);
+               }
                message->CookiePtrAutoDelete = false;
-               session->CookieEcho     = message->CookiePtr;
-               session->CookieEchoSize = message->CookieSize;
-               callback = (CookieEchoCallbackPtr)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoCallback, (tagdata_t)NULL);
-               if(callback) {
-                  LOG_VERBOSE3
-                  fputs("Invoking callback...\n", stdlog);
+               session->Cookie     = message->CookiePtr;
+               session->CookieSize = message->CookieSize;
+            break;
+            case AHT_COOKIE_ECHO:
+               if(session->CookieEcho == NULL) {
+                  LOG_ACTION
+                  fputs("Got cookie echo\n", stdlog);
                   LOG_END
-                  callback((void*)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoUserData, (tagdata_t)NULL),
-                           message->CookiePtr,
-                           message->CookieSize);
-                  LOG_VERBOSE3
-                  fputs("Callback completed\n", stdlog);
-                  LOG_END
+                  message->CookiePtrAutoDelete = false;
+                  session->CookieEcho     = message->CookiePtr;
+                  session->CookieEchoSize = message->CookieSize;
+                  callback = (CookieEchoCallbackPtr)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoCallback, (tagdata_t)NULL);
+                  if(callback) {
+                     LOG_VERBOSE3
+                     fputs("Invoking callback...\n", stdlog);
+                     LOG_END
+                     callback((void*)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoUserData, (tagdata_t)NULL),
+                              message->CookiePtr,
+                              message->CookieSize);
+                     LOG_VERBOSE3
+                     fputs("Callback completed\n", stdlog);
+                     LOG_END
+                  }
+                  else {
+                     LOG_VERBOSE2
+                     fputs("There is no callback installed\n", stdlog);
+                     LOG_END
+                  }
                }
                else {
-                  LOG_VERBOSE2
-                  fputs("There is no callback installed\n", stdlog);
+                  LOG_ERROR
+                  fputs("Got additional cookie echo. Ignoring it.\n", stdlog);
                   LOG_END
                }
-            }
-            else {
-               LOG_ERROR
-               fputs("Got additional cookie echo. Ignoring it.\n", stdlog);
+            break;
+            case AHT_BUSINESS_CARD:
+               LOG_ACTION
+               fputs("Got business card\n", stdlog);
                LOG_END
-            }
-          break;
-         case AHT_BUSINESS_CARD:
-            LOG_ACTION
-            fputs("Got business card\n", stdlog);
-            LOG_END
-          break;
-         default:
-            LOG_WARNING
-            fprintf(stdlog, "Do not know what to do with ASAP type %u\n", message->Type);
-            LOG_END
-          break;
+            break;
+            default:
+               LOG_WARNING
+               fprintf(stdlog, "Do not know what to do with ASAP type %u\n", message->Type);
+               LOG_END
+            break;
+         }
       }
       rserpoolMessageDelete(message);
    }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.18 2004/09/01 15:49:27 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.19 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -371,8 +371,8 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
 
 
 /* ###### Scan user transport parameter ##################################### */
-static bool scanUserTransportParameter(struct RSerPoolMessage*       message,
-                                       struct TransportAddressBlock* transportAddressBlock)
+static bool scanTransportParameter(struct RSerPoolMessage*       message,
+                                   struct TransportAddressBlock* transportAddressBlock)
 {
    size_t                                  addresses;
    union sockaddr_union                    addressArray[MAX_PE_TRANSPORTADDRESSES];
@@ -814,9 +814,13 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                             struct RSerPoolMessage* message)
 {
    struct rserpool_poolelementparameter* pep;
-   char                                  transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock*         transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
-   struct TransportAddressBlock*         newTransportAddressBlock;
+   char                                  userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*         userTransportAddressBlock = (struct TransportAddressBlock*)&userTransportAddressBlockBuffer;
+   struct TransportAddressBlock*         newUserTransportAddressBlock;
+   char                                  registratorTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*         registratorTransportAddressBlock = (struct TransportAddressBlock*)&registratorTransportAddressBlockBuffer;
+   struct TransportAddressBlock*         newRegistratorTransportAddressBlock;
+   bool                                  hasRegistratorTransportAddressBlock = false;
    struct PoolPolicySettings             poolPolicySettings;
    struct ST_CLASS(PoolElementNode)*     poolElementNode;
 
@@ -833,12 +837,16 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
       return(false);
    }
 
-   if(scanUserTransportParameter(message, transportAddressBlock) == false) {
+   if(scanTransportParameter(message, userTransportAddressBlock) == false) {
       return(false);
    }
 
    if(scanPolicyParameter(message, &poolPolicySettings) == false) {
       return(false);
+   }
+
+   if(scanTransportParameter(message, registratorTransportAddressBlock)) {
+      hasRegistratorTransportAddressBlock = true;
    }
 
    if(checkFinishTLV(message, tlvPosition) == false) {
@@ -850,18 +858,31 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
    }
-   newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
-   if(newTransportAddressBlock == NULL) {
+   newUserTransportAddressBlock = transportAddressBlockDuplicate(userTransportAddressBlock);
+   if(newUserTransportAddressBlock == NULL) {
       free(poolElementNode);
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
+   }
+   if(hasRegistratorTransportAddressBlock) {
+      newRegistratorTransportAddressBlock = transportAddressBlockDuplicate(registratorTransportAddressBlock);
+      if(registratorTransportAddressBlock == NULL) {
+         free(newUserTransportAddressBlock);
+         free(poolElementNode);
+         message->Error = RSPERR_OUT_OF_MEMORY;
+         return(false);
+      }
+   }
+   else {
+      newRegistratorTransportAddressBlock = NULL;
    }
    ST_CLASS(poolElementNodeNew)(poolElementNode,
                                 ntohl(pep->pep_identifier),
                                 ntohl(pep->pep_homeserverid),
                                 ntohl(pep->pep_reg_life),
                                 &poolPolicySettings,
-                                newTransportAddressBlock,
+                                newUserTransportAddressBlock,
+                                newRegistratorTransportAddressBlock,
                                 -1, 0);
    return(poolElementNode);
 }
@@ -1090,7 +1111,7 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
       return(false);
    }
 
-   if(scanUserTransportParameter(message, transportAddressBlock) == false) {
+   if(scanTransportParameter(message, transportAddressBlock) == false) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
@@ -1175,10 +1196,16 @@ static bool scanRegistrationMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
+
    message->PoolElementPtr = scanPoolElementParameter(message);
    if(message->PoolElementPtr == NULL) {
       return(false);
    }
+   if(message->PoolElementPtr->RegistratorTransport != NULL) {
+      message->Error = RSPERR_INVALID_REGISTRATOR;
+      return(false);
+   }
+
    return(true);
 }
 
@@ -1294,7 +1321,7 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
-      if(scanUserTransportParameter(message, transportAddressBlock)) {
+      if(scanTransportParameter(message, transportAddressBlock)) {
          newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
          if(newTransportAddressBlock == NULL) {
             message->Error = RSPERR_OUT_OF_MEMORY;
@@ -1520,6 +1547,10 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
          scannedPoolElementParameters = 0;
          poolElementNode = scanPoolElementParameter(message);
          while(poolElementNode) {
+            if(poolElementNode->RegistratorTransport == NULL) {
+               message->Error = RSPERR_INVALID_REGISTRATOR;
+               return(false);
+            }
             scannedPoolElementParameters++;
 
             message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
@@ -1529,7 +1560,8 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
                                 poolElementNode->Identifier,
                                 poolElementNode->RegistrationLife,
                                 &poolElementNode->PolicySettings,
-                                poolElementNode->AddressBlock,
+                                poolElementNode->UserTransport,
+                                poolElementNode->RegistratorTransport,
                                 -1, 0,
                                 0,
                                 &newPoolElementNode);
@@ -1580,6 +1612,10 @@ static bool scanPeerNameUpdateMessage(struct RSerPoolMessage* message)
    }
    message->PoolElementPtr = scanPoolElementParameter(message);
    if(message->PoolElementPtr == NULL) {
+      return(false);
+   }
+   if(message->PoolElementPtr->RegistratorTransport == NULL) {
+      message->Error = RSPERR_INVALID_REGISTRATOR;
       return(false);
    }
 
@@ -1688,6 +1724,7 @@ static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
                              message->Identifier,
                              0,
                              &dummyPoolPolicySettings,
+                             dummyTransportAddressBlock,
                              dummyTransportAddressBlock,
                              -1, 0,
                              0,
@@ -2025,42 +2062,46 @@ static bool scanMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Convert packet to RSerPoolMessage ############################## */
-struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
-                                               const uint32_t ppid,
-                                               const size_t   packetSize,
-                                               const size_t   minBufferSize)
+unsigned int rserpoolPacket2Message(char*                    packet,
+                                    const uint32_t           ppid,
+                                    const size_t             packetSize,
+                                    const size_t             minBufferSize,
+                                    struct RSerPoolMessage** message)
 {
-   struct RSerPoolMessage* message = rserpoolMessageNew(packet, packetSize);
-   if(message != NULL) {
-      message->PPID                                   = ppid;
-      message->OriginalBufferSize                     = max(packetSize, minBufferSize);
-      message->Position                               = 0;
-      message->PoolElementPtrAutoDelete               = true;
-      message->CookiePtrAutoDelete                    = true;
-      message->PoolElementPtrArrayAutoDelete          = true;
-      message->TransportAddressBlockListPtrAutoDelete = true;
-      message->NamespacePtrAutoDelete                 = true;
-      message->PeerListNodePtrAutoDelete              = true;
-      message->PeerListPtrAutoDelete                  = true;
+   *message = rserpoolMessageNew(packet, packetSize);
+   if(*message != NULL) {
+      (*message)->PPID                                   = ppid;
+      (*message)->OriginalBufferSize                     = max(packetSize, minBufferSize);
+      (*message)->Position                               = 0;
+      (*message)->PoolElementPtrAutoDelete               = true;
+      (*message)->CookiePtrAutoDelete                    = true;
+      (*message)->PoolElementPtrArrayAutoDelete          = true;
+      (*message)->TransportAddressBlockListPtrAutoDelete = true;
+      (*message)->NamespacePtrAutoDelete                 = true;
+      (*message)->PeerListNodePtrAutoDelete              = true;
+      (*message)->PeerListPtrAutoDelete                  = true;
 
       LOG_VERBOSE3
       fprintf(stdlog, "Scanning message, size=%u...\n",
               (unsigned int)packetSize);
       LOG_END
 
-      if(scanMessage(message) == true) {
+      if(scanMessage(*message) == true) {
          LOG_VERBOSE3
          fputs("Message successfully scanned!\n", stdlog);
          LOG_END
-         return(message);
+         return(RSPERR_OKAY);
       }
 
       LOG_WARNING
-      fprintf(stdlog, "Format error in message at byte %u!\n",
-              (unsigned int)message->Position);
-      LOG_END_FATAL  // =???????????????
-      rserpoolMessageDelete(message);
-      message = NULL;
+      fprintf(stdlog, "Error while parsing message at byte %u: ",
+              (unsigned int)(*message)->Position);
+      rserpoolErrorPrint((*message)->Error, stdlog);
+      fputs("\n", stdlog);
+      LOG_END
+
+      CHECK((*message)->Error != RSPERR_OKAY);
+      return((*message)->Error);
    }
-   return(message);
+   return(RSPERR_NO_RESOURCES);
 }

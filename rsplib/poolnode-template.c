@@ -179,22 +179,41 @@ unsigned int ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(
       return(RSPERR_INVALID_ID);
    }
 
-   if(poolNode->Protocol != poolElementNode->AddressBlock->Protocol) {
+   if(poolNode->Protocol != poolElementNode->UserTransport->Protocol) {
       return(RSPERR_WRONG_PROTOCOL);
    }
 
-   if((poolElementNode->AddressBlock->Addresses < 1) ||
-      (poolElementNode->AddressBlock->Addresses > MAX_PE_TRANSPORTADDRESSES)) {
+   if(poolElementNode->RegistratorTransport) {
+      if(poolElementNode->RegistratorTransport->Protocol != IPPROTO_SCTP) {
+         return(RSPERR_INVALID_REGISTRATOR);
+      }
+      if(poolElementNode->RegistratorTransport->Flags & TABF_CONTROLCHANNEL) {
+         return(RSPERR_INVALID_REGISTRATOR);
+      }
+      if((poolElementNode->RegistratorTransport->Addresses < 1) ||
+         (poolElementNode->RegistratorTransport->Addresses > MAX_PE_TRANSPORTADDRESSES)) {
+         return(RSPERR_INVALID_REGISTRATOR);
+      }
+      if(poolElementNode->RegistratorTransport->Port == 0) {
+         return(RSPERR_INVALID_REGISTRATOR);
+      }
+   }
+
+   if((poolElementNode->UserTransport->Addresses < 1) ||
+      (poolElementNode->UserTransport->Addresses > MAX_PE_TRANSPORTADDRESSES)) {
+      return(RSPERR_INVALID_ADDRESSES);
+   }
+   if(poolElementNode->UserTransport->Port == 0) {
       return(RSPERR_INVALID_ADDRESSES);
    }
 
    if(poolNode->Flags & PNF_CONTROLCHANNEL) {
-      if(!poolElementNode->AddressBlock->Flags & TABF_CONTROLCHANNEL) {
+      if(!poolElementNode->UserTransport->Flags & TABF_CONTROLCHANNEL) {
          return(RSPERR_WRONG_CONTROLCHANNEL_HANDLING);
       }
    }
    else {
-      if(poolElementNode->AddressBlock->Flags & TABF_CONTROLCHANNEL) {
+      if(poolElementNode->UserTransport->Flags & TABF_CONTROLCHANNEL) {
          return(RSPERR_WRONG_CONTROLCHANNEL_HANDLING);
       }
    }

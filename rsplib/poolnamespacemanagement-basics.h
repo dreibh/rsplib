@@ -51,23 +51,24 @@ typedef uint32_t PoolElementSeqNumberType;
 #define UNDEFINED_NAME_SERVER_IDENTIFIER  0
 
 
-#define PENPO_POLICYINFO      (1 << 0)   /* constants set by PE      */
-#define PENPO_POLICYSTATE     (1 << 1)   /* current policy state     */
-#define PENPO_HOME_NS         (1 << 2)   /* Home NS identifier       */
-#define PENPO_REGLIFE         (1 << 3)   /* Registration lifetime    */
-#define PENPO_UR_REPORTS      (1 << 4)   /* Unreachability reports   */
-#define PENPO_LASTUPDATE      (1 << 5)   /* Last update time stamp   */
-#define PENPO_USERTRANSPORT   (1 << 6)   /* User transport info      */
-#define PENPO_CONNECTION      (1 << 7)   /* Connection (sd/assoc)    */
+#define PENPO_POLICYINFO             (1 << 0)   /* constants set by PE      */
+#define PENPO_POLICYSTATE            (1 << 1)   /* current policy state     */
+#define PENPO_HOME_NS                (1 << 2)   /* Home NS identifier       */
+#define PENPO_REGLIFE                (1 << 3)   /* Registration lifetime    */
+#define PENPO_UR_REPORTS             (1 << 4)   /* Unreachability reports   */
+#define PENPO_LASTUPDATE             (1 << 5)   /* Last update time stamp   */
+#define PENPO_USERTRANSPORT          (1 << 6)   /* User transport           */
+#define PENPO_REGISTRATORTRANSPORT   (1 << 7)   /* Registrator transport    */
+#define PENPO_CONNECTION             (1 << 8)   /* Connection (sd/assoc)    */
 
-#define PNPO_INDEX            (1 << 8)   /* PEs of pool by index     */
-#define PNPO_SELECTION        (1 << 9)   /* PEs of pool by selection */
+#define PNPO_INDEX                   (1 << 16)  /* PEs of pool by index     */
+#define PNPO_SELECTION               (1 << 17)  /* PEs of pool by selection */
 
-#define PNNPO_POOLS_INDEX       (1 << 10)
-#define PNNPO_POOLS_SELECTION   (1 << 11)
-#define PNNPO_POOLS_OWNERSHIP   (1 << 12)
-#define PNNPO_POOLS_CONNECTION (1 << 13)
-#define PNNPO_POOLS_TIMER       (1 << 14)
+#define PNNPO_POOLS_INDEX            (1 << 24)
+#define PNNPO_POOLS_SELECTION        (1 << 25)
+#define PNNPO_POOLS_OWNERSHIP        (1 << 26)
+#define PNNPO_POOLS_CONNECTION       (1 << 27)
+#define PNNPO_POOLS_TIMER            (1 << 28)
 
 
 #define PENPO_FULL          (~0)
@@ -76,7 +77,7 @@ typedef uint32_t PoolElementSeqNumberType;
 
 
 
-#define PLNPO_USERTRANSPORT (1 << 0)
+#define PLNPO_TRANSPORT     (1 << 0)
 
 #define PLPO_PEERS_INDEX    (1 << 10)
 #define PLPO_PEERS_TIMER    (1 << 11)

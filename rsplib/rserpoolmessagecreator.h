@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.h,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.h,v 1.2 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -38,10 +38,8 @@
 #ifndef RSERPOOLMESSAGECREATOR_H
 #define RSERPOOLMESSAGECREATOR_H
 
-
 #include "tdtypes.h"
 #include "rserpoolmessage.h"
-
 
 #ifdef __cplusplus
 extern "C" {

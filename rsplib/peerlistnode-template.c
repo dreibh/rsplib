@@ -156,7 +156,7 @@ void ST_CLASS(peerListNodeGetDescription)(
       safestrcat(buffer, "+multicast", bufferSize);
    }
 
-   if((fields & PLNPO_USERTRANSPORT) &&
+   if((fields & PLNPO_TRANSPORT) &&
       (peerListNode->AddressBlock->Addresses > 0)) {
       transportAddressBlockGetDescription(peerListNode->AddressBlock,
                                           (char*)&transportAddressDescription,

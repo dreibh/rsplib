@@ -59,9 +59,9 @@ static void ST_CLASS(poolNamespaceManagementPoolElementNodeDisposer)(void* arg1,
                                                                poolNamespaceManagement->DisposerUserData);
       poolElementNode->UserData = NULL;
    }
-   transportAddressBlockDelete(poolElementNode->AddressBlock);
-   free(poolElementNode->AddressBlock);
-   poolElementNode->AddressBlock = NULL;
+   transportAddressBlockDelete(poolElementNode->UserTransport);
+   free(poolElementNode->UserTransport);
+   poolElementNode->UserTransport = NULL;
    free(poolElementNode);
 }
 
@@ -117,14 +117,16 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 const PoolElementIdentifierType           poolElementIdentifier,
                 const unsigned int                        registrationLife,
                 const struct PoolPolicySettings*          poolPolicySettings,
-                const struct TransportAddressBlock*       transportAddressBlock,
+                const struct TransportAddressBlock*       userTransport,
+                const struct TransportAddressBlock*       registratorTransport,
                 const int                                 connectionSocketDescriptor,
                 const sctp_assoc_t                        connectionAssocID,
                 const unsigned long long                  currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**        poolElementNode)
 {
    const struct ST_CLASS(PoolPolicy)*       poolPolicy;
-   struct TransportAddressBlock*            userTransport;
+   struct TransportAddressBlock*            userTransportCopy;
+   struct TransportAddressBlock*            registratorTransportCopy;
    unsigned int                             errorCode;
 
    *poolElementNode = 0;
@@ -143,8 +145,8 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
    }
    ST_CLASS(poolNodeNew)(poolNamespaceManagement->NewPoolNode,
                          poolHandle, poolPolicy,
-                         transportAddressBlock->Protocol,
-                         (transportAddressBlock->Flags & TABF_CONTROLCHANNEL) ? PNF_CONTROLCHANNEL : 0);
+                         userTransport->Protocol,
+                         (userTransport->Flags & TABF_CONTROLCHANNEL) ? PNF_CONTROLCHANNEL : 0);
 
    if(poolNamespaceManagement->NewPoolElementNode == NULL) {
       poolNamespaceManagement->NewPoolElementNode = (struct ST_CLASS(PoolElementNode)*)malloc(sizeof(struct ST_CLASS(PoolElementNode)));
@@ -155,18 +157,21 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
 
    /*
       Attention:
-      transportAddressBlock is given as TransportAddressBlock here, since
+      userTransport is given as TransportAddressBlock here, since
       poolNamespaceNodeAddOrUpdatePoolElementNode must be able to check it
       for compatibility to the pool.
       If the node is inserted as new pool element node, the AddressBlock field
-      *must* be updated with a duplicate of transportAddressBlock's data!
+      *must* be updated with a duplicate of userTransport's data!
+
+      The same is necessary for registratorTransport.
     */
    ST_CLASS(poolElementNodeNew)(poolNamespaceManagement->NewPoolElementNode,
                                 poolElementIdentifier,
                                 homeNSIdentifier,
                                 registrationLife,
                                 poolPolicySettings,
-                                (struct TransportAddressBlock*)transportAddressBlock,
+                                (struct TransportAddressBlock*)userTransport,
+                                (struct TransportAddressBlock*)registratorTransport,
                                 connectionSocketDescriptor,
                                 connectionAssocID);
    *poolElementNode = ST_CLASS(poolNamespaceNodeAddOrUpdatePoolElementNode)(&poolNamespaceManagement->Namespace,
@@ -176,15 +181,33 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
    if(errorCode == RSPERR_OKAY) {
       (*poolElementNode)->LastUpdateTimeStamp = currentTimeStamp;
 
-      userTransport = transportAddressBlockDuplicate(transportAddressBlock);
-      if(userTransport != NULL) {
-         if((*poolElementNode)->AddressBlock != transportAddressBlock) {  /* see comment above! */
-            transportAddressBlockDelete((*poolElementNode)->AddressBlock);
-            free((*poolElementNode)->AddressBlock);
+      userTransportCopy        = transportAddressBlockDuplicate(userTransport);
+      registratorTransportCopy = transportAddressBlockDuplicate(registratorTransport);
+
+      if((userTransportCopy != NULL) &&
+         ((registratorTransportCopy != NULL) || (registratorTransport == NULL))) {
+         if((*poolElementNode)->UserTransport != userTransport) {   /* see comment above! */
+            transportAddressBlockDelete((*poolElementNode)->UserTransport);
+            free((*poolElementNode)->UserTransport);
          }
-         (*poolElementNode)->AddressBlock = userTransport;
+         (*poolElementNode)->UserTransport = userTransportCopy;
+
+         if(((*poolElementNode)->RegistratorTransport != registratorTransport) &&
+            ((*poolElementNode)->RegistratorTransport != NULL)) {   /* see comment above! */
+            transportAddressBlockDelete((*poolElementNode)->RegistratorTransport);
+            free((*poolElementNode)->RegistratorTransport);
+         }
+         (*poolElementNode)->RegistratorTransport = registratorTransportCopy;
       }
       else {
+         if(userTransportCopy) {
+            transportAddressBlockDelete(userTransportCopy);
+            free(userTransportCopy);
+         }
+         if(registratorTransportCopy) {
+            transportAddressBlockDelete(registratorTransportCopy);
+            free(registratorTransportCopy);
+         }
          ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
             poolNamespaceManagement,
             poolHandle,

@@ -87,7 +87,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = t2 nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork
+noinst_PROGRAMS = t2 nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
 # examplepe2 examplepu2
 
 
@@ -126,6 +126,10 @@ fractalpoolelement_LDFLAGS = -static $(all_libraries) -L.
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 fork_LDFLAGS = -static $(all_libraries) -L.
+
+cspmonitor_SOURCES = cspmonitor.c
+cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 
 
 #t1_SOURCES = t1.cc

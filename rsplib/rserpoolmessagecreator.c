@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.15 2004/09/01 15:49:26 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.16 2004/09/02 15:30:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -198,16 +198,16 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
 
 
 /* ###### Create transport parameter ###################################### */
-static bool createUserTransportParameter(struct RSerPoolMessage*             message,
-                                         const struct TransportAddressBlock* transportAddressBlock)
+static bool createTransportParameter(struct RSerPoolMessage*             message,
+                                     const struct TransportAddressBlock* transportAddressBlock)
 {
-   size_t                              tlvPosition = 0;
+   size_t                                  tlvPosition = 0;
    struct rserpool_udptransportparameter*  utp;
    struct rserpool_tcptransportparameter*  ttp;
    struct rserpool_sctptransportparameter* stp;
-   uint16_t                            type;
-   uint16_t                            transportUse;
-   size_t                              i;
+   uint16_t                                type;
+   uint16_t                                transportUse;
+   size_t                                  i;
 
    if(transportAddressBlock == NULL) {
       LOG_ERROR
@@ -464,13 +464,18 @@ static bool createPoolElementParameter(
    pep->pep_homeserverid = htonl(poolElement->HomeNSIdentifier);
    pep->pep_reg_life     = htonl(poolElement->RegistrationLife);
 
-
-   if(createUserTransportParameter(message, poolElement->AddressBlock) == false) {
+   if(createTransportParameter(message, poolElement->UserTransport) == false) {
       return(false);
    }
 
    if(createPolicyParameter(message, &poolElement->PolicySettings) == false) {
       return(false);
+   }
+
+   if(poolElement->RegistratorTransport) {
+      if(createTransportParameter(message, poolElement->RegistratorTransport) == false) {
+         return(false);
+      }
    }
 
    return(finishTLV(message, tlvPosition));
@@ -607,7 +612,7 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
    sip->sip_server_id = htonl(peerListNode->Identifier);
    sip->sip_flags     = peerListNode->Flags;
 
-   if(createUserTransportParameter(message, peerListNode->AddressBlock) == false) {
+   if(createTransportParameter(message, peerListNode->AddressBlock) == false) {
       return(false);
    }
 
@@ -672,6 +677,8 @@ static bool createEndpointUnreachableMessage(struct RSerPoolMessage* message)
 /* ###### Create registration message #################################### */
 static bool createRegistrationMessage(struct RSerPoolMessage* message)
 {
+   CHECK(message->PoolElementPtr->RegistratorTransport == NULL);
+
    if(beginMessage(message, AHT_REGISTRATION,
                    message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == NULL) {
       return(false);
@@ -682,6 +689,11 @@ static bool createRegistrationMessage(struct RSerPoolMessage* message)
    }
    if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
       return(false);
+   }
+   if(message->Error != 0x00) {
+      if(createErrorParameter(message) == false) {
+         return(false);
+      }
    }
 
    return(finishMessage(message));
@@ -708,8 +720,6 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
-   }
-   if(message->Error != 0x00) {
    }
 
    return(finishMessage(message));
@@ -860,7 +870,7 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 
    transportAddressBlock = message->TransportAddressBlockListPtr;
    while(transportAddressBlock != NULL) {
-      if(createUserTransportParameter(message, transportAddressBlock) == false) {
+      if(createTransportParameter(message, transportAddressBlock) == false) {
          return(false);
       }
       transportAddressBlock = transportAddressBlock->Next;
@@ -1080,6 +1090,7 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
                }
             }
 
+            CHECK(nte->PoolElementNodeArray[i]->RegistratorTransport != NULL);
             if(createPoolElementParameter(message, nte->PoolElementNodeArray[i]) == false) {
                if(i < 1) {
                   return(false);
@@ -1108,6 +1119,8 @@ static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_peernameupdateparameter* pnup;
 
+   CHECK(message->PoolElementPtr->RegistratorTransport != NULL);
+
    if(beginMessage(message, EHT_PEER_NAME_UPDATE,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
@@ -1126,6 +1139,7 @@ static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
    if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
+
    if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
       return(false);
    }
