@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.18 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.19 2004/11/18 12:30:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -156,9 +156,7 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
    size_t               tlvPosition = 0;
    char*                output;
    struct sockaddr_in*  in;
-#ifdef HAVE_IPV6
    struct sockaddr_in6* in6;
-#endif
 
    switch(address->sa_family) {
       case AF_INET:
@@ -172,7 +170,6 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
          }
          memcpy(output, &in->sin_addr, 4);
        break;
-#ifdef HAVE_IPV6
       case AF_INET6:
          if(beginTLV(message, &tlvPosition, ATT_IPv6_ADDRESS) == false) {
             return(false);
@@ -184,7 +181,6 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
          }
          memcpy(output, &in6->sin6_addr, 16);
        break;
-#endif
       default:
          LOG_ERROR
          fputs("Unknown address family\n", stdlog);

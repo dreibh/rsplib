@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.26 2004/11/16 21:37:05 tuexen Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.27 2004/11/18 12:30:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -297,9 +297,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
    struct sockaddr_in*  in;
    uint16_t             tlvType;
    char*                space;
-#ifdef HAVE_IPV6
    struct sockaddr_in6* in6;
-#endif
 
    size_t tlvPosition = 0;
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, 0, false);
@@ -339,7 +337,6 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             return(false);
          }
        break;
-#ifdef HAVE_IPV6
       case ATT_IPv6_ADDRESS:
          if(tlvLength >= 16) {
             space = (char*)getSpace(message, 16);
@@ -368,7 +365,6 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             return(false);
          }
        break;
-#endif
       default:
          if(handleUnknownTLV(message, tlvType, tlvLength) == false) {
             return(false);

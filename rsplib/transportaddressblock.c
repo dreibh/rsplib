@@ -42,14 +42,12 @@ static int address2string(const struct sockaddr* address,
                           const size_t           length,
                           const int              port)
 {
-   struct sockaddr_in*  ipv4address;
-#ifdef HAVE_IPV6
-   struct sockaddr_in6* ipv6address;
-   char                 str[128];
-#endif
+   struct sockaddr_in*       ipv4address;
+   struct sockaddr_in6*      ipv6address;
 #ifdef HAVE_TEST
    struct sockaddr_testaddr* testaddress;
 #endif
+   char                      str[128];
 
    switch(address->sa_family) {
       case AF_INET:
@@ -63,7 +61,6 @@ static int address2string(const struct sockaddr* address,
          }
          return(1);
        break;
-#ifdef HAVE_IPV6
       case AF_INET6:
          ipv6address = (struct sockaddr_in6*)address;
          ipv6address->sin6_scope_id = 0;
@@ -78,7 +75,6 @@ static int address2string(const struct sockaddr* address,
             return(1);
          }
        break;
-#endif
 #ifdef HAVE_TEST
       case AF_TEST:
          testaddress = (struct sockaddr_testaddr*)address;
