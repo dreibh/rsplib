@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.26 2004/11/23 11:49:33 dreibh Exp $
+ *  $Id: rspsession.c,v 1.27 2004/12/03 10:30:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1049,7 +1049,8 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
       }
    }
 
-   if((result <= 0) && (errno != EAGAIN) && (tagListGetData(tags, TAG_RspIO_MakeFailover, 1) != 0)) {
+   if( ( (result <= 0) && (errno != EAGAIN) ) &&
+       (tagListGetData(tags, TAG_RspIO_MakeFailover, 1) != 0) ) {
       LOG_ACTION
       fprintf(stdlog, "Session failure during read, socket %d. Failover necessary\n",
               session->Socket);

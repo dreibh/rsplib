@@ -234,31 +234,10 @@ void FractalPU::timeoutExpired()
 
 void FractalPU::run()
 {
-   char     statusText[128];
-   TagItem  tags[16];
-
-   Run                     = 0;
-   PoolElementUsages       = 0;
-   Parameter.C1Real        = -1.5;
-   Parameter.C1Imag        = 1.5;
-   Parameter.C2Real        = 1.5;
-   Parameter.C2Imag        = -1.5;
-   Parameter.MaxIterations = 150;
-   Parameter.AlgorithmID   = FGPA_MANDELBROT;
-
-   tags[0].Tag = TAG_TuneSCTP_MinRTO;
-   tags[0].Data = 250;
-   tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-   tags[1].Data = 500;
-   tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-   tags[2].Data = 250;
-   tags[3].Tag = TAG_TuneSCTP_Heartbeat;
-   tags[3].Data = 100;
-   tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
-   tags[4].Data = 3;
-   tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
-   tags[5].Data = 9;
-   tags[6].Tag = TAG_DONE;
+   char              statusText[128];
+   TagItem           tags[16];
+   Run               = 0;
+   PoolElementUsages = 0;
 
    TimeoutTimer = new QTimer;
    Q_CHECK_PTR(TimeoutTimer);
@@ -267,6 +246,21 @@ void FractalPU::run()
    std::cerr << "Creating session..." << std::endl;
    for(;;) {
       LastPoolElementID = 0;
+
+      tags[0].Tag  = TAG_TuneSCTP_MinRTO;
+      tags[0].Data = 200;
+      tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
+      tags[1].Data = 500;
+      tags[2].Tag  = TAG_TuneSCTP_InitialRTO;
+      tags[2].Data = 250;
+      tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
+      tags[3].Data = 100;
+      tags[4].Tag  = TAG_TuneSCTP_PathMaxRXT;
+      tags[4].Data = 3;
+      tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
+      tags[5].Data = 12;
+      tags[6].Tag  = TAG_DONE;
+
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {
          Run++;
@@ -275,9 +269,14 @@ void FractalPU::run()
 
          // ====== Initialize image object and timeout timer ================
          lock();
-         Parameter.Width  = width();
-         Parameter.Height = height();
-
+         Parameter.Width         = width();
+         Parameter.Height        = height();
+         Parameter.C1Real        = -1.5;
+         Parameter.C1Imag        = 1.5;
+         Parameter.C2Real        = 1.5;
+         Parameter.C2Imag        = -1.5;
+         Parameter.MaxIterations = 150;
+         Parameter.AlgorithmID   = FGPA_MANDELBROT;
          if(Image == NULL) {
             Image = new QImage(Parameter.Width, Parameter.Height, 32);
             Q_CHECK_PTR(Image);

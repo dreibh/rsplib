@@ -332,11 +332,9 @@ void ServiceThread::run()
 finish:
    std::cerr << "Thread-Ende!" << std::endl;
 LOG_ACTION
-fputs("A-01\n",stdlog);
 LOG_END
    rspDeleteSession(Session);
 LOG_ACTION
-fputs("A-02\n",stdlog);
 LOG_END
    Session = NULL;
 }
