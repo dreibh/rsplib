@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.6 2004/11/11 22:44:20 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.7 2004/11/11 23:28:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -130,6 +130,8 @@ static void connectToPoolElement()
          printf(", Pool Element $%08x\n", eai2->ai_pe_id);
 
          if(eai2->ai_protocol == IPPROTO_SCTP) {
+/*
+            tags[0].Tag = TAG_DONE;
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
             tags[0].Data = 100;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -146,6 +148,7 @@ static void connectToPoolElement()
             if(!tuneSCTP(DataSocket, 0, (struct TagItem*)&tags)) {
                puts("WARNING: Unable to set SCTP parameters!");
             }
+*/
          }
          break;
       }

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.27 2004/11/11 22:48:06 dreibh Exp $
+ *  $Id: netutilities.c,v 1.28 2004/11/11 23:28:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -957,7 +957,7 @@ int sendtoplus(int                      sockfd,
 
    if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE4
-      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %lld [µs]...\n",
+      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %lld [us]...\n",
               sockfd, (unsigned int)assocID, timeout);
       LOG_END
 
@@ -1055,7 +1055,7 @@ int recvfromplus(int                      sockfd,
    cc = ext_recvmsg(sockfd, &msg, *flags);
    if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE5
-      fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %lld [µs]...\n",
+      fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %lld [us]...\n",
               sockfd, timeout);
       LOG_END
 
@@ -1457,7 +1457,7 @@ int establish(const int             socketDomain,
          to.tv_sec  = timeout / 1000000;
          to.tv_usec = timeout % 1000000;
          LOG_VERBOSE2
-         fprintf(stdlog, "Waiting for association establishment with timeout %lld [µs]...\n",
+         fprintf(stdlog, "Waiting for association establishment with timeout %lld [us]...\n",
                  ((unsigned long long)to.tv_sec * (unsigned long long)1000000) + (unsigned long long)to.tv_usec);
          LOG_END
          result = ext_select(sockfd + 1, NULL, &fdset, NULL, &to);

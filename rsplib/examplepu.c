@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.12 2004/11/11 22:44:20 dreibh Exp $
+ *  $Id: examplepu.c,v 1.13 2004/11/11 23:28:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -253,6 +253,9 @@ int main(int argc, char** argv)
       }
    }
 
+
+   tags[0].Tag = TAG_DONE;
+/*
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
    tags[0].Data = 100;
    tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -270,6 +273,8 @@ int main(int argc, char** argv)
    tags[7].Tag  = TAG_RspSession_FailoverUserData;
    tags[7].Data = (tagdata_t)NULL;
    tags[8].Tag = TAG_DONE;
+*/
+
 
    Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
                               NULL, (struct TagItem*)&tags);

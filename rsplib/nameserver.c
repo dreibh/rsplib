@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.46 2004/11/11 22:44:20 dreibh Exp $
+ *  $Id: nameserver.c,v 1.47 2004/11/11 23:28:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -124,7 +124,7 @@ void takeoverProcessIndexPrint(const void* takeoverProcessPtr,
    size_t i;
 
    struct TakeoverProcess* takeoverProcess = (struct TakeoverProcess*)takeoverProcessPtr;
-   fprintf(fd, "   - Takeover for $%08x (expiry in %lld탎)\n",
+   fprintf(fd, "   - Takeover for $%08x (expiry in %lldus)\n",
            takeoverProcess->TargetID,
            (long long)takeoverProcess->ExpiryTimeStamp - (long long)getMicroTime());
    for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
@@ -1227,7 +1227,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          LOG_ACTION
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fprintf(stdlog, " not head since MaxTimeLastHeard=%llu탎 -> requesting immediate PeerPresence\n",
+         fprintf(stdlog, " not head since MaxTimeLastHeard=%lluus -> requesting immediate PeerPresence\n",
                  nameServer->PeerMaxTimeLastHeard);
          LOG_END
          sendPeerPresence(nameServer,
@@ -1250,7 +1250,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          LOG_ACTION
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fprintf(stdlog, " did not answer in MaxTimeNoResponse=%llu탎 -> removing it\n",
+         fprintf(stdlog, " did not answer in MaxTimeNoResponse=%lluus -> removing it\n",
                  nameServer->PeerMaxTimeLastHeard);
          LOG_END
 
@@ -1590,6 +1590,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
             LOG_END
 
             /* ====== Tune SCTP association ============================== */
+/*
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
             tags[0].Data = 500;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -1609,6 +1610,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
                        (unsigned int)assocID);
                LOG_END
             }
+*/
 
             /* ====== Activate keep alive timer ========================== */
             if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
@@ -3501,22 +3503,22 @@ int main(int argc, char** argv)
       printf("CSP Report Address:     ");
       fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
       puts("");
-      printf("CSP Report Interval:    %lld탎\n", cspReportInterval);
+      printf("CSP Report Interval:    %lldus\n", cspReportInterval);
    }
 #endif
 
    puts("\nASAP Parameters:");
    printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)nameServer->MaxBadPEReports);
-   printf("   Server Announce Cycle:                       %lld탎\n", nameServer->ServerAnnounceCycle);
-   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lld탎\n", nameServer->EndpointMonitoringHeartbeatInterval);
-   printf("   Endpoint Keep Alive Transmission Interval:   %lld탎\n", nameServer->EndpointKeepAliveTransmissionInterval);
-   printf("   Endpoint Keep Alive Timeout Interval:        %lld탎\n", nameServer->EndpointKeepAliveTimeoutInterval);
+   printf("   Server Announce Cycle:                       %lldus\n", nameServer->ServerAnnounceCycle);
+   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldus\n", nameServer->EndpointMonitoringHeartbeatInterval);
+   printf("   Endpoint Keep Alive Transmission Interval:   %lldus\n", nameServer->EndpointKeepAliveTransmissionInterval);
+   printf("   Endpoint Keep Alive Timeout Interval:        %lldus\n", nameServer->EndpointKeepAliveTimeoutInterval);
    puts("ENRP Parameters:");
-   printf("   Peer Heartbeat Cylce:                        %lld탎\n", nameServer->PeerHeartbeatCycle);
-   printf("   Peer Max Time Last Heard:                    %lld탎\n", nameServer->PeerMaxTimeLastHeard);
-   printf("   Peer Max Time No Response:                   %lld탎\n", nameServer->PeerMaxTimeNoResponse);
-   printf("   Mentor Hunt Timeout:                         %lld탎\n", nameServer->MentorHuntTimeout);
-   printf("   Takeover Expiry Interval:                    %lld탎\n", nameServer->TakeoverExpiryInterval);
+   printf("   Peer Heartbeat Cylce:                        %lldus\n", nameServer->PeerHeartbeatCycle);
+   printf("   Peer Max Time Last Heard:                    %lldus\n", nameServer->PeerMaxTimeLastHeard);
+   printf("   Peer Max Time No Response:                   %lldus\n", nameServer->PeerMaxTimeNoResponse);
+   printf("   Mentor Hunt Timeout:                         %lldus\n", nameServer->MentorHuntTimeout);
+   printf("   Takeover Expiry Interval:                    %lldus\n", nameServer->TakeoverExpiryInterval);
    puts("");
 
 

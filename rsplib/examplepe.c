@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.14 2004/11/11 19:33:48 dreibh Exp $
+ *  $Id: examplepe.c,v 1.15 2004/11/11 23:28:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -440,6 +440,9 @@ int main(int argc, char** argv)
                   client->CounterStart = 0;
                   client->IsNewClient    = true;
 
+
+                  tags[0].Tag = TAG_DONE;
+/*
                   tags[0].Tag  = TAG_TuneSCTP_MinRTO;
                   tags[0].Data = 100;
                   tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
@@ -457,6 +460,9 @@ int main(int argc, char** argv)
                   tags[7].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;
                   tags[7].Data = (tagdata_t)client;
                   tags[8].Tag  = TAG_DONE;
+*/
+
+
                   newSession = rspAcceptSession(pedArray[0], (struct TagItem*)&tags);
                   if(newSession) {
                      client->Session = newSession;
