@@ -362,3 +362,48 @@ int ST_CLASS(poolElementConnectionStorageNodeComparison)(const void* nodePtr1, c
    }
    return(0);
 }
+
+
+/* ###### Get PoolElementNode from given Selection Node ################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementSelectionStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}
+
+
+/* ###### Get PoolElementNode from given Index Node ###################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementIndexStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}
+
+
+/* ###### Get PoolElementNode from given Timer Node ###################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromTimerStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementTimerStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}
+
+
+/* ###### Get PoolElementNode from given Ownership Node ################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementOwnershipStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}
+
+
+/* ###### Get PoolElementNode from given Connection Node ################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementConnectionStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}

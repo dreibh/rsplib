@@ -124,6 +124,24 @@ void ST_CLASS(peerListNodeDelete)(struct ST_CLASS(PeerListNode)* peerListNode)
 }
 
 
+/* ###### Get PeerListNode from given Index Node ######################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(void* node)
+{
+   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
+   long n = (long)node - ((long)&dummy->PeerListIndexStorageNode - (long)dummy);
+   return((struct ST_CLASS(PeerListNode)*)n);
+}
+
+
+/* ###### Get PeerListNode from given Timer Node ######################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node)
+{
+   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
+   long n = (long)node - ((long)&dummy->PeerListTimerStorageNode - (long)dummy);
+   return((struct ST_CLASS(PeerListNode)*)n);
+}
+
+
 /* ###### Update ######################################################### */
 int ST_CLASS(peerListNodeUpdate)(struct ST_CLASS(PeerListNode)*       peerListNode,
                                  const struct ST_CLASS(PeerListNode)* source)

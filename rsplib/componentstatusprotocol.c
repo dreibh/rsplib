@@ -2,7 +2,12 @@
 #include "timeutilities.h"
 #include "netutilities.h"
 #include "loglevel.h"
-#include "rsplib.h"
+#include "rsplib-internals.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t elements)
@@ -171,3 +176,8 @@ void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,
                   rsplibGetReportFunction,
                   NULL);
 }
+
+
+#ifdef __cplusplus
+}
+#endif

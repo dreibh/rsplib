@@ -25,7 +25,14 @@
 #include "randomizer.h"
 
 
-PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
+const PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
+
+
+/* ###### Get textual description of error code ########################## */
+const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode)
+{
+   return(rserpoolErrorGetDescription(errorCode));
+}
 
 
 /* ###### Get pool element identifier #################################### */

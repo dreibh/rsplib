@@ -20,6 +20,9 @@
  *
  */
 
+#include "randomizer.h"
+
+
 #define COMPARE_KEY_ASCENDING(a, b)  if((a) < (b)) { return(-1); } else if ((a) > (b)) { return(1); }
 #define COMPARE_KEY_DESCENDING(a, b) if((a) > (b)) { return(-1); } else if ((a) < (b)) { return(1); }
 

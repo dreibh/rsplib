@@ -67,6 +67,11 @@ void ST_CLASS(peerListManagementDelete)(
         struct ST_CLASS(PeerListManagement)* peerListManagement)
 {
    ST_CLASS(peerListManagementClear)(peerListManagement);
+   if(peerListManagement->NewPeerListNode) {
+      ST_CLASS(peerListNodeDelete)(peerListManagement->NewPeerListNode);
+      free(peerListManagement->NewPeerListNode);
+      peerListManagement->NewPeerListNode = NULL;
+   }
    ST_CLASS(peerListDelete)(&peerListManagement->List);
 }
 
@@ -78,6 +83,85 @@ void ST_CLASS(peerListManagementClear)(
    ST_CLASS(peerListClear)(&peerListManagement->List,
                            ST_CLASS(peerListManagementPeerListNodeDisposer),
                            (void*)peerListManagement);
+}
+
+
+/* ###### Print peer list ################################################ */
+void ST_CLASS(peerListManagementPrint)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        FILE*                                fd,
+        const unsigned int                   fields)
+{
+   ST_CLASS(peerListPrint)(&peerListManagement->List, fd, fields);
+}
+
+
+/* ###### Verify structures ############################################## */
+void ST_CLASS(peerListManagementVerify)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   ST_CLASS(peerListVerify)(&peerListManagement->List);
+}
+
+
+/* ###### Get number of pools ############################################ */
+size_t ST_CLASS(peerListManagementGetPeers)(
+                 const struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetPeerListNodes)(&peerListManagement->List));
+}
+
+
+/* ###### Find PeerListNode ############################################## */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const ENRPIdentifierType             nsIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock)
+{
+   return(ST_CLASS(peerListFindPeerListNode)(
+             &peerListManagement->List,
+             nsIdentifier,
+             transportAddressBlock));
+}
+
+
+/* ###### Find nearest prev PeerListNode ################################# */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const ENRPIdentifierType             nsIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock)
+{
+   return(ST_CLASS(peerListFindNearestPrevPeerListNode)(
+             &peerListManagement->List,
+             nsIdentifier,
+             transportAddressBlock));
+}
+
+
+/* ###### Find nearest next PeerListNode ################################# */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const ENRPIdentifierType             nsIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock)
+{
+   return(ST_CLASS(peerListFindNearestNextPeerListNode)(
+             &peerListManagement->List,
+             nsIdentifier,
+             transportAddressBlock));
+}
+
+
+/* ###### Get next timer time stamp ###################################### */
+unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                      struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   const struct ST_CLASS(PeerListNode)* nextTimer =
+      ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
+         &peerListManagement->List);
+   if(nextTimer != NULL) {
+      return(nextTimer->TimerTimeStamp);
+   }
+   return(~0);
 }
 
 

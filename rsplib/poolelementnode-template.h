@@ -96,58 +96,13 @@ void ST_CLASS(poolElementNodePrint)(
         struct ST_CLASS(PoolElementNode)* poolElementNode,
         FILE*                             fd,
         const unsigned int                fields);
-
-
-/* ###### Update ######################################################### */
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source);
-
-
-/* ###### Get PoolElementNode from given Selection Node ################## */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(void* node)
-{
-   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementSelectionStorageNode - (long)dummy);
-   return((struct ST_CLASS(PoolElementNode)*)n);
-}
-
-
-/* ###### Get PoolElementNode from given Index Node ###################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(void* node)
-{
-   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementIndexStorageNode - (long)dummy);
-   return((struct ST_CLASS(PoolElementNode)*)n);
-}
-
-
-/* ###### Get PoolElementNode from given Timer Node ###################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromTimerStorageNode)(void* node)
-{
-   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementTimerStorageNode - (long)dummy);
-   return((struct ST_CLASS(PoolElementNode)*)n);
-}
-
-
-/* ###### Get PoolElementNode from given Ownership Node ################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(void* node)
-{
-   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementOwnershipStorageNode - (long)dummy);
-   return((struct ST_CLASS(PoolElementNode)*)n);
-}
-
-
-/* ###### Get PoolElementNode from given Connection Node ################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(void* node)
-{
-   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementConnectionStorageNode - (long)dummy);
-   return((struct ST_CLASS(PoolElementNode)*)n);
-}
-
-
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(void* node);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(void* node);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromTimerStorageNode)(void* node);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(void* node);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(void* node);
 void ST_CLASS(poolElementTimerStorageNodePrint)(const void* nodePtr, FILE* fd);
 int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2);
 void ST_CLASS(poolElementOwnershipStorageNodePrint)(const void* nodePtr, FILE* fd);

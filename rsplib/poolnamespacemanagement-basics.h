@@ -88,22 +88,15 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PLPO_ONLY_INDEX     (PLPO_PEERS_INDEX)
 
 
-inline const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode)
-{
-   return(rserpoolErrorGetDescription(errorCode));
-}
-
-
+const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode);
 PoolElementIdentifierType getPoolElementIdentifier();
-
-unsigned long long random64();
 
 
 /*
  Starting value for seqence numbers. Set it to (~0) ^ 0xf to test
  sequence number warp.
  */
-extern PoolElementSeqNumberType SeqNumberStart;
+extern const PoolElementSeqNumberType SeqNumberStart;
 
 
 #ifdef __cplusplus

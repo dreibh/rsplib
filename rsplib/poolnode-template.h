@@ -64,150 +64,34 @@ void ST_CLASS(poolNodeNew)(struct ST_CLASS(PoolNode)*         poolNode,
 void ST_CLASS(poolNodeDelete)(struct ST_CLASS(PoolNode)* poolNode);
 
 void ST_CLASS(poolNodeResequence)(struct ST_CLASS(PoolNode)* poolNode);
-
-
-/* ###### Get number of pool elements #################################### */
-inline size_t ST_CLASS(poolNodeGetPoolElementNodes)(
-                 const struct ST_CLASS(PoolNode)* poolNode)
-{
-   return(ST_METHOD(GetElements)(&poolNode->PoolElementIndexStorage));
-}
-
-
-/* ###### Get first PoolElementNode from Index ########################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(
-                                            struct ST_CLASS(PoolNode)* poolNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&poolNode->PoolElementIndexStorage);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get last PoolElementNode from Index ############################ */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetLastPoolElementNodeFromIndex)(
-                                            struct ST_CLASS(PoolNode)* poolNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolNode->PoolElementIndexStorage);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get next PoolElementNode from Index ############################ */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(
-                                            struct ST_CLASS(PoolNode)*        poolNode,
-                                            struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&poolNode->PoolElementIndexStorage,
-                                                   &poolElementNode->PoolElementIndexStorageNode);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PoolElementNode from Index ######################## */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetPrevPoolElementNodeFromIndex)(
-                                            struct ST_CLASS(PoolNode)*        poolNode,
-                                            struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolNode->PoolElementIndexStorage,
-                                                   &poolElementNode->PoolElementIndexStorageNode);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get first PoolElementNode from Selection ####################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(
-                                            struct ST_CLASS(PoolNode)* poolNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&poolNode->PoolElementSelectionStorage);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get last PoolElementNode from Selection ######################## */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetLastPoolElementNodeFromSelection)(
-                                            struct ST_CLASS(PoolNode)* poolNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolNode->PoolElementSelectionStorage);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get next PoolElementNode from Selection ######################## */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(
-                                            struct ST_CLASS(PoolNode)*        poolNode,
-                                            struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&poolNode->PoolElementSelectionStorage,
-                                                   &poolElementNode->PoolElementSelectionStorageNode);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PoolElementNode from Selection #################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetPrevPoolElementNodeFromSelection)(
-                                            struct ST_CLASS(PoolNode)*        poolNode,
-                                            struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolNode->PoolElementSelectionStorage,
-                                                   &poolElementNode->PoolElementSelectionStorageNode);
-   if(node) {
-      return(ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Unlink PoolElementNode from Selection ########################## */
-inline void ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(
-               struct ST_CLASS(PoolNode)*        poolNode,
-               struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(Remove)(&poolNode->PoolElementSelectionStorage,
-                                                  &poolElementNode->PoolElementSelectionStorageNode);
-   CHECK(node == &poolElementNode->PoolElementSelectionStorageNode);
-}
-
-
-/* ###### Link PoolElementNode into Selection ############################ */
-inline void ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(
-               struct ST_CLASS(PoolNode)*        poolNode,
-               struct ST_CLASS(PoolElementNode)* poolElementNode)
-{
-   struct STN_CLASSNAME* node;
-
-   CHECK(poolPolicySettingsIsValid(&poolElementNode->PolicySettings));
-
-   if(poolNode->Policy->UpdatePoolElementNodeFunction) {
-      (*poolNode->Policy->UpdatePoolElementNodeFunction)(poolElementNode);
-   }
-
-   node = ST_METHOD(Insert)(&poolNode->PoolElementSelectionStorage,
-                            &poolElementNode->PoolElementSelectionStorageNode);
-   CHECK(node == &poolElementNode->PoolElementSelectionStorageNode);
-}
-
-
+size_t ST_CLASS(poolNodeGetPoolElementNodes)(
+          const struct ST_CLASS(PoolNode)* poolNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(
+                                     struct ST_CLASS(PoolNode)* poolNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetLastPoolElementNodeFromIndex)(
+                                     struct ST_CLASS(PoolNode)* poolNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(
+                                     struct ST_CLASS(PoolNode)*        poolNode,
+                                     struct ST_CLASS(PoolElementNode)* poolElementNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetPrevPoolElementNodeFromIndex)(
+                                     struct ST_CLASS(PoolNode)*        poolNode,
+                                     struct ST_CLASS(PoolElementNode)* poolElementNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(
+                                     struct ST_CLASS(PoolNode)* poolNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetLastPoolElementNodeFromSelection)(
+                                     struct ST_CLASS(PoolNode)* poolNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(
+                                     struct ST_CLASS(PoolNode)*        poolNode,
+                                     struct ST_CLASS(PoolElementNode)* poolElementNode);
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeGetPrevPoolElementNodeFromSelection)(
+                                     struct ST_CLASS(PoolNode)*        poolNode,
+                                     struct ST_CLASS(PoolElementNode)* poolElementNode);
+void ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(
+        struct ST_CLASS(PoolNode)*        poolNode,
+        struct ST_CLASS(PoolElementNode)* poolElementNode);
+void ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(
+        struct ST_CLASS(PoolNode)*        poolNode,
+        struct ST_CLASS(PoolElementNode)* poolElementNode);
 unsigned int ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(
                 struct ST_CLASS(PoolNode)*          poolNode,
                 struct ST_CLASS(PoolElementNode)*   poolElementNode);

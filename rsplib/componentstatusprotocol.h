@@ -8,6 +8,11 @@
 #include "timer.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #define CID_GROUP(id)  (((uint64_t)id >> 56) & (0xffffLL))
 #define CID_OBJECT(id) ((uint64_t)id & 0xffffffffffffffLL)
 
@@ -87,5 +92,9 @@ void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,
                              const uint64_t              cspIdentifier,
                              const union sockaddr_union* cspReportAddress,
                              const unsigned long long    cspReportInterval);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.17 2004/11/09 20:00:31 dreibh Exp $
+ *  $Id: rsplib.c,v 1.18 2004/11/09 22:03:30 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -115,6 +115,13 @@ void rspCleanUp()
       /* Give sctplib some time to cleanly shut down all associations */
       usleep(250000);
    }
+}
+
+
+/* ###### Get textual description of error code ########################## */
+const char* rspGetErrorDescription(const unsigned int errorCode)
+{
+   return(rserpoolErrorGetDescription(errorCode));
 }
 
 

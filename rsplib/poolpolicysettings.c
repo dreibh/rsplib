@@ -23,6 +23,48 @@
 #include "poolpolicysettings.h"
 
 
+/* ###### Initialize ##################################################### */
+void poolPolicySettingsNew(struct PoolPolicySettings* pps)
+{
+   pps->PolicyType      = 0;
+   pps->Weight          = 0;
+   pps->Load            = 0;
+   pps->LoadDegradation = 0;
+}
+
+
+/* ###### Invalidate ##################################################### */
+void poolPolicySettingsDelete(struct PoolPolicySettings* pps)
+{
+   pps->PolicyType      = 0;
+   pps->Weight          = 0;
+   pps->Load            = 0;
+   pps->LoadDegradation = 0;
+}
+
+
+/* ###### Comparison ##################################################### */
+int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
+                                        const struct PoolPolicySettings* pps2)
+{
+   return((pps1->Weight          != pps2->Weight) ||
+          (pps1->Load            != pps2->Load)   ||
+          (pps1->LoadDegradation != pps2->LoadDegradation));
+}
+
+
+/* ###### Check, if settings are valid ################################### */
+int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps)
+{
+   return( (pps->Weight >= PEPS_MIN_WEIGHT) &&
+           (pps->Weight <= PEPS_MAX_WEIGHT) &&
+           (pps->Load >= PEPS_MIN_LOAD) &&
+           (pps->Load <= PEPS_MAX_LOAD) &&
+           (pps->LoadDegradation >= PEPS_MIN_LOADDEGRADATION) &&
+           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) );
+}
+
+
 /* ###### Pool Policy adaptation ######################################### */
 int poolPolicySettingsAdapt(struct PoolPolicySettings* pps,
                             const unsigned int         destinationType)

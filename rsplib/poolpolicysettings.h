@@ -67,55 +67,16 @@ struct PoolPolicySettings
 #define PEPS_MAX_LOADDEGRADATION   0xffffff
 
 
-/* ###### Initialize ##################################################### */
-inline void poolPolicySettingsNew(struct PoolPolicySettings* pps)
-{
-   pps->PolicyType      = 0;
-   pps->Weight          = 0;
-   pps->Load            = 0;
-   pps->LoadDegradation = 0;
-}
-
-
-/* ###### Invalidate ##################################################### */
-inline void poolPolicySettingsDelete(struct PoolPolicySettings* pps)
-{
-   pps->PolicyType      = 0;
-   pps->Weight          = 0;
-   pps->Load            = 0;
-   pps->LoadDegradation = 0;
-}
-
-
+void poolPolicySettingsNew(struct PoolPolicySettings* pps);
+void poolPolicySettingsDelete(struct PoolPolicySettings* pps);
 void poolPolicySettingsPrint(const struct PoolPolicySettings* pps,
                              FILE*                            fd);
 void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
                                       char*                            buffer,
                                       const size_t                     bufferSize);
-
-
-/* ###### Comparison ##################################################### */
-inline int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
-                                        const struct PoolPolicySettings* pps2)
-{
-   return((pps1->Weight          != pps2->Weight) ||
-          (pps1->Load            != pps2->Load)   ||
-          (pps1->LoadDegradation != pps2->LoadDegradation));
-}
-
-
-/* ###### Check, if settings are valid ################################### */
-inline int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps)
-{
-   return( (pps->Weight >= PEPS_MIN_WEIGHT) &&
-           (pps->Weight <= PEPS_MAX_WEIGHT) &&
-           (pps->Load >= PEPS_MIN_LOAD) &&
-           (pps->Load <= PEPS_MAX_LOAD) &&
-           (pps->LoadDegradation >= PEPS_MIN_LOADDEGRADATION) &&
-           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) );
-}
-
-
+int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
+                                        const struct PoolPolicySettings* pps2);
+int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps);
 int poolPolicySettingsAdapt(struct PoolPolicySettings* pps,
                             const unsigned int         destinationType);
 

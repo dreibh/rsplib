@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.6 2004/09/28 12:41:27 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.7 2004/11/09 22:03:29 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -141,8 +141,8 @@ static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectP
 }
 
 
-struct CSPObject* findCSPObject(LeafLinkedRedBlackTree* objectStorage,
-                                const uint64_t          id)
+struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
+                                const uint64_t                 id)
 {
    struct LeafLinkedRedBlackTreeNode* node;
    struct CSPObject                   cmpCSPObject;
@@ -155,7 +155,7 @@ struct CSPObject* findCSPObject(LeafLinkedRedBlackTree* objectStorage,
 }
 
 
-void purgeCSPObjects(LeafLinkedRedBlackTree* objectStorage)
+void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
 {
    struct CSPObject* cspObject;
    struct CSPObject* nextCSPObject;
@@ -173,7 +173,7 @@ void purgeCSPObjects(LeafLinkedRedBlackTree* objectStorage)
 }
 
 
-static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
+static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
 {
    struct ComponentStatusProtocolHeader* csph;
    struct CSPObject*                     cspObject;
@@ -239,14 +239,14 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   union sockaddr_union   localAddress;
-   int                    n;
-   int                    result;
-   int                    sd;
-   fd_set                 readfdset;
-   LeafLinkedRedBlackTree objectStorage;
-   struct timeval         timeout;
-   int                    reuse;
+   union sockaddr_union          localAddress;
+   int                           n;
+   int                           result;
+   int                           sd;
+   fd_set                        readfdset;
+   struct LeafLinkedRedBlackTree objectStorage;
+   struct timeval                timeout;
+   int                           reuse;
 
    if(checkIPv6()) {
       string2address("[::]:0", &localAddress);

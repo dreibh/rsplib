@@ -44,120 +44,28 @@ struct ST_CLASS(PeerList)
 void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)* peerList,
                            const ENRPIdentifierType   ownIdentifier);
 void ST_CLASS(peerListDelete)(struct ST_CLASS(PeerList)* peerList);
-
-
-/* ###### Get number of pool elements #################################### */
-inline size_t ST_CLASS(peerListGetPeerListNodes)(
-                 const struct ST_CLASS(PeerList)* peerList)
-{
-   return(ST_METHOD(GetElements)(&peerList->PeerListIndexStorage));
-}
-
-
-/* ###### Get first PeerListNode from Index ############################## */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                         struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&peerList->PeerListIndexStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get last PeerListNode from Index ############################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromIndexStorage)(
-                                         struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&peerList->PeerListIndexStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get next PeerListNode from Index ############################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
-                                         struct ST_CLASS(PeerList)*     peerList,
-                                         struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&peerList->PeerListIndexStorage,
-                                                   &peerListNode->PeerListIndexStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PeerListNode from Index ########################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromIndexStorage)(
-                                         struct ST_CLASS(PeerList)*     peerList,
-                                         struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&peerList->PeerListIndexStorage,
-                                                   &peerListNode->PeerListIndexStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get first PeerListNode from Timer ############################## */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
-                                            struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&peerList->PeerListTimerStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get last PeerListNode from Timer ############################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromTimerStorage)(
-                                            struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&peerList->PeerListTimerStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get next PeerListNode from Timer ############################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetNextPeerListNodeFromTimerStorage)(
-                                         struct ST_CLASS(PeerList)*     peerList,
-                                         struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&peerList->PeerListTimerStorage,
-                                                   &peerListNode->PeerListTimerStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PeerListNode from Timer ########################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromTimerStorage)(
-                                         struct ST_CLASS(PeerList)*     peerList,
-                                         struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&peerList->PeerListTimerStorage,
-                                                   &peerListNode->PeerListTimerStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
+size_t ST_CLASS(peerListGetPeerListNodes)(
+          const struct ST_CLASS(PeerList)* peerList);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerList)* peerList);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerList)* peerList);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerList)*     peerList,
+                                  struct ST_CLASS(PeerListNode)* peerListNode);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerList)*     peerList,
+                                  struct ST_CLASS(PeerListNode)* peerListNode);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerList)* peerList);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerList)* peerList);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetNextPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerList)*     peerList,
+                                  struct ST_CLASS(PeerListNode)* peerListNode);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerList)*     peerList,
+                                  struct ST_CLASS(PeerListNode)* peerListNode);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
                                   struct ST_CLASS(PeerList)*     peerList,
                                   struct ST_CLASS(PeerListNode)* peerListNode,
@@ -198,40 +106,14 @@ void ST_CLASS(peerListPrint)(struct ST_CLASS(PeerList)* peerList,
 void ST_CLASS(peerListClear)(struct ST_CLASS(PeerList)* peerList,
                              void                       (*peerListNodeDisposer)(void* peerListNode, void* userData),
                              void*                      userData);
-
-/* ###### Insert PeerListNode into timer storage ######################### */
-inline void ST_CLASS(peerListActivateTimer)(
+void ST_CLASS(peerListActivateTimer)(
                struct ST_CLASS(PeerList)*     peerList,
                struct ST_CLASS(PeerListNode)* peerListNode,
                const unsigned int             timerCode,
-               const unsigned long long       timerTimeStamp)
-{
-   struct STN_CLASSNAME* result;
-
-   CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode));
-   peerListNode->TimerCode      = timerCode;
-   peerListNode->TimerTimeStamp = timerTimeStamp;
-   result = ST_METHOD(Insert)(&peerList->PeerListTimerStorage,
-                              &peerListNode->PeerListTimerStorageNode);
-   CHECK(result == &peerListNode->PeerListTimerStorageNode);
-}
-
-
-/* ###### Remove PeerListNode from timer storage ######################### */
-inline void ST_CLASS(peerListDeactivateTimer)(
-               struct ST_CLASS(PeerList)*     peerList,
-               struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* result;
-
-   if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
-      result = ST_METHOD(Remove)(&peerList->PeerListTimerStorage,
-                                 &peerListNode->PeerListTimerStorageNode);
-      CHECK(result == &peerListNode->PeerListTimerStorageNode);
-   }
-}
-
-
+               const unsigned long long       timerTimeStamp);
+void ST_CLASS(peerListDeactivateTimer)(
+        struct ST_CLASS(PeerList)*     peerList,
+        struct ST_CLASS(PeerListNode)* peerListNode);
 size_t ST_CLASS(peerListPurgeExpiredPeerListNodes)(
           struct ST_CLASS(PeerList)* peerList,
           const unsigned long long   currentTimeStamp);

@@ -65,24 +65,8 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void *nodePtr1, const voi
 void ST_CLASS(peerListTimerStorageNodePrint)(const void *nodePtr, FILE* fd);
 int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
 
-
-/* ###### Get PeerListNode from given Index Node ######################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(void* node)
-{
-   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
-   long n = (long)node - ((long)&dummy->PeerListIndexStorageNode - (long)dummy);
-   return((struct ST_CLASS(PeerListNode)*)n);
-}
-
-
-/* ###### Get PeerListNode from given Timer Node ######################### */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node)
-{
-   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
-   long n = (long)node - ((long)&dummy->PeerListTimerStorageNode - (long)dummy);
-   return((struct ST_CLASS(PeerListNode)*)n);
-}
-
+struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(void* node);
+struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node);
 
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
                                const ENRPIdentifierType       identifier,

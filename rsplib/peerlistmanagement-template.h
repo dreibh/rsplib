@@ -49,36 +49,16 @@ void ST_CLASS(peerListManagementNew)(
         void* disposerUserData);
 void ST_CLASS(peerListManagementDelete)(
         struct ST_CLASS(PeerListManagement)* peerListManagement);
-
-
-inline void ST_CLASS(peerListManagementPrint)(
-               struct ST_CLASS(PeerListManagement)* peerListManagement,
-               FILE*                                fd,
-               const unsigned int                   fields)
-{
-   ST_CLASS(peerListPrint)(&peerListManagement->List, fd, fields);
-}
-
-
-inline void ST_CLASS(peerListManagementVerify)(
-               struct ST_CLASS(PeerListManagement)* peerListManagement)
-{
-   ST_CLASS(peerListVerify)(&peerListManagement->List);
-}
-
-
+void ST_CLASS(peerListManagementPrint)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        FILE*                                fd,
+        const unsigned int                   fields);
+void ST_CLASS(peerListManagementVerify)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement);
 void ST_CLASS(peerListManagementClear)(
         struct ST_CLASS(PeerListManagement)* peerListManagement);
-
-
-/* ###### Get number of pools ############################################ */
-inline size_t ST_CLASS(peerListManagementGetPeers)(
-                 const struct ST_CLASS(PeerListManagement)* peerListManagement)
-{
-   return(ST_CLASS(peerListGetPeerListNodes)(&peerListManagement->List));
-}
-
-
+size_t ST_CLASS(peerListManagementGetPeers)(
+          const struct ST_CLASS(PeerListManagement)* peerListManagement);
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 const ENRPIdentifierType             nsIdentifier,
@@ -86,47 +66,18 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
                 struct ST_CLASS(PeerListNode)**      peerListNode);
-
-
-/* ###### Find PeerListNode ############################################## */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
-                                         struct ST_CLASS(PeerListManagement)* peerListManagement,
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const ENRPIdentifierType             nsIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const ENRPIdentifierType             nsIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
                                          const ENRPIdentifierType             nsIdentifier,
-                                         const struct TransportAddressBlock*  transportAddressBlock)
-{
-   return(ST_CLASS(peerListFindPeerListNode)(
-             &peerListManagement->List,
-             nsIdentifier,
-             transportAddressBlock));
-}
-
-
-/* ###### Find nearest prev PeerListNode ################################# */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
-                                         struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                         const ENRPIdentifierType             nsIdentifier,
-                                         const struct TransportAddressBlock*  transportAddressBlock)
-{
-   return(ST_CLASS(peerListFindNearestPrevPeerListNode)(
-             &peerListManagement->List,
-             nsIdentifier,
-             transportAddressBlock));
-}
-
-
-/* ###### Find nearest next PeerListNode ################################# */
-inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
-                                         struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                         const ENRPIdentifierType             nsIdentifier,
-                                         const struct TransportAddressBlock*  transportAddressBlock)
-{
-   return(ST_CLASS(peerListFindNearestNextPeerListNode)(
-             &peerListManagement->List,
-             nsIdentifier,
-             transportAddressBlock));
-}
-
-
+                                         const struct TransportAddressBlock*  transportAddressBlock);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode);
@@ -134,20 +85,8 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 const ENRPIdentifierType             nsIdentifier,
                 const struct TransportAddressBlock*  transportAddressBlock);
-
-/* ###### Get next timer time stamp ###################################### */
-inline unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
-                             struct ST_CLASS(PeerListManagement)* peerListManagement)
-{
-   const struct ST_CLASS(PeerListNode)* nextTimer =
-      ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
-         &peerListManagement->List);
-   if(nextTimer != NULL) {
-      return(nextTimer->TimerTimeStamp);
-   }
-   return(~0);
-}
-
+unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                      struct ST_CLASS(PeerListManagement)* peerListManagement);
 void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         struct ST_CLASS(PeerListNode)*       peerListNode,

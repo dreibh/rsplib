@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.9 2004/11/09 20:00:31 dreibh Exp $
+ *  $Id: rsplib.h,v 1.10 2004/11/09 22:03:30 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -114,10 +114,7 @@ void rspCleanUp();
   * @param errorCode Error code.
   * @return Textual description.
   */
-inline const char* rspGetErrorDescription(const unsigned int errorCode)
-{
-   return(rserpoolErrorGetDescription(errorCode));
-}
+const char* rspGetErrorDescription(const unsigned int errorCode);
 
 
 /**
