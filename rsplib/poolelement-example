@@ -1,2 +1,2 @@
 #!/bin/sh
-./fork 3 5 ./examplepe -ph=EchoPool -logcolor=on -loglevel=3 $@
+./examplepe -ph=EchoPool -logcolor=on -loglevel=3 $@

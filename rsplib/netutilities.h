@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.13 2004/11/12 00:25:16 dreibh Exp $
+ *  $Id: netutilities.h,v 1.14 2004/11/12 15:15:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -65,14 +65,12 @@ extern "C" {
 
 #ifdef HAVE_KERNEL_SCTP
 #ifndef HAVE_SCTP_CONNECTX
-#warning No sctp_connectx() available - Using only the first address!
 int sctp_connectx(int                    sockfd,
                   const struct sockaddr* addrs,
                   int                    addrcnt);
 #endif
 
 #ifndef HAVE_SCTP_SEND
-#warning No sctp_send() available - Using wrapper!
 ssize_t sctp_send(int                           sd,
                   const void*                   data,
                   size_t                        len,
@@ -81,7 +79,6 @@ ssize_t sctp_send(int                           sd,
 #endif
 
 #ifndef HAVE_SCTP_SENDX
-#warning No sctp_send() available - Using only the first address!
 ssize_t sctp_sendx(int                           sd,
                    const void*                   data,
                    size_t                        len,
