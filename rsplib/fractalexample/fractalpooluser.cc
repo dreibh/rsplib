@@ -8,6 +8,7 @@
 #include <qstatusbar.h>
 #define QT_THREAD_SUPPORT
 #include <qthread.h>
+#include <qmutex.h>
 #include <complex>
 
 #include "rsplib.h"
@@ -22,18 +23,19 @@
 
 
 class FractalPU : public QMainWindow,
-                  public QThread
+                  public QThread,
+                  public QMutex
 {
    Q_OBJECT
 
    public:
    FractalPU(const size_t width,
-                    const size_t height,
-                    QWidget*     parent = NULL,
-                    const char*  name   = NULL);
+             const size_t height,
+             QWidget*     parent = NULL,
+             const char*  name   = NULL);
    ~FractalPU();
 
-   void reset();
+   void restartCalculation();
 
    inline unsigned int getPoint(const size_t x, const size_t y) {
       return(Image->pixel(x, y));
@@ -50,7 +52,6 @@ class FractalPU : public QMainWindow,
 
    protected:
    void paintImage(const size_t startY, const size_t endY);
-   void resizeEvent(QResizeEvent* resizeEvent);
    void paintEvent(QPaintEvent* paintEvent);
    void closeEvent(QCloseEvent* closeEvent);
 
@@ -87,23 +88,12 @@ FractalPU::FractalPU(const size_t width,
                      const char*  name)
    : QMainWindow(parent, name)
 {
-   Running          = true;
-   Parameter.Width  = width;
-   Parameter.Height = height;
+   Image        = NULL;
+   TimeoutTimer = NULL;
 
-   setMinimumSize(Parameter.Width, Parameter.Height);
-   setMaximumSize(Parameter.Width, Parameter.Height);
+   resize(width, height);
    setCaption("Fractal Pool User");
    statusBar()->message("Welcome to Fractal PU!", 3000);
-
-   Image  = new QImage(Parameter.Width, Parameter.Height, 32);
-   Q_CHECK_PTR(Image);
-
-   TimeoutTimer = new QTimer;
-   Q_CHECK_PTR(TimeoutTimer);
-   connect(TimeoutTimer, SIGNAL(timeout()), this, SLOT(timeoutExpired()));
-
-   reset();
    show();
    start();
 }
@@ -119,22 +109,6 @@ FractalPU::~FractalPU()
 
 
 
-void FractalPU::reset()
-{
-   for(int y = 0;y < Image->height();y++) {
-      for(int x = 0;x < Image->width();x++) {
-         Image->setPixel(x, y, qRgb(255, 255, 255));
-      }
-   }
-}
-
-
-void FractalPU::resizeEvent(QResizeEvent* resizeEvent)
-{
-   update();
-}
-
-
 void FractalPU::paintImage(const size_t startY, const size_t endY)
 {
    QPainter p;
@@ -142,27 +116,33 @@ void FractalPU::paintImage(const size_t startY, const size_t endY)
    p.drawImage(0, startY,
                *Image,
                0, startY,
-               Parameter.Width, endY + 1);
+               Image->width(), endY + 1);
    p.end();
 }
 
 
 void FractalPU::paintEvent(QPaintEvent* paintEvent)
 {
-   QPainter p;
-   p.begin(this);
-   p.drawImage(paintEvent->rect().left(), paintEvent->rect().top(),
-               *Image,
-               paintEvent->rect().left(),
-               paintEvent->rect().top(),
-               paintEvent->rect().width(),
-               paintEvent->rect().height());
-   p.end();
+   lock();
+   if(Image) {
+      QPainter p;
+      p.begin(this);
+      p.drawImage(paintEvent->rect().left(), paintEvent->rect().top(),
+                  *Image,
+                  paintEvent->rect().left(),
+                  paintEvent->rect().top(),
+                  paintEvent->rect().width(),
+                  paintEvent->rect().height());
+      p.end();
+   }
+   unlock();
 }
 
 
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
+   Running = false;
+   wait();
    std::cout << "Good bye!" << std::endl;
    qApp->exit(0);
 }
@@ -181,6 +161,7 @@ bool FractalPU::sendParameter()
    parameter.C1Imag        = Parameter.C1Imag;
    parameter.C2Real        = Parameter.C2Real;
    parameter.C2Imag        = Parameter.C2Imag;
+   parameter.N             = 2.0;
 
    tags[0].Tag  = TAG_RspIO_Timeout;
    tags[0].Data = (tagdata_t)2000000;
@@ -211,17 +192,17 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
    if(size < getFractalGeneratorDataSize(points)) {
       return(Invalid);
    }
-   if(x >= Parameter.Width) {
+   if(x >= (size_t)Image->width()) {
       return(Invalid);
    }
-   if(y >= Parameter.Height) {
+   if(y >= (size_t)Image->height()) {
       return(Invalid);
    }
    if(points > FGD_MAX_POINTS) {
       return(Invalid);
    }
-   while(y < Parameter.Height) {
-      while(x < Parameter.Width) {
+   while(y < (size_t)Image->height()) {
+      while(x < (size_t)Image->width()) {
          if(p > points) {
             break;
          }
@@ -276,6 +257,10 @@ void FractalPU::run()
    tags[5].Data = 9;
    tags[6].Tag = TAG_DONE;
 
+   TimeoutTimer = new QTimer;
+   Q_CHECK_PTR(TimeoutTimer);
+   connect(TimeoutTimer, SIGNAL(timeout()), this, SLOT(timeoutExpired()));
+
    std::cerr << "Creating session..." << std::endl;
    for(;;) {
       LastPoolElementID = 0;
@@ -284,13 +269,29 @@ void FractalPU::run()
          Run++;
          PoolElementUsages = 0;
 
+
+         // ====== Initialize image object and timeout timer ================
+         lock();
+         Parameter.Width  = width();
+         Parameter.Height = height();
+
+         if(Image == NULL) {
+            Image = new QImage(Parameter.Width, Parameter.Height, 32);
+            Q_CHECK_PTR(Image);
+            Image->fill(qRgb(255, 255, 255));
+         }
+         unlock();
+
          rspSessionSetStatusText(Session, "Sending parameter command...");
          statusBar()->message("Sending parameter command...");
          std::cerr << "Sending parameter command..." << std::endl;
 
+
+         // ====== Begin image calculation ==================================
          if(sendParameter()) {
             TimeoutTimer->start(2000, TRUE);
 
+            // ====== Handle received result chunks =========================
             FractalGeneratorData data;
             tags[0].Tag  = TAG_RspIO_PE_ID;
             tags[0].Data = 0;
@@ -324,11 +325,17 @@ void FractalPU::run()
                       break;
                   }
                }
+
+               if(!Running) {
+                  goto finish;
+               }
+
                received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
             }
          }
 
 finish:
+         // ====== Image calculation completed ==============================
          TimeoutTimer->stop();
 
          rspSessionSetStatusText(Session, "Image completed!");
@@ -338,9 +345,30 @@ finish:
          rspDeleteSession(Session);
          Session = NULL;
 
-         usleep(2000000);
+         if(Running) {
+            usleep(2000000);
+         }
+
+
+         // ====== Clean-up =================================================
+         lock();
+         if( (!Running) ||
+             (Image->width() != width()) ||
+             (Image->height() != height()) ) {
+            // Thread destruction or size change
+            delete Image;
+            Image = NULL;
+         }
+         unlock();
+
+         if(!Running) {
+            break;
+         }
       }
    }
+
+   delete TimeoutTimer;
+   TimeoutTimer = NULL;
 }
 
 
@@ -442,6 +470,11 @@ int main(int argc, char** argv)
       cspReporterDelete(&cspReporter);
    }
 #endif
+
+   RsplibThreadStop = true;
+   pthread_join(rsplibThread, NULL);
+
    rspCleanUp();
+   finishLogging();
    return(result);
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.28 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.29 2004/11/22 15:28:11 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -972,7 +972,7 @@ static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
 {
    uint32_t* registrarIdentifier;
    size_t    tlvPosition = 0;
-   size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_NS_IDENTIFIER, true);
+   size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_REGISTRAR_IDENTIFIER, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
@@ -990,7 +990,7 @@ static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
    if(registrarIdentifier == NULL) {
       return(false);
    }
-   message->Identifier = ntohl(*registrarIdentifier);
+   message->RegistrarIdentifier = ntohl(*registrarIdentifier);
 
    LOG_VERBOSE3
    fprintf(stdlog, "Scanned NS Identifier $%08x\n", message->Identifier);

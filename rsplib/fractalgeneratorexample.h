@@ -14,6 +14,7 @@ struct FractalGeneratorParameter
    double   C1Imag;
    double   C2Real;
    double   C2Imag;
+   double   N;
 };
 
 

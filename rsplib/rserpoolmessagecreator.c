@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.20 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.21 2004/11/22 15:28:11 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -502,14 +502,14 @@ static bool createPoolElementIdentifierParameter(
 
 /* ###### Create NS identifier parameter ################################# */
 static bool createRegistrarIdentifierParameter(
-               struct RSerPoolMessage*  message,
+               struct RSerPoolMessage*       message,
                const RegistrarIdentifierType registrarIdentifier)
 {
    uint32_t* identifier;
    size_t    tlvPosition;
 
-   /* ATT_NS_IDENTIFIER is optional => Also set ATT_ACTION_CONTINUE! */
-   if(beginTLV(message, &tlvPosition, ATT_NS_IDENTIFIER|ATT_ACTION_CONTINUE) == false) {
+   /* ATT_REGISTRAR_IDENTIFIER is optional => Also set ATT_ACTION_CONTINUE! */
+   if(beginTLV(message, &tlvPosition, ATT_REGISTRAR_IDENTIFIER|ATT_ACTION_CONTINUE) == false) {
       return(false);
    }
 

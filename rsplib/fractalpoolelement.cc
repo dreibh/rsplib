@@ -46,7 +46,7 @@
 class ServiceThread : public TDThread
 {
    public:
-   ServiceThread();
+   ServiceThread(const size_t failureAfter);
    ~ServiceThread();
 
    inline bool hasFinished() {
@@ -71,17 +71,19 @@ class ServiceThread : public TDThread
 
    public:
    SessionDescriptor*  Session;
+   size_t              FailureAfter;
 };
 
 
-ServiceThread::ServiceThread()
+ServiceThread::ServiceThread(const size_t failureAfter)
 {
    static unsigned int IDCounter = 0;
-   ID           = ++IDCounter;
-   Session      = NULL;
-   IsNewSession = true;
-   Shutdown     = false;
-   LastSendTimeStamp = 0;
+   ID                  = ++IDCounter;
+   Session             = NULL;
+   IsNewSession        = true;
+   Shutdown            = false;
+   FailureAfter        = failureAfter;
+   LastSendTimeStamp   = 0;
    LastCookieTimeStamp = 0;
    std::cout << "Created thread " << ID << "..." << std::endl;
 }
@@ -282,9 +284,10 @@ void ServiceThread::run()
                   }
 
                   dataPackets++;
-                  if(dataPackets > 20) {
+                  if((FailureAfter > 0) && (dataPackets > FailureAfter)) {
                      sendCookie();
-                     std::cerr << "UNTERBRECHUNG! ---------------" << std::endl;
+                     std::cerr << "Failure Tester -> Disconnect after "
+                               << dataPackets << " packets!" << std::endl;
                      goto finish;
                   }
                }
@@ -447,6 +450,7 @@ int main(int argc, char** argv)
    unsigned int                  pedStatusArray[FD_SETSIZE];
    card64                        start                          = getMicroTime();
    card64                        stop                           = 0;
+   size_t                        failureAfter                   = 0;
    int                           type                           = SOCK_STREAM;
    int                           protocol                       = IPPROTO_SCTP;
    unsigned short                port                           = 0;
@@ -590,13 +594,16 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[i], "-failureafter=" ,14))) {
+         failureAfter = atol((char*)&argv[i][14]);
+      }
       else if(!(strncmp(argv[i], "-registrar=" ,11))) {
          /* Process this later */
       }
       else {
          std::cerr << "Bad argument \"" << argv[i] << "\"!"  << std::endl;
          std::cerr << "Usage: " << argv[0]
-                   << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}";
+                   << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} {-failureafter=Packets}";
 #ifdef ENABLE_CSP
          std::cerr << "{-cspreportaddress=Address} {-cspreportinterval=Microseconds} ";
 #endif
@@ -660,8 +667,9 @@ int main(int argc, char** argv)
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
-      std::cout << "Fractal Generator Pool Element - Version 1.0" << std::endl;
-      std::cout << "--------------------------------------------" << std::endl;
+      std::cout << "Fractal Generator Pool Element - Version 1.0" << std::endl
+                << "--------------------------------------------" << std::endl << std::endl
+                << "Failure After: " << failureAfter << " packets" << std::endl << std::endl;
 
 #ifndef FAST_BREAK
       installBreakDetector();
@@ -692,7 +700,7 @@ int main(int argc, char** argv)
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
-               ServiceThread* serviceThread = new ServiceThread;
+               ServiceThread* serviceThread = new ServiceThread(failureAfter);
                if(serviceThread) {
                   tags[0].Tag  = TAG_TuneSCTP_MinRTO;
                   tags[0].Data = 200;
@@ -748,13 +756,13 @@ int main(int argc, char** argv)
    std::cout << "Removing main thread..." << std::endl;
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
-   finishLogging();
 #ifdef ENABLE_CSP
    if(cspReportInterval > 0) {
       cspReporterDelete(&cspReporter);
    }
 #endif
    rspCleanUp();
+   finishLogging();
    std::cout << std::endl << "Terminated!" << std::endl;
    return(0);
 }

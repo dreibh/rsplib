@@ -363,8 +363,8 @@ if test "$enable_kernel_sctp" = "no"; then
    if test ! -e "$ac_sctplib_includes/sctp.h" ; then
       AC_MSG_ERROR([No sctplib installation found ($ac_sctplib_includes/sctp.h)!])
    fi
-   if test ! -e $ac_sctplib_libraries/libsctp.a ; then
-      AC_MSG_ERROR([No sctplib installation found ($ac_sctplib_libraries/libsctp.a)!])
+   if test ! -e $ac_sctplib_libraries/libsctplib.a ; then
+      AC_MSG_ERROR([No sctplib installation found ($ac_sctplib_libraries/libsctplib.a)!])
    fi
 fi
 

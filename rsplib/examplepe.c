@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.19 2004/11/19 16:42:46 dreibh Exp $
+ *  $Id: examplepe.c,v 1.20 2004/11/22 15:28:11 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -517,13 +517,13 @@ int main(int argc, char** argv)
 
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
-   finishLogging();
 #ifdef ENABLE_CSP
    if(cspReportInterval > 0) {
       cspReporterDelete(&cspReporter);
    }
 #endif
    rspCleanUp();
+   finishLogging();
    puts("\nTerminated!");
    return(0);
 }
