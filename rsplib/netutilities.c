@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.34 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: netutilities.c,v 1.35 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -376,8 +376,6 @@ bool string2address(const char* string, union sockaddr_union* address)
    size_t hostLength;
    size_t i;
 
-
-
    if(strlen(string) > sizeof(host)) {
       LOG_ERROR
       fputs("String too long!\n",stdlog);
@@ -449,7 +447,7 @@ bool string2address(const char* string, union sockaddr_union* address)
       hints.ai_flags = AI_NUMERICHOST;
    }
 
-   if(getaddrinfo(host,NULL, &hints, &res) != 0) {
+   if(getaddrinfo(host, NULL, &hints, &res) != 0) {
       return(false);
    }
 
@@ -1227,14 +1225,14 @@ static bool multicastGroupMgt(int              sockfd,
    if(address->sa_family == AF_INET) {
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
       if(interface != NULL) {
-         strcpy(ifr.ifr_name,interface);
-         if(ext_ioctl(sockfd,SIOCGIFADDR, &ifr) != 0) {
+         strcpy(ifr.ifr_name, interface);
+         if(ext_ioctl(sockfd, SIOCGIFADDR, &ifr) != 0) {
             return(false);
          }
          mreq.imr_interface = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
       }
       else {
-         memset((char*)&mreq.imr_interface,0,sizeof(mreq.imr_interface));
+         memset((char*)&mreq.imr_interface, 0, sizeof(mreq.imr_interface));
       }
       return(ext_setsockopt(sockfd,IPPROTO_IP,
                             add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
@@ -1277,15 +1275,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
       localAddress.in.sin_port = groupAddress->in.sin_port;
    }
 
-   on = 1;
-   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
-      return(false);
-   }
-#if !defined (LINUX)
-   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
-      return(false);
-   }
-#endif
+   setReusable(sd, 1);
 
    if(ext_bind(sd, (struct sockaddr*)&localAddress,
                getSocklen((struct sockaddr*)&localAddress)) != 0) {
@@ -1299,6 +1289,21 @@ bool joinOrLeaveMulticastGroup(int                         sd,
    if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false) {
       return(false);
    }
+   return(true);
+}
+
+
+/* ###### Set SO_REUSEADDR and SO_REUSEPORT (if supported) ############### */
+bool setReusable(int sd, int on)
+{
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
+      return(false);
+   }
+#if !defined (LINUX)
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
+      return(false);
+   }
+#endif
    return(true);
 }
 

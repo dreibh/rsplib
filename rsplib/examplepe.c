@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.17 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: examplepe.c,v 1.18 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -401,7 +401,7 @@ int main(int argc, char** argv)
 #endif
 
       while(!breakDetected()) {
-         /* ====== Collect sources for rspSessionSelect() call ============== */
+         /* ====== Collect sources for rspSessionSelect() call =========== */
          sessions = 0;
          list = g_list_first(clientList);
          while(list != NULL) {
@@ -414,7 +414,7 @@ int main(int argc, char** argv)
          pedArray[0]       = poolElement;
          pedStatusArray[0] = RspSelect_Read;
 
-         /* ====== Call rspSessionSelect() ================================== */
+         /* ====== Call rspSessionSelect() =============================== */
          /* Wait for activity. Note: rspSessionSelect() is called in the
             background thread. Therefore, it is *not* necessary here! */
          tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
@@ -429,7 +429,7 @@ int main(int argc, char** argv)
                                    500000,
                                    (struct TagItem*)&tags);
 
-         /* ====== Handle results of ext_select() =========================== */
+         /* ====== Handle results of ext_select() ======================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
                client = (struct Client*)malloc(sizeof(struct Client));
@@ -492,13 +492,22 @@ int main(int argc, char** argv)
             break;
          }
 
-         /* ====== Check auto-stop timer ==================================== */
+         /* ====== Check auto-stop timer ================================= */
          if((stop > 0) && (getMicroTime() >= stop)) {
             puts("Auto-stop time reached -> exiting!");
             break;
          }
       }
 
+      /* ====== Delete sessions and finally pool element ================= */
+      list = g_list_first(clientList);
+      while(list != NULL) {
+         client = (struct Client*)list->data;
+         rspDeleteSession(client->Session, NULL);
+         clientList = g_list_remove(clientList, (gpointer)client);
+         free(client);
+         list = g_list_first(clientList);
+      }
       rspDeletePoolElement(poolElement, NULL);
    }
    else {

@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.5 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: loglevel.h,v 1.6 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -144,13 +144,13 @@ void setLogColor(const unsigned int color);
 #endif
 
 #if (LOG_VERBOSE3 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE3 if(gLogLevel >= LOGLEVEL_VERBOSE3)     LOG_BEGIN("",11,3)
+#define LOG_VERBOSE3 if(gLogLevel >= LOGLEVEL_VERBOSE3)     LOG_BEGIN("",3,3)
 #else
 #define LOG_VERBOSE3 if(0) {
 #endif
 
 #if (LOG_VERBOSE4 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE4 if(gLogLevel >= LOGLEVEL_VERBOSE4)     LOG_BEGIN("",6,11)
+#define LOG_VERBOSE4 if(gLogLevel >= LOGLEVEL_VERBOSE4)     LOG_BEGIN("",6,6)
 #else
 #define LOG_VERBOSE4 if(0) {
 #endif

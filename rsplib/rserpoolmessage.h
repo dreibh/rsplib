@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.9 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.10 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -113,6 +113,7 @@ struct rserpool_tlv_header
 #define ATT_COOKIE                  0x0b
 #define ATT_POOL_ELEMENT_IDENTIFIER 0x0c
 #define ATT_POOL_ELEMENT_CHECKSUM   0x0d
+#define ATT_NS_IDENTIFIER           0x3f
 
 
 struct rserpool_poolelementparameter
@@ -360,6 +361,7 @@ struct RSerPoolMessage
    sctp_assoc_t                              AssocID;
    unsigned short                            StreamID;
    uint32_t                                  PPID;
+   union sockaddr_union                      SourceAddress;
 };
 
 

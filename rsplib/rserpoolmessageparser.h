@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.h,v 1.2 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rserpoolmessageparser.h,v 1.3 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,6 +41,7 @@
 
 #include "tdtypes.h"
 #include "rserpoolmessage.h"
+#include "sockaddrunion.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,17 +52,19 @@ extern "C" {
   * Create RSerPoolMessage structure from ENRP packet.
   *
   * @param packet Packet.
+  * @param sourceAddress Source address.
   * @param ppid PPID of the packet (ASAP or ENRP).
   * @param packetSize Size of packet.
   * @param minBufferSize Minimum size of RSerPoolMessage's buffer (e.g. for reply message).
   * @param message Reference to store RSerPoolMessage to.
   * @return Error code.
   */
-unsigned int rserpoolPacket2Message(char*                    packet,
-                                    const uint32_t           ppid,
-                                    const size_t             packetSize,
-                                    const size_t             minBufferSize,
-                                    struct RSerPoolMessage** message);
+unsigned int rserpoolPacket2Message(char*                       packet,
+                                    const union sockaddr_union* sourceAddress,
+                                    const uint32_t              ppid,
+                                    const size_t                packetSize,
+                                    const size_t                minBufferSize,
+                                    struct RSerPoolMessage**    message);
 
 
 #ifdef __cplusplus

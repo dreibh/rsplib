@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.13 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: examplepu.c,v 1.14 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -297,6 +297,7 @@ int main(int argc, char** argv)
          else {
             FD_SET(STDIN_FILENO, &readfdset);
             n = STDIN_FILENO;
+            selectTimeout = 500000;
          }
 
          /* Very important! Allow rspSessionSelect() to call

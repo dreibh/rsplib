@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.15 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: netutilities.h,v 1.16 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -365,6 +365,15 @@ int recvfromplus(int                      sockfd,
 bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add);
+
+/**
+  * Set address and port reuse on socket on or off.
+  *
+  * @param sd Socket descriptor.
+  * @param on 1 to set reuse on, 0 for off.
+  * @return true for success; false otherwise.
+  */
+bool setReusable(int sd, int on);
 
 /**
   * Create socket and establish connection to a given peer.

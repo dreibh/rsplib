@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.23 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: servertable.c,v 1.24 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -79,6 +79,7 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
                            &senderAddressLength);
    if(received > 0) {
       result = rserpoolPacket2Message((char*)&buffer,
+                                      &senderAddress,
                                       PPID_ASAP,
                                       received, sizeof(buffer),
                                       &message);

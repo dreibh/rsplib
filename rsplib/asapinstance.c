@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.28 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.29 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -217,15 +217,19 @@ static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstan
 static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapInstance,
                                                 struct RSerPoolMessage** message)
 {
-   ssize_t      received;
-   unsigned int result;
+   ssize_t              received;
+   unsigned int         result;
+   union sockaddr_union sourceAddress;
+   socklen_t            sourceAddressLength;
 
    LOG_VERBOSE2
    fputs("Waiting for response...\n",stdlog);
    LOG_END
 
    do {
+      sourceAddressLength = sizeof(sourceAddress);
       received = messageBufferRead(asapInstance->Buffer, asapInstance->NameServerSocket,
+                                   &sourceAddress, &sourceAddressLength,
                                    (asapInstance->NameServerSocketProtocol == IPPROTO_SCTP) ? PPID_ASAP : 0,
                                    asapInstance->NameServerResponseTimeout,
                                    asapInstance->NameServerResponseTimeout);
@@ -236,6 +240,7 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapIns
 
    if(received > 0) {
       result = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
+                                      &sourceAddress,
                                       PPID_ASAP,
                                       received, asapInstance->Buffer->Size,
                                       message);

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.23 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: rspsession.c,v 1.24 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -357,7 +357,7 @@ void rspDeletePoolElement(struct PoolElementDescriptor* ped,
       }
       else {
          LOG_ERROR
-         fputs("Pool element to be deleted has still open sessions. Go fix your program!", stdlog);
+         fputs("Pool element to be deleted has still open sessions. Go fix your program!\n", stdlog);
          LOG_END
       }
    }
@@ -439,6 +439,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       memset((void*)&localAddress, 0, sizeof(localAddress));
       ((struct sockaddr*)&localAddress)->sa_family = ped->SocketDomain;
       setPort((struct sockaddr*)&localAddress, tagListGetData(tags, TAG_PoolElement_LocalPort, 0));
+
       if(bindplus(ped->Socket, (union sockaddr_union*)&localAddress, 1) == false) {
          LOG_ERROR
          logerror("Unable to bind socket for new pool element");
@@ -784,10 +785,10 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       else if(result == RSPERR_NOT_FOUND) {
          LOG_ACTION
          fprintf(stdlog,
-                 "Name resolution did not find new pool element. Waiting %lldus...\n",
+                 "Name resolution did not find new pool element. Waiting %lluus...\n",
                  session->NameResolutionRetryDelay);
          LOG_END
-         usleep(session->NameResolutionRetryDelay);
+         usleep((unsigned int)session->NameResolutionRetryDelay);
       }
       else {
          LOG_WARNING
@@ -894,7 +895,7 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
 
    threadSafetyLock(&session->Mutex);
 
-   result = rserpoolPacket2Message(buffer, PPID_ASAP, size, size, &message);
+   result = rserpoolPacket2Message(buffer, NULL, PPID_ASAP, size, size, &message);
    if(message != NULL) {
       if(result == RSPERR_OKAY) {
          LOG_VERBOSE2
@@ -992,6 +993,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
            session->Socket);
    LOG_END
    result = messageBufferRead(session->MessageBuffer, session->Socket,
+                              NULL, 0,
                               PPID_ASAP, timeout, timeout);
    if(result > 0) {
       LOG_VERBOSE2

@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.6 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.7 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -69,6 +69,8 @@ void messageBufferDelete(struct MessageBuffer* mb)
 /* ###### Read from buffer ################################################ */
 ssize_t messageBufferRead(struct MessageBuffer* mb,
                           int                   sd,
+                          union sockaddr_union* sourceAddress,
+                          socklen_t*            sourceAddressLength,
                           const uint32_t        requiredPPID,
                           const card64          peekTimeout,
                           const card64          totalTimeout)
@@ -90,7 +92,8 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
       mb->StartTimeStamp = getMicroTime();
       flags = MSG_PEEK;
       received = recvfromplus(sd, (char*)&header, sizeof(header), &flags,
-                              NULL, 0, &ppid, &assocID, &streamID, peekTimeout);
+                              (struct sockaddr*)sourceAddress, sourceAddressLength,
+                              &ppid, &assocID, &streamID, peekTimeout);
       if(received > 0) {
          if(ppid == requiredPPID) {
             if(received == sizeof(header)) {
@@ -140,7 +143,8 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
       LOG_END
       flags    = 0;
       received = recvfromplus(sd, (char*)&mb->Buffer[mb->Position], mb->ToGo, &flags,
-                              NULL, 0, &ppid, &assocID, &streamID, (card64)timeout);
+                              (struct sockaddr*)sourceAddress, sourceAddressLength,
+                              &ppid, &assocID, &streamID, (card64)timeout);
       if(received > 0) {
          mb->ToGo     -= received;
          mb->Position += received;

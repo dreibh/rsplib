@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.48 2004/11/12 00:17:18 dreibh Exp $
+ *  $Id: nameserver.c,v 1.49 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -422,8 +422,9 @@ struct NameServer
    int                                      ASAPSocket;
    struct Timer                             ASAPAnnounceTimer;
 
-   int                                      ENRPMulticastSocket;
-   struct FDCallback                        ENRPMulticastSocketFDCallback;
+   int                                      ENRPMulticastOutputSocket;
+   int                                      ENRPMulticastInputSocket;
+   struct FDCallback                        ENRPMulticastInputSocketFDCallback;
    union sockaddr_union                     ENRPMulticastAddress;
    int                                      ENRPUnicastSocket;
    struct FDCallback                        ENRPUnicastSocketFDCallback;
@@ -468,7 +469,10 @@ static size_t nameServerGetReportFunction(
 
 struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
                                  int                         asapSocket,
+                                 int                         asapAnnounceSocket,
                                  int                         enrpUnicastSocket,
+                                 int                         enrpMulticastOutputSocket,
+                                 int                         enrpMulticastInputSocket,
                                  const bool                  asapSendAnnounces,
                                  const union sockaddr_union* asapAnnounceAddress,
                                  const bool                  enrpUseMulticast,
@@ -534,7 +538,10 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 /* ###### Constructor #################################################### */
 struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
                                  int                         asapSocket,
+                                 int                         asapAnnounceSocket,
                                  int                         enrpUnicastSocket,
+                                 int                         enrpMulticastOutputSocket,
+                                 int                         enrpMulticastInputSocket,
                                  const bool                  asapSendAnnounces,
                                  const union sockaddr_union* asapAnnounceAddress,
                                  const bool                  enrpUseMulticast,
@@ -586,16 +593,18 @@ struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
                (void*)nameServer);
       takeoverProcessListNew(&nameServer->Takeovers);
 
-      nameServer->InInitializationPhase    = true;
-      nameServer->MentorServerID           = 0;
+      nameServer->InInitializationPhase     = true;
+      nameServer->MentorServerID            = 0;
 
-      nameServer->ASAPSocket               = asapSocket;
-      nameServer->ASAPSendAnnounces        = asapSendAnnounces;
+      nameServer->ASAPSocket                = asapSocket;
+      nameServer->ASAPAnnounceSocket        = asapAnnounceSocket;
+      nameServer->ASAPSendAnnounces         = asapSendAnnounces;
 
-      nameServer->ENRPUnicastSocket        = enrpUnicastSocket;
-      nameServer->ENRPMulticastSocket      = -1;
-      nameServer->ENRPUseMulticast         = enrpUseMulticast;
-      nameServer->ENRPAnnounceViaMulticast = enrpAnnounceViaMulticast;
+      nameServer->ENRPUnicastSocket         = enrpUnicastSocket;
+      nameServer->ENRPMulticastInputSocket  = enrpMulticastOutputSocket;
+      nameServer->ENRPMulticastOutputSocket = enrpMulticastInputSocket;
+      nameServer->ENRPUseMulticast          = enrpUseMulticast;
+      nameServer->ENRPAnnounceViaMulticast  = enrpAnnounceViaMulticast;
 
 
       nameServer->MaxBadPEReports                       = NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS;
@@ -610,15 +619,6 @@ struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
       nameServer->TakeoverExpiryInterval                = NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
 
       memcpy(&nameServer->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(nameServer->ASAPAnnounceAddress));
-      if(nameServer->ASAPAnnounceAddress.in6.sin6_family == AF_INET6) {
-         nameServer->ASAPAnnounceSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-      }
-      else if(nameServer->ASAPAnnounceAddress.in.sin_family == AF_INET) {
-         nameServer->ASAPAnnounceSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-      }
-      else {
-         nameServer->ASAPAnnounceSocket = -1;
-      }
       if(nameServer->ASAPAnnounceSocket >= 0) {
          setNonBlocking(nameServer->ASAPAnnounceSocket);
       }
@@ -637,20 +637,11 @@ struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
                     (void*)nameServer);
 
       memcpy(&nameServer->ENRPMulticastAddress, enrpMulticastAddress, sizeof(nameServer->ENRPMulticastAddress));
-      if(nameServer->ENRPMulticastAddress.in6.sin6_family == AF_INET6) {
-         nameServer->ENRPMulticastSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-      }
-      else if(nameServer->ENRPMulticastAddress.in.sin_family == AF_INET) {
-         nameServer->ENRPMulticastSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-      }
-      else {
-         nameServer->ENRPMulticastSocket = -1;
-      }
-      if(nameServer->ENRPMulticastSocket >= 0) {
-         setNonBlocking(nameServer->ENRPMulticastSocket);
-         fdCallbackNew(&nameServer->ENRPMulticastSocketFDCallback,
+      if(nameServer->ENRPMulticastInputSocket >= 0) {
+         setNonBlocking(nameServer->ENRPMulticastInputSocket);
+         fdCallbackNew(&nameServer->ENRPMulticastInputSocketFDCallback,
                        &nameServer->StateMachine,
-                       nameServer->ENRPMulticastSocket,
+                       nameServer->ENRPMulticastInputSocket,
                        FDCE_Read|FDCE_Exception,
                        nameServerSocketCallback,
                        (void*)nameServer);
@@ -658,7 +649,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
 
       timerStart(&nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
       if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
-         if(joinOrLeaveMulticastGroup(nameServer->ENRPMulticastSocket,
+         if(joinOrLeaveMulticastGroup(nameServer->ENRPMulticastInputSocket,
                                       &nameServer->ENRPMulticastAddress,
                                       true) == false) {
             LOG_ERROR
@@ -667,6 +658,10 @@ struct NameServer* nameServerNew(const ENRPIdentifierType    serverID,
             nameServerDelete(nameServer);
             return(NULL);
          }
+      }
+
+      if(nameServer->ENRPMulticastOutputSocket >= 0) {
+         setNonBlocking(nameServer->ENRPMulticastOutputSocket);
       }
 
 #ifdef ENABLE_CSP
@@ -708,10 +703,14 @@ void nameServerDelete(struct NameServer* nameServer)
       timerDelete(&nameServer->NamespaceActionTimer);
       timerDelete(&nameServer->PeerActionTimer);
       takeoverProcessListDelete(&nameServer->Takeovers);
-      if(nameServer->ENRPMulticastSocket >= 0) {
-         fdCallbackDelete(&nameServer->ENRPMulticastSocketFDCallback);
-         ext_close(nameServer->ENRPMulticastSocket >= 0);
-         nameServer->ENRPMulticastSocket = -1;
+      if(nameServer->ENRPMulticastOutputSocket >= 0) {
+         fdCallbackDelete(&nameServer->ENRPMulticastInputSocketFDCallback);
+         ext_close(nameServer->ENRPMulticastOutputSocket >= 0);
+         nameServer->ENRPMulticastOutputSocket = -1;
+      }
+      if(nameServer->ENRPMulticastInputSocket >= 0) {
+         ext_close(nameServer->ENRPMulticastInputSocket >= 0);
+         nameServer->ENRPMulticastInputSocket = -1;
       }
       if(nameServer->ENRPUnicastSocket >= 0) {
          ext_close(nameServer->ENRPUnicastSocket >= 0);
@@ -753,50 +752,30 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct NameServer*            nameServer = (struct NameServer*)userData;
-   struct RSerPoolMessage*       message;
-   size_t                        messageLength;
-   char                          localAddressArrayBuffer[MAX_NS_TRANSPORTADDRESSES * sizeof(struct TransportAddressBlock)];
-   struct TransportAddressBlock* localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
+   struct NameServer*      nameServer = (struct NameServer*)userData;
+   struct RSerPoolMessage* message;
+   size_t                  messageLength;
 
    CHECK(nameServer->ASAPSendAnnounces == true);
    CHECK(nameServer->ASAPAnnounceSocket >= 0);
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type                         = AHT_SERVER_ANNOUNCE;
-      message->Flags                        = 0x00;
-      message->NSIdentifier                 = nameServer->ServerID;
-
-      if(transportAddressBlockGetLocalAddressesFromSCTPSocket(localAddressArray,
-                                                              nameServer->ASAPSocket,
-                                                              MAX_NS_TRANSPORTADDRESSES) > 0) {
-         message->TransportAddressBlockListPtr = localAddressArray;
-         messageLength = rserpoolMessage2Packet(message);
-         if(messageLength > 0) {
-            if(nameServer->ASAPAnnounceSocket) {
-               LOG_VERBOSE2
-               fputs("Sending announce to address ", stdlog);
-               fputaddress((struct sockaddr*)&nameServer->ASAPAnnounceAddress, true, stdlog);
-               fputs("\n", stdlog);
-               LOG_END
-               if(ext_sendto(nameServer->ASAPAnnounceSocket,
-                             message->Buffer,
-                             messageLength,
-                             0,
-                             (struct sockaddr*)&nameServer->ASAPAnnounceAddress,
-                             getSocklen((struct sockaddr*)&nameServer->ASAPAnnounceAddress)) < (ssize_t)messageLength) {
-                  LOG_WARNING
-                  logerror("Unable to send announce");
-                  LOG_END
-               }
-            }
+      message->Type         = AHT_SERVER_ANNOUNCE;
+      message->Flags        = 0x00;
+      message->NSIdentifier = nameServer->ServerID;
+      messageLength = rserpoolMessage2Packet(message);
+      if(messageLength > 0) {
+         if(ext_sendto(nameServer->ASAPAnnounceSocket,
+                     message->Buffer,
+                     messageLength,
+                     0,
+                     (struct sockaddr*)&nameServer->ASAPAnnounceAddress,
+                     getSocklen((struct sockaddr*)&nameServer->ASAPAnnounceAddress)) < (ssize_t)messageLength) {
+            LOG_WARNING
+            logerror("Unable to send announce");
+            LOG_END
          }
-      }
-      else {
-         LOG_ERROR
-         fputs("Unable to obtain local ASAP socket addresses\n", stdlog);
-         LOG_END
       }
       rserpoolMessageDelete(message);
    }
@@ -904,7 +883,7 @@ static void sendPeerPresence(struct NameServer*          nameServer,
                                    nameServer->ServerID,
                                    nameServer->ENRPUseMulticast ? PLNF_MULTICAST : 0,
                                    localAddressArray);
-         if(rserpoolMessageSend((sd == nameServer->ENRPMulticastSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+         if(rserpoolMessageSend((sd == nameServer->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
                               sd, assocID, msgSendFlags, 0, message) == false) {
             LOG_WARNING
             fputs("Sending PeerPresence failed\n", stdlog);
@@ -1013,7 +992,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    }
 
    if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
-      sendPeerPresence(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+      sendPeerPresence(nameServer, nameServer->ENRPMulticastOutputSocket, 0, 0,
                        (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
                        0, false);
    }
@@ -1328,7 +1307,7 @@ static void sendPeerInitTakeover(struct NameServer*       nameServer,
          message->AddressArray  = &nameServer->ENRPMulticastAddress;
          message->Addresses     = 1;
          if(rserpoolMessageSend(IPPROTO_UDP,
-                                nameServer->ENRPMulticastSocket,
+                                nameServer->ENRPMulticastOutputSocket,
                                 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
@@ -1429,7 +1408,7 @@ static void sendPeerNameUpdate(struct NameServer*                nameServer,
          message->AddressArray  = &nameServer->ENRPMulticastAddress;
          message->Addresses     = 1;
          if(rserpoolMessageSend(IPPROTO_UDP,
-                                nameServer->ENRPMulticastSocket,
+                                nameServer->ENRPMulticastOutputSocket,
                                 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
@@ -2111,7 +2090,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
 
    if(message->PeerListNodePtr) {
       int flags = PLNF_DYNAMIC;
-      if((nameServer->ENRPUseMulticast) && (fd == nameServer->ENRPMulticastSocket)) {
+      if((nameServer->ENRPUseMulticast) && (fd == nameServer->ENRPMulticastOutputSocket)) {
          flags |= PLNF_MULTICAST;
       }
       result = ST_CLASS(peerListManagementRegisterPeerListNode)(
@@ -2151,7 +2130,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
          LOG_END
 
          if((message->Flags & EHF_PEER_PRESENCE_REPLY_REQUIRED) &&
-            (fd != nameServer->ENRPMulticastSocket) &&
+            (fd != nameServer->ENRPMulticastOutputSocket) &&
             (message->SenderID != 0)) {
             LOG_VERBOSE
             fputs("PeerPresence with ReplyRequired flag set -> Sending reply...\n", stdlog);
@@ -2247,7 +2226,7 @@ static void handlePeerInitTakeover(struct NameServer*      nameServer,
               message->SenderID);
       LOG_END
       if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
-         sendPeerPresence(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+         sendPeerPresence(nameServer, nameServer->ENRPMulticastOutputSocket, 0, 0,
                           (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
                           0, false);
       }
@@ -2341,7 +2320,7 @@ static void sendPeerTakeoverServer(struct NameServer*          nameServer,
       message->ReceiverID   = receiverID;
       message->NSIdentifier = targetID;
 
-      if(rserpoolMessageSend((sd == nameServer->ENRPMulticastSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+      if(rserpoolMessageSend((sd == nameServer->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, message) == false) {
          LOG_WARNING
          fputs("Sending PeerTakeoverServer failed\n", stdlog);
@@ -2382,7 +2361,7 @@ static void sendPeerOwnershipChange(struct NameServer*          nameServer,
       nte.LastPoolElementIdentifier   = 0;
 
       do {
-         if(rserpoolMessageSend((sd == nameServer->ENRPMulticastSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+         if(rserpoolMessageSend((sd == nameServer->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
                                 sd, assocID, msgSendFlags, 0, message) == false) {
             LOG_WARNING
             fputs("Sending PeerOwnershipChange failed\n", stdlog);
@@ -2411,11 +2390,11 @@ static void doTakeover(struct NameServer*      nameServer,
 
    /* ====== Report takeover to peers ==================================== */
    if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
-      sendPeerTakeoverServer(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+      sendPeerTakeoverServer(nameServer, nameServer->ENRPMulticastOutputSocket, 0, 0,
                              (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
                              0,
                              takeoverProcess->TargetID);
-      sendPeerOwnershipChange(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+      sendPeerOwnershipChange(nameServer, nameServer->ENRPMulticastOutputSocket, 0, 0,
                               (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
                               0,
                               takeoverProcess->TargetID);
@@ -2974,7 +2953,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
    if((fd == nameServer->ASAPSocket) ||
       (fd == nameServer->ENRPUnicastSocket) ||
       (((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) &&
-        (fd == nameServer->ENRPMulticastSocket))) {
+        (fd == nameServer->ENRPMulticastInputSocket))) {
       LOG_VERBOSE3
       fprintf(stdlog, "Event on socket %d...\n", fd);
       LOG_END
@@ -2989,13 +2968,13 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                               0);
       if(received > 0) {
          if(!(flags & MSG_NOTIFICATION)) {
-            if(fd == nameServer->ENRPMulticastSocket) {
+            if(fd == nameServer->ENRPMulticastInputSocket) {
                /* ENRP via UDP -> Set PPID so that rserpoolPacket2Message can
                   correctly decode the packet */
                ppid = PPID_ENRP;
             }
 
-            result = rserpoolPacket2Message(buffer, ppid, received, sizeof(buffer), &message);
+            result = rserpoolPacket2Message(buffer, NULL, ppid, received, sizeof(buffer), &message);
             if(message != NULL) {
                if(result == RSPERR_OKAY) {
                   message->BufferAutoDelete = false;
@@ -3201,30 +3180,51 @@ static void addPeer(struct NameServer* nameServer, char* arg)
 }
 
 
-/* ###### Create and bind SCTP socket #################################### */
-static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
+/* ###### Create and bind SCTP and UDP sockets ########################### */
+static void getSocketPair(const char*                   sctpAddressParameter,
+                          struct TransportAddressBlock* sctpTransportAddress,
+                          int*                          sctpSocket,
+                          const char*                   udpGroupAddressParameter,
+                          struct TransportAddressBlock* udpGroupTransportAddress,
+                          int*                          udpSocket)
 {
    union sockaddr_union        sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
-   char*                       address;
+   union sockaddr_union        groupAddress;
+   union sockaddr_union        udpAddress;
+   uint16_t                    localPort;
+   size_t                      i;
+   int                         family;
+   const char*                 address;
    char*                       idx;
    struct sctp_event_subscribe sctpEvents;
    size_t                      sctpAddresses;
-   int                         sctpSocket;
    int                         autoCloseTimeout;
+   uint16_t                    configuredPort;
+   size_t                      trials;
 
    sctpAddresses = 0;
-   if(!(strncmp(arg, "auto", 4))) {
-      string2address(checkIPv6() ? "[::]" : "0.0.0.0", &sctpAddressArray[0]);
+   family        = checkIPv6() ? AF_INET6 : AF_INET;
+
+   if(string2address(udpGroupAddressParameter, &groupAddress) == false) {
+      fprintf(stderr, "ERROR: Bad multicast group address <%s>\n", udpGroupAddressParameter);
+      exit(1);
+   }
+
+   memset(&udpAddress, 0, sizeof(udpAddress));
+   udpAddress.sa.sa_family = groupAddress.sa.sa_family;
+
+   if(!(strncmp(sctpAddressParameter, "auto", 4))) {
+      string2address((family == AF_INET6) ? "[::]" : "0.0.0.0", &sctpAddressArray[0]);
       sctpAddresses = 1;
    }
    else {
-      address = arg;
+      address = sctpAddressParameter;
       while(sctpAddresses < MAX_NS_TRANSPORTADDRESSES) {
          idx = index(address, ',');
          if(idx) {
             *idx = 0x00;
          }
-         if(!string2address(address,&sctpAddressArray[sctpAddresses])) {
+         if(!string2address(address, &sctpAddressArray[sctpAddresses])) {
             printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
             exit(1);
          }
@@ -3243,48 +3243,91 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
       exit(1);
    }
 
-   sctpSocket = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
-   if(sctpSocket >= 0) {
-      if(bindplus(sctpSocket,
+
+   configuredPort = getPort((struct sockaddr*)&sctpAddressArray[0]);
+   *sctpSocket = -1;
+   *udpSocket  = -1;
+
+   trials = 0;
+   while((configuredPort == 0) && (trials++ < 1024)) {
+      if(configuredPort == 0) {
+         localPort = 10000 + (random16() % 50000);
+         setPort((struct sockaddr*)&udpAddress, localPort);
+         for(i = 0;i < sctpAddresses;i++) {
+            setPort((struct sockaddr*)&sctpAddressArray[i], localPort);
+         }
+      }
+      *sctpSocket = ext_socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
+      if(*sctpSocket < 0) {
+         continue;
+      }
+      if(bindplus(*sctpSocket,
                   (union sockaddr_union*)&sctpAddressArray,
                   sctpAddresses) == false) {
-         perror("bindx() call failed");
-         exit(1);
-      }
-      if(ext_listen(sctpSocket, 10) < 0) {
-         perror("listen() call failed");
-         exit(1);
-      }
-      memset(&sctpEvents, 0, sizeof(sctpEvents));
-      sctpEvents.sctp_data_io_event          = 1;
-      sctpEvents.sctp_association_event      = 1;
-      sctpEvents.sctp_address_event          = 1;
-      sctpEvents.sctp_send_failure_event     = 1;
-      sctpEvents.sctp_peer_error_event       = 1;
-      sctpEvents.sctp_shutdown_event         = 1;
-      sctpEvents.sctp_partial_delivery_event = 1;
-      sctpEvents.sctp_adaption_layer_event   = 1;
-      if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
-         perror("setsockopt() for SCTP_EVENTS failed");
-         exit(1);
-      }
-      autoCloseTimeout = 5 + (2 * (NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000));
-      if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
-         perror("setsockopt() for SCTP_AUTOCLOSE failed");
-         exit(1);
+         ext_close(*sctpSocket);
+         *sctpSocket = -1;
+         continue;
       }
 
-      transportAddressBlockNew(sctpAddress,
-                              IPPROTO_SCTP,
-                              getPort((struct sockaddr*)&sctpAddressArray[0]),
-                              0,
-                              (union sockaddr_union*)&sctpAddressArray,
-                              sctpAddresses);
+      *udpSocket = ext_socket(udpAddress.sa.sa_family, SOCK_DGRAM, IPPROTO_UDP);
+      if(*udpSocket < 0) {
+         puts("ERROR: Unable to create UDP socket!");
+         exit(1);
+      }
+      setReusable(*udpSocket, 1);
+      if(bindplus(*udpSocket,
+                  (union sockaddr_union*)&udpAddress,
+                  1) == true) {
+         break;
+      }
+
+      ext_close(*sctpSocket);
+      *sctpSocket = -1;
+      ext_close(*udpSocket);
+      *udpSocket = -1;
    }
-   else {
-      puts("ERROR: Unable to create SCTP socket!");
+
+   if((*sctpSocket < 0) || (*udpSocket < 0)) {
+      perror("Unable to find suitable SCTP/UDP socket pair");
+      exit(1);
    }
-   return(sctpSocket);
+
+
+   if(ext_listen(*sctpSocket, 10) < 0) {
+      perror("listen() call failed");
+      exit(1);
+   }
+   memset(&sctpEvents, 0, sizeof(sctpEvents));
+   sctpEvents.sctp_data_io_event          = 1;
+   sctpEvents.sctp_association_event      = 1;
+   sctpEvents.sctp_address_event          = 1;
+   sctpEvents.sctp_send_failure_event     = 1;
+   sctpEvents.sctp_peer_error_event       = 1;
+   sctpEvents.sctp_shutdown_event         = 1;
+   sctpEvents.sctp_partial_delivery_event = 1;
+   sctpEvents.sctp_adaption_layer_event   = 1;
+   if(ext_setsockopt(*sctpSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
+      perror("setsockopt() for SCTP_EVENTS failed");
+      exit(1);
+   }
+   autoCloseTimeout = 5 + (2 * (NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000));
+   if(ext_setsockopt(*sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
+      perror("setsockopt() for SCTP_AUTOCLOSE failed");
+      exit(1);
+   }
+
+   transportAddressBlockNew(sctpTransportAddress,
+                            IPPROTO_SCTP,
+                            getPort((struct sockaddr*)&sctpAddressArray[0]),
+                            0,
+                            (union sockaddr_union*)&sctpAddressArray,
+                            sctpAddresses);
+   transportAddressBlockNew(udpGroupTransportAddress,
+                            IPPROTO_UDP,
+                            getPort((struct sockaddr*)&groupAddress),
+                            0,
+                            (union sockaddr_union*)&groupAddress,
+                            1);
 }
 
 
@@ -3293,22 +3336,37 @@ static int getSCTPSocket(char* arg, struct TransportAddressBlock* sctpAddress)
 int main(int argc, char** argv)
 {
    struct NameServer*            nameServer;
-   uint32_t                      serverID   = 0;
-   int                           asapSocket = -1;
+   uint32_t                      serverID                      = 0;
+
+   int                           asapSocket                    = -1;
+   char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   const char*                   asapAddressParameter          = "auto";
+   struct TransportAddressBlock* asapAddress                   = (struct TransportAddressBlock*)&asapAddressBuffer;
+
+   bool                          asapSendAnnounces             = false;
+   int                           asapAnnounceSocket            = -1;
+   char                          asapAnnounceAddressBuffer[transportAddressBlockGetSize(1)];
+   const char*                   asapAnnounceAddressParameter  = "auto";
+   struct TransportAddressBlock* asapAnnounceAddress           = (struct TransportAddressBlock*)&asapAnnounceAddressBuffer;
+
+   int                           enrpUnicastSocket             = -1;
+   const char*                   enrpUnicastAddressParameter   = "auto";
+   char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* enrpUnicastAddress            = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
+
+   bool                          enrpUseMulticast              = false;
+   bool                          enrpAnnounceViaMulticast      = false;
+   int                           enrpMulticastOutputSocket      = -1;
+   int                           enrpMulticastInputSocket     = -1;
+   const char*                   enrpMulticastAddressParameter = "auto";
+   char                          enrpMulticastAddressBuffer[transportAddressBlockGetSize(1)];
+   struct TransportAddressBlock* enrpMulticastAddress          = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
+
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
    unsigned long long            cspReportInterval = 0;
 #endif
-   char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock* asapAddress = (struct TransportAddressBlock*)&asapAddressBuffer;
-   union sockaddr_union          asapAnnounceAddress;
-   bool                          asapSendAnnounces = false;
-   int                           enrpUnicastSocket = -1;
-   char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock* enrpUnicastAddress = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
-   union sockaddr_union          enrpMulticastAddress;
-   bool                          enrpUseMulticast         = false;
-   bool                          enrpAnnounceViaMulticast = false;
+
    int                           result;
    struct timeval                timeout;
    fd_set                        readfdset;
@@ -3328,15 +3386,6 @@ int main(int argc, char** argv)
          fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
          exit(1);
       }
-      else if(!(strncmp(argv[i], "-asap=",6))) {
-         if(asapSocket < 0) {
-            asapSocket = getSCTPSocket((char*)&argv[i][6], asapAddress);
-         }
-         else {
-            fputs("ERROR: ASAP address given twice!", stdlog);
-            exit(1);
-         }
-      }
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
          serverID = atol((char*)&argv[i][12]);
       }
@@ -3345,6 +3394,31 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-maxbadpereports=",17))) {
          /* to be handled later */
+      }
+      else if(!(strncmp(argv[i], "-asap=",6))) {
+         asapAddressParameter = (const char*)&argv[i][6];
+      }
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
+         asapAnnounceAddressParameter = (const char*)&argv[i][14];
+         asapSendAnnounces = true;
+      }
+      else if(!(strncmp(argv[i], "-enrp=",6))) {
+         enrpUnicastAddressParameter = (const char*)&argv[i][6];
+      }
+      else if(!(strncmp(argv[i], "-enrpmulticast=", 15))) {
+         enrpMulticastAddressParameter = (const char*)&argv[i][15];
+         enrpAnnounceViaMulticast = true;
+      }
+      else if(!(strcmp(argv[i], "-multicast=on"))) {
+         enrpUseMulticast = true;
+      }
+      else if(!(strcmp(argv[i], "-multicast=off"))) {
+         enrpUseMulticast = false;
+      }
+      else if(!(strncmp(argv[i], "-log",4))) {
+         if(initLogging(argv[i]) == false) {
+            exit(1);
+         }
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
@@ -3368,52 +3442,6 @@ int main(int argc, char** argv)
          exit(1);
       }
 #endif
-      else if(!(strcmp(argv[i], "-asapannounce=auto"))) {
-         string2address("239.0.0.1:3863", &asapAnnounceAddress);
-         asapSendAnnounces = true;
-      }
-      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         if(!string2address((char*)&argv[i][14], &asapAnnounceAddress)) {
-            fprintf(stderr,
-                    "ERROR: Bad ASAP announce address %s! Use format <address:port>.\n",
-                    (char*)&argv[i][14]);
-            exit(1);
-         }
-         asapSendAnnounces = true;
-      }
-      else if(!(strncmp(argv[i], "-enrp=",6))) {
-         if(enrpUnicastSocket < 0) {
-            enrpUnicastSocket = getSCTPSocket((char*)&argv[i][6], enrpUnicastAddress);
-         }
-         else {
-            fputs("ERROR: ENRP unicast address given twice!", stdlog);
-            exit(1);
-         }
-      }
-      else if(!(strcmp(argv[i], "-enrpmulticast=auto"))) {
-         string2address("239.0.0.1:3864", &enrpMulticastAddress);
-         enrpAnnounceViaMulticast = true;
-      }
-      else if(!(strncmp(argv[i], "-enrpmulticast=", 15))) {
-         if(!string2address((char*)&argv[i][15], &enrpMulticastAddress)) {
-            fprintf(stderr,
-                    "ERROR: Bad ENRP announce address %s! Use format <address:port>.\n",
-                    (char*)&argv[i][10]);
-            exit(1);
-         }
-         enrpAnnounceViaMulticast = true;
-      }
-      else if(!(strcmp(argv[i], "-multicast=on"))) {
-         enrpUseMulticast = true;
-      }
-      else if(!(strcmp(argv[i], "-multicast=off"))) {
-         enrpUseMulticast = false;
-      }
-      else if(!(strncmp(argv[i], "-log",4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
-      }
       else {
          printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
@@ -3423,12 +3451,21 @@ int main(int argc, char** argv)
          exit(1);
       }
    }
-   if(asapSocket <= 0) {
-      fprintf(stderr, "ERROR: No ASAP socket opened. Use parameter \"-asap=...\"!\n");
-      exit(1);
+
+   if(!strcmp(asapAnnounceAddressParameter, "auto")) {
+      asapAnnounceAddressParameter = "239.0.0.1:3863";
    }
-   if(enrpUnicastSocket <= 0) {
-      fprintf(stderr, "ERROR: No ENRP socket opened. Use parameter \"-enrp=...\"!\n");
+   if(!strcmp(enrpMulticastAddressParameter, "auto")) {
+      enrpMulticastAddressParameter = "239.0.0.1:3864";
+   }
+   getSocketPair(asapAddressParameter, asapAddress, &asapSocket,
+                 asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket);
+   getSocketPair(enrpUnicastAddressParameter, enrpUnicastAddress, &enrpUnicastSocket,
+                 enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket);
+   enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
+                                          SOCK_DGRAM, IPPROTO_UDP);
+   if(enrpMulticastInputSocket < 0) {
+      fputs("ERROR: Unable to create output UDP socket for ENRP!\n", stderr);
       exit(1);
    }
 
@@ -3436,9 +3473,12 @@ int main(int argc, char** argv)
    /* ====== Initialize NameServer ======================================= */
    nameServer = nameServerNew(serverID,
                               asapSocket,
+                              asapAnnounceSocket,
                               enrpUnicastSocket,
-                              asapSendAnnounces, (union sockaddr_union*)&asapAnnounceAddress,
-                              enrpUseMulticast, enrpAnnounceViaMulticast, (union sockaddr_union*)&enrpMulticastAddress
+                              enrpMulticastInputSocket,
+                              enrpMulticastOutputSocket,
+                              asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
+                              enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0]
 #ifdef ENABLE_CSP
                               , cspReportInterval, &cspReportAddress
 #endif
@@ -3474,7 +3514,7 @@ int main(int argc, char** argv)
    puts("");
    printf("ASAP Announce Address:  ");
    if(asapSendAnnounces) {
-      fputaddress((struct sockaddr*)&asapAnnounceAddress, true, stdout);
+      transportAddressBlockPrint(asapAnnounceAddress, stdout);
       puts("");
    }
    else {
@@ -3482,7 +3522,7 @@ int main(int argc, char** argv)
    }
    printf("ENRP Multicast Address: ");
    if(enrpAnnounceViaMulticast) {
-      fputaddress((struct sockaddr*)&enrpMulticastAddress, true, stdout);
+      transportAddressBlockPrint(enrpMulticastAddress, stdout);
       puts("");
    }
    else {

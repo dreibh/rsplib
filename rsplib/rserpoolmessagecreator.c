@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.17 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.18 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -504,6 +504,29 @@ static bool createPoolElementIdentifierParameter(
 }
 
 
+/* ###### Create NS identifier parameter ################################# */
+static bool createNSIdentifierParameter(
+               struct RSerPoolMessage*  message,
+               const ENRPIdentifierType nsIdentifier)
+{
+   uint32_t* identifier;
+   size_t    tlvPosition;
+
+   /* ATT_NS_IDENTIFIER is optional => Also set ATT_ACTION_CONTINUE! */
+   if(beginTLV(message, &tlvPosition, ATT_NS_IDENTIFIER|ATT_ACTION_CONTINUE) == false) {
+      return(false);
+   }
+
+   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(identifier == NULL) {
+      return(false);
+   }
+   *identifier = htonl(nsIdentifier);
+
+   return(finishTLV(message, tlvPosition));
+}
+
+
 /* ###### Create pool element checksum parameter ####################### */
 static bool createPoolElementChecksumParameter(
                struct RSerPoolMessage*       message,
@@ -846,36 +869,12 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
 /* ###### Create server announce message ################################## */
 static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 {
-   struct TransportAddressBlock* transportAddressBlock;
-   uint32_t*                     nsIdentifier;
-
-   if(message->TransportAddressBlockListPtr == NULL) {
-      LOG_ERROR
-      fputs("Invalid parameters\n", stdlog);
-      LOG_END_FATAL
-      return(false);
-   }
-
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
-
-   /* ?????? Non-standard ?????? */
-   nsIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
-   if(nsIdentifier == NULL) {
+   if(createNSIdentifierParameter(message, message->NSIdentifier) == false) {
       return(false);
    }
-   *nsIdentifier = htonl(message->NSIdentifier);
-   /* ?????????????????????????? */
-
-   transportAddressBlock = message->TransportAddressBlockListPtr;
-   while(transportAddressBlock != NULL) {
-      if(createTransportParameter(message, transportAddressBlock) == false) {
-         return(false);
-      }
-      transportAddressBlock = transportAddressBlock->Next;
-   }
-
    return(finishMessage(message));
 }
 

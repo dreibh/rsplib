@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: messagebuffer.h,v 1.2 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,6 +39,7 @@
 #define MESSAGEBUFFER_H
 
 #include "tdtypes.h"
+#include "sockaddrunion.h"
 
 
 #ifdef __cplusplus
@@ -82,6 +83,8 @@ void messageBufferDelete(struct MessageBuffer* mb);
   *
   * @param mb MessageBuffer.
   * @param fd File descriptor.
+  * @param sourceAddress Pointer to sockaddr_union to store source address to.
+  * @param sourceAddressLength Pointer to variable containing maximum source address length. Actual length will be written to it.
   * @param requiredPPID Required PPID (SCTP only).
   * @param peekTimeout Maximum timeout to peek message size.
   * @param readTimeout Maximum timeout to read complete message.
@@ -89,6 +92,8 @@ void messageBufferDelete(struct MessageBuffer* mb);
   */
 ssize_t messageBufferRead(struct MessageBuffer* mb,
                           int                   fd,
+                          union sockaddr_union* sourceAddress,
+                          socklen_t*            sourceAddressLength,
                           const uint32_t        requiredPPID,
                           const card64          peekTimeout,
                           const card64          readTimeout);

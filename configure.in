@@ -336,7 +336,7 @@ AC_CHECK_MEMBER(struct sockaddr_in.sin_len,
                  #include <sys/types.h>
                  #endif
                  #include <netinet/in.h>])
-                
+
 AC_CHECK_MEMBER(struct sockaddr_in6.sin6_len,
                 AC_DEFINE(HAVE_SIN6_LEN, 1, [Define this if your IPv6 has sin6_len in sockaddr_in6 struct.]),,
                 [#ifdef HAVE_SYS_TYPES_H

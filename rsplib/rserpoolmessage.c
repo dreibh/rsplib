@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.11 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.12 2004/11/13 03:24:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -238,12 +238,19 @@ void* getSpace(struct RSerPoolMessage* message,
       return(header);
    }
 
-   LOG_VERBOSE3
-   fprintf(stdlog,
-           "Buffer size too low!\np=%u + h=%u > size=%u\n",
-           (unsigned int)message->Position, (unsigned int)headerSize,
-           (unsigned int)message->BufferSize);
-   LOG_END
+   if(message->Position == message->BufferSize) {
+      LOG_VERBOSE4
+      fputs("End of message\n", stdlog);
+      LOG_END
+   }
+   else {
+      LOG_VERBOSE3
+      fprintf(stdlog,
+            "Buffer size too low!\np=%u + h=%u > size=%u\n",
+            (unsigned int)message->Position, (unsigned int)headerSize,
+            (unsigned int)message->BufferSize);
+      LOG_END
+   }
 
    return(NULL);
 }
