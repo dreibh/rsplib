@@ -1,5 +1,5 @@
 /*
- *  $Id: tdtypes.h,v 1.6 2004/11/11 14:27:43 dreibh Exp $
+ *  $Id: tdtypes.h,v 1.7 2004/11/11 18:19:10 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -56,7 +56,9 @@
 
 
 /* ????? In configure-Skript verschieben! ????? */
+/*
 #define ENABLE_CSP
+*/
 /*
 #define HAS_PTHREADS_RECURSIVE_MUTEX
 */
