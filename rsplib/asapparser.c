@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.c,v 1.6 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: asapparser.c,v 1.7 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -812,6 +812,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMes
    struct asap_poolelementparameter* pep;
    char                              transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct TransportAddressBlock*     newTransportAddressBlock;
    struct PoolPolicySettings         poolPolicySettings;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
@@ -845,12 +846,18 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMes
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
    }
+   newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
+   if(newTransportAddressBlock == NULL) {
+      free(poolElementNode);
+      message->Error = RSPERR_OUT_OF_MEMORY;
+      return(false);
+   }
    ST_CLASS(poolElementNodeNew)(poolElementNode,
                                 ntohl(pep->pep_identifier),
                                 ntohl(pep->pep_homeserverid),
                                 ntohl(pep->pep_reg_life),
                                 &poolPolicySettings,
-                                transportAddressBlock);
+                                newTransportAddressBlock);
    return(poolElementNode);
 }
 
@@ -1128,14 +1135,16 @@ static bool scanNameResolutionMessage(struct ASAPMessage* message)
 /* ###### Scan name resolution response message ############################# */
 static bool scanNameResolutionResponseMessage(struct ASAPMessage* message)
 {
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
+      return(false);
+   }
+
    if(!scanErrorParameter(message)) {
-      if(scanPoolHandleParameter(message, &message->Handle) == false) {
-         return(false);
-      }
       if(scanPolicyParameter(message, &message->PolicySettings) == false) {
          return(false);
       }
 
+puts("K1");
       message->PoolElementPtrArraySize = 0;
       while(message->Position < message->BufferSize) {
          if(message->PoolElementPtrArraySize >= MAX_MAX_NAME_RESOLUTION_ITEMS) {
@@ -1144,12 +1153,19 @@ static bool scanNameResolutionResponseMessage(struct ASAPMessage* message)
             LOG_END
             return(false);
          }
+puts("K2");
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
             scanPoolElementParameter(message);
+         if(message->PoolElementPtrArray[message->PoolElementPtrArraySize] == false) {
+            break;
+         }
+puts("K3");
          message->PoolElementPtrArraySize++;
       }
    }
 
+puts("K4");
+printf("elements=%d\n",message->PoolElementPtrArraySize);
    return(true);
 }
 

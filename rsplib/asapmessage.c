@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: asapmessage.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -164,9 +164,10 @@ static size_t asapMessagePeekSize(int fd, const card64 timeout)
    struct asap_header header;
    ssize_t            received;
    size_t             asapLength;
+   int                flags = MSG_PEEK;
 
    received = recvfromplus(fd,
-                           (char*)&header, sizeof(header), MSG_PEEK, NULL, 0,
+                           (char*)&header, sizeof(header), &flags, NULL, 0,
                            NULL, NULL, NULL,
                            timeout);
    if(received == sizeof(header)) {
@@ -239,6 +240,7 @@ struct ASAPMessage* asapMessageReceive(int              fd,
    card64              peekStart;
    card64              peekTime;
    card64              timeout;
+   int                 flags;
 
    peekStart = getMicroTime();
    length = asapMessagePeekSize(fd,peekTimeout);
@@ -253,8 +255,9 @@ struct ASAPMessage* asapMessageReceive(int              fd,
          else {
             timeout -= peekTime;
          }
+         flags = 0;
          received = recvfromplus(fd,
-                                 buffer, length, 0,
+                                 buffer, length, &flags,
                                  senderAddress, senderAddressLength,
                                  &ppid, &assocID, &streamID,
                                  timeout);

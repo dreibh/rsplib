@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.3 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -130,11 +130,6 @@ static void connectToPoolElement()
          printf(", Pool Element $%08x\n", eai2->ai_pe_id);
 
          if(eai2->ai_protocol == IPPROTO_SCTP) {
-            /*
-            if(!setHeartbeatInterval(DataSocket, 100)) {
-               puts("WARNING: Unable to set SCTP heartbeat interval!");
-            }
-            */
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
             tags[0].Data = 1000;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -153,6 +148,12 @@ static void connectToPoolElement()
             }
          }
          break;
+      }
+      else {
+         printf("Pool Element $%08x at ", eai2->ai_pe_id);
+         fputaddress((struct sockaddr*)&eai2->ai_addr[0],true,stdout);
+         puts(" is not answering -> reporting it as failed.");
+         rspReportFailure((unsigned char*)PoolName, strlen(PoolName), eai2->ai_pe_id, NULL);
       }
       eai2 = eai2->ai_next;
    }
@@ -255,7 +256,7 @@ static void handleServerReply()
    io.iov_base = buffer;
    io.iov_len  = sizeof(buffer) - 1;
 
-   received = ext_recvmsg(DataSocket,&msg,msg.msg_flags);
+   received = ext_recvmsg(DataSocket, &msg,msg.msg_flags);
    if(received > 0) {
       InBytes += received;
       buffer[received] = 0x00;

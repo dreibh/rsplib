@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.3 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: rspsession.c,v 1.4 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -924,6 +924,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
    sctp_assoc_t   assocID;
    unsigned short streamID;
    ssize_t        result;
+   int            flags;
 
    LOG_VERBOSE2
    fprintf(stdlog, "Trying to read message from session, socket %d\n",
@@ -959,8 +960,9 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
          fprintf(stdlog, "No message -> Trying to read up to %u bytes of user data on socket %d\n",
                  (int)length, session->Socket);
          LOG_END
+         flags  = tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL);
          result = recvfromplus(session->Socket, buffer, length,
-                               tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
+                               &flags,
                                NULL, 0,
                                &ppid, &assocID, &streamID,
                                timeout);

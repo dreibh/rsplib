@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.2 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.3 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -80,6 +80,7 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
    sctp_assoc_t     assocID;
    unsigned short   streamID;
    int64            timeout;
+   int              flags;
 
    if(mb->Position == 0) {
       LOG_VERBOSE4
@@ -87,12 +88,14 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
               sd, peekTimeout, totalTimeout);
       LOG_END
       mb->StartTimeStamp = getMicroTime();
-      received = recvfromplus(sd, (char*)&header, sizeof(header), MSG_PEEK,
+      flags = MSG_PEEK;
+      received = recvfromplus(sd, (char*)&header, sizeof(header), &flags,
                               NULL, 0, &ppid, &assocID, &streamID, peekTimeout);
       if(received > 0) {
 
 
 puts("HACK! PPID=ASAP!");
+printf("PPID=%08x\n",ppid);
 ppid=requiredPPID;
 // ???????????????????
 
@@ -120,14 +123,16 @@ ppid=requiredPPID;
             return(RspRead_WrongPPID);
          }
       }
+      /* ?????????????
       else if(errno == 0) {
+         errno = EIO;
+         return(RspRead_ReadError);
+      }
+      */
+      else if(errno == EAGAIN) {
          LOG_VERBOSE3
          fputs("Timeout while trying to read data\n", stdlog);
          LOG_END
-         errno = EAGAIN;
-         return(RspRead_Timeout);
-      }
-      else if(errno == EAGAIN) {
          return(RspRead_Timeout);
       }
       else {
@@ -147,7 +152,8 @@ ppid=requiredPPID;
       fprintf(stdlog, "Trying to read remaining %d bytes from message of length %d from socket %d, timeout %Ld [µs]\n",
               (int)mb->ToGo, (int)(mb->Position + mb->ToGo), sd, timeout);
       LOG_END
-      received = recvfromplus(sd, (char*)&mb->Buffer[mb->Position], mb->ToGo, 0,
+      flags    = 0;
+      received = recvfromplus(sd, (char*)&mb->Buffer[mb->Position], mb->ToGo, &flags,
                               NULL, 0, &ppid, &assocID, &streamID, (card64)timeout);
       if(received > 0) {
          mb->ToGo     -= received;

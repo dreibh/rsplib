@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.3 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: rsplib.c,v 1.4 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -153,22 +153,12 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
       myPolicySettings.Load            = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Load, 0);
       myPolicySettings.LoadDegradation = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_LoadDegradation, 0);
 
-puts("XXXXXXX");
-fputaddress((struct sockaddr*)endpointAddressInfo->ai_addr,true,stdout);
-puts("");
-printf("ADDRS=%d\n",endpointAddressInfo->ai_addrs);
-
       transportAddressBlockNew(myTransportAddressBlock,
                                endpointAddressInfo->ai_protocol,
                                getPort((struct sockaddr*)endpointAddressInfo->ai_addr),
                                (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
                                endpointAddressInfo->ai_addr,
                                endpointAddressInfo->ai_addrs);
-
-puts("\n");
-transportAddressBlockPrint(                               myTransportAddressBlock,stdout);
-puts("\n");
-//exit(1);
 
       ST_CLASS(poolElementNodeNew)(
          &myPoolElementNode,
@@ -233,7 +223,6 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
                                struct TagItem*              tags)
 {
    struct PoolHandle                 myPoolHandle;
-   struct TransportAddressBlock*     transportAddressBlock;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t                            poolElementNodes;
    unsigned int                      result;
@@ -254,11 +243,11 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
          if(endpointAddressInfo != NULL) {
             (*endpointAddressInfo)->ai_next     = NULL;
             (*endpointAddressInfo)->ai_pe_id    = poolElementNode->Identifier;
-            (*endpointAddressInfo)->ai_family   = transportAddressBlock->AddressArray[0].sa.sa_family;
-            (*endpointAddressInfo)->ai_protocol = transportAddressBlock->Protocol;
-            switch(transportAddressBlock->Protocol) {
+            (*endpointAddressInfo)->ai_family   = poolElementNode->AddressBlock->AddressArray[0].sa.sa_family;
+            (*endpointAddressInfo)->ai_protocol = poolElementNode->AddressBlock->Protocol;
+            switch(poolElementNode->AddressBlock->Protocol) {
                case IPPROTO_SCTP:
-                  (*endpointAddressInfo)->ai_socktype = SOCK_SEQPACKET;
+                  (*endpointAddressInfo)->ai_socktype = SOCK_STREAM;
                 break;
                case IPPROTO_TCP:
                   (*endpointAddressInfo)->ai_socktype = SOCK_STREAM;
@@ -268,12 +257,12 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
                 break;
             }
             (*endpointAddressInfo)->ai_addrlen = sizeof(struct sockaddr_storage);
-            (*endpointAddressInfo)->ai_addrs   = transportAddressBlock->Addresses;
+            (*endpointAddressInfo)->ai_addrs   = poolElementNode->AddressBlock->Addresses;
             (*endpointAddressInfo)->ai_addr    = (struct sockaddr_storage*)malloc((*endpointAddressInfo)->ai_addrs * sizeof(struct sockaddr_storage));
             if((*endpointAddressInfo)->ai_addr != NULL) {
                ptr = (char*)(*endpointAddressInfo)->ai_addr;
-               for(i = 0;i < transportAddressBlock->Addresses;i++) {
-                  memcpy((void*)ptr, (void*)&transportAddressBlock->AddressArray[i],
+               for(i = 0;i < poolElementNode->AddressBlock->Addresses;i++) {
+                  memcpy((void*)ptr, (void*)&poolElementNode->AddressBlock->AddressArray[i],
                          sizeof(union sockaddr_union));
                   ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
                }

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -221,7 +221,7 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance* asapInstanc
 
    LOG_WARNING
    fputs("Receiving response failed\n", stdlog);
-   LOG_END_FATAL
+   LOG_END
    return(RSPERR_READ_ERROR);
 }
 
@@ -261,7 +261,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance* asapInstance,
                                      uint16_t*            error)
 {
    struct ASAPMessage* response;
-   unsigned int      result = RSPERR_OKAY;
+   unsigned int        result = RSPERR_OKAY;
    cardinal            i;
 
    if(responsePtr != NULL) {
@@ -336,7 +336,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 {
    struct ASAPMessage*               message;
    struct ST_CLASS(PoolElementNode)* newPoolElement;
-   unsigned int                      ioResult;
+   unsigned int                      result;
    uint16_t                          nameServerResult;
    unsigned int                      namespaceMgtResult;
 
@@ -356,8 +356,8 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
       message->Handle         = *poolHandle;
       message->PoolElementPtr = poolElementNode;
 
-      ioResult = asapInstanceDoIO(asapInstance, message, NULL, &nameServerResult);
-      if(ioResult == RSPERR_OKAY) {
+      result = asapInstanceDoIO(asapInstance, message, NULL, &nameServerResult);
+      if(result == RSPERR_OKAY) {
          if(nameServerResult == RSPERR_OKAY) {
             namespaceMgtResult = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                                     &asapInstance->OwnPoolElements,
@@ -382,24 +382,24 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
             }
          }
          else {
-            ioResult = (unsigned int)nameServerResult;
+            result = (unsigned int)nameServerResult;
          }
       }
 
       asapMessageDelete(message);
    }
    else {
-      ioResult = RSPERR_NO_RESOURCES;
+      result = RSPERR_NO_RESOURCES;
    }
 
    LOG_ACTION
    fputs("Registration result is ", stdlog);
-   rserpoolErrorPrint(ioResult, stdlog);
+   rserpoolErrorPrint(result, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
    dispatcherUnlock(asapInstance->StateMachine);
-   return(ioResult);
+   return(result);
 }
 
 
@@ -409,7 +409,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
                                     const PoolElementIdentifierType identifier)
 {
    struct ASAPMessage* message;
-   unsigned int        ioResult;
+   unsigned int        result;
    uint16_t            nameServerResult;
    unsigned int        namespaceMgtResult;
 
@@ -427,8 +427,8 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
 
-      ioResult = asapInstanceDoIO(asapInstance, message, NULL, &nameServerResult);
-      if((ioResult == RSPERR_OKAY) && (nameServerResult == RSPERR_OKAY)) {
+      result = asapInstanceDoIO(asapInstance, message, NULL, &nameServerResult);
+      if((result == RSPERR_OKAY) && (nameServerResult == RSPERR_OKAY)) {
          namespaceMgtResult = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                                  &asapInstance->OwnPoolElements,
                                  poolHandle,
@@ -444,17 +444,17 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
       asapMessageDelete(message);
    }
    else {
-      ioResult = RSPERR_NO_RESOURCES;
+      result = RSPERR_NO_RESOURCES;
    }
 
    LOG_ACTION
    fputs("Deregistration result is ", stdlog);
-   rserpoolErrorPrint(ioResult, stdlog);
+   rserpoolErrorPrint(result, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
    dispatcherUnlock(asapInstance->StateMachine);
-   return(ioResult);
+   return(result);
 }
 
 
@@ -466,7 +466,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 {
    struct ASAPMessage*               message;
    struct ST_CLASS(PoolElementNode)* found;
-   unsigned int                      ioResult;
+   unsigned int                      result;
 
    LOG_ACTION
    fprintf(stdlog, "Failure reported for pool element $%08x of pool ",
@@ -483,11 +483,11 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
               poolHandle,
               identifier);
    if(found != NULL) {
-      ioResult = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
+      result = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                           &asapInstance->Cache,
                           poolHandle,
                           identifier);
-      CHECK(ioResult == RSPERR_OKAY);
+      CHECK(result == RSPERR_OKAY);
    }
    else {
       LOG_VERBOSE
@@ -501,11 +501,11 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
       message->Type       = AHT_ENDPOINT_UNREACHABLE;
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
-      ioResult = asapInstanceSendRequest(asapInstance, message);
+      result = asapInstanceSendRequest(asapInstance, message);
    }
 
    dispatcherUnlock(asapInstance->StateMachine);
-   return(ioResult);
+   return(result);
 }
 
 
@@ -513,53 +513,82 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstance,
                                                  struct PoolHandle*   poolHandle)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct ASAPMessage*               message;
    struct ASAPMessage*               response;
-   unsigned int                      ioResult;
+   unsigned int                      result;
    uint16_t                          nameServerResult;
-   GList*                            list;
+   size_t                            i;
 
    message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type   = AHT_NAME_RESOLUTION;
       message->Handle = *poolHandle;
 
-      ioResult = asapInstanceDoIO(asapInstance, message, &response, &nameServerResult);
-      if(ioResult == RSPERR_OKAY) {
+      result = asapInstanceDoIO(asapInstance, message, &response, &nameServerResult);
+      if(result == RSPERR_OKAY) {
          if(nameServerResult == RSPERR_OKAY) {
-            list = g_list_first(message->PoolElementListPtr);
-            while(list != NULL) {
-               poolElementNode = (struct ST_CLASS(PoolElementNode)*)list->data;
+            LOG_VERBOSE
+            fprintf(stdlog, "Got %u elements in name resolution response\n",
+                    response->PoolElementPtrArraySize);
+            LOG_END
+            for(i = 0;i < response->PoolElementPtrArraySize;i++) {
                LOG_VERBOSE2
                fputs("Adding pool element to cache: ", stdlog);
-               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+               ST_CLASS(poolElementNodePrint)(response->PoolElementPtrArray[i], stdlog, PENPO_FULL);
                fputs("\n", stdlog);
                LOG_END
-               ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                  &asapInstance->Cache,
-                  poolHandle,
-                  poolElementNode->HomeNSIdentifier,
-                  poolElementNode->Identifier,
-                  poolElementNode->RegistrationLife,
-                  &poolElementNode->PolicySettings,
-                  poolElementNode->AddressBlock,
-                  getMicroTime(),
-                  &newPoolElementNode);
-               list = g_list_next(list);
+               result = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                           &asapInstance->Cache,
+                           poolHandle,
+                           response->PoolElementPtrArray[i]->HomeNSIdentifier,
+                           response->PoolElementPtrArray[i]->Identifier,
+                           response->PoolElementPtrArray[i]->RegistrationLife,
+                           &response->PoolElementPtrArray[i]->PolicySettings,
+                           response->PoolElementPtrArray[i]->AddressBlock,
+                           getMicroTime(),
+                           &newPoolElementNode);
+               if(result != RSPERR_OKAY) {
+                  LOG_WARNING
+                  fputs("Failed to add pool element to cache: ", stdlog);
+                  ST_CLASS(poolElementNodePrint)(response->PoolElementPtrArray[i], stdlog, PENPO_FULL);
+                  fputs(": ", stdlog);
+                  rserpoolErrorPrint(result, stdlog);
+                  fputs("\n", stdlog);
+                  LOG_END
+               }
             }
+// ???????????????????????????
+//            asapMessageDelete(response);
+puts("response nicht gelöscht!");
          }
-         asapMessageDelete(response);
+         else {
+            LOG_WARNING
+            fprintf(stdlog, "Name Resolution at name server for pool ");
+            poolHandlePrint(poolHandle, stdlog);
+            fputs("failed: ", stdlog);
+            rserpoolErrorPrint(nameServerResult, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            result = nameServerResult;
+         }
       }
-
-      asapMessageDelete(message);
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "Name Resolution at name server for pool ");
+         poolHandlePrint(poolHandle, stdlog);
+         fputs("failed: ", stdlog);
+         rserpoolErrorPrint(nameServerResult, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+      }
+      asapMessageDelete(response);
    }
    else {
-      ioResult = RSPERR_NO_RESOURCES;
+      result = RSPERR_NO_RESOURCES;
    }
 
-   return(ioResult);
+   return(result);
 }
 
 
@@ -571,7 +600,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
                        size_t*                            poolElementNodes)
 {
    unsigned int result;
-   size_t         i;
+   size_t       i;
 
    dispatcherLock(asapInstance->StateMachine);
 
@@ -581,6 +610,13 @@ static unsigned int asapInstanceNameResolutionFromCache(
    fputs(":\n", stdlog);
    ST_CLASS(poolNamespaceManagementPrint)(&asapInstance->Cache,
                                           stdlog, PENPO_ONLY_POLICY);
+   LOG_END
+
+   i = ST_CLASS(poolNamespaceManagementPurgeExpiredPoolElements)(
+          &asapInstance->Cache,
+          getMicroTime());
+   LOG_VERBOSE
+   fprintf(stdlog, "Purged %u out-of-date elements\n", i);
    LOG_END
 
    if(ST_CLASS(poolNamespaceManagementNameResolution)(
@@ -617,6 +653,7 @@ unsigned int asapInstanceNameResolution(
                 size_t*                            poolElementNodes)
 {
    unsigned int result;
+   const size_t originalPoolElementNodes = *poolElementNodes;
 
    LOG_VERBOSE
    fputs("Trying name resolution from cache...\n", stdlog);
@@ -630,6 +667,11 @@ unsigned int asapInstanceNameResolution(
       LOG_VERBOSE
       fputs("No results in cache. Trying name resolution at name server...\n", stdlog);
       LOG_END
+
+      /* The amount is now 0 (since name resolution was not successful).
+         Set it to its original value. */
+      *poolElementNodes = originalPoolElementNodes;
+
       result = asapInstanceDoNameResolution(asapInstance, poolHandle);
       if(result == RSPERR_OKAY) {
          result = asapInstanceNameResolutionFromCache(

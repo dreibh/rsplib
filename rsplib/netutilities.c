@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: netutilities.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -965,7 +965,7 @@ int sendtoplus(int                 sockfd,
 int recvfromplus(int              sockfd,
                  void*            buffer,
                  size_t           length,
-                 int              flags,
+                 int*             flags,
                  struct sockaddr* from,
                  socklen_t*       fromlen,
                  uint32_t*        ppid,
@@ -987,7 +987,7 @@ int recvfromplus(int              sockfd,
       (fromlen != NULL) ? *fromlen : 0,
       &iov, 1,
       cbuf, cmsglen,
-      flags
+      *flags
    };
    struct timeval selectTimeout;
    fd_set         fdset;
@@ -1004,7 +1004,7 @@ int recvfromplus(int              sockfd,
    LOG_END
 
    setNonBlocking(sockfd);
-   cc = ext_recvmsg(sockfd, &msg, flags);
+   cc = ext_recvmsg(sockfd, &msg, *flags);
    if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE5
       fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %Ld [µs]...\n",
@@ -1024,7 +1024,7 @@ int recvfromplus(int              sockfd,
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
          LOG_END
-         cc = ext_recvmsg(sockfd, &msg, flags);
+         cc = ext_recvmsg(sockfd, &msg, *flags);
       }
       else {
          LOG_VERBOSE5
@@ -1059,6 +1059,7 @@ int recvfromplus(int              sockfd,
    if(fromlen != NULL) {
       *fromlen = msg.msg_namelen;
    }
+   *flags = msg.msg_flags;
 
    return(cc);
 }
@@ -1147,6 +1148,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
 
    size = sizeof(rtoinfo);
    rtoinfo.srto_assoc_id = assocID;
+printf("ASSSOC=%d\n",assocID);
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0) {
       LOG_VERBOSE3
       fprintf(stdlog, "  Current RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
@@ -1177,7 +1179,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    }
    else {
       LOG_VERBOSE2
-      fputs("Cannot get RTO info -> Skipping RTO info configuration", stdlog);
+      logerror("Cannot get RTO info -> Skipping RTO info configuration");
       LOG_END
    }
 
@@ -1217,7 +1219,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    }
    else {
       LOG_VERBOSE2
-      fputs("Cannot get Assoc info -> Skipping Assoc info configuration", stdlog);
+      logerror("Cannot get Assoc info -> Skipping Assoc info configuration");
       LOG_END
    }
 
@@ -1269,8 +1271,9 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       free(addrs);
    }
    else {
-      LOG_VERBOSE2
-      fputs("No peer addresses -> skipping peer parameters", stdlog);
+      //LOG_VERBOSE2  ?????
+      LOG_ERROR
+      fputs("No peer addresses -> skipping peer parameters\n", stdlog);
       LOG_END
    }
 
@@ -1333,10 +1336,8 @@ int establish(const int                socketDomain,
             LOG_END
             return(-1);
          }
-         printf("connect...");
          result = ext_connect(sockfd, (struct sockaddr*)&addressArray[0],
-                                      getSocklen((struct sockaddr*)&addressArray[0]));
-         printf("res=%d  %d  %s  %d\n",result,errno,strerror(errno),errno);
+                              getSocklen((struct sockaddr*)&addressArray[0]));
       }
       if( (((result < 0) && (errno == EINPROGRESS)) || (result >= 0)) ) {
          FD_ZERO(&fdset);
@@ -1348,11 +1349,14 @@ int establish(const int                socketDomain,
                  ((card64)to.tv_sec * (card64)1000000) + (card64)to.tv_usec);
          LOG_END
          result = ext_select(sockfd + 1, NULL, &fdset, NULL, &to);
+         LOG_VERBOSE2
+         fprintf(stdlog, "result=%d\n", result);
+         LOG_END
          if(result > 0) {
             peerAddressLen = sizeof(peerAddress);
             if(ext_getpeername(sockfd, (struct sockaddr*)&peerAddress, &peerAddressLen) >= 0) {
                LOG_VERBOSE2
-               fputs("Successfully establishment connection to address(es) {", stdlog);
+               fputs("Successfully established connection to address(es) {", stdlog);
                for(i = 0;i < addresses;i++) {
                   fputaddress((struct sockaddr*)&addressArray[i], false, stdlog);
                   if(i + 1 < addresses) {
@@ -1377,10 +1381,15 @@ int establish(const int                socketDomain,
                LOG_END
             }
          }
+         else {
+            LOG_VERBOSE2
+            fputs("select() call timed out\n", stdlog);
+            LOG_END
+         }
       }
 
       LOG_VERBOSE2
-      logerror("connect()/connectx() failed");
+      fputs("connect()/connectx() failed\n", stdlog);
       LOG_END
       ext_close(sockfd);
    }

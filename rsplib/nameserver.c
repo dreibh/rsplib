@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: nameserver.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,8 +58,12 @@
 /* Exit immediately on Ctrl-C. No clean shutdown. */
 #define FAST_BREAK
 
-#define MAX_NS_TRANSPORTADDRESSES 16
-
+#define MAX_NS_TRANSPORTADDRESSES             16
+#define NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL          2000000
+#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL          100000
+#define NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL        5000000
+#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT        12000000
+#define NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT  3000000
 
 
 struct NameServer
@@ -79,16 +83,11 @@ struct NameServer
    struct Timer*                            NamespaceActionTimer;
 
    card64                                   AnnounceInterval;
+   card64                                   HeartbeatInterval;
    card64                                   KeepAliveInterval;
    card64                                   KeepAliveTimeout;
    card64                                   MessageReceptionTimeout;
 };
-
-
-#define NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL          2000000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL        5000000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT        12000000
-#define NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT  3000000
 
 
 struct NameServer* nameServerNew(int                           nameServerSocket,
@@ -134,6 +133,7 @@ struct NameServer* nameServerNew(int                           nameServerSocket,
       nameServer->KeepAliveInterval       = NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL;
       nameServer->KeepAliveTimeout        = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT;
       nameServer->AnnounceInterval        = NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL;
+      nameServer->HeartbeatInterval       = NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL;
       nameServer->MessageReceptionTimeout = NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT;
 
       nameServer->SendAnnounces           = sendAnnounces;
@@ -297,6 +297,7 @@ static size_t filterValidAddresses(
    if(selected > 0) {
       validAddressBlock->Next      = NULL;
       validAddressBlock->Protocol  = sourceAddressBlock->Protocol;
+      validAddressBlock->Port      = sourceAddressBlock->Port;
       validAddressBlock->Flags     = 0;
       validAddressBlock->Addresses = selected;
       j = 0;
@@ -324,6 +325,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
    struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct sockaddr_storage*          addressArray;
+   struct TagItem                    tags[8];
    int                               addresses;
    int                               i;
 
@@ -345,7 +347,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
    addresses = getpaddrsplus(fd, assocID, &addressArray);
    if(addresses > 0) {
       LOG_VERBOSE1
-      fputs("SCTP association's peer addresses:\n", stdlog);
+      fputs("SCTP association's valid peer addresses:\n", stdlog);
       for(i = 0;i < addresses;i++) {
          fprintf(stdlog, "%d/%d: ",i + 1,addresses);
          fputaddress((struct sockaddr*)&addressArray[i],false, stdlog);
@@ -363,15 +365,15 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
          LOG_END
 
          message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                           &nameServer->Namespace,
-                           &message->Handle,
-                           nameServer->ServerID,
-                           message->PoolElementPtr->Identifier,
-                           message->PoolElementPtr->RegistrationLife,
-                           &message->PoolElementPtr->PolicySettings,
-                           validAddressBlock,
-                           getMicroTime(),
-                           &poolElementNode);
+                             &nameServer->Namespace,
+                             &message->Handle,
+                             nameServer->ServerID,
+                             message->PoolElementPtr->Identifier,
+                             message->PoolElementPtr->RegistrationLife,
+                             &message->PoolElementPtr->PolicySettings,
+                             validAddressBlock,
+                             getMicroTime(),
+                             &poolElementNode);
          if(message->Error == RSPERR_OKAY) {
             LOG_ACTION
             fputs("Successfully registered to pool ", stdlog);
@@ -384,6 +386,24 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
             fputs("Namespace content:\n", stdlog);
             nameServerDump(nameServer);
             LOG_END
+
+
+            tags[0].Tag  = TAG_TuneSCTP_Heartbeat;
+            tags[0].Data = (nameServer->HeartbeatInterval / 1000);
+            tags[1].Tag  = TAG_TuneSCTP_PathMaxRXT;
+            tags[1].Data = 2;
+            tags[2].Tag  = TAG_TuneSCTP_AssocMaxRXT;
+            tags[2].Data = 3;
+            tags[3].Tag  = TAG_DONE;
+            if(!tuneSCTP(fd, assocID, (struct TagItem*)&tags)) {
+               LOG_WARNING
+               fprintf(stdlog, "Unable to tune SCTP association %u's parameters\n",
+                       assocID);
+               LOG_END
+            }
+
+
+
          }
          else {
             LOG_WARNING
@@ -482,13 +502,13 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
                                         sctp_assoc_t        assocID,
                                         struct ASAPMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS],
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS];
    size_t                            poolElementNodes = NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS;
-   GList*                            poolElementList  = NULL;
+   size_t                            i;
 
    LOG_ACTION
    fprintf(stdlog, "Name Resolution request for pool ");
-   poolHandlePrint(message->PoolHandlePtr, stdlog);
+   poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
@@ -502,7 +522,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
                        NAMERESOLUTION_MAX_INCREMENT);
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE
-      fprintf(stdlog, "Got %u elements:\n", poolElementNodes);
+      fprintf(stdlog, "Got %u element(s):\n", poolElementNodes);
       for(i = 0;i < poolElementNodes;i++) {
          fprintf(stdlog, "#%02u: ", i + 1);
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
@@ -511,6 +531,10 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
          fputs("\n", stdlog);
       }
       LOG_END
+
+      if(poolElementNodes > 0) {
+         message->PolicySettings = poolElementNodeArray[0]->PolicySettings;
+      }
 
       message->PoolElementPtrArrayAutoDelete = false;
       message->PoolElementPtrArraySize       = poolElementNodes;
@@ -527,7 +551,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
    else {
       LOG_WARNING
       fprintf(stdlog, "Name Resolution request for pool ");
-      poolHandlePrint(message->PoolHandlePtr, stdlog);
+      poolHandlePrint(&message->Handle, stdlog);
       fputs(" failed: ", stdlog);
       rserpoolErrorPrint(message->Error, stdlog);
       fputs("\n", stdlog);
@@ -640,51 +664,39 @@ static void handleMessage(struct NameServer*  nameServer,
                           struct ASAPMessage* message,
                           int                 sd)
 {
-      switch(message->Type) {
-         case AHT_ENDPOINT_KEEP_ALIVE:
-            puts("KeepAlive request received!");
-          break;
-         case AHT_REGISTRATION:
-            handleRegistrationRequest(nameServer, sd, message->AssocID, message);
-          break;
-         case AHT_DEREGISTRATION:
-            handleDeregistrationRequest(nameServer, sd, message->AssocID, message);
-          break;
-/*
-         case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-            endpointKeepAliveAck(nameServer,user,fd,message);
-          break;
-         case AHT_NAME_RESOLUTION:
-            reply = nameResolutionRequest(nameServer,user,fd,message);
-          break;
-         case AHT_NAME_RESOLUTION_RESPONSE:
-            break;
-         case AHT_REGISTRATION:
-            reply = registrationRequest(nameServer,user,fd,message);
-          break;
-         case AHT_DEREGISTRATION:
-            reply = deregistrationRequest(nameServer,user,fd,message);
-          break;
-*/
-         default:
-            LOG_WARNING
-            fprintf(stdlog, "Unsupported message type $%02x!\n",
-                     message->Type);
-            LOG_END
-          break;
-      }
-/* ??????????????
-      if(reply) {
-         if(asapMessageSend(fd, 0, message) == false) {
-            LOG_WARNING
-            logerror("Sending reply failed. Closing connection");
-            LOG_END
-            removeUser(nameServer,user);
-         }
-      }
-*/
-//      asapMessageDelete(message);
-//   }
+   switch(message->Type) {
+      case AHT_ENDPOINT_KEEP_ALIVE:
+         puts("KeepAlive request received!");
+       break;
+      case AHT_REGISTRATION:
+         handleRegistrationRequest(nameServer, sd, message->AssocID, message);
+       break;
+      case AHT_NAME_RESOLUTION:
+         handleNameResolutionRequest(nameServer, sd, message->AssocID, message);
+       break;
+      case AHT_DEREGISTRATION:
+         handleDeregistrationRequest(nameServer, sd, message->AssocID, message);
+       break;
+    /*
+      case AHT_ENDPOINT_KEEP_ALIVE_ACK:
+         endpointKeepAliveAck(nameServer,user,fd,message);
+       break;
+      case AHT_NAME_RESOLUTION_RESPONSE:
+         break;
+      case AHT_REGISTRATION:
+         reply = registrationRequest(nameServer,user,fd,message);
+       break;
+      case AHT_DEREGISTRATION:
+         reply = deregistrationRequest(nameServer,user,fd,message);
+       break;
+    */
+      default:
+         LOG_WARNING
+         fprintf(stdlog, "Unsupported message type $%02x!\n",
+                  message->Type);
+         LOG_END
+       break;
+   }
 }
 
 
@@ -698,56 +710,55 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
    struct ASAPMessage*     message;
    struct sockaddr_storage remoteAddress;
    socklen_t               remoteAddressLength;
+   char                    buffer[65536];
+   int                     flags;
+   uint32_t                ppid;
+   sctp_assoc_t            assocID;
+   unsigned short          streamID;
+   ssize_t                 received;
 
    if(fd == nameServer->NameServerSocket) {
       LOG_ACTION
       fputs("Event on name server socket...\n", stdlog);
       LOG_END
 
-      message = asapMessageReceive(nameServer->NameServerSocket,
-                                   0, 0,
-                                   65536,
-                                   (struct sockaddr*)&remoteAddress,
-                                   &remoteAddressLength);
-      if(message) {
-/*
-
-
-struct ASAPMessage* asapMessageReceive(int              fd,
-                                       const card64     peekTimeout,
-                                       const card64     totalTimeout,
-                                       const size_t     minBufferSize,
-                                       struct sockaddr* senderAddress,
-                                       socklen_t*       senderAddressLength)
-
-      received = recvfromplus(nameServer->NameServerSocket,
-                              &buffer,
-                              sizeof(buffer),
-                              0,
+      flags               = 0;
+      remoteAddressLength = sizeof(remoteAddress);
+      received = recvfromplus(fd,
+                              (char*)&buffer, sizeof(buffer), &flags,
                               (struct sockaddr*)&remoteAddress,
                               &remoteAddressLength,
-                              &ppid,
-                              &assocID,
-                              &streamID,
+                              &ppid, &assocID, &streamID,
                               0);
       if(received > 0) {
-*/
-         LOG_VERBOSE
-         fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
-         fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
-         fprintf(stdlog, ", assoc #%u, PPID $%x\n",
-                 message->AssocID, message->PPID);
-         LOG_END
+         if(!(flags & MSG_NOTIFICATION)) {
+            message = asapPacket2Message(buffer, received, sizeof(buffer));
+            if(message != NULL) {
+               message->BufferAutoDelete = false;
+               message->PPID             = ppid;
+               message->AssocID          = assocID;
+               message->StreamID         = streamID;
+               LOG_VERBOSE
+               fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
+               fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
+               fprintf(stdlog, ", assoc #%u, PPID $%x\n",
+                       message->AssocID, message->PPID);
+               LOG_END
 
-         handleMessage(nameServer, message, nameServer->NameServerSocket);
-         asapMessageDelete(message);
+               handleMessage(nameServer, message, nameServer->NameServerSocket);
+
+               asapMessageDelete(message);
+            }
+         }
+         else {
+            puts("NOTIF!");
+         }
       }
       else {
          LOG_WARNING
          logerror("Unable to read from name server socket");
          LOG_END
       }
-
    }
    else {
       CHECK(false);
@@ -781,6 +792,8 @@ int main(int argc, char** argv)
    struct TransportAddressBlock* sctpAddress = (struct TransportAddressBlock*)&sctpAddressBuffer;
    struct sockaddr_storage       announceAddress;
    bool                          hasAnnounceAddress = false;
+   sctp_event_subscribe          sctpEvents;
+   int                           autoCloseTimeout;
 
    struct sockaddr_storage* localAddressArray;
    char*                    address;
@@ -872,6 +885,26 @@ int main(int argc, char** argv)
                perror("listen() call failed");
                exit(1);
             }
+            bzero(&sctpEvents, sizeof(sctpEvents));
+            sctpEvents.sctp_data_io_event = 1;
+            sctpEvents.sctp_association_event = 1;
+            sctpEvents.sctp_address_event = 1;
+            sctpEvents.sctp_send_failure_event = 1;
+            sctpEvents.sctp_peer_error_event = 1;
+            sctpEvents.sctp_shutdown_event = 1;
+            sctpEvents.sctp_partial_delivery_event = 1;
+            sctpEvents.sctp_adaption_layer_event = 1;
+            if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
+               perror("setsockopt() for SCTP_EVENTS failed");
+               exit(1);
+            }
+            /*
+            autoCloseTimeout = 2 * (NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL / 1000000);
+            if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
+               perror("setsockopt() for SCTP_AUTOCLOSE failed");
+               exit(1);
+            }
+            */
          }
          else {
             puts("ERROR: Unable to create SCTP socket!");

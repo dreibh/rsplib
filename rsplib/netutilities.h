@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.3 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: netutilities.h,v 1.4 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -281,7 +281,7 @@ int sendtoplus(int                 sockfd,
   * @param sockfd Socket descriptor.
   * @param buffer Buffer to store read data to.
   * @param length Length of buffer.
-  * @param flags recvmsg() flags.
+  * @param flags recvmsg() flags. ??????????????
   * @param from Reference to store source address to or NULL if not necessary.
   * @param fromlen Reference to store source address length to or NULL if not necessary.
   * @param ppid Reference to store SCTP Payload Protocol Identifier to.
@@ -294,7 +294,7 @@ int sendtoplus(int                 sockfd,
 int recvfromplus(int              sockfd,
                  void*            buffer,
                  size_t           length,
-                 int              flags,
+                 int*             flags,
                  struct sockaddr* from,
                  socklen_t*       fromlen,
                  uint32_t*        ppid,

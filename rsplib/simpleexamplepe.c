@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.4 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.5 2004/07/20 15:35:15 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -285,7 +285,7 @@ static void cleanUp()
    list = g_list_first(ClientList);
    while(list != NULL) {
       fd = (int)list->data;
-      ClientList = g_list_remove(ClientList,(gpointer)fd);
+      ClientList = g_list_remove(ClientList, (gpointer)fd);
       ext_close(fd);
       printTimeStamp(stdout);
       printf("Removed client #%d.\n",fd);
@@ -323,18 +323,18 @@ static void initAll()
    setNonBlocking(ListenSocket);
 
 
-   memset((void*)&localAddress,0,sizeof(localAddress));
+   memset((void*)&localAddress, 0, sizeof(localAddress));
    ((struct sockaddr*)&localAddress)->sa_family = ListenSocketFamily;
    setPort((struct sockaddr*)&localAddress,ListenPort);
 
-   if(bindplus(ListenSocket,(struct sockaddr_storage*)&localAddress,1) == false) {
+   if(bindplus(ListenSocket, (struct sockaddr_storage*)&localAddress, 1) == false) {
       perror("Unable to bind application socket");
       cleanUp();
       exit(1);
    }
 
    if(ListenSocketType != SOCK_DGRAM) {
-      if(ext_listen(ListenSocket,5) < 0) {
+      if(ext_listen(ListenSocket, 5) < 0) {
          perror("Unable to set application socket to listen mode");
          cleanUp();
          exit(1);
@@ -367,21 +367,23 @@ static void socketHandler(int fd)
    socklen_t                  addressSize;
    ssize_t                    received;
    int                        sd;
+   int                        flags;
 
    if(ListenSocketType != SOCK_DGRAM) {
       if(fd == ListenSocket) {
-         sd = ext_accept(ListenSocket,NULL,0);
+         sd = ext_accept(ListenSocket,NULL, 0);
          if(sd >= 0) {
-            ClientList = g_list_append(ClientList,(gpointer)sd);
+            ClientList = g_list_append(ClientList, (gpointer)sd);
             setNonBlocking(sd);
 
             printTimeStamp(stdout);
-            printf("Added client #%d.\n",sd);
+            printf("Added client #%d.\n", sd);
          }
       }
       else {
-         if(g_list_find(ClientList,(gpointer)fd) != NULL) {
-            received = recvfromplus(fd, (char*)&buffer, sizeof(buffer) - 1, 0,
+         if(g_list_find(ClientList, (gpointer)fd) != NULL) {
+            flags    = 0;
+            received = recvfromplus(fd, (char*)&buffer, sizeof(buffer) - 1, &flags,
                                     NULL, 0,
                                     NULL, NULL, NULL,
                                     0);
@@ -391,17 +393,18 @@ static void socketHandler(int fd)
                   buffer[received] = 0x00;
                   printf("Echo> %s",buffer);
 
-                  ext_send(fd,(char*)&buffer,received,0);
+                  ext_send(fd, (char*)&buffer,received, 0);
                }
                else {
-                  ClientList = g_list_remove(ClientList,(gpointer)fd);
+                  ClientList = g_list_remove(ClientList, (gpointer)fd);
                   ext_close(fd);
 
                   printTimeStamp(stdout);
                   printf("Removed client #%d.\n",fd);
                   break;
                }
-               received = recvfromplus(fd, (char*)&buffer, sizeof(buffer) - 1, 0,
+               flags    = 0;
+               received = recvfromplus(fd, (char*)&buffer, sizeof(buffer) - 1, &flags,
                                        NULL, 0,
                                        NULL, NULL, NULL,
                                        0);
@@ -521,7 +524,7 @@ int main(int argc, char** argv)
             PolicyType = PPT_WEIGHTED_RANDOM;
          }
          else {
-            printf("ERROR: Unknown policy type \"%s\"!\n",(char*)&argv[n][8]);
+            printf("ERROR: Unknown policy type \"%s\"!\n", (char*)&argv[n][8]);
             exit(1);
          }
       }
@@ -556,7 +559,7 @@ int main(int argc, char** argv)
       list = g_list_first(ClientList);
       while(list != NULL) {
          FD_SET((int)list->data,&readfdset);
-         n = max(n,(int)list->data);
+         n = max(n, (int)list->data);
          list = g_list_next(list);
       }
 
