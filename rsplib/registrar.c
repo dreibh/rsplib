@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.4 2005/03/02 13:34:16 dreibh Exp $
+ *  $Id: registrar.c,v 1.5 2005/03/02 17:01:02 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3082,8 +3082,10 @@ static size_t registrarGetReportFunction(
    pools        = ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace);
    poolElements = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
    snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
-            "%u PEs in %u Pools, %u Peers",
-            poolElements, pools, peers);
+            "%u PEs in %u Pool%s, %u Peer%s",
+            poolElements,
+	    pools, (pools == 1) ? "" : "s",
+	    peers, (peers == 1) ? "" : "s");
    componentStatusGetComponentAddress(componentAddress, registrar->ASAPSocket, 0);
 
    *caeArray    = componentAssociationEntryArrayNew(peers);
