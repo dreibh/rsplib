@@ -85,6 +85,7 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder)(
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t                            poolElementNodes;
    size_t                            i;
+   size_t                            elementsToUpdate;
 
 
    /* Check, if resequencing is necessary. However, using 64 bit counters,
@@ -105,25 +106,26 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder)(
    poolElementNode  = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(poolNode);
    while((poolElementNodes < maxPoolElementNodes) && (poolElementNode != NULL)) {
       poolElementNodeArray[poolElementNodes] = poolElementNode;
-
-      if(poolElementNodes < maxIncrement) {
-         /* Common update functionality: SeqNumber increment and Selection Counter */
-         poolElementNodeArray[poolElementNodes]->SeqNumber =
-            poolNode->GlobalSeqNumber++;
-         poolElementNodeArray[poolElementNodes]->SelectionCounter++;
-
-         /* Policy-specifc pool element node updates (e.g. counter changes) */
-         if(poolNode->Policy->UpdatePoolElementNodeFunction) {
-            poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNode);
-         }
-      }
-
       poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
       poolElementNodes++;
    }
 
-   for(i = 0;i < ((poolElementNodes < maxIncrement) ? poolElementNodes : maxIncrement);i++) {
+
+   elementsToUpdate = poolElementNodes;
+   if(elementsToUpdate > maxIncrement) {
+      elementsToUpdate = maxIncrement;
+   }
+   for(i = 0;i < elementsToUpdate;i++) {
       ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(poolNode, poolElementNodeArray[i]);
+
+      poolElementNodeArray[i]->SeqNumber = poolNode->GlobalSeqNumber++;
+      poolElementNodeArray[i]->SelectionCounter++;
+
+      /* Policy-specifc pool element node updates (e.g. counter changes) */
+      if(poolNode->Policy->UpdatePoolElementNodeFunction) {
+         poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNodeArray[i]);
+      }
+
       ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(poolNode, poolElementNodeArray[i]);
    }
 
