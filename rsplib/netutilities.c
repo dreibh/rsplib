@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.25 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: netutilities.c,v 1.26 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -882,7 +882,7 @@ int sendtoplus(int                      sockfd,
                const unsigned long long timeout)
 {
    union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
-   size_t                 addresses;
+   size_t                 addresses = 0;
    struct sctp_sndrcvinfo sri;
    struct timeval         selectTimeout;
    fd_set                 fdset;
@@ -892,7 +892,7 @@ int sendtoplus(int                      sockfd,
 
    LOG_VERBOSE4
    fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u toaddrs=%p toaddrcnt=%u...\n",
-           sockfd, assocID, (unsigned int)length, ppid, streamID, toaddrs, toaddrcnt);
+           sockfd, (unsigned int)assocID, (unsigned int)length, ppid, streamID, toaddrs, (unsigned int)toaddrcnt);
    LOG_END
 
    setNonBlocking(sockfd);
@@ -911,7 +911,7 @@ int sendtoplus(int                      sockfd,
          addresses = min(toaddrcnt, MAX_TRANSPORTADDRESSES);
          for(i = 0;i < addresses;i++) {
             LOG_VERBOSE5
-            fprintf(stdlog, "Address #%u is ", i + 1);
+            fprintf(stdlog, "Address #%u is ", (unsigned int)i + 1);
             fputaddress(&toaddrs[i].sa, true, stdlog);
             fputs("\n", stdlog);
             LOG_END
@@ -957,8 +957,8 @@ int sendtoplus(int                      sockfd,
 
    if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE4
-      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %Ld [탎]...\n",
-              sockfd, assocID, timeout);
+      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %lld [탎]...\n",
+              sockfd, (unsigned int)assocID, timeout);
       LOG_END
 
       FD_ZERO(&fdset);
@@ -1002,7 +1002,7 @@ int sendtoplus(int                      sockfd,
 
    LOG_VERBOSE4
    fprintf(stdlog, "sendmsg(%d/A%u) result=%d; %s\n",
-           sockfd, assocID, result, strerror(errno));
+           sockfd, (unsigned int)assocID, result, strerror(errno));
    LOG_END
 
    return(result);
@@ -1010,16 +1010,16 @@ int sendtoplus(int                      sockfd,
 
 
 /* ###### recvmsg() wrapper ############################################## */
-int recvfromplus(int              sockfd,
-                 void*            buffer,
-                 size_t           length,
-                 int*             flags,
-                 struct sockaddr* from,
-                 socklen_t*       fromlen,
-                 uint32_t*        ppid,
-                 sctp_assoc_t*    assocID,
-                 uint16_t*        streamID,
-                 const unsigned long long     timeout)
+int recvfromplus(int                      sockfd,
+                 void*                    buffer,
+                 size_t                   length,
+                 int*                     flags,
+                 struct sockaddr*         from,
+                 socklen_t*               fromlen,
+                 uint32_t*                ppid,
+                 sctp_assoc_t*            assocID,
+                 uint16_t*                streamID,
+                 const unsigned long long timeout)
 {
    struct sctp_sndrcvinfo* sri;
    struct iovec    iov = { (char*)buffer, length };
@@ -1027,11 +1027,7 @@ int recvfromplus(int              sockfd,
    size_t          cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
    char            cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
    struct msghdr msg = {
-#ifdef __APPLE__
-      (char*)from,
-#else
-      from,
-#endif
+      (caddr_t*)from,
       (fromlen != NULL) ? *fromlen : 0,
       &iov, 1,
       cbuf, cmsglen,
@@ -1055,7 +1051,7 @@ int recvfromplus(int              sockfd,
    cc = ext_recvmsg(sockfd, &msg, *flags);
    if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE5
-      fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %Ld [탎]...\n",
+      fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %lld [탎]...\n",
               sockfd, timeout);
       LOG_END
 
@@ -1072,7 +1068,7 @@ int recvfromplus(int              sockfd,
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
          LOG_END
-         msg.msg_name       = from;
+         msg.msg_name       = (caddr_t*)from;
          msg.msg_namelen    = (fromlen != NULL) ? *fromlen : 0;
          iov.iov_base       = (char*)buffer;
          iov.iov_len        = length;
@@ -1113,7 +1109,7 @@ int recvfromplus(int              sockfd,
          if(assocID  != NULL) *assocID  = sri->sinfo_assoc_id;
          LOG_VERBOSE4
          fprintf(stdlog, "SCTP_SNDRCV: ppid=$%08x streamID=%u assocID=%u\n",
-                 sri->sinfo_ppid, sri->sinfo_stream, sri->sinfo_assoc_id);
+                 sri->sinfo_ppid, sri->sinfo_stream, (unsigned int)sri->sinfo_assoc_id);
          LOG_END
       }
    }
@@ -1336,7 +1332,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
          size = sizeof(peerParams);
 
          if(sctp_opt_info(sockfd, assocID, SCTP_PEER_ADDR_PARAMS,
-                          (void*)&peerParams, (socklen_t *)&size) == 0) {
+                          (void*)&peerParams, &size) == 0) {
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
@@ -1349,7 +1345,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
             peerParams.spp_pathmaxrxt = tagListGetData(tags, TAG_TuneSCTP_PathMaxRXT, peerParams.spp_pathmaxrxt);;
 
             if(sctp_opt_info(sockfd, 0, SCTP_PEER_ADDR_PARAMS,
-                             (void *)&peerParams, (socklen_t *)&size) < 0) {
+                             (void *)&peerParams, &size) < 0) {
                LOG_VERBOSE2
                fputs("Unable to set peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
@@ -1453,7 +1449,7 @@ int establish(const int             socketDomain,
          to.tv_sec  = timeout / 1000000;
          to.tv_usec = timeout % 1000000;
          LOG_VERBOSE2
-         fprintf(stdlog, "Waiting for association establishment with timeout %Ld [탎]...\n",
+         fprintf(stdlog, "Waiting for association establishment with timeout %lld [탎]...\n",
                  ((unsigned long long)to.tv_sec * (unsigned long long)1000000) + (unsigned long long)to.tv_usec);
          LOG_END
          result = ext_select(sockfd + 1, NULL, &fdset, NULL, &to);

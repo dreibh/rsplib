@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.5 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.6 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -201,7 +201,7 @@ static void handleStdIn()
    char   buffer[8192];
    size_t lineNumberLength;
 
-   snprintf((char*)&buffer,sizeof(buffer),"%09Ld ",++OutCalls);
+   snprintf((char*)&buffer,sizeof(buffer),"%09lld ",++OutCalls);
    lineNumberLength = strlen(buffer);
 
    setNonBlocking(STDIN_FILENO);
@@ -222,7 +222,7 @@ static void handleAutoTimer()
    char   buffer[512];
    size_t lineNumberLength;
 
-   snprintf((char*)&buffer, sizeof(buffer),"%09Ld ", ++OutCalls);
+   snprintf((char*)&buffer, sizeof(buffer),"%09lld ", ++OutCalls);
    lineNumberLength = strlen(buffer);
 
    snprintf((char*)&buffer[lineNumberLength],sizeof(buffer) - lineNumberLength,"This is a test!\n");
@@ -262,14 +262,14 @@ static void handleServerReply()
       buffer[received] = 0x00;
 
 /*
-      printf("[in=%Ld out=%Ld] P%Ld.%Ld> ",
+      printf("[in=%lld out=%lld] P%lld.%lld> ",
              (card64)InBytes, (card64)OutBytes,
              (card64)Handle, (card64)counter++);
 */
-      printf("[in=%Ld",InBytes);
-      printf(" out=%Ld] P",OutBytes);
+      printf("[in=%lld",InBytes);
+      printf(" out=%lld] P",OutBytes);
       printf("$%08x.",Identifier);
-      printf("%Ld> ",counter++);
+      printf("%lld> ",counter++);
       puts(buffer);
       fflush(stdout);
    }

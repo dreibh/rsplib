@@ -56,7 +56,7 @@ int main(int argc, char** argv)
             timeout.tv_usec = 1;
             result = rspSelect(fd + 1,&r,NULL,NULL,&timeout);
             if(result > 0) {
-               printf("Durchläufe: %Ld\n",z);
+               printf("Durchläufe: %lld\n",z);
                if(FD_ISSET(fd,&r)) {
                   fd2 = ext_accept(fd,NULL,0);
                   printf("fd2=%d\n",fd2);
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
             else {
                z++;
                // now = getMicroTime();
-               //printf("%Ld\n",now - start);
+               //printf("%lld\n",now - start);
             }
          }
          }

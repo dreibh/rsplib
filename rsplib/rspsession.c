@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.20 2004/11/09 20:00:31 dreibh Exp $
+ *  $Id: rspsession.c,v 1.21 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -784,7 +784,7 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       else if(result == RSPERR_NOT_FOUND) {
          LOG_ACTION
          fprintf(stdlog,
-                 "Name resolution did not find new pool element. Waiting %Ldµs...\n",
+                 "Name resolution did not find new pool element. Waiting %lldµs...\n",
                  session->NameResolutionRetryDelay);
          LOG_END
          usleep(session->NameResolutionRetryDelay);
@@ -1309,7 +1309,7 @@ size_t rspSessionCreateComponentStatus(
 
       if((statusText[0] == 0x00) || (sessions != 1)) {
          snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
-                  "%u Session%s", sessions, (sessions == 1) ? "" : "s");
+                  "%u Session%s", (unsigned int)sessions, (sessions == 1) ? "" : "s");
       }
    }
 

@@ -105,7 +105,7 @@ void ST_CLASS(poolNodeGetDescription)(struct ST_CLASS(PoolNode)* poolNode,
             poolNode->Policy->Name,
             protocol,
             ((poolNode->Flags & PNF_CONTROLCHANNEL) ? "yes" : "no"),
-            ST_CLASS(poolNodeGetPoolElementNodes)(poolNode));
+            (unsigned int)ST_CLASS(poolNodeGetPoolElementNodes)(poolNode));
    safestrcat(buffer, poolDescription, bufferSize);
 }
 
@@ -130,7 +130,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       i               = 1;
       poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
       while(poolElementNode != NULL) {
-         fprintf(fd, "   - idx:#%04u: ", i++);
+         fprintf(fd, "   - idx:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
          puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
@@ -141,7 +141,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       i               = 1;
       poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(poolNode);
       while(poolElementNode != NULL) {
-         fprintf(fd, "   - sel:#%04u: ", i++);
+         fprintf(fd, "   - sel:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
          puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);

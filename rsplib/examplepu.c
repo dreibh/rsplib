@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.11 2004/11/11 19:33:48 dreibh Exp $
+ *  $Id: examplepu.c,v 1.12 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,7 +74,7 @@ static void handleStdIn()
    size_t lineNumberLength;
    size_t toSend;
 
-   snprintf((char*)&buffer,sizeof(buffer),"%09Ld ",++OutCalls);
+   snprintf((char*)&buffer,sizeof(buffer),"%09lld ",++OutCalls);
    lineNumberLength = strlen(buffer);
 
    setNonBlocking(STDIN_FILENO);
@@ -101,11 +101,11 @@ static void handleAutoTimer()
    size_t lineNumberLength;
    size_t toSend;
 
-   snprintf((char*)&buffer,sizeof(buffer),"%09Ld ",++OutCalls);
+   snprintf((char*)&buffer,sizeof(buffer),"%09lld ",++OutCalls);
    lineNumberLength = strlen(buffer);
 
    snprintf((char*)&buffer[lineNumberLength], sizeof(buffer) - lineNumberLength,
-            "This is a test %09Ld!\n", OutCalls);
+            "This is a test %09lld!\n", OutCalls);
    printf(&buffer[lineNumberLength]);
    fflush(stdout);
 
@@ -135,10 +135,10 @@ static void handleServerReply()
       InBytes += received;
       buffer[received] = 0x00;
 
-      printf("##### [in=%Ld", InBytes);
-      printf(" out=%Ld] P", OutBytes);
+      printf("##### [in=%lld", InBytes);
+      printf(" out=%lld] P", OutBytes);
       printf("$%08x.", (int)tags[0].Data);
-      printf("%Ld rcv=%d> ", counter++, received);
+      printf("%lld rcv=%d> ", counter++, received);
       puts(buffer);
       fflush(stdout);
    }

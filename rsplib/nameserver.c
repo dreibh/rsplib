@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.45 2004/11/11 21:25:17 dreibh Exp $
+ *  $Id: nameserver.c,v 1.46 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -124,7 +124,7 @@ void takeoverProcessIndexPrint(const void* takeoverProcessPtr,
    size_t i;
 
    struct TakeoverProcess* takeoverProcess = (struct TakeoverProcess*)takeoverProcessPtr;
-   fprintf(fd, "   - Takeover for $%08x (expiry in %Ld탎)\n",
+   fprintf(fd, "   - Takeover for $%08x (expiry in %lld탎)\n",
            takeoverProcess->TargetID,
            (long long)takeoverProcess->ExpiryTimeStamp - (long long)getMicroTime());
    for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
@@ -207,7 +207,7 @@ void takeoverProcessListPrint(struct TakeoverProcessList* takeoverProcessList,
                               FILE*                       fd)
 {
    fprintf(fd, "Takeover Process List: (%u entries)\n",
-           ST_METHOD(GetElements)(&takeoverProcessList->TakeoverProcessIndexStorage));
+           (unsigned int)ST_METHOD(GetElements)(&takeoverProcessList->TakeoverProcessIndexStorage));
    ST_METHOD(Print)(&takeoverProcessList->TakeoverProcessIndexStorage, fd);
 }
 
@@ -820,7 +820,7 @@ static void nameServerRemovePoolElementsOfConnection(struct NameServer* nameServ
       LOG_ACTION
       fprintf(stdlog,
               "Removing all pool elements registered by user socket %u, assoc %u...\n",
-              sd, assocID);
+              sd, (unsigned int)assocID);
       LOG_END
 
       do {
@@ -1057,7 +1057,7 @@ static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
    LOG_WARNING
    fprintf(stdlog, "Takeover of peer $%08x has expired, %u outstanding acknowledgements:\n",
            takeoverProcess->TargetID,
-           takeoverProcess->OutstandingAcknowledgements);
+           (unsigned int)takeoverProcess->OutstandingAcknowledgements);
    for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
       peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                         &nameServer->Peers,
@@ -1606,7 +1606,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
             if(!tuneSCTP(fd, assocID, (struct TagItem*)&tags)) {
                LOG_WARNING
                fprintf(stdlog, "Unable to tune SCTP association %u's parameters\n",
-                       assocID);
+                       (unsigned int)assocID);
                LOG_END
             }
 
@@ -1668,7 +1668,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
    else {
       LOG_ERROR
       fprintf(stdlog, "Unable to obtain peer addresses of FD %d, assoc %u\n",
-              fd, assocID);
+              fd, (unsigned int)assocID);
       LOG_END
    }
 }
@@ -1799,9 +1799,9 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
                        NAMERESOLUTION_MAX_INCREMENT);
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE
-      fprintf(stdlog, "Got %u element(s):\n", poolElementNodes);
+      fprintf(stdlog, "Got %u element(s):\n", (unsigned int)poolElementNodes);
       for(i = 0;i < poolElementNodes;i++) {
-         fprintf(stdlog, "#%02u: ", i + 1);
+         fprintf(stdlog, "#%02u: ", (unsigned int)i + 1);
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
                   stdlog,
                   PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
@@ -2511,7 +2511,7 @@ static void handlePeerInitTakeoverAck(struct NameServer*      nameServer,
       fprintf(stdlog, "Peer $%08x acknowledges takeover of target $%08x. %u acknowledges to go.\n",
               message->SenderID,
               message->NSIdentifier,
-              takeoverProcess->OutstandingAcknowledgements);
+              (unsigned int)takeoverProcess->OutstandingAcknowledgements);
       LOG_END
       if(takeoverProcess->OutstandingAcknowledgements == 0) {
          LOG_ACTION
@@ -3001,10 +3001,10 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                   message->AssocID          = assocID;
                   message->StreamID         = streamID;
                   LOG_VERBOSE3
-                  fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
+                  fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);
                   fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
                   fprintf(stdlog, ", assoc #%u, PPID $%x\n",
-                        message->AssocID, message->PPID);
+                          (unsigned int)message->AssocID, message->PPID);
                   LOG_END
 
                   handleMessage(nameServer, message, fd);
@@ -3037,7 +3037,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                      LOG_ACTION
                      fprintf(stdlog, "Association communication lost for socket %d, assoc %u\n",
                              nameServer->ASAPSocket,
-                             notification->sn_assoc_change.sac_assoc_id);
+                             (unsigned int)notification->sn_assoc_change.sac_assoc_id);
 
                      LOG_END
                      nameServerRemovePoolElementsOfConnection(nameServer, fd,
@@ -3047,7 +3047,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                      LOG_ACTION
                      fprintf(stdlog, "Association shutdown completed for socket %d, assoc %u\n",
                              nameServer->ASAPSocket,
-                             notification->sn_assoc_change.sac_assoc_id);
+                             (unsigned int)notification->sn_assoc_change.sac_assoc_id);
 
                      LOG_END
                      nameServerRemovePoolElementsOfConnection(nameServer, fd,
@@ -3058,7 +3058,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                   LOG_ACTION
                   fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
                           nameServer->ASAPSocket,
-                          notification->sn_shutdown_event.sse_assoc_id);
+                          (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
 
                   LOG_END
                   nameServerRemovePoolElementsOfConnection(nameServer, fd,
@@ -3501,22 +3501,22 @@ int main(int argc, char** argv)
       printf("CSP Report Address:     ");
       fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
       puts("");
-      printf("CSP Report Interval:    %Ld탎\n", cspReportInterval);
+      printf("CSP Report Interval:    %lld탎\n", cspReportInterval);
    }
 #endif
 
    puts("\nASAP Parameters:");
-   printf("   Max Bad PE Reports:                          %d\n",    nameServer->MaxBadPEReports);
-   printf("   Server Announce Cycle:                       %Ld탎\n", nameServer->ServerAnnounceCycle);
-   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %Ld탎\n", nameServer->EndpointMonitoringHeartbeatInterval);
-   printf("   Endpoint Keep Alive Transmission Interval:   %Ld탎\n", nameServer->EndpointKeepAliveTransmissionInterval);
-   printf("   Endpoint Keep Alive Timeout Interval:        %Ld탎\n", nameServer->EndpointKeepAliveTimeoutInterval);
+   printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)nameServer->MaxBadPEReports);
+   printf("   Server Announce Cycle:                       %lld탎\n", nameServer->ServerAnnounceCycle);
+   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lld탎\n", nameServer->EndpointMonitoringHeartbeatInterval);
+   printf("   Endpoint Keep Alive Transmission Interval:   %lld탎\n", nameServer->EndpointKeepAliveTransmissionInterval);
+   printf("   Endpoint Keep Alive Timeout Interval:        %lld탎\n", nameServer->EndpointKeepAliveTimeoutInterval);
    puts("ENRP Parameters:");
-   printf("   Peer Heartbeat Cylce:                        %Ld탎\n", nameServer->PeerHeartbeatCycle);
-   printf("   Peer Max Time Last Heard:                    %Ld탎\n", nameServer->PeerMaxTimeLastHeard);
-   printf("   Peer Max Time No Response:                   %Ld탎\n", nameServer->PeerMaxTimeNoResponse);
-   printf("   Mentor Hunt Timeout:                         %Ld탎\n", nameServer->MentorHuntTimeout);
-   printf("   Takeover Expiry Interval:                    %Ld탎\n", nameServer->TakeoverExpiryInterval);
+   printf("   Peer Heartbeat Cylce:                        %lld탎\n", nameServer->PeerHeartbeatCycle);
+   printf("   Peer Max Time Last Heard:                    %lld탎\n", nameServer->PeerMaxTimeLastHeard);
+   printf("   Peer Max Time No Response:                   %lld탎\n", nameServer->PeerMaxTimeNoResponse);
+   printf("   Mentor Hunt Timeout:                         %lld탎\n", nameServer->MentorHuntTimeout);
+   printf("   Takeover Expiry Interval:                    %lld탎\n", nameServer->TakeoverExpiryInterval);
    puts("");
 
 

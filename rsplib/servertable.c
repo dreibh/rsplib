@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.21 2004/11/11 21:25:17 dreibh Exp $
+ *  $Id: servertable.c,v 1.22 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -120,7 +120,7 @@ static void handleServerAnnounceCallback(struct ServerTable* serverTable,
                         &serverTable->ServerList,
                         getMicroTime());
                   LOG_VERBOSE3
-                  fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  i);
+                  fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
                   ST_CLASS(peerListManagementPrint)(&serverTable->ServerList, stdlog, PLPO_FULL);
                   LOG_END
                }
@@ -502,7 +502,7 @@ int serverTableFindServer(struct ServerTable* serverTable,
       selectTimeout.tv_usec = nextTimeout % (card64)1000000;
 
       LOG_VERBOSE3
-      fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
+      fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
       LOG_END
       /*
          Important: rspSelect() may *not* be used here!

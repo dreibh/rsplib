@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.22 2004/11/11 19:33:49 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.23 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -207,7 +207,9 @@ static bool checkFinishMessage(struct RSerPoolMessage* message,
       LOG_WARNING
       fputs("Message length invalid!\n", stdlog);
       fprintf(stdlog, "position=%u expected=%u padding=%u\n",
-              (unsigned int)message->Position, (unsigned int)endPos, padding);
+              (unsigned int)message->Position,
+              (unsigned int)endPos,
+              (unsigned int)padding);
       LOG_END
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -927,7 +929,7 @@ static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
    LOG_VERBOSE3
    fprintf(stdlog, "Scanned pool handle ");
    poolHandlePrint(poolHandlePtr, stdlog);
-   fprintf(stdlog, ", length=%u.\n",poolHandlePtr->Size);
+   fprintf(stdlog, ", length=%u.\n", (unsigned int)poolHandlePtr->Size);
    LOG_END
 
    return(checkFinishTLV(message, tlvPosition));
@@ -1800,9 +1802,9 @@ static bool scanMessage(struct RSerPoolMessage* message)
    size_t              i, j;
 
    LOG_VERBOSE5
-   fprintf(stdlog, "Incoming message (%u bytes):\n", message->BufferSize);
+   fprintf(stdlog, "Incoming message (%u bytes):\n", (unsigned int)message->BufferSize);
    for(i = 0;i < message->BufferSize;i += 32) {
-      fprintf(stdlog, "%4u: ", i);
+      fprintf(stdlog, "%4u: ", (unsigned int)i);
       for(j = 0;j < 32;j++) {
          if(i + j < message->BufferSize) {
             fprintf(stdlog, "%02x", (int)((unsigned char)message->Buffer[i + j]));

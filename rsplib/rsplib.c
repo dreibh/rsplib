@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.18 2004/11/09 22:03:30 dreibh Exp $
+ *  $Id: rsplib.c,v 1.19 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -447,7 +447,7 @@ int rspSelect(int             n,
 
    /* ====== Print collected data ======================================== */
    LOG_VERBOSE5
-   fprintf(stdlog, "Calling ext_select() with timeout %Ld [µs]...\n", newTimeout);
+   fprintf(stdlog, "Calling ext_select() with timeout %lld [µs]...\n", newTimeout);
    for(i = 0;i < myn;i++) {
       if(FD_ISSET(i, &myreadfds) || FD_ISSET(i, &mywritefds) || FD_ISSET(i, &myexceptfds)) {
          fprintf(stdlog, "  Registered FD %d for %s%s%s\n",

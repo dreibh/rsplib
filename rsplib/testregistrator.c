@@ -1,5 +1,5 @@
 /*
- *  $Id: testregistrator.c,v 1.3 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: testregistrator.c,v 1.4 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -255,9 +255,9 @@ int main(int argc, char** argv)
       tags[9].Data = (tagdata_t)true;
       tags[10].Tag  = TAG_END;
 
-      printf("Registering PE #%u...\n", i + 1);
+      printf("Registering PE #%u...\n", (unsigned int)i + 1);
       if(((i % newPoolAfter) == 0) || (i == 0)) {
-         snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, ++pools);
+         snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, (unsigned int)++pools);
       }
       poolElementArray[i] = rspCreatePoolElement((unsigned char*)myPoolHandle, strlen(myPoolHandle), tags);
       if(poolElementArray[i] == NULL) {

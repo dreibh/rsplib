@@ -804,9 +804,9 @@ void ST_CLASS(poolNamespaceNodeGetDescription)(
    snprintf(buffer, bufferSize,
             "Namespace[home=$%08x]: (%u Pools, %u PoolElements, %u owned)",
             poolNamespaceNode->HomeNSIdentifier,
-            ST_CLASS(poolNamespaceNodeGetPoolNodes)(poolNamespaceNode),
-            ST_CLASS(poolNamespaceNodeGetPoolElementNodes)(poolNamespaceNode),
-            ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
+            (unsigned int)ST_CLASS(poolNamespaceNodeGetPoolNodes)(poolNamespaceNode),
+            (unsigned int)ST_CLASS(poolNamespaceNodeGetPoolElementNodes)(poolNamespaceNode),
+            (unsigned int)ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
 }
 
 
@@ -849,7 +849,7 @@ void ST_CLASS(poolNamespaceNodePrint)(
    if(fields & PNNPO_POOLS_OWNERSHIP) {
       fprintf(fd,
               " *-- Ownership: (%u nodes)\n",
-              ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
+              (unsigned int)ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
       poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - $%08x -> \"", poolElementNode->HomeNSIdentifier);
@@ -867,7 +867,7 @@ void ST_CLASS(poolNamespaceNodePrint)(
    if(fields & PNNPO_POOLS_CONNECTION) {
       fprintf(fd,
               " *-- Connection: (%u nodes)\n",
-              ST_CLASS(poolNamespaceNodeGetConnectionNodes)(poolNamespaceNode));
+              (unsigned int)ST_CLASS(poolNamespaceNodeGetConnectionNodes)(poolNamespaceNode));
       poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
          fputs("   - \"", fd);
@@ -881,8 +881,8 @@ void ST_CLASS(poolNamespaceNodePrint)(
 
    if(fields & PNNPO_POOLS_TIMER) {
       fprintf(fd,
-            "*-- Timer: (%u nodes)\n",
-            ST_CLASS(poolNamespaceNodeGetTimerNodes)(poolNamespaceNode));
+              "*-- Timer: (%u nodes)\n",
+              (unsigned int)ST_CLASS(poolNamespaceNodeGetTimerNodes)(poolNamespaceNode));
       poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementTimerNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - \"");

@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.4 2004/07/22 09:47:43 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.5 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -84,7 +84,7 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
 
    if(mb->Position == 0) {
       LOG_VERBOSE4
-      fprintf(stdlog, "Trying to peek TLV header from socket %d, peek timeout %Ld [탎], total timeout %Ld [탎]\n",
+      fprintf(stdlog, "Trying to peek TLV header from socket %d, peek timeout %lld [탎], total timeout %lld [탎]\n",
               sd, peekTimeout, totalTimeout);
       LOG_END
       mb->StartTimeStamp = getMicroTime();
@@ -135,7 +135,7 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
          timeout = 0;
       }
       LOG_VERBOSE4
-      fprintf(stdlog, "Trying to read remaining %d bytes from message of length %d from socket %d, timeout %Ld [탎]\n",
+      fprintf(stdlog, "Trying to read remaining %d bytes from message of length %d from socket %d, timeout %lld [탎]\n",
               (int)mb->ToGo, (int)(mb->Position + mb->ToGo), sd, timeout);
       LOG_END
       flags    = 0;

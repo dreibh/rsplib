@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.26 2004/11/11 21:25:17 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.27 2004/11/11 22:44:20 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,7 +74,7 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",    asapInstance->NameServerRequestMaxTrials);
+   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",     (unsigned int)asapInstance->NameServerRequestMaxTrials);
    fprintf(stdlog, "nameserver.request.timeout     = %lluµs\n", asapInstance->NameServerRequestTimeout);
    fprintf(stdlog, "nameserver.response.timeout    = %lluµs\n", asapInstance->NameServerResponseTimeout);
    fprintf(stdlog, "cache.elementtimeout           = %lluµs\n", asapInstance->CacheElementTimeout);
@@ -308,13 +308,13 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
 
    for(i = 0;i < asapInstance->NameServerRequestMaxTrials;i++) {
       LOG_VERBOSE2
-      fprintf(stdlog, "Request trial #%d - sending request...\n",i + 1);
+      fprintf(stdlog, "Request trial #%u - sending request...\n", (unsigned int)i + 1);
       LOG_END
 
       result = asapInstanceSendRequest(asapInstance, message);
       if(result == RSPERR_OKAY) {
          LOG_VERBOSE2
-         fprintf(stdlog, "Request trial #%d - waiting for response...\n",i + 1);
+         fprintf(stdlog, "Request trial #%u - waiting for response...\n", (unsigned int)i + 1);
          LOG_END
          result = asapInstanceReceiveResponse(asapInstance, &response);
          while(result == RSPERR_OKAY) {
@@ -329,7 +329,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
                      ((response->Type == AHT_DEREGISTRATION_RESPONSE)  && (message->Type == AHT_DEREGISTRATION)) ||
                      ((response->Type == AHT_NAME_RESOLUTION_RESPONSE) && (message->Type == AHT_NAME_RESOLUTION)) ) {
                LOG_VERBOSE2
-               fprintf(stdlog, "Request trial #%d - Success\n",i + 1);
+               fprintf(stdlog, "Request trial #%u - Success\n", (unsigned int)i + 1);
                LOG_END
                *responsePtr = response;
                return(RSPERR_OKAY);
@@ -349,7 +349,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
       }
 
       LOG_ERROR
-      fprintf(stdlog, "Request trial #%d failed\n",i + 1);
+      fprintf(stdlog, "Request trial #%u failed\n", (unsigned int)i + 1);
       LOG_END
       asapInstanceDisconnectFromNameServer(asapInstance);
    }
@@ -522,7 +522,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
                                        struct PoolHandle*              poolHandle,
                                        const PoolElementIdentifierType identifier)
 {
-   struct RSerPoolMessage*               message;
+   struct RSerPoolMessage*           message;
    struct ST_CLASS(PoolElementNode)* found;
    unsigned int                      result;
 
@@ -563,6 +563,9 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
       result = asapInstanceSendRequest(asapInstance, message);
       rserpoolMessageDelete(message);
    }
+   else {
+      result = RSPERR_OUT_OF_MEMORY;
+   }
 
    dispatcherUnlock(asapInstance->StateMachine);
    return(result);
@@ -591,7 +594,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
          if(nameServerResult == RSPERR_OKAY) {
             LOG_VERBOSE
             fprintf(stdlog, "Got %u elements in name resolution response\n",
-                    response->PoolElementPtrArraySize);
+                    (unsigned int)response->PoolElementPtrArraySize);
             LOG_END
             for(i = 0;i < response->PoolElementPtrArraySize;i++) {
                LOG_VERBOSE2
@@ -677,7 +680,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
           &asapInstance->Cache,
           getMicroTime());
    LOG_VERBOSE
-   fprintf(stdlog, "Purged %u out-of-date elements\n", i);
+   fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
    LOG_END
 
    if(ST_CLASS(poolNamespaceManagementNameResolution)(
@@ -688,9 +691,9 @@ static unsigned int asapInstanceNameResolutionFromCache(
          *poolElementNodes,
          1000000000) == RSPERR_OKAY) {
       LOG_VERBOSE
-      fprintf(stdlog, "Got %u items:\n", *poolElementNodes);
+      fprintf(stdlog, "Got %u items:\n", (unsigned int)*poolElementNodes);
       for(i = 0;i < *poolElementNodes;i++) {
-         fprintf(stdlog, "#%u: ", i + 1);
+         fprintf(stdlog, "#%u: ", (unsigned int)i + 1);
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
                                         stdlog, PENPO_FULL);
       }

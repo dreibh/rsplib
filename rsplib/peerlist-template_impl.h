@@ -198,7 +198,7 @@ void ST_CLASS(peerListGetDescription)(struct ST_CLASS(PeerList)* peerList,
 {
    snprintf(buffer, bufferSize, "PeerList of $%08x (%u peers)",
             peerList->OwnIdentifier,
-            ST_CLASS(peerListGetPeerListNodes)(peerList));
+            (unsigned int)ST_CLASS(peerListGetPeerListNodes)(peerList));
 }
 
 

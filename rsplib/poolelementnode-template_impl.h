@@ -116,7 +116,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
    if(fields & PENPO_CONNECTION) {
       snprintf((char*)&tmp, sizeof(tmp), " c=(S%d,A%u)",
                poolElementNode->ConnectionSocketDescriptor,
-               poolElementNode->ConnectionAssocID);
+               (unsigned int)poolElementNode->ConnectionAssocID);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_HOME_NS) {
@@ -328,7 +328,9 @@ void ST_CLASS(poolElementConnectionStorageNodePrint)(const void* nodePtr, FILE* 
 {
    const struct ST_CLASS(PoolElementNode)* node = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr);
    fprintf(fd, "#$%08x (S%d,A%u)   ",
-           node->Identifier, node->ConnectionSocketDescriptor, node->ConnectionAssocID);
+           node->Identifier,
+           node->ConnectionSocketDescriptor,
+           (unsigned int)node->ConnectionAssocID);
 }
 
 
