@@ -292,19 +292,22 @@ unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
 
 
 /* ###### Get name table from namespace ################################## */
-static int ST_CLASS(getPropertyNameTable)(
+static int ST_CLASS(getOwnershipNameTable)(
               struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
               struct ST_CLASS(NameTableExtract)*        nameTableExtract,
+              const ENRPIdentifierType                  homeNSIdentifier,
               const unsigned int                        flags)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    if(flags & NTEF_START) {
-      poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementPropertyNode)(
-                           &poolNamespaceManagement->Namespace);
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                           &poolNamespaceManagement->Namespace,
+                           homeNSIdentifier);
    }
    else {
-      poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementPropertyNode)(
+      poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementOwnershipNode)(
                            &poolNamespaceManagement->Namespace,
+                           homeNSIdentifier,
                            &nameTableExtract->LastPoolHandle,
                            nameTableExtract->LastPoolElementIdentifier);
    }
@@ -315,19 +318,19 @@ static int ST_CLASS(getPropertyNameTable)(
       if(nameTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
          break;
       }
-      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementPropertyNode)(
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
                            &poolNamespaceManagement->Namespace, poolElementNode);
    }
 
    if(nameTableExtract->PoolElementNodes > 0) {
       struct ST_CLASS(PoolElementNode)* lastPoolElementNode = nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      nameTableExtract->LastPoolHandle            = lastPoolNode->Handle;
-      nameTableExtract->LastPoolElementIdentifier = lastPoolElementNode->Identifier;
+      nameTableExtract->LastPoolHandle                      = lastPoolNode->Handle;
+      nameTableExtract->LastPoolElementIdentifier           = lastPoolElementNode->Identifier;
    }
 
 #ifdef PRINT_GETNAMETABLE_RESULT
-   printf("GetPropertyNameTable result: %u items\n", nameTableExtract->PoolElementNodes);
+   printf("GetOwnershipNameTable result: %u items\n", nameTableExtract->PoolElementNodes);
    for(size_t i = 0;i < nameTableExtract->PoolElementNodes;i++) {
       poolElementNode = nameTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
@@ -430,8 +433,10 @@ int ST_CLASS(poolNamespaceManagementGetNameTable)(
        const unsigned int                        flags)
 {
    if(flags & NTEF_OWNCHILDSONLY) {
-      return(ST_CLASS(getPropertyNameTable)(
-                poolNamespaceManagement, nameTableExtract, flags));
+      return(ST_CLASS(getOwnershipNameTable)(
+                poolNamespaceManagement, nameTableExtract,
+                poolNamespaceManagement->Namespace.HomeNSIdentifier,
+                flags));
    }
    return(ST_CLASS(getGlobalNameTable)(
              poolNamespaceManagement, nameTableExtract, flags));

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.8 2004/07/29 16:32:55 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.9 2004/08/19 11:04:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1010,6 +1010,7 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*   sp;
    struct ST_CLASS(NameTableExtract)* nte;
+   struct PoolHandle*                 lastPoolHandle;
    unsigned int                       flags;
    int                                result;
    size_t                             i;
@@ -1044,11 +1045,24 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
                   nte,
                   flags);
       if(result != 0) {
+         lastPoolHandle = NULL;
          for(i = 0;i < nte->PoolElementNodes;i++) {
             LOG_NOTE
             ST_CLASS(poolElementNodePrint)(nte->PoolElementNodeArray[i], stdlog, ~0);
             fputs("\n", stdlog);
             LOG_END
+
+            if(lastPoolHandle != &nte->PoolElementNodeArray[i]->OwnerPoolNode->Handle) {
+               lastPoolHandle = &nte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
+               if(createPoolHandleParameter(message, lastPoolHandle) == false) {
+// ???????? LANGE LISTE....
+                  return(false);
+               }
+            }
+            if(createPoolElementParameter(message, nte->PoolElementNodeArray[i]) == false) {
+// ???????? LANGE LISTE....
+               return(false);
+            }
          }
       }
    }

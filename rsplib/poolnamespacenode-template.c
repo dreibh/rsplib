@@ -26,7 +26,7 @@ void ST_CLASS(poolNamespaceNodeNew)(struct ST_CLASS(PoolNamespaceNode)* poolName
 {
    ST_METHOD(New)(&poolNamespaceNode->PoolIndexStorage, ST_CLASS(poolIndexStorageNodePrint), ST_CLASS(poolIndexStorageNodeComparison));
    ST_METHOD(New)(&poolNamespaceNode->PoolElementTimerStorage, ST_CLASS(poolElementTimerStorageNodePrint), ST_CLASS(poolElementTimerStorageNodeComparison));
-   ST_METHOD(New)(&poolNamespaceNode->PoolElementPropertyStorage, ST_CLASS(poolElementPropertyStorageNodePrint), ST_CLASS(poolElementPropertyStorageNodeComparison));
+   ST_METHOD(New)(&poolNamespaceNode->PoolElementOwnershipStorage, ST_CLASS(poolElementOwnershipStorageNodePrint), ST_CLASS(poolElementOwnershipStorageNodeComparison));
    poolNamespaceNode->HomeNSIdentifier = homeNSIdentifier;
    poolNamespaceNode->PoolElements     = 0;
 }
@@ -37,10 +37,10 @@ void ST_CLASS(poolNamespaceNodeDelete)(struct ST_CLASS(PoolNamespaceNode)* poolN
 {
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolIndexStorage));
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementTimerStorage));
-   CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementPropertyStorage));
+   CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementOwnershipStorage));
    ST_METHOD(Delete)(&poolNamespaceNode->PoolIndexStorage);
    ST_METHOD(Delete)(&poolNamespaceNode->PoolElementTimerStorage);
-   ST_METHOD(Delete)(&poolNamespaceNode->PoolElementPropertyStorage);
+   ST_METHOD(Delete)(&poolNamespaceNode->PoolElementOwnershipStorage);
    poolNamespaceNode->PoolElements = 0;
 }
 
@@ -90,6 +90,21 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindPoolNode)(
 
 
 /* ###### Find PoolNode ################################################## */
+struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolNode)(
+                              struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                              const struct PoolHandle*            poolHandle)
+{
+   struct ST_CLASS(PoolNode)* poolNode;
+   struct ST_CLASS(PoolNode)  cmpPoolNode;
+
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
+   poolNode = (struct ST_CLASS(PoolNode)*)ST_METHOD(GetNearestPrev)(&poolNamespaceNode->PoolIndexStorage,
+                                                                    &cmpPoolNode.PoolIndexStorageNode);
+   return(poolNode);
+}
+
+
+/* ###### Find PoolNode ################################################## */
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
                               const struct PoolHandle*            poolHandle)
@@ -104,24 +119,51 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
 }
 
 
-/* ###### Find nearest next property ##################################### */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementPropertyNode)(
+/* ###### Find nearest prev property ##################################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementOwnershipNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const ENRPIdentifierType            homeNSIdentifier,
                                      const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier)
 {
    struct ST_CLASS(PoolNode)        cmpPoolNode;
    struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
-   struct STN_CLASSNAME*            propertyNode;
+   struct STN_CLASSNAME*            ownershipNode;
 
    poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
-   cmpPoolElementNode.OwnerPoolNode = &cmpPoolNode;
-   cmpPoolElementNode.Identifier    = poolElementIdentifier;
+   cmpPoolElementNode.OwnerPoolNode    = &cmpPoolNode;
+   cmpPoolElementNode.Identifier       = poolElementIdentifier;
+   cmpPoolElementNode.HomeNSIdentifier = homeNSIdentifier;
 
-   propertyNode = ST_METHOD(GetNearestNext)(&poolNamespaceNode->PoolElementPropertyStorage,
-                                            &cmpPoolElementNode.PoolElementPropertyStorageNode);
-   if(propertyNode) {
-      return(ST_CLASS(getPoolElementNodeFromPropertyStorageNode)(propertyNode));
+   ownershipNode = ST_METHOD(GetNearestPrev)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                             &cmpPoolElementNode.PoolElementOwnershipStorageNode);
+   if(ownershipNode) {
+      return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(ownershipNode));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest next property ##################################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementOwnershipNode)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const ENRPIdentifierType            homeNSIdentifier,
+                                     const struct PoolHandle*            poolHandle,
+                                     const PoolElementIdentifierType     poolElementIdentifier)
+{
+   struct ST_CLASS(PoolNode)        cmpPoolNode;
+   struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
+   struct STN_CLASSNAME*            ownershipNode;
+
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
+   cmpPoolElementNode.OwnerPoolNode    = &cmpPoolNode;
+   cmpPoolElementNode.Identifier       = poolElementIdentifier;
+   cmpPoolElementNode.HomeNSIdentifier = homeNSIdentifier;
+
+   ownershipNode = ST_METHOD(GetNearestNext)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                             &cmpPoolElementNode.PoolElementOwnershipStorageNode);
+   if(ownershipNode) {
+      return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(ownershipNode));
    }
    return(NULL);
 }
@@ -152,10 +194,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeAddPoolElementNode)(
    if(result == poolElementNode) {
       CHECK(*errorCode == RSPERR_OKAY);
       poolNamespaceNode->PoolElements++;
-      if(poolNamespaceNode->HomeNSIdentifier == poolElementNode->HomeNSIdentifier) {
-         result2 = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementPropertyStorage,
-                                     &poolElementNode->PoolElementPropertyStorageNode);
-         CHECK(result2 == &poolElementNode->PoolElementPropertyStorageNode);
+      if(poolElementNode->HomeNSIdentifier != 0) {
+         result2 = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                     &poolElementNode->PoolElementOwnershipStorageNode);
+         CHECK(result2 == &poolElementNode->PoolElementOwnershipStorageNode);
       }
    }
    return(result);
@@ -169,7 +211,23 @@ void ST_CLASS(poolNamespaceNodeUpdatePoolElementNode)(
         const struct ST_CLASS(PoolElementNode)* source,
         unsigned int*                           errorCode)
 {
+   struct STN_CLASSNAME* result;
+
    ST_CLASS(poolNodeUpdatePoolElementNode)(poolElementNode->OwnerPoolNode, poolElementNode, source, errorCode);
+   if(*errorCode == RSPERR_OKAY) {
+      /* ====== Change ownership ========================================= */
+      if(source->HomeNSIdentifier != poolElementNode->HomeNSIdentifier) {
+         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode)) {
+            result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                       &poolElementNode->PoolElementOwnershipStorageNode);
+            CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+         }
+         poolElementNode->HomeNSIdentifier = source->HomeNSIdentifier;
+         result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                       &poolElementNode->PoolElementOwnershipStorageNode);
+         CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+      }
+   }
 }
 
 
@@ -223,10 +281,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeRemovePoolElementNod
                                  &poolElementNode->PoolElementTimerStorageNode);
       CHECK(result == &poolElementNode->PoolElementTimerStorageNode);
    }
-   if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementPropertyStorageNode)) {
-      result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementPropertyStorage,
-                                 &poolElementNode->PoolElementPropertyStorageNode);
-      CHECK(result == &poolElementNode->PoolElementPropertyStorageNode);
+   if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode)) {
+      result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                 &poolElementNode->PoolElementOwnershipStorageNode);
+      CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
    }
    result2 = ST_CLASS(poolNodeRemovePoolElementNode)(poolElementNode->OwnerPoolNode,
                                                      poolElementNode);
@@ -249,7 +307,7 @@ void ST_CLASS(poolNamespaceNodeGetDescription)(
             poolNamespaceNode->HomeNSIdentifier,
             ST_CLASS(poolNamespaceNodeGetPoolNodes)(poolNamespaceNode),
             ST_CLASS(poolNamespaceNodeGetPoolElementNodes)(poolNamespaceNode),
-            ST_CLASS(poolNamespaceNodeGetPropertyNodes)(poolNamespaceNode));
+            ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
 }
 
 
@@ -289,18 +347,21 @@ void ST_CLASS(poolNamespaceNodePrint)(
       }
    }
 
-   if(fields & PNNPO_POOLS_PROPERTY) {
+   if(fields & PNNPO_POOLS_OWNERSHIP) {
       fprintf(fd,
-            " *-- Property: (%u nodes)\n",
-            ST_CLASS(poolNamespaceNodeGetPropertyNodes)(poolNamespaceNode));
-      poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementPropertyNode)(poolNamespaceNode);
+              " *-- Ownership: (%u nodes)\n",
+              ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode));
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
-         fprintf(fd, "   - \"");
+         fprintf(fd, "   - $%08x -> \"", poolElementNode->HomeNSIdentifier);
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_ONLY_ID);
+         if(poolElementNode->HomeNSIdentifier == poolNamespaceNode->HomeNSIdentifier) {
+            fputs(" (property of local namespace)", fd);
+         }
          fputs("\n", fd);
-         poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementPropertyNode)(poolNamespaceNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(poolNamespaceNode, poolElementNode);
       }
    }
 
@@ -331,7 +392,7 @@ void ST_CLASS(poolNamespaceNodeVerify)(struct ST_CLASS(PoolNamespaceNode)* poolN
    const size_t pools        = ST_CLASS(poolNamespaceNodeGetPoolNodes)(poolNamespaceNode);
    const size_t poolElements = ST_CLASS(poolNamespaceNodeGetPoolElementNodes)(poolNamespaceNode);
    const size_t timers       = ST_CLASS(poolNamespaceNodeGetTimerNodes)(poolNamespaceNode);
-   const size_t properties   = ST_CLASS(poolNamespaceNodeGetPropertyNodes)(poolNamespaceNode);
+   const size_t properties   = ST_CLASS(poolNamespaceNodeGetOwnershipNodes)(poolNamespaceNode);
 
 /*
    puts("------------- VERIFY -------------------");
@@ -341,7 +402,7 @@ void ST_CLASS(poolNamespaceNodeVerify)(struct ST_CLASS(PoolNamespaceNode)* poolN
 
    ST_METHOD(Verify)(&poolNamespaceNode->PoolIndexStorage);
    ST_METHOD(Verify)(&poolNamespaceNode->PoolElementTimerStorage);
-   ST_METHOD(Verify)(&poolNamespaceNode->PoolElementPropertyStorage);
+   ST_METHOD(Verify)(&poolNamespaceNode->PoolElementOwnershipStorage);
 
    i = 0;
    poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementTimerNode)(poolNamespaceNode);
@@ -352,9 +413,9 @@ void ST_CLASS(poolNamespaceNodeVerify)(struct ST_CLASS(PoolNamespaceNode)* poolN
    CHECK(i == timers);
 
    i = 0;
-   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementPropertyNode)(poolNamespaceNode);
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNode)(poolNamespaceNode);
    while(poolElementNode != NULL) {
-      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementPropertyNode)(poolNamespaceNode, poolElementNode);
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(poolNamespaceNode, poolElementNode);
       i++;
    }
    CHECK(i == properties);
@@ -391,4 +452,102 @@ void ST_CLASS(poolNamespaceNodeClear)(struct ST_CLASS(PoolNamespaceNode)* poolNa
       poolNodeDisposer(poolNode, userData);
       poolNode = ST_CLASS(poolNamespaceNodeGetFirstPoolNode)(poolNamespaceNode);
    }
+}
+
+
+/* ###### Get first ownership node of given home NS identifier ########### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const ENRPIdentifierType            homeNSIdentifier)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* prevPoolElementNode;
+   struct PoolHandle                 lastPoolHandle;
+
+   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
+   poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementOwnershipNode)(
+                        poolNamespaceNode,
+                        homeNSIdentifier,
+                        &lastPoolHandle,
+                        0);
+   if(poolElementNode) {
+      prevPoolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementOwnershipNode)(
+                               poolNamespaceNode, poolElementNode);
+      while(prevPoolElementNode) {
+         if(prevPoolElementNode->HomeNSIdentifier == homeNSIdentifier) {
+            poolElementNode = prevPoolElementNode;
+         }
+         else {
+            break;
+         }
+         prevPoolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementOwnershipNode)(
+                                 poolNamespaceNode, prevPoolElementNode);
+      }
+   }
+   if((poolElementNode != NULL) &&
+      (poolElementNode->HomeNSIdentifier == homeNSIdentifier)) {
+      return(poolElementNode);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get last ownership node of given home NS identifier ########### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const ENRPIdentifierType            homeNSIdentifier)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+   struct PoolHandle                 lastPoolHandle;
+
+   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
+   if(homeNSIdentifier == 0xffffffff) {
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetLastPoolElementOwnershipNode)(poolNamespaceNode);
+   }
+   else {
+      poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementOwnershipNode)(
+                           poolNamespaceNode,
+                           homeNSIdentifier + 1,
+                           &lastPoolHandle,
+                           0);
+   }
+   if(poolElementNode) {
+      nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(
+                               poolNamespaceNode, poolElementNode);
+      while(nextPoolElementNode) {
+         if(nextPoolElementNode->HomeNSIdentifier == homeNSIdentifier) {
+            poolElementNode = nextPoolElementNode;
+         }
+         else {
+            break;
+         }
+         nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(
+                                 poolNamespaceNode, nextPoolElementNode);
+      }
+   }
+   if((poolElementNode != NULL) &&
+      (poolElementNode->HomeNSIdentifier == homeNSIdentifier)) {
+      return(poolElementNode);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get number of ownership nodes ################################## */
+size_t ST_CLASS(poolNamespaceNodeGetOwnershipNodesForIdentifier)(
+                 struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                 const ENRPIdentifierType            homeNSIdentifier)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   size_t                            nodes = 0;
+
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
+                        poolNamespaceNode, homeNSIdentifier);
+   while(poolElementNode != NULL) {
+      nodes++;
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
+                           poolNamespaceNode, poolElementNode);
+   }
+   return(nodes);
 }

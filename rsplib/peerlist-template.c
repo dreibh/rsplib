@@ -222,6 +222,25 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
 }
 
 
+/* ###### Find nearest prev PeerListNode ################################# */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
+                                  struct ST_CLASS(PeerList)*          peerList,
+                                  const ENRPIdentifierType            identifier,
+                                  const struct TransportAddressBlock* transportAddressBlock)
+{
+   struct ST_CLASS(PeerListNode) cmpElement;
+
+   cmpElement.Identifier   = identifier;
+   cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
+   struct STN_CLASSNAME* result = ST_METHOD(GetNearestPrev)(&peerList->PeerListIndexStorage,
+                                                            &cmpElement.PeerListIndexStorageNode);
+   if(result) {
+      return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
+   }
+   return(NULL);
+}
+
+
 /* ###### Find nearest next PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,

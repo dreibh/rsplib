@@ -101,6 +101,19 @@ inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNod
 }
 
 
+/* ###### Find nearest prev PeerListNode ################################# */
+inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
+                                         struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                         const ENRPIdentifierType             nsIdentifier,
+                                         const struct TransportAddressBlock*  transportAddressBlock)
+{
+   return(ST_CLASS(peerListFindNearestPrevPeerListNode)(
+             &peerListManagement->List,
+             nsIdentifier,
+             transportAddressBlock));
+}
+
+
 /* ###### Find nearest next PeerListNode ################################# */
 inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                                          struct ST_CLASS(PeerListManagement)* peerListManagement,

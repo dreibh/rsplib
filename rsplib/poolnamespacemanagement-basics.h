@@ -64,7 +64,7 @@ typedef uint32_t PoolElementSeqNumberType;
 
 #define PNNPO_POOLS_INDEX     (1 << 10)
 #define PNNPO_POOLS_SELECTION (1 << 11)
-#define PNNPO_POOLS_PROPERTY  (1 << 12)
+#define PNNPO_POOLS_OWNERSHIP (1 << 12)
 #define PNNPO_POOLS_TIMER     (1 << 13)
 
 

@@ -175,6 +175,10 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
                                   const ENRPIdentifierType            identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
+                                  struct ST_CLASS(PeerList)*          peerList,
+                                  const ENRPIdentifierType            identifier,
+                                  const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
                                   const ENRPIdentifierType            identifier,

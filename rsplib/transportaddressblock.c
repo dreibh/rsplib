@@ -207,7 +207,7 @@ void transportAddressBlockPrint(
         const struct TransportAddressBlock* transportAddressBlock,
         FILE*                               fd)
 {
-   char buffer[2048];
+   char buffer[256];
    transportAddressBlockGetDescription(transportAddressBlock,
                                        (char*)&buffer, sizeof(buffer));
    fputs(buffer, fd);

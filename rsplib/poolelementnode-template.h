@@ -44,7 +44,7 @@ struct ST_CLASS(PoolElementNode)
    struct STN_CLASSNAME          PoolElementSelectionStorageNode;
    struct STN_CLASSNAME          PoolElementIndexStorageNode;
    struct STN_CLASSNAME          PoolElementTimerStorageNode;
-   struct STN_CLASSNAME          PoolElementPropertyStorageNode;
+   struct STN_CLASSNAME          PoolElementOwnershipStorageNode;
    struct ST_CLASS(PoolNode)*    OwnerPoolNode;
 
    PoolElementIdentifierType     Identifier;
@@ -118,19 +118,19 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromTimerSto
 }
 
 
-/* ###### Get PoolElementNode from given Property Node ################### */
-inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPropertyStorageNode)(void* node)
+/* ###### Get PoolElementNode from given Ownership Node ################### */
+inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(void* node)
 {
    const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
-   long n = (long)node - ((long)&dummy->PoolElementPropertyStorageNode - (long)dummy);
+   long n = (long)node - ((long)&dummy->PoolElementOwnershipStorageNode - (long)dummy);
    return((struct ST_CLASS(PoolElementNode)*)n);
 }
 
 
 void ST_CLASS(poolElementTimerStorageNodePrint)(const void* nodePtr, FILE* fd);
 int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2);
-void ST_CLASS(poolElementPropertyStorageNodePrint)(const void* nodePtr, FILE* fd);
-int ST_CLASS(poolElementPropertyStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2);
+void ST_CLASS(poolElementOwnershipStorageNodePrint)(const void* nodePtr, FILE* fd);
+int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2);
 
 
 #ifdef __cplusplus

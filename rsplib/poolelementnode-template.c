@@ -31,7 +31,7 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    STN_METHOD(New)(&poolElementNode->PoolElementSelectionStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementIndexStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementTimerStorageNode);
-   STN_METHOD(New)(&poolElementNode->PoolElementPropertyStorageNode);
+   STN_METHOD(New)(&poolElementNode->PoolElementOwnershipStorageNode);
 
    poolElementNode->OwnerPoolNode         = NULL;
 
@@ -63,7 +63,7 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementSelectionStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementIndexStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode));
-   CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementPropertyStorageNode));
+   CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode));
 
    poolElementNode->Identifier            = 0;
    poolElementNode->HomeNSIdentifier      = 0;
@@ -81,7 +81,7 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    /* Do not clear AddressBlock and UserData yet, it must be used for
       user-specific dispose function! */
 
-   STN_METHOD(Delete)(&poolElementNode->PoolElementPropertyStorageNode);
+   STN_METHOD(Delete)(&poolElementNode->PoolElementOwnershipStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementTimerStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementIndexStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementSelectionStorageNode);
@@ -171,10 +171,10 @@ int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       pool
 {
    if(poolPolicySettingsComparison(&poolElementNode->PolicySettings,
                                    &source->PolicySettings) != 0) {
-      // ====== Update policy information ====================================
+      /* ====== Update policy information ================================ */
       poolElementNode->PolicySettings = source->PolicySettings;
 
-      // ====== Reduce virtual nodes counter, if necessary ===================
+      /* ====== Reduce virtual nodes counter, if necessary =============== */
       if(poolElementNode->VirtualCounter > poolElementNode->PolicySettings.Weight) {
          poolElementNode->VirtualCounter = poolElementNode->PolicySettings.Weight;
       }
@@ -260,20 +260,28 @@ int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const 
 }
 
 
-/* ###### Property Print ################################################# */
-void ST_CLASS(poolElementPropertyStorageNodePrint)(const void* nodePtr, FILE* fd)
+/* ###### Ownership Print ################################################# */
+void ST_CLASS(poolElementOwnershipStorageNodePrint)(const void* nodePtr, FILE* fd)
 {
-   const struct ST_CLASS(PoolElementNode)* node = ST_CLASS(getPoolElementNodeFromPropertyStorageNode)((void*)nodePtr);
+   const struct ST_CLASS(PoolElementNode)* node = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr);
    fprintf(fd, "#$%08x", node->Identifier);
 }
 
 
-/* ###### Property Comparison ############################################ */
-int ST_CLASS(poolElementPropertyStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2)
+/* ###### Ownership Comparison ############################################ */
+int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2)
 {
-   const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromPropertyStorageNode)((void*)nodePtr1);
-   const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromPropertyStorageNode)((void*)nodePtr2);
-   const int cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
+   const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr1);
+   const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr2);
+   int                                     cmpResult;
+
+   if(node1->HomeNSIdentifier < node2->HomeNSIdentifier) {
+      return(-1);
+   }
+   else if(node1->HomeNSIdentifier > node2->HomeNSIdentifier) {
+      return(1);
+   }
+   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
    if(cmpResult != 0) {
       return(cmpResult);
    }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.11 2004/08/04 01:02:38 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.12 2004/08/19 11:04:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1490,7 +1490,9 @@ static bool scanPeerNameTableRequestMessage(struct RSerPoolMessage* message)
 /* ###### Scan peer name table response message ########################## */
 static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_serverparameter* sp;
+   struct rserpool_serverparameter*  sp;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   size_t                            scannedPoolElementParameters;
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
@@ -1499,6 +1501,27 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   while(scanPoolHandleParameter(message, &message->Handle)) {
+
+   // CREATE POOL....??????????
+
+      scannedPoolElementParameters = 0;
+      poolElementNode = scanPoolElementParameter(message);
+      while(poolElementNode) {
+         scannedPoolElementParameters++;
+         // ADD PEN.... ????????????????
+
+         poolElementNode = scanPoolElementParameter(message);
+      }
+
+      if(scannedPoolElementParameters == 0) {
+         LOG_WARNING
+         fputs("PeerNameTableResponse contains empty pool\n", stdlog);
+         LOG_END
+         return(false);
+      }
+   }
 
    return(true);
 }
