@@ -7,12 +7,12 @@
   <C2Real>1.5000000000000000000000000000000000000000000000000000000000000000e+00</C2Real>
   <C2Imag>-1.5000000000000000000000000000000000000000000000000000000000000000e+00</C2Imag>
   <Useroptions>
-   <MaxIterations>1000</MaxIterations>
+   <MaxIterations>500</MaxIterations>
    <N>3</N>
   </Useroptions>
  </Algorithm>
  <ColorScheme>
   <ColorSchemeName>SimpleHSV</ColorSchemeName>
  </ColorScheme>
- <Resolution>800*600</Resolution>
+ <Resolution>640*480</Resolution>
 </FractalV1>

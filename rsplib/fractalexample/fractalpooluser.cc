@@ -111,7 +111,8 @@ FractalPU::FractalPU(const size_t width,
    QFile AllconfigFile(ConfigDirName + "scenarios.conf");
    if ( !AllconfigFile.open( IO_ReadOnly ) )
    {
-      std::cerr << "All-Config file open failed" << ConfigDirName + "scenarios.conf" << std::endl;
+      std::cerr << "Opening config file failed for "
+                << ConfigDirName + "scenarios.conf" << std::endl;
    }
    else
    {
@@ -307,17 +308,17 @@ void FractalPU::getNextParameters()
 
   	QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
   	QDomNode child = useroptions.firstChild();
-  	while(!child.isNull())
+        while(!child.isNull())
   	{
-		QString Name = child.nodeName();
-	  	QString Value = child.firstChild().toText().data();
-		if(Name == "MaxIterations")
+		const QString name  = child.nodeName();
+	  	const QString value = child.firstChild().toText().data();
+		if(name == "MaxIterations")
 		{
-			Parameter.MaxIterations = Value.toInt();
+			Parameter.MaxIterations = value.toInt();
 		}
-		else if (Name == "N")
+		else if (name == "N")
 		{
-			Parameter.N = Value.toInt();
+			Parameter.N = value.toDouble();
 		}
 		child = child.nextSibling();
   	}
@@ -367,7 +368,8 @@ void FractalPU::run()
          Parameter.C1Imag        = 1.5;
          Parameter.C2Real        = 1.5;
          Parameter.C2Imag        = -1.5;
-         Parameter.MaxIterations = 150;
+         Parameter.N             = 12.34567890;
+         Parameter.MaxIterations = 1024;
          Parameter.AlgorithmID   = FGPA_MANDELBROT;
 	 getNextParameters();
          if(Image == NULL) {
@@ -383,6 +385,7 @@ void FractalPU::run()
 
 
          // ====== Begin image calculation ==================================
+         bool success = false;
          if(sendParameter()) {
             TimeoutTimer->start(2000, TRUE);
 
@@ -405,8 +408,8 @@ void FractalPU::run()
                   TimeoutTimer->start(5000, TRUE);
                   switch(handleData(&data, received)) {
                      case Finalizer:
+                        success = true;
                         goto finish;
-                        break;
                       break;
                      case Invalid:
                         std::cerr << "ERROR: Invalid data block received!" << std::endl;
@@ -433,9 +436,10 @@ finish:
          // ====== Image calculation completed ==============================
          TimeoutTimer->stop();
 
-         rspSessionSetStatusText(Session, "Image completed!");
-         statusBar()->message("Image completed!");
-         std::cout << "Image completed!" << std::endl;
+         const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
+         rspSessionSetStatusText(Session, statusText);
+         statusBar()->message(statusText);
+         std::cout << statusText << std::endl;
 
          rspDeleteSession(Session);
          Session = NULL;

@@ -113,6 +113,7 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
    Status.Parameter.C2Real        = parameter->C2Real;
    Status.Parameter.C1Imag        = parameter->C1Imag;
    Status.Parameter.C2Imag        = parameter->C2Imag;
+   Status.Parameter.N             = parameter->N;
    Status.Parameter.MaxIterations = ntohl(parameter->MaxIterations);
    Status.Parameter.AlgorithmID   = ntohl(parameter->AlgorithmID);
    Status.CurrentX                = 0;
@@ -121,6 +122,7 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
             << " h=" << Status.Parameter.Width
             << " c1=" << std::complex<double>(Status.Parameter.C1Real, Status.Parameter.C1Imag)
             << " c2=" << std::complex<double>(Status.Parameter.C2Real, Status.Parameter.C2Imag)
+            << " n=" << Status.Parameter.N
             << " maxIterations=" << Status.Parameter.MaxIterations
             << " algorithmID=" << Status.Parameter.AlgorithmID << std::endl;
    if((Status.Parameter.Width > 65536)           ||
