@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.15 2004/08/24 16:06:38 dreibh Exp $
+ *  $Id: netutilities.c,v 1.16 2004/08/30 08:32:41 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -942,7 +942,7 @@ int sendtoplus(int                   sockfd,
          fputs("Calling sctp_send()...\n", stdlog);
          LOG_END
          result = sctp_sendfkt(sockfd, buffer, length,
-                              &sri, flags);
+                               &sri, flags);
       }
    }
    else {

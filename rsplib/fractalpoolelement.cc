@@ -50,14 +50,12 @@ class ServiceThread : public TDThread
       return(Session == NULL);
    }
 
-   public:
-   static void handleCookieEcho(void*        userData,
-                                void*        cookieData,
-                                const size_t cookieSize);
-
    private:
    void run();
-   bool handleParameter(const FractalGeneratorParameter* parameter);
+   bool handleParameter(const FractalGeneratorParameter* parameter,
+                        const size_t                     length);
+   bool handleCookieEcho(const FractalGeneratorCookie* cookie,
+                         const size_t                  length);
    bool sendCookie();
    bool sendData(FractalGeneratorData* data);
 
@@ -95,8 +93,12 @@ ServiceThread::~ServiceThread()
 }
 
 
-bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter)
+bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
+                                    const size_t                     size)
 {
+   if(size < sizeof(struct FractalGeneratorParameter)) {
+      return(false);
+   }
    Status.Parameter.Width         = ntohl(parameter->Width);
    Status.Parameter.Height        = ntohl(parameter->Height);
    Status.Parameter.C1Real        = parameter->C1Real;
@@ -107,7 +109,7 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter)
    Status.Parameter.AlgorithmID   = ntohl(parameter->AlgorithmID);
    Status.CurrentX                = 0;
    Status.CurrentY                = 0;
-   std::cout << "Start: w=" << Status.Parameter.Width
+   std::cout << "Parameters: w=" << Status.Parameter.Width
             << " h=" << Status.Parameter.Width
             << " c1=" << std::complex<double>(Status.Parameter.C1Real, Status.Parameter.C1Imag)
             << " c2=" << std::complex<double>(Status.Parameter.C2Real, Status.Parameter.C2Imag)
@@ -123,28 +125,33 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter)
 }
 
 
-void ServiceThread::handleCookieEcho(void* userData, void* cookieData, const size_t cookieSize)
+bool ServiceThread::handleCookieEcho(const FractalGeneratorCookie* cookie,
+                                     const size_t                  size)
 {
-   ServiceThread*          serviceThread = (ServiceThread*)userData;
-   FractalGeneratorCookie* cookie        = (FractalGeneratorCookie*)cookieData;
-
-   if(serviceThread->IsNewSession) {
-      if( (cookieSize >= sizeof(struct FractalGeneratorCookie)) &&
-          (!(strncmp(cookie->ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID)))) ) {
-         /* Here should be *at least* checks for a Message Authentication Code
-            (MAC), timestamp (out-of-date cookie, e.g. a replay attack) and
-            validity and plausibility of the values set from the cookie! */
-
-      }
-      else {
-         puts("Cookie is invalid!");
-      }
-      serviceThread->IsNewSession = false;
+   if(IsNewSession == false) {
+      std::cerr << "Bad cookie: session is not new!" << std::endl;
+      return(false);
    }
-   else {
-      puts("CookieEcho is only allowed before first transaction!");
+   if(size != sizeof(struct FractalGeneratorCookie)) {
+      std::cerr << "Bad cookie: invalid size!" << std::endl;
+      return(false);
    }
+   if(strncmp(cookie->ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID))) {
+      std::cerr << "Bad cookie: invalid ID!" << std::endl;
+      return(false);
+   }
+   IsNewSession = false;
+
+   if(!handleParameter(&cookie->Parameter, sizeof(cookie->Parameter))) {
+      return(false);
+   }
+   Status.CurrentX = ntohl(cookie->CurrentX);
+   Status.CurrentY = ntohl(cookie->CurrentY);
+   std::cout << "Cookie: x=" << Status.CurrentX
+             << " y=" << Status.CurrentY << std::endl;
+   return(true);
 }
+
 
 bool ServiceThread::sendCookie()
 {
@@ -169,6 +176,7 @@ bool ServiceThread::sendCookie()
    LastCookieTimeStamp = getMicroTime();
    return(true);
 }
+
 
 bool ServiceThread::sendData(FractalGeneratorData* data)
 {
@@ -197,28 +205,38 @@ bool ServiceThread::sendData(FractalGeneratorData* data)
 
 void ServiceThread::run()
 {
-   // ====== Handle command =================================================
+   char                             buffer[4096];
    struct TagItem                   tags[16];
-   struct FractalGeneratorParameter parameter;
    struct FractalGeneratorData      data;
    ssize_t                          received;
    double                           stepX;
    double                           stepY;
    std::complex<double>             z;
    size_t                           i;
+   size_t                           dataPackets = 0;
 
    for(;;) {
-      tags[0].Tag  = TAG_RspIO_Timeout;
-      tags[0].Data = (tagdata_t)5000000;
-      tags[1].Tag  = TAG_DONE;
-      received = rspSessionRead(Session, (char*)&parameter, sizeof(parameter), (struct TagItem*)&tags);
-printf("RECV=%d\n",received);
-      if(received == sizeof(parameter)) {
-         IsNewSession = false;
-
-         if(!handleParameter(&parameter)) {
-            goto finish;
+      tags[0].Tag  = TAG_RspIO_MsgIsCookie;
+      tags[0].Data = 0;
+      tags[1].Tag  = TAG_RspIO_Timeout;
+      tags[1].Data = (tagdata_t)5000000;
+      tags[2].Tag  = TAG_DONE;
+      received = rspSessionRead(Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
+      if(received > 0) {
+         if(tags[0].Data != 0) {
+            if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
+               goto finish;
+            }
          }
+         else {
+            if(!handleParameter((struct FractalGeneratorParameter*)&buffer, received)) {
+               Status.CurrentX = 0;
+               Status.CurrentY = 0;
+               goto finish;
+            }
+         }
+
+         IsNewSession = false;
 
          data.Points = 0;
          stepX = (Status.Parameter.C2Real - Status.Parameter.C1Real) / Status.Parameter.Width;
@@ -226,10 +244,11 @@ printf("RECV=%d\n",received);
          LastCookieTimeStamp = LastSendTimeStamp = getMicroTime();
 
          if(!sendCookie()) {
+            std::cerr << "Sending cookie (start) failed!" << std::endl;
             goto finish;
          }
-         for(Status.CurrentY = 0;Status.CurrentY < Status.Parameter.Height;Status.CurrentY++) {
-            for(Status.CurrentX = 0;Status.CurrentX < Status.Parameter.Width;Status.CurrentX++) {
+         while(Status.CurrentY < Status.Parameter.Height) {
+            while(Status.CurrentX < Status.Parameter.Width) {
                const std::complex<double> c =
                   std::complex<double>(Status.Parameter.C1Real + ((double)Status.CurrentX * stepX),
                                        Status.Parameter.C1Imag + ((double)Status.CurrentY * stepY));
@@ -252,25 +271,42 @@ printf("RECV=%d\n",received);
                if( (data.Points >= FGD_MAX_POINTS) ||
                   (LastSendTimeStamp + 1000000 < getMicroTime()) ) {
                   if(!sendData(&data)) {
+                     std::cerr << "Sending data failed!" << std::endl;
+                     goto finish;
+                  }
+
+                  dataPackets++;
+                  if(dataPackets > 20) {
+                     sendCookie();
+                     std::cerr << "UNTERBRECHUNG! ---------------" << std::endl;
                      goto finish;
                   }
                }
-               if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
-                  if(!sendCookie()) {
-                     goto finish;
-                  }
+
+               Status.CurrentX++;
+            }
+            Status.CurrentX = 0;
+            Status.CurrentY++;
+
+            if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
+               if(!sendCookie()) {
+                  std::cerr << "Sending cookie failed!" << std::endl;
+                  goto finish;
                }
             }
          }
+
          if(data.Points > 0) {
             if(!sendData(&data)) {
+               std::cerr << "Sending data (last block) failed!" << std::endl;
                goto finish;
             }
          }
 
-         data.StartX = ~0;
-         data.StartY = ~0;
+         data.StartX = 0xffffffff;
+         data.StartY = 0xffffffff;
          if(!sendData(&data)) {
+            std::cerr << "Sending data (finalizer) failed!" << std::endl;
             goto finish;
          }
       }
@@ -490,7 +526,7 @@ int main(int argc, char** argv)
             policyType = PPT_WEIGHTED_RANDOM;
          }
          else {
-            printf("ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[n][8]);
+            std::cerr << "ERROR: Unknown policy type \"" << (char*)&argv[n][8] << "\"!" << std::endl;
             exit(1);
          }
       }
@@ -503,16 +539,17 @@ int main(int argc, char** argv)
          /* Process this later */
       }
       else {
-         printf("Bad argument \"%s\"!\n" ,argv[n]);
-         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
-                argv[0]);
+         std::cerr << "Bad argument \"" << argv[n] << "\"!"  << std::endl;
+         std::cerr << "Usage: " << argv[0]
+                   << " {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}"
+                   << std::endl;
          exit(1);
       }
    }
 
    beginLogging();
    if(rspInitialize(NULL) != 0) {
-      puts("ERROR: Unable to initialize rsplib!");
+      std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
       finishLogging();
       exit(1);
    }
@@ -520,7 +557,8 @@ int main(int argc, char** argv)
    for(n = 1;n < argc;n++) {
       if(!(strncmp(argv[n], "-nameserver=" ,12))) {
          if(rspAddStaticNameServer((char*)&argv[n][12]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[n]);
+            std::cerr << "ERROR: Bad name server setting: "
+                      << argv[n] << "!" << std::endl;
             exit(1);
          }
       }
@@ -528,7 +566,7 @@ int main(int argc, char** argv)
 
 
    if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
-      puts("ERROR: Unable to create rsplib main loop thread!");
+      std::cerr << "ERROR: Unable to create rsplib main loop thread!" << std::endl;
    }
 
    tags[0].Tag  = TAG_PoolPolicy_Type;
@@ -555,8 +593,8 @@ int main(int argc, char** argv)
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
-      puts("Fractal Generator Pool Element - Version 1.0");
-      puts("--------------------------------------------\n");
+      std::cout << "Fractal Generator Pool Element - Version 1.0" << std::endl;
+      std::cout << "--------------------------------------------" << std::endl;
 
 #ifndef FAST_BREAK
       installBreakDetector();
@@ -601,13 +639,9 @@ int main(int argc, char** argv)
                   tags[4].Data = 3;
                   tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
                   tags[5].Data = 12;
-                  tags[6].Tag  = TAG_RspSession_ReceivedCookieEchoCallback;
-                  tags[6].Data = (tagdata_t)ServiceThread::handleCookieEcho;
-                  tags[7].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;
-                  tags[7].Data = (tagdata_t)serviceThread;
-                  tags[8].Tag  = TAG_UserTransport_HasControlChannel;
-                  tags[8].Data = 1;
-                  tags[9].Tag  = TAG_DONE;
+                  tags[6].Tag  = TAG_UserTransport_HasControlChannel;
+                  tags[6].Data = 1;
+                  tags[7].Tag  = TAG_DONE;
                   serviceThread->Session = rspAcceptSession(pedArray[0], (struct TagItem*)&tags);
                   if(serviceThread->Session) {
                      std::cout << "Adding new client." << std::endl;
@@ -629,25 +663,25 @@ int main(int argc, char** argv)
 
          /* ====== Check auto-stop timer ==================================== */
          if((stop > 0) && (getMicroTime() >= stop)) {
-            puts("Auto-stop time reached -> exiting!");
+            std::cerr << "Auto-stop time reached -> exiting!" << std::endl;
             break;
          }
       }
 
-      std::cerr << "Closing sessions..." << std::endl;
+      std::cout << "Closing sessions..." << std::endl;
       stl.removeAll();
-      std::cerr << "Removing Pool Element..." << std::endl;
+      std::cout << "Removing Pool Element..." << std::endl;
       rspDeletePoolElement(poolElement, NULL);
    }
    else {
-      puts("ERROR: Unable to create pool element!");
+      std::cerr << "ERROR: Unable to create pool element!" << std::endl;
       exit(1);
    }
 
-   std::cerr << "Removing main thread..." << std::endl;
+   std::cout << "Removing main thread..." << std::endl;
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
    finishLogging();
-   puts("\nTerminated!");
+   std::cout << std::endl << "Terminated!" << std::endl;
    return(0);
 }

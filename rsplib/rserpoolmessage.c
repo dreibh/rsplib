@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.9 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.10 2004/08/30 08:32:41 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -215,15 +215,17 @@ bool rserpoolMessageSend(int                     protocol,
                          const card64            timeout,
                          struct RSerPoolMessage* message)
 {
-   size_t  messageLength;
-   ssize_t sent;
+   size_t   messageLength;
+   ssize_t  sent;
+   uint32_t myPPID;
 
    messageLength = rserpoolMessage2Packet(message);
    if(messageLength > 0) {
+      myPPID = (protocol == IPPROTO_SCTP) ? message->PPID : 0;
       sent = sendtoplus(fd,
                         message->Buffer, messageLength, flags,
                         message->AddressArray, message->Addresses,
-                        (protocol == IPPROTO_SCTP) ? message->PPID : 0,
+                        myPPID,
                         assocID,
                         0, 0, timeout);
       if(sent == (ssize_t)messageLength) {
@@ -231,7 +233,7 @@ bool rserpoolMessageSend(int                     protocol,
          fprintf(stdlog, "Successfully sent ASAP message: "
                  "assoc=%u PPID=$%08x, Type=$%02x\n",
                  (unsigned int)assocID,
-                 message->PPID,
+                 myPPID,
                  message->Type);
          LOG_END
          return(true);

@@ -1,7 +1,9 @@
+#include <iostream>
 #include <qapplication.h>
 #include <qwidget.h>
 #include <qmainwindow.h>
 #include <qimage.h>
+#include <qtimer.h>
 #include <qpainter.h>
 #include <qstatusbar.h>
 #define QT_THREAD_SUPPORT
@@ -38,34 +40,41 @@ class FractalPU : public QWidget,
    inline void setPoint(const size_t x, const size_t y, const unsigned int value) {
       Image->setPixel(x, y, value);
    }
-/*
-   inline size_t width() const {
-      return(Parameter.Width);
-   }
 
-   inline size_t height() const {
-      return(Parameter.Height);
-   }
-*/
+
+   public slots:
+   void timeoutExpired();
+
+
    protected:
    void paintImage(const size_t startY, const size_t endY);
    void resizeEvent(QResizeEvent* resizeEvent);
    void paintEvent(QPaintEvent* paintEvent);
 
-   private:
-   bool sendParameter();
-   bool handleData(const FractalGeneratorData* data);
 
+   private:
    virtual void run();
+   bool sendParameter();
+
+   enum DataStatus {
+      Okay      = 0,
+      Finalizer = 1,
+      Invalid   = 2
+   };
+   DataStatus handleData(const FractalGeneratorData* data,
+                         const size_t                size);
 
    bool                      Running;
    QImage*                   Image;
+   QTimer*                   TimeoutTimer;
 
    unsigned char*            PoolHandle;
    size_t                    PoolHandleSize;
    SessionDescriptor*        Session;
+   uint32_t                  LastPoolElementID;
    FractalGeneratorParameter Parameter;
    size_t                    Run;
+   size_t                    PoolElementUsages;
 };
 
 
@@ -78,16 +87,27 @@ FractalPU::FractalPU(const size_t width,
    Running          = true;
    Parameter.Width  = width;
    Parameter.Height = height;
-   resize(width, height);
+
+   setMinimumSize(Parameter.Width, Parameter.Height);
+   setMaximumSize(Parameter.Width, Parameter.Height);
+
    Image  = new QImage(Parameter.Width, Parameter.Height, 32);
    Q_CHECK_PTR(Image);
+
+   TimeoutTimer = new QTimer;
+   Q_CHECK_PTR(TimeoutTimer);
+   connect(TimeoutTimer, SIGNAL(timeout()), this, SLOT(timeoutExpired()));
+
    reset();
+   show();
    start();
 }
 
 
 FractalPU::~FractalPU()
 {
+   delete TimeoutTimer;
+   TimeoutTimer = NULL;
    delete Image;
    Image = NULL;
 }
@@ -155,37 +175,46 @@ bool FractalPU::sendParameter()
    tags[1].Tag  = TAG_DONE;
    if(rspSessionWrite(Session, &parameter, sizeof(parameter),
                       (TagItem*)&tags) <= 0) {
-      puts("ERROR: SessionWrite failed!");
+      std::cerr << "ERROR: SessionWrite failed!" << std::endl;
       return(false);
    }
    return(true);
 }
 
 
-bool FractalPU::handleData(const FractalGeneratorData* data)
+FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
+                                            const size_t                size)
 {
+   if(size < getFractalGeneratorDataSize(0)) {
+      return(Invalid);
+   }
    size_t p      = 0;
    size_t x      = ntohl(data->StartX);
    size_t y      = ntohl(data->StartY);
    size_t points = ntohl(data->Points);
+   if((points == 0) && (x == 0xffffffff) && (y == 0xffffffff)) {
+      update();
+      return(Finalizer);
+   }
+   if(size < getFractalGeneratorDataSize(points)) {
+      return(Invalid);
+   }
    if(x >= Parameter.Width) {
-      return(false);
+      return(Invalid);
    }
    if(y >= Parameter.Height) {
-      return(false);
+      return(Invalid);
    }
    if(points > FGD_MAX_POINTS) {
-      return(false);
+      return(Invalid);
    }
    while(y < Parameter.Height) {
       while(x < Parameter.Width) {
          if(p > points) {
             break;
          }
-
          const uint32_t point = ntohl(data->Buffer[p]);
-
-         const QColor color(((point + Run) % 72) * 5, 255, 255, QColor::Hsv);
+         const QColor color(((point + (2 * Run) + PoolElementUsages) % 72) * 5, 255, 255, QColor::Hsv);
          setPoint(x, y, color.rgb());
          p++;
 
@@ -195,25 +224,22 @@ bool FractalPU::handleData(const FractalGeneratorData* data)
       y++;
    }
    paintImage(ntohl(data->StartY), y);
-   return(true);
+   return(Okay);
+}
+
+
+void FractalPU::timeoutExpired()
+{
+   std::cerr << "##### Timeout expired -> Customer is not satisfied with this service!" << std::endl;
 }
 
 
 void FractalPU::run()
 {
-   TagItem tags[16];
+   TagItem  tags[16];
 
-/*
-   for(size_t x = 0;x < Width;x++) {
-      for(size_t y = 0;y < Height;y++) {
-         setPoint(x, y, qRgb((x*y)%256, x % 256, y % 256));
-      }
-   }
-   update();
-*/
-
-puts("start...");
    Run                     = 0;
+   PoolElementUsages       = 0;
    Parameter.C1Real        = -1.5;
    Parameter.C1Imag        = 1.5;
    Parameter.C2Real        = 1.5;
@@ -235,59 +261,55 @@ puts("start...");
    tags[4].Data = 3;
    tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
    tags[5].Data = 9;
-   /*
-   tags[6].Tag  = TAG_RspSession_FailoverCallback;
-   tags[6].Data = (tagdata_t)handleFailover;
-   tags[7].Tag  = TAG_RspSession_FailoverUserData;
-   tags[7].Data = (tagdata_t)NULL;
-   */
    tags[6].Tag = TAG_DONE;
 
-   puts("Creating session...");
+   std::cerr << "Creating session..." << std::endl;
    for(;;) {
+      LastPoolElementID = 0;
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {
-         puts("Sending parameter command...");
+         std::cerr << "Sending parameter command..." << std::endl;
          Run++;
+         PoolElementUsages = 0;
 
-         bool success = false;
-         do {
-            if(sendParameter()) {
-               FractalGeneratorData data;
+         if(sendParameter()) {
+            TimeoutTimer->start(2000, TRUE);
 
-               tags[0].Tag  = TAG_RspIO_Timeout;
-               tags[0].Data = (tagdata_t)2000000;
-               tags[1].Tag  = TAG_DONE;
-               ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
-               for(;;) {
-                  if( (received >= (ssize_t)getFractalGeneratorDataSize(0)) &&
-                      (received >= (ssize_t)getFractalGeneratorDataSize(ntohl(data.Points))) ) {
-                     if(ntohl(data.Points) == 0) {
-                        puts("ENDE!");
-                        success = true;
-                        break;
-                     }
-                     handleData(&data);
+            FractalGeneratorData data;
+            tags[0].Tag  = TAG_RspIO_PE_ID;
+            tags[0].Data = 0;
+            tags[1].Tag  = TAG_RspIO_Timeout;
+            tags[1].Data = (tagdata_t)2000000;
+            tags[2].Tag  = TAG_DONE;
+            ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
+            while(received != 0) {
+               if(received > 0) {
+                  if(LastPoolElementID != tags[0].Data) {
+                     LastPoolElementID = tags[0].Data;
+                     PoolElementUsages++;
                   }
-                  else {
-                     printf("received=%d\n",received);
-                     if(errno != EAGAIN) {
-                        puts("ERROR!");
+                  TimeoutTimer->stop();
+                  TimeoutTimer->start(2000, TRUE);
+                  switch(handleData(&data, received)) {
+                     case Finalizer:
+                        goto finish;
                         break;
-                     }
-                     else {
-                        puts("eagain...");
-                     }
+                      break;
+                     case Invalid:
+                        std::cerr << "ERROR: Invalid data block received!" << std::endl;
+                      break;
+                     default:
+                      break;
                   }
-                  received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
-   printf("recv=%d\n",received);
                }
+               received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
             }
+         }
 
-            printf("success=%d\n",success);
-            usleep(5000000);
-         } while(success == false);
+finish:
+         TimeoutTimer->stop();
 
+         std::cout << "Image completed!" << std::endl;
          rspDeleteSession(Session);
          Session = NULL;
 
@@ -312,7 +334,7 @@ int main(int argc, char** argv)
    }
    beginLogging();
    if(rspInitialize(NULL) != 0) {
-      puts("ERROR: Unable to initialize rsplib!");
+      std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
       exit(1);
    }
    for(n = 1;n < argc;n++) {

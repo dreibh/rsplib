@@ -183,6 +183,10 @@ void ST_CLASS(poolElementNodePrint)(
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source)
 {
+   /* ====== Set amount of unreachability reports to zero ================ */
+   poolElementNode->UnreachabilityReports = 0;
+   // ????? Ist das sinnvoll?????
+
    if(poolPolicySettingsComparison(&poolElementNode->PolicySettings,
                                    &source->PolicySettings) != 0) {
       /* ====== Update policy information ================================ */

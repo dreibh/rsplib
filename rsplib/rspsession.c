@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.11 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: rspsession.c,v 1.12 2004/08/30 08:32:41 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -95,11 +95,12 @@ struct SessionDescriptor
    struct PoolElementDescriptor* PoolElement;
    void*                         Cookie;
    size_t                        CookieSize;
+   void*                         CookieEcho;
+   size_t                        CookieEchoSize;
    bool                          Incoming;
 
    card64                        ConnectTimeout;
-   card64                        CookieEchoTimeout;
-   card64                        BusinessCardTimeout;
+   card64                        NameResolutionRetryDelay;
 
    struct MessageBuffer*         MessageBuffer;
    struct TagItem*               Tags;
@@ -500,17 +501,18 @@ static struct SessionDescriptor* rspSessionNew(
       else {
          session->Handle.Size = 0;
       }
-      session->SocketDomain        = socketDomain;
-      session->SocketType          = socketType;
-      session->SocketProtocol      = socketProtocol;
-      session->Socket              = socketDescriptor;
-      session->PoolElement         = ped;
-      session->Incoming            = incoming;
-      session->Cookie              = NULL;
-      session->CookieSize          = 0;
-      session->ConnectTimeout      = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout,      5000000);
-      session->CookieEchoTimeout   = (card64)tagListGetData(tags, TAG_RspSession_CookieEchoTimeout,   2000000);
-      session->BusinessCardTimeout = (card64)tagListGetData(tags, TAG_RspSession_BusinessCardTimeout, 2000000);
+      session->SocketDomain             = socketDomain;
+      session->SocketType               = socketType;
+      session->SocketProtocol           = socketProtocol;
+      session->Socket                   = socketDescriptor;
+      session->PoolElement              = ped;
+      session->Incoming                 = incoming;
+      session->Cookie                   = NULL;
+      session->CookieSize               = 0;
+      session->CookieEcho               = NULL;
+      session->CookieEchoSize           = 0;
+      session->ConnectTimeout           = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout,      5000000);
+      session->NameResolutionRetryDelay = (card64)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
       if(session->PoolElement != NULL) {
          threadSafetyLock(&session->PoolElement->Mutex);
          session->PoolElement->SessionList =
@@ -547,6 +549,10 @@ static void rspSessionDelete(struct SessionDescriptor* session)
       if(session->Cookie) {
          free(session->Cookie);
          session->Cookie = NULL;
+      }
+      if(session->CookieEcho) {
+         free(session->CookieEcho);
+         session->CookieEcho = NULL;
       }
       threadSafetyDestroy(&session->Mutex);
       free(session);
@@ -603,7 +609,7 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
          result = rserpoolMessageSend(session->SocketProtocol,
                                       session->Socket,
                                       0, 0,
-                                      session->CookieEchoTimeout,
+                                      0,
                                       message);
          threadSafetyUnlock(&session->Mutex);
          rserpoolMessageDelete(message);
@@ -688,7 +694,7 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
       result = rspNameResolution((unsigned char*)&session->Handle.Handle,
                                  session->Handle.Size,
                                  &eai, NULL);
-      if(result == 0) {
+      if(result == RSPERR_OKAY) {
 
          /* ====== Establish connection ======================================== */
          eai2 = eai;
@@ -703,6 +709,9 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
                                         eai2->ai_addrs,
                                         session->ConnectTimeout);
             if(session->Socket >= 0) {
+               session->SocketDomain   = eai2->ai_family;
+               session->SocketType     = eai2->ai_socktype;
+               session->SocketProtocol = eai2->ai_protocol;
                if((eai2->ai_protocol == IPPROTO_SCTP) &&
                   ((!configureSCTPSocket(session->Socket, 0, session->Tags)) ||
                    (!tuneSCTP(session->Socket, 0, session->Tags)))) {
@@ -753,9 +762,19 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
             LOG_END
          }
       }
-      else {
+      else if(result == RSPERR_NOT_FOUND) {
          LOG_ACTION
-         fputs("Name resolution not successful\n", stdlog);
+         fprintf(stdlog,
+                 "Name resolution did not find new pool element. Waiting %Ldµs...\n",
+                 session->NameResolutionRetryDelay);
+         LOG_END
+         usleep(session->NameResolutionRetryDelay);
+      }
+      else {
+         LOG_WARNING
+         fputs("Name resolution not successful: ", stdlog);
+         rserpoolErrorPrint(result, stdlog);
+         fputs("\n", stdlog);
          LOG_END
       }
    }
@@ -841,12 +860,13 @@ void rspDeleteSession(struct SessionDescriptor* session,
 
 
 /* ###### Handle ASAP message (PE<->PE/PU) ###################################*/
-static void handleRSerPoolMessage(struct SessionDescriptor* session,
-                                  char*                     buffer,
-                                  size_t                    size)
+static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
+                                          char*                     buffer,
+                                          size_t                    size)
 {
    struct RSerPoolMessage* message;
    CookieEchoCallbackPtr   callback;
+   unsigned int            type = 0;
 
    LOG_VERBOSE
    fputs("Handling ASAP message from control channel...\n", stdlog);
@@ -860,40 +880,51 @@ static void handleRSerPoolMessage(struct SessionDescriptor* session,
       fprintf(stdlog, "Received ASAP type $%04x from session, socket %d\n",
               message->Type, session->Socket);
       LOG_END
+      type = message->Type;
       switch(message->Type) {
          case AHT_COOKIE:
             LOG_VERBOSE
             fputs("Got cookie\n", stdlog);
             LOG_END
-            message->CookiePtrAutoDelete = false;
             if(session->Cookie) {
                LOG_VERBOSE2
                fputs("Replacing existing Cookie with new one\n", stdlog);
                LOG_END
                free(session->Cookie);
             }
+            message->CookiePtrAutoDelete = false;
             session->Cookie     = message->CookiePtr;
             session->CookieSize = message->CookieSize;
           break;
          case AHT_COOKIE_ECHO:
-            LOG_ACTION
-            fputs("Got cookie echo\n", stdlog);
-            LOG_END
-            callback = (CookieEchoCallbackPtr)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoCallback, (tagdata_t)NULL);
-            if(callback) {
-               LOG_VERBOSE3
-               fputs("Invoking callback...\n", stdlog);
+            if(session->CookieEcho == NULL) {
+               LOG_ACTION
+               fputs("Got cookie echo\n", stdlog);
                LOG_END
-               callback((void*)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoUserData, (tagdata_t)NULL),
-                        message->CookiePtr,
-                        message->CookieSize);
-               LOG_VERBOSE3
-               fputs("Callback completed\n", stdlog);
-               LOG_END
+               message->CookiePtrAutoDelete = false;
+               session->CookieEcho     = message->CookiePtr;
+               session->CookieEchoSize = message->CookieSize;
+               callback = (CookieEchoCallbackPtr)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoCallback, (tagdata_t)NULL);
+               if(callback) {
+                  LOG_VERBOSE3
+                  fputs("Invoking callback...\n", stdlog);
+                  LOG_END
+                  callback((void*)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoUserData, (tagdata_t)NULL),
+                           message->CookiePtr,
+                           message->CookieSize);
+                  LOG_VERBOSE3
+                  fputs("Callback completed\n", stdlog);
+                  LOG_END
+               }
+               else {
+                  LOG_VERBOSE2
+                  fputs("There is no callback installed\n", stdlog);
+                  LOG_END
+               }
             }
             else {
-               LOG_VERBOSE2
-               fputs("There is no callback installed\n", stdlog);
+               LOG_ERROR
+               fputs("Got additional cookie echo. Ignoring it.\n", stdlog);
                LOG_END
             }
           break;
@@ -916,6 +947,7 @@ static void handleRSerPoolMessage(struct SessionDescriptor* session,
    LOG_VERBOSE
    fputs("Handling ASAP message from control channel completed\n", stdlog);
    LOG_END
+   return(type);
 }
 
 
@@ -932,6 +964,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
    ssize_t        result;
    int            flags;
 
+   tagListSetData(tags, TAG_RspIO_MsgIsCookie, 0);
    LOG_VERBOSE2
    fprintf(stdlog, "Trying to read message from session, socket %d\n",
            session->Socket);
@@ -942,7 +975,18 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
       LOG_VERBOSE2
       fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
       LOG_END
-      handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
+      if(handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result) == AHT_COOKIE_ECHO) {
+         if(session->CookieEcho) {
+            if(length >= session->CookieEchoSize) {
+               tagListSetData(tags, TAG_RspIO_MsgIsCookie, 1);
+               memcpy(buffer, session->CookieEcho, session->CookieEchoSize);
+               return(session->CookieEchoSize);
+            }
+            free(session->CookieEcho);
+            session->CookieEcho     = NULL;
+            session->CookieEchoSize = 0;
+         }
+      }
       errno = EAGAIN;
       return(RspRead_MessageRead);
    }

@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.30 2004/08/27 11:51:50 dreibh Exp $
+ *  $Id: nameserver.c,v 1.31 2004/08/30 08:32:41 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -437,7 +437,7 @@ struct NameServer
    unsigned long long                       PeerMaxTimeLastHeard;
    unsigned long long                       PeerMaxTimeNoResponse;
    unsigned long long                       MentorHuntTimeout;
-   unsigned long long                       TakeoverExipryInterval;
+   unsigned long long                       TakeoverExpiryInterval;
 };
 
 
@@ -585,7 +585,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->PeerMaxTimeNoResponse                 = NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
       nameServer->PeerHeartbeatCycle                    = NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE;
       nameServer->MentorHuntTimeout                     = NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT;
-      nameServer->TakeoverExipryInterval                = NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
+      nameServer->TakeoverExpiryInterval                = NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
 
       memcpy(&nameServer->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(union sockaddr_union));
       if(nameServer->ASAPAnnounceAddress.in6.sin6_family == AF_INET6) {
@@ -1186,7 +1186,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                &nameServer->Takeovers,
                peerListNode->Identifier,
                &nameServer->Peers,
-               getMicroTime() + nameServer->TakeoverExipryInterval) == RSPERR_OKAY) {
+               getMicroTime() + nameServer->TakeoverExpiryInterval) == RSPERR_OKAY) {
             timerRestart(&nameServer->TakeoverExpiryTimer,
                          takeoverProcessListGetNextTimerTimeStamp(&nameServer->Takeovers));
             LOG_ACTION
@@ -3207,6 +3207,9 @@ int main(int argc, char** argv)
       else if(!(strncasecmp(argv[i], "-peer=",6))) {
          /* to be handled later */
       }
+      else if(!(strncasecmp(argv[i], "-maxbadpereports=",17))) {
+         /* to be handled later */
+      }
       else if(!(strcasecmp(argv[i], "-asapannounce=auto"))) {
          string2address("239.0.0.1:3863", &asapAnnounceAddress);
          asapSendAnnounces = true;
@@ -3282,6 +3285,12 @@ int main(int argc, char** argv)
       if(!(strncasecmp(argv[i], "-peer=",6))) {
          addPeer(nameServer, (char*)&argv[i][6]);
       }
+      else if(!(strncasecmp(argv[i], "-maxbadpereports=",17))) {
+         nameServer->MaxBadPEReports = atol((char*)&argv[i][17]);
+         if(nameServer->MaxBadPEReports < 1) {
+            nameServer->MaxBadPEReports = 1;
+         }
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -3322,6 +3331,19 @@ int main(int argc, char** argv)
    else {
       printf("Off\n");
    }
+
+   puts("\nASAP Parameters:");
+   printf("   Max Bad PE Reports:                          %d\n",    nameServer->MaxBadPEReports);
+   printf("   Server Announce Cycle:                       %Ld탎\n", nameServer->ServerAnnounceCycle);
+   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %Ld탎\n", nameServer->EndpointMonitoringHeartbeatInterval);
+   printf("   Endpoint Keep Alive Transmission Interval:   %Ld탎\n", nameServer->EndpointKeepAliveTransmissionInterval);
+   printf("   Endpoint Keep Alive Timeout Interval:        %Ld탎\n", nameServer->EndpointKeepAliveTimeoutInterval);
+   puts("ENRP Parameters:");
+   printf("   Peer Heartbeat Cylce:                        %Ld탎\n", nameServer->PeerHeartbeatCycle);
+   printf("   Peer Max Time Last Heard:                    %Ld탎\n", nameServer->PeerMaxTimeLastHeard);
+   printf("   Peer Max Time No Response:                   %Ld탎\n", nameServer->PeerMaxTimeNoResponse);
+   printf("   Mentor Hunt Timeout:                         %Ld탎\n", nameServer->MentorHuntTimeout);
+   printf("   Takeover Expiry Interval:                    %Ld탎\n", nameServer->TakeoverExpiryInterval);
    puts("");
 
 

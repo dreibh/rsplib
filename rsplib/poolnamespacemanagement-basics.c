@@ -26,7 +26,7 @@
 
 
 /* Generate deterministic PE identifiers */
-#define GENERATE_DETERMINISTIC_POOLELEMENTIDENTIFIERS
+/* #define GENERATE_DETERMINISTIC_POOLELEMENTIDENTIFIERS */
 
 
 PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
