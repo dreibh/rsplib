@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.8 2004/11/11 21:25:17 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.9 2004/11/12 16:28:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -106,7 +106,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
            cspObject->Description,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
-           cspObject->Associations,
+           (unsigned int)cspObject->Associations,
            cspObject->StatusText);
    for(i = 0;i < cspObject->Associations;i++) {
       getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
