@@ -392,6 +392,12 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#else
+      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
+              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
+         fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+         exit(1);
+      }
 #endif
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {

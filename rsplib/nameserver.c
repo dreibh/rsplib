@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.43 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: nameserver.c,v 1.44 2004/11/11 19:33:48 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3362,7 +3362,8 @@ int main(int argc, char** argv)
 #else
       else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
               (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
-         fprintf(stderr, "WARNING: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+         fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+         exit(1);
       }
 #endif
       else if(!(strcmp(argv[i], "-asapannounce=auto"))) {

@@ -30,11 +30,6 @@ AC_PROG_LN_S
 AC_PROG_LIBTOOL
 
 AC_CHECK_FUNCS(sctp_sendmsg, , AC_CHECK_LIB(sctp, sctp_sendmsg))
-case $host_os in
-freebsd*)
-  LDFLAGS="$LDFLAGS -L/usr/local/v6/lib"
-  ;;
-esac
 
 AC_ARG_ENABLE([csp],
 [  --enable-csp            enable CSP support ],
@@ -217,7 +212,7 @@ AC_SUBST(glib_thread_libs)
 AC_SUBST(GLIB_DEPLIBS)
 AC_SUBST(glib_LIBS)
 
-CFLAGS="$CFLAGS $GLIB_CFLAGS -DINCLUDE_LEAFLINKEDREDBLACKTREE -DUSE_LEAFLINKEDREDBLACKTREE -ansi -Wall"
+CFLAGS="$CFLAGS $GLIB_CFLAGS -DINCLUDE_LEAFLINKEDREDBLACKTREE -DUSE_LEAFLINKEDREDBLACKTREE"
 CXXFLAGS="$CXXFLAGS $GLIB_CFLAGS -DINCLUDE_LEAFLINKEDREDBLACKTREE -DUSE_LEAFLINKEDREDBLACKTREE"
 
 
@@ -287,6 +282,7 @@ bsdi*)
 freebsd*)
     CFLAGS="$CFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include"
     CXXFLAGS="$CXXFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/v6/lib"
     thread_LIBS=""
     # CFLAGS="$CFLAGS `glib12-config --cflags`"
     # LDFLAGS="$LDFLAGS `glib12-config --libs`"
@@ -301,8 +297,8 @@ hpux*)
 linux*)
     #CC=gcc-2.96
     #CXX=g++-2.96
-    CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE -O0 -g -DLINUX"
-    CXXFLAGS="$CXXFLAGS  -D_REENTRANT -D_THREAD_SAFE  -O0 -g -DLINUX"
+    CFLAGS="$CFLAGS -DLINUX -D_BSD_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g"
+    CXXFLAGS="$CXXFLAGS -DLINUX -D_BSD_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g"
     LDFLAGS="$LDFLAGS"
     thread_LIBS="-lpthread"
     ;;

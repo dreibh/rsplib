@@ -482,10 +482,10 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-ph=" ,4))) {
          poolHandle = (char*)&argv[i][4];
       }
-#ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
          identifier = atol((char*)&argv[i][12]);
       }
+#ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
          cspReportInterval = atol((char*)&argv[i][19]);
       }
@@ -499,6 +499,12 @@ int main(int argc, char** argv)
          if(cspReportInterval <= 0) {
             cspReportInterval = 250000;
          }
+      }
+#else
+      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
+              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
+         fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+         exit(1);
       }
 #endif
       else if(!(strncmp(argv[i], "-load=" ,6))) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.13 2004/11/10 14:44:38 dreibh Exp $
+ *  $Id: examplepe.c,v 1.14 2004/11/11 19:33:48 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -242,6 +242,12 @@ int main(int argc, char** argv)
          if(cspReportInterval <= 0) {
             cspReportInterval = 250000;
          }
+      }
+#else
+      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
+              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
+         fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+         exit(1);
       }
 #endif
       else if(!(strncmp(argv[i], "-load=" ,6))) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.21 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.22 2004/11/11 19:33:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -322,6 +322,9 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             in = (struct sockaddr_in*)address;
             in->sin_family = AF_INET;
             in->sin_port   = htons(port);
+#ifdef HAVE_SA_LEN
+            in->sin_len = sizeof(struct sockaddr_in);
+#endif
             memcpy((char*)&in->sin_addr, (char*)space, 4);
          }
          else {
@@ -348,6 +351,9 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             in6->sin6_port     = htons(port);
             in6->sin6_flowinfo = 0;
             in6->sin6_scope_id = 0;
+#ifdef HAVE_SA_LEN
+            in6->sin6_len = sizeof(struct sockaddr_in6);
+#endif
             memcpy((char*)&in6->sin6_addr, (char*)space, 16);
          }
          else {
