@@ -107,10 +107,17 @@ FractalPU::FractalPU(const size_t width,
 
    QString Buffer;
    QFile AllconfigFile("liste.conf");
-   while(AllconfigFile.readLine(Buffer, 255))
+   if ( !AllconfigFile.open( IO_ReadOnly ) )
    {
-      Buffer = Buffer.stripWhiteSpace();
-      ConfigList.append(Buffer);
+      std::cerr << "All-Config file open failed" << std::endl;
+   }
+   else
+   {
+      while(AllconfigFile.readLine(Buffer, 255))
+      {
+         Buffer = Buffer.stripWhiteSpace();
+         ConfigList.append(Buffer);
+      }
    }
    
    resize(width, height);
@@ -318,8 +325,6 @@ void FractalPU::run()
 {
    char              statusText[128];
    TagItem           tags[16];
-
-   Running           = true;
    Run               = 0;
    PoolElementUsages = 0;
 
