@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.37 2004/11/18 12:23:36 dreibh Exp $
+ *  $Id: netutilities.c,v 1.38 2004/11/18 12:23:51 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1271,7 +1271,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add)
 {
-   return(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false);
+   return(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add));
 }
 
 
