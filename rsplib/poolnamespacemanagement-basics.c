@@ -25,12 +25,26 @@
 #include "randomizer.h"
 
 
+/* Generate deterministic PE identifiers */
+#define GENERATE_DETERMINISTIC_POOLELEMENTIDENTIFIERS
+
+
 PoolElementSeqNumberType SeqNumberStart = (~0) ^ 0xf;
 
 
 /* ###### Get pool element identifier #################################### */
 PoolElementIdentifierType getPoolElementIdentifier()
 {
-   PoolElementIdentifierType poolElementIdentifier = 1 + (random32() % 0xfffffffe);
+#ifdef GENERATE_DETERMINISTIC_POOLELEMENTIDENTIFIERS
+#warning GENERATE_DETERMINISTIC_POOLELEMENTIDENTIFIERS is only for debugging purposes!
+   static PoolElementIdentifierType globalPoolElementIdentifier = 1;
+   const PoolElementIdentifierType poolElementIdentifier = globalPoolElementIdentifier;
+   globalPoolElementIdentifier++;
+   if(globalPoolElementIdentifier == 0) {
+     globalPoolElementIdentifier = 1;
+   }
+#else
+   const PoolElementIdentifierType poolElementIdentifier = 1 + (random32() % 0xfffffffe);
+#endif
    return(poolElementIdentifier);
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.15 2004/08/24 09:38:49 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.16 2004/08/25 17:27:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1542,6 +1542,7 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
             LOG_WARNING
             fputs("PeerNameTableResponse contains empty pool\n", stdlog);
             LOG_END
+            message->Error = RSPERR_INVALID_VALUES;
             return(false);
          }
       }
@@ -1632,18 +1633,76 @@ static bool scanPeerTakeoverServerMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer take ownership message ############################### */
-static bool scanPeerTakeOwnershipMessage(struct RSerPoolMessage* message)
+static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_targetparameter* tp;
+   struct rserpool_serverparameter*  sp;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   size_t                            scannedPoolElementIdentifiers;
+   static struct PoolPolicySettings  dummyPoolPolicySettings;
+   static char                       dummyTransportAddressBlockBuffer[transportAddressBlockGetSize(1)];
+   struct TransportAddressBlock*     dummyTransportAddressBlock = (struct TransportAddressBlock*)&dummyTransportAddressBlockBuffer;
+   struct sockaddr_in                dummyAddress;
 
-   tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
-   if(tp == NULL) {
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   message->SenderID     = ntohl(tp->tp_sender_id);
-   message->ReceiverID   = ntohl(tp->tp_receiver_id);
-   message->NSIdentifier = ntohl(tp->tp_target_id);
+   message->SenderID     = ntohl(sp->sp_sender_id);
+   message->ReceiverID   = ntohl(sp->sp_receiver_id);
+
+   message->NamespacePtr = (struct ST_CLASS(PoolNamespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolNamespaceManagement)));
+   if(message->NamespacePtr == NULL) {
+      message->Error = RSPERR_OUT_OF_MEMORY;
+      return(false);
+   }
+   ST_CLASS(poolNamespaceManagementNew)(message->NamespacePtr, 0, NULL, NULL, NULL);
+
+
+   poolPolicySettingsNew(&dummyPoolPolicySettings);
+   dummyPoolPolicySettings.PolicyType = PPT_ROUNDROBIN;
+   memset(&dummyAddress, 0, sizeof(dummyAddress));
+   dummyAddress.sin_family = AF_INET;
+   transportAddressBlockNew(dummyTransportAddressBlock,
+                            IPPROTO_SCTP, 0xffff, 0,
+                            (sockaddr_union*)&dummyAddress, 1);
+
+   while(scanPoolHandleParameter(message, &message->Handle)) {
+      scannedPoolElementIdentifiers = 0;
+      while(scanPoolElementIdentifierParameter(message)) {
+         scannedPoolElementIdentifiers++;
+
+         message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                             message->NamespacePtr,
+                             &message->Handle,
+                             0,
+                             message->Identifier,
+                             0,
+                             &dummyPoolPolicySettings,
+                             dummyTransportAddressBlock,
+                             -1, 0,
+                             0,
+                             &newPoolElementNode);
+         if(message->Error != RSPERR_OKAY) {
+            LOG_WARNING
+            fprintf(stdlog,
+                    "PeerOwnershipChange contains bad/inconsistent entry for ID $%08x: ",
+                    message->Identifier);
+            rserpoolErrorPrint(message->Error, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            return(false);
+         }
+      }
+
+      if(scannedPoolElementIdentifiers == 0) {
+         LOG_WARNING
+         fputs("PeerOwnershipChange contains empty pool\n", stdlog);
+         LOG_END
+         message->Error = RSPERR_INVALID_VALUES;
+         return(false);
+      }
+   }
 
    return(true);
 }
@@ -1912,7 +1971,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
          LOG_VERBOSE2
          fputs("Scanning PeerOwnershipChange message...\n", stdlog);
          LOG_END
-         if(scanPeerTakeOwnershipMessage(message) == false) {
+         if(scanPeerOwnershipChangeMessage(message) == false) {
             return(false);
          }
         break;

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.8 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.9 2004/08/25 17:27:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -227,7 +227,7 @@ bool rserpoolMessageSend(int                     protocol,
                         assocID,
                         0, 0, timeout);
       if(sent == (ssize_t)messageLength) {
-         LOG_VERBOSE
+         LOG_VERBOSE2
          fprintf(stdlog, "Successfully sent ASAP message: "
                  "assoc=%u PPID=$%08x, Type=$%02x\n",
                  (unsigned int)assocID,
@@ -296,7 +296,7 @@ struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
                message->AssocID          = assocID;
                message->StreamID         = streamID;
 
-               LOG_VERBOSE
+               LOG_VERBOSE2
                fprintf(stdlog,"Successfully received ASAP message\n"
                        "PPID=$%08x assoc=%d StreamID=%d, ASAP Type = $%02x\n",
                        ppid, (unsigned int)assocID, streamID,
@@ -340,7 +340,7 @@ void* getSpace(struct RSerPoolMessage* message,
       return(header);
    }
 
-   LOG_VERBOSE2
+   LOG_VERBOSE3
    fprintf(stdlog,
            "Buffer size too low!\np=%u + h=%u > size=%u\n",
            (unsigned int)message->Position, (unsigned int)headerSize,

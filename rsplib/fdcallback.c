@@ -60,8 +60,8 @@ void fdCallbackNew(struct FDCallback* fdCallback,
    fdCallback->SelectTimeStamp = getMicroTime();
 
    dispatcherLock(fdCallback->Master);
-   leafLinkedRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
-                                &fdCallback->Node);
+   CHECK(leafLinkedRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
+                                      &fdCallback->Node) == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
    dispatcherUnlock(fdCallback->Master);
 }

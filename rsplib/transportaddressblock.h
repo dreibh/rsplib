@@ -48,10 +48,7 @@ struct TransportAddressBlock
 
 
 /* ###### Get size of TransportAddressBlock structure for given addr. amount ## */
-inline size_t transportAddressBlockGetSize(const size_t addresses)
-{
-   return(sizeof(struct TransportAddressBlock) + (addresses * sizeof(union sockaddr_union)));
-}
+#define transportAddressBlockGetSize(addresses) (sizeof(struct TransportAddressBlock) + (addresses * sizeof(union sockaddr_union)))
 
 
 /**

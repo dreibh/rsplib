@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.4 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: timer.c,v 1.5 2004/08/25 17:27:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -76,8 +76,8 @@ void timerStart(struct Timer*            timer,
    timer->TimeStamp = timeStamp;
 
    dispatcherLock(timer->Master);
-   leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
-                                &timer->Node);
+   CHECK(leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
+                                      &timer->Node) == &timer->Node);
    dispatcherUnlock(timer->Master);
 }
 
