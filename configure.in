@@ -344,10 +344,10 @@ AC_CHECK_MEMBER(struct sockaddr_in6.sin6_len,
                  #endif
                  #include <netinet/in.h>])
 
-AC_CHECK_FUNCS(sctp_sendmsg,  , AC_CHECK_LIB(sctp, sctp_sendmsg))
-AC_CHECK_FUNCS(sctp_connectx, , AC_CHECK_LIB(sctp, sctp_connectx))
-AC_CHECK_FUNCS(sctp_send,     , AC_CHECK_LIB(sctp, sctp_send))
-AC_CHECK_FUNCS(sctp_sendx,    , AC_CHECK_LIB(sctp, sctp_sendx))
+AC_CHECK_LIB(sctp, sctp_sendmsg)
+AC_CHECK_LIB(sctp, sctp_connectx)
+AC_CHECK_LIB(sctp, sctp_send)
+AC_CHECK_LIB(sctp, sctp_sendx)
 
 # Check if kernel SCTP should be used
 AC_ARG_ENABLE(kernel-sctp,
