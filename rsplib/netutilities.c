@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.20 2004/11/09 20:00:31 dreibh Exp $
+ *  $Id: netutilities.c,v 1.21 2004/11/10 16:46:14 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -48,8 +48,9 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <fcntl.h>
+#ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
-
+#endif
 #include <ext_socket.h>
 #include <sys/uio.h>
 
@@ -1537,7 +1538,7 @@ size_t getpaddrsplus(const int              fd,
    return(addrs);
 }
 
-
+#ifdef HAVE_BYTESWAP_H
 /* ###### Convert byte order of 64 bit value ############################# */
 uint64_t hton64(const uint64_t value)
 {
@@ -1550,3 +1551,4 @@ uint64_t ntoh64(const uint64_t value)
 {
    return(bswap_64(value));
 }
+#endif

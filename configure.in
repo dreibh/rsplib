@@ -29,6 +29,9 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
 
+AC_CHECK_FUNCS(sctp_sendmsg, , AC_CHECK_LIB(sctp, sctp_sendmsg))
+AC_CHECK_HEADERS(byteswap.h)
+
 # ----------------------
 # Packages configuration - Blatantly stolen from zebra !
 # ----------------------
