@@ -308,7 +308,7 @@ AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
                [socklen_t x = 1; return 0;],
                [AC_MSG_RESULT(yes)],
                [AC_MSG_RESULT(int)
-                AC_DEFINE(socklen_t, int, [Define a type for socklen_t.])]) 
+                AC_DEFINE(socklen_t, int, [Define a type for socklen_t.])])
 
 AC_MSG_CHECKING(if stderr is a variable of type FILE* and not a macro)
 AC_TRY_COMPILE([#include <stdio.h>],
@@ -390,7 +390,7 @@ if test "$enable_kernel_sctp" = "no"; then
    if test ! -e $ac_socketapi_libraries/libsctpsocket.a ; then
       AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_libraries/libsctpsocket.a)!])
    fi
-   sctplib_LIBS="$ac_sctplib_libraries/libsctp.a"
+   sctplib_LIBS="$ac_sctplib_libraries/libsctplib.a"
    socketapi_LIBS="$ac_socketapi_libraries/libsctpsocket.a -lstdc++"
 else
    sctplib_LIBS=""
