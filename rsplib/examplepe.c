@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: examplepe.c,v 1.3 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -100,7 +100,7 @@ static void handleCookieEcho(void* userData, void* cookieData, const size_t cook
             validity and plausibility of the values set from the cookie! */
          client->CounterStart = ntohl(cookie->Counter);
          client->Counter = client->CounterStart;
-         printf("Retrieved Counter from Cookie -> %d\n", client->Counter);
+         printf("Retrieved Counter from Cookie -> %d\n" , client->Counter);
       }
       else {
          puts("Cookie is invalid!");
@@ -128,7 +128,7 @@ static void handleServiceRequest(GList**        clientList,
    if(received > 0) {
       client->IsNewClient = false;
       buffer[received]  = 0x00;
-      printf("Echo %u %u> %s", client->CounterStart,
+      printf("Echo %u %u> %s" , client->CounterStart,
                                client->Counter,
                                buffer);
       client->Counter++;
@@ -157,7 +157,9 @@ static void* rsplibMainLoop(void* args)
    while(!RsplibThreadStop) {
       timeout.tv_sec  = 0;
       timeout.tv_usec = 1000000;
+      puts("rspsel...");
       rspSelect(0, NULL, NULL, NULL, &timeout);
+      puts("rspsel... ok!");
    }
    return(NULL);
 }
@@ -178,84 +180,121 @@ int main(int argc, char** argv)
    struct PoolElementDescriptor* pedArray[1];
    unsigned int                  pedStatusArray[FD_SETSIZE];
 
-   GList*         clientList = NULL;
-   card64         start    = getMicroTime();
-   card64         stop     = 0;
-   int            type     = SOCK_STREAM;
-   int            protocol = IPPROTO_SCTP;
-   unsigned short port     = 0;
-   char*          poolHandle            = "EchoPool";
-   unsigned int   policyType            = TAGDATA_PoolPolicy_Type_RoundRobin;
-   unsigned int   policyParameterWeight = 1;
-   unsigned int   policyParameterLoad   = 0;
-   int            n;
-   int            result;
-   size_t         i;
-   GList*         list;
+   GList*                        clientList                     = NULL;
+   card64                        start                          = getMicroTime();
+   card64                        stop                           = 0;
+   int                           type                           = SOCK_STREAM;
+   int                           protocol                       = IPPROTO_SCTP;
+   unsigned short                port                           = 0;
+   char*                         poolHandle                     = "EchoPool";
+   unsigned int                  policyType                     = PPT_ROUNDROBIN;
+   unsigned int                  policyParameterWeight          = 1;
+   unsigned int                  policyParameterLoad            = 0;
+   unsigned int                  policyParameterLoadDegradation = 0;
+   int                           n;
+   int                           result;
+   size_t                        i;
+   GList*                        list;
 
 
    start = getMicroTime();
    stop  = 0;
    for(n = 1;n < argc;n++) {
-      if(!(strcmp(argv[n],"-sctp"))) {
+      if(!(strcmp(argv[n], "-sctp"))) {
          protocol = IPPROTO_SCTP;
       }
-      else if(!(strcmp(argv[n],"-tcp"))) {
+      else if(!(strcmp(argv[n], "-tcp"))) {
          protocol = IPPROTO_TCP;
       }
-      else if(!(strncmp(argv[n],"-stop=",6))) {
+      else if(!(strncmp(argv[n], "-stop=" ,6))) {
          stop = start + ((card64)1000000 * (card64)atol((char*)&argv[n][6]));
       }
-      else if(!(strncmp(argv[n],"-port=",6))) {
+      else if(!(strncmp(argv[n], "-port=" ,6))) {
          port = atol((char*)&argv[n][6]);
       }
-      else if(!(strncmp(argv[n],"-ph=",4))) {
+      else if(!(strncmp(argv[n], "-ph=" ,4))) {
          poolHandle = (char*)&argv[n][4];
       }
-      else if(!(strncmp(argv[n],"-load=",6))) {
+      else if(!(strncmp(argv[n], "-load=" ,6))) {
          policyParameterLoad = atol((char*)&argv[n][6]);
          if(policyParameterLoad > 0xffffff) {
             policyParameterLoad = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n],"-weight=",8))) {
+      else if(!(strncmp(argv[n], "-weight=" ,8))) {
          policyParameterWeight = atol((char*)&argv[n][8]);
          if(policyParameterWeight > 0xffffff) {
             policyParameterWeight = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n],"-policy=",8))) {
-         if((!(strcmp((char*)&argv[n][8],"roundrobin"))) || (!(strcmp((char*)&argv[n][8],"rr")))) {
-            policyType = TAGDATA_PoolPolicy_Type_RoundRobin;
+      else if(!(strncmp(argv[n], "-load=" ,6))) {
+         policyParameterLoad = atol((char*)&argv[n][6]);
+         if(policyParameterLoad > 0xffffff) {
+            policyParameterLoad = 0xffffff;
          }
-         else if((!(strcmp((char*)&argv[n][8],"weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8],"wrr")))) {
-            policyType = TAGDATA_PoolPolicy_Type_WeightedRoundRobin;
+      }
+      else if(!(strncmp(argv[n], "-loaddeg=" ,9))) {
+         policyParameterLoadDegradation = atol((char*)&argv[n][9]);
+         if(policyParameterLoadDegradation > 0xffffff) {
+            policyParameterLoadDegradation = 0xffffff;
          }
-         else if((!(strcmp((char*)&argv[n][8],"leastused"))) || (!(strcmp((char*)&argv[n][8],"lu")))) {
-            policyType = TAGDATA_PoolPolicy_Type_LeastUsed;
+      }
+      else if(!(strncmp(argv[n], "-weight=" ,8))) {
+         policyParameterWeight = atol((char*)&argv[n][8]);
+         if(policyParameterWeight < 1) {
+            policyParameterWeight = 1;
          }
-         else if((!(strcmp((char*)&argv[n][8],"leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8],"lud")))) {
-            policyType = TAGDATA_PoolPolicy_Type_LeastUsedDegradation;
+      }
+      else if(!(strncmp(argv[n], "-policy=" ,8))) {
+         if((!(strcmp((char*)&argv[n][8], "roundrobin"))) || (!(strcmp((char*)&argv[n][8], "rr")))) {
+            policyType = PPT_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8],"random"))) || (!(strcmp((char*)&argv[n][8],"rd")))) {
-            policyType = TAGDATA_PoolPolicy_Type_Random;
+         else if((!(strcmp((char*)&argv[n][8], "weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8], "wrr")))) {
+            policyType = PPT_WEIGHTED_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8],"weightedrandom"))) || (!(strcmp((char*)&argv[n][8],"wrd")))) {
-            policyType = TAGDATA_PoolPolicy_Type_WeightedRandom;
+         else if((!(strcmp((char*)&argv[n][8], "leastused"))) || (!(strcmp((char*)&argv[n][8], "lu")))) {
+            policyType = PPT_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "lud")))) {
+            policyType = PPT_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedleastused"))) || (!(strcmp((char*)&argv[n][8], "rlu")))) {
+            policyType = PPT_RANDOMIZED_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rlud")))) {
+            policyType = PPT_RANDOMIZED_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "priorityleastused"))) || (!(strcmp((char*)&argv[n][8], "plu")))) {
+            policyType = PPT_PRIORITY_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "priorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "plud")))) {
+            policyType = PPT_PRIORITY_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastused"))) || (!(strcmp((char*)&argv[n][8], "rplu")))) {
+            policyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rplud")))) {
+            policyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "random"))) || (!(strcmp((char*)&argv[n][8], "rand")))) {
+            policyType = PPT_RANDOM;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "weightedrandom"))) || (!(strcmp((char*)&argv[n][8], "wrand")))) {
+            policyType = PPT_WEIGHTED_RANDOM;
          }
          else {
-            printf("ERROR: Unknown policy type \"%s\"!\n",(char*)&argv[n][8]);
+            printf("ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[n][8]);
             exit(1);
          }
       }
-      else if(!(strncmp(argv[n],"-log",4))) {
+      else if(!(strncmp(argv[n], "-log" ,4))) {
          if(initLogging(argv[n]) == false) {
             exit(1);
          }
       }
       else {
-         printf("Bad argument \"%s\"!\n",argv[n]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n",
+         printf("Bad argument \"%s\"!\n" ,argv[n]);
+         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }
@@ -276,21 +315,23 @@ int main(int argc, char** argv)
    tags[0].Data = policyType;
    tags[1].Tag  = TAG_PoolPolicy_Parameter_Load;
    tags[1].Data = policyParameterLoad;
-   tags[2].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[2].Data = policyParameterWeight;
-   tags[3].Tag  = TAG_PoolElement_SocketType;
-   tags[3].Data = type;
-   tags[4].Tag  = TAG_PoolElement_SocketProtocol;
-   tags[4].Data = protocol;
-   tags[5].Tag  = TAG_PoolElement_LocalPort;
-   tags[5].Data = port;
-   tags[6].Tag  = TAG_PoolElement_ReregistrationInterval;
-   tags[6].Data = 45000;
-   tags[7].Tag  = TAG_PoolElement_RegistrationLife;
-   tags[7].Data = (3 * 45000) + 5000;
-   tags[8].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[8].Data = (tagdata_t)true;
-   tags[9].Tag  = TAG_END;
+   tags[2].Tag  = TAG_PoolPolicy_Parameter_LoadDegradation;
+   tags[2].Data = policyParameterLoadDegradation;
+   tags[3].Tag  = TAG_PoolPolicy_Parameter_Weight;
+   tags[3].Data = policyParameterWeight;
+   tags[4].Tag  = TAG_PoolElement_SocketType;
+   tags[4].Data = type;
+   tags[5].Tag  = TAG_PoolElement_SocketProtocol;
+   tags[5].Data = protocol;
+   tags[6].Tag  = TAG_PoolElement_LocalPort;
+   tags[6].Data = port;
+   tags[7].Tag  = TAG_PoolElement_ReregistrationInterval;
+   tags[7].Data = 45000;
+   tags[8].Tag  = TAG_PoolElement_RegistrationLife;
+   tags[8].Data = (3 * 45000) + 5000;
+   tags[9].Tag  = TAG_UserTransport_HasControlChannel;
+   tags[9].Data = (tagdata_t)true;
+   tags[10].Tag  = TAG_END;
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
@@ -330,6 +371,13 @@ int main(int argc, char** argv)
                                    500000,
                                    (struct TagItem*)&tags);
 
+puts("---");
+for(i = 0;i < sessions;i++) {
+   printf("%d: %d\n",i, (sessionStatusArray[i] & RspSelect_Read));
+}
+puts("--ü");
+
+
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
@@ -341,17 +389,17 @@ int main(int argc, char** argv)
                   client->IsNewClient    = true;
 
                   tags[0].Tag  = TAG_TuneSCTP_MinRTO;
-                  tags[0].Data = 1000;
+                  tags[0].Data = 100;
                   tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
-                  tags[1].Data = 2000;
+                  tags[1].Data = 500;
                   tags[2].Tag  = TAG_TuneSCTP_InitialRTO;
-                  tags[2].Data = 500;
+                  tags[2].Data = 250;
                   tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
                   tags[3].Data = 100;
                   tags[4].Tag  = TAG_TuneSCTP_PathMaxRXT;
-                  tags[4].Data = 1;
+                  tags[4].Data = 2;
                   tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
-                  tags[5].Data = 2;
+                  tags[5].Data = 3;
                   tags[6].Tag  = TAG_RspSession_ReceivedCookieEchoCallback;
                   tags[6].Data = (tagdata_t)handleCookieEcho;
                   tags[7].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;

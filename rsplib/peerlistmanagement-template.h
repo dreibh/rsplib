@@ -37,6 +37,7 @@ struct ST_CLASS(PeerListManagement)
 
    void (*PeerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
                                         void*                          userData);
+   void* DisposerUserData;
 };
 
 
@@ -44,7 +45,8 @@ void ST_CLASS(peerListManagementNew)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         const ENRPIdentifierType             ownNSIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
-                                             void*                          userData));
+                                             void*                          userData),
+        void* disposerUserData);
 void ST_CLASS(peerListManagementDelete)(
         struct ST_CLASS(PeerListManagement)* peerListManagement);
 

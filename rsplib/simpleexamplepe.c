@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.5 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.6 2004/07/22 09:47:44 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -202,13 +202,13 @@ static void doRegistration()
    /* ====== Do registration ================================================ */
    result = rspRegister((unsigned char*)PoolName, strlen(PoolName),
                         eai, (struct TagItem*)&tags);
-   if(result != RSPERR_OKAY) {
-      printf("WARNING: (Re-)Registration failed: ");
-      puts(rspGetErrorDescription(result));
+   if(result == RSPERR_OKAY) {
+      PoolElementID = eai->ai_pe_id;
+      printf("(Re-)Registration successful, ID is $%08x\n", PoolElementID);
    }
    else {
-      PoolElementID = eai->ai_pe_id;
-      printf("(Re-)Registration successful - ID=$%08x\n", PoolElementID);
+      printf("WARNING: (Re-)Registration failed: ");
+      puts(rspGetErrorDescription(result));
    }
 
 
@@ -451,76 +451,94 @@ int main(int argc, char** argv)
    PoolName = "EchoPool";
 #endif
    for(n = 1;n < argc;n++) {
-      if(!(strcmp(argv[n],"-sctp-udplike"))) {
+      if(!(strcmp(argv[n], "-sctp-udplike"))) {
          ListenSocketFamily   = AF_INET6;
          ListenSocketProtocol = IPPROTO_SCTP;
          ListenSocketType     = SOCK_DGRAM;
       }
-      else if(!(strcmp(argv[n],"-sctp-tcplike"))) {
+      else if(!(strcmp(argv[n], "-sctp-tcplike"))) {
          ListenSocketFamily   = AF_INET6;
          ListenSocketProtocol = IPPROTO_SCTP;
          ListenSocketType     = SOCK_STREAM;
       }
-      else if(!(strcmp(argv[n],"-sctp"))) {
+      else if(!(strcmp(argv[n], "-sctp"))) {
          ListenSocketFamily   = AF_INET6;
          ListenSocketProtocol = IPPROTO_SCTP;
          ListenSocketType     = SOCK_STREAM;
       }
-      else if(!(strcmp(argv[n],"-udp"))) {
+      else if(!(strcmp(argv[n], "-udp"))) {
          ListenSocketFamily   = AF_INET6;
          ListenSocketProtocol = IPPROTO_UDP;
          ListenSocketType     = SOCK_DGRAM;
       }
-      else if(!(strcmp(argv[n],"-tcp"))) {
+      else if(!(strcmp(argv[n], "-tcp"))) {
          ListenSocketFamily   = AF_INET6;
          ListenSocketProtocol = IPPROTO_TCP;
          ListenSocketType     = SOCK_STREAM;
       }
-      else if(!(strncmp(argv[n],"-stop=",6))) {
+      else if(!(strncmp(argv[n], "-stop=",6))) {
          stop = start + ((card64)1000000 * (card64)atol((char*)&argv[n][6]));
       }
-      else if(!(strncmp(argv[n],"-port=",6))) {
+      else if(!(strncmp(argv[n], "-port=",6))) {
          ListenPort = atol((char*)&argv[n][6]);
       }
 #ifndef NO_RSP
-      else if(!(strncmp(argv[n],"-ph=",4))) {
+      else if(!(strncmp(argv[n], "-ph=",4))) {
          PoolName = (char*)&argv[n][4];
       }
-      else if(!(strncmp(argv[n],"-load=",6))) {
+      else if(!(strncmp(argv[n], "-load=",6))) {
          PolicyParameterLoad = atol((char*)&argv[n][6]);
          if(PolicyParameterLoad > 0xffffff) {
             PolicyParameterLoad = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n],"-loaddef=",9))) {
+      else if(!(strncmp(argv[n], "-loaddeg=",9))) {
          PolicyParameterLoadDegradation = atol((char*)&argv[n][9]);
          if(PolicyParameterLoadDegradation > 0xffffff) {
             PolicyParameterLoadDegradation = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n],"-weight=",8))) {
+      else if(!(strncmp(argv[n], "-weight=",8))) {
          PolicyParameterWeight = atol((char*)&argv[n][8]);
          if(PolicyParameterWeight < 1) {
             PolicyParameterWeight = 1;
          }
       }
-      else if(!(strncmp(argv[n],"-policy=",8))) {
-         if((!(strcmp((char*)&argv[n][8],"roundrobin"))) || (!(strcmp((char*)&argv[n][8],"rr")))) {
+      else if(!(strncmp(argv[n], "-policy=",8))) {
+         if((!(strcmp((char*)&argv[n][8], "roundrobin"))) || (!(strcmp((char*)&argv[n][8], "rr")))) {
             PolicyType = PPT_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8],"weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8],"wrr")))) {
+         else if((!(strcmp((char*)&argv[n][8], "weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8], "wrr")))) {
             PolicyType = PPT_WEIGHTED_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8],"leastused"))) || (!(strcmp((char*)&argv[n][8],"lu")))) {
+         else if((!(strcmp((char*)&argv[n][8], "leastused"))) || (!(strcmp((char*)&argv[n][8], "lu")))) {
             PolicyType = PPT_LEASTUSED;
          }
-         else if((!(strcmp((char*)&argv[n][8],"leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8],"lud")))) {
+         else if((!(strcmp((char*)&argv[n][8], "leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "lud")))) {
             PolicyType = PPT_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8],"random"))) || (!(strcmp((char*)&argv[n][8],"rand")))) {
+         else if((!(strcmp((char*)&argv[n][8], "randomizedleastused"))) || (!(strcmp((char*)&argv[n][8], "rlu")))) {
+            PolicyType = PPT_RANDOMIZED_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rlud")))) {
+            PolicyType = PPT_RANDOMIZED_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "priorityleastused"))) || (!(strcmp((char*)&argv[n][8], "plu")))) {
+            PolicyType = PPT_PRIORITY_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "priorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "plud")))) {
+            PolicyType = PPT_PRIORITY_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastused"))) || (!(strcmp((char*)&argv[n][8], "rplu")))) {
+            PolicyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rplud")))) {
+            PolicyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION;
+         }
+         else if((!(strcmp((char*)&argv[n][8], "random"))) || (!(strcmp((char*)&argv[n][8], "rand")))) {
             PolicyType = PPT_RANDOM;
          }
-         else if((!(strcmp((char*)&argv[n][8],"weightedrandom"))) || (!(strcmp((char*)&argv[n][8],"wrand")))) {
+         else if((!(strcmp((char*)&argv[n][8], "weightedrandom"))) || (!(strcmp((char*)&argv[n][8], "wrand")))) {
             PolicyType = PPT_WEIGHTED_RANDOM;
          }
          else {
@@ -528,7 +546,7 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[n],"-log",4))) {
+      else if(!(strncmp(argv[n], "-log",4))) {
          if(initLogging(argv[n]) == false) {
             exit(1);
          }

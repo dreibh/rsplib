@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.2 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -200,7 +200,7 @@ bool rserpoolMessageSend(int                     fd,
                         assocID,
                         0, 0, timeout);
       if(sent == (ssize_t)messageLength) {
-         LOG_ACTION
+         LOG_VERBOSE
          fprintf(stdlog, "Successfully sent ASAP message: "
                  "AssocID=%u PPID=$%08x, Type=$%02x\n",
                  (unsigned int)assocID,
@@ -269,7 +269,7 @@ struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
                message->AssocID          = assocID;
                message->StreamID         = streamID;
 
-               LOG_ACTION
+               LOG_VERBOSE
                fprintf(stdlog,"Successfully received ASAP message\n"
                        "PPID=$%08x AssocID=%d StreamID=%d, ASAP Type = $%02x\n",
                        ppid, (unsigned int)assocID, streamID,

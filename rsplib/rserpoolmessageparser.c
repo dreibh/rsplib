@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.2 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1029,6 +1029,9 @@ static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
+   if(scanPoolElementIdentifierParameter(message) == false) {
+      return(false);
+   }
    return(true);
 }
 
@@ -1039,7 +1042,6 @@ static bool scanEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-
    if(scanPoolElementIdentifierParameter(message) == false) {
       return(false);
    }
@@ -1145,7 +1147,6 @@ static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
          return(false);
       }
 
-puts("K1");
       message->PoolElementPtrArraySize = 0;
       while(message->Position < message->BufferSize) {
          if(message->PoolElementPtrArraySize >= MAX_MAX_NAME_RESOLUTION_ITEMS) {
@@ -1154,19 +1155,15 @@ puts("K1");
             LOG_END
             return(false);
          }
-puts("K2");
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
             scanPoolElementParameter(message);
          if(message->PoolElementPtrArray[message->PoolElementPtrArraySize] == false) {
             break;
          }
-puts("K3");
          message->PoolElementPtrArraySize++;
       }
    }
 
-puts("K4");
-printf("elements=%d\n",message->PoolElementPtrArraySize);
    return(true);
 }
 

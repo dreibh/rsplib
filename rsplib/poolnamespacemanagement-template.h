@@ -35,6 +35,7 @@ struct ST_CLASS(PoolNamespaceManagement)
    struct ST_CLASS(PoolNamespaceNode) Namespace;
    struct ST_CLASS(PoolNode)*         NewPoolNode;
    struct ST_CLASS(PoolElementNode)*  NewPoolElementNode;
+   void*                              DisposerUserData;
    void (*PoolNodeUserDataDisposer)(struct ST_CLASS(PoolNode)* poolNode,
                                     void*                      userData);
    void (*PoolElementNodeUserDataDisposer)(struct ST_CLASS(PoolElementNode)* poolElementNode,
@@ -48,7 +49,8 @@ void ST_CLASS(poolNamespaceManagementNew)(
         void (*poolNodeUserDataDisposer)(struct ST_CLASS(PoolNode)* poolElementNode,
                                          void*                      userData),
         void (*poolElementNodeUserDataDisposer)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                void*                             userData));
+                                                void*                             userData),
+        void* disposerUserData);
 
 void ST_CLASS(poolNamespaceManagementDelete)(
         struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement);

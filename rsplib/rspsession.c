@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.5 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rspsession.c,v 1.6 2004/07/22 09:47:44 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,8 +59,7 @@ struct PoolElementDescriptor
 {
    struct ThreadSafety Mutex;
 
-   unsigned char*      PoolHandle;
-   size_t              PoolHandleSize;
+   struct PoolHandle   Handle;
    uint32_t            Identifier;
    int                 SocketDomain;
    int                 SocketType;
@@ -85,8 +84,7 @@ struct SessionDescriptor
 {
    struct ThreadSafety           Mutex;
 
-   unsigned char*                PoolHandle;
-   size_t                        PoolHandleSize;
+   struct PoolHandle             Handle;
    uint32_t                      Identifier;
    int                           SocketDomain;
    int                           SocketType;
@@ -136,6 +134,7 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    struct sockaddr_storage     socketName;
    socklen_t                   socketNameLen;
    unsigned int                localAddresses;
+   unsigned int                result;
    unsigned int                i;
 
    /* ====== Create EndpointAddressInfo structure =========================== */
@@ -267,17 +266,20 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    tags[4].Tag  = TAG_END;
 
    /* ====== Do registration ================================================ */
-   ped->Identifier = rspRegister(ped->PoolHandle, ped->PoolHandleSize, eai, (struct TagItem*)&tags);
-   if(ped->Identifier == 0x00000000) {
-      LOG_WARNING
-      fprintf(stdlog, "(Re-)Registration failed: ");
-      fputs(rspGetLastErrorDescription(), stdlog);
-      fputs("\n", stdlog);
+   result = rspRegister((unsigned char*)&ped->Handle.Handle,
+                        ped->Handle.Size,
+                        eai, (struct TagItem*)&tags);
+   if(result == RSPERR_OKAY) {
+      ped->Identifier = eai->ai_pe_id;
+      LOG_ACTION
+      fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
       LOG_END
    }
    else {
-      LOG_ACTION
-      fprintf(stdlog, "(Re-)Registration successful - ID=$%08x\n", ped->Identifier);
+      LOG_WARNING
+      fprintf(stdlog, "(Re-)Registration failed: ");
+      rserpoolErrorPrint(result, stdlog);
+      fputs("\n", stdlog);
       LOG_END
    }
 
@@ -334,24 +336,21 @@ void rspDeletePoolElement(struct PoolElementDescriptor* ped,
             timerDelete(ped->ReregistrationTimer);
             ped->ReregistrationTimer = NULL;
          }
-         if(ped->PoolHandle) {
-            if(ped->Identifier != 0x00000000) {
-               rspDeregister(ped->PoolHandle, ped->PoolHandleSize,
-                             ped->Identifier, tags);
-            }
-            if(ped->Socket >= 0) {
-               ext_close(ped->Socket);
-               ped->Socket = -1;
-            }
-            free(ped->PoolHandle);
-            ped->PoolHandle = NULL;
+         if(ped->Identifier != 0x00000000) {
+            rspDeregister((unsigned char*)&ped->Handle.Handle,
+                          ped->Handle.Size,
+                          ped->Identifier, tags);
+         }
+         if(ped->Socket >= 0) {
+            ext_close(ped->Socket);
+            ped->Socket = -1;
          }
          threadSafetyDestroy(&ped->Mutex);
          free(ped);
       }
       else {
          LOG_ERROR
-         fputs("Pool element to be deleted has still open sessions. Fix your program!", stdlog);
+         fputs("Pool element to be deleted has still open sessions. Go fix your program!", stdlog);
          LOG_END
       }
    }
@@ -372,18 +371,15 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       LOG_END
 
       /* ====== Initialize pool element ===================================== */
-      memset((char*)ped, 0, sizeof(struct PoolElementDescriptor));
-      ped->PoolHandle = (unsigned char*)memdup(poolHandle, poolHandleSize);
-      if(ped->PoolHandle == NULL) {
+      if(poolHandleSize > MAX_POOLHANDLESIZE) {
          LOG_ERROR
-         fputs("Out of memory\n", stdlog);
-         LOG_END
-         rspDeletePoolElement(ped, NULL);
-         return(NULL);
+         fputs("Pool handle too long\n", stdlog);
+         LOG_END_FATAL
       }
+      poolHandleNew(&ped->Handle, poolHandle, poolHandleSize);
+
       threadSafetyInit(&ped->Mutex, "RspPoolElement");
       ped->ReregistrationTimer    = NULL;
-      ped->PoolHandleSize         = poolHandleSize;
       ped->Socket                 = -1;
       ped->SocketDomain           = tagListGetData(tags, TAG_PoolElement_SocketDomain,
                                                    checkIPv6() ? AF_INET6 : AF_INET);
@@ -501,18 +497,18 @@ static struct SessionDescriptor* rspSessionNew(
          free(session);
          return(NULL);
       }
-      if(poolHandle) {
-         session->PoolHandle = (unsigned char*)memdup(poolHandle, poolHandleSize);
-         if(session->PoolHandle == NULL) {
-            messageBufferDelete(session->MessageBuffer);
-            free(session);
-            return(NULL);
+
+      if(poolHandleSize > 0) {
+         if(poolHandleSize > MAX_POOLHANDLESIZE) {
+            LOG_ERROR
+            fputs("Pool handle too long\n", stdlog);
+            LOG_END_FATAL
          }
+         poolHandleNew(&session->Handle, poolHandle, poolHandleSize);
       }
       else {
-         session->PoolHandle = NULL;
+         session->Handle.Size = 0;
       }
-      session->PoolHandleSize      = poolHandleSize;
       session->SocketDomain        = socketDomain;
       session->SocketType          = socketType;
       session->SocketProtocol      = socketProtocol;
@@ -649,7 +645,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
          LOG_ACTION
          fprintf(stdlog, "Reporting failure of pool element $%08x\n", session->Identifier);
          LOG_END
-         rspReportFailure(session->PoolHandle, session->PoolHandleSize,
+         rspReportFailure((unsigned char*)&session->Handle.Handle,
+                          session->Handle.Size,
                           session->Identifier, NULL);
       }
 
@@ -679,11 +676,12 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
    }
 
    /* ====== Do name resolution ============================================= */
-   if(session->PoolHandle) {
+   if(session->Handle.Size > 0) {
       LOG_ACTION
       fputs("Doing name resolution\n", stdlog);
       LOG_END
-      result = rspNameResolution(session->PoolHandle, session->PoolHandleSize,
+      result = rspNameResolution((unsigned char*)&session->Handle.Handle,
+                                 session->Handle.Size,
                                  &eai, NULL);
       if(result == 0) {
 
@@ -724,7 +722,8 @@ static bool rspSessionFailover(struct SessionDescriptor* session)
                LOG_ACTION
                fprintf(stdlog, "Reporting failure of pool element $%08x\n", eai2->ai_pe_id);
                LOG_END
-               rspReportFailure(session->PoolHandle, session->PoolHandleSize,
+               rspReportFailure((unsigned char*)&session->Handle.Handle,
+                                session->Handle.Size,
                                 eai2->ai_pe_id, NULL);
             }
 

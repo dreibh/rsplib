@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.7 2004/07/21 14:39:51 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.8 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -92,10 +92,10 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          asapInstance->NameServerSocketProtocol = 0;
          ST_CLASS(poolNamespaceManagementNew)(&asapInstance->Cache,
                                               0x00000000,
-                                              NULL, NULL);
+                                              NULL, NULL, NULL);
          ST_CLASS(poolNamespaceManagementNew)(&asapInstance->OwnPoolElements,
                                               0x00000000,
-                                              NULL, NULL);
+                                              NULL, NULL, NULL);
          asapInstance->Buffer          = messageBufferNew(65536);
          asapInstance->NameServerTable = serverTableNew(asapInstance->StateMachine, tags);
          if((asapInstance->Buffer == NULL) || (asapInstance->NameServerTable == NULL)) {
@@ -141,13 +141,27 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
                                             const int            protocol)
 {
-   bool result = true;
+   struct sctp_event_subscribe events;
+   bool                        result = true;
 
    if(asapInstance->NameServerSocket < 0) {
       asapInstance->NameServerSocket =
          serverTableFindServer(asapInstance->NameServerTable);
       if(asapInstance->NameServerSocket >= 0) {
          asapInstance->NameServerSocketProtocol = protocol;
+
+         /* ====== Enable data IO events ================================= */
+         if(asapInstance->NameServerSocketProtocol == IPPROTO_SCTP) {
+            memset((char*)&events, 0 ,sizeof(events));
+            events.sctp_data_io_event = 1;
+            if(ext_setsockopt(asapInstance->NameServerSocket,
+                              IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events)) < 0) {
+               LOG_ERROR
+               perror("setsockopt() failed for SCTP_EVENTS on name server socket");
+               LOG_END
+            }
+         }
+
          dispatcherAddFDCallback(asapInstance->StateMachine,
                                  asapInstance->NameServerSocket,
                                  FDCE_Read|FDCE_Exception,
@@ -749,6 +763,7 @@ static void handleNameServerConnectionEvent(
       result = asapInstanceReceiveResponse(asapInstance, &message);
       if(result == RSPERR_OKAY) {
          if(message->Type == AHT_ENDPOINT_KEEP_ALIVE) {
+puts("KEEP-ALIVE!!!!");
             asapInstanceHandleEndpointKeepAlive(asapInstance, message);
          }
          else {

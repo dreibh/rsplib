@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.2 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -582,22 +582,7 @@ static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   return(finishMessage(message));
-}
-
-
-/* ###### Create endpoint keepalive message ############################## */
-static bool createEndpointUnreachableMessage(struct RSerPoolMessage* message)
-{
-   if(beginMessage(message, AHT_ENDPOINT_UNREACHABLE, 0x00, PPID_ASAP) == false) {
-      return(false);
-   }
-
-   if(createPoolHandleParameter(message,  &message->Handle) == false) {
-      return(false);
-   }
-
-   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
+   if(createPoolElementIdentifierParameter(message,message->Identifier) == false) {
       return(false);
    }
 
@@ -617,6 +602,25 @@ static bool createEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
    }
 
    if(createPoolElementIdentifierParameter(message,message->Identifier) == false) {
+      return(false);
+   }
+
+   return(finishMessage(message));
+}
+
+
+/* ###### Create endpoint keepalive message ############################## */
+static bool createEndpointUnreachableMessage(struct RSerPoolMessage* message)
+{
+   if(beginMessage(message, AHT_ENDPOINT_UNREACHABLE, 0x00, PPID_ASAP) == false) {
+      return(false);
+   }
+
+   if(createPoolHandleParameter(message,  &message->Handle) == false) {
+      return(false);
+   }
+
+   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
    }
 
@@ -757,17 +761,18 @@ static bool createNameResolutionResponseMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(createPolicyParameter(message, &message->PolicySettings) == false) {
-      return(false);
-   }
-
-   for(i = 0;i < message->PoolElementPtrArraySize;i++) {
-      if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
+   if(message->Error == 0x00) {
+      if(createPolicyParameter(message, &message->PolicySettings) == false) {
          return(false);
       }
-   }
 
-   if(message->Error != 0x00) {
+      for(i = 0;i < message->PoolElementPtrArraySize;i++) {
+         if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
+            return(false);
+         }
+      }
+   }
+   else {
       if(createErrorParameter(message) == false) {
          return(false);
       }
@@ -879,7 +884,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
    switch(message->Type) {
       /* ====== ASAP ===================================================== */
       case AHT_NAME_RESOLUTION:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating NameResolution message...\n", stdlog);
          LOG_END
          if(createNameResolutionMessage(message) == true) {
@@ -887,7 +892,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_NAME_RESOLUTION_RESPONSE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating NameResolutionResponse message...\n", stdlog);
          LOG_END
          if(createNameResolutionResponseMessage(message) == true) {
@@ -895,7 +900,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_ENDPOINT_KEEP_ALIVE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating EndpointKeepAlive message...\n", stdlog);
          LOG_END
          if(createEndpointKeepAliveMessage(message) == true) {
@@ -903,7 +908,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating EndpointKeepAliveAck message...\n", stdlog);
          LOG_END
          if(createEndpointKeepAliveAckMessage(message) == true) {
@@ -911,7 +916,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_SERVER_ANNOUNCE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating ServerAnnounce message...\n", stdlog);
          LOG_END
          if(createServerAnnounceMessage(message) == true) {
@@ -919,7 +924,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_REGISTRATION:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating Registration message...\n", stdlog);
          LOG_END
          if(createRegistrationMessage(message) == true) {
@@ -927,7 +932,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_REGISTRATION_RESPONSE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating RegistrationResponse message...\n", stdlog);
          LOG_END
          if(createRegistrationResponseMessage(message) == true) {
@@ -935,7 +940,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_DEREGISTRATION:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating Deregistration message...\n", stdlog);
          LOG_END
          if(createDeregistrationMessage(message) == true) {
@@ -943,7 +948,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_DEREGISTRATION_RESPONSE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating DeregistrationResponse message...\n", stdlog);
          LOG_END
          if(createDeregistrationResponseMessage(message) == true) {
@@ -951,7 +956,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_COOKIE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating Cookie message...\n", stdlog);
          LOG_END
          if(createCookieMessage(message) == true) {
@@ -959,7 +964,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_COOKIE_ECHO:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating CookieEcho message...\n", stdlog);
          LOG_END
          if(createCookieEchoMessage(message) == true) {
@@ -967,7 +972,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_BUSINESS_CARD:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating BusinessCard message...\n", stdlog);
          LOG_END
          if(createBusinessCardMessage(message) == true) {
@@ -975,7 +980,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
          }
        break;
       case AHT_ENDPOINT_UNREACHABLE:
-         LOG_ACTION
+         LOG_VERBOSE2
          fputs("Creating EndpointUnreachable message...\n", stdlog);
          LOG_END
          if(createEndpointUnreachableMessage(message) == true) {

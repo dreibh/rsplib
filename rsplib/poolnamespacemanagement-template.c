@@ -36,13 +36,15 @@ void ST_CLASS(poolNamespaceManagementNew)(
         void (*poolNodeUserDataDisposer)(struct ST_CLASS(PoolNode)* poolElementNode,
                                          void*                      userData),
         void (*poolElementNodeUserDataDisposer)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                void*                             userData))
+                                                void*                             userData),
+        void* disposerUserData)
 {
    ST_CLASS(poolNamespaceNodeNew)(&poolNamespaceManagement->Namespace, homeNSIdentifier);
    poolNamespaceManagement->NewPoolNode                     = NULL;
    poolNamespaceManagement->NewPoolElementNode              = NULL;
    poolNamespaceManagement->PoolNodeUserDataDisposer        = poolNodeUserDataDisposer;
    poolNamespaceManagement->PoolElementNodeUserDataDisposer = poolElementNodeUserDataDisposer;
+   poolNamespaceManagement->DisposerUserData                = disposerUserData;
 }
 
 
@@ -53,7 +55,8 @@ static void ST_CLASS(poolNamespaceManagementPoolElementNodeDisposer)(void* arg1,
    struct ST_CLASS(PoolElementNode)* poolElementNode                 = (struct ST_CLASS(PoolElementNode)*)arg1;
    struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement = (struct ST_CLASS(PoolNamespaceManagement)*)arg2;
    if((poolElementNode->UserData) && (poolNamespaceManagement->PoolElementNodeUserDataDisposer))  {
-      poolNamespaceManagement->PoolElementNodeUserDataDisposer(poolElementNode, poolElementNode->UserData);
+      poolNamespaceManagement->PoolElementNodeUserDataDisposer(poolElementNode,
+                                                               poolNamespaceManagement->DisposerUserData);
       poolElementNode->UserData = NULL;
    }
    transportAddressBlockDelete(poolElementNode->AddressBlock);
@@ -70,7 +73,8 @@ static void ST_CLASS(poolNamespaceManagementPoolNodeDisposer)(void* arg1,
    struct ST_CLASS(PoolNode)* poolNode                               = (struct ST_CLASS(PoolNode)*)arg1;
    struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement = (struct ST_CLASS(PoolNamespaceManagement)*)arg2;
    if((poolNode->UserData) && (poolNamespaceManagement->PoolNodeUserDataDisposer))  {
-      poolNamespaceManagement->PoolNodeUserDataDisposer(poolNode, poolNode->UserData);
+      poolNamespaceManagement->PoolNodeUserDataDisposer(poolNode,
+                                                        poolNamespaceManagement->DisposerUserData);
       poolNode->UserData = NULL;
    }
    free(poolNode);

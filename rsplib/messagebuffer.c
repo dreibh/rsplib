@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.3 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.4 2004/07/22 09:47:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -92,14 +92,6 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
       received = recvfromplus(sd, (char*)&header, sizeof(header), &flags,
                               NULL, 0, &ppid, &assocID, &streamID, peekTimeout);
       if(received > 0) {
-
-
-puts("HACK! PPID=ASAP!");
-printf("PPID=%08x\n",ppid);
-ppid=requiredPPID;
-// ???????????????????
-
-
          if(ppid == requiredPPID) {
             if(received == sizeof(header)) {
                tlvLength = (size_t)ntohs(header.Length);
@@ -108,7 +100,7 @@ ppid=requiredPPID;
                }
                else {
                   LOG_ERROR
-                  fprintf(stdlog, "TCP buffer size %d of socket %d is too small to read TLV of length %d\n",
+                  fprintf(stdlog, "Message buffer size %d of socket %d is too small to read TLV of length %d\n",
                           (int)mb->Size, sd, (int)tlvLength);
                   LOG_END
                   return(RspRead_TooBig);
@@ -123,12 +115,6 @@ ppid=requiredPPID;
             return(RspRead_WrongPPID);
          }
       }
-      /* ?????????????
-      else if(errno == 0) {
-         errno = EIO;
-         return(RspRead_ReadError);
-      }
-      */
       else if(errno == EAGAIN) {
          LOG_VERBOSE3
          fputs("Timeout while trying to read data\n", stdlog);

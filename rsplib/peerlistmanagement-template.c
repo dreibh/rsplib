@@ -34,11 +34,13 @@ void ST_CLASS(peerListManagementNew)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         const ENRPIdentifierType             ownNSIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
-                                             void*                             userData))
+                                             void*                             userData),
+        void* disposerUserData)
 {
    ST_CLASS(peerListNew)(&peerListManagement->List, ownNSIdentifier);
    peerListManagement->NewPeerListNode              = NULL;
    peerListManagement->PeerListNodeUserDataDisposer = peerListNodeUserDataDisposer;
+   peerListManagement->DisposerUserData             = disposerUserData;
 }
 
 
@@ -49,7 +51,8 @@ static void ST_CLASS(peerListManagementPeerListNodeDisposer)(void* arg1,
    struct ST_CLASS(PeerListNode)*       peerListNode       = (struct ST_CLASS(PeerListNode)*)arg1;
    struct ST_CLASS(PeerListManagement)* peerListManagement = (struct ST_CLASS(PeerListManagement)*)arg2;
    if((peerListNode->UserData) && (peerListManagement->PeerListNodeUserDataDisposer))  {
-      peerListManagement->PeerListNodeUserDataDisposer(peerListNode, peerListNode->UserData);
+      peerListManagement->PeerListNodeUserDataDisposer(peerListNode,
+                                                       peerListManagement->DisposerUserData);
       peerListNode->UserData = NULL;
    }
    transportAddressBlockDelete(peerListNode->AddressBlock);

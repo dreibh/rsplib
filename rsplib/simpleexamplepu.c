@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.3 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.4 2004/07/22 09:47:44 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -131,11 +131,11 @@ static void connectToPoolElement()
 
          if(eai2->ai_protocol == IPPROTO_SCTP) {
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
-            tags[0].Data = 1000;
+            tags[0].Data = 100;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-            tags[1].Data = 2000;
+            tags[1].Data = 500;
             tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-            tags[2].Data = 500;
+            tags[2].Data = 250;
             tags[3].Tag = TAG_TuneSCTP_Heartbeat;
             tags[3].Data = 100;
             tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.6 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: servertable.c,v 1.7 2004/07/22 09:47:44 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -85,9 +85,9 @@ static bool joinAnnounceMulticastGroup(int                         sd,
    if(ext_bind(sd, (struct sockaddr*)&localAddress,
                getSocklen((struct sockaddr*)&localAddress)) != 0) {
       LOG_ERROR
-      fputs("Unable to bind multicast socket to address ", stdlog);
+      fputs("Unable to bind multicast socket to address ",  stdlog);
       fputaddress((struct sockaddr*)&localAddress, true, stdlog);
-      fputs("\n", stdlog);
+      fputs("\n",  stdlog);
       LOG_END
       return(false);
    }
@@ -115,7 +115,7 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
    size_t                         i;
 
    LOG_VERBOSE2
-   fputs("Trying to receive name server announce...\n", stdlog);
+   fputs("Trying to receive name server announce...\n",  stdlog);
    LOG_END
 
    senderAddressLength = sizeof(senderAddress);
@@ -131,11 +131,11 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
          if(message->Type == AHT_SERVER_ANNOUNCE) {
             if(message->Error == RSPERR_OKAY) {
                LOG_VERBOSE2
-               fputs("ServerAnnounce from ", stdlog);
+               fputs("ServerAnnounce from ",  stdlog);
                address2string((struct sockaddr*)&senderAddress,
                               (char*)&buffer, sizeof(buffer), true);
                fputs(buffer, stdlog);
-               fputs(" received\n", stdlog);
+               fputs(" received\n",  stdlog);
                LOG_END
 
                result = ST_CLASS(peerListManagementRegisterPeerListNode)(
@@ -153,9 +153,9 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                }
                else {
                   LOG_ERROR
-                  fputs("Unable to add new peer: ", stdlog);
+                  fputs("Unable to add new peer: ",  stdlog);
                   rserpoolErrorPrint(result, stdlog);
-                  fputs("\n", stdlog);
+                  fputs("\n",  stdlog);
                   LOG_END
                }
 
@@ -163,7 +163,7 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                       &serverTable->List,
                       getMicroTime());
                LOG_VERBOSE3
-               fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n", i);
+               fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  i);
                ST_CLASS(peerListManagementPrint)(&serverTable->List, stdlog, PLPO_FULL);
                LOG_END
             }
@@ -183,7 +183,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
    struct ServerTable*      serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
       serverTable->Dispatcher = dispatcher;
-      ST_CLASS(peerListManagementNew)(&serverTable->List, 0, NULL);
+      ST_CLASS(peerListManagementNew)(&serverTable->List, 0, NULL, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
       serverTable->NameServerConnectMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerConnectMaxTrials,
@@ -200,13 +200,13 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 
       /* ====== Show results ================================================ */
       LOG_VERBOSE3
-      fputs("New ServerTable's configuration:\n", stdlog);
-      fprintf(stdlog, "nameserver.announce.timeout  = %Lu [µs]\n", serverTable->NameServerAnnounceTimeout);
-      fputs("nameserver.announce.address  = ", stdlog);
+      fputs("New ServerTable's configuration:\n",  stdlog);
+      fprintf(stdlog, "nameserver.announce.timeout  = %Lu [µs]\n",  serverTable->NameServerAnnounceTimeout);
+      fputs("nameserver.announce.address  = ",  stdlog);
       fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
-      fputs("\n", stdlog);
-      fprintf(stdlog, "nameserver.connect.maxtrials = %u\n",       serverTable->NameServerConnectMaxTrials);
-      fprintf(stdlog, "nameserver.connect.timeout   = %Lu [µs]\n", serverTable->NameServerConnectTimeout);
+      fputs("\n",  stdlog);
+      fprintf(stdlog, "nameserver.connect.maxtrials = %u\n",        serverTable->NameServerConnectMaxTrials);
+      fprintf(stdlog, "nameserver.connect.timeout   = %Lu [µs]\n",  serverTable->NameServerConnectTimeout);
       LOG_END
 
 
@@ -225,9 +225,9 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          }
          else {
             LOG_ERROR
-            fputs("Joining multicast group ", stdlog);
+            fputs("Joining multicast group ",  stdlog);
             fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
-            fputs(" failed. Check routing (is default route set?) and firewall settings!\n", stdlog);
+            fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
             LOG_END
             ext_close(serverTable->AnnounceSocket);
             serverTable->AnnounceSocket = -1;
@@ -235,7 +235,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       }
       else {
          LOG_ERROR
-         fputs("Creating a socket for name server announces failed\n", stdlog);
+         fputs("Creating a socket for name server announces failed\n",  stdlog);
          LOG_END
       }
    }
@@ -281,9 +281,9 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                transportAddressBlock = transportAddressBlock->Next;
             }
             LOG_VERBOSE2
-            fputs("Trying name server at ", stdlog);
+            fputs("Trying name server at ",  stdlog);
             transportAddressBlockPrint(transportAddressBlock, stdlog);
-            fputs("\n", stdlog);
+            fputs("\n",  stdlog);
             LOG_END
 
             if(transportAddressBlock != NULL) {
@@ -295,10 +295,10 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                   setNonBlocking(sd[i]);
 
                   LOG_VERBOSE2
-                  fprintf(stdlog,"Connecting socket %d to ", sd[i]);
+                  fprintf(stdlog, "Connecting socket %d to ",  sd[i]);
                   fputaddress((struct sockaddr*)&transportAddressBlock->AddressArray[0],
                               true, stdlog);
-                  fprintf(stdlog," via %s...\n",(transportAddressBlock->Protocol == IPPROTO_SCTP) ? "SCTP" : "TCP");
+                  fprintf(stdlog, " via %s...\n", (transportAddressBlock->Protocol == IPPROTO_SCTP) ? "SCTP" : "TCP");
                   LOG_END
                   status = ext_connect(sd[i],
                                        (struct sockaddr*)&transportAddressBlock->AddressArray[0],
@@ -343,6 +343,41 @@ int serverTableFindServer(struct ServerTable* serverTable)
    unsigned int                   i, j;
    int                            n, result;
 
+   for(trials = 0; trials < 20;trials++) {
+      /* Wait for event */
+      n = 0;
+      FD_ZERO(&rfdset);
+      FD_ZERO(&wfdset);
+      if(serverTable->AnnounceSocket >= 0) {
+         FD_SET(serverTable->AnnounceSocket, &rfdset);
+         n = max(n, serverTable->AnnounceSocket);
+      }
+      nextTimeout = serverTable->NameServerConnectTimeout;
+      /*
+      for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
+         if(sd[i] >= 0) {
+            FD_SET(sd[i], &wfdset);
+            n           = max(n, sd[i]);
+            nextTimeout = min(nextTimeout, timeout[i]);
+         }
+      }
+      */
+      selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
+      selectTimeout.tv_usec = nextTimeout % (card64)1000000;
+      LOG_VERBOSE3
+      fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
+      LOG_END
+      result = ext_select(n + 1,
+                          &rfdset, &wfdset, NULL,
+                          &selectTimeout);
+      LOG_VERBOSE3
+      fprintf(stdlog, "select() result=%d\n", result);
+      LOG_END
+   }
+   exit(1);
+#if 0
+
+
    if(serverTable == NULL) {
       return(0);
    }
@@ -353,7 +388,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
 
 
    LOG_ACTION
-   fputs("Looking for nameserver...\n", stdlog);
+   fputs("Looking for nameserver...\n",  stdlog);
    LOG_END
 
    trials       = 0;
@@ -372,7 +407,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
             trials++;
             if(trials > serverTable->NameServerConnectMaxTrials) {
                LOG_ERROR
-               fputs("No nameserver found!\n", stdlog);
+               fputs("No nameserver found!\n",  stdlog);
                LOG_END
                for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                   if(sd[j] >= 0) {
@@ -385,15 +420,17 @@ int serverTableFindServer(struct ServerTable* serverTable)
                                   &serverTable->List.List);
             start = getMicroTime();
             LOG_ACTION
-            fprintf(stdlog,"Trial #%u...\n",trials);
+            fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
          }
       }
 
       /* Try next block of addresses */
+      /*
       tryNextBlock(serverTable,
                    &nextPeerListNode,
                    (int*)&sd, (card64*)&timeout);
+*/
 
       /* Wait for event */
       n = 0;
@@ -414,13 +451,13 @@ int serverTableFindServer(struct ServerTable* serverTable)
       selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
       selectTimeout.tv_usec = nextTimeout % (card64)1000000;
       LOG_VERBOSE3
-      fprintf(stdlog,"select() with timeout %Ld\n",nextTimeout);
+      fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
       LOG_END
       result = ext_select(n + 1,
                           &rfdset, &wfdset, NULL,
                           &selectTimeout);
       LOG_VERBOSE3
-      fprintf(stdlog,"select() result=%d\n",result);
+      fprintf(stdlog, "select() result=%d\n", result);
       LOG_END
       if((result < 0) && (errno == EINTR)) {
          for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
@@ -429,7 +466,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
             }
          }
          LOG_ACTION
-         fputs("Interrupted select() call -> returning immediately!\n", stdlog);
+         fputs("Interrupted select() call -> returning immediately!\n",  stdlog);
          LOG_END
          return(-1);
       }
@@ -442,9 +479,9 @@ int serverTableFindServer(struct ServerTable* serverTable)
                   peerAddressLength = sizeof(peerAddress);
                   if(ext_getpeername(sd[i], (struct sockaddr*)&peerAddress, &peerAddressLength) >= 0) {
                      LOG_ACTION
-                     fputs("Successfully found nameserver at ", stdlog);
+                     fputs("Successfully found nameserver at ",  stdlog);
                      fputaddress((struct sockaddr*)&peerAddress, true, stdlog);
-                     fprintf(stdlog,", socket %d\n", sd[i]);
+                     fprintf(stdlog, ",  socket %d\n",  sd[i]);
                      LOG_END
                      for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                         if((j != i) && (sd[j] >= 0)) {
@@ -455,7 +492,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
                   }
                   else {
                      LOG_VERBOSE3
-                     fprintf(stdlog,"Connection trial of socket %d failed: %s\n",
+                     fprintf(stdlog, "Connection trial of socket %d failed: %s\n",
                              sd[i], strerror(errno));
                      LOG_END
                      ext_close(sd[i]);
@@ -464,7 +501,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
                }
                else if((sd[i] >= 0) && (timeout[i] < getMicroTime())) {
                   LOG_VERBOSE3
-                  fprintf(stdlog,"Connection trial of socket %d timed out\n", sd[i]);
+                  fprintf(stdlog, "Connection trial of socket %d timed out\n",  sd[i]);
                   LOG_END
                   ext_close(sd[i]);
                   sd[i] = -1;
@@ -481,4 +518,5 @@ puts("ACHTUNG: Hier kein PURGE durchführen!!!");
          }
       }
    }
+#endif
 }
