@@ -300,6 +300,8 @@ darwin*)
 esac
 AC_SUBST(thread_LIBS)
 
+AC_CHECK_HEADERS(sys/types.h sys/socket.h netinet/in.h netinet/sctp.h)
+
 AC_MSG_CHECKING(for socklen_t)
 AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
                 #include <sys/types.h>
@@ -368,6 +370,18 @@ if test "$enable_kernel_sctp" = "no"; then
    fi
 fi
 
+if test "$enable_kernel_sctp" = "yes"; then
+AC_CHECK_MEMBER(struct sctp_paddrparams.spp_flags,
+                AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.]),,
+                [#ifdef HAVE_SYS_TYPES_H
+                 #include <sys/types.h>
+                 #endif
+                 #ifdef HAVE_NETINET_SCTP_H
+                 #include <netinet/sctp.h>
+                 #endif])
+else
+AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.])
+fi
 
 ac_socketapi_includes=NO ac_socketapi_libraries=NO ac_socketapi_bindir=NO
 socketapi_libraries=""
