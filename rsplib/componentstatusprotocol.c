@@ -53,14 +53,15 @@ ssize_t componentStatusSend(const union sockaddr_union*             reportAddres
          csph->AssociationArray[i].PPID       = htonl(associationArray[i].PPID);
       }
 
-      sd = socket(reportAddress->sa.sa_family,
-                  SOCK_DGRAM,
-                  IPPROTO_UDP);
+      sd = ext_socket(reportAddress->sa.sa_family,
+                      SOCK_DGRAM,
+                      IPPROTO_UDP);
       if(sd >= 0) {
-         result = sendto(sd, csph, length, 0,
-                         &reportAddress->sa,
-                         getSocklen(&reportAddress->sa));
-         close(sd);
+         setNonBlocking(sd);
+         result = ext_sendto(sd, csph, length, 0,
+                             &reportAddress->sa,
+                             getSocklen(&reportAddress->sa));
+         ext_close(sd);
       }
 
       free(csph);

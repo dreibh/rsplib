@@ -4,6 +4,8 @@
 #include "timeutilities.h"
 #include "loglevel.h"
 
+#include "thread.h"
+
 
 void fdCallback(struct Dispatcher* dispatcher,
                 int                fd,
@@ -26,6 +28,20 @@ void timerCallback(struct Dispatcher* dispatcher,
 }
 
 
+class TestThread : public TDThread
+{
+   public:
+   int ID;
+
+   void run();
+};
+
+void TestThread::run()
+{
+   printf("ID=%d\n",ID);
+}
+
+
 int main(int argc, char** argv)
 {
    Dispatcher d;
@@ -36,6 +52,7 @@ int main(int argc, char** argv)
 
    initLogging("-loglevel=9");
 
+   /*
    dispatcherNew(&d,NULL,NULL,NULL);
    fdCallbackNew(&fdc1, &d, STDIN_FILENO, FDCE_Read, fdCallback, (void*)1);
    timerNew(&t1, &d, timerCallback, (void*)1);
@@ -51,6 +68,16 @@ int main(int argc, char** argv)
    }
 
    dispatcherDelete(&d);
+   */
+
+   TestThread* tt[1024];
+   for(size_t i = 0;i < 1024;i++) {
+      tt[i] = new TestThread;
+      tt[i]->ID = i;
+      tt[i]->start();
+      tt[i]->waitForFinish();
+      delete tt[i];
+   }
 
    return(0);
 }

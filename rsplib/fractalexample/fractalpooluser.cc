@@ -293,7 +293,7 @@ void FractalPU::run()
                      PoolElementUsages++;
                   }
                   TimeoutTimer->stop();
-                  TimeoutTimer->start(2000, TRUE);
+                  TimeoutTimer->start(5000, TRUE);
                   switch(handleData(&data, received)) {
                      case Finalizer:
                         goto finish;

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.16 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: rspsession.c,v 1.17 2004/09/23 10:37:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -528,7 +528,9 @@ static struct SessionDescriptor* rspSessionNew(
          threadSafetyUnlock(&session->PoolElement->Mutex);
       }
 
+      dispatcherLock(&gDispatcher);
       gSessionList = g_list_append(gSessionList, session);
+      dispatcherUnlock(&gDispatcher);
    }
    return(session);
 }
@@ -538,7 +540,9 @@ static struct SessionDescriptor* rspSessionNew(
 static void rspSessionDelete(struct SessionDescriptor* session)
 {
    if(session) {
+      dispatcherLock(&gDispatcher);
       gSessionList = g_list_remove(gSessionList, session);
+      dispatcherUnlock(&gDispatcher);
       if(session->PoolElement) {
          threadSafetyLock(&session->PoolElement->Mutex);
          session->PoolElement->SessionList = g_list_remove(session->PoolElement->SessionList, session);
@@ -1262,6 +1266,8 @@ void rspSendCSPReport(const int                   nameServerSocket,
    fputs("Sending a Component Status Protocol report...\n", stdlog);
    LOG_END
 
+   dispatcherLock(&gDispatcher);
+
    sessions     = g_list_length(gSessionList);
    caeArray     = componentAssociationEntryArrayNew(1 + sessions);
    caeArraySize = 0;
@@ -1279,6 +1285,9 @@ void rspSendCSPReport(const int                   nameServerSocket,
       list = g_list_first(gSessionList);
       while(list != NULL) {
          session = (struct SessionDescriptor*)list->data;
+LOG_ACTION
+fputs("t-02b\n",stdlog);
+LOG_END
 
          if(!session->Incoming) {
             if(session->Socket >= 0) {
@@ -1296,7 +1305,7 @@ void rspSendCSPReport(const int                   nameServerSocket,
             }
          }
 
-         list = g_list_next(gSessionList);
+         list = g_list_next(list);
       }
 
       if((statusText[0] == 0x00) || (sessions != 1)) {
@@ -1317,4 +1326,6 @@ void rspSendCSPReport(const int                   nameServerSocket,
 
       componentAssociationEntryArrayDelete(caeArray);
    }
+
+   dispatcherUnlock(&gDispatcher);
 }

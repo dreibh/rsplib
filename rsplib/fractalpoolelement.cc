@@ -61,6 +61,7 @@ class ServiceThread : public TDThread
 
    unsigned int           ID;
    bool                   IsNewSession;
+   bool                   Shutdown;
    FractalGeneratorStatus Status;
    unsigned long long     LastCookieTimeStamp;
    unsigned long long     LastSendTimeStamp;
@@ -76,6 +77,7 @@ ServiceThread::ServiceThread()
    ID           = ++IDCounter;
    Session      = NULL;
    IsNewSession = true;
+   Shutdown     = false;
    LastSendTimeStamp = 0;
    LastCookieTimeStamp = 0;
    std::cout << "Created thread " << ID << "..." << std::endl;
@@ -84,11 +86,12 @@ ServiceThread::ServiceThread()
 ServiceThread::~ServiceThread()
 {
    std::cout << "Stopping thread " << ID << "..." << std::endl;
+   Shutdown = true;
+   waitForFinish();
    if(Session) {
       rspDeleteSession(Session);
       Session = NULL;
    }
-   waitForFinish();
    std::cout << "Thread " << ID << " has been stopped." << std::endl;
 }
 
@@ -215,11 +218,11 @@ void ServiceThread::run()
    size_t                           i;
    size_t                           dataPackets = 0;
 
-   for(;;) {
+   while(!Shutdown) {
       tags[0].Tag  = TAG_RspIO_MsgIsCookie;
       tags[0].Data = 0;
       tags[1].Tag  = TAG_RspIO_Timeout;
-      tags[1].Data = (tagdata_t)5000000;
+      tags[1].Data = (tagdata_t)2000000;
       tags[2].Tag  = TAG_DONE;
       received = rspSessionRead(Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
       if(received > 0) {
@@ -294,6 +297,10 @@ void ServiceThread::run()
                   goto finish;
                }
             }
+            if(Shutdown) {
+               std::cerr << "Aborting session due to server shutdown!" << std::endl;
+               goto finish;
+            }
          }
 
          if(data.Points > 0) {
@@ -318,7 +325,13 @@ void ServiceThread::run()
    // ====== Shutdown connection ==========================================
 finish:
    std::cerr << "Thread-Ende!" << std::endl;
+LOG_ACTION
+fputs("A-01\n",stdlog);
+LOG_END
    rspDeleteSession(Session);
+LOG_ACTION
+fputs("A-02\n",stdlog);
+LOG_END
    Session = NULL;
 }
 

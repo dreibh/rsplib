@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.14 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: rsplib.c,v 1.15 2004/09/23 10:37:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -382,7 +382,7 @@ int rspSelect(int             n,
    card64         newTimeout;
    int            result;
 
-   if(&gDispatcher) {
+   if(&gDispatcher) {   // ??????????????????
       /* ====== Schedule ================================================= */
       /* pthreads seem to have the property that scheduling is quite
          unfair -> If the main loop only invokes rspSelect(), this

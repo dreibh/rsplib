@@ -137,5 +137,5 @@ cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 #t1_LDFLAGS = -static $(all_libraries) -L.
 
 t2_SOURCES = t2.cc
-t2_LDADD   = dispatcher.o fdcallback.o timer.o timeutilities.o loglevel.o leaflinkedredblacktree.o threadsafety.o -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) -lsctp $(GLIB_LIBS)
+t2_LDADD   = libcppthread.la dispatcher.o fdcallback.o timer.o timeutilities.o loglevel.o leaflinkedredblacktree.o threadsafety.o -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) -lsctp $(GLIB_LIBS)
 t2_LDFLAGS = -static $(all_libraries) -L.

@@ -44,7 +44,6 @@ void* TDThread::startRoutine(void* object)
 {
    TDThread* thread = (TDThread*)object;
    thread->run();
-   thread->MyThread = 0;
    return(NULL);
 }
 
@@ -65,6 +64,7 @@ void TDThread::waitForFinish()
 {
    if(MyThread != 0) {
       pthread_join(MyThread, NULL);
+      MyThread = 0;
    }
 }
 
