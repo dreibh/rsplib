@@ -116,10 +116,6 @@ inline void doubleLinkedRingListRemNode(struct DoubleLinkedRingListNode* node)
 }
 
 
-#define doubleLinkedRingListTraverseForward(n,l) for(((struct DoubleLinkedRingListNode*)n) = (l)->Node.Next;((struct DoubleLinkedRingListNode*)n) != (l)->Head;((struct DoubleLinkedRingListNode*)n) = ((struct DoubleLinkedRingListNode*)n)->Next)
-#define doubleLinkedRingListTraverseBackward(n,l) for(((struct DoubleLinkedRingListNode*)n) = (l)->Node.Prev;((struct DoubleLinkedRingListNode*)n) != (l)->Head;((struct DoubleLinkedRingListNode*)n) = ((struct DoubleLinkedRingListNode*)n)->Prev)
-
-
 #ifdef __cplusplus
 }
 #endif

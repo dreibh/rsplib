@@ -61,7 +61,9 @@ void linearListVerify(struct LinearList* ll)
    struct LinearListNode*  prevNode = NULL;
    struct LinearListNode*  node;
 
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       counter++;
       valueSum += node->Value;
 

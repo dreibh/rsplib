@@ -109,7 +109,9 @@ inline void linearListPrint(struct LinearList* ll, FILE* fd)
 {
    struct LinearListNode* node;
    fprintf(fd, "List: ");
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       linearListPrintNode(ll, node, fd);
    }
    fputs("\n", fd);
@@ -164,7 +166,9 @@ inline struct LinearListNode* linearListGetNearestPrev(
                                  struct LinearListNode* cmpNode)
 {
    struct LinearListNode* node;
-   doubleLinkedRingListTraverseBackward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Prev;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Prev) {
       if(ll->ComparisonFunction(cmpNode, node) > 0) {
          return(node);
       }
@@ -179,7 +183,9 @@ inline struct LinearListNode* linearListGetNearestNext(
                                  struct LinearListNode* cmpNode)
 {
    struct LinearListNode* node;
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       if(ll->ComparisonFunction(cmpNode, node) < 0) {
          return(node);
       }
@@ -211,7 +217,9 @@ inline struct LinearListNode* linearListInsert(struct LinearList*     ll,
    printf("\n");
 #endif
 
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       cmp = ll->ComparisonFunction(newNode, node);
       if(cmp < 0) {
          doubleLinkedRingListAddAfter(node->Node.Prev, &newNode->Node);
@@ -254,7 +262,9 @@ inline struct LinearListNode* linearListFind(const struct LinearList*     ll,
    printf("\n");
 #endif
 
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       if(ll->ComparisonFunction(cmpNode, node) == 0) {
          return(node);
       }
@@ -300,7 +310,10 @@ inline struct LinearListNode* linearListGetNodeByValue(struct LinearList*      l
                                                        LinearListNodeValueType value)
 {
    struct LinearListNode* node;
-   doubleLinkedRingListTraverseForward(node, &ll->List) {
+
+   for(node = (struct LinearListNode*)ll->List.Node.Next;
+       node != (struct LinearListNode*)ll->List.Head;
+       node = (struct LinearListNode*)((struct DoubleLinkedRingListNode*)node)->Next) {
       if(value < node->Value) {
          return(node);
       }
