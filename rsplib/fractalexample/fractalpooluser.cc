@@ -373,8 +373,10 @@ void FractalPU::run()
          qApp->unlock();
 
          rspSessionSetStatusText(Session, "Sending parameter command...");
-         statusBar()->message("Sending parameter command...");
          std::cerr << "Sending parameter command..." << std::endl;
+         qApp->lock();
+         statusBar()->message("Sending parameter command...");
+         qApp->unlock();
 
 
          // ====== Begin image calculation ==================================
@@ -417,7 +419,9 @@ void FractalPU::run()
                         snprintf((char*)&statusText, sizeof(statusText),
                                  "Processed data packet #%u...", packets);
                         rspSessionSetStatusText(Session, statusText);
+                        qApp->lock();
                         statusBar()->message(statusText);
+                        qApp->unlock();
                       break;
                   }
                }
@@ -436,8 +440,10 @@ finish:
 
          const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
          rspSessionSetStatusText(Session, statusText);
-         statusBar()->message(statusText);
          std::cout << statusText << std::endl;
+         qApp->lock();
+         statusBar()->message(statusText);
+         qApp->unlock();
 
          rspDeleteSession(Session);
          Session = NULL;
@@ -449,7 +455,6 @@ finish:
 
          // ====== Clean-up =================================================
          qApp->lock();
-printf("W=%d H=%d\n",         width(),height());
          if( (!Running) ||
              (Image->width() != width()) ||
              (Image->height() != height()) ) {
