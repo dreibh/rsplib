@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.3 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.4 2004/08/25 09:32:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -118,7 +118,7 @@ static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 {
    LeafLinkedRedBlackTreeNode* node;
    struct Timer*               timer;
-   card64                      now;
+   unsigned long long          now;
    dispatcherLock(dispatcher);
 
    node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
@@ -145,19 +145,19 @@ static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 
 
 /* ###### Get select() parameters ######################################## */
-void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
-                                   int*               n,
-                                   fd_set*            readfdset,
-                                   fd_set*            writefdset,
-                                   fd_set*            exceptfdset,
-                                   fd_set*            testfdset,
-                                   card64*            testTS,
-                                   struct timeval*    timeout)
+void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
+                                   int*                n,
+                                   fd_set*             readfdset,
+                                   fd_set*             writefdset,
+                                   fd_set*             exceptfdset,
+                                   fd_set*             testfdset,
+                                   unsigned long long* testTS,
+                                   struct timeval*     timeout)
 {
    LeafLinkedRedBlackTreeNode* node;
    struct FDCallback*          fdCallback;
    struct Timer*               timer;
-   card64                      now;
+   unsigned long long          now;
    int64                       timeToNextEvent;
    int                         fds;
 
@@ -225,13 +225,13 @@ void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
 
 
 /* ###### Handle select() result ######################################### */
-void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
-                                  int                result,
-                                  fd_set*            readfdset,
-                                  fd_set*            writefdset,
-                                  fd_set*            exceptfdset,
-                                  fd_set*            testfdset,
-                                  const card64       testTS)
+void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
+                                  int                      result,
+                                  fd_set*                  readfdset,
+                                  fd_set*                  writefdset,
+                                  fd_set*                  exceptfdset,
+                                  fd_set*                  testfdset,
+                                  const unsigned long long testTS)
 {
    struct LeafLinkedRedBlackTreeNode* node;
    struct FDCallback*                 fdCallback;
@@ -302,14 +302,14 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
 /* ###### Dispatcher event loop ########################################## */
 void dispatcherEventLoop(struct Dispatcher* dispatcher)
 {
-   int            n;
-   int            result;
-   struct timeval timeout;
-   fd_set         readfdset;
-   fd_set         writefdset;
-   fd_set         exceptfdset;
-   fd_set         testfdset;
-   card64         testTS;
+   int                n;
+   int                result;
+   struct timeval     timeout;
+   fd_set             readfdset;
+   fd_set             writefdset;
+   fd_set             exceptfdset;
+   fd_set             testfdset;
+   unsigned long long testTS;
 
    if(dispatcher != NULL) {
       dispatcherGetSelectParameters(dispatcher, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);

@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.26 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: nameserver.c,v 1.27 2004/08/25 09:32:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -68,6 +68,330 @@
 #define NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
 #define NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   2000000
 #define NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
+#define NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
+
+
+
+
+
+
+struct TakeoverProcess
+{
+   struct STN_CLASSNAME IndexStorageNode;
+   struct STN_CLASSNAME TimerStorageNode;
+
+   ENRPIdentifierType   TargetID;
+   unsigned long long   ExpiryTimeStamp;
+
+   size_t               OutstandingAcknowledgements;
+   ENRPIdentifierType   PeerIDArray[0];
+};
+
+
+/* ###### Get takeover process from index storage node ################### */
+inline struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN_CLASSNAME* node)
+{
+   const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
+   long n = (long)node - ((long)&dummy->IndexStorageNode - (long)dummy);
+   return((struct TakeoverProcess*)n);
+}
+
+
+/* ###### Get takeover process from timer storage node ################### */
+inline struct TakeoverProcess* getTakeoverProcessFromTimerStorageNode(struct STN_CLASSNAME* node)
+{
+   const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
+   long n = (long)node - ((long)&dummy->TimerStorageNode - (long)dummy);
+   return((struct TakeoverProcess*)n);
+}
+
+
+/* ###### Print ########################################################## */
+void takeoverProcessIndexPrint(const void* takeoverProcessPtr,
+                               FILE*       fd)
+{
+   size_t i;
+
+   struct TakeoverProcess* takeoverProcess = (struct TakeoverProcess*)takeoverProcessPtr;
+   fprintf(fd, "   - Takeover for $%08x (expiry in %Ldµs)\n",
+           takeoverProcess->TargetID,
+           (long long)takeoverProcess->ExpiryTimeStamp - (long long)getMicroTime());
+   for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
+      fprintf(fd, "      * Ack required by $%08x\n", takeoverProcess->PeerIDArray[i]);
+   }
+}
+
+
+/* ###### Comparison ##################################################### */
+int takeoverProcessIndexComparison(const void* takeoverProcessPtr1,
+                                   const void* takeoverProcessPtr2)
+{
+   const struct TakeoverProcess* takeoverProcess1 = getTakeoverProcessFromIndexStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr1);
+   const struct TakeoverProcess* takeoverProcess2 = getTakeoverProcessFromIndexStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr2);
+
+   if(takeoverProcess1->TargetID < takeoverProcess2->TargetID) {
+      return(-1);
+   }
+   else if(takeoverProcess1->TargetID > takeoverProcess2->TargetID) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### Comparison ##################################################### */
+int takeoverProcessTimerComparison(const void* takeoverProcessPtr1,
+                                   const void* takeoverProcessPtr2)
+{
+   const struct TakeoverProcess* takeoverProcess1 = getTakeoverProcessFromTimerStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr1);
+   const struct TakeoverProcess* takeoverProcess2 = getTakeoverProcessFromTimerStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr2);
+
+   if(takeoverProcess1->ExpiryTimeStamp < takeoverProcess2->ExpiryTimeStamp) {
+      return(-1);
+   }
+   else if(takeoverProcess1->ExpiryTimeStamp > takeoverProcess2->ExpiryTimeStamp) {
+      return(1);
+   }
+   return(0);
+}
+
+
+
+
+struct TakeoverProcessList
+{
+   struct ST_CLASSNAME TakeoverProcessIndexStorage;
+   struct ST_CLASSNAME TakeoverProcessTimerStorage;
+};
+
+
+/* ###### Initialize ##################################################### */
+void takeoverProcessListNew(struct TakeoverProcessList* takeoverProcessList)
+{
+   ST_METHOD(New)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                  takeoverProcessIndexPrint,
+                  takeoverProcessIndexComparison);
+   ST_METHOD(New)(&takeoverProcessList->TakeoverProcessTimerStorage,
+                  NULL,
+                  takeoverProcessTimerComparison);
+}
+
+
+/* ###### Invalidate takeover process list ############################### */
+void takeoverProcessListDelete(struct TakeoverProcessList* takeoverProcessList)
+{
+   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessIndexStorage);
+   while(node != NULL) {
+      ST_METHOD(Remove)(&takeoverProcessList->TakeoverProcessIndexStorage, node);
+      free(node);
+      node = ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessIndexStorage);
+   }
+   ST_METHOD(Delete)(&takeoverProcessList->TakeoverProcessIndexStorage);
+   ST_METHOD(Delete)(&takeoverProcessList->TakeoverProcessTimerStorage);
+}
+
+
+/* ###### Print takeover process list #################################### */
+void takeoverProcessListPrint(struct TakeoverProcessList* takeoverProcessList,
+                              FILE*                       fd)
+{
+   fprintf(fd, "Takeover Process List: (%u entries)\n",
+           ST_METHOD(GetElements)(&takeoverProcessList->TakeoverProcessIndexStorage));
+   ST_METHOD(Print)(&takeoverProcessList->TakeoverProcessIndexStorage, fd);
+}
+
+
+/* ###### Get next takeover process's expiry time stamp ################## */
+inline unsigned long long takeoverProcessListGetNextTimerTimeStamp(
+                             struct TakeoverProcessList* takeoverProcessList)
+{
+   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessTimerStorage);
+   if(node) {
+      return(getTakeoverProcessFromTimerStorageNode(node)->ExpiryTimeStamp);
+   }
+   return(~0);
+}
+
+
+/* ###### Get earliest takeover process from list ######################## */
+inline struct TakeoverProcess* takeoverProcessListGetEarliestTakeoverProcess(
+                                  struct TakeoverProcessList* takeoverProcessList)
+{
+   struct STN_CLASSNAME* node =
+      ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessTimerStorage);
+   if(node) {
+      return(getTakeoverProcessFromTimerStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get first takeover process from list ########################### */
+inline struct TakeoverProcess* takeoverProcessListGetFirstTakeoverProcess(
+                                  struct TakeoverProcessList* takeoverProcessList)
+{
+   struct STN_CLASSNAME* node =
+      ST_METHOD(GetFirst)(&takeoverProcessList->TakeoverProcessIndexStorage);
+   if(node) {
+      return(getTakeoverProcessFromIndexStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get last takeover process from list ############################ */
+inline struct TakeoverProcess* takeoverProcessListGetLastTakeoverProcess(
+                                  struct TakeoverProcessList* takeoverProcessList)
+{
+   struct STN_CLASSNAME* node =
+      ST_METHOD(GetLast)(&takeoverProcessList->TakeoverProcessIndexStorage);
+   if(node) {
+      return(getTakeoverProcessFromIndexStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get next takeover process from list ############################ */
+inline struct TakeoverProcess* takeoverProcessListGetNextTakeoverProcess(
+                                  struct TakeoverProcessList* takeoverProcessList,
+                                  struct TakeoverProcess*     takeoverProcess)
+{
+   struct STN_CLASSNAME* node =
+      ST_METHOD(GetNext)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                         &takeoverProcess->IndexStorageNode);
+   if(node) {
+      return(getTakeoverProcessFromIndexStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get previous takeover process from list ######################## */
+inline struct TakeoverProcess* takeoverProcessListGetPrevTakeoverProcess(
+                                  struct TakeoverProcessList* takeoverProcessList,
+                                  struct TakeoverProcess*     takeoverProcess)
+{
+   struct STN_CLASSNAME* node =
+      ST_METHOD(GetPrev)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                         &takeoverProcess->IndexStorageNode);
+   if(node) {
+      return(getTakeoverProcessFromIndexStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find takeover process ########################################## */
+struct TakeoverProcess* takeoverProcessListFindTakeoverProcess(
+                           struct TakeoverProcessList* takeoverProcessList,
+                           const ENRPIdentifierType    targetID)
+{
+   struct STN_CLASSNAME*  node;
+   struct TakeoverProcess cmpTakeoverProcess;
+
+   cmpTakeoverProcess.TargetID = targetID;
+   node = ST_METHOD(Find)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                          &cmpTakeoverProcess.IndexStorageNode);
+   if(node) {
+      return(getTakeoverProcessFromIndexStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Create takeover process ######################################## */
+unsigned int takeoverProcessListCreateTakeoverProcess(
+                struct TakeoverProcessList*          takeoverProcessList,
+                const ENRPIdentifierType             targetID,
+                struct ST_CLASS(PeerListManagement)* peerList,
+                const unsigned long long             expiryTimeStamp)
+{
+   struct TakeoverProcess*        takeoverProcess;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   const size_t                   peers = ST_CLASS(peerListManagementGetPeerListNodes)(peerList);
+
+   CHECK(targetID != 0);
+   CHECK(targetID != peerList->List.OwnIdentifier);
+   if(takeoverProcessListFindTakeoverProcess(takeoverProcessList, targetID)) {
+      return(RSPERR_DUPLICATE_ID);
+   }
+
+   takeoverProcess = (struct TakeoverProcess*)malloc(sizeof(struct TakeoverProcess) +
+                                                     sizeof(ENRPIdentifierType) * peers);
+   if(takeoverProcess == NULL) {
+      return(RSPERR_OUT_OF_MEMORY);
+   }
+
+   STN_METHOD(New)(&takeoverProcess->IndexStorageNode);
+   STN_METHOD(New)(&takeoverProcess->TimerStorageNode);
+   takeoverProcess->TargetID                    = targetID;
+   takeoverProcess->ExpiryTimeStamp             = expiryTimeStamp;
+   takeoverProcess->OutstandingAcknowledgements = 0;
+   peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerList->List);
+   while(peerListNode != NULL) {
+      if((peerListNode->Identifier != targetID) &&
+         (peerListNode->Identifier != peerList->List.OwnIdentifier) &&
+         (peerListNode->Identifier != 0)) {
+         takeoverProcess->PeerIDArray[takeoverProcess->OutstandingAcknowledgements++] =
+            peerListNode->Identifier;
+      }
+      peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerList->List, peerListNode);
+   }
+
+   ST_METHOD(Insert)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                     &takeoverProcess->IndexStorageNode);
+   ST_METHOD(Insert)(&takeoverProcessList->TakeoverProcessTimerStorage,
+                     &takeoverProcess->TimerStorageNode);
+   return(RSPERR_OKAY);
+}
+
+
+/* ###### Acknowledge takeover process ################################### */
+struct TakeoverProcess* takeoverProcessListAcknowledgeTakeoverProcess(
+                           struct TakeoverProcessList* takeoverProcessList,
+                           const ENRPIdentifierType    targetID,
+                           const ENRPIdentifierType    acknowledgerID)
+{
+   size_t                  i;
+   struct TakeoverProcess* takeoverProcess =
+      takeoverProcessListFindTakeoverProcess(takeoverProcessList,
+                                             targetID);
+   if(takeoverProcess != NULL) {
+      for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
+         if(takeoverProcess->PeerIDArray[i] == acknowledgerID) {
+            for(   ;i < takeoverProcess->OutstandingAcknowledgements - 1;i++) {
+               takeoverProcess->PeerIDArray[i] = takeoverProcess->PeerIDArray[i + 1];
+            }
+            takeoverProcess->OutstandingAcknowledgements--;
+            return(takeoverProcess);
+         }
+      }
+   }
+   return(NULL);
+}
+
+
+/* ###### Delete takeover process ######################################## */
+void takeoverProcessListDeleteTakeoverProcess(
+        struct TakeoverProcessList* takeoverProcessList,
+        struct TakeoverProcess*     takeoverProcess)
+{
+   ST_METHOD(Remove)(&takeoverProcessList->TakeoverProcessIndexStorage,
+                     &takeoverProcess->IndexStorageNode);
+   ST_METHOD(Remove)(&takeoverProcessList->TakeoverProcessTimerStorage,
+                     &takeoverProcess->TimerStorageNode);
+   STN_METHOD(Delete)(&takeoverProcess->IndexStorageNode);
+   STN_METHOD(Delete)(&takeoverProcess->TimerStorageNode);
+   takeoverProcess->TargetID                    = 0;
+   takeoverProcess->OutstandingAcknowledgements = 0;
+   free(takeoverProcess);
+}
+
+
+
+
+
 
 
 struct NameServer
@@ -101,15 +425,19 @@ struct NameServer
    bool                                     InInitializationPhase;
    ENRPIdentifierType                       MentorServerID;
 
+   struct TakeoverProcessList               Takeovers;
+   struct Timer                             TakeoverExpiryTimer;
+
    size_t                                   MaxBadPEReports;
-   card64                                   ServerAnnounceCycle;
-   card64                                   EndpointMonitoringHeartbeatInterval;
-   card64                                   EndpointKeepAliveTransmissionInterval;
-   card64                                   EndpointKeepAliveTimeoutInterval;
-   card64                                   PeerHeartbeatCycle;
-   card64                                   PeerMaxTimeLastHeard;
-   card64                                   PeerMaxTimeNoResponse;
-   card64                                   MentorHuntTimeout;
+   unsigned long long                       ServerAnnounceCycle;
+   unsigned long long                       EndpointMonitoringHeartbeatInterval;
+   unsigned long long                       EndpointKeepAliveTransmissionInterval;
+   unsigned long long                       EndpointKeepAliveTimeoutInterval;
+   unsigned long long                       PeerHeartbeatCycle;
+   unsigned long long                       PeerMaxTimeLastHeard;
+   unsigned long long                       PeerMaxTimeNoResponse;
+   unsigned long long                       MentorHuntTimeout;
+   unsigned long long                       TakeoverExipryInterval;
 };
 
 
@@ -153,6 +481,9 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
 static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                                     struct Timer*      timer,
                                     void*              userData);
+static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
+                                        struct Timer*      timer,
+                                        void*              userData);
 static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      int                fd,
                                      unsigned int       eventMask,
@@ -224,6 +555,11 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                &nameServer->StateMachine,
                peerActionTimerCallback,
                (void*)nameServer);
+      timerNew(&nameServer->TakeoverExpiryTimer,
+               &nameServer->StateMachine,
+               takeoverExpiryTimerCallback,
+               (void*)nameServer);
+      takeoverProcessListNew(&nameServer->Takeovers);
 
       nameServer->InInitializationPhase    = true;
       nameServer->MentorServerID           = 0;
@@ -244,6 +580,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->PeerMaxTimeNoResponse                 = NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
       nameServer->PeerHeartbeatCycle                    = NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE;
       nameServer->MentorHuntTimeout                     = NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT;
+      nameServer->TakeoverExipryInterval                = NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
 
       memcpy(&nameServer->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(union sockaddr_union));
       if(nameServer->ASAPAnnounceAddress.in6.sin6_family == AF_INET6) {
@@ -321,10 +658,12 @@ void nameServerDelete(struct NameServer* nameServer)
       ST_CLASS(peerListManagementDelete)(&nameServer->Peers);
       ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
       ST_CLASS(poolNamespaceManagementDelete)(&nameServer->Namespace);
+      timerDelete(&nameServer->TakeoverExpiryTimer);
       timerDelete(&nameServer->ASAPAnnounceTimer);
       timerDelete(&nameServer->ENRPAnnounceTimer);
       timerDelete(&nameServer->NamespaceActionTimer);
       timerDelete(&nameServer->PeerActionTimer);
+      takeoverProcessListDelete(&nameServer->Takeovers);
       if(nameServer->ASAPAnnounceSocket >= 0) {
          ext_close(nameServer->ASAPAnnounceSocket >= 0);
          nameServer->ASAPAnnounceSocket = -1;
@@ -467,7 +806,7 @@ static void sendPeerPresence(struct NameServer*          nameServer,
                              int                         msgSendFlags,
                              const union sockaddr_union* destinationAddressList,
                              const size_t                destinationAddresses,
-                             ENRPIdentifierType          receiverID,
+                             const ENRPIdentifierType    receiverID,
                              const bool                  replyRequired)
 {
    struct RSerPoolMessage* message;
@@ -609,6 +948,36 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    }
 
    timerStart(timer, getMicroTime() + nameServer->PeerHeartbeatCycle);
+}
+
+
+/* ###### Takeover expiry timer callback ################################# */
+static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
+                                        struct Timer*      timer,
+                                        void*              userData)
+{
+   struct NameServer*             nameServer = (struct NameServer*)userData;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct TakeoverProcess*        takeoverProcess =
+      takeoverProcessListGetEarliestTakeoverProcess(&nameServer->Takeovers);
+   size_t                         i;
+
+   CHECK(takeoverProcess != NULL);
+
+   LOG_WARNING
+   fprintf(stdlog, "Takeover of peer $%08x has expired. Outstanding acknowledgements:\n",
+           takeoverProcess->OutstandingAcknowledgements);
+   for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
+      peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
+                        &nameServer->Peers,
+                        takeoverProcess->PeerIDArray[i],
+                        NULL);
+      fprintf(stdlog, "- $%08x (%s)\n",
+              takeoverProcess->PeerIDArray[i],
+              (peerListNode == NULL) ? "not found!" : "still available");
+   }
+   LOG_END
+   takeoverProcessListDeleteTakeoverProcess(&nameServer->Takeovers, takeoverProcess);
 }
 
 
@@ -794,7 +1163,19 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                  nameServer->PeerMaxTimeLastHeard);
          LOG_END
 
-         sendPeerInitTakeover(nameServer, peerListNode->Identifier);
+         if(takeoverProcessListCreateTakeoverProcess(
+               &nameServer->Takeovers,
+               peerListNode->Identifier,
+               &nameServer->Peers,
+               nameServer->TakeoverExipryInterval) == RSPERR_OKAY) {
+            timerRestart(&nameServer->TakeoverExpiryTimer,
+                         takeoverProcessListGetNextTimerTimeStamp(&nameServer->Takeovers));
+            LOG_ACTION
+            fprintf(stdlog, "Initiating takeover of dead peer $%08x\n",
+                    peerListNode->Identifier);
+            LOG_END
+            sendPeerInitTakeover(nameServer, peerListNode->Identifier);
+         }
 
          result = ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                      &nameServer->Peers,
@@ -1573,6 +1954,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
                                struct RSerPoolMessage* message)
 {
    ST_CLASS(PeerListNode)* peerListNode;
+   struct TakeoverProcess* takeoverProcess;
    int                     result;
 
    if(message->SenderID == nameServer->ServerID) {
@@ -1686,6 +2068,18 @@ static void handlePeerPresence(struct NameServer*      nameServer,
          LOG_END
       }
    }
+
+   if((takeoverProcess = takeoverProcessListFindTakeoverProcess(&nameServer->Takeovers,
+                                                                message->SenderID))) {
+      LOG_ACTION
+      fprintf(stdlog, "Peer $%08x is alive again. Aborting its takeover.\n",
+              message->SenderID);
+      LOG_END
+      takeoverProcessListDeleteTakeoverProcess(&nameServer->Takeovers,
+                                                takeoverProcess);
+      timerRestart(&nameServer->TakeoverExpiryTimer,
+                   takeoverProcessListGetNextTimerTimeStamp(&nameServer->Takeovers));
+   }
 }
 
 
@@ -1697,6 +2091,7 @@ static void handlePeerInitTakeover(struct NameServer*      nameServer,
 {
    struct RSerPoolMessage*        response;
    struct ST_CLASS(PeerListNode)* peerListNode;
+   struct TakeoverProcess*        takeoverProcess;
 
    if(message->SenderID == nameServer->ServerID) {
       /* This is our own message -> skip it! */
@@ -1714,6 +2109,10 @@ static void handlePeerInitTakeover(struct NameServer*      nameServer,
 
    /* ====== This server is target -> try to stop it by peer presences === */
    if(message->NSIdentifier == nameServer->ServerID) {
+      LOG_WARNING
+      fprintf(stdlog, "Peer $%08x has initiated takeover -> trying to stop this by PeerPresences\n",
+              message->SenderID);
+      LOG_END
       if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
          sendPeerPresence(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
                           (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
@@ -1740,9 +2139,39 @@ static void handlePeerInitTakeover(struct NameServer*      nameServer,
       }
    }
 
-   /* else if(  In Takeover .... ???????????? */
+   /* ====== Another peer tries takeover, too ============================ */
+   else if((takeoverProcess = takeoverProcessListFindTakeoverProcess(
+                                 &nameServer->Takeovers,
+                                 message->NSIdentifier))) {
+      if(message->SenderID < nameServer->ServerID) {
+         LOG_ACTION
+         fprintf(stdlog, "Peer $%08x, also trying takeover of $%08x, has lower ID -> we ($%08x) abort our takeover\n",
+                 message->SenderID,
+                 message->NSIdentifier,
+                 nameServer->ServerID);
+         LOG_END
+         takeoverProcessListDeleteTakeoverProcess(&nameServer->Takeovers,
+                                                  takeoverProcess);
+         timerRestart(&nameServer->TakeoverExpiryTimer,
+                      takeoverProcessListGetNextTimerTimeStamp(&nameServer->Takeovers));
+      }
+      else {
+         LOG_ACTION
+         fprintf(stdlog, "Peer $%08x, also trying takeover of $%08x, has higher ID -> we ($%08x) continue our takeover\n",
+                 message->SenderID,
+                 message->NSIdentifier,
+                 nameServer->ServerID);
+         LOG_END
+      }
+   }
 
+   /* ====== Acknowledge takeover ======================================== */
    else {
+      LOG_ACTION
+      fprintf(stdlog, "Acknowledging peer $%08x's for takeover of $%08x\n",
+              message->SenderID,
+              message->NSIdentifier);
+      LOG_END
       response = rserpoolMessageNew(NULL, 65536);
       if(response != NULL) {
          response->Type         = EHT_PEER_INIT_TAKEOVER_ACK;
@@ -1769,14 +2198,175 @@ static void handlePeerInitTakeover(struct NameServer*      nameServer,
 }
 
 
+/* ###### Send ENRP peer takeover server message ######################### */
+static void sendPeerTakeoverServer(struct NameServer*          nameServer,
+                                   int                         sd,
+                                   const sctp_assoc_t          assocID,
+                                   int                         msgSendFlags,
+                                   const union sockaddr_union* destinationAddressList,
+                                   const size_t                destinationAddresses,
+                                   const ENRPIdentifierType    receiverID,
+                                   const ENRPIdentifierType    targetID)
+{
+   struct RSerPoolMessage* message;
+
+   message = rserpoolMessageNew(NULL, 65536);
+   if(message) {
+      message->Type         = EHT_PEER_TAKEOVER_SERVER;
+      message->PPID         = PPID_ENRP;
+      message->AssocID      = assocID;
+      message->AddressArray = (union sockaddr_union*)destinationAddressList;
+      message->Addresses    = destinationAddresses;
+      message->Flags        = 0x00;
+      message->SenderID     = nameServer->ServerID;
+      message->ReceiverID   = receiverID;
+      message->NSIdentifier = targetID;
+
+      if(rserpoolMessageSend((sd == nameServer->ENRPMulticastSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+                             sd, assocID, msgSendFlags, 0, message) == false) {
+         LOG_WARNING
+         fputs("Sending PeerTakeoverServer failed\n", stdlog);
+         LOG_END
+      }
+      rserpoolMessageDelete(message);
+   }
+}
+
+
+/* ###### Send ENRP peer ownership change message(s) ##################### */
+static void sendPeerOwnershipChange(struct NameServer*          nameServer,
+                                    int                         sd,
+                                    const sctp_assoc_t          assocID,
+                                    int                         msgSendFlags,
+                                    const union sockaddr_union* destinationAddressList,
+                                    const size_t                destinationAddresses,
+                                    const ENRPIdentifierType    receiverID,
+                                    const ENRPIdentifierType    targetID)
+{
+   struct RSerPoolMessage*           message;
+   struct ST_CLASS(NameTableExtract) nte;
+
+   message = rserpoolMessageNew(NULL, 250);  // ??????????????
+   if(message) {
+      message->Type                   = EHT_PEER_OWNERSHIP_CHANGE;
+      message->PPID                   = PPID_ENRP;
+      message->AssocID                = assocID;
+      message->AddressArray           = (union sockaddr_union*)destinationAddressList;
+      message->Addresses              = destinationAddresses;
+      message->Flags                  = 0x00;
+      message->SenderID               = nameServer->ServerID;
+      message->ReceiverID             = receiverID;
+      message->NSIdentifier           = targetID;
+      message->NamespacePtr           = &nameServer->Namespace;
+      message->NamespacePtrAutoDelete = false;
+      message->ExtractContinuation    = &nte;
+      nte.LastPoolElementIdentifier   = 0;
+
+      puts("X1");
+      do {
+      puts("X2");
+         if(rserpoolMessageSend((sd == nameServer->ENRPMulticastSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+                                sd, assocID, msgSendFlags, 0, message) == false) {
+            LOG_WARNING
+            fputs("Sending PeerOwnershipChange failed\n", stdlog);
+            LOG_END
+            break;
+         }
+         printf("lastPEID=%u\n",nte.LastPoolElementIdentifier);
+      } while(nte.LastPoolElementIdentifier == 0);
+      rserpoolMessageDelete(message);
+   }
+}
+
+
+
+/* ###### Do takeover of peer server ##################################### */
+static void doTakeover(struct NameServer*      nameServer,
+                       struct TakeoverProcess* takeoverProcess)
+{
+   struct ST_CLASS(PeerListNode)*    peerListNode;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+
+   LOG_WARNING
+   fprintf(stdlog, "Taking over peer $%08x...\n",
+           takeoverProcess->TargetID);
+   LOG_END
+
+   /* ====== Report takeover to peers ==================================== */
+   if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
+      sendPeerTakeoverServer(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+                             (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
+                             0,
+                             takeoverProcess->TargetID);
+      sendPeerOwnershipChange(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+                              (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
+                              0,
+                              takeoverProcess->TargetID);
+   }
+
+   peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&nameServer->Peers.List);
+   while(peerListNode != NULL) {
+      if(!(peerListNode->Flags & PLNF_MULTICAST)) {
+         LOG_VERBOSE
+         fprintf(stdlog, "Sending PeerTakeoverServer to unicast peer $%08x...\n",
+                  peerListNode->Identifier);
+         LOG_END
+         sendPeerTakeoverServer(nameServer,
+                                nameServer->ENRPUnicastSocket, 0, 0,
+                                peerListNode->AddressBlock->AddressArray,
+                                peerListNode->AddressBlock->Addresses,
+                                peerListNode->Identifier,
+                                takeoverProcess->TargetID);
+         sendPeerOwnershipChange(nameServer,
+                                 nameServer->ENRPUnicastSocket, 0, 0,
+                                 peerListNode->AddressBlock->AddressArray,
+                                 peerListNode->AddressBlock->Addresses,
+                                 peerListNode->Identifier,
+                                 takeoverProcess->TargetID);
+      }
+      peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                        &nameServer->Peers.List,
+                        peerListNode);
+   }
+
+
+   /* ====== Update PEs' home NS identifier ============================== */
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)
+                        (&nameServer->Namespace.Namespace, takeoverProcess->TargetID);
+   while(poolElementNode) {
+      LOG_ACTION
+      fprintf(stdlog, "Taking ownership of pool element $%08x in pool ",
+              poolElementNode->Identifier);
+      poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
+      fputs("\n", stdlog);
+      LOG_END
+puts("IMEPLEMENT ME!");
+
+// HIER DANN: First, oder Next schon oben merken (besser, da O(1)) ...
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)
+                           (&nameServer->Namespace.Namespace, poolElementNode);
+   }
+
+
+   /* ====== Remove takeover process ===================================== */
+   LOG_WARNING
+   fprintf(stdlog, "Takeover of peer $%08x completed\n",
+           takeoverProcess->TargetID);
+   LOG_END
+   takeoverProcessListDeleteTakeoverProcess(&nameServer->Takeovers,
+                                            takeoverProcess);
+   timerRestart(&nameServer->TakeoverExpiryTimer,
+                takeoverProcessListGetNextTimerTimeStamp(&nameServer->Takeovers));
+}
+
+
 /* ###### Handle peer init takeover ack ################################## */
 static void handlePeerInitTakeoverAck(struct NameServer*      nameServer,
                                       int                     fd,
                                       sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
 {
-//   struct RSerPoolMessage*        response;
-// ?????   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct TakeoverProcess* takeoverProcess;
 
    if(message->SenderID == nameServer->ServerID) {
       /* This is our own message -> skip it! */
@@ -1791,6 +2381,34 @@ static void handlePeerInitTakeoverAck(struct NameServer*      nameServer,
            message->SenderID,
            message->NSIdentifier);
    LOG_END
+
+   takeoverProcess = takeoverProcessListAcknowledgeTakeoverProcess(
+                        &nameServer->Takeovers,
+                        message->NSIdentifier,
+                        message->SenderID);
+   if(takeoverProcess) {
+      LOG_ACTION
+      fprintf(stdlog, "Peer $%08x acknowledges takeover of target $%08x. %u acknowledges to go.\n",
+              message->SenderID,
+              message->NSIdentifier,
+              takeoverProcess->OutstandingAcknowledgements);
+      LOG_END
+      if(takeoverProcess->OutstandingAcknowledgements == 0) {
+         LOG_ACTION
+         fprintf(stdlog, "Takeover of target $%08x confirmed. Taking it over now.\n",
+                 message->NSIdentifier);
+         LOG_END
+
+         doTakeover(nameServer, takeoverProcess);
+      }
+   }
+   else {
+      LOG_VERBOSE
+      fprintf(stdlog, "Ignoring PeerInitTakeoverAck from peer $%08x for target $%08x\n",
+              message->SenderID,
+              message->NSIdentifier);
+      LOG_END
+   }
 }
 
 
@@ -2472,7 +3090,7 @@ int main(int argc, char** argv)
    fd_set                        writefdset;
    fd_set                        exceptfdset;
    fd_set                        testfdset;
-   card64                        testTS;
+   unsigned long long            testTS;
    int                           i, n;
 
 

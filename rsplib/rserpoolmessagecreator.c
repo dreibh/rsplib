@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.11 2004/08/24 09:20:16 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.12 2004/08/25 09:32:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1268,6 +1268,8 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
          (i != message->ExtractContinuation->PoolElementNodes)) {
 // ?????         header->ah_flags |= EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND;
 puts("MORE TO SEND::::????");
+         /* ????????? */
+         message->ExtractContinuation->LastPoolElementIdentifier = 0;
       }
    }
 

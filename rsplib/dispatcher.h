@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.h,v 1.2 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: dispatcher.h,v 1.3 2004/08/25 09:32:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -117,14 +117,14 @@ void dispatcherUnlock(struct Dispatcher* dispatcher);
   * @param exceptfdset exceptfdset.
   * @param timeout timeout.
   */
-void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
-                                   int*               n,
-                                   fd_set*            readfdset,
-                                   fd_set*            writefdset,
-                                   fd_set*            exceptfdset,
-                                   fd_set*            testfdset,
-                                   card64*            testTS,
-                                   struct timeval*    timeout);
+void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
+                                   int*                n,
+                                   fd_set*             readfdset,
+                                   fd_set*             writefdset,
+                                   fd_set*             exceptfdset,
+                                   fd_set*             testfdset,
+                                   unsigned long long* testTS,
+                                   struct timeval*     timeout);
 
 /**
   * Handle results of select() call.
@@ -136,13 +136,13 @@ void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
   * @param exceptfdset exceptfdset.
   * @param timeout timeout.
   */
-void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
-                                  int                result,
-                                  fd_set*            readfdset,
-                                  fd_set*            writefdset,
-                                  fd_set*            exceptfdset,
-                                  fd_set*            testfdset,
-                                  const card64       testTS);
+void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
+                                  int                      result,
+                                  fd_set*                  readfdset,
+                                  fd_set*                  writefdset,
+                                  fd_set*                  exceptfdset,
+                                  fd_set*                  testfdset,
+                                  const unsigned long long testTS);
 
 /**
   * Event loop calling dispatcherGetSelectParameters(), select() and dispatcherHandleSelectResult().

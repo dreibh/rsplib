@@ -67,7 +67,7 @@ struct FDCallback
                                                  int                fd,
                                                  unsigned int       eventMask,
                                                  void*              userData);
-   card64                            SelectTimeStamp;
+   unsigned long long                SelectTimeStamp;
    void*                             UserData;
 };
 
