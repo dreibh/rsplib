@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.1 2004/11/11 18:15:07 dreibh Exp $
+ *  $Id: ext_socket.h,v 1.2 2004/11/11 21:41:57 dreibh Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -410,11 +410,10 @@ int ext_recvmsg2(int sockfd, struct msghdr* msg, int flags,
 #define SCTP_BINDX_ADD_ADDR 1
 #define SCTP_BINDX_REM_ADDR 2
 
-int ext_bindx(int             sockfd,
-             struct sockaddr* addrs,
-             int              addrcnt,
-             int              flags);
-#define sctp_bindx ext_bindx
+int sctp_bindx(int              sockfd,
+               struct sockaddr* addrs,
+               int              addrcnt,
+               int              flags);
 
 int ext_connectx(int                    sockfd,
                  const struct sockaddr* addrs,
@@ -496,8 +495,6 @@ int sctp_enableCRC32(const unsigned int enable);
 #ifdef __cplusplus
 #define ext_socket(a,b,c) ::socket(a,b,c)
 #define ext_bind(a,b,c) ::bind(a,b,c)
-#define ext_bindx(a,b,c,d) ::bindx(a,b,c,d)
-#define ext_bindx sctp_bindx
 #define ext_connect(a,b,c) ::connect(a,b,c)
 #define ext_listen(a,b) ::listen(a,b)
 #define ext_accept(a,b,c) ::accept(a,b,c)
@@ -522,7 +519,6 @@ int sctp_enableCRC32(const unsigned int enable);
 #else
 #define ext_socket(a,b,c) socket(a,b,c)
 #define ext_bind(a,b,c) bind(a,b,c)
-#define ext_bindx sctp_bindx
 #define ext_connect(a,b,c) connect(a,b,c)
 #define ext_listen(a,b) listen(a,b)
 #define ext_accept(a,b,c) accept(a,b,c)
