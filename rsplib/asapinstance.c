@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.31 2004/12/03 16:58:19 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.32 2004/12/08 14:54:48 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -671,8 +671,6 @@ static unsigned int asapInstanceNameResolutionFromCache(
    unsigned int result;
    size_t       i;
 
-   dispatcherLock(asapInstance->StateMachine);
-
    LOG_ACTION
    fprintf(stdlog, "Name Resolution for pool ");
    poolHandlePrint(poolHandle, stdlog);
@@ -710,7 +708,6 @@ static unsigned int asapInstanceNameResolutionFromCache(
       result = RSPERR_NOT_FOUND;
    }
 
-   dispatcherUnlock(asapInstance->StateMachine);
    return(result);
 }
 
@@ -724,6 +721,8 @@ unsigned int asapInstanceNameResolution(
 {
    unsigned int result;
    const size_t originalPoolElementNodes = *poolElementNodes;
+
+   dispatcherLock(asapInstance->StateMachine);
 
    LOG_VERBOSE
    fputs("Trying name resolution from cache...\n", stdlog);
@@ -756,6 +755,7 @@ unsigned int asapInstanceNameResolution(
       }
    }
 
+   dispatcherUnlock(asapInstance->StateMachine);
    return(result);
 }
 
