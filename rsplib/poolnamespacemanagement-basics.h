@@ -44,6 +44,8 @@ extern "C" {
 
 typedef uint32_t ENRPIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
+typedef uint32_t PoolElementChecksumType;
+
 typedef uint32_t PoolElementSeqNumberType;
 
 #define UNDEFINED_POOL_ELEMENT_IDENTIFIER 0

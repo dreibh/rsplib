@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.2 2004/07/22 09:47:43 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.3 2004/07/23 12:57:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -368,8 +368,8 @@ static bool scanAddressParameter(struct RSerPoolMessage*  message,
 
 
 /* ###### Scan user transport parameter ##################################### */
-static bool scanTransportParameter(struct RSerPoolMessage*       message,
-                                   struct TransportAddressBlock* transportAddressBlock)
+static bool scanUserTransportParameter(struct RSerPoolMessage*       message,
+                                       struct TransportAddressBlock* transportAddressBlock)
 {
    size_t                              addresses;
    struct sockaddr_storage             addressArray[MAX_PE_TRANSPORTADDRESSES];
@@ -830,7 +830,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
       return(false);
    }
 
-   if(scanTransportParameter(message, transportAddressBlock) == false) {
+   if(scanUserTransportParameter(message, transportAddressBlock) == false) {
       return(false);
    }
 
@@ -929,7 +929,40 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
    message->Identifier = ntohl(*identifier);
 
    LOG_VERBOSE3
-   fprintf(stdlog, "Scanned pool element identifier $%08x\n",message->Identifier);
+   fprintf(stdlog, "Scanned pool element identifier $%08x\n", message->Identifier);
+   LOG_END
+
+   return(checkFinishTLV(message, tlvPosition));
+}
+
+
+/* ###### Scan pool element checksum parameter ############################ */
+static bool scanPoolElementChecksumParameter(struct RSerPoolMessage* message)
+{
+   uint32_t* checksum;
+   size_t    tlvPosition = 0;
+   size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_CHECKSUM, true);
+   if(tlvLength == 0) {
+      return(false);
+   }
+
+   tlvLength -= sizeof(struct rserpool_tlv_header);
+   if(tlvLength != sizeof(uint32_t)) {
+      LOG_WARNING
+      fputs("Pool element checksum too short!\n", stdlog);
+      LOG_END
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+
+   checksum = (uint32_t*)getSpace(message, tlvLength);
+   if(checksum == NULL) {
+      return(false);
+   }
+   message->Checksum = ntohl(*checksum);
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Scanned pool element checksum $%08x\n", message->Checksum);
    LOG_END
 
    return(checkFinishTLV(message, tlvPosition));
@@ -1013,13 +1046,64 @@ static bool scanCookieParameter(struct RSerPoolMessage* message)
    }
 
    message->CookieSize = tlvLength;
-   memcpy(message->CookiePtr,cookie,message->CookieSize);
+   memcpy(message->CookiePtr,cookie, message->CookieSize);
 
    LOG_VERBOSE3
    fprintf(stdlog, "Scanned cookie, length=%d\n",(int)message->CookieSize);
    LOG_END
 
    return(true);
+}
+
+
+/* ###### Scan server information paramter ############################### */
+static bool scanServerInformationParameter(struct RSerPoolMessage* message)
+{
+   char                                 transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*        transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct rserpool_serverinfoparameter* sip;
+   size_t                               tlvPosition = 0;
+   size_t                               tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_SERVER_INFORMATION, true);
+
+   if(tlvLength == 0) {
+      return(false);
+   }
+
+   tlvLength -= sizeof(struct rserpool_tlv_header);
+   if(tlvLength < 1) {
+      LOG_WARNING
+      fputs("Server information too short!\n", stdlog);
+      LOG_END
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+
+   sip = (struct rserpool_serverinfoparameter*)getSpace(message, tlvLength);
+   if(sip == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->NSIdentifier = sip->sip_server_id;
+   message->NSFlags      = sip->sip_flags;
+
+   if(scanUserTransportParameter(message, transportAddressBlock) == false) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+
+   message->TransportAddressBlockListPtr = transportAddressBlockDuplicate(transportAddressBlock);
+   if(message->TransportAddressBlockListPtr == NULL) {
+      message->Error = RSPERR_OUT_OF_MEMORY;
+      return(false);
+   }
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Scanned server information parameter for NS $%08x, flags=$%08x, address=");
+   transportAddressBlockPrint(message->TransportAddressBlockListPtr, stdlog);
+   fputs("\n", stdlog);
+   LOG_END
+
+   return(checkFinishTLV(message, tlvPosition));
 }
 
 
@@ -1185,7 +1269,7 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
-      if(scanTransportParameter(message, transportAddressBlock)) {
+      if(scanUserTransportParameter(message, transportAddressBlock)) {
          newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
          if(newTransportAddressBlock == NULL) {
             message->Error = RSPERR_OUT_OF_MEMORY;
@@ -1218,7 +1302,6 @@ static bool scanCookieMessage(struct RSerPoolMessage* message)
    if(scanCookieParameter(message) == false) {
       return(false);
    }
-
    return(true);
 }
 
@@ -1272,7 +1355,17 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan message ###################################################### */
+/* ###### Scan peer presence message ##################################### */
+static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
+{
+   if(scanServerInformationParameter(message) == false) {
+      return(false);
+   }
+   return(true);
+}
+
+
+/* ###### Scan message ################################################### */
 static bool scanMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_header* header;
@@ -1436,13 +1529,70 @@ static bool scanMessage(struct RSerPoolMessage* message)
          }
        break;
 
-      /* ====== ENRP ===================================================== */
-      case EHT_PEER_PRESENCE:
-       break;
+       /* ====== ENRP ==================================================== */
+       case EHT_PEER_PRESENCE:
+         LOG_VERBOSE2
+         fputs("Scanning PeerPresence message...\n", stdlog);
+         LOG_END
+         if(scanPeerPresenceMessage(message) == false) {
+            return(false);
+         }
+        break;
+       case EHT_PEER_NAME_TABLE_REQUEST:
+         LOG_VERBOSE2
+         fputs("Scanning PeerNameTableRequest message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_NAME_TABLE_RESPONSE:
+         LOG_VERBOSE2
+         fputs("Scanning PeerNameTableResponse message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_NAME_UPDATE:
+         LOG_VERBOSE2
+         fputs("Scanning PeerNameUpdate message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_LIST_REQUEST:
+         LOG_VERBOSE2
+         fputs("Scanning PeerListRequest message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_LIST_RESPONSE:
+         LOG_VERBOSE2
+         fputs("Scanning PeerListResponse message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_INIT_TAKEOVER:
+         LOG_VERBOSE2
+         fputs("Scanning PeerInitTakeover message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_INIT_TAKEOVER_ACK:
+         LOG_VERBOSE2
+         fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_TAKEOVER_SERVER:
+         LOG_VERBOSE2
+         fputs("Scanning PeerTakeoverServer message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_OWNERSHIP_CHANGE:
+         LOG_VERBOSE2
+         fputs("Scanning PeerOwnershipChange message...\n", stdlog);
+         LOG_END
+        break;
+       case EHT_PEER_ERROR:
+         LOG_VERBOSE2
+         fputs("Scanning PeerError message...\n", stdlog);
+         LOG_END
+        break;
 
+       /* ====== Unknown ================================================= */
       default:
          LOG_WARNING
-         fprintf(stdlog, "Unknown message type #$%02x!\n", header->ah_type);
+         fprintf(stdlog, "Unknown message type $%04x!\n", message->Type);
          LOG_END
          return(false);
        break;

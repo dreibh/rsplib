@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.1 2004/07/21 14:39:52 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.2 2004/07/23 12:57:24 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -112,7 +112,7 @@ struct rserpool_tlv_header
 #define ATT_OPERATION_ERROR         0x0a
 #define ATT_COOKIE                  0x0b
 #define ATT_POOL_ELEMENT_IDENTIFIER 0x0c
-
+#define ATT_POOL_ELEMENT_CHECKSUM   0x0d
 
 
 struct rserpool_poolelementparameter
@@ -282,11 +282,14 @@ struct rserpool_targetparameter
 };
 
 
+#define RMF_PEER_PRESENCE_REPLY_REQUIRED              (1 << 0)
+#define RMF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY (1 << 0)
 
 struct RSerPoolMessage
 {
    unsigned int                      Type;
    uint16_t                          Error;
+   uint8_t                           Flags;
 
    char*                             OperationErrorData;
    size_t                            OperationErrorLength;
@@ -305,11 +308,14 @@ struct RSerPoolMessage
    size_t                            Position;
 
    PoolElementIdentifierType         Identifier;
-   ENRPIdentifierType                NSIdentifier;
-   ENRPIdentifierType                SenderID;
-   ENRPIdentifierType                ReceiverID;
+   PoolElementChecksumType           Checksum;
    struct PoolPolicySettings         PolicySettings;
    struct PoolHandle                 Handle;
+
+   ENRPIdentifierType                NSIdentifier;
+   unsigned int                      NSFlags;
+   ENRPIdentifierType                SenderID;
+   ENRPIdentifierType                ReceiverID;
 
    struct ST_CLASS(PoolElementNode)* PoolElementPtr;
    bool                              PoolElementPtrAutoDelete;
