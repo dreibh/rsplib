@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.36 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: nameserver.c,v 1.37 2004/09/21 11:44:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3432,7 +3432,7 @@ int main(int argc, char** argv)
    /* ====== Print information =========================================== */
    puts("The rsplib Name Server - Version 1.00");
    puts("=====================================\n");
-   printf("Server ID:              %08x\n", nameServer->ServerID);
+   printf("Server ID:              $%08x\n", nameServer->ServerID);
    printf("ASAP Address:           ");
    transportAddressBlockPrint(asapAddress, stdout);
    puts("");

@@ -304,7 +304,8 @@ void FractalPU::run()
                       break;
                      default:
                         packets++;
-                        snprintf((char*)&statusText, "Received data packet #%u\n", packets);
+                        snprintf((char*)&statusText, sizeof(statusText),
+                                 "Processed data packet #%u...", packets);
                         rspSessionSetCSPStatus(Session, statusText);
                       break;
                   }
@@ -330,12 +331,27 @@ finish:
 #include "fractalpooluser.moc"
 
 
+/* ###### rsplib main loop thread ########################################### */
+static bool RsplibThreadStop = false;
+static void* rsplibMainLoop(void* args)
+{
+   struct timeval timeout;
+   while(!RsplibThreadStop) {
+      timeout.tv_sec  = 0;
+      timeout.tv_usec = 50000;
+      rspSelect(0, NULL, NULL, NULL, &timeout);
+   }
+   return(NULL);
+}
+
+
 int main(int argc, char** argv)
 {
    uint64_t             cspIdentifier     = 0;
    unsigned int         cspReportInterval = 0;
    union sockaddr_union cspReportAddress;
    struct TagItem       tags[16];
+   pthread_t            rsplibThread;
    int                  i;
 
    string2address("127.0.0.1:2960", &cspReportAddress);
@@ -383,6 +399,10 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+   }
+
+   if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
+      puts("ERROR: Unable to create rsplib main loop thread!");
    }
 
    QApplication application(argc, argv);

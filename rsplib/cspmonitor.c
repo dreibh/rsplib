@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.3 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.4 2004/09/21 11:44:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -157,8 +157,9 @@ void purgeCSPObjects(LeafLinkedRedBlackTree* objectStorage)
    cspObject = (struct CSPObject*)leafLinkedRedBlackTreeGetFirst(objectStorage);
    while(cspObject != NULL) {
       nextCSPObject = (struct CSPObject*)leafLinkedRedBlackTreeGetNext(objectStorage, &cspObject->Node);
-      if(cspObject->LastReportTimeStamp + (3 * cspObject->ReportInterval) < getMicroTime()) {
-         leafLinkedRedBlackTreeRemove(objectStorage, &cspObject->Node);
+      if(cspObject->LastReportTimeStamp + (10 * cspObject->ReportInterval) < getMicroTime()) {
+         CHECK(leafLinkedRedBlackTreeRemove(objectStorage, &cspObject->Node) == &cspObject->Node);
+         free(cspObject->AssociationArray);
          free(cspObject);
       }
       cspObject = nextCSPObject;
@@ -219,8 +220,8 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
                CHECK(cspObject->AssociationArray);
                memcpy(cspObject->AssociationArray, &csph->AssociationArray, csph->Associations * sizeof(struct ComponentAssociationEntry));
                cspObject->Associations = csph->Associations;
-               leafLinkedRedBlackTreeInsert(objectStorage,
-                                             &cspObject->Node);
+               CHECK(leafLinkedRedBlackTreeInsert(objectStorage,
+                                                  &cspObject->Node) == &cspObject->Node);
             }
          }
       }

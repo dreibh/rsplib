@@ -311,7 +311,6 @@ void ServiceThread::run()
          }
       }
       else {
-         std::cerr << "Invalid parameter message received!" << std::endl;
          goto finish;
       }
    }
@@ -615,9 +614,11 @@ int main(int argc, char** argv)
    tags[7].Data = 45000;
    tags[8].Tag  = TAG_PoolElement_RegistrationLife;
    tags[8].Data = (3 * 45000) + 5000;
-   tags[9].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[9].Data = (tagdata_t)true;
-   tags[10].Tag  = TAG_END;
+   tags[9].Tag  = TAG_PoolElement_Identifier;
+   tags[9].Data = identifier;
+   tags[10].Tag  = TAG_UserTransport_HasControlChannel;
+   tags[10].Data = (tagdata_t)true;
+   tags[11].Tag  = TAG_END;
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
