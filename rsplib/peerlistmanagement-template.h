@@ -106,12 +106,12 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
 
 void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
-        struct ST_CLASS(PeerListNode)*   peerListNode,
+        struct ST_CLASS(PeerListNode)*       peerListNode,
         const unsigned long long             expiryTimeout);
 
 size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
           struct ST_CLASS(PeerListManagement)* peerListManagement,
-          const unsigned long long                  currentTimeStamp);
+          const unsigned long long             currentTimeStamp);
 
 
 

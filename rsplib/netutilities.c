@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: netutilities.c,v 1.3 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1074,8 +1074,10 @@ bool multicastGroupMgt(int              sockfd,
 #endif
 
    if(address->sa_family == AF_INET) {
+puts("x1");
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
       if(interface != NULL) {
+puts("x2");
          strcpy(ifr.ifr_name,interface);
          if(ext_ioctl(sockfd,SIOCGIFADDR,&ifr) != 0) {
             return(false);
@@ -1085,6 +1087,7 @@ bool multicastGroupMgt(int              sockfd,
       else {
          memset((char*)&mreq.imr_interface,0,sizeof(mreq.imr_interface));
       }
+puts("x3");
       return(ext_setsockopt(sockfd,IPPROTO_IP,
                             add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
                             &mreq, sizeof(mreq)) == 0);
@@ -1105,6 +1108,7 @@ bool multicastGroupMgt(int              sockfd,
                             &mreq6, sizeof(mreq6)) == 0);
    }
 #endif
+   CHECK(false);
    return(false);
 }
 

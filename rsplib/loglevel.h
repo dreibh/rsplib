@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: loglevel.h,v 1.3 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,7 @@
 #include "tdtypes.h"
 #include "timeutilities.h"
 #include "threadsafety.h"
+#include "debug.h"
 
 
 #ifdef __cplusplus

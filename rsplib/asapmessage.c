@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: asapmessage.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -96,6 +96,7 @@ void asapMessageClearAll(struct ASAPMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct TransportAddressBlock*     transportAddressBlock;
+   struct TransportAddressBlock*     nextTransportAddressBlock;
    GList*                            list;
    char*                             buffer;
    size_t                            originalBufferSize;
@@ -109,17 +110,16 @@ void asapMessageClearAll(struct ASAPMessage* message)
       if((message->CookiePtr) && (message->CookiePtrAutoDelete)) {
          free(message->CookiePtr);
       }
-      if((message->TransportAddressBlockListPtr) && (message->TransportAddressBlockListPtrAutoDelete)) {
-         list = g_list_first(message->TransportAddressBlockListPtr);
-         while(list != NULL) {
-            transportAddressBlock = (struct TransportAddressBlock*)list->data;
-            message->TransportAddressBlockListPtr = g_list_remove(message->TransportAddressBlockListPtr,
-                                                                  transportAddressBlock);
+      if(message->TransportAddressBlockListPtrAutoDelete) {
+         transportAddressBlock = message->TransportAddressBlockListPtr;
+         while(transportAddressBlock) {
+            nextTransportAddressBlock = transportAddressBlock->Next;
             transportAddressBlockDelete(transportAddressBlock);
             free(transportAddressBlock);
-            list = g_list_first(message->TransportAddressBlockListPtr);
+            transportAddressBlock = nextTransportAddressBlock;
          }
       }
+      message->TransportAddressBlockListPtr = NULL;
       if((message->PoolElementListPtr) && (message->PoolElementListPtrAutoDelete)) {
          list = g_list_first(message->PoolElementListPtr);
          while(list != NULL) {

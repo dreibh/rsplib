@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: asapcreator.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -129,7 +129,7 @@ static bool createPoolHandleParameter(struct ASAPMessage*      message,
    if(poolHandle == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -186,7 +186,7 @@ static bool createAddressParameter(struct ASAPMessage*    message,
       default:
          LOG_ERROR
          fputs("Unknown address family\n", stdlog);
-         LOG_END
+         LOG_END_FATAL
          return(false);
        break;
    }
@@ -210,7 +210,7 @@ static bool createTransportParameter(struct ASAPMessage*                 message
    if(transportAddressBlock == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -227,7 +227,7 @@ static bool createTransportParameter(struct ASAPMessage*                 message
       default:
          LOG_ERROR
          fprintf(stdlog,"Unknown protocol #%d\n",transportAddressBlock->Protocol);
-         LOG_END
+         LOG_END_FATAL
          return(false);
        break;
    }
@@ -279,7 +279,7 @@ static bool createTransportParameter(struct ASAPMessage*                 message
       if((i > 0) && (type != ATT_SCTP_TRANSPORT)) {
          LOG_ERROR
          fputs("Multiple addresses for non-multihomed protocol\n", stdlog);
-         LOG_END
+         LOG_END_FATAL
          return(false);
       }
    }
@@ -308,7 +308,7 @@ static bool createPolicyParameter(struct ASAPMessage*              message,
    if(poolPolicySettings == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -364,7 +364,7 @@ static bool createPolicyParameter(struct ASAPMessage*              message,
       default:
          LOG_ERROR
          fprintf(stdlog,"Unknown policy #$%02x\n",poolPolicySettings->PolicyType);
-         LOG_END
+         LOG_END_FATAL
          return(false);
        break;
    }
@@ -383,7 +383,7 @@ static bool createPoolElementParameter(struct ASAPMessage*                     m
    if(poolElement == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -583,7 +583,7 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
    if(message->PoolElementPtr == NULL)  {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -635,7 +635,7 @@ static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
    if(message->PoolElementPtr == NULL)  {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -752,12 +752,11 @@ static bool createBusinessCardMessage(struct ASAPMessage* message)
 static bool createServerAnnounceMessage(struct ASAPMessage* message)
 {
    struct TransportAddressBlock* transportAddressBlock;
-   GList*                        list;
 
    if(message->TransportAddressBlockListPtr == NULL) {
       LOG_ERROR
       fputs("Invalid parameters\n", stdlog);
-      LOG_END
+      LOG_END_FATAL
       return(false);
    }
 
@@ -765,13 +764,12 @@ static bool createServerAnnounceMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   list = g_list_first(message->TransportAddressBlockListPtr);
-   while(list != NULL) {
-      transportAddressBlock = (struct TransportAddressBlock*)list->data;
+   transportAddressBlock = message->TransportAddressBlockListPtr;
+   while(transportAddressBlock != NULL) {
       if(createTransportParameter(message, transportAddressBlock) == false) {
          return(false);
       }
-      list = g_list_next(list);
+      transportAddressBlock = transportAddressBlock->Next;
    }
 
    return(finishMessage(message));

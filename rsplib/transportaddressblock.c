@@ -32,10 +32,10 @@
 
 
 /* ###### Convert address to string ###################################### */
-int address2string(const struct sockaddr* address,
-                   char*                  buffer,
-                   const size_t           length,
-                   const int              port)
+static int address2string(const struct sockaddr* address,
+                          char*                  buffer,
+                          const size_t           length,
+                          const int              port)
 {
    struct sockaddr_in*  ipv4address;
 #ifdef HAVE_IPV6
@@ -106,6 +106,7 @@ void transportAddressBlockNew(struct TransportAddressBlock*  transportAddressBlo
                               const size_t                   addresses)
 {
    size_t i;
+   transportAddressBlock->Next      = NULL;
    transportAddressBlock->Flags     = flags;
    transportAddressBlock->Port      = port;
    transportAddressBlock->Protocol  = protocol;

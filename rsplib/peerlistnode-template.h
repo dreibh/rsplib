@@ -85,7 +85,6 @@ inline struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerS
 }
 
 
-
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
                                const ENRPIdentifierType       identifier,
                                const unsigned int             flags,

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: servertable.h,v 1.3 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -67,7 +67,6 @@ struct ServerTable
 };
 
 
-
 /**
   * Constructor.
   *
@@ -89,16 +88,13 @@ void serverTableDelete(struct ServerTable* ServerTable);
   * Do server hunt.
   *
   * @param serverTable ServerTable.
-  * @param protocol Desired nameserver protocol (SCTP or TCP).
-  * @return Number of valid servers seen.
+  * @return Socket description for name server connection or -1 in case of error.
   */
-unsigned int serverTableFindServer(struct ServerTable* serverTable,
-                                   const int           protocol);
+int serverTableFindServer(struct ServerTable* serverTable);
 
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

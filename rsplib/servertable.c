@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: servertable.c,v 1.3 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -105,14 +105,15 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                                          int                eventMask,
                                          void*              userData)
 {
-   struct ServerTable*      serverTable = (struct ServerTable*)userData;
-   struct ASAPMessage*      message;
-   struct TransportAddress* transportAddress;
-   GList*                   transportAddressList;
-   struct sockaddr_storage  senderAddress;
-   socklen_t                senderAddressLength;
-   char                     buffer[1024];
-   ssize_t                  received;
+   struct ServerTable*            serverTable = (struct ServerTable*)userData;
+   struct ASAPMessage*            message;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct sockaddr_storage        senderAddress;
+   socklen_t                      senderAddressLength;
+   char                           buffer[1024];
+   ssize_t                        received;
+   unsigned int                   result;
+   size_t                         i;
 
    LOG_VERBOSE
    fputs("Trying to receive name server announce...\n", stdlog);
@@ -120,38 +121,49 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
 
    senderAddressLength = sizeof(senderAddress);
    received = ext_recvfrom(sd,
-                           (char*)&buffer ,sizeof(buffer), 0,
+                           (char*)&buffer , sizeof(buffer), 0,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
       message = asapPacket2Message((char*)&buffer, received, sizeof(buffer));
       if(message != NULL) {
          if(message->Type == AHT_SERVER_ANNOUNCE) {
-            if(message->Error != 0) {
+            if(message->Error == RSPERR_OKAY) {
                LOG_VERBOSE
-               fputs("ServerAnnounce from ",stdlog);
+               fputs("ServerAnnounce from ", stdlog);
                address2string((struct sockaddr*)&senderAddress,
                               (char*)&buffer, sizeof(buffer), true);
-               fputs(buffer,stdlog);
-               fputs(" received\n",stdlog);
+               fputs(buffer, stdlog);
+               fputs(" received\n", stdlog);
                LOG_END
 
-               /*
-               if(message->TransportAddressListPtr) {
-                  message->TransportAddressListPtrAutoDelete = false;
-                  transportAddressList = message->TransportAddressListPtr;
+               result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                           &serverTable->List,
+                           message->NSIdentifier,
+                           PLNF_DYNAMIC,
+                           message->TransportAddressBlockListPtr,
+                           getMicroTime(),
+                           &peerListNode);
+               if(result == RSPERR_OKAY) {
+                  ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
+                     &serverTable->List,
+                     peerListNode,
+                     serverTable->NameServerAnnounceTimeout);
                }
                else {
-                  transportAddressList = NULL;
-                  transportAddress = transportAddressNew(IPPROTO_SCTP,
-                                                         PORT_ASAP,
-                                                         (struct sockaddr_storage*)&senderAddress,
-                                                         1);
-                  if(transportAddress != NULL) {
-                     transportAddressList = g_list_append(transportAddressList,transportAddress);
-                  }
+                  LOG_ERROR
+                  fputs("Unable to add new peer: ", stdlog);
+                  rserpoolErrorPrint(result, stdlog);
+                  fputs("\n", stdlog);
+                  LOG_END
                }
-               */
+
+               i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
+                      &serverTable->List,
+                      getMicroTime());
+               LOG_VERBOSE
+               fprintf(stdlog, "Purged %u out-of-date peer list nodes\n", i);
+               LOG_END
             }
          }
          asapMessageDelete(message);
@@ -208,6 +220,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
                                     FDCE_Read,
                                     handleServerAnnounceCallback,
                                     (void*)serverTable);
+printf("************* MCAST=%d\n",serverTable->AnnounceSocket);
          }
          else {
             LOG_ERROR
@@ -215,9 +228,9 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
             fputaddress((struct sockaddr*)&serverTable->AnnounceAddress, true, stdlog);
             fputs(" failed. Check routing (is default route set?) and firewall settings!\n", stdlog);
             LOG_END
+            ext_close(serverTable->AnnounceSocket);
+            serverTable->AnnounceSocket = -1;
          }
-         ext_close(serverTable->AnnounceSocket);
-         serverTable->AnnounceSocket = -1;
       }
       else {
          LOG_ERROR
@@ -247,13 +260,12 @@ void serverTableDelete(struct ServerTable* serverTable)
 
 
 /* ###### Try more nameservers ############################################## */
-static void tryNextBlock(struct ServerTable* serverTable,
-                         GList**             serverAnnounceList,
-                         GList**             serverTransportAddressList,
-                         int*                sd,
-                         card64*             timeout,
-                         const int           protocol)
+static void tryNextBlock(struct ServerTable*      serverTable,
+                         ST_CLASS(PeerListNode)** nextPeerListNode,
+                         int*                     sd,
+                         card64*                  timeout)
 {
+/*
    struct ServerAnnounce*   serverAnnounce;
    struct TransportAddress* transportAddress;
    int                      status;
@@ -278,7 +290,7 @@ static void tryNextBlock(struct ServerTable* serverTable,
                      setNonBlocking(sd[i]);
 
                      LOG_VERBOSE
-                     fprintf(stdlog,"Connecting socket %d to ",sd[i]);
+                     fprintf(stdlog,"Connecting socket %d to ", sd[i]);
                      fputaddress((struct sockaddr*)&transportAddress->AddressArray[0],
                                  true, stdlog);
                      fprintf(stdlog," via %s...\n",(transportAddress->Protocol == IPPROTO_SCTP) ? "SCTP" : "TCP");
@@ -308,12 +320,12 @@ static void tryNextBlock(struct ServerTable* serverTable,
          }
       }
    }
+*/
 }
 
 
 /* ###### Find nameserver ################################################### */
-unsigned int serverTableFindServer(struct ServerTable* serverTable,
-                                   const int           protocol)
+int serverTableFindServer(struct ServerTable* serverTable)
 {
    struct timeval          selectTimeout;
    struct sockaddr_storage peerAddress;
@@ -322,8 +334,7 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
    card64                  timeout[MAX_SIMULTANEOUS_REQUESTS];
    card64                  start;
    card64                  nextTimeout;
-   GList*                  serverAnnounceList;
-   GList*                  serverTransportAddressList;
+   ST_CLASS(PeerListNode)* nextPeerListNode;
    fd_set                  rfdset;
    fd_set                  wfdset;
    unsigned int            trials;
@@ -340,26 +351,26 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
 
 
    LOG_ACTION
-   fputs("Looking for nameserver...\n",stdlog);
+   fputs("Looking for nameserver...\n", stdlog);
    LOG_END
 
-   trials             = 0;
-   serverAnnounceList = NULL;
-   start              = 0;
+   trials       = 0;
+   nextPeerListNode = NULL;
+   start        = 0;
 
    for(;;) {
-      if(serverAnnounceList == NULL) {
+      if(nextPeerListNode == NULL) {
          /* Start new trial, when
             - First time
             - A new server announce has been added to the list
             - The current trial has been running for at least serverTable->NameServerConnectTimeout */
-         if( (start == 0)                                       ||
-             (serverTable->NameServerAnnounceListAddition >= start) ||
+         if( (start == 0)                                           ||
+/* ?????             (serverTable->NameServerAnnounceListAddition >= start) || */
              (start + serverTable->NameServerConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > serverTable->NameServerConnectMaxTrials) {
                LOG_ERROR
-               fputs("No nameserver found!\n",stdlog);
+               fputs("No nameserver found!\n", stdlog);
                LOG_END
                for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                   if(sd[j] >= 0) {
@@ -368,9 +379,9 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
                }
                return(0);
             }
-            serverAnnounceList         = g_list_first(serverTable->NameServerAnnounceList);
-            serverTransportAddressList = NULL;
-            start                      = getMicroTime();
+            nextPeerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                                  &serverTable->List.List);
+            start = getMicroTime();
             LOG_ACTION
             fprintf(stdlog,"Trial #%u...\n",trials);
             LOG_END
@@ -379,25 +390,24 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
 
       /* Try next block of addresses */
       tryNextBlock(serverTable,
-                   &serverAnnounceList,
-                   &serverTransportAddressList,
-                   (int*)&sd, (card64*)&timeout,
-                   protocol);
+                   &nextPeerListNode,
+                   (int*)&sd, (card64*)&timeout);
 
       /* Wait for event */
       n = 0;
       FD_ZERO(&rfdset);
       FD_ZERO(&wfdset);
-      if(serverTable->NameServerAnnounceSocket >= 0) {
-         FD_SET(serverTable->NameServerAnnounceSocket,&rfdset);
-         n = max(n,serverTable->NameServerAnnounceSocket);
+      if(serverTable->AnnounceSocket >= 0) {
+printf("mcast=%d\n",serverTable->AnnounceSocket);
+         FD_SET(serverTable->AnnounceSocket, &rfdset);
+         n = max(n, serverTable->AnnounceSocket);
       }
       nextTimeout = serverTable->NameServerConnectTimeout;
       for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
          if(sd[i] >= 0) {
-            FD_SET(sd[i],&wfdset);
-            n           = max(n,sd[i]);
-            nextTimeout = min(nextTimeout,timeout[i]);
+            FD_SET(sd[i], &wfdset);
+            n           = max(n, sd[i]);
+            nextTimeout = min(nextTimeout, timeout[i]);
          }
       }
       selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
@@ -416,11 +426,13 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
       if(result != 0) {
          for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
             if(sd[i] >= 0) {
-               if(FD_ISSET(sd[i],&wfdset)) {
+               if(FD_ISSET(sd[i], &wfdset)) {
                   peerAddressLength = sizeof(peerAddress);
-                  if(ext_getpeername(sd[i],(struct sockaddr*)&peerAddress,&peerAddressLength) >= 0) {
+                  if(ext_getpeername(sd[i], (struct sockaddr*)&peerAddress, &peerAddressLength) >= 0) {
                      LOG_ACTION
-                     fprintf(stdlog,"Successfully found nameserver, socket %d\n",sd[i]);
+                     fputs("Successfully found nameserver at ", stdlog);
+                     fputaddress((struct sockaddr*)&peerAddress, true, stdlog);
+                     fprintf(stdlog,", socket %d\n", sd[i]);
                      LOG_END
                      for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
                         if((j != i) && (sd[j] >= 0)) {
@@ -431,7 +443,8 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
                   }
                   else {
                      LOG_VERBOSE3
-                     fprintf(stdlog,"Connection trial of socket %d failed: %s\n",sd[i],strerror(errno));
+                     fprintf(stdlog,"Connection trial of socket %d failed: %s\n",
+                             sd[i], strerror(errno));
                      LOG_END
                      ext_close(sd[i]);
                      sd[i] = -1;
@@ -439,16 +452,20 @@ unsigned int serverTableFindServer(struct ServerTable* serverTable,
                }
                else if((sd[i] >= 0) && (timeout[i] < getMicroTime())) {
                   LOG_VERBOSE3
-                  fprintf(stdlog,"Connection trial of socket %d timed out\n",sd[i]);
+                  fprintf(stdlog,"Connection trial of socket %d timed out\n", sd[i]);
                   LOG_END
                   ext_close(sd[i]);
                   sd[i] = -1;
                }
             }
          }
-         if((serverTable->NameServerAnnounceSocket >= 0) &&
-            FD_ISSET(serverTable->NameServerAnnounceSocket,&rfdset)) {
-            receiveServerAnnounce(serverTable,serverTable->NameServerAnnounceSocket);
+         if((serverTable->AnnounceSocket >= 0) &&
+            FD_ISSET(serverTable->AnnounceSocket, &rfdset)) {
+puts("ACHTUNG: Hier kein PURGE durchführen!!!");
+            handleServerAnnounceCallback(serverTable->Dispatcher,
+                                         serverTable->AnnounceSocket,
+                                         FDCE_Read,
+                                         serverTable);
          }
       }
    }

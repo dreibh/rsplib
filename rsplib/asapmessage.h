@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.h,v 1.3 2004/07/16 15:35:40 dreibh Exp $
+ *  $Id: asapmessage.h,v 1.4 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -235,6 +235,7 @@ struct ASAPMessage
    size_t                              Position;
 
    PoolElementIdentifierType           Identifier;
+   ENRPIdentifierType                  NSIdentifier;
    struct PoolPolicySettings           PolicySettings;
    struct PoolHandle                   Handle;
 
@@ -245,7 +246,7 @@ struct ASAPMessage
    bool                                CookiePtrAutoDelete;
    size_t                              CookieSize;
 
-   GList*                              TransportAddressBlockListPtr;
+   struct TransportAddressBlock*       TransportAddressBlockListPtr;
    bool                                TransportAddressBlockListPtrAutoDelete;
 
    GList*                              PoolElementListPtr;

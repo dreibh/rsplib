@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -145,8 +145,8 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
    bool result = true;
 
    if(asapInstance->NameServerSocket < 0) {
-      asapInstance->NameServerSocket = serverTableFindServer(asapInstance->NameServerTable,
-                                                             protocol);
+      asapInstance->NameServerSocket =
+         serverTableFindServer(asapInstance->NameServerTable);
       if(asapInstance->NameServerSocket >= 0) {
          asapInstance->NameServerSocketProtocol = protocol;
          dispatcherAddFDCallback(asapInstance->StateMachine,

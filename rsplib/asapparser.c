@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.c,v 1.3 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: asapparser.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -44,6 +44,7 @@
 #include <netinet/in.h>
 #include <ext_socket.h>
 
+// ???????????? AEC-Fehler => RSPERR....!!!!!!!!!!!
 
 
 /* ###### Scan next TLV header ############################################## */
@@ -1014,12 +1015,24 @@ static bool scanServerAnnounceMessage(struct ASAPMessage* message)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct TransportAddressBlock* lastTransportAddressBlock = NULL;
+   struct TransportAddressBlock* newTransportAddressBlock;
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
       if(scanTransportParameter(message, transportAddressBlock)) {
-         message->TransportAddressBlockListPtr = g_list_append(message->TransportAddressBlockListPtr,
-                                                               transportAddressBlock);
+         newTransportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
+         if(newTransportAddressBlock) {
+            message->Error = AEC_OUT_OF_MEMORY;
+            return(false);
+         }
+         if(message->TransportAddressBlockListPtr == NULL) {
+            message->TransportAddressBlockListPtr = newTransportAddressBlock;
+         }
+         else {
+            lastTransportAddressBlock->Next = newTransportAddressBlock;
+         }
+         lastTransportAddressBlock = newTransportAddressBlock;
       }
       else {
          return(false);

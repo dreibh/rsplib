@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: nameserver.c,v 1.3 2004/07/19 09:06:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -223,41 +223,37 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
                                   void*              userData)
 {
    struct NameServer*  nameServer = (struct NameServer*)userData;
-   GList*              transportAddressBlockList;
    struct ASAPMessage* message;
    size_t              messageLength;
 
    CHECK(nameServer->SendAnnounces == true);
    CHECK(nameServer->AnnounceSocket >= 0);
 
-   transportAddressBlockList = g_list_append(NULL, nameServer->NameServerAddress);
-   if(transportAddressBlockList) {
-      message = asapMessageNew(NULL, 65536);
-      if(message) {
-         message->Type                         = AHT_SERVER_ANNOUNCE;
-         message->TransportAddressBlockListPtr = transportAddressBlockList;
-         messageLength = asapMessage2Packet(message);
-         if(messageLength > 0) {
-            if(nameServer->AnnounceSocket) {
-               LOG_VERBOSE2
-               fputs("Sending announce to address ",stdlog);
-               fputaddress((struct sockaddr*)&nameServer->AnnounceAddress, true, stdlog);
-               fputs("\n",stdlog);
+   message = asapMessageNew(NULL, 65536);
+   if(message) {
+      message->Type                         = AHT_SERVER_ANNOUNCE;
+      message->TransportAddressBlockListPtr = nameServer->NameServerAddress;
+      messageLength = asapMessage2Packet(message);
+      if(messageLength > 0) {
+         if(nameServer->AnnounceSocket) {
+            LOG_VERBOSE2
+            fputs("Sending announce to address ",stdlog);
+            fputaddress((struct sockaddr*)&nameServer->AnnounceAddress, true, stdlog);
+            fputs("\n",stdlog);
+            LOG_END
+            if(ext_sendto(nameServer->AnnounceSocket,
+                          message->Buffer,
+                          messageLength,
+                          0,
+                          (struct sockaddr*)&nameServer->AnnounceAddress,
+                          getSocklen((struct sockaddr*)&nameServer->AnnounceAddress)) < (ssize_t)messageLength) {
+               LOG_WARNING
+               logerror("Unable to send announce");
                LOG_END
-               if(ext_sendto(nameServer->AnnounceSocket,
-                             message->Buffer,
-                             messageLength,
-                             0,
-                             (struct sockaddr*)&nameServer->AnnounceAddress,
-                             getSocklen((struct sockaddr*)&nameServer->AnnounceAddress)) < (ssize_t)messageLength) {
-                  LOG_WARNING
-                  logerror("Unable to send announce");
-                  LOG_END
-               }
             }
          }
-         asapMessageDelete(message);
       }
+      asapMessageDelete(message);
    }
    timerStart(timer, nameServer->AnnounceInterval);
 }

@@ -167,23 +167,22 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
 
 
 /* ###### Restart PE expiry timer to last update TS + expiry timeout ##### */
-void ST_CLASS(peerListManagementRestartTimer)(
+void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         struct ST_CLASS(PeerListNode)*       peerListNode,
-        const unsigned int                   timerCode,
-        const unsigned int                   timeout)
+        const unsigned long long             expiryTimeout)
 {
    ST_CLASS(peerListDeactivateTimer)(&peerListManagement->List,
                                      peerListNode);
    ST_CLASS(peerListActivateTimer)(&peerListManagement->List,
                                    peerListNode,
                                    PLNT_EXPIRY,
-                                   peerListNode->LastUpdateTimeStamp + timeout);
+                                   peerListNode->LastUpdateTimeStamp + expiryTimeout);
 }
 
 
 /* ###### Purge namespace from expired PE entries ######################## */
-size_t ST_CLASS(peerListManagementPurgeExpiredPeerLists)(
+size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
           struct ST_CLASS(PeerListManagement)* peerListManagement,
           const unsigned long long             currentTimeStamp)
 {
