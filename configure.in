@@ -36,6 +36,10 @@ freebsd*)
   ;;
 esac
 
+AC_ARG_ENABLE([csp],
+[  --enable-csp            enable CSP support ],
+AC_DEFINE(ENABLE_CSP, 1, "Define to 1 if you want CSP"), )
+
 # ----------------------
 # Packages configuration - Blatantly stolen from zebra !
 # ----------------------
