@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.8 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.9 2004/07/29 16:32:55 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -199,8 +199,8 @@ static bool checkFinishMessage(struct RSerPoolMessage* message,
                                const size_t            startPosition)
 {
    struct rserpool_header* header = (struct rserpool_header*)&message->Buffer[startPosition];
-   const size_t        length = (size_t)ntohs(header->ah_length);
-   const size_t        endPos = startPosition + length;
+   const size_t            length = (size_t)ntohs(header->ah_length);
+   const size_t            endPos = startPosition + length;
 
    if(message->Position != endPos ) {
       LOG_WARNING
@@ -1416,6 +1416,8 @@ static bool scanPeerListRequestMessage(struct RSerPoolMessage* message)
 static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
+   struct ST_CLASS(PeerListNode)*   peerListNode;
+   unsigned int                     errorCode;
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
@@ -1424,6 +1426,36 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
+
+   while(message->Position < message->BufferSize) {
+      peerListNode = scanServerInformationParameter(message);
+      if(peerListNode == NULL) {
+         break;
+      }
+
+      if(message->PeerListPtr == NULL) {
+         message->PeerListPtr = (struct ST_CLASS(PeerList)*)malloc(sizeof(struct ST_CLASS(PeerList)));
+         if(message->PeerListPtr) {
+            message->Error = RSPERR_OUT_OF_MEMORY;
+            free(peerListNode);
+            return(false);
+         }
+      }
+      ST_CLASS(peerListAddPeerListNode)(message->PeerListPtr,
+                                        peerListNode,
+                                        &errorCode);
+      if(errorCode != RSPERR_OKAY) {
+         LOG_WARNING
+         fputs("PeerListResponse contains bad peer ", stdlog);
+         ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+         fputs(". Unable to add it: ", stdlog);
+         rserpoolErrorPrint(errorCode, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+         message->Error = (uint16_t)errorCode;
+         return(false);
+      }
+   }
 
    return(true);
 }
@@ -1639,6 +1671,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
       fprintf(stdlog, "Wrong PPID ($%08x)\n", message->PPID);
       LOG_END_FATAL
    }
+
    switch(message->Type) {
       /* ====== ASAP ===================================================== */
       case AHT_NAME_RESOLUTION:

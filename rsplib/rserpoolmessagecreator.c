@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.8 2004/07/29 16:32:55 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1015,7 +1015,7 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
    size_t                             i;
 
    if(beginMessage(message, EHT_PEER_NAME_TABLE_RESPONSE,
-                   message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT,
+                   message->Flags & (EHT_PEER_NAME_TABLE_RESPONSE_REJECT|EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND),
                    PPID_ENRP) == false) {
       return(false);
    }

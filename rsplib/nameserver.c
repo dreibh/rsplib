@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.17 2004/07/29 15:10:33 dreibh Exp $
+ *  $Id: nameserver.c,v 1.18 2004/07/29 16:32:55 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -431,9 +431,14 @@ static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElemen
 
 
 static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
-                                     void*                          userData)
+                                 void*                          userData)
 {
    // struct NameServer* nameServer = (struct NameServer*)userData;
+   if(peerListNode->UserData) {
+      /* A peer name table request state is still saved. Free its memory. */
+      free(peerListNode->UserData);
+      peerListNode->UserData = NULL;
+   }
 }
 
 
