@@ -11,7 +11,7 @@
 #include <qmutex.h>
 #include <qfile.h>
 #include <complex>
-#include <qstringlist.h> 
+#include <qstringlist.h>
 #include <qdom.h>
 
 #include "rsplib.h"
@@ -36,6 +36,7 @@ class FractalPU : public QMainWindow,
    FractalPU(const size_t width,
              const size_t height,
              const char*  poolHandle,
+             const char*  configDirName,
              QWidget*     parent = NULL,
              const char*  name   = NULL);
    ~FractalPU();
@@ -85,15 +86,16 @@ class FractalPU : public QMainWindow,
    FractalGeneratorParameter Parameter;
    size_t                    Run;
    size_t                    PoolElementUsages;
-   
+
    QStringList               ConfigList;
-   
+   QString                   ConfigDirName;
 };
 
 
 FractalPU::FractalPU(const size_t width,
                      const size_t height,
                      const char*  poolHandle,
+                     const char*  configDirName,
                      QWidget*     parent,
                      const char*  name)
    : QMainWindow(parent, name)
@@ -103,7 +105,7 @@ FractalPU::FractalPU(const size_t width,
 
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
-
+   ConfigDirName  = QString(configDirName);
 
    QString Buffer;
    QFile AllconfigFile("liste.conf");
@@ -119,7 +121,7 @@ FractalPU::FractalPU(const size_t width,
          ConfigList.append(Buffer);
       }
    }
-   
+
    resize(width, height);
    setCaption("Fractal Pool User");
    statusBar()->message("Welcome to Fractal PU!", 3000);
@@ -263,8 +265,8 @@ void FractalPU::getNextParameters()
 		return;
 	}
 	size_t Element = random32() % ConfigList.count();
-		
-	
+
+
 	QString File(ConfigList[Element]);
   	QDomDocument doc( "XMLFractalSave" );
   	QFile file( File);//url.prettyURL().mid(5) );
@@ -273,10 +275,10 @@ void FractalPU::getNextParameters()
 		std::cerr << "Config file open failed" << std::endl;
     		return;
 	}
-      
+
   	QString Error;
   	int Line, Column;
-  	if ( !doc.setContent( &file , false, &Error, &Line, &Column) ) 
+  	if ( !doc.setContent( &file , false, &Error, &Line, &Column) )
 	{
     		file.close();
     		std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
@@ -284,7 +286,7 @@ void FractalPU::getNextParameters()
     		return;
   	}
   	file.close();
-  	
+
   	QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
   	QString AlgorithmName = algorithm.firstChild().toText().data();
   	if(AlgorithmName == "MandelbrotN")
@@ -295,13 +297,13 @@ void FractalPU::getNextParameters()
   	{
   		Parameter.AlgorithmID   = FGPA_MANDELBROT;
   	}
-	
-  
+
+
 	Parameter.C1Real        = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
 	Parameter.C1Imag        = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
 	Parameter.C2Real        = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
 	Parameter.C2Imag        = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
-  
+
   	QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
   	QDomNode child = useroptions.firstChild();
   	while(!child.isNull())
@@ -316,8 +318,8 @@ void FractalPU::getNextParameters()
 		{
 			Parameter.N = Value.toInt();
 		}
-		child = child.nextSibling(); 
-  	}	
+		child = child.nextSibling();
+  	}
 }
 
 
@@ -483,7 +485,8 @@ static void* rsplibMainLoop(void* args)
 
 int main(int argc, char** argv)
 {
-   const char*          poolHandle = "FractalGeneratorPool";
+   const char*          poolHandle    = "FractalGeneratorPool";
+   const char*          configDirName = NULL;
 #ifdef ENABLE_CSP
    struct CSPReporter   cspReporter;
    uint64_t             cspIdentifier     = 0;
@@ -497,6 +500,9 @@ int main(int argc, char** argv)
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
+      }
+      if(!(strncmp(argv[i],"-configdir=",1))) {
+         configDirName = (char*)&argv[i][11];
       }
 #ifdef ENABLE_CSP
       else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
@@ -555,7 +561,7 @@ int main(int argc, char** argv)
 
 
    QApplication application(argc, argv);
-   FractalPU* fractalPU = new FractalPU(400, 250, poolHandle);
+   FractalPU* fractalPU = new FractalPU(400, 250, poolHandle, configDirName);
    Q_CHECK_PTR(fractalPU);
    fractalPU->show();
    const int result = application.exec();

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.42 2004/12/03 16:58:19 dreibh Exp $
+ *  $Id: netutilities.c,v 1.43 2004/12/03 17:55:09 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1610,10 +1610,6 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
          LOG_END
       }
       else {
-printf("VERIFY:\n");
-CHECK(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0);
-puts("------------------------------");
-
          LOG_VERBOSE2
          fprintf(stdlog, "  New RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
          fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
