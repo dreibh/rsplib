@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.7 2004/08/24 09:20:16 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.8 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,8 +42,8 @@
 
 #include "tdtypes.h"
 #include "poolnamespacemanagement.h"
+
 #include <ext_socket.h>
-#include <glib.h>
 
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.14 2004/08/24 09:38:49 dreibh Exp $
+ *  $Id: netutilities.c,v 1.15 2004/08/24 16:06:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -926,8 +926,8 @@ int sendtoplus(int                   sockfd,
          fputs("Calling sctp_sendmsgx()...\n", stdlog);
          LOG_END
          result = sctp_sendmsgx(sockfd, buffer, length,
-                              (struct sockaddr*)&addressArray, addresses,
-                              ppid, flags, streamID, timeToLive, 0);
+                                (struct sockaddr*)&addressArray, addresses,
+                                ppid, flags, streamID, timeToLive, 0);
       }
       else {
          sri.sinfo_assoc_id   = assocID;

@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.2 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.3 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,56 +43,43 @@
 #include <ext_socket.h>
 
 
-
-struct FDCallback
-{
-   struct Dispatcher* Master;
-   int                FD;
-   int                EventMask;
-
-   void               (*Callback)(struct Dispatcher* dispatcher,
-                                  int                fd,
-                                  int                eventMask,
-                                  void*              userData);
-   card64             SelectTimeStamp;
-   void*              UserData;
-};
-
-
-
 /* ###### Constructor #################################################### */
-struct Dispatcher* dispatcherNew(void (*lock)(struct Dispatcher* dispatcher, void* userData),
-                                 void (*unlock)(struct Dispatcher* dispatcher, void* userData),
-                                 void* lockUserData)
+void dispatcherNew(struct Dispatcher* dispatcher,
+                   void               (*lock)(struct Dispatcher* dispatcher, void* userData),
+                   void               (*unlock)(struct Dispatcher* dispatcher, void* userData),
+                   void*              lockUserData)
 {
-   struct Dispatcher* dispatcher = (struct Dispatcher*)malloc(sizeof(struct Dispatcher));
-   if(dispatcher != NULL) {
-      if(lock != NULL) {
-         dispatcher->Lock = lock;
-      }
-      else {
-         dispatcher->Lock = dispatcherDefaultLock;
-      }
-      if(unlock != NULL) {
-         dispatcher->Unlock = unlock;
-      }
-      else {
-         dispatcher->Unlock = dispatcherDefaultUnlock;
-      }
-      dispatcher->LockUserData = lockUserData;
-      dispatcher->TimerList    = NULL;
-      dispatcher->SocketList   = NULL;
+   leafLinkedRedBlackTreeNew(&dispatcher->TimerStorage, NULL, timerComparison);
+   leafLinkedRedBlackTreeNew(&dispatcher->FDCallbackStorage, NULL, fdCallbackComparison);
+
+   dispatcher->AddRemove    = false;
+   dispatcher->LockUserData = lockUserData;
+
+   if(lock != NULL) {
+      dispatcher->Lock = lock;
    }
-   return(dispatcher);
+   else {
+      dispatcher->Lock = dispatcherDefaultLock;
+   }
+   if(unlock != NULL) {
+      dispatcher->Unlock = unlock;
+   }
+   else {
+      dispatcher->Unlock = dispatcherDefaultUnlock;
+   }
 }
 
 
 /* ###### Destructor ##################################################### */
 void dispatcherDelete(struct Dispatcher* dispatcher)
 {
-   if(dispatcher != NULL) {
-      free(dispatcher);
-   }
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&dispatcher->TimerStorage));
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&dispatcher->FDCallbackStorage));
+   leafLinkedRedBlackTreeDelete(&dispatcher->TimerStorage);
+   leafLinkedRedBlackTreeDelete(&dispatcher->FDCallbackStorage);
+   dispatcher->Lock         = NULL;
+   dispatcher->Unlock       = NULL;
+   dispatcher->LockUserData = NULL;
 }
 
 
@@ -129,33 +116,28 @@ void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData)
 /* ###### Handle timer events ############################################ */
 static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 {
-   GList*        timerList;
-   struct Timer* timer;
-   card64        now;
+   LeafLinkedRedBlackTreeNode* node;
+   struct Timer*               timer;
+   card64                      now;
    dispatcherLock(dispatcher);
 
-   dispatcher->AddRemove = false;
-   timerList = g_list_first(dispatcher->TimerList);
-   while(timerList != NULL) {
-      timer = (struct Timer*)timerList->data;
+   node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+   while(node != NULL) {
+      timer = (struct Timer*)node;
       now   = getMicroTime();
 
-      if(now >= timer->Time) {
-         timer->Time = 0;
-         dispatcher->TimerList = g_list_remove(dispatcher->TimerList,timer);
-         timerList = g_list_first(dispatcher->TimerList);
-
+      if(now >= timer->TimeStamp) {
+         timer->TimeStamp = 0;
+         leafLinkedRedBlackTreeRemove(&dispatcher->TimerStorage,
+                                      &timer->Node);
          if(timer->Callback != NULL) {
-            timer->Callback(dispatcher,timer,timer->UserData);
-            if(dispatcher->AddRemove == true) {
-               dispatcher->AddRemove = false;
-               timerList = g_list_first(dispatcher->TimerList);
-            }
+            timer->Callback(dispatcher, timer, timer->UserData);
          }
       }
       else {
          break;
       }
+      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
    }
 
    dispatcherUnlock(dispatcher);
@@ -172,12 +154,12 @@ void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
                                    card64*            testTS,
                                    struct timeval*    timeout)
 {
-   GList*             glist;
-   struct FDCallback* fdCallback;
-   struct Timer*      timer;
-   card64             now;
-   int64              timeToNextEvent;
-   int                fds;
+   LeafLinkedRedBlackTreeNode* node;
+   struct FDCallback*          fdCallback;
+   struct Timer*               timer;
+   card64                      now;
+   int64                       timeToNextEvent;
+   int                         fds;
 
    if(dispatcher != NULL) {
       dispatcherLock(dispatcher);
@@ -190,9 +172,9 @@ void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
       FD_ZERO(exceptfdset);
       FD_ZERO(testfdset);
       fds = 0;
-      glist = g_list_first(dispatcher->SocketList);
-      while(glist != NULL) {
-         fdCallback = (struct FDCallback*)glist->data;
+      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
+      while(node != NULL) {
+         fdCallback = (struct FDCallback*)node;
          if(fdCallback->EventMask & (FDCE_Read|FDCE_Write|FDCE_Exception)) {
             FD_SET(fdCallback->FD, testfdset);
             fdCallback->SelectTimeStamp = now;
@@ -212,14 +194,14 @@ void dispatcherGetSelectParameters(struct Dispatcher* dispatcher,
             fputs("Empty event mask?!\n",stdlog);
             LOG_END
          }
-         glist = g_list_next(glist);
+         node = leafLinkedRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
       }
 
       /*  ====== Get time to next timer event ============================ */
-      glist = g_list_first(dispatcher->TimerList);
-      if(glist != NULL) {
-         timer = (struct Timer*)glist->data;
-         timeToNextEvent = max((int64)0,(int64)timer->Time - (int64)now);
+      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      if(node != NULL) {
+         timer = (struct Timer*)node;
+         timeToNextEvent = max((int64)0,(int64)timer->TimeStamp - (int64)now);
       }
       else {
          timeToNextEvent = 10000000;
@@ -251,9 +233,9 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
                                   fd_set*            testfdset,
                                   const card64       testTS)
 {
-   GList*             glist;
-   struct FDCallback* fdCallback;
-   int                eventMask;
+   struct LeafLinkedRedBlackTreeNode* node;
+   struct FDCallback*                 fdCallback;
+   int                                eventMask;
 
    if(dispatcher != NULL) {
       dispatcherLock(dispatcher);
@@ -262,9 +244,9 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
       dispatcherHandleTimerEvents(dispatcher);
       if(result > 0) {
          dispatcher->AddRemove = false;
-         glist = g_list_first(dispatcher->SocketList);
-         while(glist != NULL) {
-            fdCallback = (struct FDCallback*)glist->data;
+         node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
+         while(node != NULL) {
+            fdCallback = (struct FDCallback*)node;
             if(fdCallback->SelectTimeStamp <= testTS) {
                eventMask  = 0;
                if(FD_ISSET(fdCallback->FD,readfdset)) {
@@ -297,7 +279,7 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
                                           fdCallback->UserData);
                      if(dispatcher->AddRemove == true) {
                         dispatcher->AddRemove = false;
-                        glist = g_list_first(dispatcher->SocketList);
+                        node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
                         continue;
                      }
                   }
@@ -308,7 +290,7 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
                fprintf(stdlog, "FD callback for FD %d is newer than begin of ext_select() -> Skipping.\n", fdCallback->FD);
                LOG_END
             }
-            glist = g_list_next(glist);
+            node = leafLinkedRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
          }
       }
 
@@ -340,102 +322,4 @@ void dispatcherEventLoop(struct Dispatcher* dispatcher)
 
       dispatcherHandleSelectResult(dispatcher, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
    }
-}
-
-
-/* ###### File descriptor callback comparision function ################## */
-static gint fdCallbackCompareFunc(gconstpointer a,
-                                  gconstpointer b)
-{
-   struct FDCallback* t1 = (struct FDCallback*)a;
-   struct FDCallback* t2 = (struct FDCallback*)b;
-   if(t1->FD < t2->FD) {
-      return(-1);
-   }
-   else if(t1->FD > t2->FD) {
-      return(1);
-   }
-   return(0);
-}
-
-
-/* ###### Add file descriptor callback ################################### */
-bool dispatcherAddFDCallback(struct Dispatcher* dispatcher,
-                             int                fd,
-                             int                eventMask,
-                             void               (*callback)(struct Dispatcher* dispatcher,
-                                                            int                fd,
-                                                            int                eventMask,
-                                                            void*              userData),
-                             void*              userData)
-{
-   struct FDCallback* fdCallback;
-   if(dispatcher != NULL) {
-      if((fd < 0) || (fd >= FD_SETSIZE)) {
-         LOG_ERROR
-         fprintf(stderr, "Invalid FD %d specified\n", fd);
-         LOG_END_FATAL
-         return(false);
-      }
-      fdCallback = (struct FDCallback*)malloc(sizeof(struct FDCallback));
-      if(fdCallback != NULL) {
-         fdCallback->Master    = dispatcher;
-         fdCallback->FD        = fd;
-         fdCallback->EventMask = eventMask;
-         fdCallback->Callback  = callback;
-         fdCallback->UserData  = userData;
-         fdCallback->SelectTimeStamp = getMicroTime();
-         dispatcherLock(dispatcher);
-         dispatcher->SocketList = g_list_insert_sorted(dispatcher->SocketList,
-                                                      (gpointer)fdCallback,
-                                                      fdCallbackCompareFunc);
-         dispatcher->AddRemove = true;
-         dispatcherUnlock(dispatcher);
-         return(true);
-      }
-   }
-   return(false);
-}
-
-
-/* ###### Update file descriptor callback ################################ */
-void dispatcherUpdateFDCallback(struct Dispatcher* dispatcher,
-                                int                fd,
-                                int                eventMask)
-{
-   GList*             found;
-   struct FDCallback* fdCallback;
-   struct FDCallback  example;
-
-   example.FD = fd;
-
-   dispatcherLock(dispatcher);
-   found = g_list_find_custom(dispatcher->SocketList,(gpointer)&example,fdCallbackCompareFunc);
-   if(found != NULL) {
-      fdCallback = (struct FDCallback*)found->data;
-      fdCallback->EventMask = eventMask;
-   }
-   dispatcherUnlock(dispatcher);
-}
-
-
-/* ###### Remove file descriptor callback ################################ */
-void dispatcherRemoveFDCallback(struct Dispatcher* dispatcher,
-                                int                fd)
-{
-   GList*           found;
-   struct FDCallback* fdCallback;
-   struct FDCallback  example;
-
-   example.FD = fd;
-
-   dispatcherLock(dispatcher);
-   found = g_list_find_custom(dispatcher->SocketList,(gpointer)&example,fdCallbackCompareFunc);
-   if(found != NULL) {
-      fdCallback = (struct FDCallback*)found->data;
-      dispatcher->SocketList = g_list_remove(dispatcher->SocketList,fdCallback);
-      dispatcher->AddRemove  = true;
-      free(fdCallback);
-   }
-   dispatcherUnlock(dispatcher);
 }

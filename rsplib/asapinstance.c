@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.16 2004/08/24 09:38:49 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.17 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,7 +48,7 @@
 
 static void handleNameServerConnectionEvent(struct Dispatcher* dispatcher,
                                             int                fd,
-                                            int                eventMask,
+                                            unsigned int       eventMask,
                                             void*              userData);
 
 
@@ -162,11 +162,13 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
             }
          }
 
-         dispatcherAddFDCallback(asapInstance->StateMachine,
-                                 asapInstance->NameServerSocket,
-                                 FDCE_Read|FDCE_Exception,
-                                 handleNameServerConnectionEvent,
-                                 (gpointer)asapInstance);
+         fdCallbackNew(&asapInstance->NameServerFDCallback,
+                       asapInstance->StateMachine,
+                       asapInstance->NameServerSocket,
+                       FDCE_Read|FDCE_Exception,
+                       handleNameServerConnectionEvent,
+                       (void*)asapInstance);
+
          LOG_ACTION
          fputs("Connection to name server server successfully established\n", stdlog);
          LOG_END
@@ -187,7 +189,7 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
 static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstance)
 {
    if(asapInstance->NameServerSocket >= 0) {
-      dispatcherRemoveFDCallback(asapInstance->StateMachine, asapInstance->NameServerSocket);
+      fdCallbackDelete(&asapInstance->NameServerFDCallback);
       ext_close(asapInstance->NameServerSocket);
       LOG_ACTION
       fputs("Disconnected from nameserver\n", stdlog);
@@ -757,7 +759,7 @@ static void asapInstanceHandleEndpointKeepAlive(
 static void handleNameServerConnectionEvent(
                struct Dispatcher* dispatcher,
                int                fd,
-               int                eventMask,
+               unsigned int       eventMask,
                void*              userData)
 {
    struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;

@@ -23,6 +23,8 @@ debug.h \
 dispatcher.c \
 dispatcher.h \
 doublelinkedringlist.h \
+fdcallback.c \
+fdcallback.h \
 leaflinkedbinarytree.c \
 leaflinkedbinarytree.h \
 leaflinkedredblacktree.c \
@@ -83,7 +85,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork
+noinst_PROGRAMS = t2 nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork
 # examplepe2 examplepu2
 
 
@@ -127,3 +129,7 @@ fork_LDFLAGS = -static $(all_libraries) -L.
 #t1_SOURCES = t1.cc
 #t1_LDADD   = librsplib.la -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) $(GLIB_LIBS) -lsctp
 #t1_LDFLAGS = -static $(all_libraries) -L.
+
+t2_SOURCES = t2.cc
+t2_LDADD   = dispatcher.o fdcallback.o timer.o timeutilities.o loglevel.o leaflinkedredblacktree.o threadsafety.o -lsctpsocket -lstdc++ -lsctp $(thread_LIBS) -lsctp $(GLIB_LIBS)
+t2_LDFLAGS = -static $(all_libraries) -L.

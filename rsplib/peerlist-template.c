@@ -20,6 +20,7 @@
  *
  */
 
+
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)* peerList,
                            const ENRPIdentifierType   ownIdentifier)

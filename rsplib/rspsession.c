@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.10 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: rspsession.c,v 1.11 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,6 +45,7 @@
 #include "messagebuffer.h"
 
 #include <ext_socket.h>
+#include <glib.h>
 
 
 #ifndef MSG_NOSIGNAL
@@ -52,7 +53,7 @@
 #endif
 
 
-extern struct Dispatcher* gDispatcher;
+extern struct Dispatcher gDispatcher;
 
 
 struct PoolElementDescriptor
@@ -71,7 +72,7 @@ struct PoolElementDescriptor
    uint32_t            PolicyParameterLoad;
 
    GList*              SessionList;
-   struct Timer*       ReregistrationTimer;
+   struct Timer        ReregistrationTimer;
 
    unsigned int        RegistrationLife;
    unsigned int        ReregistrationInterval;
@@ -315,7 +316,7 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
    LOG_END
    threadSafetyLock(&ped->Mutex);
    rspPoolElementUpdateRegistration(ped);
-   timerStart(ped->ReregistrationTimer,
+   timerStart(&ped->ReregistrationTimer,
               getMicroTime() + ((card64)1000 * (card64)ped->ReregistrationInterval));
    threadSafetyUnlock(&ped->Mutex);
    LOG_VERBOSE3
@@ -333,10 +334,7 @@ void rspDeletePoolElement(struct PoolElementDescriptor* ped,
    if(ped) {
       list = g_list_first(ped->SessionList);
       if(list == NULL) {
-         if(ped->ReregistrationTimer) {
-            timerDelete(ped->ReregistrationTimer);
-            ped->ReregistrationTimer = NULL;
-         }
+         timerDelete(&ped->ReregistrationTimer);
          if(ped->Identifier != 0x00000000) {
             rspDeregister((unsigned char*)&ped->Handle.Handle,
                           ped->Handle.Size,
@@ -380,7 +378,10 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       poolHandleNew(&ped->Handle, poolHandle, poolHandleSize);
 
       threadSafetyInit(&ped->Mutex, "RspPoolElement");
-      ped->ReregistrationTimer    = NULL;
+      timerNew(&ped->ReregistrationTimer,
+               &gDispatcher,
+               reregistrationTimer,
+               (void*)ped);
       ped->Socket                 = -1;
       ped->SocketDomain           = tagListGetData(tags, TAG_PoolElement_SocketDomain,
                                                    checkIPv6() ? AF_INET6 : AF_INET);
@@ -443,18 +444,6 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       }
 
 
-      /* ====== Create reregistration timer ==================================== */
-      ped->ReregistrationTimer = timerNew(gDispatcher,
-                                          reregistrationTimer,
-                                          (void*)ped);
-      if(ped->ReregistrationTimer == NULL) {
-         LOG_ERROR
-         fputs("Unable to create reregistration timer\n", stdlog);
-         LOG_END
-         rspDeletePoolElement(ped, NULL);
-         return(NULL);
-      }
-
       /* ====== Do registration ================================================ */
       if(rspPoolElementUpdateRegistration(ped) == false) {
          LOG_ERROR
@@ -465,7 +454,8 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       }
 
       /* Okay -> start reregistration timer */
-      timerStart(ped->ReregistrationTimer, getMicroTime() + ped->ReregistrationInterval);
+      timerStart(&ped->ReregistrationTimer,
+                 getMicroTime() + ((card64)1000 * (card64)ped->ReregistrationInterval));
    }
 
    return(ped);

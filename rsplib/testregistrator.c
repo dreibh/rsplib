@@ -1,5 +1,5 @@
 /*
- *  $Id: testregistrator.c,v 1.2 2004/08/24 11:54:08 dreibh Exp $
+ *  $Id: testregistrator.c,v 1.3 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,7 +45,6 @@
 
 #include <ext_socket.h>
 #include <pthread.h>
-#include <glib.h>
 
 
 #define MAX_POOL_ELEMENTS 1024

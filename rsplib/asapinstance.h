@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.5 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.6 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,10 +35,8 @@
  *
  */
 
-
 #ifndef ASAPINSTANCE_H
 #define ASAPINSTANCE_H
-
 
 #include "tdtypes.h"
 #include "dispatcher.h"
@@ -48,13 +46,10 @@
 #include "poolnamespacemanagement.h"
 #include "servertable.h"
 
-#include <glib.h>
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 
 struct ASAPInstance
@@ -70,12 +65,13 @@ struct ASAPInstance
    char*                                    AsapServerAnnounceConfigFile;
    char*                                    AsapNameServersConfigFile;
 
-   card64                                   CacheElementTimeout;
-   card64                                   CacheMaintenanceInterval;
+   unsigned long long                       CacheElementTimeout;
+   unsigned long long                       CacheMaintenanceInterval;
 
-   cardinal                                 NameServerRequestMaxTrials;
-   card64                                   NameServerRequestTimeout;
-   card64                                   NameServerResponseTimeout;
+   struct FDCallback                        NameServerFDCallback;
+   size_t                                   NameServerRequestMaxTrials;
+   unsigned long long                       NameServerRequestTimeout;
+   unsigned long long                       NameServerResponseTimeout;
 
    struct MessageBuffer*                    Buffer;
 };

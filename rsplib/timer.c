@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.3 2004/07/21 14:39:53 dreibh Exp $
+ *  $Id: timer.c,v 1.4 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,61 +41,50 @@
 
 
 /* ###### Constructor #################################################### */
-struct Timer* timerNew(struct Dispatcher* dispatcher,
-                       void               (*callback)(struct Dispatcher* dispatcher,
-                                                      struct Timer*      timer,
-                                                      void*              userData),
-                       void*               userData)
+void timerNew(struct Timer*      timer,
+              struct Dispatcher* dispatcher,
+              void               (*callback)(struct Dispatcher* dispatcher,
+                                             struct Timer*      timer,
+                                             void*              userData),
+              void*              userData)
 {
-   struct Timer* timer = NULL;
-   if(dispatcher != NULL) {
-      timer = (struct Timer*)malloc(sizeof(struct Timer));
-      if(timer != NULL) {
-         timer->Master   = dispatcher;
-         timer->Time     = 0;
-         timer->Callback = callback;
-         timer->UserData = userData;
-      }
-   }
-   return(timer);
+   leafLinkedRedBlackTreeNodeNew(&timer->Node);
+   timer->Master    = dispatcher;
+   timer->TimeStamp = 0;
+   timer->Callback  = callback;
+   timer->UserData  = userData;
 }
 
 
 /* ###### Destructor ##################################################### */
 void timerDelete(struct Timer* timer)
 {
-   if(timer != NULL) {
-      timerStop(timer);
-      free(timer);
-   }
+   timerStop(timer);
+   leafLinkedRedBlackTreeNodeDelete(&timer->Node);
+   timer->Master    = NULL;
+   timer->TimeStamp = 0;
+   timer->Callback  = NULL;
+   timer->UserData  = NULL;
 }
 
 
 /* ###### Start timer #################################################### */
-void timerStart(struct Timer* timer,
-                const card64  timeStamp)
+void timerStart(struct Timer*            timer,
+                const unsigned long long timeStamp)
 {
-   if(timer != NULL) {
-      dispatcherLock(timer->Master);
-      if(timer->Time == 0) {
-         timer->Time = timeStamp;
-         timer->Master->TimerList = g_list_insert_sorted(timer->Master->TimerList,
-                                                         (gpointer)timer,
-                                                         timerCompareFunc);
-      }
-      else {
-         LOG_ERROR
-         fputs("Timer already started!\n",stdlog);
-         LOG_END
-      }
-      dispatcherUnlock(timer->Master);
-   }
+   CHECK(!leafLinkedRedBlackTreeNodeIsLinked(&timer->Node));
+   timer->TimeStamp = timeStamp;
+
+   dispatcherLock(timer->Master);
+   leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
+                                &timer->Node);
+   dispatcherUnlock(timer->Master);
 }
 
 
 /* ###### Restart timer ################################################## */
-void timerRestart(struct Timer* timer,
-                  const card64  timeStamp)
+void timerRestart(struct Timer*            timer,
+                  const unsigned long long timeStamp)
 {
    timerStop(timer);
    timerStart(timer, timeStamp);
@@ -105,25 +94,25 @@ void timerRestart(struct Timer* timer,
 /* ###### Stop timer ##################################################### */
 void timerStop(struct Timer* timer)
 {
-   if(timer != NULL) {
+   if(leafLinkedRedBlackTreeNodeIsLinked(&timer->Node)) {
       dispatcherLock(timer->Master);
-      timer->Time = 0;
-      timer->Master->TimerList = g_list_remove(timer->Master->TimerList, (gpointer)timer);
+      leafLinkedRedBlackTreeRemove(&timer->Master->TimerStorage,
+                                   &timer->Node);
       dispatcherUnlock(timer->Master);
+      timer->TimeStamp = 0;
    }
 }
 
 
 /* ###### Timer comparision function ##################################### */
-gint timerCompareFunc(gconstpointer a,
-                      gconstpointer b)
+int timerComparison(const void* timerPtr1, const void* timerPtr2)
 {
-   const struct Timer* t1 = (const struct Timer*)a;
-   const struct Timer* t2 = (const struct Timer*)b;
-   if(t1->Time < t2->Time) {
+   const struct Timer* timer1 = (const struct Timer*)timerPtr1;
+   const struct Timer* timer2 = (const struct Timer*)timerPtr2;
+   if(timer1->TimeStamp < timer2->TimeStamp) {
       return(-1);
    }
-   else if(t1->Time > t2->Time) {
+   else if(timer1->TimeStamp > timer2->TimeStamp) {
       return(1);
    }
    return(0);

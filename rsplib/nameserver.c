@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.25 2004/08/24 11:54:08 dreibh Exp $
+ *  $Id: nameserver.c,v 1.26 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -70,32 +70,33 @@
 #define NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
 
 
-
-
 struct NameServer
 {
    ENRPIdentifierType                       ServerID;
 
-   struct Dispatcher*                       StateMachine;
+   struct Dispatcher                        StateMachine;
    struct ST_CLASS(PoolNamespaceManagement) Namespace;
    struct ST_CLASS(PeerListManagement)      Peers;
-   struct Timer*                            NamespaceActionTimer;
-   struct Timer*                            PeerActionTimer;
+   struct Timer                             NamespaceActionTimer;
+   struct Timer                             PeerActionTimer;
 
    int                                      ASAPAnnounceSocket;
+   struct FDCallback                        ASAPSocketFDCallback;
    union sockaddr_union                     ASAPAnnounceAddress;
    bool                                     ASAPSendAnnounces;
    int                                      ASAPSocket;
    struct TransportAddressBlock*            ASAPAddress;
-   struct Timer*                            ASAPAnnounceTimer;
+   struct Timer                             ASAPAnnounceTimer;
 
    int                                      ENRPMulticastSocket;
+   struct FDCallback                        ENRPMulticastSocketFDCallback;
    union sockaddr_union                     ENRPMulticastAddress;
    int                                      ENRPUnicastSocket;
+   struct FDCallback                        ENRPUnicastSocketFDCallback;
    struct TransportAddressBlock*            ENRPUnicastAddress;
    bool                                     ENRPAnnounceViaMulticast;
    bool                                     ENRPUseMulticast;
-   struct Timer*                            ENRPAnnounceTimer;
+   struct Timer                             ENRPAnnounceTimer;
 
    bool                                     InInitializationPhase;
    ENRPIdentifierType                       MentorServerID;
@@ -154,7 +155,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                                     void*              userData);
 static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      int                fd,
-                                     int                eventMask,
+                                     unsigned int       eventMask,
                                      void*              userData);
 
 
@@ -195,11 +196,9 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       if(nameServer->ServerID == 0) {
          nameServer->ServerID = random32();
       }
-      nameServer->StateMachine = dispatcherNew(dispatcherDefaultLock, dispatcherDefaultUnlock, NULL);
-      if(nameServer->StateMachine == NULL) {
-         free(nameServer);
-         return(NULL);
-      }
+
+      dispatcherNew(&nameServer->StateMachine,
+                    dispatcherDefaultLock, dispatcherDefaultUnlock, NULL);
       ST_CLASS(poolNamespaceManagementNew)(&nameServer->Namespace,
                                            nameServer->ServerID,
                                            NULL,
@@ -209,6 +208,22 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                       nameServer->ServerID,
                                       peerListNodeDisposer,
                                       nameServer);
+      timerNew(&nameServer->ASAPAnnounceTimer,
+               &nameServer->StateMachine,
+               asapAnnounceTimerCallback,
+               (void*)nameServer);
+      timerNew(&nameServer->ENRPAnnounceTimer,
+               &nameServer->StateMachine,
+               enrpAnnounceTimerCallback,
+               (void*)nameServer);
+      timerNew(&nameServer->NamespaceActionTimer,
+               &nameServer->StateMachine,
+               namespaceActionTimerCallback,
+               (void*)nameServer);
+      timerNew(&nameServer->PeerActionTimer,
+               &nameServer->StateMachine,
+               peerActionTimerCallback,
+               (void*)nameServer);
 
       nameServer->InInitializationPhase    = true;
       nameServer->MentorServerID           = 0;
@@ -258,26 +273,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
          setNonBlocking(nameServer->ENRPMulticastSocket);
       }
 
-      nameServer->ASAPAnnounceTimer = timerNew(nameServer->StateMachine,
-                                               asapAnnounceTimerCallback,
-                                               (void*)nameServer);
-      nameServer->ENRPAnnounceTimer = timerNew(nameServer->StateMachine,
-                                               enrpAnnounceTimerCallback,
-                                               (void*)nameServer);
-      nameServer->NamespaceActionTimer = timerNew(nameServer->StateMachine,
-                                                  namespaceActionTimerCallback,
-                                                  (void*)nameServer);
-      nameServer->PeerActionTimer = timerNew(nameServer->StateMachine,
-                                             peerActionTimerCallback,
-                                             (void*)nameServer);
-      if((nameServer->ASAPAnnounceTimer == NULL) ||
-         (nameServer->ENRPAnnounceTimer == NULL) ||
-         (nameServer->NamespaceActionTimer == NULL) ||
-         (nameServer->PeerActionTimer == NULL)) {
-         nameServerDelete(nameServer);
-         return(NULL);
-      }
-      timerStart(nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
+      timerStart(&nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
       if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
          if(joinOrLeaveMulticastGroup(nameServer->ENRPMulticastSocket,
                                       &nameServer->ENRPMulticastAddress,
@@ -288,23 +284,26 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
             nameServerDelete(nameServer);
             return(NULL);
          }
-         dispatcherAddFDCallback(nameServer->StateMachine,
-                                 nameServer->ENRPMulticastSocket,
-                                 FDCE_Read|FDCE_Exception,
-                                 nameServerSocketCallback,
-                                 (void*)nameServer);
+         fdCallbackNew(&nameServer->ENRPMulticastSocketFDCallback,
+                       &nameServer->StateMachine,
+                       nameServer->ENRPMulticastSocket,
+                       FDCE_Read|FDCE_Exception,
+                       nameServerSocketCallback,
+                       (void*)nameServer);
       }
 
-      dispatcherAddFDCallback(nameServer->StateMachine,
-                              nameServer->ASAPSocket,
-                              FDCE_Read|FDCE_Exception,
-                              nameServerSocketCallback,
-                              (void*)nameServer);
-      dispatcherAddFDCallback(nameServer->StateMachine,
-                              nameServer->ENRPUnicastSocket,
-                              FDCE_Read|FDCE_Exception,
-                              nameServerSocketCallback,
-                              (void*)nameServer);
+      fdCallbackNew(&nameServer->ASAPSocketFDCallback,
+                    &nameServer->StateMachine,
+                    nameServer->ASAPSocket,
+                    FDCE_Read|FDCE_Exception,
+                    nameServerSocketCallback,
+                    (void*)nameServer);
+      fdCallbackNew(&nameServer->ENRPUnicastSocketFDCallback,
+                    &nameServer->StateMachine,
+                    nameServer->ENRPUnicastSocket,
+                    FDCE_Read|FDCE_Exception,
+                    nameServerSocketCallback,
+                    (void*)nameServer);
    }
 
    return(nameServer);
@@ -315,27 +314,17 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
 void nameServerDelete(struct NameServer* nameServer)
 {
    if(nameServer) {
-      dispatcherRemoveFDCallback(nameServer->StateMachine, nameServer->ASAPSocket);
+      fdCallbackDelete(&nameServer->ASAPSocketFDCallback);
+      fdCallbackDelete(&nameServer->ENRPUnicastSocketFDCallback);
+      fdCallbackDelete(&nameServer->ENRPMulticastSocketFDCallback);
       ST_CLASS(peerListManagementClear)(&nameServer->Peers);
       ST_CLASS(peerListManagementDelete)(&nameServer->Peers);
       ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
       ST_CLASS(poolNamespaceManagementDelete)(&nameServer->Namespace);
-      if(nameServer->ASAPAnnounceTimer) {
-         timerDelete(nameServer->ASAPAnnounceTimer);
-         nameServer->ASAPAnnounceTimer = NULL;
-      }
-      if(nameServer->ENRPAnnounceTimer) {
-         timerDelete(nameServer->ENRPAnnounceTimer);
-         nameServer->ENRPAnnounceTimer = NULL;
-      }
-      if(nameServer->NamespaceActionTimer) {
-         timerDelete(nameServer->NamespaceActionTimer);
-         nameServer->NamespaceActionTimer = NULL;
-      }
-      if(nameServer->PeerActionTimer) {
-         timerDelete(nameServer->PeerActionTimer);
-         nameServer->PeerActionTimer = NULL;
-      }
+      timerDelete(&nameServer->ASAPAnnounceTimer);
+      timerDelete(&nameServer->ENRPAnnounceTimer);
+      timerDelete(&nameServer->NamespaceActionTimer);
+      timerDelete(&nameServer->PeerActionTimer);
       if(nameServer->ASAPAnnounceSocket >= 0) {
          ext_close(nameServer->ASAPAnnounceSocket >= 0);
          nameServer->ASAPAnnounceSocket = -1;
@@ -344,10 +333,7 @@ void nameServerDelete(struct NameServer* nameServer)
          ext_close(nameServer->ENRPMulticastSocket >= 0);
          nameServer->ENRPMulticastSocket = -1;
       }
-      if(nameServer->StateMachine) {
-         dispatcherDelete(nameServer->StateMachine);
-         nameServer->StateMachine = NULL;
-      }
+      dispatcherDelete(&nameServer->StateMachine);
       free(nameServer);
    }
 }
@@ -593,7 +579,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
       fputs("Initialization phase ended after ENRP mentor discovery timeout. The name server is ready!\n", stdlog);
       LOG_END
       if(nameServer->ASAPSendAnnounces) {
-         timerStart(nameServer->ASAPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
+         timerStart(&nameServer->ASAPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
       }
    }
 
@@ -753,9 +739,9 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
       poolElementNode = nextPoolElementNode;
    }
 
-   timerRestart(nameServer->NamespaceActionTimer,
-               ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
-                  &nameServer->Namespace));
+   timerRestart(&nameServer->NamespaceActionTimer,
+                ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                   &nameServer->Namespace));
 }
 
 
@@ -841,9 +827,9 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
       peerListNode = nextPeerListNode;
    }
 
-   timerRestart(nameServer->PeerActionTimer,
-               ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
-                  &nameServer->Peers));
+   timerRestart(&nameServer->PeerActionTimer,
+                ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                   &nameServer->Peers));
 }
 
 
@@ -1123,7 +1109,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
                poolElementNode,
                PENT_KEEPALIVE_TRANSMISSION,
                getMicroTime() + nameServer->EndpointKeepAliveTransmissionInterval);
-            timerRestart(nameServer->NamespaceActionTimer,
+            timerRestart(&nameServer->NamespaceActionTimer,
                          ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
                             &nameServer->Namespace));
 
@@ -1371,9 +1357,9 @@ static void handleEndpointEndpointKeepAliveAck(struct NameServer*      nameServe
          poolElementNode,
          PENT_KEEPALIVE_TRANSMISSION,
          getMicroTime() + nameServer->EndpointKeepAliveTransmissionInterval);
-      timerRestart(nameServer->NamespaceActionTimer,
-                  ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
-                     &nameServer->Namespace));
+      timerRestart(&nameServer->NamespaceActionTimer,
+                   ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                      &nameServer->Namespace));
    }
    else {
       LOG_WARNING
@@ -1516,9 +1502,9 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
                newPoolElementNode,
                PENT_EXPIRY,
                getMicroTime() + newPoolElementNode->RegistrationLife);
-            timerRestart(nameServer->NamespaceActionTimer,
-                        ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
-                           &nameServer->Namespace));
+            timerRestart(&nameServer->NamespaceActionTimer,
+                         ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                            &nameServer->Namespace));
 
             LOG_VERBOSE3
             fputs("Namespace content:\n", stdlog);
@@ -1638,7 +1624,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
             peerListNode,
             PLNT_MAX_TIME_LAST_HEARD,
             getMicroTime() + nameServer->PeerMaxTimeLastHeard);
-         timerRestart(nameServer->PeerActionTimer,
+         timerRestart(&nameServer->PeerActionTimer,
                       ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                          &nameServer->Peers));
 
@@ -1789,8 +1775,8 @@ static void handlePeerInitTakeoverAck(struct NameServer*      nameServer,
                                       sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
 {
-   struct RSerPoolMessage*        response;
-   struct ST_CLASS(PeerListNode)* peerListNode;
+//   struct RSerPoolMessage*        response;
+// ?????   struct ST_CLASS(PeerListNode)* peerListNode;
 
    if(message->SenderID == nameServer->ServerID) {
       /* This is our own message -> skip it! */
@@ -1916,9 +1902,9 @@ static void handlePeerListResponse(struct NameServer*      nameServer,
          }
       }
 
-      timerRestart(nameServer->PeerActionTimer,
-                  ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
-                     &nameServer->Peers));
+      timerRestart(&nameServer->PeerActionTimer,
+                   ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                      &nameServer->Peers));
 
       /* ====== Print debug information ============================ */
       LOG_VERBOSE3
@@ -2080,7 +2066,7 @@ static void handlePeerNameTableResponse(struct NameServer*      nameServer,
             poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(&message->NamespacePtr->Namespace, poolElementNode);
          }
 
-         timerRestart(nameServer->NamespaceActionTimer,
+         timerRestart(&nameServer->NamespaceActionTimer,
                       ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
                          &nameServer->Namespace));
 
@@ -2178,7 +2164,7 @@ static void handleMessage(struct NameServer*      nameServer,
 /* ###### Handle events on sockets ####################################### */
 static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      int                fd,
-                                     int                eventMask,
+                                     unsigned int       eventMask,
                                      void*              userData)
 {
    struct NameServer*       nameServer = (struct NameServer*)userData;
@@ -2264,7 +2250,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                   LOG_ACTION
                   fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
                           nameServer->ASAPSocket,
-                          notification->sn_assoc_change.sac_assoc_id);
+                          notification->sn_shutdown_event.sse_assoc_id);
 
                   LOG_END
                   nameServerRemovePoolElementsOfConnection(nameServer, fd,
@@ -2638,11 +2624,11 @@ int main(int argc, char** argv)
 
    /* ====== Main loop =================================================== */
    while(!breakDetected()) {
-      dispatcherGetSelectParameters(nameServer->StateMachine, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
+      dispatcherGetSelectParameters(&nameServer->StateMachine, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
       timeout.tv_sec  = min(0, timeout.tv_sec);
       timeout.tv_usec = min(250000, timeout.tv_usec);
       result = ext_select(n, &readfdset, &writefdset, &exceptfdset, &timeout);
-      dispatcherHandleSelectResult(nameServer->StateMachine, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
+      dispatcherHandleSelectResult(&nameServer->StateMachine, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
       if(errno == EINTR) {
          break;
       }

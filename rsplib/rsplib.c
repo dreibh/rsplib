@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.9 2004/08/24 09:38:49 dreibh Exp $
+ *  $Id: rsplib.c,v 1.10 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -49,7 +49,7 @@
 #define MAX_ADDRESSES_PER_ENDPOINT 128
 
 
-struct Dispatcher*          gDispatcher   = NULL;
+struct Dispatcher           gDispatcher;
 static struct ASAPInstance* gAsapInstance = NULL;
 static unsigned int         gLastError    = RSPERR_OKAY;
 static struct ThreadSafety  gThreadSafety;
@@ -76,21 +76,18 @@ unsigned int rspInitialize(struct TagItem* tags)
    static const char* buildTime = __TIME__;
 
    threadSafetyInit(&gThreadSafety, "RsplibInstance");
-   gDispatcher = dispatcherNew(lock, unlock, NULL);
-   if(gDispatcher) {
-      gAsapInstance = asapInstanceNew(gDispatcher, tags);
-      if(gAsapInstance) {
-         tagListSetData(tags, TAG_RspLib_GetVersion,   (tagdata_t)RSPLIB_VERSION);
-         tagListSetData(tags, TAG_RspLib_GetRevision,  (tagdata_t)RSPLIB_REVISION);
-         tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
-         tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
-         tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
-         return(RSPERR_OKAY);
-      }
-      else {
-         dispatcherDelete(gDispatcher);
-         gDispatcher = NULL;
-      }
+   dispatcherNew(&gDispatcher, lock, unlock, NULL);
+   gAsapInstance = asapInstanceNew(&gDispatcher, tags);
+   if(gAsapInstance) {
+      tagListSetData(tags, TAG_RspLib_GetVersion,   (tagdata_t)RSPLIB_VERSION);
+      tagListSetData(tags, TAG_RspLib_GetRevision,  (tagdata_t)RSPLIB_REVISION);
+      tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
+      tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
+      tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
+      return(RSPERR_OKAY);
+   }
+   else {
+      dispatcherDelete(&gDispatcher);
    }
 
    return(RSPERR_OUT_OF_MEMORY);
@@ -102,10 +99,9 @@ void rspCleanUp()
 {
    if(gAsapInstance) {
       asapInstanceDelete(gAsapInstance);
-      dispatcherDelete(gDispatcher);
+      dispatcherDelete(&gDispatcher);
       threadSafetyDestroy(&gThreadSafety);
       gAsapInstance = NULL;
-      gDispatcher   = NULL;
 
       /* Give sctplib some time to cleanly shut down all associations */
       usleep(250000);
@@ -400,7 +396,7 @@ int rspSelect(int             n,
    card64         newTimeout;
    int            result;
 
-   if(gDispatcher) {
+   if(&gDispatcher) {
       /* ====== Schedule ================================================= */
       /* pthreads seem to have the property that scheduling is quite
          unfair -> If the main loop only invokes rspSelect(), this
@@ -409,7 +405,7 @@ int rspSelect(int             n,
       sched_yield();
 
       /* ====== Collect data for ext_select() call ======================= */
-      lock(gDispatcher, NULL);
+      lock(&gDispatcher, NULL);
       if(timeout == NULL) {
          userTimeout = (card64)~0;
          mytimeout.tv_sec  = ~0;
@@ -418,7 +414,7 @@ int rspSelect(int             n,
       else {
          userTimeout = ((card64)timeout->tv_sec * 1000000) + (card64)timeout->tv_usec;
       }
-      dispatcherGetSelectParameters(gDispatcher, &myn, &myreadfds, &mywritefds, &myexceptfds, &testfds, &testTS, &mytimeout);
+      dispatcherGetSelectParameters(&gDispatcher, &myn, &myreadfds, &mywritefds, &myexceptfds, &testfds, &testTS, &mytimeout);
       asapTimeout = ((card64)mytimeout.tv_sec * 1000000) + (card64)mytimeout.tv_usec;
       newTimeout  = min(userTimeout, asapTimeout);
       mytimeout.tv_sec  = newTimeout / 1000000;
@@ -480,7 +476,7 @@ int rspSelect(int             n,
       LOG_END
 
       /* ====== Handle results ============================================ */
-      dispatcherHandleSelectResult(gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
+      dispatcherHandleSelectResult(&gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
 
       /* ====== Prepare results for user ================================== */
       result = 0;
@@ -511,7 +507,7 @@ int rspSelect(int             n,
             }
          }
       }
-      unlock(gDispatcher, NULL);
+      unlock(&gDispatcher, NULL);
    }
    else {
       result = ext_select(n, readfds, writefds, exceptfds, timeout);

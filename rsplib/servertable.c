@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.14 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: servertable.c,v 1.15 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,7 +58,7 @@
 /* ###### Server announce callback  ######################################### */
 static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                                          int                sd,
-                                         int                eventMask,
+                                         unsigned int       eventMask,
                                          void*              userData)
 {
    struct ServerTable*            serverTable = (struct ServerTable*)userData;
@@ -96,16 +96,16 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                LOG_END
 
                result = ST_CLASS(peerListManagementRegisterPeerListNode)(
-                           &serverTable->List,
+                           &serverTable->ServerList,
                            message->NSIdentifier,
                            PLNF_DYNAMIC,
                            message->TransportAddressBlockListPtr,
                            getMicroTime(),
                            &peerListNode);
                if(result == RSPERR_OKAY) {
-                  serverTable->LastAnnounce = getMicroTime();
+                  serverTable->LastAnnounceHeard = getMicroTime();
                   ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
-                     &serverTable->List,
+                     &serverTable->ServerList,
                      peerListNode,
                      serverTable->NameServerAnnounceTimeout);
                }
@@ -118,11 +118,11 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                }
 
                i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
-                      &serverTable->List,
+                      &serverTable->ServerList,
                       getMicroTime());
                LOG_VERBOSE3
                fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  i);
-               ST_CLASS(peerListManagementPrint)(&serverTable->List, stdlog, PLPO_FULL);
+               ST_CLASS(peerListManagementPrint)(&serverTable->ServerList, stdlog, PLPO_FULL);
                LOG_END
             }
          }
@@ -140,9 +140,9 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
    union sockaddr_union  defaultAnnounceAddress;
    struct ServerTable*   serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
-      serverTable->Dispatcher   = dispatcher;
-      serverTable->LastAnnounce = 0;
-      ST_CLASS(peerListManagementNew)(&serverTable->List, 0, NULL, NULL);
+      serverTable->Dispatcher        = dispatcher;
+      serverTable->LastAnnounceHeard = 0;
+      ST_CLASS(peerListManagementNew)(&serverTable->ServerList, 0, NULL, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
       serverTable->NameServerConnectMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerConnectMaxTrials,
@@ -176,11 +176,12 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                       &serverTable->AnnounceAddress,
                                       true)) {
-            dispatcherAddFDCallback(serverTable->Dispatcher,
-                                    serverTable->AnnounceSocket,
-                                    FDCE_Read,
-                                    handleServerAnnounceCallback,
-                                    (void*)serverTable);
+            fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
+                          serverTable->Dispatcher,
+                          serverTable->AnnounceSocket,
+                          FDCE_Read,
+                          handleServerAnnounceCallback,
+                          (void*)serverTable);
          }
          else {
             LOG_ERROR
@@ -207,13 +208,12 @@ void serverTableDelete(struct ServerTable* serverTable)
 {
    if(serverTable != NULL) {
       if(serverTable->AnnounceSocket >= 0) {
-         dispatcherRemoveFDCallback(serverTable->Dispatcher,
-                                    serverTable->AnnounceSocket);
+         fdCallbackDelete(&serverTable->AnnounceSocketFDCallback);
          ext_close(serverTable->AnnounceSocket);
          serverTable->AnnounceSocket = -1;
       }
-      ST_CLASS(peerListManagementClear)(&serverTable->List);
-      ST_CLASS(peerListManagementDelete)(&serverTable->List);
+      ST_CLASS(peerListManagementClear)(&serverTable->ServerList);
+      ST_CLASS(peerListManagementDelete)(&serverTable->ServerList);
       free(serverTable);
    }
 }
@@ -236,7 +236,7 @@ unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
                             addressArray,
                             addresses);
    result = ST_CLASS(peerListManagementRegisterPeerListNode)(
-               &serverTable->List,
+               &serverTable->ServerList,
                0,
                PLNF_STATIC,
                transportAddressBlock,
@@ -278,7 +278,7 @@ static void tryNextBlock(struct ServerTable*            serverTable,
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       if(sd[i] < 0) {
          peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
-                           &serverTable->List,
+                           &serverTable->ServerList,
                            *lastNSIdentifier,
                            *lastTransportAddressBlock);
 
@@ -406,7 +406,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
             - A new server announce has been added to the list
             - The current trial has been running for at least serverTable->NameServerConnectTimeout */
          if( (start == 0) ||
-             (serverTable->LastAnnounce >= start) ||
+             (serverTable->LastAnnounceHeard >= start) ||
              (start + serverTable->NameServerConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > serverTable->NameServerConnectMaxTrials) {

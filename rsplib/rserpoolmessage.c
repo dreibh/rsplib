@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.7 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.8 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,9 +43,7 @@
 #include "rserpoolmessagecreator.h"
 #include "rserpoolmessageparser.h"
 
-#include <glib.h>
 #include <ext_socket.h>
-
 
 
 /* ###### Constructor #################################################### */

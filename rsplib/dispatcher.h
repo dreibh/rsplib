@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: dispatcher.h,v 1.2 2004/08/24 16:03:13 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,16 +35,13 @@
  *
  */
 
-
 #ifndef DISPATCHER_H
 #define DISPATCHER_H
 
-
 #include "tdtypes.h"
 #include "timer.h"
-
-#include <glib.h>
-#include <sys/time.h>
+#include "fdcallback.h"
+#include "leaflinkedredblacktree.h"
 
 
 #ifdef __cplusplus
@@ -52,24 +49,15 @@ extern "C" {
 #endif
 
 
-
 struct Dispatcher
 {
-   void (*Lock)(struct Dispatcher* dispatcher, void* userData);
-   void (*Unlock)(struct Dispatcher* dispatcher, void* userData);
-   void* LockUserData;
+   struct LeafLinkedRedBlackTree TimerStorage;
+   struct LeafLinkedRedBlackTree FDCallbackStorage;
+   bool                          AddRemove;
 
-   GList* TimerList;
-   GList* SocketList;
-   bool   AddRemove;
-};
-
-
-enum FDCallbackEvents
-{
-   FDCE_Read      = (1 << 0),
-   FDCE_Write     = (1 << 1),
-   FDCE_Exception = (1 << 2)
+   void                          (*Lock)(struct Dispatcher* dispatcher, void* userData);
+   void                          (*Unlock)(struct Dispatcher* dispatcher, void* userData);
+   void*                         LockUserData;
 };
 
 
@@ -83,9 +71,10 @@ enum FDCallbackEvents
   * @see dispatcherDefaultLock
   * @see dispatcherDefaultUnlock
   */
-struct Dispatcher* dispatcherNew(void (*lock)(struct Dispatcher* dispatcher, void* userData),
-                                 void (*unlock)(struct Dispatcher* dispatcher, void* userData),
-                                 void* lockUserData);
+void dispatcherNew(struct Dispatcher* dispatcher,
+                   void               (*lock)(struct Dispatcher* dispatcher, void* userData),
+                   void               (*unlock)(struct Dispatcher* dispatcher, void* userData),
+                   void*              lockUserData);
 
 /**
   * Destructor.
@@ -165,50 +154,9 @@ void dispatcherHandleSelectResult(struct Dispatcher* dispatcher,
   */
 void dispatcherEventLoop(struct Dispatcher* dispatcher);
 
-/**
-  * Add file descriptor callback.
-  *
-  * @param dispatcher Dispatcher.
-  * @param fd File descriptor.
-  * @param eventMask Event mask.
-  * @param callback Callback.
-  * @param userData User data for callback.
-  * @param true for success; false otherwise.
-  */
-bool dispatcherAddFDCallback(struct Dispatcher* dispatcher,
-                             int                fd,
-                             int                eventMask,
-                             void               (*callback)(struct Dispatcher* dispatcher,
-                                                            int                fd,
-                                                            int                eventMask,
-                                                            void*              userData),
-                             void*              userData);
-
-/**
-  * Update existing file descriptor callback with new event mask.
-  *
-  * @param dispatcher Dispatcher.
-  * @param fd File descriptor.
-  * @param eventMask Event mask.
-  */
-void dispatcherUpdateFDCallback(struct Dispatcher* dispatcher,
-                                int                fd,
-                                int                eventMask);
-
-/**
-  * Remove file descriptor callback.
-  *
-  * @param dispatcher Dispatcher.
-  * @param fd File descriptor.
-  */
-void dispatcherRemoveFDCallback(struct Dispatcher* dispatcher,
-                                int                fd);
-
-
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

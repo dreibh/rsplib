@@ -1,6 +1,4 @@
 /*
- *  $Id: timer.h,v 1.3 2004/08/24 16:03:13 dreibh Exp $
- *
  * RSerPool implementation.
  *
  * Realized in co-operation between Siemens AG
@@ -31,13 +29,13 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: Timer
+ * Purpose: FDCallback
  *
  */
 
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef FDCALLBACK_H
+#define FDCALLBACK_H
 
 
 #include "tdtypes.h"
@@ -50,75 +48,74 @@ extern "C" {
 #endif
 
 
-struct Timer
+enum FDCallbackEvents
+{
+   FDCE_Read      = (1 << 0),
+   FDCE_Write     = (1 << 1),
+   FDCE_Exception = (1 << 2)
+};
+
+
+struct FDCallback
 {
    struct LeafLinkedRedBlackTreeNode Node;
 
    struct Dispatcher*                Master;
-   unsigned long long                TimeStamp;
+   int                               FD;
+   unsigned int                      EventMask;
    void                              (*Callback)(struct Dispatcher* dispatcher,
-                                                 struct Timer*      timer,
+                                                 int                fd,
+                                                 unsigned int       eventMask,
                                                  void*              userData);
+   card64                            SelectTimeStamp;
    void*                             UserData;
 };
-
 
 
 /**
   * Constructor.
   *
-  * @param timer Timer.
+  * @param fdCallback FDCallback.
   * @param dispatcher Dispatcher.
+  * @param fd File descriptor.
+  * @param eventMask Event mask.
   * @param callback Callback.
   * @param userData User data for callback.
   */
-void timerNew(struct Timer*      timer,
-              struct Dispatcher* dispatcher,
-              void               (*callback)(struct Dispatcher* dispatcher,
-                                             struct Timer*      timer,
-                                             void*              userData),
-              void*              userData);
+void fdCallbackNew(struct FDCallback* fdCallback,
+                   struct Dispatcher* dispatcher,
+                   const int          fd,
+                   const unsigned int eventMask,
+                   void               (*callback)(struct Dispatcher* dispatcher,
+                                                  int                fd,
+                                                  unsigned int       eventMask,
+                                                  void*              userData),
+                   void*              userData);
 
 /**
   * Destructor.
   *
-  * @param timer Timer.
+  * @param fdCallback FDCallback.
   */
-void timerDelete(struct Timer* timer);
+void fdCallbackDelete(struct FDCallback* fdCallback);
 
 /**
-  * Start timer.
+  * Update event mask.
   *
-  * @param timer Timer.
-  * @param timeStamp Time stamp.
+  * @param fdCallback FDCallback.
+  * @param
   */
-void timerStart(struct Timer*            timer,
-                const unsigned long long timeStamp);
+void fdCallbackUpdate(struct FDCallback* fdCallback,
+                      const unsigned int eventMask);
 
 /**
-  * Restart timer (set new timeout for already running timer).
+  * FDCallback comparision function.
   *
-  * @param timer Timer.
-  * @param timeStamp Time stamp.
-  */
-void timerRestart(struct Timer*            timer,
-                  const unsigned long long timeStamp);
-
-/**
-  * Stop timer.
-  *
-  * @param timer Timer.
-  */
-void timerStop(struct Timer* timer);
-
-/**
-  * Timer comparision function.
-  *
-  * @param timerPtr1 Pointer to timer 1.
-  * @param timerPtr2 Pointer to timer 2.
+  * @param fdCallbackPtr1 Pointer to FDCallback 1.
+  * @param fdCallbackPtr2 Pointer to FDCallback 2.
   * @return Comparision result.
   */
-int timerComparison(const void* timerPtr1, const void* timerPtr2);
+int fdCallbackComparison(const void* fdCallbackPtr1, const void* fdCallbackPtr2);
 
 
 #ifdef __cplusplus
