@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.7 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: rsplib.h,v 1.8 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,7 +50,6 @@
 #include "rsplib-tags.h"
 #include "poolpolicysettings.h"
 #include "rserpoolerror.h"
-#include "componentstatusprotocol.h"
 
 
 #ifdef __cplusplus
@@ -344,8 +343,26 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
                      struct TagItem*                tags CPP_DEFAULT(NULL));
 
 
-void rspSessionSetCSPStatus(struct SessionDescriptor* session,
+/**
+  * Set session's application status text for rspGetComponentStatus().
+  *
+  * @param sd SessionDescriptor.
+  * @param statusText Status text.
+  */
+void rspSessionSetCSPStatus(struct SessionDescriptor* sd,
                             const char*               statusText);
+
+
+/**
+  * Get component status. The resulting status is dynamically allocated and has to
+  * be freed by the caller!
+  *
+  * @param caeArray Reference to store pointer to resulting ComponentAssociationEntry array to.
+  * @param statusText Reference of buffer to store status text to.
+  * @return Number of ComponentAssociationEntries created.
+*/
+size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
+                             char*                              statusText);
 
 
 #ifdef __cplusplus

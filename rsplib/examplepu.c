@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.7 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: examplepu.c,v 1.8 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,12 +35,14 @@
  *
  */
 
-
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "rsplib.h"
 #include "breakdetector.h"
+#include "rsplib.h"
+#ifdef ENABLE_CSP
+#include "componentstatusprotocol.h"
+#endif
 
 
 #include <ext_socket.h>
@@ -153,9 +155,12 @@ static void handleServerReply()
 /* ###### Main program ###################################################### */
 int main(int argc, char** argv)
 {
+#ifdef ENABLE_CSP
+   struct CSPReporter        cspReporter;
    uint64_t                  cspIdentifier     = 0;
    unsigned int              cspReportInterval = 0;
    union sockaddr_union      cspReportAddress;
+#endif
    struct TagItem            tags[16];
    struct SessionDescriptor* sessionArray[1];
    unsigned int              statusArray[1];
@@ -168,7 +173,9 @@ int main(int argc, char** argv)
    int                       result;
    int                       i, n;
 
+#ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
@@ -176,6 +183,7 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i],"-auto=",6))) {
          autoInterval = 1000 * (card64)atol((char*)&argv[i][6]);
       }
+#ifdef ENABLE_CSP
       else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
       }
@@ -193,6 +201,7 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#endif
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
@@ -203,7 +212,11 @@ int main(int argc, char** argv)
       }
       else {
          puts("Bad arguments!");
-         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PU Identifier (used for CSP only)}\n",argv[0]);
+         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}"
+#ifdef ENABLE_CSP
+                " {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PU Identifier (used for CSP only)}"
+#endif
+                "\n",argv[0]);
          exit(1);
       }
    }
@@ -212,17 +225,15 @@ int main(int argc, char** argv)
    }
 
    beginLogging();
-   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
-   tags[0].Data = (tagdata_t)&cspReportAddress;
-   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
-   tags[1].Data = (tagdata_t)cspReportInterval;
-   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
-   tags[2].Data = (tagdata_t)&cspIdentifier;
-   tags[3].Tag  = TAG_DONE;
-   if(rspInitialize((struct TagItem*)&tags) != 0) {
+   if(rspInitialize(NULL) != 0) {
       puts("ERROR: Unable to initialize rsplib!");
       exit(1);
    }
+#ifdef ENABLE_CSP
+   if((cspReportInterval > 0) && (cspIdentifier != 0)) {
+      cspReporterNewForRspLib(&cspReporter, cspIdentifier, &cspReportAddress, cspReportInterval);
+   }
+#endif
 #ifndef FAST_BREAK
    installBreakDetector();
 #endif
@@ -322,6 +333,12 @@ int main(int argc, char** argv)
    }
 
    finishLogging();
+#ifdef ENABLE_CSP
+   if(cspReportInterval > 0) {
+      cspReporterDelete(&cspReporter);
+   }
+#endif
+   rspCleanUp();
    puts("\nTerminated!");
    return(0);
 }

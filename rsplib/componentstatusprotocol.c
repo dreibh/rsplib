@@ -1,6 +1,8 @@
 #include "componentstatusprotocol.h"
 #include "timeutilities.h"
 #include "netutilities.h"
+#include "loglevel.h"
+#include "rsplib.h"
 
 
 struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t elements)
@@ -67,4 +69,105 @@ ssize_t componentStatusSend(const union sockaddr_union*             reportAddres
       free(csph);
    }
    return(result);
+}
+
+
+/* ###### Report status ################################################## */
+static void cspReporterCallback(struct Dispatcher* dispatcher,
+                                struct Timer*      timer,
+                                void*              userData)
+{
+   struct CSPReporter*               cspReporter = (struct CSPReporter*)userData;
+   struct ComponentAssociationEntry* caeArray    = NULL;
+   char                              statusText[CSPH_STATUS_TEXT_SIZE];
+   size_t                            caeArraySize;
+
+   LOG_VERBOSE3
+   fputs("Creating and sending CSP report...\n", stdlog);
+   LOG_END
+
+   statusText[0] = 0x00;
+   caeArraySize = cspReporter->CSPGetReportFunction(cspReporter->CSPGetReportFunctionUserData,
+                                                    &caeArray,
+                                                    (char*)&statusText);
+
+   componentStatusSend(&cspReporter->CSPReportAddress,
+                       cspReporter->CSPReportInterval,
+                       cspReporter->CSPIdentifier,
+                       statusText,
+                       caeArray, caeArraySize);
+
+   if(caeArray) {
+      componentAssociationEntryArrayDelete(caeArray);
+   }
+
+   timerStart(&cspReporter->CSPReportTimer,
+              getMicroTime() + cspReporter->CSPReportInterval);
+
+   LOG_VERBOSE3
+   fputs("Sending CSP report completed\n", stdlog);
+   LOG_END
+}
+
+
+void cspReporterNew(struct CSPReporter*         cspReporter,
+                    struct Dispatcher*          dispatcher,
+                    const uint64_t              cspIdentifier,
+                    const union sockaddr_union* cspReportAddress,
+                    const unsigned long long    cspReportInterval,
+                    size_t                      (*cspGetReportFunction)(
+                                                   void*                              userData,
+                                                   struct ComponentAssociationEntry** caeArray,
+                                                   char*                              statusText),
+                    void*                       cspGetReportFunctionUserData)
+{
+   cspReporter->StateMachine = dispatcher;
+   memcpy(&cspReporter->CSPReportAddress,
+          cspReportAddress,
+          getSocklen(&cspReportAddress->sa));
+   cspReporter->CSPReportInterval            = cspReportInterval;
+   cspReporter->CSPIdentifier                = cspIdentifier;
+   cspReporter->CSPGetReportFunction         = cspGetReportFunction;
+   cspReporter->CSPGetReportFunctionUserData = cspGetReportFunctionUserData;
+   timerNew(&cspReporter->CSPReportTimer,
+            cspReporter->StateMachine,
+            cspReporterCallback,
+            cspReporter);
+   timerStart(&cspReporter->CSPReportTimer, 0);
+}
+
+
+void cspReporterDelete(struct CSPReporter* cspReporter)
+{
+   timerDelete(&cspReporter->CSPReportTimer);
+   cspReporter->StateMachine                 = NULL;
+   cspReporter->CSPGetReportFunction         = NULL;
+   cspReporter->CSPGetReportFunctionUserData = NULL;
+}
+
+
+extern struct Dispatcher gDispatcher;
+
+
+static size_t rsplibGetReportFunction(
+                 void*                              userData,
+                 struct ComponentAssociationEntry** caeArray,
+                 char*                              statusText)
+{
+   return(rspGetComponentStatus(caeArray, statusText));
+}
+
+
+void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,
+                             const uint64_t              cspIdentifier,
+                             const union sockaddr_union* cspReportAddress,
+                             const unsigned long long    cspReportInterval)
+{
+   cspReporterNew(cspReporter,
+                  &gDispatcher,
+                  cspIdentifier,
+                  cspReportAddress,
+                  cspReportInterval,
+                  rsplibGetReportFunction,
+                  NULL);
 }

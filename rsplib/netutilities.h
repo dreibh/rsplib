@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.9 2004/11/09 13:54:17 tuexen Exp $
+ *  $Id: netutilities.h,v 1.10 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,6 +47,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ext_socket.h>
+#include <byteswap.h>
 
 
 #ifdef __cplusplus
@@ -71,7 +72,7 @@ extern "C" {
   */
 inline uint64_t hton64(const uint64_t value)
 {
-   return(value);
+   return(bswap_64(value));
 }
 
 
@@ -83,7 +84,7 @@ inline uint64_t hton64(const uint64_t value)
   */
 inline uint64_t ntoh64(const uint64_t value)
 {
-   return(value);
+   return(bswap_64(value));
 }
 
 
@@ -286,17 +287,17 @@ bool bindplus(int                   sockfd,
   * @param timeout Timeout for sending data.
   * @param Bytes sent or -1 in case of error.
   */
-int sendtoplus(int                   sockfd,
-               const void*           buffer,
-               const size_t          length,
-               const int             flags,
-               union sockaddr_union* toaddrs,
-               const size_t          toaddrcnt,
-               const uint32_t        ppid,
-               const sctp_assoc_t    assocID,
-               const uint16_t        streamID,
-               const uint32_t        timeToLive,
-               const card64          timeout);
+int sendtoplus(int                      sockfd,
+               const void*              buffer,
+               const size_t             length,
+               const int                flags,
+               union sockaddr_union*    toaddrs,
+               const size_t             toaddrcnt,
+               const uint32_t           ppid,
+               const sctp_assoc_t       assocID,
+               const uint16_t           streamID,
+               const uint32_t           timeToLive,
+               const unsigned long long timeout);
 
 /**
   * Wrapper for recvmsg() with timeout and support for SCTP parameters.
@@ -304,7 +305,7 @@ int sendtoplus(int                   sockfd,
   * @param sockfd Socket descriptor.
   * @param buffer Buffer to store read data to.
   * @param length Length of buffer.
-  * @param flags recvmsg() flags. ??????????????
+  * @param flags Reference to store recvmsg() flags.
   * @param from Reference to store source address to or NULL if not necessary.
   * @param fromlen Reference to store source address length to or NULL if not necessary.
   * @param ppid Reference to store SCTP Payload Protocol Identifier to.
@@ -314,16 +315,16 @@ int sendtoplus(int                   sockfd,
   * @param timeout Timeout for receiving data.
   * @param Bytes read or -1 in case of error.
   */
-int recvfromplus(int              sockfd,
-                 void*            buffer,
-                 size_t           length,
-                 int*             flags,
-                 struct sockaddr* from,
-                 socklen_t*       fromlen,
-                 uint32_t*        ppid,
-                 sctp_assoc_t*    assocID,
-                 uint16_t*        streamID,
-                 const card64     timeout);
+int recvfromplus(int                      sockfd,
+                 void*                    buffer,
+                 size_t                   length,
+                 int*                     flags,
+                 struct sockaddr*         from,
+                 socklen_t*               fromlen,
+                 uint32_t*                ppid,
+                 sctp_assoc_t*            assocID,
+                 uint16_t*                streamID,
+                 const unsigned long long timeout);
 
 /**
   * Join or leave a multicast group.
@@ -348,7 +349,7 @@ int establish(const int             socketDomain,
               const int             socketProtocol,
               union sockaddr_union* addressArray,
               const size_t          addresses,
-              const card64          timeout);
+              const unsigned long long          timeout);
 
 
 #define TAG_TuneSCTP_MinRTO      (TAG_USER + 15000)

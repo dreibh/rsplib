@@ -1,9 +1,12 @@
 #ifndef COMPONENTSTATUSPROTOCOL_H
 #define COMPONENTSTATUSPROTOCOL_H
 
-#include "sockaddrunion.h"
 #include <sys/types.h>
 #include <inttypes.h>
+#include "sockaddrunion.h"
+#include "dispatcher.h"
+#include "timer.h"
+
 
 #define CID_GROUP(id)  (((uint64_t)id >> 56) & (0xffffLL))
 #define CID_OBJECT(id) ((uint64_t)id & 0xffffffffffffffLL)
@@ -25,16 +28,19 @@ struct ComponentAssociationEntry
 };
 
 
+#define CSPH_STATUS_TEXT_SIZE 128
+
 struct ComponentStatusProtocolHeader
 {
    uint16_t                         Type;
    uint16_t                         Version;
    uint32_t                         Length;
 
-   u_int64_t                         SenderID;
-   u_int64_t                         ReportInterval;
-   u_int64_t                         SenderTimeStamp;
-   char                             StatusText[128];
+   u_int64_t                        SenderID;
+   u_int64_t                        ReportInterval;
+   u_int64_t                        SenderTimeStamp;
+
+   char                             StatusText[CSPH_STATUS_TEXT_SIZE];
 
    uint32_t                         Associations;
    struct ComponentAssociationEntry AssociationArray[];
@@ -47,12 +53,39 @@ struct ComponentStatusProtocolHeader
 struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t elements);
 void componentAssociationEntryArrayDelete(struct ComponentAssociationEntry* associationArray);
 
-ssize_t componentStatusSend(const union sockaddr_union*             reportAddress,
-                            const uint64_t                          reportInterval,
-                            const uint64_t                          senderID,
-                            const char*                             statusText,
-                            const struct ComponentAssociationEntry* associationArray,
-                            const size_t                            associations);
 
+
+
+struct CSPReporter
+{
+   struct Dispatcher*   StateMachine;
+   uint64_t             CSPIdentifier;
+   union sockaddr_union CSPReportAddress;
+   unsigned long long   CSPReportInterval;
+   struct Timer         CSPReportTimer;
+
+   size_t               (*CSPGetReportFunction)(
+                           void*                              userData,
+                           struct ComponentAssociationEntry** caeArray,
+                           char*                              statusText);
+   void*                CSPGetReportFunctionUserData;
+};
+
+
+void cspReporterNew(struct CSPReporter*         cspReporter,
+                    struct Dispatcher*          dispatcher,
+                    const uint64_t              cspIdentifier,
+                    const union sockaddr_union* cspReportAddress,
+                    const unsigned long long    cspReportInterval,
+                    size_t                      (*cspGetReportFunction)(
+                                                   void*                              userData,
+                                                   struct ComponentAssociationEntry** caeArray,
+                                                   char*                              statusText),
+                    void*                       cspGetReportFunctionUserData);
+void cspReporterDelete(struct CSPReporter* cspReporter);
+void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,
+                             const uint64_t              cspIdentifier,
+                             const union sockaddr_union* cspReportAddress,
+                             const unsigned long long    cspReportInterval);
 
 #endif

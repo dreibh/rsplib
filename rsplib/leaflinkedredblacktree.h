@@ -23,6 +23,7 @@
 #ifndef LEAFLINKEDREDBLACKTREE_H
 #define LEAFLINKEDREDBLACKTREE_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "debug.h"
 #include "doublelinkedringlist.h"
@@ -168,7 +169,7 @@ inline void leafLinkedRedBlackTreePrint(struct LeafLinkedRedBlackTree* llrbt,
 {
 #ifdef DEBUG
    fprintf(fd, "\n\nroot=%p[", llrbt->NullNode.LeftSubtree);
-   llrbt->PrintFunction(llrbt->NullNode.LeftSubtree);
+   llrbt->PrintFunction(llrbt->NullNode.LeftSubtree, fd);
    fprintf(fd, "] null=%p   \n", &llrbt->NullNode);
 #endif
    leafLinkedRedBlackTreeInternalPrint(llrbt, llrbt->NullNode.LeftSubtree, fd);
@@ -326,7 +327,7 @@ inline struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeFind(
 {
 #ifdef DEBUG
    printf("find: ");
-   llrbt->PrintFunction(cmpNode);
+   llrbt->PrintFunction(cmpNode, stdout);
    printf("\n");
 #endif
 

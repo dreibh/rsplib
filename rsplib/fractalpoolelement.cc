@@ -36,6 +36,9 @@
 #include "timeutilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
+#ifdef ENABLE_CSP
+#include "componentstatusprotocol.h"
+#endif
 
 #include "fractalgeneratorexample.h"
 
@@ -436,9 +439,6 @@ static void* rsplibMainLoop(void* args)
 int main(int argc, char** argv)
 {
    uint32_t                      identifier        = 0;
-   uint64_t                      cspIdentifier;
-   unsigned int                  cspReportInterval = 0;
-   union sockaddr_union          cspReportAddress;
    unsigned int                  reregInterval     = 5000;
    struct PoolElementDescriptor* poolElement;
    struct TagItem                tags[16];
@@ -457,8 +457,16 @@ int main(int argc, char** argv)
    unsigned int                  policyParameterLoadDegradation = 0;
    int                           i;
    int                           result;
+#ifdef ENABLE_CSP
+   struct CSPReporter            cspReporter;
+   uint64_t                      cspIdentifier;
+   unsigned int                  cspReportInterval = 0;
+   union sockaddr_union          cspReportAddress;
+#endif
 
+#ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
+#endif
    start = getMicroTime();
    stop  = 0;
    for(i = 1;i < argc;i++) {
@@ -474,6 +482,7 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-ph=" ,4))) {
          poolHandle = (char*)&argv[i][4];
       }
+#ifdef ENABLE_CSP
       else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          identifier = atol((char*)&argv[i][12]);
       }
@@ -491,6 +500,7 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#endif
       else if(!(strncmp(argv[i], "-load=" ,6))) {
          policyParameterLoad = atol((char*)&argv[i][6]);
          if(policyParameterLoad > 0xffffff) {
@@ -580,26 +590,28 @@ int main(int argc, char** argv)
       else {
          std::cerr << "Bad argument \"" << argv[i] << "\"!"  << std::endl;
          std::cerr << "Usage: " << argv[0]
-                   << " {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PE Identifier}"
+                   << " {-nameserver=Nameserver address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}";
+#ifdef ENABLE_CSP
+         std::cerr << "{-cspreportaddress=Address} {-cspreportinterval=Microseconds} ";
+#endif
+         std::cerr << " {-identifier=PE Identifier}"
                    << std::endl;
          exit(1);
       }
    }
 
    beginLogging();
-   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
-   tags[0].Data = (tagdata_t)&cspReportAddress;
-   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
-   tags[1].Data = (tagdata_t)cspReportInterval;
-   cspIdentifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
-   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
-   tags[2].Data = (tagdata_t)&cspIdentifier;
-   tags[3].Tag  = TAG_DONE;
-   if(rspInitialize((struct TagItem*)&tags) != 0) {
+   if(rspInitialize(NULL) != 0) {
       std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
       finishLogging();
       exit(1);
    }
+#ifdef ENABLE_CSP
+   cspIdentifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
+   if(cspReportInterval > 0) {
+      cspReporterNewForRspLib(&cspReporter, cspIdentifier, &cspReportAddress, cspReportInterval);
+   }
+#endif
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-nameserver=" ,12))) {
@@ -731,6 +743,12 @@ int main(int argc, char** argv)
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
    finishLogging();
+#ifdef ENABLE_CSP
+   if(cspReportInterval > 0) {
+      cspReporterDelete(&cspReporter);
+   }
+#endif
+   rspCleanUp();
    std::cout << std::endl << "Terminated!" << std::endl;
    return(0);
 }

@@ -11,7 +11,9 @@
 #include <complex>
 
 #include "rsplib.h"
-#include "rsplib-tags.h"
+#ifdef ENABLE_CSP
+#include "componentstatusprotocol.h"
+#endif
 #include "loglevel.h"
 #include "netutilities.h"
 
@@ -361,15 +363,18 @@ static void* rsplibMainLoop(void* args)
 
 int main(int argc, char** argv)
 {
+#ifdef ENABLE_CSP
+   struct CSPReporter   cspReporter;
    uint64_t             cspIdentifier     = 0;
    unsigned int         cspReportInterval = 0;
    union sockaddr_union cspReportAddress;
-   struct TagItem       tags[16];
+#endif
    pthread_t            rsplibThread;
    int                  i;
 
    string2address("127.0.0.1:2960", &cspReportAddress);
    for(i = 1;i < argc;i++) {
+#ifdef ENABLE_CSP
       if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
       }
@@ -387,6 +392,7 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#endif
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
@@ -395,17 +401,15 @@ int main(int argc, char** argv)
    }
 
    beginLogging();
-   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
-   tags[0].Data = (tagdata_t)&cspReportAddress;
-   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
-   tags[1].Data = (tagdata_t)cspReportInterval;
-   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
-   tags[2].Data = (tagdata_t)&cspIdentifier;
-   tags[3].Tag  = TAG_DONE;
-   if(rspInitialize((struct TagItem*)&tags) != 0) {
+   if(rspInitialize(NULL) != 0) {
       std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
       exit(1);
    }
+#ifdef ENABLE_CSP
+   if((cspReportInterval > 0) && (cspIdentifier != 0)) {
+      cspReporterNewForRspLib(&cspReporter, cspIdentifier, &cspReportAddress, cspReportInterval);
+   }
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-nameserver=" ,12))) {
          if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
@@ -419,9 +423,19 @@ int main(int argc, char** argv)
       puts("ERROR: Unable to create rsplib main loop thread!");
    }
 
+
    QApplication application(argc, argv);
    FractalPU* fractalPU = new FractalPU(400, 250);
    Q_CHECK_PTR(fractalPU);
    fractalPU->show();
-   return(application.exec());
+   const int result = application.exec();
+
+
+#ifdef ENABLE_CSP
+   if(cspReportInterval > 0) {
+      cspReporterDelete(&cspReporter);
+   }
+#endif
+   rspCleanUp();
+   return(result);
 }

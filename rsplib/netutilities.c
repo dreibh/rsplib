@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.18 2004/11/09 13:54:17 tuexen Exp $
+ *  $Id: netutilities.c,v 1.19 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -869,17 +869,17 @@ bool bindplus(int                   sockfd,
 
 /* ###### sendmsg() wrapper ############################################## */
 #define MAX_TRANSPORTADDRESSES 32
-int sendtoplus(int                   sockfd,
-               const void*           buffer,
-               const size_t          length,
-               const int             flags,
-               union sockaddr_union* toaddrs,
-               const size_t          toaddrcnt,
-               const uint32_t        ppid,
-               const sctp_assoc_t    assocID,
-               const uint16_t        streamID,
-               const uint32_t        timeToLive,
-               const card64          timeout)
+int sendtoplus(int                      sockfd,
+               const void*              buffer,
+               const size_t             length,
+               const int                flags,
+               union sockaddr_union*    toaddrs,
+               const size_t             toaddrcnt,
+               const uint32_t           ppid,
+               const sctp_assoc_t       assocID,
+               const uint16_t           streamID,
+               const uint32_t           timeToLive,
+               const unsigned long long timeout)
 {
    union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
    size_t                 addresses;
@@ -1017,7 +1017,7 @@ int recvfromplus(int              sockfd,
                  uint32_t*        ppid,
                  sctp_assoc_t*    assocID,
                  uint16_t*        streamID,
-                 const card64     timeout)
+                 const unsigned long long     timeout)
 {
    struct sctp_sndrcvinfo* sri;
    struct iovec    iov = { (char*)buffer, length };
@@ -1393,7 +1393,7 @@ int establish(const int             socketDomain,
               const int             socketProtocol,
               union sockaddr_union* addressArray,
               const size_t          addresses,
-              const card64          timeout)
+              const unsigned long long          timeout)
 {
    fd_set               fdset;
    struct timeval       to;
@@ -1452,7 +1452,7 @@ int establish(const int             socketDomain,
          to.tv_usec = timeout % 1000000;
          LOG_VERBOSE2
          fprintf(stdlog, "Waiting for association establishment with timeout %Ld [µs]...\n",
-                 ((card64)to.tv_sec * (card64)1000000) + (card64)to.tv_usec);
+                 ((unsigned long long)to.tv_sec * (unsigned long long)1000000) + (unsigned long long)to.tv_usec);
          LOG_END
          result = ext_select(sockfd + 1, NULL, &fdset, NULL, &to);
          LOG_VERBOSE2

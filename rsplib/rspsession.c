@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.18 2004/09/28 12:30:26 dreibh Exp $
+ *  $Id: rspsession.c,v 1.19 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1251,39 +1251,37 @@ void rspSessionSetCSPStatus(struct SessionDescriptor* session,
 }
 
 
-/* ###### Send CSP report ################################################ */
-void rspSendCSPReport(const int                   nameServerSocket,
-                      const ENRPIdentifierType    nameServerID,
-                      const int                   nameServerSocketProtocol,
-                      const unsigned long long    nameServerConnectionTimeStamp,
-                      const uint64_t              cspIdentifier,
-                      const union sockaddr_union* cspReportAddress,
-                      const unsigned long long    cspReportInterval)
+/* ###### Get CSP status ################################################# */
+size_t rspSessionCreateComponentStatus(
+          struct ComponentAssociationEntry** caeArray,
+          char*                              statusText,
+          const int                          nameServerSocket,
+          const ENRPIdentifierType           nameServerID,
+          const int                          nameServerSocketProtocol,
+          const unsigned long long           nameServerConnectionTimeStamp)
 {
-   struct ComponentAssociationEntry* caeArray;
    size_t                            caeArraySize;
-   char                              statusText[128];
    GList*                            list;
    struct SessionDescriptor*         session;
    size_t                            sessions;
 
    LOG_VERBOSE3
-   fputs("Sending a Component Status Protocol report...\n", stdlog);
+   fputs("Getting Component Status...\n", stdlog);
    LOG_END
 
    dispatcherLock(&gDispatcher);
 
    sessions     = g_list_length(gSessionList);
-   caeArray     = componentAssociationEntryArrayNew(1 + sessions);
+   *caeArray    = componentAssociationEntryArrayNew(1 + sessions);
    caeArraySize = 0;
-   if(caeArray) {
+   if(*caeArray) {
       statusText[0] = 0x00;
       if(nameServerSocket >= 0) {
-         caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
-         caeArray[caeArraySize].Duration   = getMicroTime() - nameServerConnectionTimeStamp;
-         caeArray[caeArraySize].Flags      = 0;
-         caeArray[caeArraySize].ProtocolID = nameServerSocketProtocol;
-         caeArray[caeArraySize].PPID       = PPID_ASAP;
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
+         (*caeArray)[caeArraySize].Duration   = getMicroTime() - nameServerConnectionTimeStamp;
+         (*caeArray)[caeArraySize].Flags      = 0;
+         (*caeArray)[caeArraySize].ProtocolID = nameServerSocketProtocol;
+         (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
          caeArraySize++;
       }
 
@@ -1292,17 +1290,17 @@ void rspSendCSPReport(const int                   nameServerSocket,
          session = (struct SessionDescriptor*)list->data;
          if(!session->Incoming) {
             if(session->Socket >= 0) {
-               caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Identifier);
-               caeArray[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
-               caeArray[caeArraySize].Flags      = 0;
-               caeArray[caeArraySize].ProtocolID = session->SocketProtocol;
-               caeArray[caeArraySize].PPID       = 0;
+               (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Identifier);
+               (*caeArray)[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
+               (*caeArray)[caeArraySize].Flags      = 0;
+               (*caeArray)[caeArraySize].ProtocolID = session->SocketProtocol;
+               (*caeArray)[caeArraySize].PPID       = 0;
                caeArraySize++;
             }
             if(session->CSPStatusText[0] != 0x00) {
-               safestrcpy((char*)&statusText,
+               safestrcpy(statusText,
                           session->CSPStatusText,
-                          sizeof(statusText));
+                          CSPH_STATUS_TEXT_SIZE);
             }
          }
 
@@ -1310,23 +1308,13 @@ void rspSendCSPReport(const int                   nameServerSocket,
       }
 
       if((statusText[0] == 0x00) || (sessions != 1)) {
-         snprintf((char*)&statusText, sizeof(statusText),
+         snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
                   "%u Session%s", sessions, (sessions == 1) ? "" : "s");
       }
-
-      if(componentStatusSend(cspReportAddress,
-                             cspReportInterval,
-                             cspIdentifier,
-                             (const char*)&statusText,
-                             caeArray,
-                             caeArraySize) < 0) {
-         LOG_WARNING
-         fputs("Unable to send Component Status Protocol report\n", stdlog);
-         LOG_END
-      }
-
-      componentAssociationEntryArrayDelete(caeArray);
    }
 
    dispatcherUnlock(&gDispatcher);
+
+   return(caeArraySize);
 }
+

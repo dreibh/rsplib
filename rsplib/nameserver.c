@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.39 2004/11/09 13:54:17 tuexen Exp $
+ *  $Id: nameserver.c,v 1.40 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,7 +48,9 @@
 #include "poolnamespacemanagement.h"
 #include "randomizer.h"
 #include "breakdetector.h"
+#ifdef ENABLE_CSP
 #include "componentstatusprotocol.h"
+#endif
 
 #include <ext_socket.h>
 #include <net/if.h>
@@ -431,10 +433,6 @@ struct NameServer
    bool                                     ENRPUseMulticast;
    struct Timer                             ENRPAnnounceTimer;
 
-   struct Timer                             CSPReportTimer;
-   unsigned long long                       CSPReportInterval;
-   union sockaddr_union                     CSPReportAddress;
-
    bool                                     InInitializationPhase;
    ENRPIdentifierType                       MentorServerID;
 
@@ -451,18 +449,22 @@ struct NameServer
    unsigned long long                       PeerMaxTimeNoResponse;
    unsigned long long                       MentorHuntTimeout;
    unsigned long long                       TakeoverExpiryInterval;
+
+#ifdef ENABLE_CSP
+   struct CSPReporter                       CSPReporter;
+   unsigned long long                       CSPReportInterval;
+   union sockaddr_union                     CSPReportAddress;
+#endif
 };
 
 
 void nameServerDumpNamespace(struct NameServer* nameServer);
+void nameServerDumpPeers(struct NameServer* nameServer);
+static size_t nameServerGetReportFunction(
+                 void*                              userData,
+                 struct ComponentAssociationEntry** caeArray,
+                 char*                              statusText);
 
-void nameServerDumpPeers(struct NameServer* nameServer)
-{
-   fputs("*************** Peers ********************\n", stdlog);
-   ST_CLASS(peerListManagementPrint)(&nameServer->Peers, stdlog, PLPO_FULL);
-   fputs("******************************************\n", stdlog);
-
-}
 
 struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                  int                           asapSocket,
@@ -473,9 +475,12 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                  const union sockaddr_union*   asapAnnounceAddress,
                                  const bool                    enrpUseMulticast,
                                  const bool                    enrpAnnounceViaMulticast,
-                                 const union sockaddr_union*   enrpMulticastAddress,
-                                 const unsigned long long      cspReportInterval,
-                                 const union sockaddr_union*   cspReportAddress);
+                                 const union sockaddr_union*   enrpMulticastAddress
+#ifdef ENABLE_CSP
+                                 , const unsigned long long      cspReportInterval,
+                                 const union sockaddr_union*   cspReportAddress
+#endif
+                                 );
 void nameServerDelete(struct NameServer* nameServer);
 
 static void sendPeerNameUpdate(struct NameServer*                nameServer,
@@ -503,9 +508,6 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
 static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
                                         struct Timer*      timer,
                                         void*              userData);
-static void cspReportCallback(struct Dispatcher* dispatcher,
-                              struct Timer*      timer,
-                              void*              userData);
 static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      int                fd,
                                      unsigned int       eventMask,
@@ -541,9 +543,12 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                                  const union sockaddr_union*   asapAnnounceAddress,
                                  const bool                    enrpUseMulticast,
                                  const bool                    enrpAnnounceViaMulticast,
-                                 const union sockaddr_union*   enrpMulticastAddress,
-                                 const unsigned long long      cspReportInterval,
-                                 const union sockaddr_union*   cspReportAddress)
+                                 const union sockaddr_union*   enrpMulticastAddress
+#ifdef ENABLE_CSP
+                                 , const unsigned long long      cspReportInterval,
+                                 const union sockaddr_union*   cspReportAddress
+#endif
+                                 )
 {
    struct NameServer* nameServer = (struct NameServer*)malloc(sizeof(struct NameServer));
    if(nameServer != NULL) {
@@ -583,10 +588,6 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                &nameServer->StateMachine,
                takeoverExpiryTimerCallback,
                (void*)nameServer);
-      timerNew(&nameServer->CSPReportTimer,
-               &nameServer->StateMachine,
-               cspReportCallback,
-               (void*)nameServer);
       takeoverProcessListNew(&nameServer->Takeovers);
 
       nameServer->InInitializationPhase    = true;
@@ -602,7 +603,6 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->ENRPUseMulticast         = enrpUseMulticast;
       nameServer->ENRPAnnounceViaMulticast = enrpAnnounceViaMulticast;
 
-      nameServer->CSPReportInterval        = cspReportInterval;
 
       nameServer->MaxBadPEReports                       = NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS;
       nameServer->ServerAnnounceCycle                   = NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE;
@@ -642,10 +642,6 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                     nameServerSocketCallback,
                     (void*)nameServer);
 
-      if(nameServer->CSPReportInterval > 0) {
-         memcpy(&nameServer->CSPReportAddress, cspReportAddress, sizeof(nameServer->CSPReportAddress));
-      }
-
       memcpy(&nameServer->ENRPMulticastAddress, enrpMulticastAddress, sizeof(nameServer->ENRPMulticastAddress));
       if(nameServer->ENRPMulticastAddress.in6.sin6_family == AF_INET6) {
          nameServer->ENRPMulticastSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
@@ -679,9 +675,20 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
          }
       }
 
+#ifdef ENABLE_CSP
+      nameServer->CSPReportInterval = cspReportInterval;
       if(nameServer->CSPReportInterval > 0) {
-         timerStart(&nameServer->CSPReportTimer, 0);
+         memcpy(&nameServer->CSPReportAddress,
+                cspReportAddress,
+                sizeof(nameServer->CSPReportAddress));
+         cspReporterNew(&nameServer->CSPReporter, &nameServer->StateMachine,
+                        CID_COMPOUND(CID_GROUP_NAMESERVER, nameServer->ServerID),
+                        &nameServer->CSPReportAddress,
+                        nameServer->CSPReportInterval,
+                        nameServerGetReportFunction,
+                        nameServer);
       }
+#endif
    }
 
    return(nameServer);
@@ -698,7 +705,9 @@ void nameServerDelete(struct NameServer* nameServer)
       ST_CLASS(peerListManagementDelete)(&nameServer->Peers);
       ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
       ST_CLASS(poolNamespaceManagementDelete)(&nameServer->Namespace);
-      timerDelete(&nameServer->CSPReportTimer);
+#ifdef ENABLE_CSP
+      cspReporterDelete(&nameServer->CSPReporter);
+#endif
       timerDelete(&nameServer->TakeoverExpiryTimer);
       timerDelete(&nameServer->ASAPAnnounceTimer);
       timerDelete(&nameServer->ENRPAnnounceTimer);
@@ -732,6 +741,15 @@ void nameServerDumpNamespace(struct NameServer* nameServer)
    fputs("\n", stdlog);
    ST_CLASS(poolNamespaceManagementPrint)(&nameServer->Namespace, stdlog,
             PNNPO_POOLS_INDEX|PNNPO_POOLS_SELECTION|PNNPO_POOLS_TIMER|PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
+   fputs("**********************************************\n", stdlog);
+}
+
+
+/* ###### Dump peers ##################################################### */
+void nameServerDumpPeers(struct NameServer* nameServer)
+{
+   fputs("*************** Peers ************************\n", stdlog);
+   ST_CLASS(peerListManagementPrint)(&nameServer->Peers, stdlog, PLPO_FULL);
    fputs("**********************************************\n", stdlog);
 }
 
@@ -3044,18 +3062,19 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
 }
 
 
-static void cspReportCallback(struct Dispatcher* dispatcher,
-                              struct Timer*      timer,
-                              void*              userData)
+#ifdef ENABLE_CSP
+/* ###### Get CSP report ################################################# */
+static size_t nameServerGetReportFunction(
+                 void*                              userData,
+                 struct ComponentAssociationEntry** caeArray,
+                 char*                              statusText)
 {
-   struct ST_CLASS(PeerListNode)*    peerListNode;
-   struct NameServer*                nameServer = (struct NameServer*)userData;
-   struct ComponentAssociationEntry* caeArray;
-   size_t                            caeArraySize;
-   char                              statusText[128];
-   size_t                            peers;
-   size_t                            pools;
-   size_t                            poolElements;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct NameServer*             nameServer = (struct NameServer*)userData;
+   size_t                         caeArraySize;
+   size_t                         peers;
+   size_t                         pools;
+   size_t                         poolElements;
 
    LOG_VERBOSE2
    fputs("Sending a Component Status Protocol report...\n", stdlog);
@@ -3063,49 +3082,37 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
    peers        = ST_CLASS(peerListManagementGetPeers)(&nameServer->Peers);
    pools        = ST_CLASS(poolNamespaceManagementGetPools)(&nameServer->Namespace);
    poolElements = ST_CLASS(poolNamespaceManagementGetPoolElements)(&nameServer->Namespace);
-   snprintf((char*)&statusText, sizeof(statusText),
+   snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
             "%u PEs in %u Pools, %u Peers",
             poolElements, pools, peers);
 
-   caeArray     = componentAssociationEntryArrayNew(peers);
+   *caeArray    = componentAssociationEntryArrayNew(peers);
    caeArraySize = 0;
-   if(caeArray) {
+   if(*caeArray) {
       peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&nameServer->Peers.List);
       while(peerListNode != NULL) {
          if( (peerListNode->Identifier != 0) &&
              (!(peerListNode->Flags & PLNF_MULTICAST)) ) {
          }
 
-         caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, peerListNode->Identifier);
-         caeArray[caeArraySize].Duration   = ~0;
-         caeArray[caeArraySize].Flags      = 0;
-         caeArray[caeArraySize].ProtocolID = IPPROTO_SCTP;
-         caeArray[caeArraySize].PPID       = PPID_ENRP;
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, peerListNode->Identifier);
+         (*caeArray)[caeArraySize].Duration   = ~0;
+         (*caeArray)[caeArraySize].Flags      = 0;
+         (*caeArray)[caeArraySize].ProtocolID = IPPROTO_SCTP;
+         (*caeArray)[caeArraySize].PPID       = PPID_ENRP;
          caeArraySize++;
 
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
                            &nameServer->Peers.List,
                            peerListNode);
       }
-
-      if(componentStatusSend(&nameServer->CSPReportAddress,
-                             nameServer->CSPReportInterval,
-                             CID_COMPOUND(CID_GROUP_NAMESERVER, nameServer->ServerID),
-                             (const char*)&statusText,
-                             caeArray,
-                             caeArraySize) < 0) {
-         LOG_WARNING
-         fputs("Unable to send Component Status Protocol report\n", stdlog);
-         LOG_END
-      }
-
-      componentAssociationEntryArrayDelete(caeArray);
    }
-
-   timerRestart(&nameServer->CSPReportTimer, getMicroTime() + nameServer->CSPReportInterval);
+   return(caeArraySize);
 }
+#endif
 
 
+/* ###### Add static peer ################################################ */
 unsigned int nameServerAddStaticPeer(
                 struct NameServer*                  nameServer,
                 const ENRPIdentifierType            identifier,
@@ -3126,6 +3133,7 @@ unsigned int nameServerAddStaticPeer(
 }
 
 
+/* ###### Add peer ####################################################### */
 static void addPeer(struct NameServer* nameServer, char* arg)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
@@ -3291,8 +3299,10 @@ int main(int argc, char** argv)
    struct NameServer*            nameServer;
    uint32_t                      serverID   = 0;
    int                           asapSocket = -1;
+#ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
    unsigned long long            cspReportInterval = 0;
+#endif
    char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapAddress = (struct TransportAddressBlock*)&asapAddressBuffer;
    union sockaddr_union          asapAnnounceAddress;
@@ -3314,7 +3324,9 @@ int main(int argc, char** argv)
 
 
    /* ====== Get arguments =============================================== */
+#ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncasecmp(argv[i], "-tcp=",5))) {
          fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
@@ -3338,6 +3350,7 @@ int main(int argc, char** argv)
       else if(!(strncasecmp(argv[i], "-maxbadpereports=",17))) {
          /* to be handled later */
       }
+#ifdef ENABLE_CSP
       else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
          cspReportInterval = atol((char*)&argv[i][19]);
       }
@@ -3352,6 +3365,12 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#else
+      else if((!(strncasecmp(argv[i], "-cspreportinterval=", 19))) ||
+              (!(strncasecmp(argv[i], "-cspreportaddress=", 18)))) {
+         fprintf(stderr, "WARNING: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
+      }
+#endif
       else if(!(strcasecmp(argv[i], "-asapannounce=auto"))) {
          string2address("239.0.0.1:3863", &asapAnnounceAddress);
          asapSendAnnounces = true;
@@ -3399,7 +3418,11 @@ int main(int argc, char** argv)
          }
       }
       else {
-         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}  {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PE Identifier}\n",argv[0]);
+         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
+#ifdef ENABLE_CSP
+          "{-cspreportaddress=Address} {-cspreportinterval=Microseconds}"
+#endif
+          "{-identifier=PE Identifier}\n",argv[0]);
          exit(1);
       }
    }
@@ -3418,8 +3441,11 @@ int main(int argc, char** argv)
                               asapSocket, asapAddress,
                               enrpUnicastSocket, enrpUnicastAddress,
                               asapSendAnnounces, (union sockaddr_union*)&asapAnnounceAddress,
-                              enrpUseMulticast, enrpAnnounceViaMulticast, (union sockaddr_union*)&enrpMulticastAddress,
-                              cspReportInterval, &cspReportAddress);
+                              enrpUseMulticast, enrpAnnounceViaMulticast, (union sockaddr_union*)&enrpMulticastAddress
+#ifdef ENABLE_CSP
+                              , cspReportInterval, &cspReportAddress
+#endif
+                              );
    if(nameServer == NULL) {
       fprintf(stderr, "ERROR: Unable to initialize NameServer object!\n");
       exit(1);
@@ -3475,12 +3501,14 @@ int main(int argc, char** argv)
    else {
       printf("Off\n");
    }
+#ifdef ENABLE_CSP
    if(cspReportInterval > 0) {
       printf("CSP Report Address:     ");
       fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
       puts("");
       printf("CSP Report Interval:    %Ldµs\n", cspReportInterval);
    }
+#endif
 
    puts("\nASAP Parameters:");
    printf("   Max Bad PE Reports:                          %d\n",    nameServer->MaxBadPEReports);

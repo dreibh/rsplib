@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.15 2004/09/23 10:37:17 dreibh Exp $
+ *  $Id: rsplib.c,v 1.16 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -52,6 +52,15 @@
 struct Dispatcher           gDispatcher;
 static struct ASAPInstance* gAsapInstance = NULL;
 static struct ThreadSafety  gThreadSafety;
+
+
+size_t rspSessionCreateComponentStatus(
+          struct ComponentAssociationEntry** caeArray,
+          char*                              statusText,
+          const int                          nameServerSocket,
+          const ENRPIdentifierType           nameServerID,
+          const int                          nameServerSocketProtocol,
+          const unsigned long long           nameServerConnectionTimeStamp);
 
 
 /* ###### Lock mutex ###################################################### */
@@ -382,122 +391,130 @@ int rspSelect(int             n,
    card64         newTimeout;
    int            result;
 
-   if(&gDispatcher) {   // ??????????????????
-      /* ====== Schedule ================================================= */
-      /* pthreads seem to have the property that scheduling is quite
-         unfair -> If the main loop only invokes rspSelect(), this
-         may block other threads forever => explicitly let other threads
-         do their work now, then lock! */
-      sched_yield();
+   /* ====== Schedule ==================================================== */
+   /* pthreads seem to have the property that scheduling is quite
+      unfair -> If the main loop only invokes rspSelect(), this
+      may block other threads forever => explicitly let other threads
+      do their work now, then lock! */
+   sched_yield();
 
-      /* ====== Collect data for ext_select() call ======================= */
-      lock(&gDispatcher, NULL);
-      if(timeout == NULL) {
-         userTimeout = (card64)~0;
-         mytimeout.tv_sec  = ~0;
-         mytimeout.tv_usec = 0;
-      }
-      else {
-         userTimeout = ((card64)timeout->tv_sec * 1000000) + (card64)timeout->tv_usec;
-      }
-      dispatcherGetSelectParameters(&gDispatcher, &myn, &myreadfds, &mywritefds, &myexceptfds, &testfds, &testTS, &mytimeout);
-      asapTimeout = ((card64)mytimeout.tv_sec * 1000000) + (card64)mytimeout.tv_usec;
-      newTimeout  = min(userTimeout, asapTimeout);
-      mytimeout.tv_sec  = newTimeout / 1000000;
-      mytimeout.tv_usec = newTimeout % 1000000;
-
-      if(readfds) {
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,readfds)) {
-               FD_SET(i,&myreadfds);
-            }
-         }
-      }
-      if(writefds) {
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,writefds)) {
-               FD_SET(i,&mywritefds);
-            }
-         }
-      }
-      if(exceptfds) {
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,exceptfds)) {
-               FD_SET(i,&myexceptfds);
-            }
-         }
-      }
-      myn = max(myn,n);
-
-      /* ====== Print collected data ===================================== */
-      LOG_VERBOSE5
-      fprintf(stdlog, "Calling ext_select() with timeout %Ld [µs]...\n", newTimeout);
-      for(i = 0;i < myn;i++) {
-         if(FD_ISSET(i, &myreadfds) || FD_ISSET(i, &mywritefds) || FD_ISSET(i, &myexceptfds)) {
-            fprintf(stdlog, "  Registered FD %d for %s%s%s\n",
-                    i,
-                    FD_ISSET(i, &myreadfds)   ? "<read> "  : "",
-                    FD_ISSET(i, &mywritefds)  ? "<write> " : "",
-                    FD_ISSET(i, &myexceptfds) ? "<except>" : "");
-         }
-      }
-      fprintf(stdlog, "n=%d myn=%d\n", n, myn);
-      LOG_END
-
-      /* ====== Do ext_select() call ===================================== */
-      result = ext_select(myn, &myreadfds, &mywritefds, &myexceptfds, &mytimeout);
-
-      /* ====== Print results ============================================= */
-      LOG_VERBOSE5
-      fprintf(stdlog, "ext_select() result is %d\n", result);
-      for(i = 0;i < myn;i++) {
-         if(FD_ISSET(i, &myreadfds) || FD_ISSET(i, &mywritefds) || FD_ISSET(i, &myexceptfds)) {
-            fprintf(stdlog, "  Events for FD %d: %s%s%s\n",
-                    i,
-                    FD_ISSET(i, &myreadfds)   ? "<read> "  : "",
-                    FD_ISSET(i, &mywritefds)  ? "<write> " : "",
-                    FD_ISSET(i, &myexceptfds) ? "<except>" : "");
-         }
-      }
-      LOG_END
-
-      /* ====== Handle results ============================================ */
-      dispatcherHandleSelectResult(&gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
-
-      /* ====== Prepare results for user ================================== */
-      result = 0;
-      if(readfds) {
-         FD_ZERO(readfds);
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,&myreadfds)) {
-               FD_SET(i,readfds);
-               result++;
-            }
-         }
-      }
-      if(writefds) {
-         FD_ZERO(writefds);
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,&mywritefds)) {
-               FD_SET(i,writefds);
-               result++;
-            }
-         }
-      }
-      if(exceptfds) {
-         FD_ZERO(exceptfds);
-         for(i = 0;i < n;i++) {
-            if(FD_ISSET(i,&myexceptfds)) {
-               FD_SET(i,exceptfds);
-               result++;
-            }
-         }
-      }
-      unlock(&gDispatcher, NULL);
+   /* ====== Collect data for ext_select() call ========================== */
+   lock(&gDispatcher, NULL);
+   if(timeout == NULL) {
+      userTimeout = (card64)~0;
+      mytimeout.tv_sec  = ~0;
+      mytimeout.tv_usec = 0;
    }
    else {
-      result = ext_select(n, readfds, writefds, exceptfds, timeout);
+      userTimeout = ((card64)timeout->tv_sec * 1000000) + (card64)timeout->tv_usec;
    }
+   dispatcherGetSelectParameters(&gDispatcher, &myn, &myreadfds, &mywritefds, &myexceptfds, &testfds, &testTS, &mytimeout);
+   asapTimeout = ((card64)mytimeout.tv_sec * 1000000) + (card64)mytimeout.tv_usec;
+   newTimeout  = min(userTimeout, asapTimeout);
+   mytimeout.tv_sec  = newTimeout / 1000000;
+   mytimeout.tv_usec = newTimeout % 1000000;
+
+   if(readfds) {
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,readfds)) {
+            FD_SET(i,&myreadfds);
+         }
+      }
+   }
+   if(writefds) {
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,writefds)) {
+            FD_SET(i,&mywritefds);
+         }
+      }
+   }
+   if(exceptfds) {
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,exceptfds)) {
+            FD_SET(i,&myexceptfds);
+         }
+      }
+   }
+   myn = max(myn,n);
+
+   /* ====== Print collected data ======================================== */
+   LOG_VERBOSE5
+   fprintf(stdlog, "Calling ext_select() with timeout %Ld [µs]...\n", newTimeout);
+   for(i = 0;i < myn;i++) {
+      if(FD_ISSET(i, &myreadfds) || FD_ISSET(i, &mywritefds) || FD_ISSET(i, &myexceptfds)) {
+         fprintf(stdlog, "  Registered FD %d for %s%s%s\n",
+                  i,
+                  FD_ISSET(i, &myreadfds)   ? "<read> "  : "",
+                  FD_ISSET(i, &mywritefds)  ? "<write> " : "",
+                  FD_ISSET(i, &myexceptfds) ? "<except>" : "");
+      }
+   }
+   fprintf(stdlog, "n=%d myn=%d\n", n, myn);
+   LOG_END
+
+   /* ====== Do ext_select() call ======================================== */
+   result = ext_select(myn, &myreadfds, &mywritefds, &myexceptfds, &mytimeout);
+
+   /* ====== Print results =============================================== */
+   LOG_VERBOSE5
+   fprintf(stdlog, "ext_select() result is %d\n", result);
+   for(i = 0;i < myn;i++) {
+      if(FD_ISSET(i, &myreadfds) || FD_ISSET(i, &mywritefds) || FD_ISSET(i, &myexceptfds)) {
+         fprintf(stdlog, "  Events for FD %d: %s%s%s\n",
+                  i,
+                  FD_ISSET(i, &myreadfds)   ? "<read> "  : "",
+                  FD_ISSET(i, &mywritefds)  ? "<write> " : "",
+                  FD_ISSET(i, &myexceptfds) ? "<except>" : "");
+      }
+   }
+   LOG_END
+
+   /* ====== Handle results ============================================== */
+   dispatcherHandleSelectResult(&gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
+
+   /* ====== Prepare results for user ==================================== */
+   result = 0;
+   if(readfds) {
+      FD_ZERO(readfds);
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,&myreadfds)) {
+            FD_SET(i,readfds);
+            result++;
+         }
+      }
+   }
+   if(writefds) {
+      FD_ZERO(writefds);
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,&mywritefds)) {
+            FD_SET(i,writefds);
+            result++;
+         }
+      }
+   }
+   if(exceptfds) {
+      FD_ZERO(exceptfds);
+      for(i = 0;i < n;i++) {
+         if(FD_ISSET(i,&myexceptfds)) {
+            FD_SET(i,exceptfds);
+            result++;
+         }
+      }
+   }
+   unlock(&gDispatcher, NULL);
 
    return(result);
+}
+
+
+/* ###### Get PE/PU status ############################################### */
+size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
+                             char*                              statusText)
+{
+   return(rspSessionCreateComponentStatus(caeArray,
+                                          statusText,
+                                          gAsapInstance->NameServerSocket,
+                                          gAsapInstance->NameServerID,
+                                          gAsapInstance->NameServerSocketProtocol,
+                                          gAsapInstance->NameServerConnectionTimeStamp));
 }

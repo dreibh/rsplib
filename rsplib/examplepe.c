@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.11 2004/09/17 13:52:45 dreibh Exp $
+ *  $Id: examplepe.c,v 1.12 2004/11/09 19:03:22 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,9 @@
 #include "localaddresses.h"
 #include "breakdetector.h"
 #include "rsplib.h"
+#ifdef ENABLE_CSP
+#include "componentstatusprotocol.h"
+#endif
 
 #include <ext_socket.h>
 #include <pthread.h>
@@ -168,9 +171,6 @@ static void* rsplibMainLoop(void* args)
 int main(int argc, char** argv)
 {
    uint32_t                      identifier        = 0;
-   uint64_t                      cspIdentifier;
-   unsigned int                  cspReportInterval = 0;
-   union sockaddr_union          cspReportAddress;
    struct PoolElementDescriptor* poolElement;
    struct TagItem                tags[16];
    pthread_t                     rsplibThread;
@@ -182,6 +182,12 @@ int main(int argc, char** argv)
    size_t                        sessions;
    struct PoolElementDescriptor* pedArray[1];
    unsigned int                  pedStatusArray[FD_SETSIZE];
+#ifdef ENABLE_CSP
+   struct CSPReporter            cspReporter;
+   uint64_t                      cspIdentifier;
+   unsigned int                  cspReportInterval = 0;
+   union sockaddr_union          cspReportAddress;
+#endif
 
    GList*                        clientList                     = NULL;
    card64                        start                          = getMicroTime();
@@ -198,7 +204,9 @@ int main(int argc, char** argv)
    int                           i;
    GList*                        list;
 
+#ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
+#endif
    start = getMicroTime();
    stop  = 0;
    for(i = 1;i < argc;i++) {
@@ -220,6 +228,7 @@ int main(int argc, char** argv)
       else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          identifier = atol((char*)&argv[i][12]);
       }
+#ifdef ENABLE_CSP
       else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
          cspReportInterval = atol((char*)&argv[i][19]);
       }
@@ -234,6 +243,7 @@ int main(int argc, char** argv)
             cspReportInterval = 250000;
          }
       }
+#endif
       else if(!(strncmp(argv[i], "-load=" ,6))) {
          policyParameterLoad = atol((char*)&argv[i][6]);
          if(policyParameterLoad > 0xffffff) {
@@ -311,27 +321,41 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+         /* Process this later */
+      }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[i]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}  {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PE Identifier}\n" ,
+         printf("Usage: %s {-nameserver=Nameserver address(es)} {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}"
+#ifdef ENABLE_CSP
+                " {-cspreportaddress=Address} {-cspreportinterval=Microseconds} "
+#endif
+                "{-identifier=PE Identifier}\n" ,
                 argv[0]);
          exit(1);
       }
    }
 
    beginLogging();
-   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
-   tags[0].Data = (tagdata_t)&cspReportAddress;
-   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
-   tags[1].Data = (tagdata_t)cspReportInterval;
-   cspIdentifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
-   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
-   tags[2].Data = (tagdata_t)&cspIdentifier;
-   tags[3].Tag  = TAG_DONE;
-   if(rspInitialize((struct TagItem*)&tags) != 0) {
+   if(rspInitialize(NULL) != 0) {
       puts("ERROR: Unable to initialize rsplib!");
       finishLogging();
       exit(1);
+   }
+#ifdef ENABLE_CSP
+   cspIdentifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
+   if(cspReportInterval > 0) {
+      cspReporterNewForRspLib(&cspReporter, cspIdentifier, &cspReportAddress, cspReportInterval);
+   }
+#endif
+
+   for(i = 1;i < argc;i++) {
+      if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+         if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[i]);
+            exit(1);
+         }
+      }
    }
 
    if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
@@ -470,6 +494,12 @@ int main(int argc, char** argv)
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
    finishLogging();
+#ifdef ENABLE_CSP
+   if(cspReportInterval > 0) {
+      cspReporterDelete(&cspReporter);
+   }
+#endif
+   rspCleanUp();
    puts("\nTerminated!");
    return(0);
 }
