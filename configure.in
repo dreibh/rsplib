@@ -29,11 +29,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
 
-AC_CHECK_FUNCS(sctp_sendmsg,  , AC_CHECK_LIB(sctp, sctp_sendmsg))
-AC_CHECK_FUNCS(sctp_connectx, , AC_CHECK_LIB(sctp, sctp_connectx))
-AC_CHECK_FUNCS(sctp_send,     , AC_CHECK_LIB(sctp, sctp_send))
-AC_CHECK_FUNCS(sctp_sendx,    , AC_CHECK_LIB(sctp, sctp_sendx))
-
 AC_ARG_ENABLE([csp],
 [  --enable-csp            enable CSP support ],
 AC_DEFINE(ENABLE_CSP, 1, "Define to 1 if you want CSP"), )
@@ -335,12 +330,24 @@ darwin*)
 esac
 AC_SUBST(thread_LIBS)
 
+AC_CHECK_MEMBER(struct sockaddr_in.sin_len,
+                AC_DEFINE(HAVE_SIN_LEN, 1, [Define this if your IPv4 has sin_len in sockaddr_in struct.]),,
+                [#ifdef HAVE_SYS_TYPES_H
+                 #include <sys/types.h>
+                 #endif
+                 #include <netinet/in.h>])
+                
+AC_CHECK_MEMBER(struct sockaddr_in6.sin6_len,
+                AC_DEFINE(HAVE_SIN6_LEN, 1, [Define this if your IPv6 has sin6_len in sockaddr_in6 struct.]),,
+                [#ifdef HAVE_SYS_TYPES_H
+                 #include <sys/types.h>
+                 #endif
+                 #include <netinet/in.h>])
 
-# Achtung! Wenn LDFLAGS nicht gesetzt wird, verwendet der Linker die
-# Option -s => Alle Debug-Symbole werden entfernt!
-#LDFLAGS=""
-
-AC_CHECK_FUNCS(sctp_sendmsg, , AC_CHECK_LIB(sctp, sctp_sendmsg))
+AC_CHECK_FUNCS(sctp_sendmsg,  , AC_CHECK_LIB(sctp, sctp_sendmsg))
+AC_CHECK_FUNCS(sctp_connectx, , AC_CHECK_LIB(sctp, sctp_connectx))
+AC_CHECK_FUNCS(sctp_send,     , AC_CHECK_LIB(sctp, sctp_send))
+AC_CHECK_FUNCS(sctp_sendx,    , AC_CHECK_LIB(sctp, sctp_sendx))
 
 # Check if kernel SCTP should be used
 AC_ARG_ENABLE(kernel-sctp,
