@@ -21,6 +21,7 @@ if [ -e /usr/local/share/aclocal ] ; then
 else
    aclocal -I admin -I /usr/share/aclocal
 fi
-autoheader 
+autoheader
 automake --gnu --add-missing --copy
 autoconf
+./configure
