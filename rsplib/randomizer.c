@@ -1,5 +1,5 @@
 /*
- *  $Id: randomizer.c,v 1.9 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: randomizer.c,v 1.10 2004/11/12 00:16:51 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,6 +42,9 @@
 #include <stdlib.h>
 
 
+#ifdef NDEBUG
+#include <omnetpp.h>
+#else
 /*
    It is tried to use /dev/urandom as random source first, since
    it provides high-quality random numbers. If /dev/urandom is not
@@ -60,6 +63,7 @@
 
 static int   RandomSource = RS_TRY_DEVICE;
 static FILE* RandomDevice = NULL;
+#endif
 
 
 
@@ -87,7 +91,12 @@ uint64_t random64()
 /* ###### Get 32-bit random value ######################################## */
 uint32_t random32()
 {
-   uint32_t number;
+#ifdef NDEBUG
+#warning Using OMNeT++ random generator
+   const double value = uniform(0.0, (double)0xffffffff);
+   return((uint32_t)rint(value));
+#else
+  uint32_t number;
 
    switch(RandomSource) {
       case RS_DEVICE:
@@ -113,4 +122,5 @@ uint32_t random32()
       break;
    }
    return(random());
+#endif
 }

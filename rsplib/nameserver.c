@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.47 2004/11/11 23:28:06 dreibh Exp $
+ *  $Id: nameserver.c,v 1.48 2004/11/12 00:17:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1522,7 +1522,7 @@ static void handleRegistrationRequest(struct NameServer*      nameServer,
    struct TransportAddressBlock*     remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    union sockaddr_union*             addressArray;
-   struct TagItem                    tags[8];
+   /* struct TagItem                    tags[8]; */
    int                               addresses;
 
    LOG_ACTION

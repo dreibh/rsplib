@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.29 2004/11/12 00:01:49 dreibh Exp $
+ *  $Id: netutilities.c,v 1.30 2004/11/12 00:16:50 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -51,11 +51,6 @@
 #include <fcntl.h>
 #include <ext_socket.h>
 #include <sys/uio.h>
-
-
-#ifndef HAVE_IPV6
-#error **** No IPv6 support?! Check configure scripts ****
-#endif
 
 
 #ifndef HAVE_SCTP_CONNECTX
