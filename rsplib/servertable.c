@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.28 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: servertable.c,v 1.29 2004/11/22 18:07:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -161,7 +161,6 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 {
    union sockaddr_union* announceAddress;
    union sockaddr_union  defaultAnnounceAddress;
-   union sockaddr_union  localAddress;
    struct ServerTable*   serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
 
    if(serverTable != NULL) {
@@ -199,12 +198,9 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
                                                SOCK_DGRAM, IPPROTO_UDP);
       if(serverTable->AnnounceSocket >= 0) {
          setReusable(serverTable->AnnounceSocket, 1);
-         memset(&localAddress, 0, sizeof(localAddress));
-         localAddress.sa.sa_family = serverTable->AnnounceAddress.sa.sa_family;
-         setPort(&localAddress.sa, getPort(&serverTable->AnnounceAddress.sa));
-         if(ext_bind(serverTable->AnnounceSocket,
-                     (struct sockaddr*)&serverTable->AnnounceAddress.sa,
-                     getSocklen((struct sockaddr*)&serverTable->AnnounceAddress.sa)) == 0) {
+         if(bindplus(serverTable->AnnounceSocket,
+                     &serverTable->AnnounceAddress,
+                     1) == true) {
             if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                          &serverTable->AnnounceAddress,
                                          true)) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.2 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: registrar.c,v 1.3 2004/11/22 18:07:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3361,7 +3361,6 @@ int main(int argc, char** argv)
    const char*                   enrpMulticastAddressParameter = "auto";
    char                          enrpMulticastAddressBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* enrpMulticastAddress          = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
-   union sockaddr_union          enrpMulticastInputLocalAddress;
 
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
@@ -3472,14 +3471,11 @@ int main(int argc, char** argv)
       exit(1);
    }
    setReusable(enrpMulticastInputSocket, 1);
-   memset(&enrpMulticastInputLocalAddress, 0, sizeof(enrpMulticastInputLocalAddress));
-   enrpMulticastInputLocalAddress.sa.sa_family = enrpMulticastAddress->AddressArray[0].sa.sa_family;
-   setPort(&enrpMulticastInputLocalAddress.sa, getPort(&enrpMulticastAddress->AddressArray[0].sa));
    if(bindplus(enrpMulticastInputSocket,
-               (union sockaddr_union*)&enrpMulticastInputLocalAddress,
+               (union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
                1) == false) {
       fputs("ERROR: Unable to bind input UDP socket for ENRP to address ", stderr);
-      fputaddress(&enrpMulticastInputLocalAddress.sa, true, stderr);
+      fputaddress(&enrpMulticastAddress->AddressArray[0].sa, true, stderr);
       fputs("\n", stderr);
       exit(1);
    }
