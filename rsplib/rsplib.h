@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.10 2004/11/09 22:03:30 dreibh Exp $
+ *  $Id: rsplib.h,v 1.11 2004/11/12 00:08:33 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -39,9 +39,10 @@
 #ifndef RSPLIB_H
 #define RSPLIB_H
 
-#ifndef FreeBSD
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+
 #include <sys/types.h>
 
 #include "tdtypes.h"

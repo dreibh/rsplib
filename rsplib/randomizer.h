@@ -23,9 +23,8 @@
 #ifndef RANDOMIZER_H
 #define RANDOMIZER_H
 
-#ifdef FreeBSD
 #include <sys/types.h>
-#else
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
 
