@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.9 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: examplepe.c,v 1.10 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -167,6 +167,10 @@ static void* rsplibMainLoop(void* args)
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
+   uint32_t                      identifier        = 0;
+   uint64_t                      cspIdentifier;
+   unsigned int                  cspReportInterval = 0;
+   union sockaddr_union          cspReportAddress;
    struct PoolElementDescriptor* poolElement;
    struct TagItem                tags[16];
    pthread_t                     rsplibThread;
@@ -190,109 +194,125 @@ int main(int argc, char** argv)
    unsigned int                  policyParameterWeight          = 1;
    unsigned int                  policyParameterLoad            = 0;
    unsigned int                  policyParameterLoadDegradation = 0;
-   int                           n;
    int                           result;
-   size_t                        i;
+   int                           i;
    GList*                        list;
 
 
    start = getMicroTime();
    stop  = 0;
-   for(n = 1;n < argc;n++) {
-      if(!(strcmp(argv[n], "-sctp"))) {
+   for(i = 1;i < argc;i++) {
+      if(!(strcmp(argv[i], "-sctp"))) {
          protocol = IPPROTO_SCTP;
       }
-      else if(!(strcmp(argv[n], "-tcp"))) {
+      else if(!(strcmp(argv[i], "-tcp"))) {
          protocol = IPPROTO_TCP;
       }
-      else if(!(strncmp(argv[n], "-stop=" ,6))) {
-         stop = start + ((card64)1000000 * (card64)atol((char*)&argv[n][6]));
+      else if(!(strncmp(argv[i], "-stop=" ,6))) {
+         stop = start + ((card64)1000000 * (card64)atol((char*)&argv[i][6]));
       }
-      else if(!(strncmp(argv[n], "-port=" ,6))) {
-         port = atol((char*)&argv[n][6]);
+      else if(!(strncmp(argv[i], "-port=" ,6))) {
+         port = atol((char*)&argv[i][6]);
       }
-      else if(!(strncmp(argv[n], "-ph=" ,4))) {
-         poolHandle = (char*)&argv[n][4];
+      else if(!(strncmp(argv[i], "-ph=" ,4))) {
+         poolHandle = (char*)&argv[i][4];
       }
-      else if(!(strncmp(argv[n], "-load=" ,6))) {
-         policyParameterLoad = atol((char*)&argv[n][6]);
+      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+         identifier = atol((char*)&argv[i][12]);
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
+         cspReportInterval = atol((char*)&argv[i][19]);
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
+         if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
+            fprintf(stderr,
+                    "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
+                    (char*)&argv[i][18]);
+            exit(1);
+         }
+         if(cspReportInterval <= 0) {
+            cspReportInterval = 250000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-load=" ,6))) {
+         policyParameterLoad = atol((char*)&argv[i][6]);
          if(policyParameterLoad > 0xffffff) {
             policyParameterLoad = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n], "-weight=" ,8))) {
-         policyParameterWeight = atol((char*)&argv[n][8]);
+      else if(!(strncmp(argv[i], "-weight=" ,8))) {
+         policyParameterWeight = atol((char*)&argv[i][8]);
          if(policyParameterWeight > 0xffffff) {
             policyParameterWeight = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n], "-load=" ,6))) {
-         policyParameterLoad = atol((char*)&argv[n][6]);
+      else if(!(strncmp(argv[i], "-load=" ,6))) {
+         policyParameterLoad = atol((char*)&argv[i][6]);
          if(policyParameterLoad > 0xffffff) {
             policyParameterLoad = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n], "-loaddeg=" ,9))) {
-         policyParameterLoadDegradation = atol((char*)&argv[n][9]);
+      else if(!(strncmp(argv[i], "-loaddeg=" ,9))) {
+         policyParameterLoadDegradation = atol((char*)&argv[i][9]);
          if(policyParameterLoadDegradation > 0xffffff) {
             policyParameterLoadDegradation = 0xffffff;
          }
       }
-      else if(!(strncmp(argv[n], "-weight=" ,8))) {
-         policyParameterWeight = atol((char*)&argv[n][8]);
+      else if(!(strncmp(argv[i], "-weight=" ,8))) {
+         policyParameterWeight = atol((char*)&argv[i][8]);
          if(policyParameterWeight < 1) {
             policyParameterWeight = 1;
          }
       }
-      else if(!(strncmp(argv[n], "-policy=" ,8))) {
-         if((!(strcmp((char*)&argv[n][8], "roundrobin"))) || (!(strcmp((char*)&argv[n][8], "rr")))) {
+      else if(!(strncmp(argv[i], "-policy=" ,8))) {
+         if((!(strcmp((char*)&argv[i][8], "roundrobin"))) || (!(strcmp((char*)&argv[i][8], "rr")))) {
             policyType = PPT_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8], "weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8], "wrr")))) {
+         else if((!(strcmp((char*)&argv[i][8], "weightedroundrobin"))) || (!(strcmp((char*)&argv[i][8], "wrr")))) {
             policyType = PPT_WEIGHTED_ROUNDROBIN;
          }
-         else if((!(strcmp((char*)&argv[n][8], "leastused"))) || (!(strcmp((char*)&argv[n][8], "lu")))) {
+         else if((!(strcmp((char*)&argv[i][8], "leastused"))) || (!(strcmp((char*)&argv[i][8], "lu")))) {
             policyType = PPT_LEASTUSED;
          }
-         else if((!(strcmp((char*)&argv[n][8], "leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "lud")))) {
+         else if((!(strcmp((char*)&argv[i][8], "leastuseddegradation"))) || (!(strcmp((char*)&argv[i][8], "lud")))) {
             policyType = PPT_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8], "randomizedleastused"))) || (!(strcmp((char*)&argv[n][8], "rlu")))) {
+         else if((!(strcmp((char*)&argv[i][8], "randomizedleastused"))) || (!(strcmp((char*)&argv[i][8], "rlu")))) {
             policyType = PPT_RANDOMIZED_LEASTUSED;
          }
-         else if((!(strcmp((char*)&argv[n][8], "randomizedleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rlud")))) {
+         else if((!(strcmp((char*)&argv[i][8], "randomizedleastuseddegradation"))) || (!(strcmp((char*)&argv[i][8], "rlud")))) {
             policyType = PPT_RANDOMIZED_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8], "priorityleastused"))) || (!(strcmp((char*)&argv[n][8], "plu")))) {
+         else if((!(strcmp((char*)&argv[i][8], "priorityleastused"))) || (!(strcmp((char*)&argv[i][8], "plu")))) {
             policyType = PPT_PRIORITY_LEASTUSED;
          }
-         else if((!(strcmp((char*)&argv[n][8], "priorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "plud")))) {
+         else if((!(strcmp((char*)&argv[i][8], "priorityleastuseddegradation"))) || (!(strcmp((char*)&argv[i][8], "plud")))) {
             policyType = PPT_PRIORITY_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastused"))) || (!(strcmp((char*)&argv[n][8], "rplu")))) {
+         else if((!(strcmp((char*)&argv[i][8], "randomizedpriorityleastused"))) || (!(strcmp((char*)&argv[i][8], "rplu")))) {
             policyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED;
          }
-         else if((!(strcmp((char*)&argv[n][8], "randomizedpriorityleastuseddegradation"))) || (!(strcmp((char*)&argv[n][8], "rplud")))) {
+         else if((!(strcmp((char*)&argv[i][8], "randomizedpriorityleastuseddegradation"))) || (!(strcmp((char*)&argv[i][8], "rplud")))) {
             policyType = PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8], "random"))) || (!(strcmp((char*)&argv[n][8], "rand")))) {
+         else if((!(strcmp((char*)&argv[i][8], "random"))) || (!(strcmp((char*)&argv[i][8], "rand")))) {
             policyType = PPT_RANDOM;
          }
-         else if((!(strcmp((char*)&argv[n][8], "weightedrandom"))) || (!(strcmp((char*)&argv[n][8], "wrand")))) {
+         else if((!(strcmp((char*)&argv[i][8], "weightedrandom"))) || (!(strcmp((char*)&argv[i][8], "wrand")))) {
             policyType = PPT_WEIGHTED_RANDOM;
          }
          else {
-            printf("ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[n][8]);
+            printf("ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[i][8]);
             exit(1);
          }
       }
-      else if(!(strncmp(argv[n], "-log" ,4))) {
-         if(initLogging(argv[n]) == false) {
+      else if(!(strncmp(argv[i], "-log" ,4))) {
+         if(initLogging(argv[i]) == false) {
             exit(1);
          }
       }
       else {
-         printf("Bad argument \"%s\"!\n" ,argv[n]);
+         printf("Bad argument \"%s\"!\n" ,argv[i]);
          printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
@@ -300,7 +320,15 @@ int main(int argc, char** argv)
    }
 
    beginLogging();
-   if(rspInitialize(NULL) != 0) {
+   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
+   tags[0].Data = (tagdata_t)&cspReportAddress;
+   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
+   tags[1].Data = (tagdata_t)cspReportInterval;
+   cspIdentifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
+   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
+   tags[2].Data = (tagdata_t)&cspIdentifier;
+   tags[3].Tag  = TAG_DONE;
+   if(rspInitialize((struct TagItem*)&tags) != 0) {
       puts("ERROR: Unable to initialize rsplib!");
       finishLogging();
       exit(1);
@@ -328,9 +356,11 @@ int main(int argc, char** argv)
    tags[7].Data = 45000;
    tags[8].Tag  = TAG_PoolElement_RegistrationLife;
    tags[8].Data = (3 * 45000) + 5000;
-   tags[9].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[9].Data = (tagdata_t)true;
-   tags[10].Tag  = TAG_END;
+   tags[9].Tag  = TAG_PoolElement_Identifier;
+   tags[9].Data = identifier;
+   tags[10].Tag  = TAG_UserTransport_HasControlChannel;
+   tags[10].Data = (tagdata_t)true;
+   tags[11].Tag  = TAG_END;
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
@@ -411,7 +441,7 @@ int main(int argc, char** argv)
                   }
                }
             }
-            for(i = 0;i < sessions;i++) {
+            for(i = 0;i < (int)sessions;i++) {
                if(sessionStatusArray[i] & RspSelect_Read) {
                   handleServiceRequest(&clientList, clientArray[i]);
                }

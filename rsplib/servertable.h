@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.8 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id: servertable.h,v 1.9 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -103,9 +103,11 @@ unsigned int serverTableAddStaticEntry(struct ServerTable*   serverTable,
   * Do server hunt.
   *
   * @param serverTable ServerTable.
+  * @param nsIdentifier Reference to store new NS's identifier to.
   * @return Socket description for name server connection or -1 in case of error.
   */
-int serverTableFindServer(struct ServerTable* serverTable);
+int serverTableFindServer(struct ServerTable* serverTable,
+                          ENRPIdentifierType* nsIdentifier);
 
 
 #ifdef __cplusplus

@@ -51,6 +51,7 @@ ssize_t componentStatusSend(const union sockaddr_union*             reportAddres
          csph->AssociationArray[i].Flags      = htons(associationArray[i].Flags);
          csph->AssociationArray[i].ProtocolID = htons(associationArray[i].ProtocolID);
          csph->AssociationArray[i].PPID       = htonl(associationArray[i].PPID);
+printf("%08x %016Lx   %016Lx\n",         csph->AssociationArray[i].PPID,csph->AssociationArray[i].ReceiverID,associationArray[i].ReceiverID);
       }
 
       sd = socket(reportAddress->sa.sa_family,

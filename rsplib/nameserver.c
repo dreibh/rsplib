@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.34 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: nameserver.c,v 1.35 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3047,7 +3047,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
    size_t                            pools;
    size_t                            poolElements;
 
-   LOG_NOTE
+   LOG_VERBOSE2
    fputs("Sending a Component Status Protocol report...\n", stdlog);
    LOG_END
    peers        = ST_CLASS(peerListManagementGetPeers)(&nameServer->Peers);
@@ -3085,7 +3085,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
                              (struct ComponentAssociationEntry*)&caeArray,
                              caeArraySize) < 0) {
          LOG_WARNING
-         fputs("Unable to send Component Status Protocol report...\n", stdlog);
+         fputs("Unable to send Component Status Protocol report\n", stdlog);
          LOG_END
       }
 
@@ -3319,8 +3319,8 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncasecmp(argv[i], "-serverid=", 10))) {
-         serverID = atol((char*)&argv[i][10]);
+      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+         serverID = atol((char*)&argv[i][12]);
       }
       else if(!(strncasecmp(argv[i], "-peer=",6))) {
          /* to be handled later */

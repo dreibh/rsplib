@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.13 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: rsplib.c,v 1.14 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -51,7 +51,6 @@
 
 struct Dispatcher           gDispatcher;
 static struct ASAPInstance* gAsapInstance = NULL;
-static unsigned int         gLastError    = RSPERR_OKAY;
 static struct ThreadSafety  gThreadSafety;
 
 
@@ -154,20 +153,6 @@ unsigned int rspAddStaticNameServer(const char* addressString)
       LOG_END
       return(RSPERR_NOT_INITIALIZED);
    }
-}
-
-
-/* ###### Get last error ################################################# */
-unsigned int rspGetLastError()
-{
-   return((unsigned int)gLastError);
-}
-
-
-/* ###### Get last error description ##################################### */
-const char* rspGetLastErrorDescription()
-{
-   return(rserpoolErrorGetDescription(gLastError));
 }
 
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.10 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.11 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,6 +74,7 @@ struct ASAPInstance
    unsigned long long                       NameServerRequestTimeout;
    unsigned long long                       NameServerResponseTimeout;
 
+   uint64_t                                 CSPIdentifier;
    union sockaddr_union                     CSPReportAddress;
    unsigned long long                       CSPReportInterval;
    struct Timer                             CSPReportTimer;

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.5 2004/08/04 01:02:38 dreibh Exp $
+ *  $Id: rsplib.h,v 1.6 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -50,6 +50,7 @@
 #include "rsplib-tags.h"
 #include "poolpolicysettings.h"
 #include "rserpoolerror.h"
+#include "componentstatusprotocol.h"
 
 
 #ifdef __cplusplus
@@ -108,21 +109,11 @@ unsigned int rspAddStaticNameServer(const char* addressString);
 void rspCleanUp();
 
 /**
-  * Get code of last error.
+  * Get textual description of error code.
   *
-  * @return Last error.
+  * @param errorCode Error code.
+  * @return Textual description.
   */
-unsigned int rspGetLastError();
-
-/**
-  * Get text description of last error.
-  *
-  * @return Last error.
-  */
-const char* rspGetLastErrorDescription();
-
-
-// ?????????????????
 inline const char* rspGetErrorDescription(const unsigned int errorCode)
 {
    return(rserpoolErrorGetDescription(errorCode));

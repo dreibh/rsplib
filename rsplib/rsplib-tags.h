@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.5 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.6 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,8 +48,10 @@
 #define TAG_RspLib_GetBuildDate      (TAG_USER + 10002)
 #define TAG_RspLib_GetBuildTime      (TAG_USER + 10003)
 #define TAG_RspLib_IsThreadSafe      (TAG_USER + 10004)
-#define TAG_RspLib_CSPReportAddress  (TAG_USER + 10005)
-#define TAG_RspLib_CSPReportInterval (TAG_USER + 10006)
+
+#define TAG_RspLib_CSPIdentifier     (TAG_USER + 10010)
+#define TAG_RspLib_CSPReportAddress  (TAG_USER + 10011)
+#define TAG_RspLib_CSPReportInterval (TAG_USER + 10012)
 
 #define TAG_RspLib_CacheElementTimeout                   (TAG_USER + 7000)
 #define TAG_RspLib_NameServerAnnounceAddress             (TAG_USER + 7001)
@@ -72,6 +74,7 @@
 #define TAG_PoolElement_SocketType             (TAG_USER + 2003)
 #define TAG_PoolElement_SocketProtocol         (TAG_USER + 2004)
 #define TAG_PoolElement_LocalPort              (TAG_USER + 2005)
+#define TAG_PoolElement_Identifier             (TAG_USER + 2006)
 
 #define TAG_RspIO_Flags           (TAG_USER + 8000)
 #define TAG_RspIO_Timeout         (TAG_USER + 8001)

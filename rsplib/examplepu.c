@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.5 2004/08/04 01:02:38 dreibh Exp $
+ *  $Id: examplepu.c,v 1.6 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,6 +41,7 @@
 #include "netutilities.h"
 #include "rsplib.h"
 #include "breakdetector.h"
+
 
 #include <ext_socket.h>
 #include <signal.h>
@@ -152,6 +153,9 @@ static void handleServerReply()
 /* ###### Main program ###################################################### */
 int main(int argc, char** argv)
 {
+   uint64_t                  cspIdentifier     = 0;
+   unsigned int              cspReportInterval = 0;
+   union sockaddr_union      cspReportAddress;
    struct TagItem            tags[16];
    struct SessionDescriptor* sessionArray[1];
    unsigned int              statusArray[1];
@@ -170,6 +174,23 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i],"-auto=",6))) {
          autoInterval = 1000 * (card64)atol((char*)&argv[i][6]);
+      }
+      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+         cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
+         cspReportInterval = atol((char*)&argv[i][19]);
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
+         if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
+            fprintf(stderr,
+                    "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
+                    (char*)&argv[i][18]);
+            exit(1);
+         }
+         if(cspReportInterval <= 0) {
+            cspReportInterval = 250000;
+         }
       }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -190,7 +211,14 @@ int main(int argc, char** argv)
    }
 
    beginLogging();
-   if(rspInitialize(NULL) != 0) {
+   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
+   tags[0].Data = (tagdata_t)&cspReportAddress;
+   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
+   tags[1].Data = (tagdata_t)cspReportInterval;
+   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
+   tags[2].Data = (tagdata_t)&cspIdentifier;
+   tags[3].Tag  = TAG_DONE;
+   if(rspInitialize((struct TagItem*)&tags) != 0) {
       puts("ERROR: Unable to initialize rsplib!");
       exit(1);
    }

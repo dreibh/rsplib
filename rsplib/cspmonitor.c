@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.1 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.2 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -66,12 +66,21 @@ struct CSPObject
 static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
+   size_t i;
+
    fprintf(fd,"\x1b[%um", 30 + (unsigned int)CID_GROUP(cspObject->ID) % 8);
-   fprintf(fd, "%s: lr=%5ums, int=%4Ldms, %s",
+   fprintf(fd, "%s: lr=%5ums, int=%4Ldms, A=%u, %s\n",
            cspObject->Description,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
+           cspObject->Associations,
            cspObject->StatusText);
+   for(i = 0;i < cspObject->Associations;i++) {
+      fprintf(fd,"   -> $%016Lx proto=%4u ppid=$%08x\n",
+              cspObject->AssociationArray[i].ReceiverID,
+              cspObject->AssociationArray[i].ProtocolID,
+              cspObject->AssociationArray[i].PPID);
+   }
    fputs("\x1b[0m\n", fd);
 }
 
@@ -156,7 +165,7 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
                cspObject = (struct CSPObject*)malloc(sizeof(struct CSPObject));
                if(cspObject) {
                   leafLinkedRedBlackTreeNodeNew(&cspObject->Node);
-                  cspObject->ID                  = csph->SenderID;
+                  cspObject->ID = csph->SenderID;
                }
             }
             if(cspObject) {
@@ -166,19 +175,19 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
                   case CID_GROUP_NAMESERVER:
                      snprintf((char*)&cspObject->Description,
                               sizeof(cspObject->Description),
-                              "Name Server $%Lx",
+                              "Name Server $%08Lx",
                               CID_OBJECT(cspObject->ID));
                    break;
                   case CID_GROUP_POOLELEMENT:
                      snprintf((char*)&cspObject->Description,
                               sizeof(cspObject->Description),
-                              "Pool Element $%Lx",
+                              "Pool Element $%08Lx",
                               CID_OBJECT(cspObject->ID));
                    break;
                   case CID_GROUP_POOLUSER:
                      snprintf((char*)&cspObject->Description,
                               sizeof(cspObject->Description),
-                              "Pool User $%Lx",
+                              "Pool User $%08Lx",
                               CID_OBJECT(cspObject->ID));
                    break;
                   default:
@@ -192,6 +201,13 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
                         &csph->StatusText,
                         sizeof(cspObject->StatusText));
                cspObject->StatusText[sizeof(cspObject->StatusText) - 1] = 0x00;
+               if(cspObject->AssociationArray) {
+                  componentAssociationEntryArrayDelete(cspObject->AssociationArray);
+               }
+               cspObject->AssociationArray = componentAssociationEntryArrayNew(csph->Associations);
+               CHECK(cspObject->AssociationArray);
+               memcpy(cspObject->AssociationArray, &csph->AssociationArray, csph->Associations * sizeof(struct ComponentAssociationEntry));
+               cspObject->Associations = csph->Associations;
                leafLinkedRedBlackTreeInsert(objectStorage,
                                              &cspObject->Node);
             }

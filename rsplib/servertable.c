@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.18 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: servertable.c,v 1.19 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -258,7 +258,8 @@ static void tryNextBlock(struct ServerTable*            serverTable,
                          ENRPIdentifierType*            lastNSIdentifier,
                          struct TransportAddressBlock** lastTransportAddressBlock,
                          int*                           sd,
-                         card64*                        timeout)
+                         card64*                        timeout,
+                         ENRPIdentifierType*            identifier)
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -321,7 +322,8 @@ static void tryNextBlock(struct ServerTable*            serverTable,
                                     SOCK_STREAM,
                                     transportAddressBlock->Protocol);
                   if(sd[i] >= 0) {
-                     timeout[i] = getMicroTime() + serverTable->NameServerConnectTimeout;
+                     timeout[i]    = getMicroTime() + serverTable->NameServerConnectTimeout;
+                     identifier[i] = peerListNode->Identifier;
                      setNonBlocking(sd[i]);
 
                      LOG_VERBOSE2
@@ -336,8 +338,9 @@ static void tryNextBlock(struct ServerTable*            serverTable,
                      }
 
                      ext_close(sd[i]);
-                     sd[i]      = -1;
-                     timeout[i] = (card64)-1;
+                     sd[i]         = -1;
+                     timeout[i]    = (card64)-1;
+                     identifier[i] = 0;
                   }
                }
                else {
@@ -357,13 +360,15 @@ static void tryNextBlock(struct ServerTable*            serverTable,
 
 
 /* ###### Find nameserver ################################################### */
-int serverTableFindServer(struct ServerTable* serverTable)
+int serverTableFindServer(struct ServerTable* serverTable,
+                          ENRPIdentifierType* nsIdentifier)
 {
    struct timeval                 selectTimeout;
    union sockaddr_union           peerAddress;
    socklen_t                      peerAddressLength;
    int                            sd[MAX_SIMULTANEOUS_REQUESTS];
    card64                         timeout[MAX_SIMULTANEOUS_REQUESTS];
+   ENRPIdentifierType             identifier[MAX_SIMULTANEOUS_REQUESTS];
    ENRPIdentifierType             lastNSIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
    card64                         start;
@@ -374,12 +379,14 @@ int serverTableFindServer(struct ServerTable* serverTable)
    unsigned int                   i, j;
    int                            n, result;
 
+   *nsIdentifier = 0;
    if(serverTable == NULL) {
       return(-1);
    }
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
-      sd[i]      = -1;
-      timeout[i] = (card64)-1;
+      sd[i]         = -1;
+      timeout[i]    = (card64)-1;
+      identifier[i] = 0;
    }
 
 
@@ -429,7 +436,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
       tryNextBlock(serverTable,
                    &lastNSIdentifier,
                    &lastTransportAddressBlock,
-                   (int*)&sd, (card64*)&timeout);
+                   (int*)&sd, (card64*)&timeout, (ENRPIdentifierType*)&identifier);
 
       /* Wait for event */
       n = 0;
@@ -510,6 +517,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
                         transportAddressBlockDelete(lastTransportAddressBlock);
                         free(lastTransportAddressBlock);
                      }
+                     *nsIdentifier = identifier[i];
                      return(sd[i]);
                   }
                   else {

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.14 2004/09/16 14:33:56 dreibh Exp $
+ *  $Id: rspsession.c,v 1.15 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,6 +43,7 @@
 #include "threadsafety.h"
 #include "rserpoolmessage.h"
 #include "messagebuffer.h"
+#include "componentstatusprotocol.h"
 
 #include <ext_socket.h>
 #include <glib.h>
@@ -54,6 +55,9 @@
 
 
 extern struct Dispatcher gDispatcher;
+
+
+GList* gSessionList = NULL;
 
 
 struct PoolElementDescriptor
@@ -384,6 +388,8 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
                reregistrationTimer,
                (void*)ped);
       ped->Socket                 = -1;
+      ped->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
+                                                   0x00000000);
       ped->SocketDomain           = tagListGetData(tags, TAG_PoolElement_SocketDomain,
                                                    checkIPv6() ? AF_INET6 : AF_INET);
       ped->SocketType             = tagListGetData(tags, TAG_PoolElement_SocketType,
@@ -400,7 +406,6 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
                                                    1);
       ped->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
                                                    0);
-      ped->Identifier             = 0x00000000;
       ped->SessionList            = NULL;
       ped->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
 
@@ -511,7 +516,7 @@ static struct SessionDescriptor* rspSessionNew(
       session->CookieSize               = 0;
       session->CookieEcho               = NULL;
       session->CookieEchoSize           = 0;
-      session->ConnectTimeout           = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout,      5000000);
+      session->ConnectTimeout           = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->NameResolutionRetryDelay = (card64)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
       if(session->PoolElement != NULL) {
          threadSafetyLock(&session->PoolElement->Mutex);
@@ -519,6 +524,8 @@ static struct SessionDescriptor* rspSessionNew(
             g_list_append(session->PoolElement->SessionList, session);
          threadSafetyUnlock(&session->PoolElement->Mutex);
       }
+
+      gSessionList = g_list_append(gSessionList, session);
    }
    return(session);
 }
@@ -528,6 +535,7 @@ static struct SessionDescriptor* rspSessionNew(
 static void rspSessionDelete(struct SessionDescriptor* session)
 {
    if(session) {
+      gSessionList = g_list_remove(gSessionList, session);
       if(session->PoolElement) {
          threadSafetyLock(&session->PoolElement->Mutex);
          session->PoolElement->SessionList = g_list_remove(session->PoolElement->SessionList, session);
@@ -1219,3 +1227,70 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
    return(result);
 }
 
+
+void rspSendCSPReport(const int                   nameServerSocket,
+                      const ENRPIdentifierType    nameServerID,
+                      const int                   nameServerSocketProtocol,
+                      const uint64_t              cspIdentifier,
+                      const union sockaddr_union* cspReportAddress,
+                      const unsigned long long    cspReportInterval)
+{
+   struct ComponentAssociationEntry* caeArray;
+   size_t                            caeArraySize;
+   char                              statusText[128];
+   GList*                            list;
+   struct SessionDescriptor*         session;
+   size_t                            sessions;
+
+   LOG_NOTE
+   fputs("Sending a Component Status Protocol report...\n", stdlog);
+   LOG_END
+
+   sessions     = g_list_length(gSessionList);
+   caeArray     = componentAssociationEntryArrayNew(1 + sessions);
+   caeArraySize = 0;
+   if(caeArray) {
+      if(nameServerSocket >= 0) {
+         caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
+         caeArray[caeArraySize].Duration   = ~0;
+         caeArray[caeArraySize].Flags      = 0;
+         caeArray[caeArraySize].ProtocolID = nameServerSocketProtocol;
+         caeArray[caeArraySize].PPID       = PPID_ASAP;
+         caeArraySize++;
+      }
+
+      list = g_list_first(gSessionList);
+      while(list != NULL) {
+         session = (struct SessionDescriptor*)list->data;
+
+         if(!session->Incoming) {
+            if(session->Socket >= 0) {
+               caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Identifier);
+               caeArray[caeArraySize].Duration   = ~0;
+               caeArray[caeArraySize].Flags      = 0;
+               caeArray[caeArraySize].ProtocolID = session->SocketProtocol;
+               caeArray[caeArraySize].PPID       = 0;
+               caeArraySize++;
+            }
+         }
+
+         list = g_list_next(gSessionList);
+      }
+
+      snprintf((char*)&statusText, sizeof(statusText),
+               "%u Session%s", sessions, (sessions == 1) ? "" : "s");
+
+      if(componentStatusSend(cspReportAddress,
+                             cspReportInterval,
+                             cspIdentifier,
+                             (const char*)&statusText,
+                             (struct ComponentAssociationEntry*)&caeArray,
+                             caeArraySize) < 0) {
+         LOG_WARNING
+         fputs("Unable to send Component Status Protocol report\n", stdlog);
+         LOG_END
+      }
+
+      componentAssociationEntryArrayDelete(caeArray);
+   }
+}

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.22 2004/09/15 09:47:12 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.23 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,6 +47,13 @@
 #include <ext_socket.h>
 
 
+extern void rspSendCSPReport(const int                   nameServerSocket,
+                             const ENRPIdentifierType    nameServerID,
+                             const int                   nameServerSocketProtocol,
+                             const uint64_t              cspIdentifier,
+                             const union sockaddr_union* cspReportAddress,
+                             const unsigned long long    cspReportInterval);
+
 static void handleNameServerConnectionEvent(struct Dispatcher* dispatcher,
                                             int                fd,
                                             unsigned int       eventMask,
@@ -63,6 +70,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
 static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagItem* tags)
 {
    union sockaddr_union* cspReportAddress;
+   uint64_t              dummyID = 0;
 
    /* ====== ASAP Instance settings ======================================= */
    asapInstance->NameServerRequestMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerRequestMaxTrials,
@@ -81,6 +89,7 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
              getSocklen(&cspReportAddress->sa));
    }
    asapInstance->CSPReportInterval = tagListGetData(tags, TAG_RspLib_CSPReportInterval, 0);
+   asapInstance->CSPIdentifier     = *((uint64_t*)tagListGetData(tags, TAG_RspLib_CSPIdentifier, (tagdata_t)&dummyID));
 
 
    /* ====== Show results =================================================== */
@@ -178,7 +187,8 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
 
    if(asapInstance->NameServerSocket < 0) {
       asapInstance->NameServerSocket =
-         serverTableFindServer(asapInstance->NameServerTable);
+         serverTableFindServer(asapInstance->NameServerTable,
+                               &asapInstance->NameServerID);
       if(asapInstance->NameServerSocket >= 0) {
          asapInstance->NameServerSocketProtocol = protocol;
 
@@ -869,7 +879,14 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
                               void*              userData)
 {
    struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
-puts("CSP...");
+
+   rspSendCSPReport(asapInstance->NameServerSocket,
+                    asapInstance->NameServerID,
+                    asapInstance->NameServerSocketProtocol,
+                    asapInstance->CSPIdentifier,
+                    &asapInstance->CSPReportAddress,
+                    asapInstance->CSPReportInterval);
+
    timerStart(&asapInstance->CSPReportTimer,
               getMicroTime() + asapInstance->CSPReportInterval);
 }

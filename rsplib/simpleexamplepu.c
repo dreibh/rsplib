@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.4 2004/07/22 09:47:44 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.5 2004/09/16 16:24:43 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -96,7 +96,7 @@ static void connectToPoolElement()
    struct TagItem              tags[16];
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;
-   int                         result;
+   unsigned int                result;
 
    /* ====== Close existing connection and report failure =================== */
    if(DataSocket >= 0) {
@@ -108,8 +108,8 @@ static void connectToPoolElement()
 
    /* ====== Do name resolution ============================================= */
    result = rspNameResolution((unsigned char*)PoolName, strlen(PoolName), &eai, NULL);
-   if(result != 0) {
-      printf("Name resolution failed - %s.\n",rspGetLastErrorDescription());
+   if(result != RSPERR_OKAY) {
+      printf("Name resolution failed - %s.\n",rspGetErrorDescription(result));
       return;
    }
 
