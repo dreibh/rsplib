@@ -116,6 +116,21 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
                                     const void* transportAddressBlockPtr2);
 
 
+/**
+  * Initialize TransportAddressBlock with local addresses
+  * of given SCTP socket.
+  *
+  * @param transportAddressBlock TransportAddressBlock.
+  * @param sockFD Socket FD.
+  * @param maxAddresses Maximum number of addresses to be returned.
+  * @return Number of obtained addresses.
+  */
+size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
+          struct TransportAddressBlock* sctpAddress,
+          int                           sockFD,
+          const size_t                  maxAddresses);
+
+
 #ifdef __cplusplus
 }
 #endif
