@@ -1,2 +1,2 @@
 #!/bin/sh
-./nameserver -sctp=127.0.0.1:3863,10.0.0.1 -announce=239.0.0.1:3863 -loglevel=9 $@
+./nameserver -asap=127.0.0.1:3863,10.0.0.1 -asapannounce=239.0.0.1:3863 -enrp=127.0.0.1:3864,10.0.0.1 -enrpannounce=239.0.0.1:3864 -loglevel=9 $@
