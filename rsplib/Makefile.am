@@ -96,7 +96,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor t3
+noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor
 # examplepe2 examplepu2 t3
 
 
@@ -133,6 +133,6 @@ cspmonitor_LDFLAGS = -static $(all_libraries) -L.
 
 EXTRA_DIST = registrar-example poolelement-example pooluser-example
 
-t3_SOURCES = t3.cc
-t3_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-t3_LDFLAGS = -static $(all_libraries) -L.
+#t3_SOURCES = t3.cc
+#t3_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+#t3_LDFLAGS = -static $(all_libraries) -L.
