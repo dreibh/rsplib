@@ -106,14 +106,16 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder)(
    while((poolElementNodes < maxPoolElementNodes) && (poolElementNode != NULL)) {
       poolElementNodeArray[poolElementNodes] = poolElementNode;
 
-      /* Common update functionality: SeqNumber increment and Selection Counter */
-      poolElementNodeArray[poolElementNodes]->SeqNumber =
-         poolNode->GlobalSeqNumber++;
-      poolElementNodeArray[poolElementNodes]->SelectionCounter++;
+      if(poolElementNodes < maxIncrement) {
+         /* Common update functionality: SeqNumber increment and Selection Counter */
+         poolElementNodeArray[poolElementNodes]->SeqNumber =
+            poolNode->GlobalSeqNumber++;
+         poolElementNodeArray[poolElementNodes]->SelectionCounter++;
 
-      /* Policy-specifc pool element node updates (e.g. counter changes) */
-      if(poolNode->Policy->UpdatePoolElementNodeFunction) {
-         poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNode);
+         /* Policy-specifc pool element node updates (e.g. counter changes) */
+         if(poolNode->Policy->UpdatePoolElementNodeFunction) {
+            poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNode);
+         }
       }
 
       poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
