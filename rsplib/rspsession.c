@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.27 2004/12/03 10:30:59 dreibh Exp $
+ *  $Id: rspsession.c,v 1.28 2004/12/03 16:58:19 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -980,7 +980,10 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
                        const size_t              length,
                        struct TagItem*           tags)
 {
-   const unsigned long long timeout = (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0);
+   const unsigned long long timeout        = (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0);
+   unsigned long long       startTimeStamp = getMicroTime();
+   unsigned long long       now;
+   long long                readTimeout;
    uint32_t                 ppid;
    sctp_assoc_t             assocID;
    unsigned short           streamID;
@@ -988,33 +991,51 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
    int                      flags;
 
    tagListSetData(tags, TAG_RspIO_MsgIsCookie, 0);
-   LOG_VERBOSE2
+   LOG_NOTE
    fprintf(stdlog, "Trying to read message from session, socket %d\n",
            session->Socket);
    LOG_END
-   result = messageBufferRead(session->MessageBuffer, session->Socket,
-                              NULL, 0,
-                              PPID_ASAP, timeout, timeout);
-   if(result > 0) {
-      LOG_VERBOSE2
-      fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
+
+   do {
+      now = getMicroTime();
+      readTimeout = (long long)timeout - (long long)(now - startTimeStamp);
+      if(readTimeout < 0) {
+         LOG_ACTION
+         fprintf(stdlog, "Reading from session, socket %d, timed out\n",
+                 session->Socket);
+         LOG_END
+         return(RspRead_Timeout);
+      }
+
+      LOG_NOTE
+      fprintf(stdlog, "Trying to read from session, socket %d, with timeout %Ldus\n",
+              session->Socket, readTimeout);
       LOG_END
-      if(handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result) == AHT_COOKIE_ECHO) {
-         if(session->CookieEcho) {
-            if(length >= session->CookieEchoSize) {
-               tagListSetData(tags, TAG_RspIO_MsgIsCookie, 1);
-               memcpy(buffer, session->CookieEcho, session->CookieEchoSize);
-               return(session->CookieEchoSize);
+      result = messageBufferRead(session->MessageBuffer, session->Socket,
+                                 NULL, 0,
+                                 PPID_ASAP,
+                                 (unsigned long long)readTimeout,
+                                 (unsigned long long)readTimeout);
+      if(result > 0) {
+         LOG_VERBOSE2
+         fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
+         LOG_END
+         if(handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result) == AHT_COOKIE_ECHO) {
+            if(session->CookieEcho) {
+               if(length >= session->CookieEchoSize) {
+                  tagListSetData(tags, TAG_RspIO_MsgIsCookie, 1);
+                  memcpy(buffer, session->CookieEcho, session->CookieEchoSize);
+                  return(session->CookieEchoSize);
+               }
+               free(session->CookieEcho);
+               session->CookieEcho     = NULL;
+               session->CookieEchoSize = 0;
             }
-            free(session->CookieEcho);
-            session->CookieEcho     = NULL;
-            session->CookieEchoSize = 0;
          }
       }
-      errno = EAGAIN;
-      return(RspRead_MessageRead);
-   }
-   else if(result == RspRead_PartialRead) {
+   } while(result > 0);
+
+   if(result == RspRead_PartialRead) {
       LOG_VERBOSE2
       fprintf(stdlog, "Partially read message data from socket %d\n", session->Socket);
       LOG_END

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.30 2004/11/19 16:42:46 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.31 2004/12/03 16:58:19 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -702,6 +702,7 @@ static unsigned int asapInstanceNameResolutionFromCache(
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
                                         stdlog, PENPO_FULL);
       }
+      fputs("\n", stdlog);
       LOG_END
       result = RSPERR_OKAY;
    }

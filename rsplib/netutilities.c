@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.41 2004/12/03 10:30:59 dreibh Exp $
+ *  $Id: netutilities.c,v 1.42 2004/12/03 16:58:19 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1591,7 +1591,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    size = sizeof(rtoinfo);
    rtoinfo.srto_assoc_id = assocID;
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0) {
-      LOG_NOTE
+      LOG_VERBOSE3
       fprintf(stdlog, "  Current RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
       fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
       fprintf(stdlog, "  Min SRTO:     %u\n", rtoinfo.srto_min);
@@ -1614,7 +1614,7 @@ printf("VERIFY:\n");
 CHECK(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t *)&size) == 0);
 puts("------------------------------");
 
-         LOG_NOTE
+         LOG_VERBOSE2
          fprintf(stdlog, "  New RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
          fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
          fprintf(stdlog, "  Min SRTO:     %u\n", rtoinfo.srto_min);
@@ -1631,7 +1631,7 @@ puts("------------------------------");
    size = sizeof(assocParams);
    assocParams.sasoc_assoc_id = assocID;
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t *)&size) == 0) {
-      LOG_NOTE
+      LOG_VERBOSE3
       fprintf(stdlog, "Current Assoc info of socket %d, assoc %u:\n", sockfd, (unsigned int)assocParams.sasoc_assoc_id);
       fprintf(stdlog, "  AssocMaxRXT:       %u\n", assocParams.sasoc_asocmaxrxt);
       fprintf(stdlog, "  Peer Destinations: %u\n", assocParams.sasoc_number_peer_destinations);
@@ -1652,7 +1652,7 @@ puts("------------------------------");
          LOG_END
       }
       else {
-         LOG_NOTE
+         LOG_VERBOSE2
          fprintf(stdlog, "New Assoc info of socket %d, assoc %u:\n", sockfd, (unsigned int)assocParams.sasoc_assoc_id);
          fprintf(stdlog, "  AssocMaxRXT:       %u\n", assocParams.sasoc_asocmaxrxt);
          fprintf(stdlog, "  Peer Destinations: %u\n", assocParams.sasoc_number_peer_destinations);
@@ -1678,7 +1678,7 @@ puts("------------------------------");
 
          if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_PARAMS,
                           (void*)&peerParams, &size) == 0) {
-            LOG_NOTE
+            LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
             fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
@@ -1699,7 +1699,7 @@ puts("------------------------------");
                LOG_END
             }
             else {
-               LOG_NOTE
+               LOG_VERBOSE2
                fputs("New peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
                fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
