@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.46 2005/03/05 00:03:43 tuexen Exp $
+ *  $Id: netutilities.c,v 1.47 2005/03/08 10:59:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1726,13 +1726,13 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
 }
 
 
-/* ###### Create socket and establish connection ############################ */
-int establish(const int             socketDomain,
-              const int             socketType,
-              const int             socketProtocol,
-              union sockaddr_union* addressArray,
-              const size_t          addresses,
-              const unsigned long long          timeout)
+/* ###### Create socket and establish connection ######################### */
+int establish(const int                socketDomain,
+              const int                socketType,
+              const int                socketProtocol,
+              union sockaddr_union*    addressArray,
+              const size_t             addresses,
+              const unsigned long long timeout)
 {
    fd_set               fdset;
    struct timeval       to;
