@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.h,v 1.2 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: messagebuffer.h,v 1.3 2004/12/16 16:16:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -79,7 +79,14 @@ struct MessageBuffer* messageBufferNew(const size_t size);
 void messageBufferDelete(struct MessageBuffer* mb);
 
 /**
-  * Read from buffer.
+  * Read from buffer. The following conditions can occur, reflected by
+  * the function's return value:
+  * result > 0: Data message of given PPID has been completely read. The size is returned.
+  * RspErr_Timeout: A timeout occured, the next read call may be successful.
+  * RspErr_ReadError: Reading failed, connection is broken.
+  * RspErr_PartialRead: A part of the message of given PPID has been read.
+  * RspErr_TooBig: The message is too big to store into the buffer.
+  * RspErr_WrongPPID: The message has a different PPID.
   *
   * @param mb MessageBuffer.
   * @param fd File descriptor.

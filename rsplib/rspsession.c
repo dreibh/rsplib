@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.29 2004/12/03 17:16:03 dreibh Exp $
+ *  $Id: rspsession.c,v 1.30 2004/12/16 16:16:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -885,7 +885,6 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
                                           size_t                    size)
 {
    struct RSerPoolMessage* message;
-   CookieEchoCallbackPtr   callback;
    unsigned int            type = 0;
    unsigned int            result;
 
@@ -915,8 +914,8 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
                   free(session->Cookie);
                }
                message->CookiePtrAutoDelete = false;
-               session->Cookie     = message->CookiePtr;
-               session->CookieSize = message->CookieSize;
+               session->Cookie              = message->CookiePtr;
+               session->CookieSize          = message->CookieSize;
             break;
             case AHT_COOKIE_ECHO:
                if(session->CookieEcho == NULL) {
@@ -924,25 +923,8 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
                   fputs("Got cookie echo\n", stdlog);
                   LOG_END
                   message->CookiePtrAutoDelete = false;
-                  session->CookieEcho     = message->CookiePtr;
-                  session->CookieEchoSize = message->CookieSize;
-                  callback = (CookieEchoCallbackPtr)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoCallback, (tagdata_t)NULL);
-                  if(callback) {
-                     LOG_VERBOSE3
-                     fputs("Invoking callback...\n", stdlog);
-                     LOG_END
-                     callback((void*)tagListGetData(session->Tags, TAG_RspSession_ReceivedCookieEchoUserData, (tagdata_t)NULL),
-                              message->CookiePtr,
-                              message->CookieSize);
-                     LOG_VERBOSE3
-                     fputs("Callback completed\n", stdlog);
-                     LOG_END
-                  }
-                  else {
-                     LOG_VERBOSE2
-                     fputs("There is no callback installed\n", stdlog);
-                     LOG_END
-                  }
+                  session->CookieEcho          = message->CookiePtr;
+                  session->CookieEchoSize      = message->CookieSize;
                }
                else {
                   LOG_ERROR
@@ -989,16 +971,36 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
    unsigned short           streamID;
    ssize_t                  result;
    int                      flags;
+   unsigned int             type;
+   size_t                   cookieLength;
 
-   tagListSetData(tags, TAG_RspIO_MsgIsCookie, 0);
+   tagListSetData(tags, TAG_RspIO_MsgIsCookieEcho, 0);
    LOG_VERBOSE3
    fprintf(stdlog, "Trying to read message from session, socket %d\n",
            session->Socket);
    LOG_END
 
+
+   if((session->CookieEcho) && (length > 0)) {
+      /* A cookie echo has been stored (during rspSessionSelect(). Now,
+         the application calls this function. We now return the cookie
+         and free its storage space. */
+      LOG_ACTION
+      fputs("There is a cookie echo. Giving it back first\n", stdlog);
+      LOG_END
+      tagListSetData(tags, TAG_RspIO_MsgIsCookieEcho, 1);
+      cookieLength = min(length, session->CookieEchoSize);
+      memcpy(buffer, session->CookieEcho, cookieLength);
+      free(session->CookieEcho);
+      session->CookieEcho     = NULL;
+      session->CookieEchoSize = 0;
+      return(cookieLength);
+   }
+
+
+   now = startTimeStamp;
    do {
-      now = getMicroTime();
-      readTimeout = (long long)timeout - (long long)(now - startTimeStamp);
+      readTimeout = (long long)timeout - ((long long)now - (long long)startTimeStamp);
       if(readTimeout < 0) {
          LOG_VERBOSE
          fprintf(stdlog, "Reading from session, socket %d, timed out\n",
@@ -1020,19 +1022,43 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
          LOG_VERBOSE2
          fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
          LOG_END
-         if(handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result) == AHT_COOKIE_ECHO) {
-            if(session->CookieEcho) {
-               if(length >= session->CookieEchoSize) {
-                  tagListSetData(tags, TAG_RspIO_MsgIsCookie, 1);
-                  memcpy(buffer, session->CookieEcho, session->CookieEchoSize);
-                  return(session->CookieEchoSize);
+         type = handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
+         switch(type) {
+            case AHT_COOKIE_ECHO:
+               if(session->CookieEcho) {
+                  tagListSetData(tags, TAG_RspIO_MsgIsCookieEcho, 1);
+                  cookieLength = min(length, session->CookieEchoSize);
+                  if(cookieLength > 0) {
+                     /* The function is called from the user program.
+                        Give the cookie echo back now. */
+                     memcpy(buffer, session->CookieEcho, cookieLength);
+                     free(session->CookieEcho);
+                     session->CookieEcho     = NULL;
+                     session->CookieEchoSize = 0;
+                  }
+                  return(cookieLength);
                }
-               free(session->CookieEcho);
-               session->CookieEcho     = NULL;
-               session->CookieEchoSize = 0;
-            }
+             break;
          }
+         return(RspRead_ControlRead);
       }
+      else if(result == RspRead_ReadError) {
+         if(tagListGetData(tags, TAG_RspIO_MakeFailover, 1) != 0) {
+            LOG_VERBOSE
+            fprintf(stdlog, "Session failure during read, socket %d. Failover necessary\n",
+                    session->Socket);
+            LOG_END
+            rspSessionFailover(session);
+            return(RspRead_Failover);
+         }
+         LOG_VERBOSE
+         fprintf(stdlog, "Session failure during read, socket %d. Failover turned off -> returning\n",
+                 session->Socket);
+         LOG_END
+         return(RspRead_ReadError);
+      }
+
+      now = getMicroTime();
    } while(result > 0);
 
    if(result == RspRead_PartialRead) {
@@ -1070,15 +1096,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
       }
    }
 
-   if( ( (result <= 0) && (errno != EAGAIN) ) &&
-       (tagListGetData(tags, TAG_RspIO_MakeFailover, 1) != 0) ) {
-      LOG_ACTION
-      fprintf(stdlog, "Session failure during read, socket %d. Failover necessary\n",
-              session->Socket);
-      LOG_END
-      rspSessionFailover(session);
-   }
-   else {
+   if(result > 0) {
       tagListSetData(tags, TAG_RspIO_SCTP_AssocID,  (tagdata_t)assocID);
       tagListSetData(tags, TAG_RspIO_SCTP_StreamID, streamID);
       tagListSetData(tags, TAG_RspIO_SCTP_PPID,     ppid);
@@ -1098,10 +1116,10 @@ ssize_t rspSessionWrite(struct SessionDescriptor* session,
                                tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
                                NULL, 0,
                                0,
-                               (const sctp_assoc_t)tagListGetData(tags, TAG_RspIO_SCTP_StreamID,   0),
+                               (const sctp_assoc_t)tagListGetData(tags, TAG_RspIO_SCTP_StreamID, 0),
                                tagListGetData(tags, TAG_RspIO_SCTP_PPID,       0),
                                tagListGetData(tags, TAG_RspIO_SCTP_TimeToLive, 0xffffffff),
-                               tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0));
+                               tagListGetData(tags, TAG_RspIO_Timeout,         (tagdata_t)~0));
    if((result < 0) && (errno != EAGAIN)) {
       LOG_ACTION
       fprintf(stdlog, "Session failure during write, socket %d. Failover necessary\n",
@@ -1213,11 +1231,14 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
             LOG_END
             mytags[0].Tag  = TAG_RspIO_MakeFailover;
             mytags[0].Data = 0;
-            mytags[1].Tag  = TAG_DONE;
+            mytags[1].Tag  = TAG_RspIO_Timeout;
+            mytags[1].Data = ~0;
+            mytags[2].Tag  = TAG_DONE;
             readResult = rspSessionRead(sessionArray[i], NULL, 0, (struct TagItem*)&mytags);
-            if((readResult != RspRead_MessageRead) && (readResult != RspRead_PartialRead)) {
+            if((readResult != RspRead_PartialRead) &&
+               (readResult != RspRead_ControlRead)) {
                LOG_VERBOSE4
-               fprintf(stdlog, "Session with socket FD %d has user data\n",
+               fprintf(stdlog, "Session with socket FD %d has real event\n",
                        sessionArray[i]->Socket);
                LOG_END
                sessionStatusArray[i] |= RspSelect_Read;
@@ -1280,7 +1301,7 @@ size_t rspSessionCreateComponentStatus(
           struct ComponentAssociationEntry** caeArray,
           char*                              statusText,
           const int                          registrarSocket,
-          const RegistrarIdentifierType           registrarID,
+          const RegistrarIdentifierType      registrarID,
           const int                          registrarSocketProtocol,
           const unsigned long long           registrarConnectionTimeStamp)
 {

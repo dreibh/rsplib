@@ -1,197 +1,60 @@
----------------------------------------------------------------------------------
+How to set up a simple test of rsplib-0.8.0 using the unstable files:
 
-This source code repository contains an implementation of the
-rsplib Reliable Server Pooling library.
+1. Get latest sctplib1-****.tar.gz and install it by
+   - unpacking the Tar/GZip archive
+   - ./autgen.sh
+      (invokes automake, calls ./configure with some parameters, calls make)
+   . make install
+      (as root!)
 
----------------------------------------------------------------------------------
+2. Get latest socketapi-****.tar.gz and install it by
+   - unpacking the Tar/GZip archive
+   - ./autgen.sh
+      (invokes automake, calls ./configure with some parameters, calls make)
+   . make install
+      (as root!)
 
-This directory contains a number of files that are shortly described hereafter:
-AUTHORS   :   People who have produced this code.
-COPYING   :   The license to be applied for using/compiling/distributing
-              this code.
-INSTALL   :   Basic installation notes.
-NEWS      :   Changes from release to release.
-README    :   This file
-TODO      :   A more or less complete list of missing features/known
-              problems, etc.
+3. Get latest rsplib2-****.tar.gz and install it by
+   - unpacking the Tar/GZip archive
+   - ./autgen.sh
+      (invokes automake, calls ./configure with some parameters, calls make)
 
+4. Ensure that multicast is working!
+   - You need a configured Ethernet interface to use multicast, even if you want to
+     make tests only via loopback! Multicast does not work correctly otherwise,
+     at least under Linux and Darwin.
+     Alternative:
+     If you have a dummy device, configure it and set a default route to it:
+     root# ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up
+     root# route add default gw 10.0.0.2
+   - Ensure that your firewall settings for the ethernet interface allow
+     UDP packets from the nameserver (Server Announce).
 
-Homepage and Mailing Lists:
-http://www.sctp.de/rserpool.html
-Here, you will find a mailing list to which you can write bug reports.
-For an introduction to RSerPool and more information about the implementation,
-see also http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html.
+5. Start at least one registrar
+   ./registrar-example
+   (You can start multiple registrars; they may also run on different hosts, of course)
 
+6. Start at least one pool element
+   ./poolelement-example
+   (You can start multiple pool elements; they may also run on different hosts, of course.
+    If it complains about finding no registrar, check the multicast settings!)
 
-Multicast Notes:
-- You need a configured Ethernet interface to use multicast, even if you want to
-  make tests only via loopback! Multicast does not work correctly otherwise,
-  at least under Linux and Darwin.
-  Alternative:
-  If you have a dummy device, configure it and set a default route to it:
-  root# ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up
-  root# route add default gw 10.0.0.2
-- Ensure that your firewall settings for the ethernet interface allow
-  UDP packets from the nameserver (Server Announce).
+6. Start a pool user
+   ./pooluser-example -auto=250
+   (If it complains about finding no registrar, check the multicast settings!
+    -auto=250 sends a text string to the Echo PE every 250ms. If you do not set
+    this parameter, you have to manually enter text lines at standard input.)
 
+7. If everythink works, you can test RSerPool functionality by stopping the pool
+   element and watching the failover. The example Echo service uses ASAP Cookies
+   to store the line number.
 
-Installation instructions:
-1. - Get a compatible version of the sctplib from http://www.sctp.de/sctp.html
-   - Install it:
-     prompt> tar xzvf sctplib-XXXX.tar.gz
-     prompt> cd sctplib-XXXX
-     prompt> ./configure
-     prompt> make
-     prompt> make install   (as root!)
-     Now, the sctplib should be installed under /usr/local.
-2. - Get a compatible version of the socketapi from http://www.sctp.de/sctp.html
-     prompt> ./configure
-     If configure fails due to incompatible version of the sctplib, go to step 1
-     and install a compatible version first. Then, try again.
-     prompt> make
-     prompt> make install   (as root!)
-3. - Install rsplib:
-     prompt> ./configure
-     prompt> make
+==================================================================================
+Please subscribe to our mailing list and report any problems you discover!
+Help us to improve rsplib, the world's first Open Source RSerPool implementation!
 
-
-Example programs:
-1. nameserver - A simple RSerPool nameserver
-Parameters:
-   -sctp=address:port{,address2}{,address3}...
-      Create SCTP socket and bind it to the given address.
-      Incoming ASAP requests will be accepted on this socket.
-      Examples: -sctp=192.168.1.1:9999
-                -sctp=[3ffe:1:2::3]:9999
-                -sctp=172.16.1.1:9999,127.0.0.1,10.11.12.13
-      As long as it is not standardized, the well-known nameserver port
-      number is assumed to be 9999. It is strongly recommended to use
-      this value! Addresses obtained by multicast will only work with
-      this port number!
-      NOTE: Currently, only SCTP is supported. TCP will be supported in
-            a later version.
-   -announce=address:port
-      Join multicast group of the given address and wait for incoming
-      UDP ServerHunts on the given port.
-      Example: -announce=239.0.0.1:9999
-      239.0.0.0 to 239.255.255.255 is reserved for private usage an
-      is recommended here.
-      IMPORTANT: See multicast notes above!
-   -logfile=filename
-      Use the given file for debug output.
-   -logappend=filename
-      Append debug output to the given file.
-   -logquiet
-      Do not print debug output.
-   -logcolor=on|off
-      Enable or disable of ANSI color sequences for debug output.
-   -loglevel=level
-      Set level for logging (0=off, 1=errors only, ..., 9=most verbose)
-
-2. examplepe - An example pool element: Echo Server
-Parameters:
-   [Pool Name]
-      The handle of the pool to which it should be registered.
-   -sctp or -sctp-tcplike
-      Use TCP-like SCTP for application data
-   -sctp-udplike
-      Use UDP-like SCTP for application data
-   -udp
-      Use UDP for application data
-   -tcp
-      Use TCP for application data
-   -port=port
-      Set local port number to port. The default is auto-select.
-   -policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|
-           random|rd|weightedrandom|wrd
-      Use given pool policy. Default weight: 1, default load: 0.
-   -load=load
-      Set load of pool policy to given value.
-   -weight=weight
-      Set weight of pool policy to given value.
-   -stop=seconds
-      Automatically stop pool element after given number of seconds.
-   -logfile=filename
-      Use the given file for debug output.
-   -logappend=filename
-      Append debug output to the given file.
-   -logquiet
-      Do not print debug output.
-   -logcolor=on|off
-      Enable or disable of ANSI color sequences for debug output.
-   -loglevel=level
-      Set level for logging (0=off, 1=errors only, ..., 9=most verbose)
-
-3. examplepu - An example pool user: Echo Client
-
-Text entered on standard input will be echoed by the pool element. In
-case of a pool element failure, a failure to another one will be tried.
-
-Parameters:
-   [Pool Name]
-      The handle of the pool.
-   -auto=milliseconds
-      Instead of reading from standard input, automatically generate
-      text with given interval in milliseconds and send it to
-      pool element.
-   -logfile=filename
-      Use the given file for debug output.
-   -logappend=filename
-      Append debug output to the given file.
-   -logquiet
-      Do not print debug output.
-   -logcolor=on|off
-      Enable or disable of ANSI color sequences for debug output.
-   -loglevel=level
-      Set level for logging (0=off, 1=errors only, ..., 9=most verbose)
-
-
-Configuration Files:
-The file asap-servers.conf contains a static list of nameservers which could
-be contacted. It contains entries of the format "nameserver <address> <SCTP|TCP>".
-Comment lines begin with "#".
-In the usual case, asap-servers.conf is empty and pool elements and users
-dynamically obtain a list of nameservers by listening to server announcements
-via multicast. The multicast address for these announcements is specified in
-the asap-serverannounce.conf file. It contains entries of the format
-"ipv4-announce <multicast address>:<port>" for IPv4 and
-"ipv6-announce <multicast address>:<port>" for IPv6.
-Note: Since there is currently no nameserver port specified, 9999 has to be used!
-
-
-How to get the examples running:
-
-Very Important: All programs have to be run as root, since the sctplib
-                is an userland SCTP implementation and therefore requires
-                root access!
-
-1. Start the nameserver
-prompt> ./nameserver -sctp=<IP address of your host>:9999 -announce=239.0.0.1:9999 -loglevel=3
-   This will start the nameserver listening on all interfaces via SCTP.
-   The multicast group will be 239.0.0.1.
-   Now, check asap-serverannounce.conf to make sure that 239.0.0.1:9999 is
-   included there as announcement address:
-   "ipv4-announce 239.0.0.1:9999"
-
-2. Start at least one pool element
-prompt> ./examplepe EchoPool -loglevel=3
-   This is an echo server, that is it simply echos back all data that
-   is sent to this server.
-   If you discover problems with the multicast server announcements,
-   read the Multicast Notes above!
-
-3. Run the pool user
-prompt> ./examplepu EchoPool -loglevel=3
-   This is a simple client for the echo server. You can enter some text,
-   it will be sent to the server and the echo will be printed. The option
-   "-auto=<milliseconds>" will automatically generate text lines in the
-   given interval.
-   If you discover problems with the multicast server announcements,
-   read the Multicast Notes above!
-
-Note: All 3 programs support the option "-loglevel=<level>" to print
-      debug information. Set the loglevel to 9 for the most verbose
-      output. To turn off all debug output, set the level to 0.
+Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more information
+==================================================================================
 
 
 Thomas Dreibholz, dreibh@exp-math.uni-essen.de

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.15 2004/11/19 16:42:46 dreibh Exp $
+ *  $Id: examplepu.c,v 1.16 2004/12/16 16:16:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,11 +74,11 @@ static void handleStdIn()
    size_t lineNumberLength;
    size_t toSend;
 
-   snprintf((char*)&buffer,sizeof(buffer),"%09lld ",++OutCalls);
+   snprintf((char*)&buffer, sizeof(buffer),"%09lld ", ++OutCalls);
    lineNumberLength = strlen(buffer);
 
    setNonBlocking(STDIN_FILENO);
-   fgets((char*)&buffer[lineNumberLength],sizeof(buffer) - lineNumberLength,stdin);
+   fgets((char*)&buffer[lineNumberLength], sizeof(buffer) - lineNumberLength, stdin);
    setBlocking(STDIN_FILENO);
 
    if(buffer[lineNumberLength] == 0x00) {
@@ -101,7 +101,7 @@ static void handleAutoTimer()
    size_t lineNumberLength;
    size_t toSend;
 
-   snprintf((char*)&buffer,sizeof(buffer),"%09lld ",++OutCalls);
+   snprintf((char*)&buffer, sizeof(buffer), "%09lld ", ++OutCalls);
    lineNumberLength = strlen(buffer);
 
    snprintf((char*)&buffer[lineNumberLength], sizeof(buffer) - lineNumberLength,
@@ -143,7 +143,7 @@ static void handleServerReply()
       fflush(stdout);
    }
    else if(errno != EAGAIN) {
-      puts("rspSessionRead failed!");
+      printf("rspSessionRead failed: code %d\n", received);
    }
    else {
       puts("Message/Partial -- DAS SOLLTE NICHT ANGEZEIGT WERDEN!");

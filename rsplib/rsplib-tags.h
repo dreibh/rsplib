@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.7 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.8 2004/12/16 16:16:59 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -84,20 +84,17 @@
 #define TAG_RspIO_SCTP_PPID       (TAG_USER + 8005)
 #define TAG_RspIO_SCTP_TimeToLive (TAG_USER + 8006)
 #define TAG_RspIO_MakeFailover    (TAG_USER + 8007)
-#define TAG_RspIO_MsgIsCookie     (TAG_USER + 8008)
+#define TAG_RspIO_MsgIsCookieEcho (TAG_USER + 8008)
 
 #define TAG_RspSession_ConnectTimeout           (TAG_USER + 7000)
 #define TAG_RspSession_NameResolutionRetryDelay (TAG_USER + 7001)
 
-#define TAG_RspSession_ReceivedCookieEchoCallback (TAG_USER + 7003)
-#define TAG_RspSession_ReceivedCookieEchoUserData (TAG_USER + 7004)
-#define TAG_RspSession_FailoverCallback           (TAG_USER + 7005)
-#define TAG_RspSession_FailoverUserData           (TAG_USER + 7006)
+#define TAG_RspSession_FailoverCallback         (TAG_USER + 7005)
+#define TAG_RspSession_FailoverUserData         (TAG_USER + 7006)
 
-#define TAG_UserTransport_HasControlChannel       (TAG_USER + 7500)
+#define TAG_UserTransport_HasControlChannel     (TAG_USER + 7500)
 
 
-typedef void (*CookieEchoCallbackPtr)(void* userData, void* cookieData, const size_t cookieSize);
 typedef bool (*FailoverCallbackPtr)(void* userData);
 
 
@@ -109,12 +106,13 @@ typedef bool (*FailoverCallbackPtr)(void* userData);
 #define TAG_RspSelect_RsplibEventLoop (TAG_USER + 9005)
 
 
-#define RspRead_ReadError   -1
-#define RspRead_WrongPPID   -2
-#define RspRead_PartialRead -3
-#define RspRead_MessageRead -4
+#define RspRead_Timeout     -1
+#define RspRead_ReadError   -2
+#define RspRead_WrongPPID   -3
+#define RspRead_PartialRead -4
 #define RspRead_TooBig      -5
-#define RspRead_Timeout     -6
+#define RspRead_Failover    -6
+#define RspRead_ControlRead -7
 
 
 #endif

@@ -227,7 +227,7 @@ void ServiceThread::run()
    size_t                           dataPackets = 0;
 
    while(!Shutdown) {
-      tags[0].Tag  = TAG_RspIO_MsgIsCookie;
+      tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
       tags[0].Data = 0;
       tags[1].Tag  = TAG_RspIO_Timeout;
       tags[1].Data = (tagdata_t)2000000;
@@ -235,8 +235,13 @@ void ServiceThread::run()
       received = rspSessionRead(Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
       if(received > 0) {
          if(tags[0].Data != 0) {
-            if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
-               goto finish;
+            if(tags[0].Data != 0) {
+               if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
+                  goto finish;
+               }
+            }
+            else {
+               std::cerr << "Cookie echo did not come via control channel?!" << std::endl;
             }
          }
          else {

@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.20 2004/11/22 15:28:11 dreibh Exp $
+ *  $Id: examplepe.c,v 1.21 2004/12/16 16:16:58 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -71,7 +71,7 @@ struct Cookie
 };
 
 
-/* ###### Send cookie ####################################################### */
+/* ###### Send cookie #################################################### */
 void sendCookie(struct Client* client)
 {
    struct Cookie cookie;
@@ -90,9 +90,9 @@ void sendCookie(struct Client* client)
 }
 
 
-static void handleCookieEcho(void* userData, void* cookieData, const size_t cookieSize)
+/* ###### Handle cookie echo ############################################# */
+static void handleCookieEcho(struct Client* client, void* cookieData, const size_t cookieSize)
 {
-   struct Client* client = (struct Client*)userData;
    struct Cookie* cookie = (struct Cookie*)cookieData;
 
    if(client->IsNewClient) {
@@ -101,7 +101,7 @@ static void handleCookieEcho(void* userData, void* cookieData, const size_t cook
          /* Here should be *at least* checks for a Message Authentication Code
             (MAC), timestamp (out-of-date cookie, e.g. a replay attack) and
             validity and plausibility of the values set from the cookie! */
-         client->CounterStart = ntohl(cookie->Counter);
+         client->CounterStart = ntohl(cookie->Counter) + 1;
          client->Counter = client->CounterStart;
          printf("Retrieved Counter from Cookie -> %d\n" , client->Counter);
       }
@@ -116,7 +116,7 @@ static void handleCookieEcho(void* userData, void* cookieData, const size_t cook
 }
 
 
-/* ###### Handle service requests from clients ############################## */
+/* ###### Handle service requests from clients ########################### */
 static void handleServiceRequest(GList**        clientList,
                                  struct Client* client)
 {
@@ -124,22 +124,33 @@ static void handleServiceRequest(GList**        clientList,
    char           buffer[16385];
    ssize_t        received;
 
-   tags[0].Tag  = TAG_RspIO_Timeout;
+   tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
    tags[0].Data = (tagdata_t)0;
-   tags[1].Tag  = TAG_DONE;
+   tags[1].Tag  = TAG_RspIO_Timeout;
+   tags[1].Data = (tagdata_t)0;
+   tags[2].Tag  = TAG_DONE;
    received = rspSessionRead(client->Session, (char*)&buffer, sizeof(buffer) - 1, (struct TagItem*)&tags);
    if(received > 0) {
-      client->IsNewClient = false;
-      buffer[received]  = 0x00;
-      printf("Echo %u %u> %s", client->CounterStart,
-                               client->Counter,
-                               buffer);
-      client->Counter++;
-      rspSessionWrite(client->Session, (char*)&buffer, received, NULL);
+      if(tags[0].Data == 0) {
+         client->IsNewClient = false;
+         buffer[received]  = 0x00;
+         printf("Echo %u %u> %s", client->CounterStart,
+                                  client->Counter,
+                                  buffer);
+         client->Counter++;
+         rspSessionWrite(client->Session, (char*)&buffer, received, NULL);
 
-      if((client->Counter % 3) == 0) {
-         sendCookie(client);
+         if((client->Counter % 3) == 0) {
+            sendCookie(client);
+         }
       }
+      else {
+         handleCookieEcho(client, (void*)&buffer, received);
+      }
+   }
+   else if(received == RspRead_Timeout) {
+      puts("INTERNAL ERROR: Timeout occurred! This should never happen!");
+      exit(1);
    }
    else {
       *clientList = g_list_remove(*clientList, (gpointer)client);
@@ -152,7 +163,7 @@ static void handleServiceRequest(GList**        clientList,
 }
 
 
-/* ###### rsplib main loop thread ########################################### */
+/* ###### rsplib main loop thread ######################################## */
 static bool RsplibThreadStop = false;
 static void* rsplibMainLoop(void* args)
 {
@@ -453,17 +464,9 @@ int main(int argc, char** argv)
                   tags[4].Data = 3;
                   tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
                   tags[5].Data = 12;
-                  tags[6].Tag  = TAG_RspSession_ReceivedCookieEchoCallback;
-                  tags[6].Data = (tagdata_t)handleCookieEcho;
-                  tags[7].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;
-                  tags[7].Data = (tagdata_t)client;
-                  tags[8].Tag  = TAG_DONE;
+                  tags[6].Tag  = TAG_DONE;
 */
-                  tags[0].Tag  = TAG_RspSession_ReceivedCookieEchoCallback;
-                  tags[0].Data = (tagdata_t)handleCookieEcho;
-                  tags[1].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;
-                  tags[1].Data = (tagdata_t)client;
-                  tags[2].Tag  = TAG_DONE;
+                  tags[0].Tag  = TAG_DONE;
 
 
                   newSession = rspAcceptSession(pedArray[0], (struct TagItem*)&tags);
