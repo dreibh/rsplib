@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.16 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.17 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1709,7 +1709,7 @@ static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer error message ######################################## */
-static bool scanPeerErrorMessage(struct RSerPoolMessage* message)
+static bool scanENRPPeerErrorMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1725,6 +1725,16 @@ static bool scanPeerErrorMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
+   return(true);
+}
+
+
+/* ###### Scan peer error message ######################################## */
+static bool scanASAPPeerErrorMessage(struct RSerPoolMessage* message)
+{
+   if(!scanErrorParameter(message)) {
+      return(false);
+   }
    return(true);
 }
 
@@ -1893,95 +1903,103 @@ static bool scanMessage(struct RSerPoolMessage* message)
             return(false);
          }
        break;
+       case AHT_PEER_ERROR:
+          LOG_VERBOSE2
+          fputs("Scanning PeerError (ASAP) message...\n", stdlog);
+          LOG_END
+          if(scanASAPPeerErrorMessage(message) == false) {
+             return(false);
+          }
+        break;
 
        /* ====== ENRP ==================================================== */
        case EHT_PEER_PRESENCE:
-         LOG_VERBOSE2
-         fputs("Scanning PeerPresence message...\n", stdlog);
-         LOG_END
-         if(scanPeerPresenceMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerPresence message...\n", stdlog);
+          LOG_END
+          if(scanPeerPresenceMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_NAME_TABLE_REQUEST:
-         LOG_VERBOSE2
-         fputs("Scanning PeerNameTableRequest message...\n", stdlog);
-         LOG_END
-         if(scanPeerNameTableRequestMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerNameTableRequest message...\n", stdlog);
+          LOG_END
+          if(scanPeerNameTableRequestMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Scanning PeerNameTableResponse message...\n", stdlog);
-         LOG_END
-         if(scanPeerNameTableResponseMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerNameTableResponse message...\n", stdlog);
+          LOG_END
+          if(scanPeerNameTableResponseMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_NAME_UPDATE:
-         LOG_VERBOSE2
-         fputs("Scanning PeerNameUpdate message...\n", stdlog);
-         LOG_END
-         if(scanPeerNameUpdateMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerNameUpdate message...\n", stdlog);
+          LOG_END
+          if(scanPeerNameUpdateMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_LIST_REQUEST:
-         LOG_VERBOSE2
-         fputs("Scanning PeerListRequest message...\n", stdlog);
-         LOG_END
-         if(scanPeerListRequestMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerListRequest message...\n", stdlog);
+          LOG_END
+          if(scanPeerListRequestMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_LIST_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Scanning PeerListResponse message...\n", stdlog);
-         LOG_END
-         if(scanPeerListResponseMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerListResponse message...\n", stdlog);
+          LOG_END
+          if(scanPeerListResponseMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_INIT_TAKEOVER:
-         LOG_VERBOSE2
-         fputs("Scanning PeerInitTakeover message...\n", stdlog);
-         LOG_END
-         if(scanPeerInitTakeoverMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerInitTakeover message...\n", stdlog);
+          LOG_END
+          if(scanPeerInitTakeoverMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_INIT_TAKEOVER_ACK:
-         LOG_VERBOSE2
-         fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
-         LOG_END
-         if(scanPeerInitTakeoverAckMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
+          LOG_END
+          if(scanPeerInitTakeoverAckMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_TAKEOVER_SERVER:
-         LOG_VERBOSE2
-         fputs("Scanning PeerTakeoverServer message...\n", stdlog);
-         LOG_END
-         if(scanPeerTakeoverServerMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerTakeoverServer message...\n", stdlog);
+          LOG_END
+          if(scanPeerTakeoverServerMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_OWNERSHIP_CHANGE:
-         LOG_VERBOSE2
-         fputs("Scanning PeerOwnershipChange message...\n", stdlog);
-         LOG_END
-         if(scanPeerOwnershipChangeMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerOwnershipChange message...\n", stdlog);
+          LOG_END
+          if(scanPeerOwnershipChangeMessage(message) == false) {
+             return(false);
+          }
         break;
        case EHT_PEER_ERROR:
-         LOG_VERBOSE2
-         fputs("Scanning PeerError message...\n", stdlog);
-         LOG_END
-         if(scanPeerErrorMessage(message) == false) {
-            return(false);
-         }
+          LOG_VERBOSE2
+          fputs("Scanning PeerError (ENRP) message...\n", stdlog);
+          LOG_END
+          if(scanENRPPeerErrorMessage(message) == false) {
+             return(false);
+          }
         break;
 
        /* ====== Unknown ================================================= */

@@ -267,6 +267,55 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeAddPoolElementNode)(
 }
 
 
+/* ###### Update PoolElementNode's ownership ############################# */
+void ST_CLASS(poolNamespaceNodeUpdateOwnershipOfPoolElementNode)(
+        struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+        struct ST_CLASS(PoolElementNode)*   poolElementNode,
+        const ENRPIdentifierType            newHomeNSIdentifier)
+{
+   struct STN_CLASSNAME* result;
+
+   if(newHomeNSIdentifier != poolElementNode->HomeNSIdentifier) {
+      if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode)) {
+         result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                    &poolElementNode->PoolElementOwnershipStorageNode);
+         CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+      }
+      poolElementNode->HomeNSIdentifier = newHomeNSIdentifier;
+      result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
+                                 &poolElementNode->PoolElementOwnershipStorageNode);
+      CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+   }
+}
+
+
+/* ###### Update PoolElementNode's connection ############################ */
+void ST_CLASS(poolNamespaceNodeUpdateConnectionOfPoolElementNode)(
+        struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+        struct ST_CLASS(PoolElementNode)*   poolElementNode,
+        const int                           connectionSocketDescriptor,
+        const sctp_assoc_t                  connectionAssocID)
+{
+   struct STN_CLASSNAME* result;
+
+   if((connectionSocketDescriptor != poolElementNode->ConnectionSocketDescriptor) ||
+      (connectionAssocID          != poolElementNode->ConnectionAssocID)) {
+      if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode)) {
+         result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                    &poolElementNode->PoolElementConnectionStorageNode);
+         CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
+      }
+      poolElementNode->ConnectionSocketDescriptor = connectionSocketDescriptor;
+      poolElementNode->ConnectionAssocID          = connectionAssocID;
+      if(poolElementNode->ConnectionSocketDescriptor > 0) {
+         result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                       &poolElementNode->PoolElementConnectionStorageNode);
+         CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
+      }
+   }
+}
+
+
 /* ###### Update PoolElementNode ######################################### */
 void ST_CLASS(poolNamespaceNodeUpdatePoolElementNode)(
         struct ST_CLASS(PoolNamespaceNode)*     poolNamespaceNode,
@@ -274,39 +323,18 @@ void ST_CLASS(poolNamespaceNodeUpdatePoolElementNode)(
         const struct ST_CLASS(PoolElementNode)* source,
         unsigned int*                           errorCode)
 {
-   struct STN_CLASSNAME* result;
-
    ST_CLASS(poolNodeUpdatePoolElementNode)(poolElementNode->OwnerPoolNode, poolElementNode, source, errorCode);
    if(*errorCode == RSPERR_OKAY) {
       /* ====== Change ownership ========================================= */
-      if(source->HomeNSIdentifier != poolElementNode->HomeNSIdentifier) {
-         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode)) {
-            result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementOwnershipStorage,
-                                       &poolElementNode->PoolElementOwnershipStorageNode);
-            CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
-         }
-         poolElementNode->HomeNSIdentifier = source->HomeNSIdentifier;
-         result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
-                                       &poolElementNode->PoolElementOwnershipStorageNode);
-         CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
-      }
+      ST_CLASS(poolNamespaceNodeUpdateOwnershipOfPoolElementNode)(
+         poolNamespaceNode, poolElementNode,
+         source->HomeNSIdentifier);
 
       /* ====== Change connection ======================================== */
-      if((source->ConnectionSocketDescriptor != poolElementNode->ConnectionSocketDescriptor) ||
-         (source->ConnectionAssocID          != poolElementNode->ConnectionAssocID)) {
-         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode)) {
-            result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementConnectionStorage,
-                                       &poolElementNode->PoolElementConnectionStorageNode);
-            CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
-         }
-         poolElementNode->ConnectionSocketDescriptor = source->ConnectionSocketDescriptor;
-         poolElementNode->ConnectionAssocID          = source->ConnectionAssocID;
-         if(poolElementNode->ConnectionSocketDescriptor > 0) {
-            result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementConnectionStorage,
-                                          &poolElementNode->PoolElementConnectionStorageNode);
-            CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
-         }
-      }
+      ST_CLASS(poolNamespaceNodeUpdateConnectionOfPoolElementNode)(
+         poolNamespaceNode, poolElementNode,
+         source->ConnectionSocketDescriptor,
+         source->ConnectionAssocID);
    }
 }
 

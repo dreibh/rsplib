@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.15 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id: servertable.c,v 1.16 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -56,12 +56,9 @@
 
 
 /* ###### Server announce callback  ######################################### */
-static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
-                                         int                sd,
-                                         unsigned int       eventMask,
-                                         void*              userData)
+static void handleServerAnnounceCallback(struct ServerTable* serverTable,
+                                         int                 sd)
 {
-   struct ServerTable*            serverTable = (struct ServerTable*)userData;
    struct RSerPoolMessage*        message;
    struct ST_CLASS(PeerListNode)* peerListNode;
    union sockaddr_union           senderAddress;
@@ -176,12 +173,14 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                       &serverTable->AnnounceAddress,
                                       true)) {
+/* =???????????? WEG!
             fdCallbackNew(&serverTable->AnnounceSocketFDCallback,
                           serverTable->Dispatcher,
                           serverTable->AnnounceSocket,
                           FDCE_Read,
                           handleServerAnnounceCallback,
                           (void*)serverTable);
+*/
          }
          else {
             LOG_ERROR
@@ -208,7 +207,7 @@ void serverTableDelete(struct ServerTable* serverTable)
 {
    if(serverTable != NULL) {
       if(serverTable->AnnounceSocket >= 0) {
-         fdCallbackDelete(&serverTable->AnnounceSocketFDCallback);
+// ????????? WEG!         fdCallbackDelete(&serverTable->AnnounceSocketFDCallback);
          ext_close(serverTable->AnnounceSocket);
          serverTable->AnnounceSocket = -1;
       }
@@ -459,15 +458,24 @@ int serverTableFindServer(struct ServerTable* serverTable)
       }
       selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
       selectTimeout.tv_usec = nextTimeout % (card64)1000000;
+
       LOG_VERBOSE3
       fprintf(stdlog, "select() with timeout %Ld\n", nextTimeout);
       LOG_END
-      result = rspSelect(n + 1,
-                         &rfdset, &wfdset, NULL,
-                         &selectTimeout);
+      /*
+         Important: rspSelect() may *not* be used here!
+         serverTableFindServer() may be called from within a
+         session timer + from within name server socket callback
+         => Strange things will happen when these callbacks are
+            invoked recursively!
+      */
+      result = ext_select(n + 1,
+                          &rfdset, &wfdset, NULL,
+                          &selectTimeout);
       LOG_VERBOSE3
       fprintf(stdlog, "select() result=%d\n", result);
       LOG_END
+
       if((result < 0) && (errno == EINTR)) {
          for(j = 0;j < MAX_SIMULTANEOUS_REQUESTS;j++) {
             if(sd[j] >= 0) {
@@ -486,6 +494,9 @@ int serverTableFindServer(struct ServerTable* serverTable)
 
       /* Handle events */
       if(result != 0) {
+         if(FD_ISSET(serverTable->AnnounceSocket, &rfdset)) {
+            handleServerAnnounceCallback(serverTable, serverTable->AnnounceSocket);
+         }
          for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
             if(sd[i] >= 0) {
                if(FD_ISSET(sd[i], &wfdset)) {

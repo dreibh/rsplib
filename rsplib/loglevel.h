@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.4 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: loglevel.h,v 1.5 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -82,7 +82,7 @@ void setLogColor(const unsigned int color);
       loggingMutexLock();                    \
       setLogColor(c1);                       \
       printTimeStamp(stdlog);                \
-      fprintf(stdlog,"P%u.%u %s:%u %s() - ", \
+      fprintf(stdlog,"P%u.%x %s:%u %s() - ", \
               (unsigned int)getpid(),        \
               (unsigned int)pthread_self(),  \
               __FILE__,                      \

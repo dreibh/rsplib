@@ -446,6 +446,15 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindPoolEleme
    return(NULL);
 }
 
+void ST_CLASS(poolNamespaceNodeUpdateOwnershipOfPoolElementNode)(
+        struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+        struct ST_CLASS(PoolElementNode)*   poolElementNode,
+        const ENRPIdentifierType            newHomeNSIdentifier);
+void ST_CLASS(poolNamespaceNodeUpdateConnectionOfPoolElementNode)(
+        struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+        struct ST_CLASS(PoolElementNode)*   poolElementNode,
+        const int                           connectionSocketDescriptor,
+        const sctp_assoc_t                  connectionAssocID);
 void ST_CLASS(poolNamespaceNodeUpdatePoolElementNode)(
         struct ST_CLASS(PoolNamespaceNode)*     poolNamespaceNode,
         struct ST_CLASS(PoolElementNode)*       poolElementNode,

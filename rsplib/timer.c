@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.5 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: timer.c,v 1.6 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -72,12 +72,15 @@ void timerDelete(struct Timer* timer)
 void timerStart(struct Timer*            timer,
                 const unsigned long long timeStamp)
 {
+   struct LeafLinkedRedBlackTreeNode* result;
+
    CHECK(!leafLinkedRedBlackTreeNodeIsLinked(&timer->Node));
    timer->TimeStamp = timeStamp;
 
    dispatcherLock(timer->Master);
-   CHECK(leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
-                                      &timer->Node) == &timer->Node);
+   result = leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
+                                         &timer->Node);
+   CHECK(result == &timer->Node);
    dispatcherUnlock(timer->Master);
 }
 
@@ -94,10 +97,12 @@ void timerRestart(struct Timer*            timer,
 /* ###### Stop timer ##################################################### */
 void timerStop(struct Timer* timer)
 {
+   struct LeafLinkedRedBlackTreeNode* result;
    if(leafLinkedRedBlackTreeNodeIsLinked(&timer->Node)) {
       dispatcherLock(timer->Master);
-      leafLinkedRedBlackTreeRemove(&timer->Master->TimerStorage,
-                                   &timer->Node);
+      result = leafLinkedRedBlackTreeRemove(&timer->Master->TimerStorage,
+                                            &timer->Node);
+      CHECK(result == &timer->Node);
       dispatcherUnlock(timer->Master);
       timer->TimeStamp = 0;
    }

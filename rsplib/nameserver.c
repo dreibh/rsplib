@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.28 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: nameserver.c,v 1.29 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -572,6 +572,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->ASAPSendAnnounces        = asapSendAnnounces;
       nameServer->ENRPUnicastSocket        = enrpUnicastSocket;
       nameServer->ENRPUnicastAddress       = enrpUnicastAddress;
+      nameServer->ENRPMulticastSocket      = -1;
       nameServer->ENRPUseMulticast         = enrpUseMulticast;
       nameServer->ENRPAnnounceViaMulticast = enrpAnnounceViaMulticast;
 
@@ -600,6 +601,19 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
          setNonBlocking(nameServer->ASAPAnnounceSocket);
       }
 
+      fdCallbackNew(&nameServer->ASAPSocketFDCallback,
+                    &nameServer->StateMachine,
+                    nameServer->ASAPSocket,
+                    FDCE_Read|FDCE_Exception,
+                    nameServerSocketCallback,
+                    (void*)nameServer);
+      fdCallbackNew(&nameServer->ENRPUnicastSocketFDCallback,
+                    &nameServer->StateMachine,
+                    nameServer->ENRPUnicastSocket,
+                    FDCE_Read|FDCE_Exception,
+                    nameServerSocketCallback,
+                    (void*)nameServer);
+
       memcpy(&nameServer->ENRPMulticastAddress, enrpMulticastAddress, sizeof(union sockaddr_union));
       if(nameServer->ENRPMulticastAddress.in6.sin6_family == AF_INET6) {
          nameServer->ENRPMulticastSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
@@ -612,6 +626,12 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       }
       if(nameServer->ENRPMulticastSocket >= 0) {
          setNonBlocking(nameServer->ENRPMulticastSocket);
+         fdCallbackNew(&nameServer->ENRPMulticastSocketFDCallback,
+                       &nameServer->StateMachine,
+                       nameServer->ENRPMulticastSocket,
+                       FDCE_Read|FDCE_Exception,
+                       nameServerSocketCallback,
+                       (void*)nameServer);
       }
 
       timerStart(&nameServer->ENRPAnnounceTimer, getMicroTime() + nameServer->MentorHuntTimeout);
@@ -625,26 +645,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
             nameServerDelete(nameServer);
             return(NULL);
          }
-         fdCallbackNew(&nameServer->ENRPMulticastSocketFDCallback,
-                       &nameServer->StateMachine,
-                       nameServer->ENRPMulticastSocket,
-                       FDCE_Read|FDCE_Exception,
-                       nameServerSocketCallback,
-                       (void*)nameServer);
       }
-
-      fdCallbackNew(&nameServer->ASAPSocketFDCallback,
-                    &nameServer->StateMachine,
-                    nameServer->ASAPSocket,
-                    FDCE_Read|FDCE_Exception,
-                    nameServerSocketCallback,
-                    (void*)nameServer);
-      fdCallbackNew(&nameServer->ENRPUnicastSocketFDCallback,
-                    &nameServer->StateMachine,
-                    nameServer->ENRPUnicastSocket,
-                    FDCE_Read|FDCE_Exception,
-                    nameServerSocketCallback,
-                    (void*)nameServer);
    }
 
    return(nameServer);
@@ -655,9 +656,8 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
 void nameServerDelete(struct NameServer* nameServer)
 {
    if(nameServer) {
-      fdCallbackDelete(&nameServer->ASAPSocketFDCallback);
       fdCallbackDelete(&nameServer->ENRPUnicastSocketFDCallback);
-      fdCallbackDelete(&nameServer->ENRPMulticastSocketFDCallback);
+      fdCallbackDelete(&nameServer->ASAPSocketFDCallback);
       ST_CLASS(peerListManagementClear)(&nameServer->Peers);
       ST_CLASS(peerListManagementDelete)(&nameServer->Peers);
       ST_CLASS(poolNamespaceManagementClear)(&nameServer->Namespace);
@@ -668,13 +668,18 @@ void nameServerDelete(struct NameServer* nameServer)
       timerDelete(&nameServer->NamespaceActionTimer);
       timerDelete(&nameServer->PeerActionTimer);
       takeoverProcessListDelete(&nameServer->Takeovers);
+      if(nameServer->ENRPMulticastSocket >= 0) {
+         fdCallbackDelete(&nameServer->ENRPMulticastSocketFDCallback);
+         ext_close(nameServer->ENRPMulticastSocket >= 0);
+         nameServer->ENRPMulticastSocket = -1;
+      }
+      if(nameServer->ENRPUnicastSocket >= 0) {
+         ext_close(nameServer->ENRPUnicastSocket >= 0);
+         nameServer->ENRPUnicastSocket = -1;
+      }
       if(nameServer->ASAPAnnounceSocket >= 0) {
          ext_close(nameServer->ASAPAnnounceSocket >= 0);
          nameServer->ASAPAnnounceSocket = -1;
-      }
-      if(nameServer->ENRPMulticastSocket >= 0) {
-         ext_close(nameServer->ENRPMulticastSocket >= 0);
-         nameServer->ENRPMulticastSocket = -1;
       }
       dispatcherDelete(&nameServer->StateMachine);
       free(nameServer);
@@ -2317,6 +2322,7 @@ static void doTakeover(struct NameServer*      nameServer,
 {
    struct ST_CLASS(PeerListNode)*    peerListNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
 
    LOG_WARNING
    fprintf(stdlog, "Taking over peer $%08x...\n",
@@ -2362,20 +2368,25 @@ static void doTakeover(struct NameServer*      nameServer,
 
 
    /* ====== Update PEs' home NS identifier ============================== */
-   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)
-                        (&nameServer->Namespace.Namespace, takeoverProcess->TargetID);
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                        &nameServer->Namespace.Namespace, takeoverProcess->TargetID);
    while(poolElementNode) {
+      nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
+                               &nameServer->Namespace.Namespace, poolElementNode);
+
       LOG_ACTION
       fprintf(stdlog, "Taking ownership of pool element $%08x in pool ",
               poolElementNode->Identifier);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
       fputs("\n", stdlog);
       LOG_END
-puts("IMEPLEMENT ME!");
 
-// HIER DANN: First, oder Next schon oben merken (besser, da O(1)) ...
-      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)
-                           (&nameServer->Namespace.Namespace, poolElementNode);
+      ST_CLASS(poolNamespaceNodeUpdateOwnershipOfPoolElementNode)(
+          &nameServer->Namespace.Namespace,
+          poolElementNode,
+          nameServer->ServerID);
+
+      poolElementNode = nextPoolElementNode;
    }
 
 

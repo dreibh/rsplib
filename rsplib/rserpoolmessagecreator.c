@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.13 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.14 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -106,9 +106,9 @@ static bool finishTLV(struct RSerPoolMessage* message,
                       const size_t            tlvPosition)
 {
    struct rserpool_tlv_header* header  = (struct rserpool_tlv_header*)&message->Buffer[tlvPosition];
-   size_t                  length  = message->Position - tlvPosition;
-   size_t                  padding = getPadding(length,4);
-   char*                   pad;
+   size_t                      length  = message->Position - tlvPosition;
+   size_t                      padding = getPadding(length,4);
+   char*                       pad;
 
    if(message->BufferSize >= sizeof(struct rserpool_tlv_header)) {
       header->atlv_length = htons(length);
@@ -544,10 +544,6 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
       case RSPERR_INVALID_VALUES:
          data       = message->OffendingMessageTLV;
          dataLength = message->OffendingMessageTLVLength;
-       break;
-      case RSPERR_INCOMPATIBLE_POOL_POLICY:
-         data       = NULL;
-         dataLength = 0;
        break;
       default:
          data       = NULL;
@@ -1275,7 +1271,7 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer error ############################################## */
-static bool createPeerErrorMessage(struct RSerPoolMessage* message)
+static bool createENRPPeerErrorMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1300,6 +1296,23 @@ static bool createPeerErrorMessage(struct RSerPoolMessage* message)
 }
 
 
+/* ###### Create peer error ############################################## */
+static bool createASAPPeerErrorMessage(struct RSerPoolMessage* message)
+{
+   if(beginMessage(message, AHT_PEER_ERROR,
+                   message->Flags & 0x00,
+                   PPID_ASAP) == NULL) {
+      return(false);
+   }
+
+   if(createErrorParameter(message) == false) {
+      return(false);
+   }
+
+   return(finishMessage(message));
+}
+
+
 /* ###### Convert RSerPoolMessage to packet ############################## */
 size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
 {
@@ -1308,198 +1321,206 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
    switch(message->Type) {
       /* ====== ASAP ===================================================== */
       case AHT_NAME_RESOLUTION:
-         LOG_VERBOSE2
-         fputs("Creating NameResolution message...\n", stdlog);
-         LOG_END
-         if(createNameResolutionMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating NameResolution message...\n", stdlog);
+          LOG_END
+          if(createNameResolutionMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_NAME_RESOLUTION_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Creating NameResolutionResponse message...\n", stdlog);
-         LOG_END
-         if(createNameResolutionResponseMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating NameResolutionResponse message...\n", stdlog);
+          LOG_END
+          if(createNameResolutionResponseMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_ENDPOINT_KEEP_ALIVE:
-         LOG_VERBOSE2
-         fputs("Creating EndpointKeepAlive message...\n", stdlog);
-         LOG_END
-         if(createEndpointKeepAliveMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating EndpointKeepAlive message...\n", stdlog);
+          LOG_END
+          if(createEndpointKeepAliveMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-         LOG_VERBOSE2
-         fputs("Creating EndpointKeepAliveAck message...\n", stdlog);
-         LOG_END
-         if(createEndpointKeepAliveAckMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating EndpointKeepAliveAck message...\n", stdlog);
+          LOG_END
+          if(createEndpointKeepAliveAckMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_SERVER_ANNOUNCE:
-         LOG_VERBOSE2
-         fputs("Creating ServerAnnounce message...\n", stdlog);
-         LOG_END
-         if(createServerAnnounceMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating ServerAnnounce message...\n", stdlog);
+          LOG_END
+          if(createServerAnnounceMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_REGISTRATION:
-         LOG_VERBOSE2
-         fputs("Creating Registration message...\n", stdlog);
-         LOG_END
-         if(createRegistrationMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating Registration message...\n", stdlog);
+          LOG_END
+          if(createRegistrationMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_REGISTRATION_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Creating RegistrationResponse message...\n", stdlog);
-         LOG_END
-         if(createRegistrationResponseMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating RegistrationResponse message...\n", stdlog);
+          LOG_END
+          if(createRegistrationResponseMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_DEREGISTRATION:
-         LOG_VERBOSE2
-         fputs("Creating Deregistration message...\n", stdlog);
-         LOG_END
-         if(createDeregistrationMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating Deregistration message...\n", stdlog);
+          LOG_END
+          if(createDeregistrationMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_DEREGISTRATION_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Creating DeregistrationResponse message...\n", stdlog);
-         LOG_END
-         if(createDeregistrationResponseMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating DeregistrationResponse message...\n", stdlog);
+          LOG_END
+          if(createDeregistrationResponseMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_COOKIE:
-         LOG_VERBOSE2
-         fputs("Creating Cookie message...\n", stdlog);
-         LOG_END
-         if(createCookieMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating Cookie message...\n", stdlog);
+          LOG_END
+          if(createCookieMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_COOKIE_ECHO:
-         LOG_VERBOSE2
-         fputs("Creating CookieEcho message...\n", stdlog);
-         LOG_END
-         if(createCookieEchoMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating CookieEcho message...\n", stdlog);
+          LOG_END
+          if(createCookieEchoMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_BUSINESS_CARD:
-         LOG_VERBOSE2
-         fputs("Creating BusinessCard message...\n", stdlog);
-         LOG_END
-         if(createBusinessCardMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating BusinessCard message...\n", stdlog);
+          LOG_END
+          if(createBusinessCardMessage(message) == true) {
+             return(message->Position);
+          }
        break;
       case AHT_ENDPOINT_UNREACHABLE:
-         LOG_VERBOSE2
-         fputs("Creating EndpointUnreachable message...\n", stdlog);
-         LOG_END
-         if(createEndpointUnreachableMessage(message) == true) {
-            return(message->Position);
-         }
-       break;
+          LOG_VERBOSE2
+          fputs("Creating EndpointUnreachable message...\n", stdlog);
+          LOG_END
+          if(createEndpointUnreachableMessage(message) == true) {
+             return(message->Position);
+          }
+        break;
+       case AHT_PEER_ERROR:
+          LOG_VERBOSE2
+          fputs("Creating PeerError (ASAP) message...\n", stdlog);
+          LOG_END
+          if(createASAPPeerErrorMessage(message) == true) {
+             return(message->Position);
+          }
+        break;
 
        /* ====== ENRP ==================================================== */
        case EHT_PEER_PRESENCE:
-         LOG_VERBOSE2
-         fputs("Creating PeerPresence message...\n", stdlog);
-         LOG_END
-         if(createPeerPresenceMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerPresence message...\n", stdlog);
+          LOG_END
+          if(createPeerPresenceMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_NAME_TABLE_REQUEST:
-         LOG_VERBOSE2
-         fputs("Creating PeerNameTableRequest message...\n", stdlog);
-         LOG_END
-         if(createPeerNameTableRequestMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerNameTableRequest message...\n", stdlog);
+          LOG_END
+          if(createPeerNameTableRequestMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_NAME_TABLE_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Creating PeerNameTableResponse message...\n", stdlog);
-         LOG_END
-         if(createPeerNameTableResponseMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerNameTableResponse message...\n", stdlog);
+          LOG_END
+          if(createPeerNameTableResponseMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_NAME_UPDATE:
-         LOG_VERBOSE2
-         fputs("Creating PeerNameUpdate message...\n", stdlog);
-         LOG_END
-         if(createPeerNameUpdateMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerNameUpdate message...\n", stdlog);
+          LOG_END
+          if(createPeerNameUpdateMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_LIST_REQUEST:
-         LOG_VERBOSE2
-         fputs("Creating PeerListRequest message...\n", stdlog);
-         LOG_END
-         if(createPeerListRequestMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerListRequest message...\n", stdlog);
+          LOG_END
+          if(createPeerListRequestMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_LIST_RESPONSE:
-         LOG_VERBOSE2
-         fputs("Creating PeerListResponse message...\n", stdlog);
-         LOG_END
-         if(createPeerListResponseMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerListResponse message...\n", stdlog);
+          LOG_END
+          if(createPeerListResponseMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_INIT_TAKEOVER:
-         LOG_VERBOSE2
-         fputs("Creating PeerInitTakeover message...\n", stdlog);
-         LOG_END
-         if(createPeerInitTakeoverMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerInitTakeover message...\n", stdlog);
+          LOG_END
+          if(createPeerInitTakeoverMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_INIT_TAKEOVER_ACK:
-         LOG_VERBOSE2
-         fputs("Creating PeerInitTakeoverAck message...\n", stdlog);
-         LOG_END
-         if(createPeerInitTakeoverAckMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerInitTakeoverAck message...\n", stdlog);
+          LOG_END
+          if(createPeerInitTakeoverAckMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_TAKEOVER_SERVER:
-         LOG_VERBOSE2
-         fputs("Creating PeerTakeoverServer message...\n", stdlog);
-         LOG_END
-         if(createPeerTakeoverServerMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerTakeoverServer message...\n", stdlog);
+          LOG_END
+          if(createPeerTakeoverServerMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_OWNERSHIP_CHANGE:
-         LOG_VERBOSE2
-         fputs("Creating PeerOwnershipChange message...\n", stdlog);
-         LOG_END
-         if(createPeerOwnershipChangeMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerOwnershipChange message...\n", stdlog);
+          LOG_END
+          if(createPeerOwnershipChangeMessage(message) == true) {
+             return(message->Position);
+          }
         break;
        case EHT_PEER_ERROR:
-         LOG_VERBOSE2
-         fputs("Creating PeerError message...\n", stdlog);
-         LOG_END
-         if(createPeerErrorMessage(message) == true) {
-            return(message->Position);
-         }
+          LOG_VERBOSE2
+          fputs("Creating PeerError (ENRP) message...\n", stdlog);
+          LOG_END
+          if(createENRPPeerErrorMessage(message) == true) {
+             return(message->Position);
+          }
         break;
 
        /* ====== Unknown ================================================= */

@@ -49,6 +49,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
                                                   void*              userData),
                    void*              userData)
 {
+   LeafLinkedRedBlackTreeNode* result;
    CHECK((fd >= 0) && (fd < FD_SETSIZE));
 
    leafLinkedRedBlackTreeNodeNew(&fdCallback->Node);
@@ -60,8 +61,9 @@ void fdCallbackNew(struct FDCallback* fdCallback,
    fdCallback->SelectTimeStamp = getMicroTime();
 
    dispatcherLock(fdCallback->Master);
-   CHECK(leafLinkedRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
-                                      &fdCallback->Node) == &fdCallback->Node);
+   result = leafLinkedRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
+                                         &fdCallback->Node);
+   CHECK(result == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
    dispatcherUnlock(fdCallback->Master);
 }
@@ -70,11 +72,13 @@ void fdCallbackNew(struct FDCallback* fdCallback,
 /* ###### Destructor ##################################################### */
 void fdCallbackDelete(struct FDCallback* fdCallback)
 {
+   LeafLinkedRedBlackTreeNode* result;
    CHECK(leafLinkedRedBlackTreeNodeIsLinked(&fdCallback->Node));
 
    dispatcherLock(fdCallback->Master);
-   leafLinkedRedBlackTreeRemove(&fdCallback->Master->FDCallbackStorage,
-                                &fdCallback->Node);
+   result = leafLinkedRedBlackTreeRemove(&fdCallback->Master->FDCallbackStorage,
+                                         &fdCallback->Node);
+   CHECK(result == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
    dispatcherUnlock(fdCallback->Master);
 

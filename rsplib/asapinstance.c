@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.18 2004/08/25 17:27:33 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.19 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -173,12 +173,12 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
                        (void*)asapInstance);
 
          LOG_NOTE
-         fputs("Connection to name server server successfully established\n", stdlog);
+         fputs("Connection to name server successfully established\n", stdlog);
          LOG_END
       }
       else {
          LOG_ERROR
-         fputs("Unable to connect to a name server server\n", stdlog);
+         fputs("Unable to connect to a name server\n", stdlog);
          LOG_END
          result = false;
       }
@@ -192,10 +192,6 @@ static bool asapInstanceConnectToNameServer(struct ASAPInstance* asapInstance,
 static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstance)
 {
    if(asapInstance->NameServerSocket >= 0) {
-LOG_NOTE
-printf("NS=%d\n",      asapInstance->NameServerSocket);  // ?????????????????
-LOG_END
-
       fdCallbackDelete(&asapInstance->NameServerFDCallback);
       ext_close(asapInstance->NameServerSocket);
       LOG_NOTE
@@ -258,7 +254,7 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
 
    if(asapInstanceConnectToNameServer(asapInstance, IPPROTO_SCTP) == false) {
       LOG_ERROR
-      fputs("No name server server available\n", stdlog);
+      fputs("No name server available\n", stdlog);
       LOG_END
       return(RSPERR_NO_NAMESERVER);
    }
@@ -806,17 +802,17 @@ static void handleNameServerConnectionEvent(
             rserpoolMessageDelete(message);
          }
          else {
-            LOG_ACTION
-            fputs("Disconnecting from name server server due to failure\n", stdlog);
+            LOG_WARNING
+            fputs("Disconnecting from name server due to failure\n", stdlog);
             LOG_END
             asapInstanceDisconnectFromNameServer(asapInstance);
          }
       }
    }
    else {
-       LOG_ERROR
-       fprintf(stdlog, "Event for unknown socket %d\n", fd);
-       LOG_END
+      LOG_ERROR
+      fprintf(stdlog, "Event for unknown socket %d\n", fd);
+      LOG_END
    }
 
    LOG_VERBOSE2

@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.4 2004/08/25 09:32:53 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.5 2004/08/26 09:12:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
