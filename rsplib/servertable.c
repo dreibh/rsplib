@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.26 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: servertable.c,v 1.27 2004/11/21 20:23:45 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -161,8 +161,12 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
 {
    union sockaddr_union* announceAddress;
    union sockaddr_union  defaultAnnounceAddress;
+/*
    union sockaddr_union  localAddress;
+*/
    struct ServerTable*   serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
+   const int on = 1;
+   
    if(serverTable != NULL) {
       serverTable->Dispatcher        = dispatcher;
       serverTable->LastAnnounceHeard = 0;
@@ -197,12 +201,26 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       serverTable->AnnounceSocket = ext_socket(serverTable->AnnounceAddress.sa.sa_family,
                                                SOCK_DGRAM, IPPROTO_UDP);
       if(serverTable->AnnounceSocket >= 0) {
+         if (ext_setsockopt(serverTable->AnnounceSocket,
+                            SOL_SOCKET,
+                            SO_REUSEADDR,
+                            (const void *)&on,
+                            sizeof(int)) != 0) {
+            LOG_ERROR
+            fputs("Unable to setsockopt SO_REUSEADDR", stdlog);
+            LOG_END
+            ext_close(serverTable->AnnounceSocket);
+            serverTable->AnnounceSocket = -1;
+            return(false);
+         };   
+         /*
          memset(&localAddress, 0, sizeof(localAddress));
          localAddress.sa.sa_family = serverTable->AnnounceAddress.sa.sa_family;
          setPort(&localAddress.sa, getPort(&serverTable->AnnounceAddress.sa));
+         */
          if(ext_bind(serverTable->AnnounceSocket,
-                     (struct sockaddr*)&localAddress,
-                     getSocklen((struct sockaddr*)&localAddress)) == 0) {
+                     (struct sockaddr*)&serverTable->AnnounceAddress.sa,
+                     getSocklen((struct sockaddr*)&serverTable->AnnounceAddress.sa)) == 0) {
             if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
                                          &serverTable->AnnounceAddress,
                                          true)) {
@@ -226,7 +244,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
          else {
             LOG_ERROR
             fputs("Unable to bind multicast socket to address ",  stdlog);
-            fputaddress((struct sockaddr*)&localAddress, true, stdlog);
+            fputaddress((struct sockaddr*)&serverTable->AnnounceAddress.sa, true, stdlog);
             fputs("\n",  stdlog);
             LOG_END
             return(false);
