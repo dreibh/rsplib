@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.13 2004/09/02 15:30:53 dreibh Exp $
+ *  $Id: rspsession.c,v 1.14 2004/09/16 14:33:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -131,9 +131,9 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;
    struct EndpointAddressInfo* next;
-   union sockaddr_union*    sctpLocalAddressArray = NULL;
-   union sockaddr_union*    localAddressArray     = NULL;
-   union sockaddr_union     socketName;
+   union sockaddr_union*       sctpLocalAddressArray = NULL;
+   union sockaddr_union*       localAddressArray     = NULL;
+   union sockaddr_union        socketName;
    socklen_t                   socketNameLen;
    unsigned int                localAddresses;
    unsigned int                result;
