@@ -10,6 +10,9 @@ fork
 nameserver
 simpleexamplepu
 simpleexamplepe
+cspmonitor
+fractalpoolelement
+testregistrator
 .libs
 .gdb_history
 .deps
