@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.11 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.12 2004/07/25 16:55:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -522,6 +522,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
       result = asapInstanceSendRequest(asapInstance, message);
+      rserpoolMessageDelete(message);
    }
 
    dispatcherUnlock(asapInstance->StateMachine);

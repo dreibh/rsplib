@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.3 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: examplepu.c,v 1.4 2004/07/25 16:55:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -196,17 +196,17 @@ int main(int argc, char** argv)
 #endif
 
    tags[0].Tag = TAG_TuneSCTP_MinRTO;
-   tags[0].Data = 1000;
+   tags[0].Data = 100;
    tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-   tags[1].Data = 2000;
+   tags[1].Data = 500;
    tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-   tags[2].Data = 500;
+   tags[2].Data = 250;
    tags[3].Tag = TAG_TuneSCTP_Heartbeat;
    tags[3].Data = 100;
    tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
-   tags[4].Data = 1;
+   tags[4].Data = 3;
    tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
-   tags[5].Data = 2;
+   tags[5].Data = 9;
    tags[6].Tag  = TAG_RspSession_FailoverCallback;
    tags[6].Data = (tagdata_t)handleFailover;
    tags[7].Tag  = TAG_RspSession_FailoverUserData;

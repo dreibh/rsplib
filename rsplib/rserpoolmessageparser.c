@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.4 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.5 2004/07/25 16:55:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1840,7 +1840,7 @@ struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
       message->TransportAddressBlockListPtrAutoDelete = true;
 
       LOG_VERBOSE3
-      fprintf(stdlog, "Scanning zzmessage, size=%u...\n",
+      fprintf(stdlog, "Scanning message, size=%u...\n",
               (unsigned int)packetSize);
       LOG_END
 

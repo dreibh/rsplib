@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.6 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: examplepe.c,v 1.7 2004/07/25 16:55:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -388,9 +388,9 @@ int main(int argc, char** argv)
                   tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
                   tags[3].Data = 100;
                   tags[4].Tag  = TAG_TuneSCTP_PathMaxRXT;
-                  tags[4].Data = 2;
+                  tags[4].Data = 3;
                   tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
-                  tags[5].Data = 3;
+                  tags[5].Data = 12;
                   tags[6].Tag  = TAG_RspSession_ReceivedCookieEchoCallback;
                   tags[6].Data = (tagdata_t)handleCookieEcho;
                   tags[7].Tag  = TAG_RspSession_ReceivedCookieEchoUserData;

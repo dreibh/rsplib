@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.12 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: nameserver.c,v 1.13 2004/07/25 16:55:03 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -302,7 +302,7 @@ void nameServerCleanUser(struct NameServer* nameServer,
                      poolElementNodeReference->Reference->Identifier);
          if(result == RSPERR_OKAY) {
             LOG_ACTION
-            fputs("Deregistration successfully completed\n", stdlog);
+            fputs("User clean-up successfully completed\n", stdlog);
             LOG_END
             LOG_VERBOSE3
             fputs("Namespace content:\n", stdlog);
@@ -310,6 +310,8 @@ void nameServerCleanUser(struct NameServer* nameServer,
             fputs("Users:\n", stdlog);
             nameServerDumpUsers(nameServer);
             LOG_END
+exit(1);
+
          }
          else {
             LOG_ERROR
@@ -851,17 +853,17 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
 
             /* ====== Tune SCTP association ============================== */
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
-            tags[0].Data = (nameServer->HeartbeatInterval / 1000);
+            tags[0].Data = 100;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
             tags[1].Data = 500;
             tags[2].Tag = TAG_TuneSCTP_InitialRTO;
             tags[2].Data = 250;
             tags[3].Tag = TAG_TuneSCTP_Heartbeat;
-            tags[3].Data = 100;
+            tags[3].Data = (nameServer->HeartbeatInterval / 1000);
             tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
-            tags[4].Data = 2;
+            tags[4].Data = 3;
             tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
-            tags[5].Data = 3;
+            tags[5].Data = 9;
             tags[6].Tag = TAG_DONE;
             if(!tuneSCTP(fd, assocID, (struct TagItem*)&tags)) {
                LOG_WARNING
@@ -1217,13 +1219,34 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
             notification = (union sctp_notification*)&buffer;
             switch(notification->sn_header.sn_type) {
                case SCTP_ASSOC_CHANGE:
-                  if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
-                     (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
+                  if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
+                     LOG_ACTION
+                     fprintf(stdlog, "Association communication lost for socket %d, assoc %u\n",
+                             nameServer->ASAPSocket,
+                             notification->sn_assoc_change.sac_assoc_id);
+
+                     LOG_END
+                     nameServerCleanUser(nameServer, fd,
+                                         notification->sn_assoc_change.sac_assoc_id);
+                  }
+                  else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
+                     LOG_ACTION
+                     fprintf(stdlog, "Association shutdown completed for socket %d, assoc %u\n",
+                             nameServer->ASAPSocket,
+                             notification->sn_assoc_change.sac_assoc_id);
+
+                     LOG_END
                      nameServerCleanUser(nameServer, fd,
                                          notification->sn_assoc_change.sac_assoc_id);
                   }
                 break;
                case SCTP_SHUTDOWN_EVENT:
+                     LOG_ACTION
+                     fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
+                             nameServer->ASAPSocket,
+                             notification->sn_assoc_change.sac_assoc_id);
+
+                     LOG_END
                   nameServerCleanUser(nameServer, fd,
                                       notification->sn_shutdown_event.sse_assoc_id);
                 break;
