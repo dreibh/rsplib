@@ -22,6 +22,7 @@
 
 #include "transportaddressblock.h"
 #include "stringutilities.h"
+#include "debug.h"
 
 #include <ext_socket.h>
 #include <stdlib.h>
@@ -221,4 +222,78 @@ struct TransportAddressBlock* transportAddressBlockDuplicate(const struct Transp
       memcpy(duplicate, transportAddressBlock, size);
    }
    return(duplicate);
+}
+
+
+#ifdef FAKE_ADDRESSCMP
+int addresscmp(const struct sockaddr* address1, const struct sockaddr* address2, const bool port)
+{
+   const struct sockaddr_testaddr* test1 = (const struct sockaddr_testaddr*)address1;
+   const struct sockaddr_testaddr* test2 = (const struct sockaddr_testaddr*)address2;
+   CHECK(test1->ta_family == AF_TEST);
+   CHECK(test2->ta_family == AF_TEST);
+   if(test1->ta_addr < test2->ta_addr) {
+      return(-1);
+   }
+   else if(test1->ta_addr > test2->ta_addr) {
+      return(1);
+   }
+   if(port) {
+      if(test1->ta_port < test2->ta_port) {
+         return(-1);
+      }
+      else if(test1->ta_port > test2->ta_port) {
+         return(1);
+      }
+   }
+   return(0);
+}
+#else
+#include "netutilities.h"
+#endif
+
+
+/* ###### Compare TransportAddressBlocks ################################# */
+int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
+                                    const void* transportAddressBlockPtr2)
+{
+   const struct TransportAddressBlock* transportAddressBlock1 = (const struct TransportAddressBlock*)transportAddressBlockPtr1;
+   const struct TransportAddressBlock* transportAddressBlock2 = (const struct TransportAddressBlock*)transportAddressBlockPtr2;
+   int                                 result;
+
+   if((transportAddressBlock1 == NULL) &&
+      (transportAddressBlock2 != NULL)) {
+      return(-1);
+   }
+   else if((transportAddressBlock1 != NULL) &&
+      (transportAddressBlock2 == NULL)) {
+      return(1);
+   }
+   if(transportAddressBlock1->Port < transportAddressBlock2->Port) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Port > transportAddressBlock2->Port) {
+      return(1);
+   }
+   if(transportAddressBlock1->Flags < transportAddressBlock2->Flags) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Flags > transportAddressBlock2->Flags) {
+      return(1);
+   }
+   if(transportAddressBlock1->Addresses < transportAddressBlock2->Addresses) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Addresses > transportAddressBlock2->Addresses) {
+      return(1);
+   }
+   for(size_t i = 0;i < transportAddressBlock1->Addresses;i++) {
+      result = addresscmp((const struct sockaddr*)&transportAddressBlock1->AddressArray[i],
+                          (const struct sockaddr*)&transportAddressBlock2->AddressArray[i],
+                          false);
+      if(result != 0) {
+         return(result);
+      }
+   }
+   return(0);
 }

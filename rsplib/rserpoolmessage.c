@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.4 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.5 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -214,7 +214,8 @@ bool rserpoolMessageSend(int                     fd,
    messageLength = rserpoolMessage2Packet(message);
    if(messageLength > 0) {
       sent = sendtoplus(fd,
-                        message->Buffer, messageLength, 0, NULL, 0,
+                        message->Buffer, messageLength, 0,
+                        message->Address, message->AddressLength,
                         message->PPID,
                         assocID,
                         0, 0, timeout);
@@ -322,7 +323,7 @@ struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
 
 /* ###### Try to get space in RSerPoolMessage's buffer ####################### */
 void* getSpace(struct RSerPoolMessage* message,
-               const size_t        headerSize)
+               const size_t            headerSize)
 {
    void* header;
 
@@ -337,6 +338,7 @@ void* getSpace(struct RSerPoolMessage* message,
            "Buffer size too low!\np=%u + h=%u > size=%u\n",
            (unsigned int)message->Position, (unsigned int)headerSize,
            (unsigned int)message->BufferSize);
-   LOG_END_FATAL
+   LOG_END_FATAL  // ?????????????????
+
    return(NULL);
 }

@@ -108,6 +108,16 @@ void transportAddressBlockPrint(const struct TransportAddressBlock* transportAdd
   */
 struct TransportAddressBlock* transportAddressBlockDuplicate(const struct TransportAddressBlock* transportAddressBlock);
 
+/**
+  * Compare TransportAddressBlocks.
+  *
+  * @param transportAddressBlockPtr1 TransportAddressBlock 1.
+  * @param transportAddressBlockPtr2 TransportAddressBlock 2.
+  * @return Comparison result.
+  */
+int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
+                                    const void* transportAddressBlockPtr2);
+
 
 #ifdef __cplusplus
 }

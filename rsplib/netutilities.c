@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.10 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: netutilities.c,v 1.11 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1083,11 +1083,32 @@ int recvfromplus(int              sockfd,
 }
 
 
+/* ###### Get socklen for given address ################################## */
+size_t getSocklen(struct sockaddr* address)
+{
+   switch(address->sa_family) {
+      case AF_INET:
+         return(sizeof(struct sockaddr_in));
+       break;
+      case AF_INET6:
+         return(sizeof(struct sockaddr_in6));
+       break;
+      default:
+         LOG_ERROR
+         fprintf(stdlog, "Unsupported address family #%d\n",
+                 address->sa_family);
+         LOG_END_FATAL
+         return(sizeof(struct sockaddr));
+       break;
+   }
+}
+
+
 /* ###### Multicast group management ##################################### */
-bool multicastGroupMgt(int              sockfd,
-                       struct sockaddr* address,
-                       const char*      interface,
-                       const bool       add)
+static bool multicastGroupMgt(int              sockfd,
+                              struct sockaddr* address,
+                              const char*      interface,
+                              const bool       add)
 {
    struct ip_mreq   mreq;
    struct ifreq     ifr;
@@ -1132,24 +1153,47 @@ bool multicastGroupMgt(int              sockfd,
 }
 
 
-/* ###### Get socklen for given address ################################## */
-size_t getSocklen(struct sockaddr* address)
+/* ###### Join or leave multicast group ################################## */
+bool joinOrLeaveMulticastGroup(int                         sd,
+                               const union sockaddr_union* groupAddress,
+                               const bool                  add)
 {
-   switch(address->sa_family) {
-      case AF_INET:
-         return(sizeof(struct sockaddr_in));
-       break;
-      case AF_INET6:
-         return(sizeof(struct sockaddr_in6));
-       break;
-      default:
-         LOG_ERROR
-         fprintf(stdlog, "Unsupported address family #%d\n",
-                 address->sa_family);
-         LOG_END_FATAL
-         return(sizeof(struct sockaddr));
-       break;
+   union sockaddr_union localAddress;
+   int                  on;
+
+   memset((char*)&localAddress, 0, sizeof(localAddress));
+   localAddress.sa.sa_family = groupAddress->sa.sa_family;
+   if(groupAddress->in6.sin6_family == AF_INET6) {
+      localAddress.in6.sin6_port = groupAddress->in6.sin6_port;
    }
+   else {
+      CHECK(groupAddress->in.sin_family == AF_INET);
+      localAddress.in.sin_port = groupAddress->in.sin_port;
+   }
+
+   on = 1;
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
+      return(false);
+   }
+#if !defined (LINUX)
+   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
+      return(false);
+   }
+#endif
+
+   if(ext_bind(sd, (struct sockaddr*)&localAddress,
+               getSocklen((struct sockaddr*)&localAddress)) != 0) {
+      LOG_ERROR
+      fputs("Unable to bind multicast socket to address ",  stdlog);
+      fputaddress((struct sockaddr*)&localAddress, true, stdlog);
+      fputs("\n",  stdlog);
+      LOG_END
+      return(false);
+   }
+   if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add) == false) {
+      return(false);
+   }
+   return(true);
 }
 
 

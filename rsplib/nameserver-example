@@ -1,3 +1,3 @@
 #!/bin/sh
 # ./nameserver -asap=127.0.0.1:3863,10.0.0.1 -asapannounce=239.0.0.1:3863 -enrp=127.0.0.1:3864,10.0.0.1 -enrpmulticast=239.0.0.1:3864 -loglevel=9 $@
-./nameserver -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -loglevel=9 $@
+./nameserver -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -logcolor=on -loglevel=9 $@

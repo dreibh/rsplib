@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.6 2004/07/25 18:02:32 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.7 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -227,8 +227,8 @@ static size_t checkBeginTLV(struct RSerPoolMessage* message,
                             const bool              checkType)
 {
    struct rserpool_tlv_header* header;
-   uint16_t                tlvType;
-   size_t                  tlvLength;
+   uint16_t                    tlvType;
+   size_t                      tlvLength;
 
    while(getNextTLV(message, tlvPosition, &header, &tlvType, &tlvLength)) {
       if((!checkType) || (PURE_ATT_TYPE(tlvType) == expectedType)) {
@@ -236,7 +236,8 @@ static size_t checkBeginTLV(struct RSerPoolMessage* message,
       }
 
       LOG_VERBOSE4
-      fprintf(stdlog, "Type $%04x, expected type $%04x!\n",PURE_ATT_TYPE(tlvType),expectedType);
+      fprintf(stdlog, "Type $%04x, expected type $%04x!\n",
+              PURE_ATT_TYPE(tlvType), expectedType);
       LOG_END
 
       if(handleUnknownTLV(message, tlvType, tlvLength) == false) {
@@ -296,7 +297,7 @@ static bool scanAddressParameter(struct RSerPoolMessage*  message,
 #endif
 
    size_t tlvPosition = 0;
-   size_t tlvLength   = checkBeginTLV(message, &tlvPosition,0,false);
+   size_t tlvLength   = checkBeginTLV(message, &tlvPosition, 0, false);
    if(tlvLength == 0) {
       message->Error = RSPERR_BUFFERSIZE_EXCEEDED;
       return(false);
@@ -372,16 +373,16 @@ static bool scanAddressParameter(struct RSerPoolMessage*  message,
 static bool scanUserTransportParameter(struct RSerPoolMessage*       message,
                                        struct TransportAddressBlock* transportAddressBlock)
 {
-   size_t                              addresses;
-   struct sockaddr_storage             addressArray[MAX_PE_TRANSPORTADDRESSES];
+   size_t                                  addresses;
+   struct sockaddr_storage                 addressArray[MAX_PE_TRANSPORTADDRESSES];
    struct rserpool_udptransportparameter*  utp;
    struct rserpool_tcptransportparameter*  ttp;
    struct rserpool_sctptransportparameter* stp;
-   size_t                              tlvEndPos;
-   uint16_t                            tlvType;
-   uint16_t                            port              = 0;
-   int                                 protocol          = 0;
-   bool                                hasControlChannel = false;
+   size_t                                  tlvEndPos;
+   uint16_t                                tlvType;
+   uint16_t                                port              = 0;
+   int                                     protocol          = 0;
+   bool                                    hasControlChannel = false;
 
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message,  &tlvPosition, 0, false);
@@ -508,7 +509,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
 
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_POLICY, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
@@ -820,7 +821,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
 
    size_t tlvPosition = 0;
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
@@ -871,7 +872,7 @@ static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
    unsigned char* poolHandle;
    size_t tlvPosition = 0;
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_HANDLE, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -910,7 +911,7 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
    uint32_t* identifier;
    size_t    tlvPosition = 0;
    size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_IDENTIFIER, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -943,7 +944,7 @@ static bool scanPoolElementChecksumParameter(struct RSerPoolMessage* message)
    uint32_t* checksum;
    size_t    tlvPosition = 0;
    size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_CHECKSUM, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -978,7 +979,7 @@ static bool scanErrorParameter(struct RSerPoolMessage* message)
    size_t                  dataLength;
    size_t                  tlvPosition = 0;
    size_t                  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_OPERATION_ERROR, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -1022,7 +1023,7 @@ static bool scanCookieParameter(struct RSerPoolMessage* message)
    void*     cookie;
    size_t    tlvPosition = 0;
    size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_COOKIE, true);
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -1068,7 +1069,7 @@ static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMes
    size_t                               tlvPosition = 0;
    size_t                               tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_SERVER_INFORMATION, true);
 
-   if(tlvLength == 0) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
 
@@ -1081,7 +1082,7 @@ static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMes
       return(false);
    }
 
-   sip = (struct rserpool_serverinfoparameter*)getSpace(message, tlvLength);
+   sip = (struct rserpool_serverinfoparameter*)getSpace(message, sizeof(struct rserpool_serverinfoparameter));
    if(sip == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -1107,7 +1108,6 @@ static ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSerPoolMes
 
    ST_CLASS(peerListNodeNew)(peerListNode,
                              ntohl(sip->sip_server_id),
-                             0,
                              ntohl(sip->sip_flags),
                              newTransportAddressBlock);
 
@@ -1277,16 +1277,9 @@ static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
 static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   struct TransportAddressBlock* transportAddressBlock     = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct TransportAddressBlock* lastTransportAddressBlock = NULL;
    struct TransportAddressBlock* newTransportAddressBlock;
-   uint32_t*                     identifier;
-
-   identifier = (uint32_t*)getSpace(message, sizeof(identifier));
-   if(identifier == NULL) {
-      return(false);
-   }
-   message->NSIdentifier = ntohl(*identifier);
 
    message->TransportAddressBlockListPtr = NULL;
    while(message->Position < message->BufferSize) {
@@ -1379,6 +1372,16 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
 /* ###### Scan peer presence message ##################################### */
 static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
 {
+   struct rserpool_serverparameter* sp;
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+   message->SenderID   = ntohl(sp->sp_sender_id);
+   message->ReceiverID = ntohl(sp->sp_receiver_id);
+
    if(scanPoolElementChecksumParameter(message) == false) {
       return(false);
    }
@@ -1633,7 +1636,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
    }
    else {
       LOG_ERROR
-      fputs("Wrong PPID\n", stdlog);
+      fprintf(stdlog, "Wrong PPID ($%08x)\n", message->PPID);
       LOG_END_FATAL
    }
    switch(message->Type) {

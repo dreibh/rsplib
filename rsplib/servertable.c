@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.10 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: servertable.c,v 1.11 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -55,50 +55,6 @@
 
 
 
-/* ###### Add nameserver announcement source ################################ */
-static bool joinAnnounceMulticastGroup(int                         sd,
-                                       const union sockaddr_union* groupAddress,
-                                       const bool                  join)
-{
-   union sockaddr_union localAddress;
-   int                  on;
-
-   memset((char*)&localAddress, 0, sizeof(localAddress));
-   localAddress.sa.sa_family = groupAddress->sa.sa_family;
-   if(groupAddress->in6.sin6_family == AF_INET6) {
-      localAddress.in6.sin6_port = groupAddress->in6.sin6_port;
-   }
-   else {
-      CHECK(groupAddress->in.sin_family == AF_INET);
-      localAddress.in.sin_port = groupAddress->in.sin_port;
-   }
-
-   on = 1;
-   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
-      return(false);
-   }
-#if !defined (LINUX)
-   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
-      return(false);
-   }
-#endif
-
-   if(ext_bind(sd, (struct sockaddr*)&localAddress,
-               getSocklen((struct sockaddr*)&localAddress)) != 0) {
-      LOG_ERROR
-      fputs("Unable to bind multicast socket to address ",  stdlog);
-      fputaddress((struct sockaddr*)&localAddress, true, stdlog);
-      fputs("\n",  stdlog);
-      LOG_END
-      return(false);
-   }
-   if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, join) == false) {
-      return(false);
-   }
-   return(true);
-}
-
-
 /* ###### Server announce callback  ######################################### */
 static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                                          int                sd,
@@ -142,12 +98,14 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                            &serverTable->List,
                            message->NSIdentifier,
-                           0,
                            PLNF_DYNAMIC,
                            message->TransportAddressBlockListPtr,
                            getMicroTime(),
                            &peerListNode);
                if(result == RSPERR_OKAY) {
+ST_CLASS(peerListManagementPrint)(&serverTable->List, stdlog, PLPO_FULL);
+// ??????????
+
                   serverTable->LastAnnounce = getMicroTime();
                   ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
                      &serverTable->List,
@@ -218,9 +176,9 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
       serverTable->AnnounceSocket = ext_socket(serverTable->AnnounceAddress.sa.sa_family,
                                                SOCK_DGRAM, IPPROTO_UDP);
       if(serverTable->AnnounceSocket >= 0) {
-         if(joinAnnounceMulticastGroup(serverTable->AnnounceSocket,
-                                       &serverTable->AnnounceAddress,
-                                       true)) {
+         if(joinOrLeaveMulticastGroup(serverTable->AnnounceSocket,
+                                      &serverTable->AnnounceAddress,
+                                      true)) {
             dispatcherAddFDCallback(serverTable->Dispatcher,
                                     serverTable->AnnounceSocket,
                                     FDCE_Read,
@@ -265,11 +223,11 @@ void serverTableDelete(struct ServerTable* serverTable)
 
 
 /* ###### Try more nameservers ############################################## */
-static void tryNextBlock(struct ServerTable* serverTable,
-                         ENRPIdentifierType* lastNSIdentifier,
-                         unsigned int*       lastStaticNumber,
-                         int*                sd,
-                         card64*             timeout)
+static void tryNextBlock(struct ServerTable*     serverTable,
+                         ENRPIdentifierType*     lastNSIdentifier,
+                         TransportAddressBlock** lastTransportAddressBlock,
+                         int*                    sd,
+                         card64*                 timeout)
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -284,11 +242,15 @@ static void tryNextBlock(struct ServerTable* serverTable,
          peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                            &serverTable->List,
                            *lastNSIdentifier,
-                           *lastStaticNumber);
+                           *lastTransportAddressBlock);
 
          if(peerListNode != NULL) {
             *lastNSIdentifier = peerListNode->Identifier;
-            *lastStaticNumber = peerListNode->StaticNumber;
+            if(*lastTransportAddressBlock) {
+               transportAddressBlockDelete(*lastTransportAddressBlock);
+               free(*lastTransportAddressBlock);
+            }
+            *lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);
 
             transportAddressBlock = peerListNode->AddressBlock;
             while(transportAddressBlock != NULL) {
@@ -356,7 +318,7 @@ static void tryNextBlock(struct ServerTable* serverTable,
          }
 
          *lastNSIdentifier = 0;
-         *lastStaticNumber = 0;
+         *lastTransportAddressBlock = NULL;
          break;
       }
    }
@@ -372,7 +334,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
    int                     sd[MAX_SIMULTANEOUS_REQUESTS];
    card64                  timeout[MAX_SIMULTANEOUS_REQUESTS];
    ENRPIdentifierType      lastNSIdentifier;
-   unsigned int            lastStaticNumber;
+   TransportAddressBlock*  lastTransportAddressBlock;
    card64                  start;
    card64                  nextTimeout;
    fd_set                  rfdset;
@@ -394,13 +356,13 @@ int serverTableFindServer(struct ServerTable* serverTable)
    fputs("Looking for nameserver...\n",  stdlog);
    LOG_END
 
-   trials           = 0;
-   lastNSIdentifier = 0;
-   lastStaticNumber = 0;
-   start            = 0;
+   trials                    = 0;
+   lastNSIdentifier          = 0;
+   lastTransportAddressBlock = NULL;
+   start                     = 0;
 
    for(;;) {
-      if((lastNSIdentifier == 0) && (lastStaticNumber == 0)) {
+      if((lastNSIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
          /* Start new trial, when
             - First time
             - A new server announce has been added to the list
@@ -418,6 +380,10 @@ int serverTableFindServer(struct ServerTable* serverTable)
                      ext_close(sd[j]);
                   }
                }
+               if(lastTransportAddressBlock) {
+                  transportAddressBlockDelete(lastTransportAddressBlock);
+                  free(lastTransportAddressBlock);
+               }
                return(-1);
             }
 
@@ -431,7 +397,7 @@ int serverTableFindServer(struct ServerTable* serverTable)
       /* Try next block of addresses */
       tryNextBlock(serverTable,
                    &lastNSIdentifier,
-                   &lastStaticNumber,
+                   &lastTransportAddressBlock,
                    (int*)&sd, (card64*)&timeout);
 
       /* Wait for event */
@@ -470,6 +436,10 @@ int serverTableFindServer(struct ServerTable* serverTable)
          LOG_ACTION
          fputs("Interrupted select() call -> returning immediately!\n",  stdlog);
          LOG_END
+         if(lastTransportAddressBlock) {
+            transportAddressBlockDelete(lastTransportAddressBlock);
+            free(lastTransportAddressBlock);
+         }
          return(-1);
       }
 
@@ -489,6 +459,10 @@ int serverTableFindServer(struct ServerTable* serverTable)
                         if((j != i) && (sd[j] >= 0)) {
                            ext_close(sd[j]);
                         }
+                     }
+                     if(lastTransportAddressBlock) {
+                        transportAddressBlockDelete(lastTransportAddressBlock);
+                        free(lastTransportAddressBlock);
                      }
                      return(sd[i]);
                   }

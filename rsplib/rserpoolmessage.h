@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.3 2004/07/25 10:40:05 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.4 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -304,6 +304,8 @@ struct RSerPoolMessage
    uint16_t                          Error;
    uint8_t                           Flags;
    uint16_t                          Action;
+   struct sockaddr*                  Address;
+   socklen_t                         AddressLength;
 
    char*                             OperationErrorData;
    size_t                            OperationErrorLength;

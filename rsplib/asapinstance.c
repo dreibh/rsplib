@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.12 2004/07/25 16:55:03 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.13 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -452,12 +452,14 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
                                  &asapInstance->OwnPoolElements,
                                  poolHandle,
                                  identifier);
-         LOG_ERROR
-         fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
-                 identifier);
-         poolHandlePrint(poolHandle, stdlog);
-         fputs(" from OwnPoolElements\n", stdlog);
-         LOG_END_FATAL
+         if(namespaceMgtResult != RSPERR_OKAY) {
+            LOG_ERROR
+            fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
+                  identifier);
+            poolHandlePrint(poolHandle, stdlog);
+            fputs(" from OwnPoolElements\n", stdlog);
+            LOG_END_FATAL
+         }
       }
 
       rserpoolMessageDelete(message);

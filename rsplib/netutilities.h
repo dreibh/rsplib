@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.4 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: netutilities.h,v 1.5 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -307,13 +307,11 @@ int recvfromplus(int              sockfd,
   *
   * @param sockfd Socket descriptor.
   * @param address Address of multicast group to join/leave.
-  * @param interface Interface name or NULL for default.
   * @param add true to join/false to leave multicast group.
   */
-bool multicastGroupMgt(int              sockfd,
-                       struct sockaddr* address,
-                       const char*      interface,
-                       const bool       add);
+bool joinOrLeaveMulticastGroup(int                         sd,
+                               const union sockaddr_union* groupAddress,
+                               const bool                  add);
 
 /**
   * Create socket and establish connection to a given peer.

@@ -172,13 +172,13 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
                                   struct ST_CLASS(PeerListNode)** peerListNode,
                                   unsigned int*                   errorCode);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
-                                  struct ST_CLASS(PeerList)* peerList,
-                                  const ENRPIdentifierType   identifier,
-                                  const unsigned int         staticNumber);
+                                  struct ST_CLASS(PeerList)*          peerList,
+                                  const ENRPIdentifierType            identifier,
+                                  const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
-                                  struct ST_CLASS(PeerList)* peerList,
-                                  const ENRPIdentifierType   identifier,
-                                  const unsigned int         staticNumber);
+                                  struct ST_CLASS(PeerList)*          peerList,
+                                  const ENRPIdentifierType            identifier,
+                                  const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
                                   struct ST_CLASS(PeerList)*        peerList,
                                   struct ST_CLASS(PeerListNode)* peerListNode);

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.5 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.6 2004/07/26 12:50:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -228,7 +228,7 @@ static bool createUserTransportParameter(struct RSerPoolMessage*             mes
        break;
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unknown protocol #%d\n",transportAddressBlock->Protocol);
+         fprintf(stdlog,"Unknown protocol #%d\n", transportAddressBlock->Protocol);
          LOG_END_FATAL
          return(false);
        break;
@@ -432,7 +432,7 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
        break;
    }
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
@@ -505,7 +505,7 @@ static bool createPoolElementChecksumParameter(
                const PoolElementChecksumType poolElementChecksum)
 {
    uint32_t* checksum;
-   size_t    tlvPosition;
+   size_t    tlvPosition = 0;
 
    if(beginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_CHECKSUM) == false) {
       return(false);
@@ -567,7 +567,7 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
    aec->aec_length = htons(sizeof(struct rserpool_errorcause) + dataLength);
    memcpy((char*)&aec->aec_data, data, dataLength);
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
@@ -589,7 +589,7 @@ static bool createCookieParameter(struct RSerPoolMessage* message,
 
    memcpy(buffer, cookie, cookieSize);
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
@@ -608,14 +608,14 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
       return(false);
    }
 
-   sip->sip_server_id = peerListNode->Identifier;
+   sip->sip_server_id = htonl(peerListNode->Identifier);
    sip->sip_flags     = peerListNode->Flags;
 
    if(createUserTransportParameter(message, peerListNode->AddressBlock) == false) {
       return(false);
    }
 
-   return(finishTLV(message,tlvPosition));
+   return(finishTLV(message, tlvPosition));
 }
 
 
@@ -841,7 +841,6 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
 static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    struct TransportAddressBlock* transportAddressBlock;
-   uint32_t*                     identifier;
 
    if(message->TransportAddressBlockListPtr == NULL) {
       LOG_ERROR
@@ -853,12 +852,6 @@ static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == false) {
       return(false);
    }
-
-   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
-   if(identifier == NULL) {
-      return(false);
-   }
-   *identifier = htonl(message->NSIdentifier);
 
    transportAddressBlock = message->TransportAddressBlockListPtr;
    while(transportAddressBlock != NULL) {
@@ -901,11 +894,20 @@ static bool createCookieEchoMessage(struct RSerPoolMessage* message)
 /* ###### Create peer presence ########################################### */
 static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
 {
+   struct rserpool_serverparameter* sp;
+
    if(beginMessage(message, EHT_PEER_PRESENCE,
                    message->Flags & EHF_PEER_PRESENCE_REPLY_REQUIRED,
                    PPID_ENRP) == false) {
       return(false);
    }
+
+   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
+   if(sp == NULL) {
+      return(false);
+   }
+   sp->sp_sender_id   = htonl(message->SenderID);
+   sp->sp_receiver_id = htonl(message->ReceiverID);
 
    if(createPoolElementChecksumParameter(message, message->Checksum) == false) {
       return(false);
