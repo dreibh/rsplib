@@ -1,5 +1,5 @@
 /*
- *  $Id: threadsafety.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: threadsafety.c,v 1.2 2004/11/11 21:08:17 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -59,7 +59,7 @@ void threadSafetyInit(struct ThreadSafety* threadSafety,
    threadSafety->MutexRecursionLevel = 0;
    pthread_mutex_init(&threadSafety->Mutex,NULL);
 #endif
-   snprintf((char*)&threadSafety->Name, sizeof(threadSafety->Name), "%Ld-%s",
+   snprintf((char*)&threadSafety->Name, sizeof(threadSafety->Name), "%llu-%s",
             gMutexCounter++, name);
    if(threadSafety != &gLogMutex) {
       LOG_MUTEX
