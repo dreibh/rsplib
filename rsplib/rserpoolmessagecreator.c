@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.10 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.11 2004/08/24 09:20:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1052,6 +1052,7 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
       oldPosition = message->Position;
       result = ST_CLASS(poolNamespaceManagementGetNameTable)(
                   message->NamespacePtr,
+                  message->NamespacePtr->Namespace.HomeNSIdentifier,
                   nte,
                   flags);
       if(result > 0) {
@@ -1200,7 +1201,12 @@ static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
 /* ###### Create peer ownership change ################################### */
 static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_serverparameter*   sp;
+   struct rserpool_serverparameter* sp;
+   struct PoolHandle*               lastPoolHandle;
+   unsigned int                     flags;
+   unsigned int                     result;
+   size_t                           oldPosition;
+   size_t                           i;
 
    if(beginMessage(message, EHT_PEER_OWNERSHIP_CHANGE,
                    message->Flags & 0x00,
@@ -1215,8 +1221,55 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-   puts("STOP!!!!");
-   exit(1);
+   flags = NTEF_OWNCHILDSONLY;  // ????????? sollte anders heißen!!!!
+   if(message->ExtractContinuation->LastPoolElementIdentifier == 0) {
+      flags |= NTEF_START;
+   }
+
+   oldPosition = message->Position;
+   result = ST_CLASS(poolNamespaceManagementGetNameTable)(
+               message->NamespacePtr,
+               message->NSIdentifier,
+               message->ExtractContinuation,
+               flags);
+   if(result > 0) {
+      lastPoolHandle = NULL;
+      for(i = 0;i < message->ExtractContinuation->PoolElementNodes;i++) {
+         LOG_NOTE
+         ST_CLASS(poolElementNodePrint)(message->ExtractContinuation->PoolElementNodeArray[i], stdlog, ~0);
+         fputs("\n", stdlog);
+         LOG_END
+
+         if(lastPoolHandle != &message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle) {
+            lastPoolHandle = &message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
+            oldPosition = message->Position;
+            if(createPoolHandleParameter(message, lastPoolHandle) == false) {
+               if(i < 1) {
+                  return(false);
+               }
+               message->Position = oldPosition;
+               break;
+            }
+         }
+
+         if(createPoolElementIdentifierParameter(message, message->ExtractContinuation->PoolElementNodeArray[i]->Identifier) == false) {
+            if(i < 1) {
+               return(false);
+            }
+            message->Position = oldPosition;
+            break;
+         }
+         oldPosition = message->Position;
+
+         message->ExtractContinuation->LastPoolHandle            = message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
+         message->ExtractContinuation->LastPoolElementIdentifier = message->ExtractContinuation->PoolElementNodeArray[i]->Identifier;
+      }
+      if((message->ExtractContinuation->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
+         (i != message->ExtractContinuation->PoolElementNodes)) {
+// ?????         header->ah_flags |= EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND;
+puts("MORE TO SEND::::????");
+      }
+   }
 
    return(finishMessage(message));
 }

@@ -27,6 +27,7 @@ void ST_CLASS(poolNamespaceNodeNew)(struct ST_CLASS(PoolNamespaceNode)* poolName
    ST_METHOD(New)(&poolNamespaceNode->PoolIndexStorage, ST_CLASS(poolIndexStorageNodePrint), ST_CLASS(poolIndexStorageNodeComparison));
    ST_METHOD(New)(&poolNamespaceNode->PoolElementTimerStorage, ST_CLASS(poolElementTimerStorageNodePrint), ST_CLASS(poolElementTimerStorageNodeComparison));
    ST_METHOD(New)(&poolNamespaceNode->PoolElementOwnershipStorage, ST_CLASS(poolElementOwnershipStorageNodePrint), ST_CLASS(poolElementOwnershipStorageNodeComparison));
+   ST_METHOD(New)(&poolNamespaceNode->PoolElementConnectionStorage, ST_CLASS(poolElementConnectionStorageNodePrint), ST_CLASS(poolElementConnectionStorageNodeComparison));
    poolNamespaceNode->HomeNSIdentifier = homeNSIdentifier;
    poolNamespaceNode->PoolElements     = 0;
 }
@@ -38,9 +39,11 @@ void ST_CLASS(poolNamespaceNodeDelete)(struct ST_CLASS(PoolNamespaceNode)* poolN
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolIndexStorage));
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementTimerStorage));
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementOwnershipStorage));
+   CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementConnectionStorage));
    ST_METHOD(Delete)(&poolNamespaceNode->PoolIndexStorage);
    ST_METHOD(Delete)(&poolNamespaceNode->PoolElementTimerStorage);
    ST_METHOD(Delete)(&poolNamespaceNode->PoolElementOwnershipStorage);
+   ST_METHOD(Delete)(&poolNamespaceNode->PoolElementConnectionStorage);
    poolNamespaceNode->PoolElements = 0;
 }
 
@@ -119,7 +122,7 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
 }
 
 
-/* ###### Find nearest prev property ##################################### */
+/* ###### Find nearest prev ownership #################################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementOwnershipNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
                                      const ENRPIdentifierType            homeNSIdentifier,
@@ -144,7 +147,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolE
 }
 
 
-/* ###### Find nearest next property ##################################### */
+/* ###### Find nearest next ownership #################################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementOwnershipNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
                                      const ENRPIdentifierType            homeNSIdentifier,
@@ -164,6 +167,60 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolE
                                              &cmpPoolElementNode.PoolElementOwnershipStorageNode);
    if(ownershipNode) {
       return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(ownershipNode));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest prev connection #################################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const int                           registratorSocketDescriptor,
+                                     const sctp_assoc_t                  assocID,
+                                     const struct PoolHandle*            poolHandle,
+                                     const PoolElementIdentifierType     poolElementIdentifier)
+{
+   struct ST_CLASS(PoolNode)        cmpPoolNode;
+   struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
+   struct STN_CLASSNAME*            connectionNode;
+
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
+   cmpPoolElementNode.OwnerPoolNode               = &cmpPoolNode;
+   cmpPoolElementNode.ConnectionSocketDescriptor = registratorSocketDescriptor;
+   cmpPoolElementNode.ConnectionAssocID          = assocID;
+   cmpPoolElementNode.Identifier                  = poolElementIdentifier;
+
+   connectionNode = ST_METHOD(GetNearestPrev)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                              &cmpPoolElementNode.PoolElementConnectionStorageNode);
+   if(connectionNode) {
+      return(ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(connectionNode));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find nearest next connection ################################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const int                           registratorSocketDescriptor,
+                                     const sctp_assoc_t                  assocID,
+                                     const struct PoolHandle*            poolHandle,
+                                     const PoolElementIdentifierType     poolElementIdentifier)
+{
+   struct ST_CLASS(PoolNode)        cmpPoolNode;
+   struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
+   struct STN_CLASSNAME*            connectionNode;
+
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
+   cmpPoolElementNode.OwnerPoolNode               = &cmpPoolNode;
+   cmpPoolElementNode.ConnectionSocketDescriptor = registratorSocketDescriptor;
+   cmpPoolElementNode.ConnectionAssocID          = assocID;
+   cmpPoolElementNode.Identifier                  = poolElementIdentifier;
+
+   connectionNode = ST_METHOD(GetNearestNext)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                              &cmpPoolElementNode.PoolElementConnectionStorageNode);
+   if(connectionNode) {
+      return(ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(connectionNode));
    }
    return(NULL);
 }
@@ -194,10 +251,16 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeAddPoolElementNode)(
    if(result == poolElementNode) {
       CHECK(*errorCode == RSPERR_OKAY);
       poolNamespaceNode->PoolElements++;
+
       if(poolElementNode->HomeNSIdentifier != 0) {
          result2 = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
                                      &poolElementNode->PoolElementOwnershipStorageNode);
          CHECK(result2 == &poolElementNode->PoolElementOwnershipStorageNode);
+      }
+      if(poolElementNode->ConnectionSocketDescriptor > 0) {
+         result2 = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                     &poolElementNode->PoolElementConnectionStorageNode);
+         CHECK(result2 == &poolElementNode->PoolElementConnectionStorageNode);
       }
    }
    return(result);
@@ -226,6 +289,23 @@ void ST_CLASS(poolNamespaceNodeUpdatePoolElementNode)(
          result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementOwnershipStorage,
                                        &poolElementNode->PoolElementOwnershipStorageNode);
          CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+      }
+
+      /* ====== Change connection ======================================== */
+      if((source->ConnectionSocketDescriptor != poolElementNode->ConnectionSocketDescriptor) ||
+         (source->ConnectionAssocID          != poolElementNode->ConnectionAssocID)) {
+         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode)) {
+            result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                       &poolElementNode->PoolElementConnectionStorageNode);
+            CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
+         }
+         poolElementNode->ConnectionSocketDescriptor = source->ConnectionSocketDescriptor;
+         poolElementNode->ConnectionAssocID          = source->ConnectionAssocID;
+         if(poolElementNode->ConnectionSocketDescriptor > 0) {
+            result = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                          &poolElementNode->PoolElementConnectionStorageNode);
+            CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
+         }
       }
    }
 }
@@ -285,6 +365,11 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeRemovePoolElementNod
       result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementOwnershipStorage,
                                  &poolElementNode->PoolElementOwnershipStorageNode);
       CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+   }
+   if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode)) {
+      result = ST_METHOD(Remove)(&poolNamespaceNode->PoolElementConnectionStorage,
+                                 &poolElementNode->PoolElementConnectionStorageNode);
+      CHECK(result == &poolElementNode->PoolElementConnectionStorageNode);
    }
    result2 = ST_CLASS(poolNodeRemovePoolElementNode)(poolElementNode->OwnerPoolNode,
                                                      poolElementNode);
@@ -362,6 +447,21 @@ void ST_CLASS(poolNamespaceNodePrint)(
          }
          fputs("\n", fd);
          poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(poolNamespaceNode, poolElementNode);
+      }
+   }
+
+   if(fields & PNNPO_POOLS_CONNECTION) {
+      fprintf(fd,
+              " *-- Connection: (%u nodes)\n",
+              ST_CLASS(poolNamespaceNodeGetConnectionNodes)(poolNamespaceNode));
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNode)(poolNamespaceNode);
+      while(poolElementNode != NULL) {
+         fputs("   - \"", fd);
+         poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
+         fprintf(fd, "\" / ");
+         ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_CONNECTION);
+         fputs("\n", fd);
+         poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNode)(poolNamespaceNode, poolElementNode);
       }
    }
 
@@ -547,6 +647,114 @@ size_t ST_CLASS(poolNamespaceNodeGetOwnershipNodesForIdentifier)(
    while(poolElementNode != NULL) {
       nodes++;
       poolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
+                           poolNamespaceNode, poolElementNode);
+   }
+   return(nodes);
+}
+
+
+/* ###### Get first connection node of given connection ################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const int                           registratorSocketDescriptor,
+                                     const sctp_assoc_t                  assocID)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* prevPoolElementNode;
+   struct PoolHandle                 lastPoolHandle;
+
+   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
+   poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementConnectionNode)(
+                        poolNamespaceNode,
+                        registratorSocketDescriptor, assocID,
+                        &lastPoolHandle,
+                        0);
+   if(poolElementNode) {
+      prevPoolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementConnectionNode)(
+                               poolNamespaceNode, poolElementNode);
+      while(prevPoolElementNode) {
+         if((prevPoolElementNode->ConnectionSocketDescriptor == registratorSocketDescriptor) &&
+            (prevPoolElementNode->ConnectionAssocID          == assocID)) {
+            poolElementNode = prevPoolElementNode;
+         }
+         else {
+            break;
+         }
+         prevPoolElementNode = ST_CLASS(poolNamespaceNodeGetPrevPoolElementConnectionNode)(
+                                 poolNamespaceNode, prevPoolElementNode);
+      }
+   }
+   if((poolElementNode                              != NULL) &&
+      (poolElementNode->ConnectionSocketDescriptor == registratorSocketDescriptor) &&
+      (poolElementNode->ConnectionAssocID          == assocID)) {
+      return(poolElementNode);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get last connection node of given connection ################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolElementConnectionNodeForConnection)(
+                                     struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                                     const int                           registratorSocketDescriptor,
+                                     const sctp_assoc_t                  assocID)
+{
+CHECK(false);
+/*
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+   struct PoolHandle                 lastPoolHandle;
+
+   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
+   if(homeNSIdentifier == 0xffffffff) {  ?????????????????????
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetLastPoolElementConnectionNode)(poolNamespaceNode);
+   }
+   else {
+      poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestPrevPoolElementConnectionNode)(
+                           poolNamespaceNode,
+                           registratorSocketDescriptor, assocID,
+                           &lastPoolHandle,
+                           0);
+   }
+   if(poolElementNode) {
+      nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNode)(
+                               poolNamespaceNode, poolElementNode);
+      while(nextPoolElementNode) {
+         if((nextPoolElementNode->SocketDescriptor == registratorSocketDescriptor) &&
+            (nextPoolElementNode->AssocID          == assocID)) {
+            poolElementNode = nextPoolElementNode;
+         }
+         else {
+            break;
+         }
+         nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNode)(
+                                 poolNamespaceNode, nextPoolElementNode);
+      }
+   }
+   if((poolElementNode                   != NULL) &&
+      (poolElementNode->SocketDescriptor == registratorSocketDescriptor) &&
+      (poolElementNode->AssocID          == assocID)) {
+      return(poolElementNode);
+   }
+   return(NULL);
+*/
+}
+
+
+/* ###### Get number of connection nodes ################################# */
+size_t ST_CLASS(poolNamespaceNodeGetConnectionNodesForConnection)(
+                 struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
+                 const int                           registratorSocketDescriptor,
+                 const sctp_assoc_t                  assocID)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   size_t                            nodes = 0;
+
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementConnectionNodeForConnection)(
+                        poolNamespaceNode, registratorSocketDescriptor, assocID);
+   while(poolElementNode != NULL) {
+      nodes++;
+      poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementConnectionNodeForSameConnection)(
                            poolNamespaceNode, poolElementNode);
    }
    return(nodes);

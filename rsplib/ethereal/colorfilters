@@ -13,7 +13,7 @@
 @asap_peer_error@asap.message_type == 0x0e@[65535,0,0][0,0,0]
 @enrp_peer_error@enrp.message_type == 0x0b@[65535,0,0][0,0,0]
 @enrp_peer_presence@enrp.message_type == 0x01@[45232,45232,45232][0,0,0]
-@enrp_peer_name_table@enrp.message_type == 0x02 || enrp.message_type == 0x03 || enrp.message_type == 0x04@[60945,33901,6675][0,0,0]
+@enrp_peer_name_table@enrp.message_type == 0x02 || enrp.message_type == 0x03 || enrp.message_type == 0x04@[65535,44746,23817][0,0,0]
 @enrp_peer_list@enrp.message_type == 0x05 || enrp.message_type == 0x06@[47771,24106,24106][0,0,0]
 @enrp_peer_takeover@enrp.message_type == 0x07 || enrp.message_type == 0x08 || enrp.message_type == 0x09 || enrp.message_type == 0x0a@[61673,3920,53619][0,0,0]
 @sctp_abort@sctp.chunk_type == 6@[65535,26214,13107][0,0,0]

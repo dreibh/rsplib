@@ -58,14 +58,16 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PENPO_UR_REPORTS      (1 << 4)   /* Unreachability reports   */
 #define PENPO_LASTUPDATE      (1 << 5)   /* Last update time stamp   */
 #define PENPO_USERTRANSPORT   (1 << 6)   /* User transport info      */
+#define PENPO_CONNECTION      (1 << 7)   /* Connection (sd/assoc)    */
 
 #define PNPO_INDEX            (1 << 8)   /* PEs of pool by index     */
 #define PNPO_SELECTION        (1 << 9)   /* PEs of pool by selection */
 
-#define PNNPO_POOLS_INDEX     (1 << 10)
-#define PNNPO_POOLS_SELECTION (1 << 11)
-#define PNNPO_POOLS_OWNERSHIP (1 << 12)
-#define PNNPO_POOLS_TIMER     (1 << 13)
+#define PNNPO_POOLS_INDEX       (1 << 10)
+#define PNNPO_POOLS_SELECTION   (1 << 11)
+#define PNNPO_POOLS_OWNERSHIP   (1 << 12)
+#define PNNPO_POOLS_CONNECTION (1 << 13)
+#define PNNPO_POOLS_TIMER       (1 << 14)
 
 
 #define PENPO_FULL          (~0)

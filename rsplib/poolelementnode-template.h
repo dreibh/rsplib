@@ -30,6 +30,9 @@ extern "C" {
 #endif
 
 
+#include <ext_socket.h>
+
+
 /* Timer Codes */
 #define PENT_EXPIRY                 1000
 #define PENT_KEEPALIVE_TRANSMISSION 1001
@@ -44,6 +47,7 @@ struct ST_CLASS(PoolElementNode)
    struct STN_CLASSNAME          PoolElementSelectionStorageNode;
    struct STN_CLASSNAME          PoolElementIndexStorageNode;
    struct STN_CLASSNAME          PoolElementTimerStorageNode;
+   struct STN_CLASSNAME          PoolElementConnectionStorageNode;
    struct STN_CLASSNAME          PoolElementOwnershipStorageNode;
    struct ST_CLASS(PoolNode)*    OwnerPoolNode;
 
@@ -63,6 +67,9 @@ struct ST_CLASS(PoolElementNode)
    unsigned int                  TimerCode;
    unsigned long long            TimerTimeStamp;
 
+   int                           ConnectionSocketDescriptor;
+   sctp_assoc_t                  ConnectionAssocID;
+
    struct TransportAddressBlock* AddressBlock;
    void*                         UserData;
 };
@@ -73,7 +80,9 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const ENRPIdentifierType          homeNSIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
-                                  struct TransportAddressBlock*     transportAddressBlock);
+                                  struct TransportAddressBlock*     transportAddressBlock,
+                                  const int                         registratorSocketDescriptor,
+                                  const sctp_assoc_t                registratorAssocID);
 void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolElementNode);
 void ST_CLASS(poolElementNodeGetDescription)(
         struct ST_CLASS(PoolElementNode)* poolElementNode,
@@ -123,6 +132,15 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromOwnershi
 {
    const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
    long n = (long)node - ((long)&dummy->PoolElementOwnershipStorageNode - (long)dummy);
+   return((struct ST_CLASS(PoolElementNode)*)n);
+}
+
+
+/* ###### Get PoolElementNode from given Connection Node ################### */
+inline struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(void* node)
+{
+   const struct ST_CLASS(PoolElementNode)* dummy = (struct ST_CLASS(PoolElementNode)*)node;
+   long n = (long)node - ((long)&dummy->PoolElementConnectionStorageNode - (long)dummy);
    return((struct ST_CLASS(PoolElementNode)*)n);
 }
 

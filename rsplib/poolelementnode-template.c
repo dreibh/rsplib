@@ -26,34 +26,40 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const ENRPIdentifierType          homeNSIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
-                                  struct TransportAddressBlock*     transportAddressBlock)
+                                  struct TransportAddressBlock*     transportAddressBlock,
+                                  const int                         registratorSocketDescriptor,
+                                  const sctp_assoc_t                registratorAssocID)
 {
    STN_METHOD(New)(&poolElementNode->PoolElementSelectionStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementIndexStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementTimerStorageNode);
+   STN_METHOD(New)(&poolElementNode->PoolElementConnectionStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementOwnershipStorageNode);
 
-   poolElementNode->OwnerPoolNode         = NULL;
+   poolElementNode->OwnerPoolNode               = NULL;
 
-   poolElementNode->Identifier            = identifier;
-   poolElementNode->HomeNSIdentifier      = homeNSIdentifier;
-   poolElementNode->RegistrationLife      = registrationLife;
-   poolElementNode->PolicySettings        = *pps;
+   poolElementNode->Identifier                  = identifier;
+   poolElementNode->HomeNSIdentifier            = homeNSIdentifier;
+   poolElementNode->RegistrationLife            = registrationLife;
+   poolElementNode->PolicySettings              = *pps;
 
-   poolElementNode->SeqNumber             = 0;
-   poolElementNode->RoundCounter          = 0;
-   poolElementNode->VirtualCounter        = 0;
-   poolElementNode->SelectionCounter      = 0;
-   poolElementNode->Degradation           = 0;
-   poolElementNode->UnreachabilityReports = 0;
+   poolElementNode->SeqNumber                   = 0;
+   poolElementNode->RoundCounter                = 0;
+   poolElementNode->VirtualCounter              = 0;
+   poolElementNode->SelectionCounter            = 0;
+   poolElementNode->Degradation                 = 0;
+   poolElementNode->UnreachabilityReports       = 0;
 
-   poolElementNode->LastUpdateTimeStamp   = 0;
+   poolElementNode->LastUpdateTimeStamp         = 0;
 
-   poolElementNode->TimerTimeStamp        = 0;
-   poolElementNode->TimerCode             = 0;
+   poolElementNode->TimerTimeStamp              = 0;
+   poolElementNode->TimerCode                   = 0;
 
-   poolElementNode->AddressBlock          = transportAddressBlock;
-   poolElementNode->UserData              = 0;
+   poolElementNode->ConnectionSocketDescriptor = registratorSocketDescriptor;
+   poolElementNode->ConnectionAssocID          = registratorAssocID;
+
+   poolElementNode->AddressBlock                = transportAddressBlock;
+   poolElementNode->UserData                    = 0;
 }
 
 
@@ -64,21 +70,25 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementIndexStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode));
+   CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode));
 
-   poolElementNode->RegistrationLife      = 0;
-   poolElementNode->OwnerPoolNode         = NULL;
-   poolElementNode->SeqNumber             = 0;
-   poolElementNode->RoundCounter          = 0;
-   poolElementNode->VirtualCounter        = 0;
-   poolElementNode->SelectionCounter      = 0;
-   poolElementNode->Degradation           = 0;
-   poolElementNode->UnreachabilityReports = 0;
-   poolElementNode->LastUpdateTimeStamp   = 0;
-   poolElementNode->TimerTimeStamp        = 0;
-   poolElementNode->TimerCode             = 0;
+   poolElementNode->RegistrationLife            = 0;
+   poolElementNode->OwnerPoolNode               = NULL;
+   poolElementNode->SeqNumber                   = 0;
+   poolElementNode->RoundCounter                = 0;
+   poolElementNode->VirtualCounter              = 0;
+   poolElementNode->SelectionCounter            = 0;
+   poolElementNode->Degradation                 = 0;
+   poolElementNode->UnreachabilityReports       = 0;
+   poolElementNode->LastUpdateTimeStamp         = 0;
+   poolElementNode->TimerTimeStamp              = 0;
+   poolElementNode->TimerCode                   = 0;
+   poolElementNode->ConnectionSocketDescriptor = -1;
+   poolElementNode->ConnectionAssocID          = 0;
    /* Do not clear AddressBlock, UserData, Identifier and HomeNSIdentifier yet,
       they may be necessary for user-specific dispose function! */
 
+   STN_METHOD(Delete)(&poolElementNode->PoolElementConnectionStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementOwnershipStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementTimerStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementIndexStorageNode);
@@ -99,6 +109,12 @@ void ST_CLASS(poolElementNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize, "$%08x", poolElementNode->Identifier);
+   if(fields & PENPO_CONNECTION) {
+      snprintf((char*)&tmp, sizeof(tmp), " c=(S%d,A%u)",
+               poolElementNode->ConnectionSocketDescriptor,
+               poolElementNode->ConnectionAssocID);
+      safestrcat(buffer, tmp, bufferSize);
+   }
    if(fields & PENPO_HOME_NS) {
       snprintf((char*)&tmp, sizeof(tmp), " home=$%08x",
                poolElementNode->HomeNSIdentifier);
@@ -139,7 +155,6 @@ void ST_CLASS(poolElementNodeGetDescription)(
       safestrcat(buffer, tmp, bufferSize);
    }
    if((fields & PENPO_USERTRANSPORT) &&
-      (poolElementNode->AddressBlock != NULL) &&
       (poolElementNode->AddressBlock->Addresses > 0)) {
       transportAddressBlockGetDescription(poolElementNode->AddressBlock,
                                           (char*)&transportAddressDescription,
@@ -278,6 +293,48 @@ int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, co
       return(-1);
    }
    else if(node1->HomeNSIdentifier > node2->HomeNSIdentifier) {
+      return(1);
+   }
+   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
+   if(cmpResult != 0) {
+      return(cmpResult);
+   }
+   if(node1->Identifier < node2->Identifier) {
+      return(-1);
+   }
+   else if(node1->Identifier > node2->Identifier) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### Connection Print ################################################# */
+void ST_CLASS(poolElementConnectionStorageNodePrint)(const void* nodePtr, FILE* fd)
+{
+   const struct ST_CLASS(PoolElementNode)* node = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr);
+   fprintf(fd, "#$%08x (S%d,A%u)   ",
+           node->Identifier, node->ConnectionSocketDescriptor, node->ConnectionAssocID);
+}
+
+
+/* ###### Connection Comparison ############################################ */
+int ST_CLASS(poolElementConnectionStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2)
+{
+   const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr1);
+   const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr2);
+   int                                     cmpResult;
+
+   if(node1->ConnectionSocketDescriptor < node2->ConnectionSocketDescriptor) {
+      return(-1);
+   }
+   else if(node1->ConnectionSocketDescriptor > node2->ConnectionSocketDescriptor) {
+      return(1);
+   }
+   if(node1->ConnectionAssocID < node2->ConnectionAssocID) {
+      return(-1);
+   }
+   else if(node1->ConnectionAssocID > node2->ConnectionAssocID) {
       return(1);
    }
    cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);

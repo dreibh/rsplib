@@ -118,19 +118,8 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 const unsigned int                        registrationLife,
                 const struct PoolPolicySettings*          poolPolicySettings,
                 const struct TransportAddressBlock*       transportAddressBlock,
-                const unsigned long long                  currentTimeStamp,
-                struct ST_CLASS(PoolElementNode)**        poolElementNode);
-
-
-/* ###### Registration ################################################### */
-unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const struct PoolHandle*                  poolHandle,
-                const ENRPIdentifierType                  homeNSIdentifier,
-                const PoolElementIdentifierType           poolElementIdentifier,
-                const unsigned int                        registrationLife,
-                const struct PoolPolicySettings*          poolPolicySettings,
-                const struct TransportAddressBlock*       transportAddressBlock,
+                const int                                 registratorSocketDescriptor,
+                const sctp_assoc_t                        registratorAssocID,
                 const unsigned long long                  currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**        poolElementNode)
 {
@@ -177,7 +166,9 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                                 homeNSIdentifier,
                                 registrationLife,
                                 poolPolicySettings,
-                                (struct TransportAddressBlock*)transportAddressBlock);
+                                (struct TransportAddressBlock*)transportAddressBlock,
+                                registratorSocketDescriptor,
+                                registratorAssocID);
    *poolElementNode = ST_CLASS(poolNamespaceNodeAddOrUpdatePoolElementNode)(&poolNamespaceManagement->Namespace,
                                                                             &poolNamespaceManagement->NewPoolNode,
                                                                             &poolNamespaceManagement->NewPoolElementNode,
@@ -429,13 +420,14 @@ finish:
 /* ###### Get name table from namespace ################################## */
 int ST_CLASS(poolNamespaceManagementGetNameTable)(
        struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
+       const ENRPIdentifierType                  homeNSIdentifier,
        struct ST_CLASS(NameTableExtract)*        nameTableExtract,
        const unsigned int                        flags)
 {
    if(flags & NTEF_OWNCHILDSONLY) {
       return(ST_CLASS(getOwnershipNameTable)(
                 poolNamespaceManagement, nameTableExtract,
-                poolNamespaceManagement->Namespace.HomeNSIdentifier,
+                homeNSIdentifier,
                 flags));
    }
    return(ST_CLASS(getGlobalNameTable)(

@@ -102,6 +102,19 @@ inline size_t ST_CLASS(poolNamespaceManagementGetPoolElementsOfPool)(
              poolHandle));
 }
 
+
+/* ###### Get number of pool elements of given connection ################ */
+inline size_t ST_CLASS(poolNamespaceManagementGetPoolElementsOfConnection)(
+                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
+                 const int                                 socketDescriptor,
+                 const sctp_assoc_t                        assocID)
+{
+   return(ST_CLASS(poolNamespaceNodeGetConnectionNodesForConnection)(
+             &poolNamespaceManagement->Namespace,
+             socketDescriptor, assocID));
+}
+
+
 unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
                 const struct PoolHandle*                  poolHandle,
@@ -110,6 +123,8 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 const unsigned int                        registrationLife,
                 const struct PoolPolicySettings*          poolPolicySettings,
                 const struct TransportAddressBlock*       transportAddressBlock,
+                const int                                 registratorSocketDescriptor,
+                const sctp_assoc_t                        registratorAssocID,
                 const unsigned long long                  currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**        poolElementNode);
 
@@ -130,6 +145,8 @@ inline unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElementByPtr)(
              originalPoolElementNode->RegistrationLife,
              &originalPoolElementNode->PolicySettings,
              originalPoolElementNode->AddressBlock,
+             originalPoolElementNode->ConnectionSocketDescriptor,
+             originalPoolElementNode->ConnectionAssocID,
              currentTimeStamp,
              poolElementNode));
 }
@@ -204,6 +221,7 @@ struct ST_CLASS(NameTableExtract)
 
 int ST_CLASS(poolNamespaceManagementGetNameTable)(
        struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
+       const ENRPIdentifierType                  homeNSIdentifier,
        struct ST_CLASS(NameTableExtract)*        nameTableExtract,
        const unsigned int                        flags);
 

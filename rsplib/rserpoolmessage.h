@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.6 2004/08/23 15:17:31 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.7 2004/08/24 09:20:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -354,6 +354,8 @@ struct RSerPoolMessage
 
    struct ST_CLASS(PoolNamespaceManagement)* NamespacePtr;
    bool                                      NamespacePtrAutoDelete;
+
+   struct ST_CLASS(NameTableExtract)*        ExtractContinuation;
 
    sctp_assoc_t                              AssocID;
    unsigned short                            StreamID;

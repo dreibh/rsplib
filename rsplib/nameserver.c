@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.22 2004/08/23 16:10:31 dreibh Exp $
+ *  $Id: nameserver.c,v 1.23 2004/08/24 09:20:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,7 +59,8 @@
 // #define FAST_BREAK
 
 #define MAX_NS_TRANSPORTADDRESSES                                           16
-#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_INTERVAL                    2111111
+#define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
+#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       2111111
 #define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000   // ???????
 #define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
 #define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000   // ???????
@@ -136,7 +137,8 @@ struct NameServer
    bool                                     InInitializationPhase;
    ENRPIdentifierType                       MentorServerID;
 
-   card64                                   ServerAnnounceInterval;
+   size_t                                   MaxBadPEReports;
+   card64                                   ServerAnnounceCycle;
    card64                                   EndpointMonitoringHeartbeatInterval;
    card64                                   EndpointKeepAliveTransmissionInterval;
    card64                                   EndpointKeepAliveTimeoutInterval;
@@ -522,7 +524,8 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
       nameServer->ENRPUseMulticast         = enrpUseMulticast;
       nameServer->ENRPAnnounceViaMulticast = enrpAnnounceViaMulticast;
 
-      nameServer->ServerAnnounceInterval                = NAMESERVER_DEFAULT_SERVER_ANNOUNCE_INTERVAL;
+      nameServer->MaxBadPEReports                       = NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS;
+      nameServer->ServerAnnounceCycle                   = NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE;
       nameServer->EndpointMonitoringHeartbeatInterval   = NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
       nameServer->EndpointKeepAliveTransmissionInterval = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
       nameServer->EndpointKeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
@@ -707,7 +710,7 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       }
       rserpoolMessageDelete(message);
    }
-   timerStart(timer, getMicroTime() + nameServer->ServerAnnounceInterval);
+   timerStart(timer, getMicroTime() + nameServer->ServerAnnounceCycle);
 }
 
 
@@ -1601,6 +1604,7 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
                                       struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   unsigned int                      result;
 
    LOG_ACTION
    fprintf(stdlog, "Got EndpointUnreachable for pool element $%08x of pool ",
@@ -1615,7 +1619,37 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
                         message->Identifier);
    if(poolElementNode != NULL) {
       poolElementNode->UnreachabilityReports++;
-      // ??????
+      if(poolElementNode->UnreachabilityReports >= nameServer->MaxBadPEReports) {
+         LOG_WARNING
+         fprintf(stdlog, "%u unreachability reports for pool element ",
+                 poolElementNode->UnreachabilityReports);
+         ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+         fputs(" of pool ", stdlog);
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs(" -> limit reached, removing it\n", stdlog);
+         LOG_END
+         result = ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
+                     &nameServer->Namespace,
+                     poolElementNode);
+         if(message->Error == RSPERR_OKAY) {
+            LOG_ACTION
+            fprintf(stdlog, "Successfully deregistered pool element $%08x from pool ",
+                  message->PoolElementPtr->Identifier);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fprintf(stdlog, "Failed to deregister pool element $%08x from pool ",
+                  message->PoolElementPtr->Identifier);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(result, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
+      }
    }
    else {
       LOG_WARNING
@@ -1871,6 +1905,111 @@ static void handlePeerPresence(struct NameServer*      nameServer,
          LOG_END
       }
    }
+}
+
+
+/* ###### Handle peer init takeover ###################################### */
+static void handlePeerInitTakeover(struct NameServer*      nameServer,
+                                   int                     fd,
+                                   sctp_assoc_t            assocID,
+                                   struct RSerPoolMessage* message)
+{
+   struct RSerPoolMessage*        response;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+
+   if(message->SenderID == nameServer->ServerID) {
+      /* This is our own message -> skip it! */
+      LOG_VERBOSE5
+      fputs("Skipping our own PeerInitTakeover message\n", stdlog);
+      LOG_END
+      return;
+   }
+
+   LOG_VERBOSE
+   fprintf(stdlog, "Got PeerInitTakeover from peer $%08x for target $%08x\n",
+           message->SenderID,
+           message->NSIdentifier);
+   LOG_END
+
+   /* ====== This server is target -> try to stop it by peer presences === */
+   if(message->NSIdentifier == nameServer->ServerID) {
+      if((nameServer->ENRPUseMulticast) || (nameServer->ENRPAnnounceViaMulticast)) {
+         sendPeerPresence(nameServer, nameServer->ENRPMulticastSocket, 0, 0,
+                          (union sockaddr_union*)&nameServer->ENRPMulticastAddress, 1,
+                          0, false);
+      }
+
+      peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&nameServer->Peers.List);
+      while(peerListNode != NULL) {
+         if(!(peerListNode->Flags & PLNF_MULTICAST)) {
+            LOG_VERBOSE
+            fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
+                     peerListNode->Identifier);
+            LOG_END
+            sendPeerPresence(nameServer,
+                             nameServer->ENRPUnicastSocket, 0, 0,
+                             peerListNode->AddressBlock->AddressArray,
+                             peerListNode->AddressBlock->Addresses,
+                             peerListNode->Identifier,
+                             false);
+         }
+         peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                           &nameServer->Peers.List,
+                           peerListNode);
+      }
+   }
+
+   /* else if(  In Takeover .... ???????????? */
+
+   else {
+      response = rserpoolMessageNew(NULL, 65536);
+      if(response != NULL) {
+         response->Type         = EHT_PEER_INIT_TAKEOVER_ACK;
+         response->AssocID      = assocID;
+         response->Flags        = 0x00;
+         response->SenderID     = nameServer->ServerID;
+         response->ReceiverID   = message->SenderID;
+         response->NSIdentifier = message->NSIdentifier;
+
+         LOG_VERBOSE
+         fprintf(stdlog, "Sending PeerInitTakeoverAck to peer $%08x...\n",
+                 message->SenderID);
+         LOG_END
+         if(rserpoolMessageSend(IPPROTO_SCTP,
+                                 fd, assocID, 0, 0, response) == false) {
+            LOG_WARNING
+            fputs("Sending PeerInitTakeoverAck failed\n", stdlog);
+            LOG_END
+         }
+
+         rserpoolMessageDelete(response);
+      }
+   }
+}
+
+
+/* ###### Handle peer init takeover ack ################################## */
+static void handlePeerInitTakeoverAck(struct NameServer*      nameServer,
+                                      int                     fd,
+                                      sctp_assoc_t            assocID,
+                                      struct RSerPoolMessage* message)
+{
+   struct RSerPoolMessage*        response;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+
+   if(message->SenderID == nameServer->ServerID) {
+      /* This is our own message -> skip it! */
+      LOG_VERBOSE5
+      fputs("Skipping our own PeerInitTakeoverAck message\n", stdlog);
+      LOG_END
+      return;
+   }
+
+   LOG_VERBOSE
+   fprintf(stdlog, "Got PeerInitTakeoverAck from peer $%08x for target $%08x\n",
+           message->SenderID,
+           message->NSIdentifier);
+   LOG_END
 }
 
 
@@ -2223,6 +2362,12 @@ static void handleMessage(struct NameServer*      nameServer,
        break;
       case EHT_PEER_NAME_TABLE_RESPONSE:
          handlePeerNameTableResponse(nameServer, sd, message->AssocID, message);
+       break;
+      case EHT_PEER_INIT_TAKEOVER:
+         handlePeerInitTakeover(nameServer, sd, message->AssocID, message);
+       break;
+      case EHT_PEER_INIT_TAKEOVER_ACK:
+         handlePeerInitTakeoverAck(nameServer, sd, message->AssocID, message);
        break;
       default:
          LOG_WARNING
