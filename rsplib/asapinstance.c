@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.7 2004/07/21 14:39:51 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -39,9 +39,7 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "asapinstance.h"
-#include "asapmessage.h"
-#include "asapcreator.h"
-#include "asapparser.h"
+#include "rserpoolmessage.h"
 #include "timeutilities.h"
 #include "rsplib-tags.h"
 
@@ -79,7 +77,8 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
 
 
 /* ###### Constructor #################################################### */
-struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher, struct TagItem* tags)
+struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
+                                     struct TagItem*    tags)
 {
    struct ASAPInstance* asapInstance = NULL;
    if(dispatcher != NULL) {
@@ -186,8 +185,8 @@ static void asapInstanceDisconnectFromNameServer(struct ASAPInstance* asapInstan
 
 
 /* ###### Receive response from name server ############################## */
-static unsigned int asapInstanceReceiveResponse(struct ASAPInstance* asapInstance,
-                                                struct ASAPMessage** message)
+static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapInstance,
+                                                struct RSerPoolMessage** message)
 {
    ssize_t received;
 
@@ -206,7 +205,9 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance* asapInstanc
    } while((received == RspRead_PartialRead) || (received == RspRead_Timeout));
 
    if(received > 0) {
-      *message = asapPacket2Message((char*)&asapInstance->Buffer->Buffer, received, asapInstance->Buffer->Size);
+      *message = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
+                                        PPID_ASAP,
+                                        received, asapInstance->Buffer->Size);
    }
    else {
       *message = NULL;
@@ -227,8 +228,8 @@ static unsigned int asapInstanceReceiveResponse(struct ASAPInstance* asapInstanc
 
 
 /* ###### Send request to name server #################################### */
-static unsigned int asapInstanceSendRequest(struct ASAPInstance* asapInstance,
-                                            struct ASAPMessage*  request)
+static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstance,
+                                            struct RSerPoolMessage*  request)
 {
    bool result;
 
@@ -239,7 +240,7 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance* asapInstance,
       return(RSPERR_NO_NAMESERVER);
    }
 
-   result = asapMessageSend(asapInstance->NameServerSocket,
+   result = rserpoolMessageSend(asapInstance->NameServerSocket,
                             0,
                             asapInstance->NameServerRequestTimeout,
                             request);
@@ -255,12 +256,12 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance* asapInstance,
 
 
 /* ###### Send request to name server and wait for response ############## */
-static unsigned int asapInstanceDoIO(struct ASAPInstance* asapInstance,
-                                     struct ASAPMessage*  message,
-                                     struct ASAPMessage** responsePtr,
-                                     uint16_t*            error)
+static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
+                                     struct RSerPoolMessage*  message,
+                                     struct RSerPoolMessage** responsePtr,
+                                     uint16_t*                error)
 {
-   struct ASAPMessage* response;
+   struct RSerPoolMessage* response;
    unsigned int        result = RSPERR_OKAY;
    cardinal            i;
 
@@ -295,7 +296,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance* asapInstance,
                   *responsePtr = response;
                }
                else {
-                  asapMessageDelete(response);
+                  rserpoolMessageDelete(response);
                }
                return(RSPERR_OKAY);
             }
@@ -304,11 +305,11 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance* asapInstance,
                fprintf(stdlog, "Bad request/response type pair: %02x/%02x\n",
                        message->Type, response->Type);
                LOG_END
-               asapMessageDelete(response);
+               rserpoolMessageDelete(response);
                return(RSPERR_INVALID_VALUES);
             }
 
-            asapMessageDelete(response);
+            rserpoolMessageDelete(response);
             result = asapInstanceReceiveResponse(asapInstance, &response);
             if(result == RSPERR_OKAY) {
                LOG_VERBOSE2
@@ -334,7 +335,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                                   struct PoolHandle*                poolHandle,
                                   struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   struct ASAPMessage*               message;
+   struct RSerPoolMessage*               message;
    struct ST_CLASS(PoolElementNode)* newPoolElement;
    unsigned int                      result;
    uint16_t                          nameServerResult;
@@ -350,7 +351,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
    fputs("\n", stdlog);
    LOG_END
 
-   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
+   message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type           = AHT_REGISTRATION;
       message->Handle         = *poolHandle;
@@ -386,7 +387,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
          }
       }
 
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
    else {
       result = RSPERR_NO_RESOURCES;
@@ -408,7 +409,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
                                     struct PoolHandle*              poolHandle,
                                     const PoolElementIdentifierType identifier)
 {
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
    unsigned int        result;
    uint16_t            nameServerResult;
    unsigned int        namespaceMgtResult;
@@ -421,7 +422,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
    fputs("\n", stdlog);
    LOG_END
 
-   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
+   message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type       = AHT_DEREGISTRATION;
       message->Handle     = *poolHandle;
@@ -441,7 +442,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
          LOG_END_FATAL
       }
 
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
    else {
       result = RSPERR_NO_RESOURCES;
@@ -464,7 +465,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
                                        struct PoolHandle*              poolHandle,
                                        const PoolElementIdentifierType identifier)
 {
-   struct ASAPMessage*               message;
+   struct RSerPoolMessage*               message;
    struct ST_CLASS(PoolElementNode)* found;
    unsigned int                      result;
 
@@ -496,7 +497,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
    }
 
    /* ====== Report unreachability ========================================== */
-   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
+   message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type       = AHT_ENDPOINT_UNREACHABLE;
       message->Handle     = *poolHandle;
@@ -514,13 +515,13 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                                                  struct PoolHandle*   poolHandle)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
-   struct ASAPMessage*               message;
-   struct ASAPMessage*               response;
+   struct RSerPoolMessage*               message;
+   struct RSerPoolMessage*               response;
    unsigned int                      result;
    uint16_t                          nameServerResult;
    size_t                            i;
 
-   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
+   message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type   = AHT_NAME_RESOLUTION;
       message->Handle = *poolHandle;
@@ -559,7 +560,7 @@ static unsigned int asapInstanceDoNameResolution(struct ASAPInstance* asapInstan
                }
             }
 // ???????????????????????????
-//            asapMessageDelete(response);
+//            rserpoolMessageDelete(response);
 puts("response nicht gelöscht!");
          }
          else {
@@ -582,7 +583,7 @@ puts("response nicht gelöscht!");
          fputs("\n", stdlog);
          LOG_END
       }
-      asapMessageDelete(response);
+      rserpoolMessageDelete(response);
    }
    else {
       result = RSPERR_NO_RESOURCES;
@@ -692,8 +693,8 @@ unsigned int asapInstanceNameResolution(
 
 /* ###### Handle endpoint keepalive ###################################### */
 static void asapInstanceHandleEndpointKeepAlive(
-               struct ASAPInstance* asapInstance,
-               struct ASAPMessage*  message)
+               struct ASAPInstance*    asapInstance,
+               struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
@@ -735,7 +736,7 @@ static void handleNameServerConnectionEvent(
                void*              userData)
 {
    struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
-   struct ASAPMessage*  message;
+   struct RSerPoolMessage*  message;
    unsigned int       result;
 
    dispatcherLock(asapInstance->StateMachine);
@@ -756,7 +757,7 @@ static void handleNameServerConnectionEvent(
                     message->Type);
             LOG_END
          }
-         asapMessageDelete(message);
+         rserpoolMessageDelete(message);
       }
       else {
          LOG_ACTION

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rserpoolmessageparser.h,v 1.1 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,17 +31,17 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: ASAP Parser
+ * Purpose: RSerPool Message Parser
  *
  */
 
 
-#ifndef ASAPPARSER_H
-#define ASAPPARSER_H
+#ifndef RSERPOOLMESSAGEPARSER_H
+#define RSERPOOLMESSAGEPARSER_H
 
 
 #include "tdtypes.h"
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 
 
 #ifdef __cplusplus
@@ -51,15 +51,31 @@ extern "C" {
 
 
 /**
-  * Create ASAPMessage structure from packet.
+  * Create RSerPoolMessage structure from ASAP packet.
   *
   * @param packet Packet.
   * @param packetSize Size of packet.
-  * @param minBufferSize Minimum size of ASAPMessage's buffer (e.g. for reply message).
-  * @return ASAPMessage or NULL in case of error.
+  * @param minBufferSize Minimum size of RSerPoolMessage's buffer (e.g. for reply message).
+  * @return RSerPoolMessage or NULL in case of error.
   */
-struct ASAPMessage* asapPacket2Message(char* packet, const size_t packetSize, const size_t minBufferSize);
+struct RSerPoolMessage* asapPacket2Message(
+                           char*        packet,
+                           const size_t packetSize,
+                           const size_t minBufferSize);
 
+/**
+  * Create RSerPoolMessage structure from ENRP packet.
+  *
+  * @param packet Packet.
+  * @param ppid PPID of the packet (ASAP or ENRP).
+  * @param packetSize Size of packet.
+  * @param minBufferSize Minimum size of RSerPoolMessage's buffer (e.g. for reply message).
+  * @return RSerPoolMessage or NULL in case of error.
+  */
+struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
+                                               const uint32_t ppid,
+                                               const size_t   packetSize,
+                                               const size_t   minBufferSize);
 
 
 #ifdef __cplusplus

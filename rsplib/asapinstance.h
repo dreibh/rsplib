@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.3 2004/07/18 15:30:42 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.4 2004/07/21 14:39:51 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,7 +43,7 @@
 #include "tdtypes.h"
 #include "dispatcher.h"
 #include "tagitem.h"
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 #include "messagebuffer.h"
 #include "poolnamespacemanagement.h"
 #include "servertable.h"

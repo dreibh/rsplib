@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: timer.c,v 1.3 2004/07/21 14:39:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,8 +43,8 @@
 /* ###### Constructor #################################################### */
 struct Timer* timerNew(struct Dispatcher* dispatcher,
                        void               (*callback)(struct Dispatcher* dispatcher,
-                                           struct Timer* timer,
-                                           void* userData),
+                                                      struct Timer*      timer,
+                                                      void*              userData),
                        void*               userData)
 {
    struct Timer* timer = NULL;
@@ -73,12 +73,12 @@ void timerDelete(struct Timer* timer)
 
 /* ###### Start timer #################################################### */
 void timerStart(struct Timer* timer,
-                const card64  usecs)
+                const card64  timeStamp)
 {
    if(timer != NULL) {
       dispatcherLock(timer->Master);
       if(timer->Time == 0) {
-         timer->Time = getMicroTime() + usecs;
+         timer->Time = timeStamp;
          timer->Master->TimerList = g_list_insert_sorted(timer->Master->TimerList,
                                                          (gpointer)timer,
                                                          timerCompareFunc);
@@ -95,10 +95,10 @@ void timerStart(struct Timer* timer,
 
 /* ###### Restart timer ################################################## */
 void timerRestart(struct Timer* timer,
-                  const card64  usecs)
+                  const card64  timeStamp)
 {
    timerStop(timer);
-   timerStart(timer,usecs);
+   timerStart(timer, timeStamp);
 }
 
 
@@ -108,7 +108,7 @@ void timerStop(struct Timer* timer)
    if(timer != NULL) {
       dispatcherLock(timer->Master);
       timer->Time = 0;
-      timer->Master->TimerList = g_list_remove(timer->Master->TimerList,(gpointer)timer);
+      timer->Master->TimerList = g_list_remove(timer->Master->TimerList, (gpointer)timer);
       dispatcherUnlock(timer->Master);
    }
 }

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: servertable.c,v 1.6 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -40,9 +40,8 @@
 #include "loglevel.h"
 #include "servertable.h"
 #include "netutilities.h"
-#include "asapcreator.h"
-#include "asapparser.h"
 #include "asapinstance.h"
+#include "rserpoolmessage.h"
 #include "rsplib-tags.h"
 
 #include <ext_socket.h>
@@ -106,7 +105,7 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                                          void*              userData)
 {
    struct ServerTable*            serverTable = (struct ServerTable*)userData;
-   struct ASAPMessage*            message;
+   struct RSerPoolMessage*        message;
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct sockaddr_storage        senderAddress;
    socklen_t                      senderAddressLength;
@@ -125,7 +124,9 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                            (struct sockaddr*)&senderAddress,
                            &senderAddressLength);
    if(received > 0) {
-      message = asapPacket2Message((char*)&buffer, received, sizeof(buffer));
+      message = rserpoolPacket2Message((char*)&buffer,
+                                       PPID_ASAP,
+                                       received, sizeof(buffer));
       if(message != NULL) {
          if(message->Type == AHT_SERVER_ANNOUNCE) {
             if(message->Error == RSPERR_OKAY) {
@@ -167,7 +168,7 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
                LOG_END
             }
          }
-         asapMessageDelete(message);
+         rserpoolMessageDelete(message);
       }
    }
 }

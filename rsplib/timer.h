@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: timer.h,v 1.2 2004/07/21 14:39:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,8 +74,8 @@ struct Timer
   */
 struct Timer* timerNew(struct Dispatcher* dispatcher,
                        void               (*callback)(struct Dispatcher* dispatcher,
-                                                      struct Timer* timer,
-                                                      void* userData),
+                                                      struct Timer*      timer,
+                                                      void*              userData),
                        void*               userData);
 
 /**
@@ -89,19 +89,19 @@ void timerDelete(struct Timer* timer);
   * Start timer.
   *
   * @param timer Timer.
-  * @param usecs Mircoseconds.
+  * @param timeStamp Time stamp.
   */
 void timerStart(struct Timer* timer,
-                const card64  usecs);
+                const card64  timeStamp);
 
 /**
   * Restart timer (set new timeout for already running timer).
   *
   * @param timer Timer.
-  * @param usecs Mircoseconds.
+  * @param timeStamp Time stamp.
   */
 void timerRestart(struct Timer* timer,
-                  const card64  usecs);
+                  const card64  timeStamp);
 
 /**
   * Stop timer.

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapparser.c,v 1.7 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.1 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,7 +31,7 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: ASAP Parser
+ * Purpose: RSerPool Message Parser
  *
  */
 
@@ -39,25 +39,25 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "asapparser.h"
+#include "rserpoolmessageparser.h"
 
 #include <netinet/in.h>
 #include <ext_socket.h>
 
 
 /* ###### Scan next TLV header ############################################## */
-static bool getNextTLV(struct ASAPMessage*      message,
-                       size_t*                  tlvPosition,
-                       struct asap_tlv_header** header,
-                       uint16_t*                tlvType,
-                       size_t*                  tlvLength)
+static bool getNextTLV(struct RSerPoolMessage*      message,
+                       size_t*                      tlvPosition,
+                       struct rserpool_tlv_header** header,
+                       uint16_t*                    tlvType,
+                       size_t*                      tlvLength)
 {
    *tlvPosition = message->Position;
    message->OffendingParameterTLV       = (char*)&message->Buffer[*tlvPosition];
    message->OffendingParameterTLVLength = 0;
 
    *tlvPosition = message->Position;
-   *header = (struct asap_tlv_header*)getSpace(message, sizeof(struct asap_tlv_header));
+   *header = (struct rserpool_tlv_header*)getSpace(message, sizeof(struct rserpool_tlv_header));
    if(*header == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -71,7 +71,7 @@ static bool getNextTLV(struct ASAPMessage*      message,
            *tlvType, (unsigned int)*tlvLength, (unsigned int)message->Position);
    LOG_END
 
-   if(message->Position + *tlvLength - sizeof(struct asap_tlv_header) > message->BufferSize) {
+   if(message->Position + *tlvLength - sizeof(struct rserpool_tlv_header) > message->BufferSize) {
       LOG_WARNING
       fprintf(stdlog, "TLV length exceeds message size!\n"
              "p=%u + l=%u > size=%u   type=$%02x\n",
@@ -81,7 +81,7 @@ static bool getNextTLV(struct ASAPMessage*      message,
       return(false);
    }
 
-   if(*tlvLength < sizeof(struct asap_tlv_header)) {
+   if(*tlvLength < sizeof(struct rserpool_tlv_header)) {
       LOG_WARNING
       fputs("TLV length too low!\n", stdlog);
       LOG_END
@@ -95,14 +95,14 @@ static bool getNextTLV(struct ASAPMessage*      message,
 
 
 /* ###### Handle unknown TLV ################################################ */
-static bool handleUnknownTLV(struct ASAPMessage* message,
-                             const uint16_t      tlvType,
-                             const size_t        tlvLength)
+static bool handleUnknownTLV(struct RSerPoolMessage* message,
+                             const uint16_t          tlvType,
+                             const size_t            tlvLength)
 {
    void* ptr;
 
    if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE) {
-      ptr = getSpace(message, tlvLength - sizeof(struct asap_tlv_header));
+      ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
          LOG_VERBOSE3
          fprintf(stdlog, "Silently skipping type $%02x at position %u\n",
@@ -112,7 +112,7 @@ static bool handleUnknownTLV(struct ASAPMessage* message,
       }
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE_AND_REPORT) {
-      ptr = getSpace(message, tlvLength - sizeof(struct asap_tlv_header));
+      ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
          LOG_VERBOSE3
          fprintf(stdlog, "Skipping type $%02x at position %u\n",
@@ -132,7 +132,7 @@ static bool handleUnknownTLV(struct ASAPMessage* message,
       fprintf(stdlog, "Silently stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END
-      message->Position -= sizeof(struct asap_tlv_header);
+      message->Position -= sizeof(struct rserpool_tlv_header);
       message->Error     = RSPERR_OKAY;
       return(false);
    }
@@ -141,7 +141,7 @@ static bool handleUnknownTLV(struct ASAPMessage* message,
       fprintf(stdlog, "Stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END
-      message->Position -= sizeof(struct asap_tlv_header);
+      message->Position -= sizeof(struct rserpool_tlv_header);
       message->Error     = RSPERR_UNRECOGNIZED_PARAMETER;
       return(false);
    }
@@ -151,10 +151,10 @@ static bool handleUnknownTLV(struct ASAPMessage* message,
 
 
 /* ###### Check begin of message ############################################ */
-static size_t checkBeginMessage(struct ASAPMessage* message,
-                                size_t*             startPosition)
+static size_t checkBeginMessage(struct RSerPoolMessage* message,
+                                size_t*                 startPosition)
 {
-   struct asap_header* header;
+   struct rserpool_header* header;
    size_t              length;
 
    *startPosition                     = message->Position;
@@ -163,7 +163,7 @@ static size_t checkBeginMessage(struct ASAPMessage* message,
    message->OffendingParameterTLV     = NULL;
    message->OffendingParameterTLV     = 0;
 
-   header = (struct asap_header*)getSpace(message, sizeof(struct asap_header));
+   header = (struct rserpool_header*)getSpace(message, sizeof(struct rserpool_header));
    if(header == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(0);
@@ -171,7 +171,7 @@ static size_t checkBeginMessage(struct ASAPMessage* message,
 
    length = (size_t)ntohs(header->ah_length);
 
-   if(message->Position + length - sizeof(struct asap_header) > message->BufferSize) {
+   if(message->Position + length - sizeof(struct rserpool_header) > message->BufferSize) {
       LOG_WARNING
       fprintf(stdlog, "Message length exceeds message size!\n"
              "p=%u + l=%u - 4 > size=%u\n",
@@ -180,7 +180,7 @@ static size_t checkBeginMessage(struct ASAPMessage* message,
       message->Error = RSPERR_INVALID_VALUES;
       return(0);
    }
-   if(length < sizeof(struct asap_tlv_header)) {
+   if(length < sizeof(struct rserpool_tlv_header)) {
       LOG_WARNING
       fputs("Message length too low!\n", stdlog);
       LOG_END
@@ -194,10 +194,10 @@ static size_t checkBeginMessage(struct ASAPMessage* message,
 
 
 /* ###### Check finish of message ########################################### */
-static bool checkFinishMessage(struct ASAPMessage* message,
-                               const size_t        startPosition)
+static bool checkFinishMessage(struct RSerPoolMessage* message,
+                               const size_t            startPosition)
 {
-   struct asap_header* header = (struct asap_header*)&message->Buffer[startPosition];
+   struct rserpool_header* header = (struct rserpool_header*)&message->Buffer[startPosition];
    const size_t        length = (size_t)ntohs(header->ah_length);
    const size_t        endPos = startPosition + length;
 
@@ -220,12 +220,12 @@ static bool checkFinishMessage(struct ASAPMessage* message,
 
 
 /* ###### Check begin of TLV ################################################ */
-static size_t checkBeginTLV(struct ASAPMessage* message,
-                            size_t*             tlvPosition,
-                            const uint16_t      expectedType,
-                            const bool          checkType)
+static size_t checkBeginTLV(struct RSerPoolMessage* message,
+                            size_t*                 tlvPosition,
+                            const uint16_t          expectedType,
+                            const bool              checkType)
 {
-   struct asap_tlv_header* header;
+   struct rserpool_tlv_header* header;
    uint16_t                tlvType;
    size_t                  tlvLength;
 
@@ -247,12 +247,12 @@ static size_t checkBeginTLV(struct ASAPMessage* message,
 
 
 /* ###### Check finish of TLV ############################################### */
-static bool checkFinishTLV(struct ASAPMessage* message,
-                           const size_t        tlvPosition)
+static bool checkFinishTLV(struct RSerPoolMessage* message,
+                           const size_t            tlvPosition)
 {
-   struct asap_tlv_header* header = (struct asap_tlv_header*)&message->Buffer[tlvPosition];
-   const size_t            length = (size_t)ntohs(header->atlv_length);
-   const size_t            endPos = tlvPosition + length + getPadding(length,4);
+   struct rserpool_tlv_header* header = (struct rserpool_tlv_header*)&message->Buffer[tlvPosition];
+   const size_t                length = (size_t)ntohs(header->atlv_length);
+   const size_t                endPos = tlvPosition + length + getPadding(length,4);
 
    if(message->Position > endPos ) {
       LOG_WARNING
@@ -283,7 +283,7 @@ static bool checkFinishTLV(struct ASAPMessage* message,
 
 
 /* ###### Scan address parameter ############################################ */
-static bool scanAddressParameter(struct ASAPMessage*      message,
+static bool scanAddressParameter(struct RSerPoolMessage*  message,
                                  const card16             port,
                                  struct sockaddr_storage* address)
 {
@@ -300,11 +300,11 @@ static bool scanAddressParameter(struct ASAPMessage*      message,
       message->Error = RSPERR_BUFFERSIZE_EXCEEDED;
       return(false);
    }
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
 
    memset((void*)address, 0, sizeof(struct sockaddr_storage));
 
-   tlvType = ntohs(((struct asap_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
+   tlvType = ntohs(((struct rserpool_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
    switch(PURE_ATT_TYPE(tlvType)) {
       case ATT_IPv4_ADDRESS:
          if(tlvLength >= 4) {
@@ -368,14 +368,14 @@ static bool scanAddressParameter(struct ASAPMessage*      message,
 
 
 /* ###### Scan user transport parameter ##################################### */
-static bool scanTransportParameter(struct ASAPMessage*           message,
+static bool scanTransportParameter(struct RSerPoolMessage*       message,
                                    struct TransportAddressBlock* transportAddressBlock)
 {
    size_t                              addresses;
    struct sockaddr_storage             addressArray[MAX_PE_TRANSPORTADDRESSES];
-   struct asap_udptransportparameter*  utp;
-   struct asap_tcptransportparameter*  ttp;
-   struct asap_sctptransportparameter* stp;
+   struct rserpool_udptransportparameter*  utp;
+   struct rserpool_tcptransportparameter*  ttp;
+   struct rserpool_sctptransportparameter* stp;
    size_t                              tlvEndPos;
    uint16_t                            tlvType;
    uint16_t                            port              = 0;
@@ -384,17 +384,17 @@ static bool scanTransportParameter(struct ASAPMessage*           message,
 
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message,  &tlvPosition, 0, false);
-   if(tlvLength < sizeof(struct asap_tlv_header)) {
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
    tlvEndPos = message->Position + tlvLength;
 
-   tlvType = ntohs(((struct asap_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
+   tlvType = ntohs(((struct rserpool_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
    switch(PURE_ATT_TYPE(tlvType)) {
       case ATT_SCTP_TRANSPORT:
-          stp = (struct asap_sctptransportparameter*)getSpace(message, sizeof(struct asap_sctptransportparameter));
+          stp = (struct rserpool_sctptransportparameter*)getSpace(message, sizeof(struct rserpool_sctptransportparameter));
           if(stp == NULL) {
              message->Error = RSPERR_INVALID_VALUES;
              return(false);
@@ -406,7 +406,7 @@ static bool scanTransportParameter(struct ASAPMessage*           message,
           }
        break;
       case ATT_TCP_TRANSPORT:
-          ttp = (struct asap_tcptransportparameter*)getSpace(message, sizeof(struct asap_tcptransportparameter));
+          ttp = (struct rserpool_tcptransportparameter*)getSpace(message, sizeof(struct rserpool_tcptransportparameter));
           if(ttp == NULL) {
              message->Error = RSPERR_INVALID_VALUES;
              return(false);
@@ -418,7 +418,7 @@ static bool scanTransportParameter(struct ASAPMessage*           message,
           }
        break;
       case ATT_UDP_TRANSPORT:
-          utp = (struct asap_udptransportparameter*)getSpace(message, sizeof(struct asap_udptransportparameter));
+          utp = (struct rserpool_udptransportparameter*)getSpace(message, sizeof(struct rserpool_udptransportparameter));
           if(utp == NULL) {
              message->Error = RSPERR_INVALID_VALUES;
              return(false);
@@ -488,22 +488,22 @@ static bool scanTransportParameter(struct ASAPMessage*           message,
 
 
 /* ###### Scan poolPolicySettings parameter ############################################# */
-static bool scanPolicyParameter(struct ASAPMessage*        message,
+static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                                 struct PoolPolicySettings* poolPolicySettings)
 {
-   uint8_t                                                       tlvType;
-   struct asap_policy_roundrobin*                                rr;
-   struct asap_policy_weighted_roundrobin*                       wrr;
-   struct asap_policy_leastused*                                 lu;
-   struct asap_policy_leastused_degradation*                     lud;
-   struct asap_policy_priority_leastused*                        plu;
-   struct asap_policy_priority_leastused_degradation*            plud;
-   struct asap_policy_random*                                    rd;
-   struct asap_policy_weighted_random*                           wrd;
-   struct asap_policy_randomized_leastused*                      rlu;
-   struct asap_policy_randomized_leastused_degradation*          rlud;
-   struct asap_policy_randomized_priority_leastused*             rplu;
-   struct asap_policy_randomized_priority_leastused_degradation* rplud;
+   uint8_t                                                           tlvType;
+   struct rserpool_policy_roundrobin*                                rr;
+   struct rserpool_policy_weighted_roundrobin*                       wrr;
+   struct rserpool_policy_leastused*                                 lu;
+   struct rserpool_policy_leastused_degradation*                     lud;
+   struct rserpool_policy_priority_leastused*                        plu;
+   struct rserpool_policy_priority_leastused_degradation*            plud;
+   struct rserpool_policy_random*                                    rd;
+   struct rserpool_policy_weighted_random*                           wrd;
+   struct rserpool_policy_randomized_leastused*                      rlu;
+   struct rserpool_policy_randomized_leastused_degradation*          rlud;
+   struct rserpool_policy_randomized_priority_leastused*             rplu;
+   struct rserpool_policy_randomized_priority_leastused_degradation* rplud;
 
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_POLICY, true);
@@ -511,7 +511,7 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
 
    if(tlvLength < 1) {
       LOG_WARNING
@@ -525,8 +525,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
    poolPolicySettingsNew(poolPolicySettings);
    switch(PURE_ATT_TYPE(tlvType)) {
       case PPT_LEASTUSED:
-         if(tlvLength >= sizeof(struct asap_policy_leastused)) {
-            lu = (struct asap_policy_leastused*)getSpace(message, sizeof(struct asap_policy_leastused));
+         if(tlvLength >= sizeof(struct rserpool_policy_leastused)) {
+            lu = (struct rserpool_policy_leastused*)getSpace(message, sizeof(struct rserpool_policy_leastused));
             if(lu == NULL) {
                return(false);
             }
@@ -546,8 +546,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_LEASTUSED_DEGRADATION:
-         if(tlvLength >= sizeof(struct asap_policy_leastused_degradation)) {
-            lud = (struct asap_policy_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_leastused_degradation));
+         if(tlvLength >= sizeof(struct rserpool_policy_leastused_degradation)) {
+            lud = (struct rserpool_policy_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation));
             if(lud == NULL) {
                return(false);
             }
@@ -570,8 +570,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_PRIORITY_LEASTUSED:
-         if(tlvLength >= sizeof(struct asap_policy_priority_leastused)) {
-            plu = (struct asap_policy_priority_leastused*)getSpace(message, sizeof(struct asap_policy_priority_leastused));
+         if(tlvLength >= sizeof(struct rserpool_policy_priority_leastused)) {
+            plu = (struct rserpool_policy_priority_leastused*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused));
             if(plu == NULL) {
                return(false);
             }
@@ -591,8 +591,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_PRIORITY_LEASTUSED_DEGRADATION:
-         if(tlvLength >= sizeof(struct asap_policy_priority_leastused_degradation)) {
-            plud = (struct asap_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_priority_leastused_degradation));
+         if(tlvLength >= sizeof(struct rserpool_policy_priority_leastused_degradation)) {
+            plud = (struct rserpool_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused_degradation));
             if(plud == NULL) {
                return(false);
             }
@@ -615,8 +615,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_RANDOM:
-         if(tlvLength >= sizeof(struct asap_policy_random)) {
-            rd = (struct asap_policy_random*)getSpace(message, sizeof(struct asap_policy_random));
+         if(tlvLength >= sizeof(struct rserpool_policy_random)) {
+            rd = (struct rserpool_policy_random*)getSpace(message, sizeof(struct rserpool_policy_random));
             if(rd == NULL) {
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
@@ -638,8 +638,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_WEIGHTED_RANDOM:
-         if(tlvLength >= sizeof(struct asap_policy_weighted_random)) {
-            wrd = (struct asap_policy_weighted_random*)getSpace(message, sizeof(struct asap_policy_weighted_random));
+         if(tlvLength >= sizeof(struct rserpool_policy_weighted_random)) {
+            wrd = (struct rserpool_policy_weighted_random*)getSpace(message, sizeof(struct rserpool_policy_weighted_random));
             if(wrd == NULL) {
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
@@ -662,8 +662,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_ROUNDROBIN:
-         if(tlvLength >= sizeof(struct asap_policy_roundrobin)) {
-            rr = (struct asap_policy_roundrobin*)getSpace(message, sizeof(struct asap_policy_roundrobin));
+         if(tlvLength >= sizeof(struct rserpool_policy_roundrobin)) {
+            rr = (struct rserpool_policy_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_roundrobin));
             if(rr == NULL) {
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
@@ -684,8 +684,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_WEIGHTED_ROUNDROBIN:
-         if(tlvLength >= sizeof(struct asap_policy_weighted_roundrobin)) {
-            wrr = (struct asap_policy_weighted_roundrobin*)getSpace(message, sizeof(struct asap_policy_weighted_roundrobin));
+         if(tlvLength >= sizeof(struct rserpool_policy_weighted_roundrobin)) {
+            wrr = (struct rserpool_policy_weighted_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_weighted_roundrobin));
             if(wrr == NULL) {
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
@@ -706,8 +706,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_RANDOMIZED_LEASTUSED:
-         if(tlvLength >= sizeof(struct asap_policy_randomized_leastused)) {
-            rlu = (struct asap_policy_randomized_leastused*)getSpace(message, sizeof(struct asap_policy_randomized_leastused));
+         if(tlvLength >= sizeof(struct rserpool_policy_randomized_leastused)) {
+            rlu = (struct rserpool_policy_randomized_leastused*)getSpace(message, sizeof(struct rserpool_policy_randomized_leastused));
             if(rlu == NULL) {
                return(false);
             }
@@ -727,8 +727,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_RANDOMIZED_LEASTUSED_DEGRADATION:
-         if(tlvLength >= sizeof(struct asap_policy_randomized_leastused_degradation)) {
-            rlud = (struct asap_policy_randomized_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_randomized_leastused_degradation));
+         if(tlvLength >= sizeof(struct rserpool_policy_randomized_leastused_degradation)) {
+            rlud = (struct rserpool_policy_randomized_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_randomized_leastused_degradation));
             if(rlud == NULL) {
                return(false);
             }
@@ -751,8 +751,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_RANDOMIZED_PRIORITY_LEASTUSED:
-         if(tlvLength >= sizeof(struct asap_policy_randomized_priority_leastused)) {
-            rplu = (struct asap_policy_randomized_priority_leastused*)getSpace(message, sizeof(struct asap_policy_randomized_priority_leastused));
+         if(tlvLength >= sizeof(struct rserpool_policy_randomized_priority_leastused)) {
+            rplu = (struct rserpool_policy_randomized_priority_leastused*)getSpace(message, sizeof(struct rserpool_policy_randomized_priority_leastused));
             if(rplu == NULL) {
                return(false);
             }
@@ -772,8 +772,8 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
          }
        break;
       case PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION:
-         if(tlvLength >= sizeof(struct asap_policy_randomized_priority_leastused_degradation)) {
-            rplud = (struct asap_policy_randomized_priority_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_randomized_priority_leastused_degradation));
+         if(tlvLength >= sizeof(struct rserpool_policy_randomized_priority_leastused_degradation)) {
+            rplud = (struct rserpool_policy_randomized_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_randomized_priority_leastused_degradation));
             if(rplud == NULL) {
                return(false);
             }
@@ -807,9 +807,10 @@ static bool scanPolicyParameter(struct ASAPMessage*        message,
 
 
 /* ###### Scan pool element paramter ######################################## */
-static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMessage* message)
+static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
+                                            struct RSerPoolMessage* message)
 {
-   struct asap_poolelementparameter* pep;
+   struct rserpool_poolelementparameter* pep;
    char                              transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct TransportAddressBlock*     newTransportAddressBlock;
@@ -823,7 +824,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMes
       return(false);
    }
 
-   pep = (struct asap_poolelementparameter*)getSpace(message, sizeof(struct asap_poolelementparameter));
+   pep = (struct rserpool_poolelementparameter*)getSpace(message, sizeof(struct rserpool_poolelementparameter));
    if(pep == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -863,8 +864,8 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(struct ASAPMes
 
 
 /* ###### Scan pool handle paramter ######################################### */
-static bool scanPoolHandleParameter(struct ASAPMessage* message,
-                                    struct PoolHandle*  poolHandlePtr)
+static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
+                                    struct PoolHandle*      poolHandlePtr)
 {
    unsigned char* poolHandle;
    size_t tlvPosition = 0;
@@ -873,7 +874,7 @@ static bool scanPoolHandleParameter(struct ASAPMessage* message,
       return(false);
    }
 
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
    if(tlvLength < 1) {
       LOG_WARNING
       fputs("Pool handle too short!\n", stdlog);
@@ -903,7 +904,7 @@ static bool scanPoolHandleParameter(struct ASAPMessage* message,
 
 
 /* ###### Scan pool element identifier parameter ############################ */
-static bool scanPoolElementIdentifierParameter(struct ASAPMessage* message)
+static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
 {
    uint32_t* identifier;
    size_t    tlvPosition = 0;
@@ -912,7 +913,7 @@ static bool scanPoolElementIdentifierParameter(struct ASAPMessage* message)
       return(false);
    }
 
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
    if(tlvLength != sizeof(uint32_t)) {
       LOG_WARNING
       fputs("Pool element identifier too short!\n", stdlog);
@@ -936,9 +937,9 @@ static bool scanPoolElementIdentifierParameter(struct ASAPMessage* message)
 
 
 /* ###### Scan error parameter ############################################## */
-static bool scanErrorParameter(struct ASAPMessage* message)
+static bool scanErrorParameter(struct RSerPoolMessage* message)
 {
-   struct asap_errorcause* aec;
+   struct rserpool_errorcause* aec;
    char*                   data;
    size_t                  dataLength;
    size_t                  tlvPosition = 0;
@@ -947,8 +948,8 @@ static bool scanErrorParameter(struct ASAPMessage* message)
       return(false);
    }
 
-   tlvLength -= sizeof(struct asap_tlv_header);
-   if(tlvLength < sizeof(struct asap_errorcause)) {
+   tlvLength -= sizeof(struct rserpool_tlv_header);
+   if(tlvLength < sizeof(struct rserpool_errorcause)) {
       LOG_WARNING
       fputs("Error parameter TLV too short\n", stdlog);
       LOG_END
@@ -956,11 +957,11 @@ static bool scanErrorParameter(struct ASAPMessage* message)
       return(false);
    }
 
-   aec = (struct asap_errorcause*)&message->Buffer[message->Position];
+   aec = (struct rserpool_errorcause*)&message->Buffer[message->Position];
    message->Error = ntohs(aec->aec_cause);
    dataLength     = ntohs(aec->aec_length);
 
-   if(dataLength < sizeof(struct asap_errorcause)) {
+   if(dataLength < sizeof(struct rserpool_errorcause)) {
       LOG_WARNING
       fputs("Cause length too short!\n", stdlog);
       LOG_END
@@ -968,7 +969,7 @@ static bool scanErrorParameter(struct ASAPMessage* message)
       return(false);
    }
 
-   dataLength -= sizeof(struct asap_errorcause);
+   dataLength -= sizeof(struct rserpool_errorcause);
    data = (char*)getSpace(message,dataLength);
    if(data == NULL) {
       return(false);
@@ -982,7 +983,7 @@ static bool scanErrorParameter(struct ASAPMessage* message)
 
 
 /* ###### Scan cookie parameter ############################################# */
-static bool scanCookieParameter(struct ASAPMessage* message)
+static bool scanCookieParameter(struct RSerPoolMessage* message)
 {
    void*     cookie;
    size_t    tlvPosition = 0;
@@ -991,7 +992,7 @@ static bool scanCookieParameter(struct ASAPMessage* message)
       return(false);
    }
 
-   tlvLength -= sizeof(struct asap_tlv_header);
+   tlvLength -= sizeof(struct rserpool_tlv_header);
    if(tlvLength < 1) {
       LOG_WARNING
       fputs("Cookie too short!\n", stdlog);
@@ -1023,7 +1024,7 @@ static bool scanCookieParameter(struct ASAPMessage* message)
 
 
 /* ###### Scan endpoint keepalive message ################################### */
-static bool scanEndpointKeepAliveMessage(struct ASAPMessage* message)
+static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1033,7 +1034,7 @@ static bool scanEndpointKeepAliveMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan endpoint keepalive acknowledgement message ################### */
-static bool scanEndpointKeepAliveAckMessage(struct ASAPMessage* message)
+static bool scanEndpointKeepAliveAckMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1047,7 +1048,7 @@ static bool scanEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan endpoint unreachable message ################################# */
-static bool scanEndpointUnreachableMessage(struct ASAPMessage* message)
+static bool scanEndpointUnreachableMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1060,7 +1061,7 @@ static bool scanEndpointUnreachableMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan registration message ######################################### */
-static bool scanRegistrationMessage(struct ASAPMessage* message)
+static bool scanRegistrationMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1074,7 +1075,7 @@ static bool scanRegistrationMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan deregistration message ####################################### */
-static bool scanDeregistrationMessage(struct ASAPMessage* message)
+static bool scanDeregistrationMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1087,7 +1088,7 @@ static bool scanDeregistrationMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan registration response message ################################ */
-static bool scanRegistrationResponseMessage(struct ASAPMessage* message)
+static bool scanRegistrationResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1105,7 +1106,7 @@ static bool scanRegistrationResponseMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan deregistration response message ############################## */
-static bool scanDeregistrationResponseMessage(struct ASAPMessage* message)
+static bool scanDeregistrationResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1123,7 +1124,7 @@ static bool scanDeregistrationResponseMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan name resolution message ###################################### */
-static bool scanNameResolutionMessage(struct ASAPMessage* message)
+static bool scanNameResolutionMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1133,7 +1134,7 @@ static bool scanNameResolutionMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan name resolution response message ############################# */
-static bool scanNameResolutionResponseMessage(struct ASAPMessage* message)
+static bool scanNameResolutionResponseMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1171,7 +1172,7 @@ printf("elements=%d\n",message->PoolElementPtrArraySize);
 
 
 /* ###### Scan name resolution response message ############################# */
-static bool scanServerAnnounceMessage(struct ASAPMessage* message)
+static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
@@ -1215,7 +1216,7 @@ static bool scanServerAnnounceMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan cookie message ################################################ */
-static bool scanCookieMessage(struct ASAPMessage* message)
+static bool scanCookieMessage(struct RSerPoolMessage* message)
 {
    if(scanCookieParameter(message) == false) {
       return(false);
@@ -1226,7 +1227,7 @@ static bool scanCookieMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan cookie echo message ########################################### */
-static bool scanCookieEchoMessage(struct ASAPMessage* message)
+static bool scanCookieEchoMessage(struct RSerPoolMessage* message)
 {
    if(scanCookieParameter(message) == false) {
       return(false);
@@ -1237,7 +1238,7 @@ static bool scanCookieEchoMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan business card message ######################################### */
-static bool scanBusinessCardMessage(struct ASAPMessage* message)
+static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
@@ -1275,9 +1276,9 @@ static bool scanBusinessCardMessage(struct ASAPMessage* message)
 
 
 /* ###### Scan message ###################################################### */
-static bool scanMessage(struct ASAPMessage* message)
+static bool scanMessage(struct RSerPoolMessage* message)
 {
-   struct asap_header* header;
+   struct rserpool_header* header;
    size_t              startPosition;
    size_t              length;
    size_t              i, j;
@@ -1314,13 +1315,25 @@ static bool scanMessage(struct ASAPMessage* message)
 
 
    length = checkBeginMessage(message, &startPosition);
-   if(length < sizeof(struct asap_header)) {
+   if(length < sizeof(struct rserpool_header)) {
       return(false);
    }
 
-   header        = (struct asap_header*)&message->Buffer[startPosition];
+   header        = (struct rserpool_header*)&message->Buffer[startPosition];
    message->Type = header->ah_type;
+   if(message->PPID == PPID_ASAP) {
+      message->Type |= AHT_ASAP_MODIFIER;
+   }
+   else if(message->PPID == PPID_ENRP) {
+      message->Type |= EHT_ENRP_MODIFIER;
+   }
+   else {
+      LOG_ERROR
+      fputs("Wrong PPID\n", stdlog);
+      LOG_END_FATAL
+   }
    switch(message->Type) {
+      /* ====== ASAP ===================================================== */
       case AHT_NAME_RESOLUTION:
          LOG_VERBOSE2
          fputs("Scanning NameResolution message...\n", stdlog);
@@ -1425,9 +1438,14 @@ static bool scanMessage(struct ASAPMessage* message)
             return(false);
          }
        break;
+
+      /* ====== ENRP ===================================================== */
+      case EHT_PEER_PRESENCE:
+       break;
+
       default:
          LOG_WARNING
-         fprintf(stdlog, "Unknown type #$%02x!\n",header->ah_type);
+         fprintf(stdlog, "Unknown message type #$%02x!\n", header->ah_type);
          LOG_END
          return(false);
        break;
@@ -1437,11 +1455,15 @@ static bool scanMessage(struct ASAPMessage* message)
 }
 
 
-/* ###### Convert packet to ASAPMessage ##################################### */
-struct ASAPMessage* asapPacket2Message(char* packet, const size_t packetSize, const size_t minBufferSize)
+/* ###### Convert packet to RSerPoolMessage ############################## */
+struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
+                                               const uint32_t ppid,
+                                               const size_t   packetSize,
+                                               const size_t   minBufferSize)
 {
-   struct ASAPMessage* message = asapMessageNew(packet, packetSize);
+   struct RSerPoolMessage* message = rserpoolMessageNew(packet, packetSize);
    if(message != NULL) {
+      message->PPID                                   = ppid;
       message->OriginalBufferSize                     = max(packetSize, minBufferSize);
       message->Position                               = 0;
       message->PoolElementPtrAutoDelete               = true;
@@ -1450,7 +1472,7 @@ struct ASAPMessage* asapPacket2Message(char* packet, const size_t packetSize, co
       message->TransportAddressBlockListPtrAutoDelete = true;
 
       LOG_VERBOSE3
-      fprintf(stdlog, "Scanning message, size=%u...\n",
+      fprintf(stdlog, "Scanning zzmessage, size=%u...\n",
               (unsigned int)packetSize);
       LOG_END
 
@@ -1465,7 +1487,7 @@ struct ASAPMessage* asapPacket2Message(char* packet, const size_t packetSize, co
       fprintf(stdlog, "Format error in message at byte %u!\n",
               (unsigned int)message->Position);
       LOG_END
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
       message = NULL;
    }
    return(message);

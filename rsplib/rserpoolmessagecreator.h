@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.h,v 1.1 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,17 +31,16 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: ASAP Creator
+ * Purpose: RSerPool Message Creator
  *
  */
 
-
-#ifndef ASAPCREATOR_H
-#define ASAPCREATOR_H
+#ifndef RSERPOOLMESSAGECREATOR_H
+#define RSERPOOLMESSAGECREATOR_H
 
 
 #include "tdtypes.h"
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 
 
 #ifdef __cplusplus
@@ -49,20 +48,17 @@ extern "C" {
 #endif
 
 
-
 /**
-  * Create packet from ASAPMessage structure.
+  * Create packet from RSerPoolMessage structure.
   *
-  * @param message ASAPMessage.
+  * @param message RSerPoolMessage.
   * @return Size of packet or 0 in case of error.
   */
-size_t asapMessage2Packet(struct ASAPMessage* message);
-
+size_t rserpoolMessage2Packet(struct RSerPoolMessage* message);
 
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

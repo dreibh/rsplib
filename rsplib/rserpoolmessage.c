@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.1 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -31,7 +31,7 @@
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
  *
- * Purpose: ASAP Message
+ * Purpose: RSerPool Message Definitions
  *
  */
 
@@ -39,9 +39,9 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "asapmessage.h"
-#include "asapcreator.h"
-#include "asapparser.h"
+#include "rserpoolmessage.h"
+#include "rserpoolmessagecreator.h"
+#include "rserpoolmessageparser.h"
 
 #include <glib.h>
 #include <ext_socket.h>
@@ -49,23 +49,23 @@
 
 
 /* ###### Constructor #################################################### */
-struct ASAPMessage* asapMessageNew(char* buffer, const size_t bufferSize)
+struct RSerPoolMessage* rserpoolMessageNew(char* buffer, const size_t bufferSize)
 {
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
 
    if(buffer == NULL) {
-      message = (struct ASAPMessage*)malloc(sizeof(struct ASAPMessage) + bufferSize);
+      message = (struct RSerPoolMessage*)malloc(sizeof(struct RSerPoolMessage) + bufferSize);
       if(message != NULL) {
-         memset(message,0,sizeof(struct ASAPMessage));
-         message->Buffer             = (char*)((long)message + (long)sizeof(struct ASAPMessage));
+         memset(message,0,sizeof(struct RSerPoolMessage));
+         message->Buffer             = (char*)((long)message + (long)sizeof(struct RSerPoolMessage));
          message->BufferSize         = bufferSize;
          message->OriginalBufferSize = bufferSize;
       }
    }
    else {
-      message = (struct ASAPMessage*)malloc(sizeof(struct ASAPMessage));
+      message = (struct RSerPoolMessage*)malloc(sizeof(struct RSerPoolMessage));
       if(message != NULL) {
-         memset(message,0,sizeof(struct ASAPMessage));
+         memset(message,0,sizeof(struct RSerPoolMessage));
          message->Buffer             = buffer;
          message->BufferSize         = bufferSize;
          message->OriginalBufferSize = bufferSize;
@@ -77,10 +77,10 @@ struct ASAPMessage* asapMessageNew(char* buffer, const size_t bufferSize)
 
 
 /* ###### Destructor ##################################################### */
-void asapMessageDelete(struct ASAPMessage* message)
+void rserpoolMessageDelete(struct RSerPoolMessage* message)
 {
    if(message != NULL) {
-      asapMessageClearAll(message);
+      rserpoolMessageClearAll(message);
       if((message->BufferAutoDelete) && (message->Buffer)) {
          free(message->Buffer);
       }
@@ -91,8 +91,8 @@ void asapMessageDelete(struct ASAPMessage* message)
 }
 
 
-/* ###### Clear ASAPMessage ############################################## */
-void asapMessageClearAll(struct ASAPMessage* message)
+/* ###### Clear RSerPoolMessage ########################################## */
+void rserpoolMessageClearAll(struct RSerPoolMessage* message)
 {
    struct TransportAddressBlock* transportAddressBlock;
    struct TransportAddressBlock* nextTransportAddressBlock;
@@ -139,7 +139,7 @@ void asapMessageClearAll(struct ASAPMessage* message)
       buffer             = message->Buffer;
       originalBufferSize = message->OriginalBufferSize;
       bufferAutoDelete   = message->BufferAutoDelete;
-      memset(message,0,sizeof(struct ASAPMessage));
+      memset(message,0,sizeof(struct RSerPoolMessage));
       message->BufferAutoDelete   = bufferAutoDelete;
       message->OriginalBufferSize = originalBufferSize;
       message->BufferSize         = originalBufferSize;
@@ -149,7 +149,7 @@ void asapMessageClearAll(struct ASAPMessage* message)
 
 
 /* ###### Reset buffer size ############################################## */
-void asapMessageClearBuffer(struct ASAPMessage* message)
+void rserpoolMessageClearBuffer(struct RSerPoolMessage* message)
 {
    if(message != NULL) {
       message->BufferSize = message->OriginalBufferSize;
@@ -159,9 +159,9 @@ void asapMessageClearBuffer(struct ASAPMessage* message)
 
 
 /* ###### Peek message size from socket ################################## */
-static size_t asapMessagePeekSize(int fd, const card64 timeout)
+static size_t rserpoolMessagePeekSize(int fd, const card64 timeout)
 {
-   struct asap_header header;
+   struct rserpool_header header;
    ssize_t            received;
    size_t             asapLength;
    int                flags = MSG_PEEK;
@@ -183,16 +183,16 @@ static size_t asapMessagePeekSize(int fd, const card64 timeout)
 }
 
 
-/* ###### Send ASAPMessage ############################################### */
-bool asapMessageSend(int                 fd,
-                     sctp_assoc_t        assocID,
-                     const card64        timeout,
-                     struct ASAPMessage* message)
+/* ###### Send RSerPoolMessage ########################################### */
+bool rserpoolMessageSend(int                     fd,
+                         sctp_assoc_t            assocID,
+                         const card64            timeout,
+                         struct RSerPoolMessage* message)
 {
    size_t  messageLength;
    ssize_t sent;
 
-   messageLength = asapMessage2Packet(message);
+   messageLength = rserpoolMessage2Packet(message);
    if(messageLength > 0) {
       sent = sendtoplus(fd,
                         message->Buffer, messageLength, 0, NULL, 0,
@@ -222,15 +222,15 @@ bool asapMessageSend(int                 fd,
 }
 
 
-/* ###### Receive ASAPMessage ############################################ */
-struct ASAPMessage* asapMessageReceive(int              fd,
-                                       const card64     peekTimeout,
-                                       const card64     totalTimeout,
-                                       const size_t     minBufferSize,
-                                       struct sockaddr* senderAddress,
-                                       socklen_t*       senderAddressLength)
+/* ###### Receive RSerPoolMessage ######################################## */
+struct RSerPoolMessage* rserpoolMessageReceive(int              fd,
+                                               const card64     peekTimeout,
+                                               const card64     totalTimeout,
+                                               const size_t     minBufferSize,
+                                               struct sockaddr* senderAddress,
+                                               socklen_t*       senderAddressLength)
 {
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
    char*               buffer;
    size_t              length;
    ssize_t             received;
@@ -243,7 +243,7 @@ struct ASAPMessage* asapMessageReceive(int              fd,
    int                 flags;
 
    peekStart = getMicroTime();
-   length = asapMessagePeekSize(fd,peekTimeout);
+   length = rserpoolMessagePeekSize(fd,peekTimeout);
    if(length > 0) {
       peekTime = getMicroTime() - peekStart;
       buffer = (char*)malloc(max(length, minBufferSize));
@@ -262,7 +262,7 @@ struct ASAPMessage* asapMessageReceive(int              fd,
                                  &ppid, &assocID, &streamID,
                                  timeout);
          if(received == (ssize_t)length) {
-            message = asapPacket2Message(buffer, length, max(length, minBufferSize));
+            message = rserpoolPacket2Message(buffer, ppid, length, max(length, minBufferSize));
             if(message != NULL) {
                message->BufferAutoDelete = true;
                message->PPID             = ppid;
@@ -301,8 +301,8 @@ struct ASAPMessage* asapMessageReceive(int              fd,
 }
 
 
-/* ###### Try to get space in ASAPMessage's buffer ####################### */
-void* getSpace(struct ASAPMessage* message,
+/* ###### Try to get space in RSerPoolMessage's buffer ####################### */
+void* getSpace(struct RSerPoolMessage* message,
                const size_t        headerSize)
 {
    void* header;
@@ -316,7 +316,8 @@ void* getSpace(struct ASAPMessage* message,
    LOG_VERBOSE2
    fprintf(stdlog,
            "Buffer size too low!\np=%u + h=%u > size=%u\n",
-           (unsigned int)message->Position, (unsigned int)headerSize, (unsigned int)message->BufferSize);
+           (unsigned int)message->Position, (unsigned int)headerSize,
+           (unsigned int)message->BufferSize);
    LOG_END_FATAL
    return(NULL);
 }

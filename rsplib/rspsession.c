@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.4 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: rspsession.c,v 1.5 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,7 +41,7 @@
 #include "netutilities.h"
 #include "localaddresses.h"
 #include "threadsafety.h"
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 #include "messagebuffer.h"
 
 #include <ext_socket.h>
@@ -312,7 +312,8 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
    LOG_END
    threadSafetyLock(&ped->Mutex);
    rspPoolElementUpdateRegistration(ped);
-   timerStart(ped->ReregistrationTimer, (card64)1000 * (card64)ped->ReregistrationInterval);
+   timerStart(ped->ReregistrationTimer,
+              getMicroTime() + ((card64)1000 * (card64)ped->ReregistrationInterval));
    threadSafetyUnlock(&ped->Mutex);
    LOG_VERBOSE3
    fputs("Reregistration completed\n", stdlog);
@@ -467,7 +468,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       }
 
       /* Okay -> start reregistration timer */
-      timerStart(ped->ReregistrationTimer, ped->ReregistrationInterval);
+      timerStart(ped->ReregistrationTimer, getMicroTime() + ped->ReregistrationInterval);
    }
 
    return(ped);
@@ -560,10 +561,10 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
                           const size_t              cookieSize,
                           struct TagItem*           tags)
 {
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
    bool                result = false;
 
-   message = asapMessageNew(NULL,256 + cookieSize);
+   message = rserpoolMessageNew(NULL,256 + cookieSize);
    if(message != NULL) {
       message->Type       = AHT_COOKIE;
       message->CookiePtr  = (char*)cookie;
@@ -572,12 +573,12 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       LOG_ACTION
       fputs("Sending Cookie\n", stdlog);
       LOG_END
-      result = asapMessageSend(session->Socket,
+      result = rserpoolMessageSend(session->Socket,
                                0,
                                (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
                                message);
       threadSafetyUnlock(&session->Mutex);
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
    return(result);
 }
@@ -586,11 +587,11 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
 /* ###### Send cookie echo ################################################### */
 static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
 {
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
    bool                result = false;
 
    if(session->Cookie) {
-      message = asapMessageNew(NULL,256 + session->CookieSize);
+      message = rserpoolMessageNew(NULL,256 + session->CookieSize);
       if(message != NULL) {
          message->Type       = AHT_COOKIE_ECHO;
          message->CookiePtr  = session->Cookie;
@@ -599,12 +600,12 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
          LOG_ACTION
          fputs("Sending Cookie Echo\n", stdlog);
          LOG_END
-         result = asapMessageSend(session->Socket,
+         result = rserpoolMessageSend(session->Socket,
                                   0,
                                   session->CookieEchoTimeout,
                                   message);
          threadSafetyUnlock(&session->Mutex);
-         asapMessageDelete(message);
+         rserpoolMessageDelete(message);
       }
    }
    return(result);
@@ -835,12 +836,12 @@ void rspDeleteSession(struct SessionDescriptor* session,
 
 
 /* ###### Handle ASAP message (PE<->PE/PU) ###################################*/
-static void handleASAPMessage(struct SessionDescriptor* session,
-                              char*                     buffer,
-                              size_t                    size)
+static void handleRSerPoolMessage(struct SessionDescriptor* session,
+                                  char*                     buffer,
+                                  size_t                    size)
 {
-   struct ASAPMessage*   message;
-   CookieEchoCallbackPtr callback;
+   struct RSerPoolMessage* message;
+   CookieEchoCallbackPtr   callback;
 
    LOG_VERBOSE
    fputs("Handling ASAP message from control channel...\n", stdlog);
@@ -848,7 +849,7 @@ static void handleASAPMessage(struct SessionDescriptor* session,
 
    threadSafetyLock(&session->Mutex);
 
-   message = asapPacket2Message(buffer, size, size);
+   message = rserpoolPacket2Message(buffer, PPID_ASAP, size, size);
    if(message != NULL) {
       LOG_VERBOSE2
       fprintf(stdlog, "Received ASAP type %u from session, socket %d\n",
@@ -902,7 +903,7 @@ static void handleASAPMessage(struct SessionDescriptor* session,
             LOG_END
           break;
       }
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
 
    threadSafetyUnlock(&session->Mutex);
@@ -936,7 +937,7 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
       LOG_VERBOSE2
       fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
       LOG_END
-      handleASAPMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
+      handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
       errno = EAGAIN;
       return(RspRead_MessageRead);
    }

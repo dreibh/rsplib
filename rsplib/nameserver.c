@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.6 2004/07/20 15:35:15 dreibh Exp $
+ *  $Id: nameserver.c,v 1.7 2004/07/21 14:39:52 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -44,7 +44,7 @@
 #include "messagebuffer.h"
 #include "rsplib-tags.h"
 
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 #include "poolnamespacemanagement.h"
 #include "randomizer.h"
 #include "breakdetector.h"
@@ -58,12 +58,11 @@
 /* Exit immediately on Ctrl-C. No clean shutdown. */
 #define FAST_BREAK
 
-#define MAX_NS_TRANSPORTADDRESSES             16
-#define NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL          2000000
-#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL          100000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL        5000000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT        12000000
-#define NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT  3000000
+#define MAX_NS_TRANSPORTADDRESSES                                   16
+#define NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL                   2000000
+#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL                   100000
+#define NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL    5000000
+#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL         5000000
 
 
 struct NameServer
@@ -84,8 +83,8 @@ struct NameServer
 
    card64                                   AnnounceInterval;
    card64                                   HeartbeatInterval;
-   card64                                   KeepAliveInterval;
-   card64                                   KeepAliveTimeout;
+   card64                                   KeepAliveTransmissionInterval;
+   card64                                   KeepAliveTimeoutInterval;
    card64                                   MessageReceptionTimeout;
 };
 
@@ -130,11 +129,10 @@ struct NameServer* nameServerNew(int                           nameServerSocket,
       nameServer->NameServerSocket        = nameServerSocket;
       nameServer->NameServerAddress       = nameServerAddress;
 
-      nameServer->KeepAliveInterval       = NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL;
-      nameServer->KeepAliveTimeout        = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT;
-      nameServer->AnnounceInterval        = NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL;
-      nameServer->HeartbeatInterval       = NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL;
-      nameServer->MessageReceptionTimeout = NAMESERVER_DEFAULT_MESSAGE_RECEPTION_TIMEOUT;
+      nameServer->KeepAliveTransmissionInterval = NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
+      nameServer->KeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL;
+      nameServer->AnnounceInterval              = NAMESERVER_DEFAULT_ANNOUNCE_INTERVAL;
+      nameServer->HeartbeatInterval             = NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL;
 
       nameServer->SendAnnounces           = sendAnnounces;
       memcpy(&nameServer->AnnounceAddress, announceAddress, sizeof(union sockaddr_union));
@@ -222,18 +220,18 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
                                   void*              userData)
 {
    struct NameServer*  nameServer = (struct NameServer*)userData;
-   struct ASAPMessage* message;
+   struct RSerPoolMessage* message;
    size_t              messageLength;
 
    CHECK(nameServer->SendAnnounces == true);
    CHECK(nameServer->AnnounceSocket >= 0);
 
-   message = asapMessageNew(NULL, 65536);
+   message = rserpoolMessageNew(NULL, 65536);
    if(message) {
       message->Type                         = AHT_SERVER_ANNOUNCE;
       message->NSIdentifier                 = nameServer->ServerID;
       message->TransportAddressBlockListPtr = nameServer->NameServerAddress;
-      messageLength = asapMessage2Packet(message);
+      messageLength = rserpoolMessage2Packet(message);
       if(messageLength > 0) {
          if(nameServer->AnnounceSocket) {
             LOG_VERBOSE2
@@ -253,9 +251,9 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
             }
          }
       }
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
-   timerStart(timer, nameServer->AnnounceInterval);
+   timerStart(timer, getMicroTime() + nameServer->AnnounceInterval);
 }
 
 
@@ -264,8 +262,42 @@ static void namespaceActionTimerCallback(struct Dispatcher* dispatcher,
                                          struct Timer*      timer,
                                          void*              userData)
 {
-   struct NameServer*  nameServer = (struct NameServer*)userData;
-puts("action CB...");
+   struct NameServer*                nameServer = (struct NameServer*)userData;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+
+   poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementTimerNode)(
+                        &nameServer->Namespace.Namespace);
+   while((poolElementNode != NULL) &&
+         (poolElementNode->TimerTimeStamp <= getMicroTime())) {
+      nextPoolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementTimerNode)(
+                               &nameServer->Namespace.Namespace,
+                               poolElementNode);
+
+      if(poolElementNode->TimerCode == PENT_KEEPALIVE_TRANSMISSION) {
+         ST_CLASS(poolNamespaceNodeDeactivateTimer)(
+            &nameServer->Namespace.Namespace,
+            poolElementNode);
+
+            puts("Send KA....");
+
+         ST_CLASS(poolNamespaceNodeActivateTimer)(
+            &nameServer->Namespace.Namespace,
+            poolElementNode,
+            PENT_KEEPALIVE_TIMEOUT,
+            getMicroTime() + nameServer->KeepAliveTransmissionInterval);
+      }
+
+      else if(poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) {
+         puts("---- EXPIRED -----");
+      }
+
+      poolElementNode = nextPoolElementNode;
+   }
+
+   timerRestart(nameServer->NamespaceActionTimer,
+               ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                  &nameServer->Namespace));
 }
 
 
@@ -319,7 +351,7 @@ static size_t filterValidAddresses(
 static void handleRegistrationRequest(struct NameServer*  nameServer,
                                       int                 fd,
                                       sctp_assoc_t        assocID,
-                                      struct ASAPMessage* message)
+                                      struct RSerPoolMessage* message)
 {
    char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
@@ -402,8 +434,19 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
                LOG_END
             }
 
+            if(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
+               ST_CLASS(poolNamespaceNodeActivateTimer)(
+                  &nameServer->Namespace.Namespace,
+                  poolElementNode,
+                  PENT_KEEPALIVE_TRANSMISSION,
+                  getMicroTime() + nameServer->KeepAliveTransmissionInterval);
+               puts("STARTED TIMER!");
+            }
+            else puts("ALREADY SET!");
 
-
+            timerRestart(nameServer->NamespaceActionTimer,
+                         ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                            &nameServer->Namespace));
          }
          else {
             LOG_WARNING
@@ -430,7 +473,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
       free(addressArray);
       addressArray = NULL;
 
-      if(asapMessageSend(fd, assocID, 0, message) == false) {
+      if(rserpoolMessageSend(fd, assocID, 0, message) == false) {
          LOG_WARNING
          logerror("Sending registration response failed");
          LOG_END
@@ -449,7 +492,7 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
 static void handleDeregistrationRequest(struct NameServer*  nameServer,
                                         int                 fd,
                                         sctp_assoc_t        assocID,
-                                        struct ASAPMessage* message)
+                                        struct RSerPoolMessage* message)
 {
    LOG_ACTION
    fprintf(stdlog, "Deregistration request for pool element $%08x of pool ",
@@ -486,7 +529,7 @@ static void handleDeregistrationRequest(struct NameServer*  nameServer,
       LOG_END
    }
 
-   if(asapMessageSend(fd, assocID, 0, message) == false) {
+   if(rserpoolMessageSend(fd, assocID, 0, message) == false) {
       LOG_WARNING
       logerror("Sending deregistration response failed");
       LOG_END
@@ -500,7 +543,7 @@ static void handleDeregistrationRequest(struct NameServer*  nameServer,
 static void handleNameResolutionRequest(struct NameServer*  nameServer,
                                         int                 fd,
                                         sctp_assoc_t        assocID,
-                                        struct ASAPMessage* message)
+                                        struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNodeArray[NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS];
    size_t                            poolElementNodes = NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS;
@@ -542,7 +585,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
          message->PoolElementPtrArray[i] = poolElementNodeArray[i];
       }
 
-      if(asapMessageSend(fd, assocID, 0, message) == false) {
+      if(rserpoolMessageSend(fd, assocID, 0, message) == false) {
          LOG_WARNING
          logerror("Sending deregistration response failed");
          LOG_END
@@ -565,7 +608,7 @@ static void handleNameResolutionRequest(struct NameServer*  nameServer,
 static void endpointKeepAliveAck(struct NameServer*     nameServer,
                                  struct NameServerUser* user,
                                  int                    fd,
-                                 struct ASAPMessage*    message)
+                                 struct RSerPoolMessage*    message)
 {
    struct PoolElement* poolElement;
 
@@ -582,7 +625,7 @@ static void endpointKeepAliveAck(struct NameServer*     nameServer,
       poolElement->TimeStamp            = getMicroTime();
       poolElement->OwnerPool->TimeStamp = poolElement->TimeStamp;
 
-      timerRestart(user->UserTimeoutTimer,nameServer->KeepAliveTimeout);
+      timerRestart(user->UserTimeoutTimer,getMicroTime() + nameServer->KeepAliveTimeout);
    }
    else {
       LOG_VERBOSE
@@ -601,13 +644,13 @@ static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
    struct NameServer*     nameServer = user->Owner;
    GList*                 list;
    struct PoolElement*    poolElement;
-   struct ASAPMessage*    message;
+   struct RSerPoolMessage*    message;
 
    LOG_VERBOSE
    fprintf(stdlog, "KeepAlive-Timer for socket #%d.\n",user->FD);
    LOG_END
 
-   message = asapMessageNew(NULL,1024);
+   message = rserpoolMessageNew(NULL,1024);
    if(message != NULL) {
       list = g_list_first(user->PoolElementList);
       while(list != NULL) {
@@ -622,21 +665,21 @@ static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
          message->PoolElementPtr = poolElement;
          message->PoolHandlePtr  = poolElement->OwnerPool->Handle;
          message->Type           = AHT_ENDPOINT_KEEP_ALIVE;
-         if(asapMessageSend(user->FD,0,message) == false) {
+         if(rserpoolMessageSend(user->FD,0,message) == false) {
             LOG_ERROR
             fputs("Sending KeepAlive failed!\n", stdlog);
             LOG_END
             return;
          }
 
-         asapMessageClearAll(message);
+         rserpoolMessageClearAll(message);
 
          list = g_list_next(list);
       }
-      asapMessageDelete(message);
+      rserpoolMessageDelete(message);
    }
 
-   timerStart(timer,nameServer->KeepAliveInterval);
+   timerStart(timer, getMicroTime() + nameServer->KeepAliveInterval);
 }
 
 
@@ -661,7 +704,7 @@ static void userTimeoutTimerCallback(struct Dispatcher* dispatcher,
 
 /* ###### Handle incoming message ######################################## */
 static void handleMessage(struct NameServer*  nameServer,
-                          struct ASAPMessage* message,
+                          struct RSerPoolMessage* message,
                           int                 sd)
 {
    switch(message->Type) {
@@ -682,7 +725,7 @@ static void handleMessage(struct NameServer*  nameServer,
          endpointKeepAliveAck(nameServer,user,fd,message);
        break;
       case AHT_NAME_RESOLUTION_RESPONSE:
-         break;
+       break;
       case AHT_REGISTRATION:
          reply = registrationRequest(nameServer,user,fd,message);
        break;
@@ -707,7 +750,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      void*              userData)
 {
    struct NameServer*      nameServer = (struct NameServer*)userData;
-   struct ASAPMessage*     message;
+   struct RSerPoolMessage*     message;
    struct sockaddr_storage remoteAddress;
    socklen_t               remoteAddressLength;
    char                    buffer[65536];
@@ -732,7 +775,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                               0);
       if(received > 0) {
          if(!(flags & MSG_NOTIFICATION)) {
-            message = asapPacket2Message(buffer, received, sizeof(buffer));
+            message = rserpoolPacket2Message(buffer, ppid, received, sizeof(buffer));
             if(message != NULL) {
                message->BufferAutoDelete = false;
                message->PPID             = ppid;
@@ -747,7 +790,7 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
 
                handleMessage(nameServer, message, nameServer->NameServerSocket);
 
-               asapMessageDelete(message);
+               rserpoolMessageDelete(message);
             }
          }
          else {
@@ -886,25 +929,23 @@ int main(int argc, char** argv)
                exit(1);
             }
             bzero(&sctpEvents, sizeof(sctpEvents));
-            sctpEvents.sctp_data_io_event = 1;
-            sctpEvents.sctp_association_event = 1;
-            sctpEvents.sctp_address_event = 1;
-            sctpEvents.sctp_send_failure_event = 1;
-            sctpEvents.sctp_peer_error_event = 1;
-            sctpEvents.sctp_shutdown_event = 1;
+            sctpEvents.sctp_data_io_event          = 1;
+            sctpEvents.sctp_association_event      = 1;
+            sctpEvents.sctp_address_event          = 1;
+            sctpEvents.sctp_send_failure_event     = 1;
+            sctpEvents.sctp_peer_error_event       = 1;
+            sctpEvents.sctp_shutdown_event         = 1;
             sctpEvents.sctp_partial_delivery_event = 1;
-            sctpEvents.sctp_adaption_layer_event = 1;
+            sctpEvents.sctp_adaption_layer_event   = 1;
             if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
                perror("setsockopt() for SCTP_EVENTS failed");
                exit(1);
             }
-            /*
-            autoCloseTimeout = 2 * (NAMESERVER_DEFAULT_KEEP_ALIVE_INTERVAL / 1000000);
+            autoCloseTimeout = 2 * (NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000);
             if(ext_setsockopt(sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
                perror("setsockopt() for SCTP_AUTOCLOSE failed");
                exit(1);
             }
-            */
          }
          else {
             puts("ERROR: Unable to create SCTP socket!");

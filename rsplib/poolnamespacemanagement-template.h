@@ -133,6 +133,20 @@ inline unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElementByPtr)(
 }
 
 
+/* ###### Get next timer time stamp ###################################### */
+inline unsigned long long ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                             struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement)
+{
+   const struct ST_CLASS(PoolElementNode)* nextTimer =
+      ST_CLASS(poolNamespaceNodeGetFirstPoolElementTimerNode)(
+         &poolNamespaceManagement->Namespace);
+   if(nextTimer != NULL) {
+      return(nextTimer->TimerTimeStamp);
+   }
+   return(~0);
+}
+
+
 void ST_CLASS(poolNamespaceManagementRestartPoolElementExpiryTimer)(
         struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
         struct ST_CLASS(PoolElementNode)*         poolElementNode,

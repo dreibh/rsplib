@@ -3,14 +3,14 @@ lib_LTLIBRARIES = librsplib.la
 librsplibincludedir      = $(prefix)/include/rserpool
 librsplibinclude_HEADERS = rsplib.h rsplib-tags.h
 librsplib_la_SOURCES = \
-asapcreator.c \
-asapcreator.h \
+rserpoolmessagecreator.c \
+rserpoolmessagecreator.h \
 asapinstance.c \
 asapinstance.h \
-asapmessage.c \
-asapmessage.h \
-asapparser.c \
-asapparser.h \
+rserpoolmessage.c \
+rserpoolmessage.h \
+rserpoolmessageparser.c \
+rserpoolmessageparser.h \
 binarytree.c \
 binarytree.h \
 breakdetector.c \

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.h,v 1.3 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: servertable.h,v 1.4 2004/07/21 14:39:53 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,7 +45,7 @@
 #include "dispatcher.h"
 #include "timer.h"
 #include "poolnamespacemanagement.h"
-#include "asapmessage.h"
+#include "rserpoolmessage.h"
 
 
 #ifdef __cplusplus
