@@ -175,6 +175,7 @@ bool ServiceThread::sendCookie()
    cookie.Parameter.C2Real        = Status.Parameter.C2Real;
    cookie.Parameter.C1Imag        = Status.Parameter.C1Imag;
    cookie.Parameter.C2Imag        = Status.Parameter.C2Imag;
+   cookie.Parameter.N             = Status.Parameter.N;
    cookie.CurrentX                = htonl(Status.CurrentX);
    cookie.CurrentY                = htonl(Status.CurrentY);
    if(rspSessionSendCookie(Session,
