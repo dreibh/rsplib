@@ -1,0 +1,2 @@
+#!/bin/sh
+fractalexample/fractalpooluser -logcolor=on -loglevel=3 -cspreportaddress=127.0.0.1:2960 -identifier=2 $@
