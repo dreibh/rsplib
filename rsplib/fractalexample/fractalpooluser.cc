@@ -108,15 +108,16 @@ FractalPU::FractalPU(const size_t width,
    ConfigDirName  = QString(configDirName);
 
    QString Buffer;
-   QFile AllconfigFile("liste.conf");
+   QFile AllconfigFile(ConfigDirName + "liste.conf");
    if ( !AllconfigFile.open( IO_ReadOnly ) )
    {
-      std::cerr << "All-Config file open failed" << std::endl;
+      std::cerr << "All-Config file open failed" << ConfigDirName + "scenarios.conf" << std::endl;
    }
    else
    {
-      while(AllconfigFile.readLine(Buffer, 255))
+      while(!AllconfigFile.atEnd())
       {
+      	 AllconfigFile.readLine(Buffer, 255);
          Buffer = Buffer.stripWhiteSpace();
          ConfigList.append(Buffer);
       }
@@ -269,10 +270,10 @@ void FractalPU::getNextParameters()
 
 	QString File(ConfigList[Element]);
   	QDomDocument doc( "XMLFractalSave" );
-  	QFile file( File);//url.prettyURL().mid(5) );
+  	QFile file( ConfigDirName + File);//url.prettyURL().mid(5) );
   	if ( !file.open( IO_ReadOnly ) )
 	{
-		std::cerr << "Config file open failed" << std::endl;
+		std::cerr << "Config file open failed" << ConfigDirName + File << std::endl;
     		return;
 	}
 
@@ -501,7 +502,7 @@ int main(int argc, char** argv)
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
       }
-      if(!(strncmp(argv[i],"-configdir=",1))) {
+      else if(!(strncmp(argv[i],"-configdir=",11))) {
          configDirName = (char*)&argv[i][11];
       }
 #ifdef ENABLE_CSP
