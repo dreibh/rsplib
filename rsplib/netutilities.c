@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.30 2004/11/12 00:16:50 dreibh Exp $
+ *  $Id: netutilities.c,v 1.31 2004/11/12 00:25:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -53,6 +53,7 @@
 #include <sys/uio.h>
 
 
+#ifdef HAVE_KERNEL_SCTP
 #ifndef HAVE_SCTP_CONNECTX
 int sctp_connectx(int                    sockfd,
                   const struct sockaddr* addrs,
@@ -124,6 +125,7 @@ ssize_t sctp_sendx(int                           sd,
 
    return(ext_sendmsg(sd, &msg, 0));
 }
+#endif
 #endif
 
 
