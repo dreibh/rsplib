@@ -108,7 +108,7 @@ FractalPU::FractalPU(const size_t width,
    ConfigDirName  = QString(configDirName);
 
    QString Buffer;
-   QFile AllconfigFile(ConfigDirName + "liste.conf");
+   QFile AllconfigFile(ConfigDirName + "scenarios.conf");
    if ( !AllconfigFile.open( IO_ReadOnly ) )
    {
       std::cerr << "All-Config file open failed" << ConfigDirName + "scenarios.conf" << std::endl;
