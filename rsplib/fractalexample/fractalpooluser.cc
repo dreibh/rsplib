@@ -1,4 +1,4 @@
-#include <iostream>
+#define QT_THREAD_SUPPORT
 #include <qapplication.h>
 #include <qwidget.h>
 #include <qmainwindow.h>
@@ -6,13 +6,13 @@
 #include <qtimer.h>
 #include <qpainter.h>
 #include <qstatusbar.h>
-#define QT_THREAD_SUPPORT
 #include <qthread.h>
-#include <qmutex.h>
 #include <qfile.h>
 #include <complex>
 #include <qstringlist.h>
 #include <qdom.h>
+
+#include <iostream>
 
 #include "rsplib.h"
 #include "randomizer.h"
@@ -27,8 +27,7 @@
 
 
 class FractalPU : public QMainWindow,
-                  public QThread,
-                  public QMutex
+                  public QThread
 {
    Q_OBJECT
 
@@ -118,7 +117,7 @@ FractalPU::FractalPU(const size_t width,
    {
       while(!AllconfigFile.atEnd())
       {
-      	 AllconfigFile.readLine(Buffer, 255);
+          AllconfigFile.readLine(Buffer, 255);
          Buffer = Buffer.stripWhiteSpace();
          ConfigList.append(Buffer);
       }
@@ -156,7 +155,7 @@ void FractalPU::paintImage(const size_t startY, const size_t endY)
 
 void FractalPU::paintEvent(QPaintEvent* paintEvent)
 {
-   lock();
+   qApp->lock();
    if(Image) {
       QPainter p;
       p.begin(this);
@@ -168,7 +167,7 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
                   paintEvent->rect().height());
       p.end();
    }
-   unlock();
+   qApp->unlock();
 }
 
 
@@ -261,67 +260,59 @@ void FractalPU::timeoutExpired()
 
 void FractalPU::getNextParameters()
 {
-	if(ConfigList.count() == 0)
-	{
-		std::cerr << "Config file list empty" << std::endl;
-		return;
-	}
-	size_t Element = random32() % ConfigList.count();
+   if(ConfigList.count() == 0) {
+      std::cerr << "Config file list empty" << std::endl;
+      return;
+   }
+   size_t Element = random32() % ConfigList.count();
 
 
-	QString File(ConfigList[Element]);
-  	QDomDocument doc( "XMLFractalSave" );
-  	QFile file( ConfigDirName + File);//url.prettyURL().mid(5) );
-  	if ( !file.open( IO_ReadOnly ) )
-	{
-		std::cerr << "Config file open failed" << ConfigDirName + File << std::endl;
-    		return;
-	}
+   QString File(ConfigList[Element]);
+   QDomDocument doc( "XMLFractalSave" );
+   QFile file(ConfigDirName + File); //url.prettyURL().mid(5) );
+   if( !file.open( IO_ReadOnly ) ) {
+      std::cerr << "Config file open failed" << ConfigDirName + File << std::endl;
+      return;
+   }
 
-  	QString Error;
-  	int Line, Column;
-  	if ( !doc.setContent( &file , false, &Error, &Line, &Column) )
-	{
-    		file.close();
-    		std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
-       			<< " and Column: " << QString().setNum(Column) << std::endl;
-    		return;
-  	}
-  	file.close();
+   QString Error;
+   int Line, Column;
+   if( !doc.setContent( &file , false, &Error, &Line, &Column) ) {
+      file.close();
+      std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
+            << " and Column: " << QString().setNum(Column) << std::endl;
+      return;
+   }
+   file.close();
 
-  	QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
-  	QString AlgorithmName = algorithm.firstChild().toText().data();
-  	if(AlgorithmName == "MandelbrotN")
-  	{
-  		Parameter.AlgorithmID   = FGPA_MANDELBROTN;
-  	}
-	else if(AlgorithmName == "Mandelbrot")
-  	{
-  		Parameter.AlgorithmID   = FGPA_MANDELBROT;
-  	}
+   QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
+   QString AlgorithmName = algorithm.firstChild().toText().data();
+   if(AlgorithmName == "MandelbrotN") {
+      Parameter.AlgorithmID   = FGPA_MANDELBROTN;
+   }
+   else if(AlgorithmName == "Mandelbrot") {
+      Parameter.AlgorithmID   = FGPA_MANDELBROT;
+   }
 
 
-	Parameter.C1Real        = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
-	Parameter.C1Imag        = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
-	Parameter.C2Real        = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
-	Parameter.C2Imag        = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
+   Parameter.C1Real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
+   Parameter.C1Imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
+   Parameter.C2Real = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
+   Parameter.C2Imag = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
 
-  	QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
-  	QDomNode child = useroptions.firstChild();
-        while(!child.isNull())
-  	{
-		const QString name  = child.nodeName();
-	  	const QString value = child.firstChild().toText().data();
-		if(name == "MaxIterations")
-		{
-			Parameter.MaxIterations = value.toInt();
-		}
-		else if (name == "N")
-		{
-			Parameter.N = value.toDouble();
-		}
-		child = child.nextSibling();
-  	}
+   QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
+   QDomNode child = useroptions.firstChild();
+   while(!child.isNull()) {
+      const QString name  = child.nodeName();
+      const QString value = child.firstChild().toText().data();
+      if(name == "MaxIterations") {
+         Parameter.MaxIterations = value.toInt();
+      }
+      else if(name == "N") {
+         Parameter.N = value.toDouble();
+      }
+      child = child.nextSibling();
+   }
 }
 
 
@@ -363,8 +354,8 @@ void FractalPU::run()
 
 
          // ====== Initialize image object and timeout timer ================
-         lock();
-	 Parameter.Width         = width();
+         qApp->lock();
+         Parameter.Width         = width();
          Parameter.Height        = height();
          Parameter.C1Real        = -1.5;
          Parameter.C1Imag        = 1.5;
@@ -373,13 +364,13 @@ void FractalPU::run()
          Parameter.N             = 12.34567890;
          Parameter.MaxIterations = 1024;
          Parameter.AlgorithmID   = FGPA_MANDELBROT;
-	 getNextParameters();
+         getNextParameters();
          if(Image == NULL) {
             Image = new QImage(Parameter.Width, Parameter.Height, 32);
             Q_CHECK_PTR(Image);
             Image->fill(qRgb(255, 255, 255));
          }
-         unlock();
+         qApp->unlock();
 
          rspSessionSetStatusText(Session, "Sending parameter command...");
          statusBar()->message("Sending parameter command...");
@@ -409,9 +400,9 @@ void FractalPU::run()
                   TimeoutTimer->stop();
                   TimeoutTimer->start(5000, TRUE);
 
-                  lock();
+                  qApp->lock();
                   const DataStatus status = handleData(&data, received);
-                  unlock();
+                  qApp->unlock();
 
                   switch(status) {
                      case Finalizer:
@@ -457,7 +448,8 @@ finish:
 
 
          // ====== Clean-up =================================================
-         lock();
+         qApp->lock();
+printf("W=%d H=%d\n",         width(),height());
          if( (!Running) ||
              (Image->width() != width()) ||
              (Image->height() != height()) ) {
@@ -465,7 +457,7 @@ finish:
             delete Image;
             Image = NULL;
          }
-         unlock();
+         qApp->unlock();
 
          if(!Running) {
             break;
