@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.6 2004/07/22 09:47:44 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -82,9 +82,9 @@ static void doRegistration()
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;
    struct EndpointAddressInfo* next;
-   struct sockaddr_storage*    sctpLocalAddressArray = NULL;
-   struct sockaddr_storage*    localAddressArray     = NULL;
-   struct sockaddr_storage     socketName;
+   union sockaddr_union*       sctpLocalAddressArray = NULL;
+   union sockaddr_union*       localAddressArray     = NULL;
+   union sockaddr_union        socketName;
    size_t                      socketNameLen;
    unsigned int                localAddresses;
    unsigned int                result;
@@ -103,7 +103,7 @@ static void doRegistration()
    eai->ai_next     = NULL;
    eai->ai_addr     = NULL;
    eai->ai_addrs    = 0;
-   eai->ai_addrlen  = sizeof(struct sockaddr_storage);
+   eai->ai_addrlen  = sizeof(union sockaddr_union);
    eai->ai_pe_id    = PoolElementID;
 
    /* ====== Get local addresses for SCTP socket ============================ */
@@ -306,7 +306,7 @@ static void cleanUp()
 /* ###### Initialize ##################################################### */
 static void initAll()
 {
-   struct sockaddr_storage localAddress;
+   union sockaddr_union localAddress;
 
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -327,7 +327,7 @@ static void initAll()
    ((struct sockaddr*)&localAddress)->sa_family = ListenSocketFamily;
    setPort((struct sockaddr*)&localAddress,ListenPort);
 
-   if(bindplus(ListenSocket, (struct sockaddr_storage*)&localAddress, 1) == false) {
+   if(bindplus(ListenSocket, (union sockaddr_union*)&localAddress, 1) == false) {
       perror("Unable to bind application socket");
       cleanUp();
       exit(1);
@@ -362,12 +362,12 @@ static void initAll()
 /* ###### Handle socket events ########################################### */
 static void socketHandler(int fd)
 {
-   char                       buffer[16385];
-   struct sockaddr_storage    address;
-   socklen_t                  addressSize;
-   ssize_t                    received;
-   int                        sd;
-   int                        flags;
+   char                    buffer[16385];
+   union sockaddr_union    address;
+   socklen_t               addressSize;
+   ssize_t                 received;
+   int                     sd;
+   int                     flags;
 
    if(ListenSocketType != SOCK_DGRAM) {
       if(fd == ListenSocket) {

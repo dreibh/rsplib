@@ -99,12 +99,12 @@ static int address2string(const struct sockaddr* address,
 
 
 /* ###### Initialize ##################################################### */
-void transportAddressBlockNew(struct TransportAddressBlock*  transportAddressBlock,
-                              const int                      protocol,
-                              const uint16_t                 port,
-                              const uint16_t                 flags,
-                              const struct sockaddr_storage* addressArray,
-                              const size_t                   addresses)
+void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBlock,
+                              const int                     protocol,
+                              const uint16_t                port,
+                              const uint16_t                flags,
+                              const union sockaddr_union*   addressArray,
+                              const size_t                  addresses)
 {
    size_t i;
    transportAddressBlock->Next      = NULL;

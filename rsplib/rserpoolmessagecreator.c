@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.6 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1001,9 +1001,6 @@ static bool createPeerNameTableRequestMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-puts("???? STOP!");
-exit(1);
-
    return(finishMessage(message));
 }
 
@@ -1011,7 +1008,11 @@ exit(1);
 /* ###### Create peer name table response ################################ */
 static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_serverparameter* sp;
+   struct rserpool_serverparameter*   sp;
+   struct ST_CLASS(NameTableExtract)* nte;
+   unsigned int                       flags;
+   int                                result;
+   size_t                             i;
 
    if(beginMessage(message, EHT_PEER_NAME_TABLE_RESPONSE,
                    message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT,
@@ -1026,8 +1027,31 @@ static bool createPeerNameTableResponseMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-puts("???? STOP!");
-exit(1);
+   if(message->PeerListNodePtr) {
+      flags = (message->Action & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? NTEF_OWNCHILDSONLY : 0;
+      nte = (struct ST_CLASS(NameTableExtract)*)message->PeerListNodePtr->UserData;
+      if(nte == NULL) {
+         flags |= NTEF_START;
+         nte = (struct ST_CLASS(NameTableExtract)*)malloc(sizeof(struct ST_CLASS(NameTableExtract)));
+         if(nte == NULL) {
+            return(false);
+         }
+         message->PeerListNodePtr->UserData = nte;
+      }
+
+      result = ST_CLASS(poolNamespaceManagementGetNameTable)(
+                  message->NamespacePtr,
+                  nte,
+                  flags);
+      if(result != 0) {
+         for(i = 0;i < nte->PoolElementNodes;i++) {
+            LOG_NOTE
+            ST_CLASS(poolElementNodePrint)(nte->PoolElementNodeArray[i], stdlog, ~0);
+            fputs("\n", stdlog);
+            LOG_END
+         }
+      }
+   }
 
    return(finishMessage(message));
 }
@@ -1136,7 +1160,7 @@ static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
 /* ###### Create peer ownership change ################################### */
 static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_serverparameter* sp;
+   struct rserpool_serverparameter*   sp;
 
    if(beginMessage(message, EHT_PEER_OWNERSHIP_CHANGE,
                    message->Flags & 0x00,
@@ -1151,8 +1175,8 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-puts("???? STOP!");
-exit(1);
+   puts("STOP!!!!");
+   exit(1);
 
    return(finishMessage(message));
 }

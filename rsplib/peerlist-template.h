@@ -56,7 +56,7 @@ inline size_t ST_CLASS(peerListGetPeerListNodes)(
 
 /* ###### Get first PeerListNode from Index ############################## */
 inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                            struct ST_CLASS(PeerList)* peerList)
+                                         struct ST_CLASS(PeerList)* peerList)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&peerList->PeerListIndexStorage);
    if(node) {
@@ -68,7 +68,7 @@ inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromI
 
 /* ###### Get last PeerListNode from Index ############################### */
 inline struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromIndexStorage)(
-                                            struct ST_CLASS(PeerList)* peerList)
+                                         struct ST_CLASS(PeerList)* peerList)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&peerList->PeerListIndexStorage);
    if(node) {

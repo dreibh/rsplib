@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.3 2004/07/20 08:47:38 dreibh Exp $
+ *  $Id: rsplib.h,v 1.4 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -46,6 +46,7 @@
 
 #include "tdtypes.h"
 #include "tagitem.h"
+#include "sockaddrunion.h"
 #include "rsplib-tags.h"
 #include "poolpolicysettings.h"
 #include "rserpoolerror.h"
@@ -78,7 +79,7 @@ struct EndpointAddressInfo {
    int                         ai_protocol;
    size_t                      ai_addrlen;
    size_t                      ai_addrs;
-   struct sockaddr_storage*    ai_addr;
+   union sockaddr_union*    ai_addr;
    struct EndpointAddressInfo* ai_next;
    uint32_t                    ai_pe_id;
 };

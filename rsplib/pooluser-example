@@ -1,2 +1,2 @@
 #!/bin/sh
-./examplepu -ph=EchoPool -loglevel=9 $@
+./examplepu -ph=EchoPool -logcolor=on -loglevel=3 $@

@@ -1,5 +1,5 @@
 /*
- *  $Id: localaddresses.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: localaddresses.c,v 1.2 2004/07/29 15:10:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -98,11 +98,11 @@ static bool filterAddress(union sockaddr_union* address,
 
 
 /* ###### Gather local addresses ######################################### */
-bool gatherLocalAddresses(struct sockaddr_storage** addressArray,
-                          size_t*                   addresses,
-                          const unsigned int        flags)
+bool gatherLocalAddresses(union sockaddr_union** addressArray,
+                          size_t*                addresses,
+                          const unsigned int     flags)
 {
-   struct sockaddr_storage* localAddresses = NULL;
+   union sockaddr_union* localAddresses = NULL;
    struct sockaddr*         toUse;
    struct ifreq             local;
    struct ifreq*            ifrequest;
@@ -168,7 +168,7 @@ bool gatherLocalAddresses(struct sockaddr_storage** addressArray,
    numAllocAddrs += addedNets;
 #endif
    /* now allocate the appropriate memory */
-   localAddresses = (struct sockaddr_storage*)calloc(numAllocAddrs,sizeof(struct sockaddr_storage));
+   localAddresses = (union sockaddr_union*)calloc(numAllocAddrs,sizeof(union sockaddr_union));
 
    if(localAddresses == NULL) {
       close(fd);

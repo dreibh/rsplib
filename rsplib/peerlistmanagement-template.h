@@ -122,6 +122,19 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 const ENRPIdentifierType             nsIdentifier,
                 const struct TransportAddressBlock*  transportAddressBlock);
 
+/* ###### Get next timer time stamp ###################################### */
+inline unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
+                             struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   const struct ST_CLASS(PeerListNode)* nextTimer =
+      ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
+         &peerListManagement->List);
+   if(nextTimer != NULL) {
+      return(nextTimer->TimerTimeStamp);
+   }
+   return(~0);
+}
+
 void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         struct ST_CLASS(PeerListNode)*       peerListNode,

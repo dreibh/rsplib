@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.11 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: netutilities.c,v 1.12 2004/07/29 15:10:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -65,13 +65,13 @@
 
 
 
-/* ###### Unpack sockaddr blocks to sockaddr_storage array ################## */
-struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray, const size_t addrs)
+/* ###### Unpack sockaddr blocks to sockaddr_union array ################## */
+union sockaddr_union* unpack_sockaddr(struct sockaddr* addrArray, const size_t addrs)
 {
-   struct sockaddr_storage* newArray;
-   size_t                   i;
+   union sockaddr_union* newArray;
+   size_t                i;
 
-   newArray = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage) * addrs);
+   newArray = (union sockaddr_union*)malloc(sizeof(union sockaddr_union) * addrs);
    if(newArray) {
       for(i = 0;i < addrs;i++) {
          switch(addrArray->sa_family) {
@@ -87,7 +87,7 @@ struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray, const size_
                LOG_ERROR
                fprintf(stderr, "ERROR: unpack_sockaddr() - Unknown address type #%d\n",
                        addrArray->sa_family);
-               fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_storage array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
+               fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_union array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
                LOG_END_FATAL
              break;
          }
@@ -97,8 +97,8 @@ struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray, const size_
 }
 
 
-/* ###### Pack sockaddr_storage array to sockaddr blocks #################### */
-struct sockaddr* pack_sockaddr_storage(const struct sockaddr_storage* addrArray, const size_t addrs)
+/* ###### Pack sockaddr_union array to sockaddr blocks #################### */
+struct sockaddr* pack_sockaddr_union(const union sockaddr_union* addrArray, const size_t addrs)
 {
    size_t           required = 0;
    size_t           i;
@@ -114,9 +114,9 @@ struct sockaddr* pack_sockaddr_storage(const struct sockaddr_storage* addrArray,
           break;
          default:
             LOG_ERROR
-            fprintf(stderr, "ERROR: pack_sockaddr_storage() - Unknown address type #%d\n",
+            fprintf(stderr, "ERROR: pack_sockaddr_union() - Unknown address type #%d\n",
                     ((struct sockaddr*)&addrArray[i])->sa_family);
-            fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_storage array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
+            fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_union array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
             LOG_END_FATAL
           break;
       }
@@ -147,12 +147,12 @@ struct sockaddr* pack_sockaddr_storage(const struct sockaddr_storage* addrArray,
 
 
 /* ###### Get local addresses from socket ################################ */
-size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray)
+size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
 {
-   struct sockaddr_storage address;
-   socklen_t               addressLength;
-   ssize_t                 addresses;
-   ssize_t                 result;
+   union sockaddr_union address;
+   socklen_t            addressLength;
+   ssize_t              addresses;
+   ssize_t              result;
 
    LOG_VERBOSE4
    fputs("Getting transport addresses from socket...\n",stdlog);
@@ -173,7 +173,7 @@ size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray
          fputs("Successfully obtained address by getsockname()\n",stdlog);
          LOG_END
 
-         *addressArray = duplicateAddressArray((const struct sockaddr_storage*)&address,1);
+         *addressArray = duplicateAddressArray((const union sockaddr_union*)&address,1);
          if(*addressArray != NULL) {
             addresses = 1;
          }
@@ -195,7 +195,7 @@ size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray
 
 
 /* ###### Delete address array ########################################### */
-void deleteAddressArray(struct sockaddr_storage* addressArray)
+void deleteAddressArray(union sockaddr_union* addressArray)
 {
    if(addressArray != NULL) {
       free(addressArray);
@@ -204,12 +204,12 @@ void deleteAddressArray(struct sockaddr_storage* addressArray)
 
 
 /* ###### Duplicate address array ######################################## */
-struct sockaddr_storage* duplicateAddressArray(const struct sockaddr_storage* addressArray,
-                                               const size_t                   addresses)
+union sockaddr_union* duplicateAddressArray(const union sockaddr_union* addressArray,
+                                            const size_t                   addresses)
 {
-   const size_t size = sizeof(struct sockaddr_storage) * addresses;
+   const size_t size = sizeof(union sockaddr_union) * addresses;
 
-   struct sockaddr_storage* copy = (struct sockaddr_storage*)malloc(size);
+   union sockaddr_union* copy = (union sockaddr_union*)malloc(size);
    if(copy != NULL) {
       memcpy(copy,addressArray,size);
    }
@@ -272,7 +272,7 @@ bool address2string(const struct sockaddr* address,
 
 
 /* ###### Convert string to address ###################################### */
-bool string2address(const char* string, struct sockaddr_storage* address)
+bool string2address(const char* string, union sockaddr_union* address)
 {
    char                 host[128];
    char                 port[128];
@@ -367,7 +367,7 @@ bool string2address(const char* string, struct sockaddr_storage* address)
       return(false);
    }
 
-   memset((char*)address,0,sizeof(struct sockaddr_storage));
+   memset((char*)address,0,sizeof(union sockaddr_union));
    memcpy((char*)address,res->ai_addr,res->ai_addrlen);
 
    switch(ipv4address->sin_family) {
@@ -762,17 +762,17 @@ bool checkIPv6()
 
 
 /* ###### bind()/bindx() wrapper ######################################### */
-bool bindplus(int                      sockfd,
-              struct sockaddr_storage* addressArray,
-              const size_t             addresses)
+bool bindplus(int                   sockfd,
+              union sockaddr_union* addressArray,
+              const size_t          addresses)
 {
-   struct sockaddr*        packedAddresses;
-   struct sockaddr_storage anyAddress;
-   bool                    autoSelect;
-   unsigned short          port;
-   unsigned int            i;
-   unsigned int            j;
-   int                     result;
+   struct sockaddr*     packedAddresses;
+   union sockaddr_union anyAddress;
+   bool                 autoSelect;
+   unsigned short       port;
+   unsigned int         i;
+   unsigned int         j;
+   int                  result;
 
    if(checkIPv6()) {
       string2address("[::]:0", &anyAddress);
@@ -836,7 +836,7 @@ bool bindplus(int                      sockfd,
             result = ext_bind(sockfd, (struct sockaddr*)&addressArray[0], getSocklen((struct sockaddr*)&addressArray[0]));
          }
          else {
-            packedAddresses = pack_sockaddr_storage(addressArray, addresses);
+            packedAddresses = pack_sockaddr_union(addressArray, addresses);
             if(packedAddresses) {
                result = sctp_bindx(sockfd, packedAddresses, addresses, SCTP_BINDX_ADD_ADDR);
                free(packedAddresses);
@@ -869,64 +869,95 @@ bool bindplus(int                      sockfd,
 
 
 /* ###### sendmsg() wrapper ############################################## */
-int sendtoplus(int                 sockfd,
-               const void*         buffer,
-               const size_t        length,
-               const int           flags,
-               struct sockaddr*    to,
-               const socklen_t     tolen,
-               const uint32_t      ppid,
-               const sctp_assoc_t  assocID,
-               const uint16_t      streamID,
-               const uint32_t      timeToLive,
-               const card64        timeout)
+#define MAX_TRANSPORTADDRESSES 32
+int sendtoplus(int                   sockfd,
+               const void*           buffer,
+               const size_t          length,
+               const int             flags,
+               union sockaddr_union* toaddrs,
+               const size_t          toaddrcnt,
+               const uint32_t        ppid,
+               const sctp_assoc_t    assocID,
+               const uint16_t        streamID,
+               const uint32_t        timeToLive,
+               const card64          timeout)
 {
-   struct sctp_sndrcvinfo* sri;
-   struct iovec    iov = { (char*)buffer, length };
-   struct cmsghdr* cmsg;
-   size_t          cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
-   char            cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
-   struct msghdr msg = {
-#ifdef __APPLE__
-      (char*)to,
-#else
-      to,
-#endif
-      tolen,
-      &iov, 1,
-      cbuf, cmsglen,
-      flags
-   };
-   struct timeval selectTimeout;
-   fd_set         fdset;
-   int            result;
-   int            cc;
-
-   cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
-   cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
-   cmsg->cmsg_level = IPPROTO_SCTP;
-   cmsg->cmsg_type  = SCTP_SNDRCV;
-
-   sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
-   sri->sinfo_assoc_id   = assocID;
-   sri->sinfo_stream     = streamID;
-   sri->sinfo_ppid       = ppid;
-   sri->sinfo_flags      = flags;
-   sri->sinfo_ssn        = 0;
-   sri->sinfo_tsn        = 0;
-   sri->sinfo_context    = 0;
-   sri->sinfo_timetolive = timeToLive;
+   sockaddr_union         addressArray[MAX_TRANSPORTADDRESSES];
+   size_t                 addresses;
+   struct sctp_sndrcvinfo sri;
+   struct timeval         selectTimeout;
+   fd_set                 fdset;
+   size_t                 i;
+   int                    result;
+   char*                  p;
 
    LOG_VERBOSE4
-   fprintf(stdlog, "sendmsg(%d,%u bytes)...\n",sockfd,(unsigned int)length);
+   fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u toaddrs=%p toaddrcnt=%u...\n",
+           sockfd, assocID, (unsigned int)length, ppid, streamID, toaddrs, toaddrcnt);
    LOG_END
 
    setNonBlocking(sockfd);
-   cc = ext_sendmsg(sockfd, &msg, flags);
-   if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
+   if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+      if(toaddrs) {
+         p = (char*)&addressArray[0];
+         addresses = min(toaddrcnt, MAX_TRANSPORTADDRESSES);
+         for(i = 0;i < addresses;i++) {
+            LOG_VERBOSE5
+            fprintf(stdlog, "Address #%u is ", i + 1);
+            fputaddress(&toaddrs[i].sa, true, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            switch(toaddrs[i].sa.sa_family) {
+               case AF_INET:
+                  memcpy(p, &toaddrs[i].in, sizeof(struct sockaddr_in));
+                  p = (char*)((long)p + sizeof(struct sockaddr_in));
+                  break;
+               case AF_INET6:
+                  memcpy(p, &toaddrs[i].in6, sizeof(struct sockaddr_in6));
+                  p = (char*)((long)p + sizeof(struct sockaddr_in6));
+                  break;
+               default:
+                  LOG_ERROR
+                  fputs("Bad address family\n", stdlog);
+                  LOG_END_FATAL
+                  break;
+            }
+         }
+         LOG_VERBOSE5
+         fputs("Calling sctp_sendmsgx()...\n", stdlog);
+         LOG_END
+         result = sctp_sendmsgx(sockfd, buffer, length,
+                              (struct sockaddr*)&addressArray, addresses,
+                              ppid, flags, streamID, timeToLive, 0);
+      }
+      else {
+         sri.sinfo_assoc_id   = assocID;
+         sri.sinfo_stream     = streamID;
+         sri.sinfo_ppid       = ppid;
+         sri.sinfo_flags      = flags;
+         sri.sinfo_ssn        = 0;
+         sri.sinfo_tsn        = 0;
+         sri.sinfo_context    = 0;
+         sri.sinfo_timetolive = timeToLive;
+         LOG_VERBOSE5
+         fputs("Calling sctp_send()...\n", stdlog);
+         LOG_END
+         result = sctp_sendfkt(sockfd, buffer, length,
+                              &sri, flags);
+      }
+   }
+   else {
+      LOG_VERBOSE5
+      fputs("Calling sendto()...\n", stdlog);
+      LOG_END
+      result = ext_sendto(sockfd, buffer, length, flags,
+                          (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
+   }
+
+   if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE4
-      fprintf(stdlog, "sendmsg(%d) would block, waiting with timeout %Ld [µs]...\n",
-              sockfd, timeout);
+      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %Ld [µs]...\n",
+              sockfd, assocID, timeout);
       LOG_END
 
       FD_ZERO(&fdset);
@@ -939,34 +970,41 @@ int sendtoplus(int                 sockfd,
       if((result > 0) && FD_ISSET(sockfd, &fdset)) {
          LOG_VERBOSE4
          fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
-                 sockfd, assocID, (unsigned int)iov.iov_len);
+                 sockfd, assocID, length);
          LOG_END
-         msg.msg_name       = to;
-         msg.msg_namelen    = tolen;
-         iov.iov_base       = (char*)buffer;
-         iov.iov_len        = length;
-         msg.msg_iov        = &iov;
-         msg.msg_iovlen     = 1;
-         msg.msg_control    = cbuf;
-         msg.msg_controllen = cmsglen;
-         msg.msg_flags      = flags;
-         cc = ext_sendmsg(sockfd, &msg, flags);
-      }
-      else {
-         cc    = -1;
-         errno = EWOULDBLOCK;
-         LOG_VERBOSE5
-         fprintf(stdlog, "sendmsg(%d/A%u) timed out\n", sockfd, assocID);
-         LOG_END
+         if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+            if(toaddrs) {
+               LOG_VERBOSE5
+               fputs("Calling sctp_sendmsgx()...\n", stdlog);
+               LOG_END
+               result = sctp_sendmsgx(sockfd, buffer, length,
+                                      (struct sockaddr*)&addressArray, addresses,
+                                      ppid, flags, streamID, timeToLive, 0);
+            }
+            else {
+               LOG_VERBOSE5
+               fputs("Calling sctp_send()...\n", stdlog);
+               LOG_END
+               result = sctp_sendfkt(sockfd, buffer, length,
+                                    &sri, flags);
+            }
+         }
+         else {
+            LOG_VERBOSE5
+            fputs("Calling sctp_sendto()...\n", stdlog);
+            LOG_END
+            result = ext_sendto(sockfd, buffer, length, flags,
+                              (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
+         }
       }
    }
 
    LOG_VERBOSE4
    fprintf(stdlog, "sendmsg(%d/A%u) result=%d; %s\n",
-           sockfd, assocID, cc, strerror(errno));
+           sockfd, assocID, result, strerror(errno));
    LOG_END
 
-   return(cc);
+   return(result);
 }
 
 
@@ -1072,6 +1110,10 @@ int recvfromplus(int              sockfd,
          if(ppid     != NULL) *ppid     = sri->sinfo_ppid;
          if(streamID != NULL) *streamID = sri->sinfo_stream;
          if(assocID  != NULL) *assocID  = sri->sinfo_assoc_id;
+         LOG_VERBOSE4
+         fprintf(stdlog, "SCTP_SNDRCV: ppid=$%08x streamID=%u assocID=%u\n",
+                 sri->sinfo_ppid, sri->sinfo_stream, sri->sinfo_assoc_id);
+         LOG_END
       }
    }
    if(fromlen != NULL) {
@@ -1200,13 +1242,13 @@ bool joinOrLeaveMulticastGroup(int                         sd,
 /* ###### Tune SCTP parameters ############################################ */
 bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
 {
-   struct sctp_rtoinfo      rtoinfo;
-   struct sctp_paddrparams  peerParams;
-   struct sctp_assocparams  assocParams;
-   struct sockaddr_storage* addrs;
-   size_t                   size;
-   int                      i, n;
-   bool                     result = true;
+   struct sctp_rtoinfo     rtoinfo;
+   struct sctp_paddrparams peerParams;
+   struct sctp_assocparams assocParams;
+   union sockaddr_union*   addrs;
+   size_t                  size;
+   int                     i, n;
+   bool                    result = true;
 
    size = sizeof(rtoinfo);
    rtoinfo.srto_assoc_id = assocID;
@@ -1289,7 +1331,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       for(i = 0;i < n;i++) {
          peerParams.spp_assoc_id = assocID;
          memcpy((void*)&(peerParams.spp_address),
-                (const void*)&addrs[i], sizeof(struct sockaddr_storage));
+                (const void*)&addrs[i], sizeof(union sockaddr_union));
          size = sizeof(peerParams);
 
          if(sctp_opt_info(sockfd, assocID, SCTP_GET_PEER_ADDR_PARAMS,
@@ -1347,21 +1389,21 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
 
 
 /* ###### Create socket and establish connection ############################ */
-int establish(const int                socketDomain,
-              const int                socketType,
-              const int                socketProtocol,
-              struct sockaddr_storage* addressArray,
-              const size_t             addresses,
-              const card64             timeout)
+int establish(const int             socketDomain,
+              const int             socketType,
+              const int             socketProtocol,
+              union sockaddr_union* addressArray,
+              const size_t          addresses,
+              const card64          timeout)
 {
-   fd_set                  fdset;
-   struct timeval          to;
-   struct sockaddr*        packedAddresses;
-   struct sockaddr_storage peerAddress;
-   socklen_t               peerAddressLen;
-   int                     result;
-   int                     sockfd;
-   size_t                  i;
+   fd_set               fdset;
+   struct timeval       to;
+   struct sockaddr*     packedAddresses;
+   union sockaddr_union peerAddress;
+   socklen_t            peerAddressLen;
+   int                  result;
+   int                  sockfd;
+   size_t               i;
 
    LOG_VERBOSE
    fprintf(stdlog, "Trying to establish connection via socket(%d,%d,%d)\n",
@@ -1384,7 +1426,7 @@ int establish(const int                socketDomain,
       LOG_END
 
       if(socketProtocol == IPPROTO_SCTP) {
-         packedAddresses = pack_sockaddr_storage(addressArray, addresses);
+         packedAddresses = pack_sockaddr_union(addressArray, addresses);
          if(packedAddresses) {
             result = sctp_connectx(sockfd, packedAddresses, addresses);
             free(packedAddresses);
@@ -1467,9 +1509,9 @@ int establish(const int                socketDomain,
 
 
 /* ###### Get local addresses ############################################### */
-size_t getladdrsplus(const int                 fd,
-                     const sctp_assoc_t        assocID,
-                     struct sockaddr_storage** addressArray)
+size_t getladdrsplus(const int              fd,
+                     const sctp_assoc_t     assocID,
+                     union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses;
    size_t addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
@@ -1482,9 +1524,9 @@ size_t getladdrsplus(const int                 fd,
 
 
 /* ###### Get peer addresses ################################################ */
-size_t getpaddrsplus(const int                 fd,
-                     const sctp_assoc_t        assocID,
-                     struct sockaddr_storage** addressArray)
+size_t getpaddrsplus(const int              fd,
+                     const sctp_assoc_t     assocID,
+                     union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses;
    size_t addrs = sctp_getpaddrs(fd, assocID, &packedAddresses);

@@ -1,5 +1,5 @@
 /*
- *  $Id: localaddresses.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: localaddresses.h,v 1.2 2004/07/29 15:10:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -76,9 +76,9 @@ enum AddressScopingFlags {
   * @param flags Flags.
   * @return true for success; false otherwise.
   */
-bool gatherLocalAddresses(struct sockaddr_storage** addressArray,
-                          size_t*                   addresses,
-                          const unsigned int        flags);
+bool gatherLocalAddresses(union sockaddr_union** addressArray,
+                          size_t*                addresses,
+                          const unsigned int     flags);
 
 
 

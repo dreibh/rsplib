@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.7 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.8 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -285,9 +285,9 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
 
 
 /* ###### Scan address parameter ############################################ */
-static bool scanAddressParameter(struct RSerPoolMessage*  message,
-                                 const card16             port,
-                                 struct sockaddr_storage* address)
+static bool scanAddressParameter(struct RSerPoolMessage* message,
+                                 const card16            port,
+                                 union sockaddr_union*   address)
 {
    struct sockaddr_in*  in;
    uint16_t             tlvType;
@@ -304,7 +304,7 @@ static bool scanAddressParameter(struct RSerPoolMessage*  message,
    }
    tlvLength -= sizeof(struct rserpool_tlv_header);
 
-   memset((void*)address, 0, sizeof(struct sockaddr_storage));
+   memset((void*)address, 0, sizeof(union sockaddr_union));
 
    tlvType = ntohs(((struct rserpool_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
    switch(PURE_ATT_TYPE(tlvType)) {
@@ -374,7 +374,7 @@ static bool scanUserTransportParameter(struct RSerPoolMessage*       message,
                                        struct TransportAddressBlock* transportAddressBlock)
 {
    size_t                                  addresses;
-   struct sockaddr_storage                 addressArray[MAX_PE_TRANSPORTADDRESSES];
+   union sockaddr_union                    addressArray[MAX_PE_TRANSPORTADDRESSES];
    struct rserpool_udptransportparameter*  utp;
    struct rserpool_tcptransportparameter*  ttp;
    struct rserpool_sctptransportparameter* stp;
@@ -473,7 +473,7 @@ static bool scanUserTransportParameter(struct RSerPoolMessage*       message,
    transportAddressBlockNew(transportAddressBlock,
                             protocol, port,
                             (hasControlChannel == true) ? TABF_CONTROLCHANNEL : 0,
-                            (struct sockaddr_storage*)&addressArray,
+                            (union sockaddr_union*)&addressArray,
                             addresses);
 
    LOG_VERBOSE3

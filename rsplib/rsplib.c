@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.6 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: rsplib.c,v 1.7 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -256,15 +256,15 @@ unsigned int rspNameResolution(const unsigned char*         poolHandle,
                   (*endpointAddressInfo)->ai_socktype = SOCK_DGRAM;
                 break;
             }
-            (*endpointAddressInfo)->ai_addrlen = sizeof(struct sockaddr_storage);
+            (*endpointAddressInfo)->ai_addrlen = sizeof(union sockaddr_union);
             (*endpointAddressInfo)->ai_addrs   = poolElementNode->AddressBlock->Addresses;
-            (*endpointAddressInfo)->ai_addr    = (struct sockaddr_storage*)malloc((*endpointAddressInfo)->ai_addrs * sizeof(struct sockaddr_storage));
+            (*endpointAddressInfo)->ai_addr    = (union sockaddr_union*)malloc((*endpointAddressInfo)->ai_addrs * sizeof(union sockaddr_union));
             if((*endpointAddressInfo)->ai_addr != NULL) {
                ptr = (char*)(*endpointAddressInfo)->ai_addr;
                for(i = 0;i < poolElementNode->AddressBlock->Addresses;i++) {
                   memcpy((void*)ptr, (void*)&poolElementNode->AddressBlock->AddressArray[i],
                          sizeof(union sockaddr_union));
-                  ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
+                  ptr = (char*)((long)ptr + (long)sizeof(union sockaddr_union));
                }
             }
             else {

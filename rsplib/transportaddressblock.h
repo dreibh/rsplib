@@ -64,12 +64,12 @@ inline size_t transportAddressBlockGetSize(const size_t addresses)
   * @param addressArray Address array.
   * @param addresses Number of addresses.
   */
-void transportAddressBlockNew(struct TransportAddressBlock*  transportAddressBlock,
-                              const int                      protocol,
-                              const uint16_t                 port,
-                              const uint16_t                 flags,
-                              const struct sockaddr_storage* addressArray,
-                              const size_t                   addresses);
+void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBlock,
+                              const int                     protocol,
+                              const uint16_t                port,
+                              const uint16_t                flags,
+                              const union sockaddr_union*   addressArray,
+                              const size_t                  addresses);
 
 /**
   * Invalidate.

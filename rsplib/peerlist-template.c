@@ -126,7 +126,8 @@ unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
                 struct ST_CLASS(PeerList)*     peerList,
                 struct ST_CLASS(PeerListNode)* peerListNode)
 {
-   if(peerListNode->Identifier == peerList->OwnIdentifier) {
+   if((peerList->OwnIdentifier != 0) &&
+      (peerListNode->Identifier == peerList->OwnIdentifier)) {
       return(RSPERR_INVALID_ID);
    }
    return(RSPERR_OKAY);

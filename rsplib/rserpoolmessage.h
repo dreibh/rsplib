@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.4 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.5 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -304,8 +304,8 @@ struct RSerPoolMessage
    uint16_t                          Error;
    uint8_t                           Flags;
    uint16_t                          Action;
-   struct sockaddr*                  Address;
-   socklen_t                         AddressLength;
+   union sockaddr_union*             AddressArray;
+   size_t                            Addresses;
 
    char*                             OperationErrorData;
    size_t                            OperationErrorLength;
@@ -352,6 +352,8 @@ struct RSerPoolMessage
    struct ST_CLASS(PeerList)*        PeerListPtr;
    bool                              PeerListPtrAutoDelete;
 
+   struct ST_CLASS(PoolNamespaceManagement)* NamespacePtr;
+
    sctp_assoc_t                      AssocID;
    unsigned short                    StreamID;
    uint32_t                          PPID;
@@ -393,13 +395,18 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message);
   * Convert RSerPoolMessage to packet and send it to file descriptor
   * with given timeout.
   *
+  * @param protocol Protocol (e.g. IPPROTO_SCTP).
   * @param fd File descriptor to write packet to.
+  * @param assocID Association ID.
+  * @param flags Flags for sendmsg().
   * @param timeout Timeout in microseconds.
   * @param message RSerPoolMessage.
   * @return true in case of success; false otherwise.
   */
-bool rserpoolMessageSend(int                     fd,
+bool rserpoolMessageSend(int                     protocol,
+                         int                     fd,
                          sctp_assoc_t            assocID,
+                         int                     flags,
                          const card64            timeout,
                          struct RSerPoolMessage* message);
 

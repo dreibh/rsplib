@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.11 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: servertable.c,v 1.12 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -64,7 +64,7 @@ static void handleServerAnnounceCallback(struct Dispatcher* dispatcher,
    struct ServerTable*            serverTable = (struct ServerTable*)userData;
    struct RSerPoolMessage*        message;
    struct ST_CLASS(PeerListNode)* peerListNode;
-   struct sockaddr_storage        senderAddress;
+   union sockaddr_union           senderAddress;
    socklen_t                      senderAddressLength;
    char                           buffer[1024];
    ssize_t                        received;
@@ -139,9 +139,9 @@ ST_CLASS(peerListManagementPrint)(&serverTable->List, stdlog, PLPO_FULL);
 struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
                                    struct TagItem*    tags)
 {
-   struct sockaddr_storage* announceAddress;
-   struct sockaddr_storage  defaultAnnounceAddress;
-   struct ServerTable*      serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
+   union sockaddr_union* announceAddress;
+   union sockaddr_union  defaultAnnounceAddress;
+   struct ServerTable*   serverTable = (struct ServerTable*)malloc(sizeof(struct ServerTable));
    if(serverTable != NULL) {
       serverTable->Dispatcher   = dispatcher;
       serverTable->LastAnnounce = 0;
@@ -156,7 +156,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
                                                                       ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT);
 
       CHECK(string2address(ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
-      announceAddress = (struct sockaddr_storage*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddress,
+      announceAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_NameServerAnnounceAddress,
                                                                  (tagdata_t)&defaultAnnounceAddress);
       memcpy(&serverTable->AnnounceAddress, announceAddress, sizeof(serverTable->AnnounceAddress));
 
@@ -231,7 +231,7 @@ static void tryNextBlock(struct ServerTable*     serverTable,
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
-   struct sockaddr_storage        addressArray[MAX_PE_TRANSPORTADDRESSES];
+   union sockaddr_union           addressArray[MAX_PE_TRANSPORTADDRESSES];
    size_t                         addresses;
    int                            status;
    size_t                         i, j;
@@ -329,7 +329,7 @@ static void tryNextBlock(struct ServerTable*     serverTable,
 int serverTableFindServer(struct ServerTable* serverTable)
 {
    struct timeval          selectTimeout;
-   struct sockaddr_storage peerAddress;
+   union sockaddr_union    peerAddress;
    socklen_t               peerAddressLength;
    int                     sd[MAX_SIMULTANEOUS_REQUESTS];
    card64                  timeout[MAX_SIMULTANEOUS_REQUESTS];

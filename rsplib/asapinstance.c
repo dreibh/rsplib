@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.13 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.14 2004/07/29 15:10:33 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -254,10 +254,11 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
       return(RSPERR_NO_NAMESERVER);
    }
 
-   result = rserpoolMessageSend(asapInstance->NameServerSocket,
-                            0,
-                            asapInstance->NameServerRequestTimeout,
-                            request);
+   result = rserpoolMessageSend(asapInstance->NameServerSocketProtocol,
+                                asapInstance->NameServerSocket,
+                                0, 0,
+                                asapInstance->NameServerRequestTimeout,
+                                request);
    if(result) {
       return(RSPERR_OKAY);
    }

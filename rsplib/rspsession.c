@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.8 2004/07/25 15:26:28 dreibh Exp $
+ *  $Id: rspsession.c,v 1.9 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -129,9 +129,9 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;
    struct EndpointAddressInfo* next;
-   struct sockaddr_storage*    sctpLocalAddressArray = NULL;
-   struct sockaddr_storage*    localAddressArray     = NULL;
-   struct sockaddr_storage     socketName;
+   union sockaddr_union*    sctpLocalAddressArray = NULL;
+   union sockaddr_union*    localAddressArray     = NULL;
+   union sockaddr_union     socketName;
    socklen_t                   socketNameLen;
    unsigned int                localAddresses;
    unsigned int                result;
@@ -153,7 +153,7 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
    eai->ai_next     = NULL;
    eai->ai_addr     = NULL;
    eai->ai_addrs    = 0;
-   eai->ai_addrlen  = sizeof(struct sockaddr_storage);
+   eai->ai_addrlen  = sizeof(union sockaddr_union);
    eai->ai_pe_id    = ped->Identifier;
 
    /* ====== Get local addresses for SCTP socket ============================ */
@@ -363,7 +363,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
                                                    const size_t         poolHandleSize,
                                                    struct TagItem*      tags)
 {
-   struct sockaddr_storage localAddress;
+   union sockaddr_union localAddress;
 
    struct PoolElementDescriptor* ped = (struct PoolElementDescriptor*)malloc(sizeof(struct PoolElementDescriptor));
    if(ped != NULL) {
@@ -429,7 +429,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       memset((void*)&localAddress, 0, sizeof(localAddress));
       ((struct sockaddr*)&localAddress)->sa_family = ped->SocketDomain;
       setPort((struct sockaddr*)&localAddress, tagListGetData(tags, TAG_PoolElement_LocalPort, 0));
-      if(bindplus(ped->Socket, (struct sockaddr_storage*)&localAddress, 1) == false) {
+      if(bindplus(ped->Socket, (union sockaddr_union*)&localAddress, 1) == false) {
          LOG_ERROR
          logerror("Unable to bind socket for new pool element");
          LOG_END
@@ -582,10 +582,11 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       LOG_ACTION
       fputs("Sending Cookie\n", stdlog);
       LOG_END
-      result = rserpoolMessageSend(session->Socket,
-                               0,
-                               (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
-                               message);
+      result = rserpoolMessageSend(session->SocketProtocol,
+                                   session->Socket,
+                                   0, 0,
+                                   (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
+                                   message);
       threadSafetyUnlock(&session->Mutex);
       rserpoolMessageDelete(message);
    }
@@ -609,10 +610,11 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
          LOG_ACTION
          fputs("Sending Cookie Echo\n", stdlog);
          LOG_END
-         result = rserpoolMessageSend(session->Socket,
-                                  0,
-                                  session->CookieEchoTimeout,
-                                  message);
+         result = rserpoolMessageSend(session->SocketProtocol,
+                                      session->Socket,
+                                      0, 0,
+                                      session->CookieEchoTimeout,
+                                      message);
          threadSafetyUnlock(&session->Mutex);
          rserpoolMessageDelete(message);
       }

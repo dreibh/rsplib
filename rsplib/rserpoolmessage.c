@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.5 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.6 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -203,8 +203,10 @@ static size_t rserpoolMessagePeekSize(int fd, const card64 timeout)
 
 
 /* ###### Send RSerPoolMessage ########################################### */
-bool rserpoolMessageSend(int                     fd,
+bool rserpoolMessageSend(int                     protocol,
+                         int                     fd,
                          sctp_assoc_t            assocID,
+                         int                     flags,
                          const card64            timeout,
                          struct RSerPoolMessage* message)
 {
@@ -214,9 +216,9 @@ bool rserpoolMessageSend(int                     fd,
    messageLength = rserpoolMessage2Packet(message);
    if(messageLength > 0) {
       sent = sendtoplus(fd,
-                        message->Buffer, messageLength, 0,
-                        message->Address, message->AddressLength,
-                        message->PPID,
+                        message->Buffer, messageLength, flags,
+                        message->AddressArray, message->Addresses,
+                        (protocol == IPPROTO_SCTP) ? message->PPID : 0,
                         assocID,
                         0, 0, timeout);
       if(sent == (ssize_t)messageLength) {

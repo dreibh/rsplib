@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.5 2004/07/26 12:50:18 dreibh Exp $
+ *  $Id: netutilities.h,v 1.6 2004/07/29 15:10:34 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -74,14 +74,14 @@ extern "C" {
   *
   * @see deleteAddressArray
   */
-size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray);
+size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray);
 
 /**
   * Delete address array.
   *
   * @param addressArray Address array.
   */
-void deleteAddressArray(struct sockaddr_storage* addressArray);
+void deleteAddressArray(union sockaddr_union* addressArray);
 
 /**
   * Duplicate address array.
@@ -90,8 +90,8 @@ void deleteAddressArray(struct sockaddr_storage* addressArray);
   * @param addresses Number of addresses.
   * @return Address array or NULL in case of error.
   */
-struct sockaddr_storage* duplicateAddressArray(const struct sockaddr_storage* addressArray,
-                                               const size_t                   addresses);
+union sockaddr_union* duplicateAddressArray(const union sockaddr_union* addressArray,
+                                            const size_t                   addresses);
 
 /**
   * Convert address to string.
@@ -114,7 +114,7 @@ bool address2string(const struct sockaddr* address,
   * @param address Reference to store address to.
   * @return true for success; false otherwise.
   */
-bool string2address(const char* string, struct sockaddr_storage* address);
+bool string2address(const char* string, union sockaddr_union* address);
 
 /**
   * Print address.
@@ -243,9 +243,9 @@ size_t getSocklen(struct sockaddr* address);
   * @param addresses Number of addresses.
   * @return true for success; false otherwise.
   */
-bool bindplus(int                      sockfd,
-              struct sockaddr_storage* addressArray,
-              const size_t             addresses);
+bool bindplus(int                   sockfd,
+              union sockaddr_union* addressArray,
+              const size_t          addresses);
 
 /**
   * Wrapper for sendmsg() with timeout and support for SCTP parameters.
@@ -263,17 +263,17 @@ bool bindplus(int                      sockfd,
   * @param timeout Timeout for sending data.
   * @param Bytes sent or -1 in case of error.
   */
-int sendtoplus(int                 sockfd,
-               const void*         buffer,
-               const size_t        length,
-               const int           flags,
-               struct sockaddr*    to,
-               const socklen_t     tolen,
-               const uint32_t      ppid,
-               const sctp_assoc_t  assocID,
-               const uint16_t      streamID,
-               const uint32_t      timeToLive,
-               const card64        timeout);
+int sendtoplus(int                   sockfd,
+               const void*           buffer,
+               const size_t          length,
+               const int             flags,
+               union sockaddr_union* toaddrs,
+               const size_t          toaddrcnt,
+               const uint32_t        ppid,
+               const sctp_assoc_t    assocID,
+               const uint16_t        streamID,
+               const uint32_t        timeToLive,
+               const card64          timeout);
 
 /**
   * Wrapper for recvmsg() with timeout and support for SCTP parameters.
@@ -320,12 +320,12 @@ bool joinOrLeaveMulticastGroup(int                         sd,
   * connection socket descriptor is returned. All other
   * connections are aborted.
   */
-int establish(const int                socketDomain,
-              const int                socketType,
-              const int                socketProtocol,
-              struct sockaddr_storage* addressArray,
-              const size_t             addresses,
-              const card64             timeout);
+int establish(const int             socketDomain,
+              const int             socketType,
+              const int             socketProtocol,
+              union sockaddr_union* addressArray,
+              const size_t          addresses,
+              const card64          timeout);
 
 
 #define TAG_TuneSCTP_MinRTO      (TAG_USER + 15000)
@@ -349,31 +349,31 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags);
 
 
 /**
-  * Translate a sockaddr_storage array into a block of sockaddrs.
+  * Translate a sockaddr_union array into a block of sockaddrs.
   * The memory is dynamically allocated using malloc() and has to be
   * freed using free().
   *
-  * @param addrArray sockaddr_storage array.
+  * @param addrArray sockaddr_union array.
   * @param addrs Number of addresses.
   * @return Point to block of sockaddrs.
   */
-struct sockaddr* pack_sockaddr_storage(const struct sockaddr_storage* addrArray,
-                                       const size_t                   addrs);
+struct sockaddr* pack_sockaddr_union(const union sockaddr_union* addrArray,
+                                     const size_t                   addrs);
 
 /**
-  * Translate block of sockaddrs into sockaddr_storage array.
+  * Translate block of sockaddrs into sockaddr_union array.
   * The memory is dynamically allocated using malloc() and has to be
   * freed using free().
   *
   * @param addrArray Block of sockaddrs.
   * @param addrs Number of addresses.
-  * @return Point sockaddr_storage array.
+  * @return Point sockaddr_union array.
   */
-struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray,
-                                         const size_t     addrs);
+union sockaddr_union* unpack_sockaddr(struct sockaddr* addrArray,
+                                      const size_t     addrs);
 
 /**
-  * Wrapper to sctp_getladdrs() using sockaddr_storage array instead of
+  * Wrapper to sctp_getladdrs() using sockaddr_union array instead of
   * packed sockaddr blocks.
   *
   * @param fd Socket FD.
@@ -381,12 +381,12 @@ struct sockaddr_storage* unpack_sockaddr(struct sockaddr* addrArray,
   * @param addressArray Pointer to store pointer to created address array to.
   * @return Number of addresses stored.
   */
-size_t getladdrsplus(const int                 fd,
-                     const sctp_assoc_t        assocID,
-                     struct sockaddr_storage** addressArray);
+size_t getladdrsplus(const int              fd,
+                     const sctp_assoc_t     assocID,
+                     union sockaddr_union** addressArray);
 
 /**
-  * Wrapper to sctp_getpaddrs() using sockaddr_storage array instead of
+  * Wrapper to sctp_getpaddrs() using sockaddr_union array instead of
   * packed sockaddr blocks.
   *
   * @param fd Socket FD.
@@ -394,9 +394,9 @@ size_t getladdrsplus(const int                 fd,
   * @param addressArray Pointer to store pointer to created address array to.
   * @return Number of addresses stored.
   */
-size_t getpaddrsplus(const int                 fd,
-                     const sctp_assoc_t        assocID,
-                     struct sockaddr_storage** addressArray);
+size_t getpaddrsplus(const int              fd,
+                     const sctp_assoc_t     assocID,
+                     union sockaddr_union** addressArray);
 
 
 #ifdef __cplusplus
