@@ -2,6 +2,8 @@
 #ifndef SOCKADDRUNION_H
 #define SOCKADDRUNION_H
 
+#include "config.h"
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 

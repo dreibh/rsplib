@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: rsplib.c,v 1.3 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -148,10 +148,15 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
 
       poolPolicySettingsNew(&myPolicySettings);
-      myPolicySettings.PolicyType      = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Type, TAGDATA_PoolPolicy_Type_RoundRobin);
+      myPolicySettings.PolicyType      = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Type, PPT_ROUNDROBIN);
       myPolicySettings.Weight          = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight, 1);
       myPolicySettings.Load            = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Load, 0);
       myPolicySettings.LoadDegradation = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_LoadDegradation, 0);
+
+puts("XXXXXXX");
+fputaddress((struct sockaddr*)endpointAddressInfo->ai_addr,true,stdout);
+puts("");
+printf("ADDRS=%d\n",endpointAddressInfo->ai_addrs);
 
       transportAddressBlockNew(myTransportAddressBlock,
                                endpointAddressInfo->ai_protocol,
@@ -159,6 +164,11 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
                                (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
                                endpointAddressInfo->ai_addr,
                                endpointAddressInfo->ai_addrs);
+
+puts("\n");
+transportAddressBlockPrint(                               myTransportAddressBlock,stdout);
+puts("\n");
+//exit(1);
 
       ST_CLASS(poolElementNodeNew)(
          &myPoolElementNode,
@@ -217,73 +227,72 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
 
 
 /* ###### Name resolution ################################################ */
-int rspNameResolution(const unsigned char*         poolHandle,
-                      const size_t                 poolHandleSize,
-                      struct EndpointAddressInfo** endpointAddressInfo,
-                      struct TagItem*              tags)
+unsigned int rspNameResolution(const unsigned char*         poolHandle,
+                               const size_t                 poolHandleSize,
+                               struct EndpointAddressInfo** endpointAddressInfo,
+                               struct TagItem*              tags)
 {
-   struct PoolHandle           myPoolHandle;
-   struct PoolElement*         poolElement;
-   struct TransportAddress*    transportAddress;
-   struct EndpointAddressInfo* endpointAddress;
-   unsigned int                result;
+   struct PoolHandle                 myPoolHandle;
+   struct TransportAddressBlock*     transportAddressBlock;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   size_t                            poolElementNodes;
+   unsigned int                      result;
+   char*                             ptr;
+   size_t                            i;
 
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
-puts("STOP!");
-exit(1);
-#if 0
-      poolElement = asapSelectPoolElement(gAsapInstance,myPoolHandle,&gLastError);
-      if(poolElement != NULL) {
-         list = g_list_last(poolElement->TransportAddressList);
-         while(list != NULL) {
-            transportAddress = (struct TransportAddress*)list->data;
-            if(transportAddress->Addresses > 0) {
-               endpointAddress = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
-               if(endpointAddress != NULL) {
-                  endpointAddress->ai_next     = *endpointAddressInfo;
-                  endpointAddress->ai_pe_id    = poolElement->Identifier;
-                  endpointAddress->ai_family   = transportAddress->AddressArray[0].sa.sa_family;
-                  endpointAddress->ai_protocol = transportAddress->Protocol;
-                  switch(transportAddress->Protocol) {
-                     case IPPROTO_SCTP:
-                     case IPPROTO_TCP:
-                        endpointAddress->ai_socktype = SOCK_STREAM;
-                        break;
-                     default:
-                        endpointAddress->ai_socktype = SOCK_DGRAM;
-                        break;
-                  }
-                  endpointAddress->ai_addrlen = sizeof(struct sockaddr_storage);
-                  endpointAddress->ai_addrs   = transportAddress->Addresses;
-                  endpointAddress->ai_addr    = (struct sockaddr_storage*)malloc(endpointAddress->ai_addrs * sizeof(struct sockaddr_storage));
-                  if(endpointAddress->ai_addr != NULL) {
-                     ptr = (char*)endpointAddress->ai_addr;
-                     for(i = 0;i < transportAddress->Addresses;i++) {
-                        memcpy((void*)ptr, (void*)&transportAddress->AddressArray[i], sizeof(union sockaddr_union));
-                        ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
-                     }
 
-                     *endpointAddressInfo = endpointAddress;
-                  }
-                  else {
-                     free(endpointAddress);
-                     endpointAddress = NULL;
-                  }
+      poolElementNodes = 1;
+      result = asapInstanceNameResolution(
+                  gAsapInstance,
+                  &myPoolHandle,
+                  (struct ST_CLASS(PoolElementNode)**)&poolElementNode,
+                  &poolElementNodes);
+      if(result == RSPERR_OKAY) {
+         *endpointAddressInfo = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
+         if(endpointAddressInfo != NULL) {
+            (*endpointAddressInfo)->ai_next     = NULL;
+            (*endpointAddressInfo)->ai_pe_id    = poolElementNode->Identifier;
+            (*endpointAddressInfo)->ai_family   = transportAddressBlock->AddressArray[0].sa.sa_family;
+            (*endpointAddressInfo)->ai_protocol = transportAddressBlock->Protocol;
+            switch(transportAddressBlock->Protocol) {
+               case IPPROTO_SCTP:
+                  (*endpointAddressInfo)->ai_socktype = SOCK_SEQPACKET;
+                break;
+               case IPPROTO_TCP:
+                  (*endpointAddressInfo)->ai_socktype = SOCK_STREAM;
+                break;
+               default:
+                  (*endpointAddressInfo)->ai_socktype = SOCK_DGRAM;
+                break;
+            }
+            (*endpointAddressInfo)->ai_addrlen = sizeof(struct sockaddr_storage);
+            (*endpointAddressInfo)->ai_addrs   = transportAddressBlock->Addresses;
+            (*endpointAddressInfo)->ai_addr    = (struct sockaddr_storage*)malloc((*endpointAddressInfo)->ai_addrs * sizeof(struct sockaddr_storage));
+            if((*endpointAddressInfo)->ai_addr != NULL) {
+               ptr = (char*)(*endpointAddressInfo)->ai_addr;
+               for(i = 0;i < transportAddressBlock->Addresses;i++) {
+                  memcpy((void*)ptr, (void*)&transportAddressBlock->AddressArray[i],
+                         sizeof(union sockaddr_union));
+                  ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_storage));
                }
             }
-
-            list = g_list_previous(list);
+            else {
+               free(*endpointAddressInfo);
+               *endpointAddressInfo = NULL;
+            }
          }
-
-         poolElementDelete(poolElement);
-#endif
+         else {
+            result = RSPERR_OUT_OF_MEMORY;
+         }
+      }
    }
    else {
+      result = RSPERR_NOT_INITIALIZED;
       LOG_ERROR
       fputs("rsplib is not initialized\n", stdlog);
       LOG_END
-      result = RSPERR_NOT_INITIALIZED;
    }
 
    return(result);

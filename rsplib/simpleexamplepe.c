@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.3 2004/07/19 16:24:06 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.4 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -55,23 +55,24 @@
 
 
 
-static int           ListenSocketFamily    = AF_INET;
+static int           ListenSocketFamily    = AF_INET6;
 static int           ListenSocketType      = SOCK_STREAM;
-static int           ListenSocketProtocol  = IPPROTO_TCP;
+static int           ListenSocketProtocol  = IPPROTO_SCTP;
 static uint16_t      ListenPort            = 0;
 static int           ListenSocket          = -1;
 static GList*        ClientList            = NULL;
 
 
 #ifndef NO_RSP
-static char*         PoolName               = NULL;
-static uint32_t      PoolElementID          = 0x00000000;
-static unsigned int  PolicyType             = TAGDATA_PoolPolicy_Type_RoundRobin;
-static unsigned int  PolicyParameterWeight  = 1;
-static unsigned int  PolicyParameterLoad    = 0;
-static unsigned long RegistrationInterval   = 5000000;
-static pthread_t     RegistrationThread     = 0;
-static bool          RegistrationThreadStop = false;
+static char*         PoolName                       = NULL;
+static uint32_t      PoolElementID                  = 0x00000000;
+static unsigned int  PolicyType                     = PPT_ROUNDROBIN;
+static uint32_t      PolicyParameterWeight          = 1;
+static uint32_t      PolicyParameterLoad            = 0;
+static uint32_t      PolicyParameterLoadDegradation = 0;
+static unsigned long RegistrationInterval           = 5000000;
+static pthread_t     RegistrationThread             = 0;
+static bool          RegistrationThreadStop         = false;
 
 
 /* ###### Registration/Reregistration ####################################### */
@@ -86,6 +87,7 @@ static void doRegistration()
    struct sockaddr_storage     socketName;
    size_t                      socketNameLen;
    unsigned int                localAddresses;
+   unsigned int                result;
    unsigned int                i;
 
    /* ====== Create EndpointAddressInfo structure =========================== */
@@ -106,7 +108,7 @@ static void doRegistration()
 
    /* ====== Get local addresses for SCTP socket ============================ */
    if(ListenSocketProtocol == IPPROTO_SCTP) {
-      eai->ai_addrs    = getladdrsplus(ListenSocket, 0, &eai->ai_addr);
+      eai->ai_addrs = getladdrsplus(ListenSocket, 0, &eai->ai_addr);
       if(eai->ai_addrs <= 0) {
          puts("ERROR: Unable to obtain socket's local addresses!");
       }
@@ -190,19 +192,22 @@ static void doRegistration()
    tags[0].Data = PolicyType;
    tags[1].Tag  = TAG_PoolPolicy_Parameter_Load;
    tags[1].Data = PolicyParameterLoad;
-   tags[2].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[2].Data = PolicyParameterWeight;
-   tags[3].Tag  = TAG_END;
+   tags[2].Tag  = TAG_PoolPolicy_Parameter_LoadDegradation;
+   tags[2].Data = PolicyParameterLoadDegradation;
+   tags[3].Tag  = TAG_PoolPolicy_Parameter_Weight;
+   tags[3].Data = PolicyParameterWeight;
+   tags[4].Tag  = TAG_END;
 
 
    /* ====== Do registration ================================================ */
-   PoolElementID = rspRegister((unsigned char*)PoolName, strlen(PoolName),
-                               eai, (struct TagItem*)&tags);
-   if(PoolElementID == 0x00000000) {
+   result = rspRegister((unsigned char*)PoolName, strlen(PoolName),
+                        eai, (struct TagItem*)&tags);
+   if(result != RSPERR_OKAY) {
       printf("WARNING: (Re-)Registration failed: ");
-      puts(rspGetLastErrorDescription());
+      puts(rspGetErrorDescription(result));
    }
    else {
+      PoolElementID = eai->ai_pe_id;
       printf("(Re-)Registration successful - ID=$%08x\n", PoolElementID);
    }
 
@@ -484,30 +489,36 @@ int main(int argc, char** argv)
             PolicyParameterLoad = 0xffffff;
          }
       }
+      else if(!(strncmp(argv[n],"-loaddef=",9))) {
+         PolicyParameterLoadDegradation = atol((char*)&argv[n][9]);
+         if(PolicyParameterLoadDegradation > 0xffffff) {
+            PolicyParameterLoadDegradation = 0xffffff;
+         }
+      }
       else if(!(strncmp(argv[n],"-weight=",8))) {
          PolicyParameterWeight = atol((char*)&argv[n][8]);
-         if(PolicyParameterWeight > 0xffffff) {
-            PolicyParameterWeight = 0xffffff;
+         if(PolicyParameterWeight < 1) {
+            PolicyParameterWeight = 1;
          }
       }
       else if(!(strncmp(argv[n],"-policy=",8))) {
          if((!(strcmp((char*)&argv[n][8],"roundrobin"))) || (!(strcmp((char*)&argv[n][8],"rr")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_RoundRobin;
+            PolicyType = PPT_ROUNDROBIN;
          }
          else if((!(strcmp((char*)&argv[n][8],"weightedroundrobin"))) || (!(strcmp((char*)&argv[n][8],"wrr")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_WeightedRoundRobin;
+            PolicyType = PPT_WEIGHTED_ROUNDROBIN;
          }
          else if((!(strcmp((char*)&argv[n][8],"leastused"))) || (!(strcmp((char*)&argv[n][8],"lu")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_LeastUsed;
+            PolicyType = PPT_LEASTUSED;
          }
          else if((!(strcmp((char*)&argv[n][8],"leastuseddegradation"))) || (!(strcmp((char*)&argv[n][8],"lud")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_LeastUsedDegradation;
+            PolicyType = PPT_LEASTUSED_DEGRADATION;
          }
-         else if((!(strcmp((char*)&argv[n][8],"random"))) || (!(strcmp((char*)&argv[n][8],"rd")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_Random;
+         else if((!(strcmp((char*)&argv[n][8],"random"))) || (!(strcmp((char*)&argv[n][8],"rand")))) {
+            PolicyType = PPT_RANDOM;
          }
-         else if((!(strcmp((char*)&argv[n][8],"weightedrandom"))) || (!(strcmp((char*)&argv[n][8],"wrd")))) {
-            PolicyType = TAGDATA_PoolPolicy_Type_WeightedRandom;
+         else if((!(strcmp((char*)&argv[n][8],"weightedrandom"))) || (!(strcmp((char*)&argv[n][8],"wrand")))) {
+            PolicyType = PPT_WEIGHTED_RANDOM;
          }
          else {
             printf("ERROR: Unknown policy type \"%s\"!\n",(char*)&argv[n][8]);
@@ -524,7 +535,7 @@ int main(int argc, char** argv)
          printf("Bad argument \"%s\"!\n",argv[n]);
          printf("Usage: %s {-sctp|-sctp-udplike|-sctp-tcplike|-tcp|-udp} {-port=local port} {-stop=seconds}"
 #ifndef NO_RSP
-                " {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}"
+                " {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrand} {-load=load} {-loaddeg=load degradation} {-weight=weight}"
 #endif
                 "\n",argv[0]);
          exit(1);

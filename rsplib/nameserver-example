@@ -1,2 +1,2 @@
 #!/bin/sh
-./nameserver -sctp=127.0.0.1:3863 -announce=[fff5::1]:3863 -loglevel=9 $@
+./nameserver -sctp=127.0.0.1:3863,10.0.0.1,[fe80::200:39ff:fee0:a237],[2000:1:2:3:4:5:6:7] -announce=239.0.0.1:3863 -loglevel=9 $@

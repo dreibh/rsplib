@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.4 2004/07/19 16:24:05 dreibh Exp $
+ *  $Id: netutilities.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -167,7 +167,7 @@ size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray
       addresses     = 0;
       *addressArray = NULL;
       addressLength = sizeof(address);
-      result = ext_getsockname(sockfd,(struct sockaddr*)&address,&addressLength);
+      result = ext_getsockname(sockfd,(struct sockaddr*)&address, &addressLength);
       if(result == 0) {
          LOG_VERBOSE4
          fputs("Successfully obtained address by getsockname()\n",stdlog);
@@ -186,7 +186,7 @@ size_t getAddressesFromSocket(int sockfd, struct sockaddr_storage** addressArray
    }
    else {
       LOG_VERBOSE4
-      fprintf(stdlog,"Obtained %d address(es)\n",addresses);
+      fprintf(stdlog, "Obtained %d address(es)\n",addresses);
       LOG_END
    }
 
@@ -245,7 +245,7 @@ bool address2string(const struct sockaddr* address,
       case AF_INET6:
          ipv6address = (struct sockaddr_in6*)address;
          ipv6address->sin6_scope_id = 0;
-         if(inet_ntop(AF_INET6,&ipv6address->sin6_addr, str, sizeof(str)) != NULL) {
+         if(inet_ntop(AF_INET6, &ipv6address->sin6_addr, str, sizeof(str)) != NULL) {
             if(port) {
                snprintf(buffer, length,
                         "[%s]:%d", str, ntohs(ipv6address->sin6_port));
@@ -258,12 +258,15 @@ bool address2string(const struct sockaddr* address,
        break;
 #endif
       case AF_UNSPEC:
-         safestrcpy(buffer,"(unspecified)",length);
+         safestrcpy(buffer, "(unspecified)",length);
          return(true);
        break;
    }
 
-   snprintf(buffer,length,"(unsupported address family #%d)",address->sa_family);
+   LOG_ERROR
+   fprintf(stdlog, "Unsupported address family #%d\n",
+           ((struct sockaddr*)address)->sa_family);
+   LOG_END_FATAL
    return(false);
 }
 
@@ -296,14 +299,14 @@ bool string2address(const char* string, struct sockaddr_storage* address)
       return(false);
    }
    strcpy((char*)&host,string);
-   strcpy((char*)&port,"0");
+   strcpy((char*)&port, "0");
 
    /* ====== Handle RFC2732-compliant addresses ========================== */
    if(string[0] == '[') {
       p1 = strindex(host,']');
       if(p1 != NULL) {
          if((p1[1] == ':') || (p1[1] == '!')) {
-            strcpy((char*)&port,&p1[2]);
+            strcpy((char*)&port, &p1[2]);
          }
          strncpy((char*)&host,(char*)&host[1],(long)p1 - (long)host - 1);
          host[(long)p1 - (long)host - 1] = 0x00;
@@ -318,12 +321,12 @@ bool string2address(const char* string, struct sockaddr_storage* address)
       }
       if(p1 != NULL) {
          p1[0] = 0x00;
-         strcpy((char*)&port,&p1[1]);
+         strcpy((char*)&port, &p1[1]);
       }
    }
 
    /* ====== Check port number =========================================== */
-   if((sscanf(port,"%d",&portNumber) == 1) &&
+   if((sscanf(port, "%d", &portNumber) == 1) &&
       (portNumber < 0) &&
       (portNumber > 65535)) {
       return(false);
@@ -360,7 +363,7 @@ bool string2address(const char* string, struct sockaddr_storage* address)
       hints.ai_flags = AI_NUMERICHOST;
    }
 
-   if(getaddrinfo(host,NULL,&hints,&res) != 0) {
+   if(getaddrinfo(host,NULL, &hints, &res) != 0) {
       return(false);
    }
 
@@ -384,9 +387,9 @@ bool string2address(const char* string, struct sockaddr_storage* address)
 #endif
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unsupported address family #%d\n",
+         fprintf(stdlog, "Unsupported address family #%d\n",
                  ((struct sockaddr*)address)->sa_family);
-         LOG_END
+         LOG_END_FATAL
        break;
    }
 
@@ -503,9 +506,9 @@ unsigned int getScope(const struct sockaddr* address)
 #endif
    else {
       LOG_ERROR
-      fprintf(stdlog,"Unsupported address family #%d\n",
+      fprintf(stdlog, "Unsupported address family #%d\n",
               address->sa_family);
-      LOG_END
+      LOG_END_FATAL
    }
    return(0);
 }
@@ -538,13 +541,13 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
       s2 = 1000000 - getScope((struct sockaddr*)a2);
       if(s1 < s2) {
          LOG_VERBOSE5
-         fprintf(stdlog,"Result: less-than, s1=%d s2=%d\n",s1,s2);
+         fprintf(stdlog, "Result: less-than, s1=%d s2=%d\n",s1,s2);
          LOG_END
          return(-1);
       }
       else if(s1 > s2) {
          LOG_VERBOSE5
-         fprintf(stdlog,"Result: greater-than, s1=%d s2=%d\n",s1,s2);
+         fprintf(stdlog, "Result: greater-than, s1=%d s2=%d\n",s1,s2);
          LOG_END
          return(1);
       }
@@ -613,8 +616,8 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
    }
 
    LOG_ERROR
-   fprintf(stdlog,"Unsupported address family comparision #%d / #%d\n",a1->sa_family,a2->sa_family);
-   LOG_END
+   fprintf(stdlog, "Unsupported address family comparision #%d / #%d\n",a1->sa_family,a2->sa_family);
+   LOG_END_FATAL
    return(0);
 }
 
@@ -634,9 +637,9 @@ uint16_t getPort(struct sockaddr* address)
 #endif
          default:
             LOG_ERROR
-            fprintf(stdlog,"Unsupported address family #%d\n",
+            fprintf(stdlog, "Unsupported address family #%d\n",
                     address->sa_family);
-            LOG_END
+            LOG_END_FATAL
           break;
       }
    }
@@ -661,9 +664,9 @@ bool setPort(struct sockaddr* address, uint16_t port)
 #endif
          default:
             LOG_ERROR
-            fprintf(stdlog,"Unsupported address family #%d\n",
+            fprintf(stdlog, "Unsupported address family #%d\n",
                     address->sa_family);
-            LOG_END
+            LOG_END_FATAL
           break;
       }
    }
@@ -687,7 +690,7 @@ bool setBlocking(int fd)
    int flags = ext_fcntl(fd,F_GETFL,0);
    if(flags != -1) {
       flags &= ~O_NONBLOCK;
-      if(ext_fcntl(fd,F_SETFL,flags) == 0) {
+      if(ext_fcntl(fd,F_SETFL, flags) == 0) {
          return(true);
       }
    }
@@ -701,7 +704,7 @@ bool setNonBlocking(int fd)
    int flags = ext_fcntl(fd,F_GETFL,0);
    if(flags != -1) {
       flags |= O_NONBLOCK;
-      if(ext_fcntl(fd,F_SETFL,flags) == 0) {
+      if(ext_fcntl(fd,F_SETFL, flags) == 0) {
          return(true);
       }
    }
@@ -802,7 +805,7 @@ bool bindplus(int                      sockfd,
          setPort((struct sockaddr*)&anyAddress,port);
 
          LOG_VERBOSE4
-         fprintf(stdlog,"Trying port %d for \"any\" address...\n",port);
+         fprintf(stdlog, "Trying port %d for \"any\" address...\n",port);
          LOG_END
 
          result = ext_bind(sockfd,(struct sockaddr*)&anyAddress,getSocklen((struct sockaddr*)&anyAddress));
@@ -826,7 +829,7 @@ bool bindplus(int                      sockfd,
                setPort((struct sockaddr*)&addressArray[j],port);
             }
             LOG_VERBOSE5
-            fprintf(stdlog,"Trying port %d...\n",port);
+            fprintf(stdlog, "Trying port %d...\n",port);
             LOG_END
          }
          if(addresses == 1) {
@@ -915,14 +918,14 @@ int sendtoplus(int                 sockfd,
    sri->sinfo_timetolive = timeToLive;
 
    LOG_VERBOSE4
-   fprintf(stdlog,"sendmsg(%d,%u bytes)...\n",sockfd,(unsigned int)length);
+   fprintf(stdlog, "sendmsg(%d,%u bytes)...\n",sockfd,(unsigned int)length);
    LOG_END
 
    setNonBlocking(sockfd);
-   cc = ext_sendmsg(sockfd,&msg,flags);
+   cc = ext_sendmsg(sockfd, &msg, flags);
    if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
       LOG_VERBOSE4
-      fprintf(stdlog,"sendmsg(%d) would block, waiting with timeout %Ld [µs]...\n",
+      fprintf(stdlog, "sendmsg(%d) would block, waiting with timeout %Ld [µs]...\n",
               sockfd, timeout);
       LOG_END
 
@@ -935,23 +938,23 @@ int sendtoplus(int                 sockfd,
                           &selectTimeout);
       if((result > 0) && FD_ISSET(sockfd, &fdset)) {
          LOG_VERBOSE4
-         fprintf(stdlog,"retrying sendmsg(%d, %u bytes)...\n",
-                 sockfd, (unsigned int)iov.iov_len);
+         fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
+                 sockfd, assocID, (unsigned int)iov.iov_len);
          LOG_END
-         cc = ext_sendmsg(sockfd,&msg,flags);
+         cc = ext_sendmsg(sockfd, &msg, flags);
       }
       else {
          cc    = -1;
          errno = EWOULDBLOCK;
          LOG_VERBOSE5
-         fprintf(stdlog,"sendmsg(%d) timed out\n",sockfd);
+         fprintf(stdlog, "sendmsg(%d/A%u) timed out\n", sockfd, assocID);
          LOG_END
       }
    }
 
    LOG_VERBOSE4
-   fprintf(stdlog,"sendmsg(%d) result=%d; %s\n",
-           sockfd, cc, strerror(errno));
+   fprintf(stdlog, "sendmsg(%d/A%u) result=%d; %s\n",
+           sockfd, assocID, cc, strerror(errno));
    LOG_END
 
    return(cc);
@@ -996,7 +999,7 @@ int recvfromplus(int              sockfd,
    if(assocID  != NULL) *assocID  = 0;
 
    LOG_VERBOSE5
-   fprintf(stdlog,"recvmsg(%d, %u bytes)...\n",
+   fprintf(stdlog, "recvmsg(%d, %u bytes)...\n",
            sockfd, (unsigned int)iov.iov_len);
    LOG_END
 
@@ -1018,14 +1021,14 @@ int recvfromplus(int              sockfd,
                           &selectTimeout);
       if((result > 0) && FD_ISSET(sockfd, &fdset)) {
          LOG_VERBOSE5
-         fprintf(stdlog,"retrying recvmsg(%d, %u bytes)...\n",
+         fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
          LOG_END
          cc = ext_recvmsg(sockfd, &msg, flags);
       }
       else {
          LOG_VERBOSE5
-         fprintf(stdlog,"recvmsg(%d) timed out\n", sockfd);
+         fprintf(stdlog, "recvmsg(%d) timed out\n", sockfd);
          LOG_END
          cc    = -1;
          errno = EWOULDBLOCK;
@@ -1033,7 +1036,7 @@ int recvfromplus(int              sockfd,
    }
 
    LOG_VERBOSE4
-   fprintf(stdlog,"recvmsg(%d) result=%d data=%u/%u control=%u; %s\n",
+   fprintf(stdlog, "recvmsg(%d) result=%d data=%u/%u control=%u; %s\n",
            sockfd, cc, (unsigned int)iov.iov_len, (unsigned int)length, (unsigned int)msg.msg_controllen, (cc < 0) ? strerror(errno) : "");
    LOG_END
 
@@ -1077,7 +1080,7 @@ bool multicastGroupMgt(int              sockfd,
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
       if(interface != NULL) {
          strcpy(ifr.ifr_name,interface);
-         if(ext_ioctl(sockfd,SIOCGIFADDR,&ifr) != 0) {
+         if(ext_ioctl(sockfd,SIOCGIFADDR, &ifr) != 0) {
             return(false);
          }
          mreq.imr_interface = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
@@ -1122,9 +1125,9 @@ size_t getSocklen(struct sockaddr* address)
        break;
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unsupported address family #%d\n",
+         fprintf(stdlog, "Unsupported address family #%d\n",
                  address->sa_family);
-         LOG_END
+         LOG_END_FATAL
          return(sizeof(struct sockaddr));
        break;
    }

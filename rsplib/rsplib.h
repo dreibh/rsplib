@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: rsplib.h,v 1.3 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -47,6 +47,8 @@
 #include "tdtypes.h"
 #include "tagitem.h"
 #include "rsplib-tags.h"
+#include "poolpolicysettings.h"
+#include "rserpoolerror.h"
 
 
 #ifdef __cplusplus
@@ -110,6 +112,14 @@ unsigned int rspGetLastError();
   */
 const char* rspGetLastErrorDescription();
 
+
+// ?????????????????
+inline const char* rspGetErrorDescription(const unsigned int errorCode)
+{
+   return(rserpoolErrorGetDescription(errorCode));
+}
+
+
 /**
   * Register pool element. In case of success, the pool element's identifier
   * is returned. Otherwise, 0 is returned and the exact error can be obtained
@@ -119,7 +129,7 @@ const char* rspGetLastErrorDescription();
   * @param poolHandleSize Size of pool handle.
   * @param endpointAddressInfo Pool element's address information.
   * @param tags Additional parameters.
-  * @return Pool element identifier or 0 in case of error.
+  * @return Pool element identifier or 0 in case of error.  ??????????
   *
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
@@ -138,7 +148,7 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
   * @param poolHandleSize Size of pool handle.
   * @param identifier Pool element identifier.
   * @param tags Additional parameters.
-  * @return Success.
+  * @return Success.  ??????????
   */
 unsigned int rspDeregister(const unsigned char* poolHandle,
                            const size_t         poolHandleSize,
@@ -158,16 +168,16 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
   * @param poolHandleSize Size of pool handle.
   * @param endpointAddressInfo Pool element's address information.
   * @param tags Additional parameters.
-  * @return Pool element identifier or 0 in case of error.
+  * @return Pool element identifier or 0 in case of error.  ??????????
   *
   * @rspFreeEndpointAddressArray
   * @see rspGetLastError
   * @see rspGetLastErrorDescription
   */
-int rspNameResolution(const unsigned char*         poolHandle,
-                      const size_t                 poolHandleSize,
-                      struct EndpointAddressInfo** endpointAddressInfo,
-                      struct TagItem*              tags CPP_DEFAULT(NULL));
+unsigned int rspNameResolution(const unsigned char*         poolHandle,
+                               const size_t                 poolHandleSize,
+                               struct EndpointAddressInfo** endpointAddressInfo,
+                               struct TagItem*              tags CPP_DEFAULT(NULL));
 
 /**
   * Free endpoint address structure created by rspNameResolution().
@@ -185,7 +195,7 @@ void rspFreeEndpointAddressArray(struct EndpointAddressInfo* endpointAddressInfo
   * @param poolHandleSize Size of pool handle.
   * @param identifier Pool element identifier.
   * @param tags Additional parameters.
-  * @return Success.
+  * @return Success.  ??????????
   */
 unsigned int rspReportFailure(const unsigned char* poolHandle,
                               const size_t         poolHandleSize,

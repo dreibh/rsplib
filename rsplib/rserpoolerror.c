@@ -40,6 +40,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_UNRECOGNIZED_MESSAGE,          "unrecognized message" },
    { RSPERR_AUTHORIZATION_FAILURE,         "authorization failure" },
    { RSPERR_INVALID_VALUES,                "invalid values" },
+   { RSPERR_NO_USABLE_ADDRESSES,           "no usable address(es)" },
 
    /* Implementation-specific error causes */
    { RSPERR_NOT_INITIALIZED,               "not initialized" },
@@ -85,5 +86,5 @@ const char* rserpoolErrorGetDescription(const unsigned int error)
 void rserpoolErrorPrint(const unsigned int error,
                         FILE*              fd)
 {
-   fprintf(fd, "$%04x: %s", error, rserpoolErrorGetDescription(error));
+   fputs(rserpoolErrorGetDescription(error), fd);
 }

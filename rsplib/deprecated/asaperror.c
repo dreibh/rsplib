@@ -1,5 +1,5 @@
 /*
- *  $Id: asaperror.c,v 1.1 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: asaperror.c,v 1.2 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *

@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: rsplib-tags.h,v 1.3 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,12 +59,6 @@
 #define TAG_RspLib_NameServerResponseTimeout             (TAG_USER + 7007)
 
 #define TAG_PoolPolicy_Type                          (TAG_USER + 1000)
-#define TAGDATA_PoolPolicy_Type_RoundRobin           0x01
-#define TAGDATA_PoolPolicy_Type_LeastUsed            0x02
-#define TAGDATA_PoolPolicy_Type_LeastUsedDegradation 0x03
-#define TAGDATA_PoolPolicy_Type_WeightedRoundRobin   0x04
-#define TAGDATA_PoolPolicy_Type_Random               0xfe
-#define TAGDATA_PoolPolicy_Type_WeightedRandom       0xff
 
 #define TAG_PoolPolicy_Parameter_Weight              (TAG_USER + 1001)
 #define TAG_PoolPolicy_Parameter_Load                (TAG_USER + 1002)

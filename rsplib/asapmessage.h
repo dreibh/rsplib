@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.h,v 1.4 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: asapmessage.h,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -167,6 +167,22 @@ struct asap_policy_leastused_degradation
 {
    uint8_t  pp_lud_policy:8;
    uint32_t pp_lud_load:24;
+   uint8_t  pp_lud_pad:8;
+   uint32_t pp_lud_loaddeg:24;
+};
+
+struct asap_policy_priority_leastused
+{
+   uint8_t  pp_plu_policy:8;
+   uint32_t pp_plu_load:24;
+};
+
+struct asap_policy_priority_leastused_degradation
+{
+   uint8_t  pp_plud_policy:8;
+   uint32_t pp_plud_load:24;
+   uint8_t  pp_plud_pad:8;
+   uint32_t pp_plud_loaddeg:24;
 };
 
 struct asap_policy_random
@@ -181,27 +197,33 @@ struct asap_policy_weighted_random
    uint32_t pp_wrd_weight:24;
 };
 
+struct asap_policy_randomized_leastused
+{
+   uint8_t  pp_rlu_policy:8;
+   uint32_t pp_rlu_load:24;
+};
 
+struct asap_policy_randomized_leastused_degradation
+{
+   uint8_t  pp_rlud_policy:8;
+   uint32_t pp_rlud_load:24;
+   uint8_t  pp_rlud_pad:8;
+   uint32_t pp_rlud_loaddeg:24;
+};
 
-/* ASAP-specific error causes */
-#define AEC_OKAY                         0x00
-#define AEC_UNRECOGNIZED_PARAMETER       0x01
-#define AEC_UNRECOGNIZED_MESSAGE         0x02
-#define AEC_AUTHORIZATION_FAILURE        0x03
-#define AEC_INVALID_VALUES               0x04
-#define AEC_NONUNIQUE_PE_ID              0x05
-#define AEC_POLICY_INCONSISTENT          0x06
+struct asap_policy_randomized_priority_leastused
+{
+   uint8_t  pp_rplu_policy:8;
+   uint32_t pp_rplu_load:24;
+};
 
-/* Implementation-specific error causes */
-#define AEC_BUFFERSIZE_EXCEEDED          0x1000
-#define AEC_OUT_OF_MEMORY                0x1001
-#define AEC_READ_ERROR                   0x1010
-#define AEC_WRITE_ERROR                  0x1011
-#define AEC_CONNECTION_FAILURE_UNUSABLE  0x1012
-#define AEC_CONNECTION_FAILURE_SOCKET    0x1013
-#define AEC_CONNECTION_FAILURE_CONNECT   0x1014
-#define AEC_NOT_FOUND                    0x1020
-#define AEC_NO_NAME_SERVER_FOUND         0x1021
+struct asap_policy_randomized_priority_leastused_degradation
+{
+   uint8_t  pp_rplud_policy:8;
+   uint32_t pp_rplud_load:24;
+   uint8_t  pp_rplud_pad:8;
+   uint32_t pp_rplud_loaddeg:24;
+};
 
 
 struct asap_errorcause
@@ -210,7 +232,6 @@ struct asap_errorcause
    uint16_t aec_length;
    char     aec_data[0];
 };
-
 
 
 struct ASAPMessage
@@ -249,8 +270,9 @@ struct ASAPMessage
    struct TransportAddressBlock*       TransportAddressBlockListPtr;
    bool                                TransportAddressBlockListPtrAutoDelete;
 
-   GList*                              PoolElementListPtr;
-   bool                                PoolElementListPtrAutoDelete;
+   struct ST_CLASS(PoolElementNode)*   PoolElementPtrArray[MAX_MAX_NAME_RESOLUTION_ITEMS];
+   size_t                              PoolElementPtrArraySize;
+   bool                                PoolElementPtrArrayAutoDelete;
 
    sctp_assoc_t                        AssocID;
    unsigned short                      StreamID;
@@ -299,6 +321,7 @@ void asapMessageClearBuffer(struct ASAPMessage* message);
   * @return true in case of success; false otherwise.
   */
 bool asapMessageSend(int                 fd,
+                     sctp_assoc_t        assocID,
                      const card64        timeout,
                      struct ASAPMessage* message);
 

@@ -38,7 +38,9 @@ extern "C" {
 #endif
 
 
-#define MAX_PE_TRANSPORTADDRESSES 128
+#define MAX_PE_TRANSPORTADDRESSES      32
+#define MAX_MAX_NAME_RESOLUTION_ITEMS 128
+
 
 typedef uint32_t ENRPIdentifierType;
 typedef uint32_t PoolElementIdentifierType;

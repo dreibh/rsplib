@@ -1,4 +1,7 @@
 #!/bin/sh
+
+/etc/init.d/iptables stop
+
 ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 up
 route add default gw 10.0.0.2
 

@@ -62,6 +62,7 @@ extern "C" {
 #define RSPERR_INVALID_POOL_POLICY           0xf009
 #define RSPERR_INVALID_POOL_HANDLE           0xf00a
 #define RSPERR_INVALID_ADDRESSES             0xf00b
+#define RSPERR_NO_USABLE_ADDRESSES           0xf00c
 
 
 const char* rserpoolErrorGetDescription(const unsigned int error);

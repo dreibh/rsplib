@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -240,6 +240,7 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance* asapInstance,
    }
 
    result = asapMessageSend(asapInstance->NameServerSocket,
+                            0,
                             asapInstance->NameServerRequestTimeout,
                             request);
    if(result) {
@@ -335,7 +336,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 {
    struct ASAPMessage*               message;
    struct ST_CLASS(PoolElementNode)* newPoolElement;
-   unsigned int                    ioResult;
+   unsigned int                      ioResult;
    uint16_t                          nameServerResult;
    unsigned int                      namespaceMgtResult;
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.4 2004/07/19 16:24:05 dreibh Exp $
+ *  $Id: servertable.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -265,10 +265,9 @@ static void tryNextBlock(struct ServerTable*             serverTable,
                          int*                            sd,
                          card64*                         timeout)
 {
-   struct ServerAnnounce*   serverAnnounce;
    struct TransportAddressBlock* transportAddressBlock;
-   int                      status;
-   unsigned int             i;
+   int                           status;
+   unsigned int                  i;
 
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       if(sd[i] < 0) {
@@ -287,7 +286,7 @@ static void tryNextBlock(struct ServerTable*             serverTable,
             LOG_END
 
             if(transportAddressBlock != NULL) {
-               sd[i] = ext_socket(transportAddressBlock->AddressArray[0].sa.sa_family,
+               sd[i] = ext_socket(checkIPv6() ? AF_INET6 : AF_INET,
                                   SOCK_STREAM,
                                   transportAddressBlock->Protocol);
                if(sd[i] >= 0) {

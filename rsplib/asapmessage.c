@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.c,v 1.4 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: asapmessage.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -94,13 +94,12 @@ void asapMessageDelete(struct ASAPMessage* message)
 /* ###### Clear ASAPMessage ############################################## */
 void asapMessageClearAll(struct ASAPMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct TransportAddressBlock*     transportAddressBlock;
-   struct TransportAddressBlock*     nextTransportAddressBlock;
-   GList*                            list;
-   char*                             buffer;
-   size_t                            originalBufferSize;
-   bool                              bufferAutoDelete;
+   struct TransportAddressBlock* transportAddressBlock;
+   struct TransportAddressBlock* nextTransportAddressBlock;
+   char*                         buffer;
+   size_t                        originalBufferSize;
+   bool                          bufferAutoDelete;
+   size_t                        i;
 
    if(message != NULL) {
       if((message->PoolElementPtr) && (message->PoolElementPtrAutoDelete)) {
@@ -120,15 +119,14 @@ void asapMessageClearAll(struct ASAPMessage* message)
          }
       }
       message->TransportAddressBlockListPtr = NULL;
-      if((message->PoolElementListPtr) && (message->PoolElementListPtrAutoDelete)) {
-         list = g_list_first(message->PoolElementListPtr);
-         while(list != NULL) {
-            poolElementNode = (struct ST_CLASS(PoolElementNode)*)list->data;
-            message->PoolElementListPtr = g_list_remove(message->PoolElementListPtr,
-                                                        poolElementNode);
-            ST_CLASS(poolElementNodeDelete)(poolElementNode);
-            free(poolElementNode);
-            list = g_list_first(message->PoolElementListPtr);
+      if(message->PoolElementPtrArrayAutoDelete) {
+         CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
+         for(i = 0;i < message->PoolElementPtrArraySize;i++) {
+            if(message->PoolElementPtrArray[i]) {
+               ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);
+               free(message->PoolElementPtrArray[i]);
+               message->PoolElementPtrArray[i] = NULL;
+            }
          }
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
@@ -186,6 +184,7 @@ static size_t asapMessagePeekSize(int fd, const card64 timeout)
 
 /* ###### Send ASAPMessage ############################################### */
 bool asapMessageSend(int                 fd,
+                     sctp_assoc_t        assocID,
                      const card64        timeout,
                      struct ASAPMessage* message)
 {
@@ -196,15 +195,16 @@ bool asapMessageSend(int                 fd,
    if(messageLength > 0) {
       sent = sendtoplus(fd,
                         message->Buffer, messageLength, 0, NULL, 0,
-                        (message->PPID == 0) ? PPID_ASAP : message->PPID,
-                        0, 0, 0, timeout);
+                        message->PPID,
+                        assocID,
+                        0, 0, timeout);
       if(sent == (ssize_t)messageLength) {
          LOG_ACTION
-         fprintf(stdlog,"Successfully sent ASAP message\n"
-                 "PPID=$%08x, ASAP Type = $%02x, AssocID=%u\n",
-                 (message->PPID == 0) ? PPID_ASAP : message->PPID,
-                 message->Type,
-                 (unsigned int)message->AssocID);
+         fprintf(stdlog, "Successfully sent ASAP message: "
+                 "AssocID=%u PPID=$%08x, Type=$%02x\n",
+                 (unsigned int)assocID,
+                 message->PPID,
+                 message->Type);
          LOG_END
          return(true);
       }

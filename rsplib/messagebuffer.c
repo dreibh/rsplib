@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.2 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -88,8 +88,15 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
       LOG_END
       mb->StartTimeStamp = getMicroTime();
       received = recvfromplus(sd, (char*)&header, sizeof(header), MSG_PEEK,
-                                      NULL, 0, &ppid, &assocID, &streamID, peekTimeout);
+                              NULL, 0, &ppid, &assocID, &streamID, peekTimeout);
       if(received > 0) {
+
+
+puts("HACK! PPID=ASAP!");
+ppid=requiredPPID;
+// ???????????????????
+
+
          if(ppid == requiredPPID) {
             if(received == sizeof(header)) {
                tlvLength = (size_t)ntohs(header.Length);

@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.4 2004/07/19 16:24:05 dreibh Exp $
+ *  $Id: nameserver.c,v 1.5 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -140,7 +140,6 @@ struct NameServer* nameServerNew(int                           nameServerSocket,
       memcpy(&nameServer->AnnounceAddress, announceAddress, sizeof(union sockaddr_union));
       if(nameServer->AnnounceAddress.in6.sin6_family == AF_INET6) {
          nameServer->AnnounceSocket = ext_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-puts("v6-ann.");
       }
       else if(nameServer->AnnounceAddress.in.sin_family == AF_INET) {
          nameServer->AnnounceSocket = ext_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -164,7 +163,6 @@ puts("v6-ann.");
          return(NULL);
       }
       if(nameServer->SendAnnounces) {
-puts("ANNOUNCE TIMER...");
          timerStart(nameServer->AnnounceTimer, 0);
       }
 
@@ -209,11 +207,12 @@ void nameServerDelete(struct NameServer* nameServer)
 /* ###### Dump namespace ################################################# */
 void nameServerDump(struct NameServer* nameServer)
 {
-   fputs("*************** Namespace Dump ***************\n",stdlog);
+   fputs("*************** Namespace Dump ***************\n", stdlog);
    printTimeStamp(stdlog);
-   fputs("\n",stdlog);
-   ST_CLASS(poolNamespaceManagementPrint)(&nameServer->Namespace, stdlog, PENPO_FULL);
-   fputs("**********************************************\n",stdlog);
+   fputs("\n", stdlog);
+   ST_CLASS(poolNamespaceManagementPrint)(&nameServer->Namespace, stdlog,
+            PNNPO_POOLS_INDEX|PNNPO_POOLS_SELECTION|PNNPO_POOLS_TIMER|PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
+   fputs("**********************************************\n", stdlog);
 }
 
 
@@ -238,9 +237,9 @@ static void announceTimerCallback(struct Dispatcher* dispatcher,
       if(messageLength > 0) {
          if(nameServer->AnnounceSocket) {
             LOG_VERBOSE2
-            fputs("Sending announce to address ",stdlog);
+            fputs("Sending announce to address ", stdlog);
             fputaddress((struct sockaddr*)&nameServer->AnnounceAddress, true, stdlog);
-            fputs("\n",stdlog);
+            fputs("\n", stdlog);
             LOG_END
             if(ext_sendto(nameServer->AnnounceSocket,
                           message->Buffer,
@@ -271,342 +270,273 @@ puts("action CB...");
 
 
 
-#if 0
 /* ###### Filter address array ########################################### */
-static bool filterAddresses(struct PoolElement*            poolElement,
-                            const struct sockaddr_storage* addressArray,
-                            const size_t                   addresses)
+static size_t filterValidAddresses(
+                 const struct TransportAddressBlock* sourceAddressBlock,
+                 const struct sockaddr_storage*      assocAddressArray,
+                 const size_t                        assocAddresses,
+                 struct TransportAddressBlock*       validAddressBlock)
 {
-   struct TransportAddress* transportAddress;
-   GList*                   list;
-   bool                     found;
-   size_t                   i, j;
-   bool                     valid;
+   bool   selectionArray[MAX_PE_TRANSPORTADDRESSES];
+   size_t selected = 0;
+   size_t i, j;
 
-   valid = false;
-   list = poolElement->TransportAddressList;
-   while(list != NULL) {
-      transportAddress = (struct TransportAddress*)list->data;
-      for(i = 0;i < transportAddress->Addresses;i++) {
-         found = false;
-         for(j = 0;j < addresses;j++) {
-            if(addresscmp((const struct sockaddr*)&transportAddress->AddressArray[i],
-                          (const struct sockaddr*)&addressArray[j],
-                          false) == 0) {
-               found = true;
-               break;
-            }
+   for(i = 0;i < sourceAddressBlock->Addresses;i++) {
+      selectionArray[i] = false;
+      for(j = 0;j < assocAddresses;j++) {
+         if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
+                       (const struct sockaddr*)&assocAddressArray[j],
+                       false) == 0) {
+            selectionArray[i] = true;
+            selected++;
+            break;
          }
-
-         if(!found) {
-            LOG_VERBOSE3
-            fputs("Rejected address ",stdlog);
-            fputaddress((struct sockaddr*)&transportAddress->AddressArray[i],
-                        false, stdlog);
-            fputs("\n",stdlog);
-            LOG_END
-
-            if(i + 1 < transportAddress->Addresses) {
-               for(j = i;j < transportAddress->Addresses - 1;j++) {
-                  transportAddress->AddressArray[j] = transportAddress->AddressArray[j + 1];
-               }
-               i--;
-            }
-            transportAddress->Addresses--;
-         }
-         else {
-            LOG_VERBOSE2
-            fputs("Accepted address ",stdlog);
-            fputaddress((struct sockaddr*)&transportAddress->AddressArray[i],
-                        false, stdlog);
-            fputs("\n",stdlog);
-            LOG_END
-         }
-      }
-
-      list = g_list_next(list);
-      if(transportAddress->Addresses < 1) {
-         LOG_VERBOSE3
-         fputs("Removed empty TransportAddress structure\n",stdlog);
-         LOG_END
-         poolElementRemoveTransportAddress(poolElement,transportAddress);
-         transportAddressDelete(transportAddress);
-      }
-      else {
-         valid = true;
       }
    }
 
-   return(valid);
+   if(selected > 0) {
+      validAddressBlock->Next      = NULL;
+      validAddressBlock->Protocol  = sourceAddressBlock->Protocol;
+      validAddressBlock->Flags     = 0;
+      validAddressBlock->Addresses = selected;
+      j = 0;
+      for(i = 0;i < sourceAddressBlock->Addresses;i++) {
+         if(selectionArray[i]) {
+            memcpy(&validAddressBlock->AddressArray[j],
+                   (const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
+                   sizeof(validAddressBlock->AddressArray[j]));
+            j++;
+         }
+      }
+   }
+
+   return(selected);
 }
 
 
 /* ###### Handle registration request #################################### */
-static bool registrationRequest(struct NameServer*     nameServer,
-                                struct NameServerUser* user,
-                                int                    fd,
-                                struct ASAPMessage*    message)
+static void handleRegistrationRequest(struct NameServer*  nameServer,
+                                      int                 fd,
+                                      sctp_assoc_t        assocID,
+                                      struct ASAPMessage* message)
 {
-   struct PoolElement*      existing;
-   struct Pool*             pool;
-   bool                     poolAdded;
-   struct sockaddr_storage* addressArray;
-   int                      addresses;
-   int                      i;
-   bool                     addressesValid;
+   char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct sockaddr_storage*          addressArray;
+   int                               addresses;
+   int                               i;
 
    LOG_ACTION
-   fprintf(stdlog,"Registration Request: ");
-   poolElementPrint(message->PoolElementPtr,stdlog);
+   fprintf(stdlog, "Registration request to pool ");
+   poolHandlePrint(&message->Handle, stdlog);
+   fputs(" of pool element ", stdlog);
+   ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+   fputs("\n", stdlog);
    LOG_END
 
 
    message->Type       = AHT_REGISTRATION_RESPONSE;
-   message->Error      = AEC_OKAY;
+   message->Error      = RSPERR_OKAY;
    message->Identifier = message->PoolElementPtr->Identifier;
 
 
    /* ====== Filter addresses ========================================= */
-   addresses = getpaddrsplus(fd, 0, &addressArray);
+   addresses = getpaddrsplus(fd, assocID, &addressArray);
    if(addresses > 0) {
-      LOG_VERBOSE
-      fputs("SCTP association local addresses:\n",stdlog);
+      LOG_VERBOSE1
+      fputs("SCTP association's peer addresses:\n", stdlog);
       for(i = 0;i < addresses;i++) {
-         fprintf(stdlog,"%d/%d: ",i + 1,addresses);
-         fputaddress((struct sockaddr*)&addressArray[i],false,stdlog);
-         fputs("\n",stdlog);
+         fprintf(stdlog, "%d/%d: ",i + 1,addresses);
+         fputaddress((struct sockaddr*)&addressArray[i],false, stdlog);
+         fputs("\n", stdlog);
       }
       LOG_END
 
-      addressesValid = filterAddresses(message->PoolElementPtr,addressArray,addresses);
-
-      LOG_VERBOSE
-      fputs("Filtered Registration Request: ",stdlog);
-      poolElementPrint(message->PoolElementPtr,stdlog);
-      LOG_END
-
-      free(addressArray);
-   }
-   else {
-      LOG_WARNING
-      fputs("Cannot obtain peer addresses. Assuming addresses to be okay\n", stdlog);
-      LOG_END
-      addressesValid = true;
-   }
-
-   if(addressesValid == false) {
-      LOG_ERROR
-      fputs("No valid addresses for registration\n",stdlog);
-      LOG_END
-      message->Error = AEC_AUTHORIZATION_FAILURE;
-      return(true);
-   }
-
-
-   /* ====== Check, if pool element already exists ======================= */
-   existing = poolNamespaceFindPoolElement(
-                  nameServer->Namespace,
-                  message->PoolHandlePtr,
-                  message->PoolElementPtr->Identifier);
-   if(existing == NULL) {
-      /* ====== Check, if pool already exists ============================ */
-      pool = poolNamespaceFindPool(nameServer->Namespace,message->PoolHandlePtr);
-      if(pool != NULL) {
-         poolAdded = false;
-
-         /* Try to adapt requested policy to pool's policy. */
-         if(poolPolicyAdapt(message->PoolElementPtr->Policy,pool->Policy) == false) {
-            LOG_ACTION
-            fputs("Pool policy inconsistent -> Registration rejected.\n",stdlog);
-            LOG_END
-            message->Error = AEC_POLICY_INCONSISTENT;
-            pool = NULL;
-         }
-      }
-
-      /* ====== Pool does not exist -> add it. =========================== */
-      else {
-         poolAdded = true;
-
-         /* Create pool. */
-         pool = poolNew(message->PoolHandlePtr,message->PoolElementPtr->Policy);
-         if(pool != NULL) {
-            poolNamespaceAddPool(nameServer->Namespace,pool);
-         }
-         else {
-            message->Error = AEC_OUT_OF_MEMORY;
-            pool           = NULL;
-         }
-      }
-
-
-      /* ====== Add pool element to pool ================================= */
-      if(pool != NULL) {
-         /* Take pool element from ASAPMessage structure. */
-         message->PoolElementPtrAutoDelete = false;
-
-         message->PoolElementPtr->HomeENRPServerID = nameServer->ServerID;
-         message->PoolElementPtr->UserData         = (void*)user;
-         poolAddPoolElement(pool,message->PoolElementPtr);
-         user->PoolElementList = g_list_append(user->PoolElementList,message->PoolElementPtr);
-
-         user->Registrations++;
-         if(user->Registrations == 1) {
-            LOG_ACTION
-            fputs("Starting KeepAlive timers\n",stdlog);
-            LOG_END
-            timerStart(user->KeepAliveTimer,nameServer->KeepAliveInterval);
-            timerStart(user->UserTimeoutTimer,nameServer->KeepAliveTimeout);
-         }
-
-
-         LOG_ACTION
-         fputs("Registration successful!\n",stdlog);
+      if(filterValidAddresses(message->PoolElementPtr->AddressBlock,
+                              addressArray, addresses,
+                              validAddressBlock) > 0) {
+         LOG_VERBOSE1
+         fputs("Valid addresses: ", stdlog);
+         transportAddressBlockPrint(validAddressBlock, stdlog);
+         fputs("\n", stdlog);
          LOG_END
-      }
-   }
 
-
-   /* ====== Pool element already exists -> try re-registration ========== */
-   else {
-      pool = existing->OwnerPool;
-
-      /* Existing pool element has been created by another user.
-         Probably non-unique PE-ID. */
-      if(existing->UserData != user) {
-         message->Error = AEC_NONUNIQUE_PE_ID;
-
-         LOG_ACTION
-         fputs("Non-unique pool element identifier -> Registration rejected.\n",stdlog);
-         LOG_END
-      }
-
-      /* Re-registration */
-      else {
-         /* Try to adapt requested policy to pool's policy. */
-         if(poolPolicyAdapt(message->PoolElementPtr->Policy,pool->Policy) == false) {
-            message->Error = AEC_POLICY_INCONSISTENT;
+         message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                           &nameServer->Namespace,
+                           &message->Handle,
+                           nameServer->ServerID,
+                           message->PoolElementPtr->Identifier,
+                           message->PoolElementPtr->RegistrationLife,
+                           &message->PoolElementPtr->PolicySettings,
+                           validAddressBlock,
+                           getMicroTime(),
+                           &poolElementNode);
+         if(message->Error == RSPERR_OKAY) {
             LOG_ACTION
-            fputs("Pool policy for re-registration inconsistent -> Registration rejected.\n",stdlog);
+            fputs("Successfully registered to pool ", stdlog);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(" pool element ", stdlog);
+            ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+            fputs("\n", stdlog);
             LOG_END
-         }
-
-         /* Update pool element's settings. */
-         else {
-            message->Error = poolElementAdapt(existing,message->PoolElementPtr);
-            LOG_ACTION
-            fputs("Re-registration successful!\n",stdlog);
+            LOG_VERBOSE3
+            fputs("Namespace content:\n", stdlog);
             nameServerDump(nameServer);
             LOG_END
          }
+         else {
+            LOG_WARNING
+            fputs("Failed to register to pool ", stdlog);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(" pool element ", stdlog);
+            ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(message->Error, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
+      }
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "Registration request to pool ");
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs(" of pool element ", stdlog);
+         ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+         fputs(" was not possible, since no valid addresses are available\n", stdlog);
+         LOG_END
+         message->Error = RSPERR_NO_USABLE_ADDRESSES;
+      }
+      free(addressArray);
+      addressArray = NULL;
+
+      if(asapMessageSend(fd, assocID, 0, message) == false) {
+         LOG_WARNING
+         logerror("Sending registration response failed");
+         LOG_END
       }
    }
-
-   return(true);
+   else {
+      LOG_ERROR
+      fprintf(stdlog, "Unable to obtain peer addresses of FD %d, AssocID %u\n",
+              fd, assocID);
+      LOG_END
+   }
 }
 
 
 /* ###### Handle deregistration request ################################## */
-static bool deregistrationRequest(struct NameServer*      nameServer,
-                                  struct NameServerUser*  user,
-                                  int                     fd,
-                                  struct ASAPMessage*     message)
+static void handleDeregistrationRequest(struct NameServer*  nameServer,
+                                        int                 fd,
+                                        sctp_assoc_t        assocID,
+                                        struct ASAPMessage* message)
 {
-   struct PoolElement* poolElement;
-
    LOG_ACTION
-   fprintf(stdlog,"Deregistration Request for pool element $%08x of pool ",message->Identifier);
-   poolHandlePrint(message->PoolHandlePtr, stdlog);
-   fputs("\n",stdlog);
+   fprintf(stdlog, "Deregistration request for pool element $%08x of pool ",
+           message->Identifier);
+   poolHandlePrint(&message->Handle, stdlog);
+   fputs("\n", stdlog);
    LOG_END
 
    message->Type  = AHT_DEREGISTRATION_RESPONSE;
-   message->Error = AEC_OKAY;
-
-
-   /* ====== Check, if pool element still exists ========================= */
-   poolElement = poolNamespaceFindPoolElement(
-                    nameServer->Namespace, message->PoolHandlePtr, message->Identifier);
-   if(poolElement != NULL) {
-
-      /* ====== Pool element may only be removed by its creator ========== */
-      if(poolElement->UserData == user) {
-         message->PoolElementPtr = poolElementDuplicate(poolElement);
-         removePoolElement(nameServer,user,poolElement);
-
-         user->Registrations--;
-         if(user->Registrations == 0) {
-            LOG_ACTION
-            fputs("Stopping KeepAlive timers\n",stdlog);
-            LOG_END
-            timerStop(user->KeepAliveTimer);
-            timerStop(user->UserTimeoutTimer);
-         }
-
-         LOG_ACTION
-         fputs("Deregistration successful!\n",stdlog);
-         nameServerDump(nameServer);
-         LOG_END
-      }
-
-      else {
-         message->Error = AEC_AUTHORIZATION_FAILURE;
-         LOG_ACTION
-         fputs("Deregistration not by creator -> Deregistration rejected!\n",stdlog);
-         nameServerDump(nameServer);
-         LOG_END
-      }
-   }
-
-   /* ====== Pool element does not exist -> okay. ======================== */
-   else {
+   message->Error = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
+                       &nameServer->Namespace,
+                       &message->Handle,
+                       message->Identifier);
+   if(message->Error == RSPERR_OKAY) {
       LOG_ACTION
-      fputs("Pool element to deregister is not in the namespace!\n",stdlog);
+      fprintf(stdlog, "Successfully deregistered pool element $%08x of pool ",
+              message->Identifier);
+      poolHandlePrint(&message->Handle, stdlog);
+      fputs("\n", stdlog);
+      LOG_END
+      LOG_VERBOSE3
+      fputs("Namespace content:\n", stdlog);
+      nameServerDump(nameServer);
+      LOG_END
+   }
+   else {
+      LOG_WARNING
+      fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
+            message->Identifier);
+      poolHandlePrint(&message->Handle, stdlog);
+      fputs(": ", stdlog);
+      rserpoolErrorPrint(message->Error, stdlog);
+      fputs("\n", stdlog);
       LOG_END
    }
 
-   return(true);
+   if(asapMessageSend(fd, assocID, 0, message) == false) {
+      LOG_WARNING
+      logerror("Sending deregistration response failed");
+      LOG_END
+   }
 }
 
 
 /* ###### Handle name resolution request ################################# */
-static bool nameResolutionRequest(struct NameServer*  nameServer,
-                                  struct NameServerUser*  user,
-                                  int                 fd,
-                                  struct ASAPMessage* message)
+#define NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS 16
+#define NAMERESOLUTION_MAX_INCREMENT              1
+static void handleNameResolutionRequest(struct NameServer*  nameServer,
+                                        int                 fd,
+                                        sctp_assoc_t        assocID,
+                                        struct ASAPMessage* message)
 {
-   struct Pool* pool;
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS],
+   size_t                            poolElementNodes = NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS;
+   GList*                            poolElementList  = NULL;
 
    LOG_ACTION
-   fprintf(stdlog,"Name Resolution Request: ");
-   poolHandlePrint(message->PoolHandlePtr,stdlog);
-   fputs("\n",stdlog);
+   fprintf(stdlog, "Name Resolution request for pool ");
+   poolHandlePrint(message->PoolHandlePtr, stdlog);
+   fputs("\n", stdlog);
    LOG_END
 
-   pool = poolNamespaceFindPool(nameServer->Namespace,message->PoolHandlePtr);
-   if(pool != NULL) {
-      message->Type              = AHT_NAME_RESOLUTION_RESPONSE;
-      message->Error             = 0;
-      message->PoolPtrAutoDelete = false;
-      message->PoolPtr           = pool;
-
-      LOG_ACTION
-      fprintf(stdlog,"Result: ");
-      poolPrint(message->PoolPtr,stdlog);
+   message->Type  = AHT_NAME_RESOLUTION_RESPONSE;
+   message->Error = ST_CLASS(poolNamespaceManagementNameResolution)(
+                       &nameServer->Namespace,
+                       &message->Handle,
+                       (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+                       &poolElementNodes,
+                       NAMERESOLUTION_MAX_NAME_RESOLUTION_ITEMS,
+                       NAMERESOLUTION_MAX_INCREMENT);
+   if(message->Error == RSPERR_OKAY) {
+      LOG_VERBOSE
+      fprintf(stdlog, "Got %u elements:\n", poolElementNodes);
+      for(i = 0;i < poolElementNodes;i++) {
+         fprintf(stdlog, "#%02u: ", i + 1);
+         ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
+                  stdlog,
+                  PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_NS);
+         fputs("\n", stdlog);
+      }
       LOG_END
+
+      message->PoolElementPtrArrayAutoDelete = false;
+      message->PoolElementPtrArraySize       = poolElementNodes;
+      for(i = 0;i < poolElementNodes;i++) {
+         message->PoolElementPtrArray[i] = poolElementNodeArray[i];
+      }
+
+      if(asapMessageSend(fd, assocID, 0, message) == false) {
+         LOG_WARNING
+         logerror("Sending deregistration response failed");
+         LOG_END
+      }
    }
    else {
-      LOG_ACTION
-      fputs("Pool is not in the namespace!\n",stdlog);
+      LOG_WARNING
+      fprintf(stdlog, "Name Resolution request for pool ");
+      poolHandlePrint(message->PoolHandlePtr, stdlog);
+      fputs(" failed: ", stdlog);
+      rserpoolErrorPrint(message->Error, stdlog);
+      fputs("\n", stdlog);
       LOG_END
-      message->Type  = AHT_NAME_RESOLUTION_RESPONSE;
-      message->Error = AEC_NOT_FOUND;
    }
-
-   return(true);
 }
 
 
+#if 0
 /* ###### Handle endpoint keepalive acknowledgement ###################### */
 static void endpointKeepAliveAck(struct NameServer*     nameServer,
                                  struct NameServerUser* user,
@@ -616,9 +546,9 @@ static void endpointKeepAliveAck(struct NameServer*     nameServer,
    struct PoolElement* poolElement;
 
    LOG_VERBOSE
-   fprintf(stdlog,"Endpoint KeepAliveAck for $%08x in ",message->Identifier);
-   poolHandlePrint(message->PoolHandlePtr,stdlog);
-   fputs("\n",stdlog);
+   fprintf(stdlog, "Endpoint KeepAliveAck for $%08x in ",message->Identifier);
+   poolHandlePrint(message->PoolHandlePtr, stdlog);
+   fputs("\n", stdlog);
    LOG_END
 
    poolElement = poolNamespaceFindPoolElement(nameServer->Namespace,
@@ -632,7 +562,7 @@ static void endpointKeepAliveAck(struct NameServer*     nameServer,
    }
    else {
       LOG_VERBOSE
-      fputs("Pool element not found!\n",stdlog);
+      fputs("Pool element not found!\n", stdlog);
       LOG_END
    }
 }
@@ -650,7 +580,7 @@ static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
    struct ASAPMessage*    message;
 
    LOG_VERBOSE
-   fprintf(stdlog,"KeepAlive-Timer for socket #%d.\n",user->FD);
+   fprintf(stdlog, "KeepAlive-Timer for socket #%d.\n",user->FD);
    LOG_END
 
    message = asapMessageNew(NULL,1024);
@@ -660,9 +590,9 @@ static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
          poolElement = (struct PoolElement*)list->data;
 
          LOG_VERBOSE2
-         fprintf(stdlog,"KeepAlive for pool element $%08x in pool ",poolElement->Identifier);
-         poolHandlePrint(poolElement->OwnerPool->Handle,stdlog);
-         fputs("\n",stdlog);
+         fprintf(stdlog, "KeepAlive for pool element $%08x in pool ",poolElement->Identifier);
+         poolHandlePrint(poolElement->OwnerPool->Handle, stdlog);
+         fputs("\n", stdlog);
          LOG_END
 
          message->PoolElementPtr = poolElement;
@@ -670,7 +600,7 @@ static void keepAliveTimerCallback(struct Dispatcher* dispatcher,
          message->Type           = AHT_ENDPOINT_KEEP_ALIVE;
          if(asapMessageSend(user->FD,0,message) == false) {
             LOG_ERROR
-            fputs("Sending KeepAlive failed!\n",stdlog);
+            fputs("Sending KeepAlive failed!\n", stdlog);
             LOG_END
             return;
          }
@@ -695,7 +625,7 @@ static void userTimeoutTimerCallback(struct Dispatcher* dispatcher,
    struct NameServer*     nameServer = user->Owner;
 
    LOG_ACTION
-   fprintf(stdlog,"Timeout-Timer for socket #%d -> removing user\n",user->FD);
+   fprintf(stdlog, "Timeout-Timer for socket #%d -> removing user\n",user->FD);
    LOG_END
 
    removeUser(nameServer,user);
@@ -706,24 +636,19 @@ static void userTimeoutTimerCallback(struct Dispatcher* dispatcher,
 
 
 /* ###### Handle incoming message ######################################## */
-static void handleMessage(struct NameServer* nameServer,
-                          char*              buffer,
-                          const size_t       receivedSize,
-                          const size_t       bufferSize,
-                          int                sockFD,
-                          const sctp_assoc_t assocID,
-                          const uint32_t     ppid)
+static void handleMessage(struct NameServer*  nameServer,
+                          struct ASAPMessage* message,
+                          int                 sd)
 {
-   struct ASAPMessage* message;
-   bool                reply;  // ????????????????????
-
-   CHECK(receivedSize <= bufferSize);
-   message = asapPacket2Message(buffer, receivedSize, bufferSize);
-   if(message != NULL) {
-      reply = false;
       switch(message->Type) {
          case AHT_ENDPOINT_KEEP_ALIVE:
             puts("KeepAlive request received!");
+          break;
+         case AHT_REGISTRATION:
+            handleRegistrationRequest(nameServer, sd, message->AssocID, message);
+          break;
+         case AHT_DEREGISTRATION:
+            handleDeregistrationRequest(nameServer, sd, message->AssocID, message);
           break;
 /*
          case AHT_ENDPOINT_KEEP_ALIVE_ACK:
@@ -743,7 +668,7 @@ static void handleMessage(struct NameServer* nameServer,
 */
          default:
             LOG_WARNING
-            fprintf(stdlog,"Unsupported message type $%02x!\n",
+            fprintf(stdlog, "Unsupported message type $%02x!\n",
                      message->Type);
             LOG_END
           break;
@@ -758,8 +683,8 @@ static void handleMessage(struct NameServer* nameServer,
          }
       }
 */
-      asapMessageDelete(message);
-   }
+//      asapMessageDelete(message);
+//   }
 }
 
 
@@ -770,18 +695,30 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                                      void*              userData)
 {
    struct NameServer*      nameServer = (struct NameServer*)userData;
+   struct ASAPMessage*     message;
    struct sockaddr_storage remoteAddress;
    socklen_t               remoteAddressLength;
-   sctp_assoc_t            assocID;
-   uint16_t                streamID;
-   uint32_t                ppid;
-   char                    buffer[65536];
-   ssize_t                 received;
 
    if(fd == nameServer->NameServerSocket) {
       LOG_ACTION
       fputs("Event on name server socket...\n", stdlog);
       LOG_END
+
+      message = asapMessageReceive(nameServer->NameServerSocket,
+                                   0, 0,
+                                   65536,
+                                   (struct sockaddr*)&remoteAddress,
+                                   &remoteAddressLength);
+      if(message) {
+/*
+
+
+struct ASAPMessage* asapMessageReceive(int              fd,
+                                       const card64     peekTimeout,
+                                       const card64     totalTimeout,
+                                       const size_t     minBufferSize,
+                                       struct sockaddr* senderAddress,
+                                       socklen_t*       senderAddressLength)
 
       received = recvfromplus(nameServer->NameServerSocket,
                               &buffer,
@@ -794,15 +731,16 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
                               &streamID,
                               0);
       if(received > 0) {
+*/
          LOG_VERBOSE
-         fprintf(stdlog, "Got %u bytes from ", received);
+         fprintf(stdlog, "Got %u bytes message from ", message->BufferSize);
          fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
-         fprintf(stdlog, ", assoc #%u, PPID $%x\n", assocID, ppid);
+         fprintf(stdlog, ", assoc #%u, PPID $%x\n",
+                 message->AssocID, message->PPID);
          LOG_END
 
-         handleMessage(nameServer,
-                       (char*)&buffer, received, sizeof(buffer),
-                       nameServer->NameServerSocket, assocID, ppid);
+         handleMessage(nameServer, message, nameServer->NameServerSocket);
+         asapMessageDelete(message);
       }
       else {
          LOG_WARNING
@@ -859,11 +797,11 @@ int main(int argc, char** argv)
 
 
    for(i = 1;i < argc;i++) {
-      if(!(strncasecmp(argv[i],"-tcp=",5))) {
+      if(!(strncasecmp(argv[i], "-tcp=",5))) {
          fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
          exit(1);
       }
-      else if(!(strncasecmp(argv[i],"-sctp=",6))) {
+      else if(!(strncasecmp(argv[i], "-sctp=",6))) {
          sctpAddresses = 0;
          if(!(strncasecmp((const char*)&argv[i][6], "auto", 4))) {
             sockFD = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
@@ -922,7 +860,7 @@ int main(int argc, char** argv)
             exit(1);
          }
 
-         sctpSocket = ext_socket(AF_INET,SOCK_STREAM,IPPROTO_SCTP);
+         sctpSocket = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
          if(sctpSocket >= 0) {
             if(bindplus(sctpSocket,
                         (struct sockaddr_storage*)&sctpAddressArray,
@@ -939,7 +877,7 @@ int main(int argc, char** argv)
             puts("ERROR: Unable to create SCTP socket!");
          }
       }
-      else if(!(strncasecmp(argv[i],"-announce=", 10))) {
+      else if(!(strncasecmp(argv[i], "-announce=", 10))) {
          address = (char*)&argv[i][10];
          if(!string2address(address, &announceAddress)) {
             printf("ERROR: Bad announce address %s! Use format <address:port>.\n",address);
@@ -947,7 +885,7 @@ int main(int argc, char** argv)
          }
          hasAnnounceAddress = true;
       }
-      else if(!(strncmp(argv[i],"-log",4))) {
+      else if(!(strncmp(argv[i], "-log",4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
          }

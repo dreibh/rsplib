@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.2 2004/07/18 15:30:43 dreibh Exp $
+ *  $Id: rspsession.c,v 1.3 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -395,7 +395,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       ped->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
                                                    (ped->ReregistrationInterval * 3) + 3000);
       ped->PolicyType             = tagListGetData(tags, TAG_PoolPolicy_Type,
-                                                   TAGDATA_PoolPolicy_Type_RoundRobin);
+                                                   PPT_ROUNDROBIN);
       ped->PolicyParameterWeight  = tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight,
                                                    1);
       ped->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
@@ -573,6 +573,7 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       fputs("Sending Cookie\n", stdlog);
       LOG_END
       result = asapMessageSend(session->Socket,
+                               0,
                                (card64)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
                                message);
       threadSafetyUnlock(&session->Mutex);
@@ -599,6 +600,7 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
          fputs("Sending Cookie Echo\n", stdlog);
          LOG_END
          result = asapMessageSend(session->Socket,
+                                  0,
                                   session->CookieEchoTimeout,
                                   message);
          threadSafetyUnlock(&session->Mutex);

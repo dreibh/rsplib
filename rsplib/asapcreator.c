@@ -1,5 +1,5 @@
 /*
- *  $Id: asapcreator.c,v 1.5 2004/07/19 16:24:05 dreibh Exp $
+ *  $Id: asapcreator.c,v 1.6 2004/07/20 08:47:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,12 +48,14 @@
 /* ###### Begin message ################################################## */
 static bool beginMessage(struct ASAPMessage* message,
                          const uint8_t       type,
-                         const uint8_t       flags)
+                         const uint8_t       flags,
+                         const uint32_t      ppid)
 {
    struct asap_header* header = (struct asap_header*)getSpace(message,sizeof(struct asap_header));
    if(header == NULL) {
       return(false);
    }
+   message->PPID = ppid;
 
    header->ah_type   = type;
    header->ah_flags  = flags;
@@ -284,7 +286,6 @@ static bool createTransportParameter(struct ASAPMessage*                 message
       }
    }
 
-
    return(finishTLV(message, tlvPosition));
 }
 
@@ -293,15 +294,21 @@ static bool createTransportParameter(struct ASAPMessage*                 message
 static bool createPolicyParameter(struct ASAPMessage*              message,
                                   const struct PoolPolicySettings* poolPolicySettings)
 {
-   size_t                                    tlvPosition = 0;
-   struct asap_policy_roundrobin*            rr;
-   struct asap_policy_weighted_roundrobin*   wrr;
-   struct asap_policy_leastused*             lu;
-   struct asap_policy_leastused_degradation* lud;
-   struct asap_policy_random*                rd;
-   struct asap_policy_weighted_random*       wrd;
+   size_t                                                        tlvPosition = 0;
+   struct asap_policy_roundrobin*                                rr;
+   struct asap_policy_weighted_roundrobin*                       wrr;
+   struct asap_policy_leastused*                                 lu;
+   struct asap_policy_leastused_degradation*                     lud;
+   struct asap_policy_priority_leastused*                        plu;
+   struct asap_policy_priority_leastused_degradation*            plud;
+   struct asap_policy_random*                                    rd;
+   struct asap_policy_weighted_random*                           wrd;
+   struct asap_policy_randomized_leastused*                      rlu;
+   struct asap_policy_randomized_leastused_degradation*          rlud;
+   struct asap_policy_randomized_priority_leastused*             rplu;
+   struct asap_policy_randomized_priority_leastused_degradation* rplud;
 
-   if(beginTLV(message,&tlvPosition,ATT_POOL_POLICY) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_POOL_POLICY) == false) {
       return(false);
    }
 
@@ -358,8 +365,64 @@ static bool createPolicyParameter(struct ASAPMessage*              message,
           if(lud == NULL) {
              return(false);
           }
-          lud->pp_lud_policy = poolPolicySettings->PolicyType;
-          lud->pp_lud_load   = hton24(poolPolicySettings->Load);
+          lud->pp_lud_policy  = poolPolicySettings->PolicyType;
+          lud->pp_lud_load    = hton24(poolPolicySettings->Load);
+          lud->pp_lud_pad     = 0x00;
+          lud->pp_lud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+       break;
+      case PPT_PRIORITY_LEASTUSED:
+          plu = (struct asap_policy_priority_leastused*)getSpace(message, sizeof(struct asap_policy_priority_leastused));
+          if(plu == NULL) {
+             return(false);
+          }
+          plu->pp_plu_policy = poolPolicySettings->PolicyType;
+          plu->pp_plu_load   = hton24(poolPolicySettings->Load);
+       break;
+      case PPT_PRIORITY_LEASTUSED_DEGRADATION:
+          plud = (struct asap_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_priority_leastused_degradation));
+          if(plud == NULL) {
+             return(false);
+          }
+          plud->pp_plud_policy  = poolPolicySettings->PolicyType;
+          plud->pp_plud_load    = hton24(poolPolicySettings->Load);
+          plud->pp_plud_pad     = 0x00;
+          plud->pp_plud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+       break;
+      case PPT_RANDOMIZED_LEASTUSED:
+          rlu = (struct asap_policy_randomized_leastused*)getSpace(message, sizeof(struct asap_policy_randomized_leastused));
+          if(rlu == NULL) {
+             return(false);
+          }
+          rlu->pp_rlu_policy = poolPolicySettings->PolicyType;
+          rlu->pp_rlu_load   = hton24(poolPolicySettings->Load);
+       break;
+      case PPT_RANDOMIZED_LEASTUSED_DEGRADATION:
+          rlud = (struct asap_policy_randomized_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_randomized_leastused_degradation));
+          if(rlud == NULL) {
+             return(false);
+          }
+          rlud->pp_rlud_policy  = poolPolicySettings->PolicyType;
+          rlud->pp_rlud_load    = hton24(poolPolicySettings->Load);
+          rlud->pp_rlud_pad     = 0x00;
+          rlud->pp_rlud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+       break;
+      case PPT_RANDOMIZED_PRIORITY_LEASTUSED:
+          rplu = (struct asap_policy_randomized_priority_leastused*)getSpace(message, sizeof(struct asap_policy_randomized_priority_leastused));
+          if(rplu == NULL) {
+             return(false);
+          }
+          rplu->pp_rplu_policy = poolPolicySettings->PolicyType;
+          rplu->pp_rplu_load   = hton24(poolPolicySettings->Load);
+       break;
+      case PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION:
+          rplud = (struct asap_policy_randomized_priority_leastused_degradation*)getSpace(message, sizeof(struct asap_policy_randomized_priority_leastused_degradation));
+          if(rplud == NULL) {
+             return(false);
+          }
+          rplud->pp_rplud_policy  = poolPolicySettings->PolicyType;
+          rplud->pp_rplud_load    = hton24(poolPolicySettings->Load);
+          rplud->pp_rplud_pad     = 0x00;
+          rplud->pp_rplud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
        break;
       default:
          LOG_ERROR
@@ -374,8 +437,9 @@ static bool createPolicyParameter(struct ASAPMessage*              message,
 
 
 /* ###### Create pool element parameter ################################## */
-static bool createPoolElementParameter(struct ASAPMessage*                     message,
-                                       const struct ST_CLASS(PoolElementNode)* poolElement)
+static bool createPoolElementParameter(
+               struct ASAPMessage*                     message,
+               const struct ST_CLASS(PoolElementNode)* poolElement)
 {
    size_t                            tlvPosition = 0;
    struct asap_poolelementparameter* pep;
@@ -400,7 +464,8 @@ static bool createPoolElementParameter(struct ASAPMessage*                     m
    pep->pep_homeserverid = htonl(poolElement->HomeNSIdentifier);
    pep->pep_reg_life     = htonl(poolElement->RegistrationLife);
 
-   if(createTransportParameter(message, poolElement->AddressBlock)) {
+
+   if(createTransportParameter(message, poolElement->AddressBlock) == false) {
       return(false);
    }
 
@@ -442,22 +507,22 @@ static bool createErrorParameter(struct ASAPMessage* message)
    char*                   data;
    size_t                  dataLength;
 
-   if(beginTLV(message,&tlvPosition,ATT_OPERATION_ERROR) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_OPERATION_ERROR) == false) {
       return(false);
    }
 
    cause = message->Error;
    switch(cause) {
-      case AEC_UNRECOGNIZED_PARAMETER:
+      case RSPERR_UNRECOGNIZED_PARAMETER:
          data       = message->OffendingParameterTLV;
          dataLength = message->OffendingParameterTLVLength;
        break;
-      case AEC_UNRECOGNIZED_MESSAGE:
-      case AEC_INVALID_VALUES:
+      case RSPERR_UNRECOGNIZED_MESSAGE:
+      case RSPERR_INVALID_VALUES:
          data       = message->OffendingMessageTLV;
          dataLength = message->OffendingMessageTLVLength;
        break;
-      case AEC_POLICY_INCONSISTENT:
+      case RSPERR_INCOMPATIBLE_POOL_POLICY:
          data       = NULL;
          dataLength = 0;
        break;
@@ -490,7 +555,7 @@ static bool createCookieParameter(struct ASAPMessage* message,
 {
    void*  buffer;
    size_t tlvPosition = 0;
-   if(beginTLV(message,&tlvPosition,ATT_COOKIE) == false) {
+   if(beginTLV(message, &tlvPosition, ATT_COOKIE) == false) {
       return(false);
    }
 
@@ -508,7 +573,7 @@ static bool createCookieParameter(struct ASAPMessage* message,
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_ENDPOINT_KEEP_ALIVE,0x00) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -523,7 +588,7 @@ static bool createEndpointKeepAliveMessage(struct ASAPMessage* message)
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointUnreachableMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_ENDPOINT_UNREACHABLE,0x00) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_UNREACHABLE, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -542,7 +607,7 @@ static bool createEndpointUnreachableMessage(struct ASAPMessage* message)
 /* ###### Create endpoint keepalive acknowledgement message ############## */
 static bool createEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_ENDPOINT_KEEP_ALIVE_ACK,0x00) == false) {
+   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE_ACK, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -561,7 +626,7 @@ static bool createEndpointKeepAliveAckMessage(struct ASAPMessage* message)
 /* ###### Create registration message #################################### */
 static bool createRegistrationMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message,AHT_REGISTRATION,0x00) == false) {
+   if(beginMessage(message, AHT_REGISTRATION, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -587,8 +652,8 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(beginMessage(message,AHT_REGISTRATION_RESPONSE,
-                   (message->Error != 0) ? AHF_REGISTRATION_REJECT : 0) == false) {
+   if(beginMessage(message, AHT_REGISTRATION_RESPONSE,
+                   (message->Error != 0) ? AHF_REGISTRATION_REJECT : 0, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -613,7 +678,7 @@ static bool createRegistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Create deregistration message ################################## */
 static bool createDeregistrationMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message, AHT_DEREGISTRATION, 0x00) == false) {
+   if(beginMessage(message, AHT_DEREGISTRATION, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -640,7 +705,7 @@ static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
    }
 
    if(beginMessage(message, AHT_DEREGISTRATION_RESPONSE,
-                   (message->Error != 0) ? AHF_DEREGISTRATION_REJECT : 0) == false) {
+                   (message->Error != 0) ? AHF_DEREGISTRATION_REJECT : 0, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -665,7 +730,7 @@ static bool createDeregistrationResponseMessage(struct ASAPMessage* message)
 /* ###### Create name resolution message ################################# */
 static bool createNameResolutionMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message, AHT_NAME_RESOLUTION, 0x00) == false) {
+   if(beginMessage(message, AHT_NAME_RESOLUTION, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -680,11 +745,10 @@ static bool createNameResolutionMessage(struct ASAPMessage* message)
 /* ###### Create name resolution response message ######################## */
 static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElement;
-   GList*                            list;
+   size_t i;
 
-   CHECK(message->PoolElementListPtr != NULL);
-   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, 0x00) == false) {
+   CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
+   if(beginMessage(message, AHT_NAME_RESOLUTION_RESPONSE, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -696,13 +760,10 @@ static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   list = g_list_first(message->PoolElementListPtr);
-   while(list != NULL) {
-      poolElement = (struct ST_CLASS(PoolElementNode)*)list->data;
-      if(createPoolElementParameter(message,poolElement) == false) {
+   for(i = 0;i < message->PoolElementPtrArraySize;i++) {
+      if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
          return(false);
       }
-      list = g_list_next(list);
    }
 
    if(message->Error != 0x00) {
@@ -718,14 +779,13 @@ static bool createNameResolutionResponseMessage(struct ASAPMessage* message)
 /* ###### Create business card message #################################### */
 static bool createBusinessCardMessage(struct ASAPMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElement;
-   GList*                            list;
+   size_t i;
 
-   CHECK(message->PoolElementListPtr != NULL);
-   if(beginMessage(message, AHT_BUSINESS_CARD, 0x00) == false) {
+   CHECK(message->PoolElementPtrArraySize > 0);
+   CHECK(message->PoolElementPtrArraySize < MAX_MAX_NAME_RESOLUTION_ITEMS);
+   if(beginMessage(message, AHT_BUSINESS_CARD, 0x00, PPID_ASAP) == false) {
       return(false);
    }
-
 
    if(createPoolHandleParameter(message,  &message->Handle) == false) {
       return(false);
@@ -735,13 +795,10 @@ static bool createBusinessCardMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   list = g_list_first(message->PoolElementListPtr);
-   while(list != NULL) {
-      poolElement = (struct ST_CLASS(PoolElementNode)*)list->data;
-      if(createPoolElementParameter(message,poolElement) == false) {
+   for(i = 0;i < message->PoolElementPtrArraySize;i++) {
+      if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
          return(false);
       }
-      list = g_list_next(list);
    }
 
    return(finishMessage(message));
@@ -761,7 +818,7 @@ static bool createServerAnnounceMessage(struct ASAPMessage* message)
       return(false);
    }
 
-   if(beginMessage(message, AHT_SERVER_ANNOUNCE, 0x00) == false) {
+   if(beginMessage(message, AHT_SERVER_ANNOUNCE, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -786,7 +843,7 @@ static bool createServerAnnounceMessage(struct ASAPMessage* message)
 /* ###### Create cookie message ########################################### */
 static bool createCookieMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message, AHT_COOKIE, 0x00) == false) {
+   if(beginMessage(message, AHT_COOKIE, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
@@ -801,7 +858,7 @@ static bool createCookieMessage(struct ASAPMessage* message)
 /* ###### Create cookie echo message ###################################### */
 static bool createCookieEchoMessage(struct ASAPMessage* message)
 {
-   if(beginMessage(message, AHT_COOKIE_ECHO, 0x00) == false) {
+   if(beginMessage(message, AHT_COOKIE_ECHO, 0x00, PPID_ASAP) == false) {
       return(false);
    }
 
