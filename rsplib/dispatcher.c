@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.8 2004/11/09 19:03:22 dreibh Exp $
+ *  $Id: dispatcher.c,v 1.9 2004/11/11 18:33:49 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -39,7 +39,7 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "dispatcher.h"
-
+#include <netinet/in.h>
 #include <ext_socket.h>
 
 

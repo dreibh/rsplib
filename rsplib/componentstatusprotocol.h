@@ -48,7 +48,7 @@ struct ComponentStatusProtocolHeader
    char                             StatusText[CSPH_STATUS_TEXT_SIZE];
 
    uint32_t                         Associations;
-   struct ComponentAssociationEntry AssociationArray[];
+   struct ComponentAssociationEntry AssociationArray[0];
 };
 
 #define CSP_VERSION  0x0100

@@ -45,7 +45,7 @@ struct TransportAddressBlock
    uint16_t                      Port;
    uint16_t                      Flags;
    size_t                        Addresses;
-   union sockaddr_union          AddressArray[];
+   union sockaddr_union          AddressArray[0];
 };
 
 #define transportAddressBlockGetSize(addresses) (sizeof(struct TransportAddressBlock) + (addresses * sizeof(union sockaddr_union)))
