@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.48 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: netutilities.c,v 1.49 2005/03/08 17:04:41 tuexen Exp $
  *
  * RSerPool implementation.
  *
@@ -1678,18 +1678,26 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
             LOG_VERBOSE3
             fputs("Old peer parameters for address ", stdlog);
             fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
+#ifdef HAVE_SPP_FLAGS
             fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
                     sockfd, (unsigned int)assocID,
                     peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
+#else
+            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                    sockfd, (unsigned int)assocID,
+                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+#endif
             LOG_END
 
             peerParams.spp_hbinterval = tagListGetData(tags, TAG_TuneSCTP_Heartbeat,  peerParams.spp_hbinterval);
+#ifdef HAVE_SPP_FLAGS
             if(peerParams.spp_hbinterval > 0) {
                peerParams.spp_flags |= SPP_HB_ENABLED;
             }
             else {
                peerParams.spp_flags |= SPP_HB_DISABLED;
             }
+#endif
             peerParams.spp_pathmaxrxt = tagListGetData(tags, TAG_TuneSCTP_PathMaxRXT, peerParams.spp_pathmaxrxt);;
 
             if(sctp_opt_info(sockfd, 0, SCTP_PEER_ADDR_PARAMS,
@@ -1705,9 +1713,15 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
                LOG_VERBOSE2
                fputs("New peer parameters for address ", stdlog);
                fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
-               fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
+#ifdef HAVE_SPP_FLAGS
+                fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
                         sockfd, (unsigned int)assocID,
                         peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
+#else
+                fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                        sockfd, (unsigned int)assocID,
+                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+#endif
                LOG_END
             }
          }
