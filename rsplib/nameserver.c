@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.19 2004/08/04 01:02:38 dreibh Exp $
+ *  $Id: nameserver.c,v 1.20 2004/08/06 15:43:25 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -61,10 +61,10 @@
 #define MAX_NS_TRANSPORTADDRESSES                                   16
 #define NAMESERVER_DEFAULT_ASAP_ANNOUNCE_INTERVAL              2111111
 #define NAMESERVER_DEFAULT_ENRP_ANNOUNCE_INTERVAL              2444444
-#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL                   100000
+#define NAMESERVER_DEFAULT_HEARTBEAT_INTERVAL                   10000000 // ???????
 #define NAMESERVER_DEFAULT_PEER_TIMEOUT_INTERVAL               7500000
 #define NAMESERVER_DEFAULT_KEEP_ALIVE_TRANSMISSION_INTERVAL    5000000
-#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL         5000000
+#define NAMESERVER_DEFAULT_KEEP_ALIVE_TIMEOUT_INTERVAL         500000000   // ???????
 #define NAMESERVER_DEFAULT_MENTOR_DISCOVERY_INTERVAL           5000000
 
 
@@ -1102,13 +1102,15 @@ static size_t filterValidAddresses(
 
    for(i = 0;i < sourceAddressBlock->Addresses;i++) {
       selectionArray[i] = false;
-      for(j = 0;j < assocAddresses;j++) {
-         if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
-                       (const struct sockaddr*)&assocAddressArray[j],
-                       false) == 0) {
-            selectionArray[i] = true;
-            selected++;
-            break;
+      if(getScope((const struct sockaddr*)&sourceAddressBlock->AddressArray[i]) >= 4) {
+         for(j = 0;j < assocAddresses;j++) {
+            if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
+                        (const struct sockaddr*)&assocAddressArray[j],
+                        false) == 0) {
+               selectionArray[i] = true;
+               selected++;
+               break;
+            }
          }
       }
    }
@@ -1224,11 +1226,11 @@ static void handleRegistrationRequest(struct NameServer*  nameServer,
 
             /* ====== Tune SCTP association ============================== */
             tags[0].Tag = TAG_TuneSCTP_MinRTO;
-            tags[0].Data = 100;
+            tags[0].Data = 500;
             tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-            tags[1].Data = 500;
+            tags[1].Data = 1000;
             tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-            tags[2].Data = 250;
+            tags[2].Data = 750;
             tags[3].Tag = TAG_TuneSCTP_Heartbeat;
             tags[3].Data = (nameServer->HeartbeatInterval / 1000);
             tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
