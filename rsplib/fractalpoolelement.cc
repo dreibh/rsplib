@@ -474,7 +474,7 @@ int main(int argc, char** argv)
    int                           protocol                       = IPPROTO_SCTP;
    unsigned short                port                           = 0;
    char*                         poolHandle                     = "FractalGeneratorPool";
-   unsigned int                  policyType                     = PPT_ROUNDROBIN;
+   unsigned int                  policyType                     = PPT_RANDOM;
    unsigned int                  policyParameterWeight          = 1;
    unsigned int                  policyParameterLoad            = 0;
    unsigned int                  policyParameterLoadDegradation = 0;

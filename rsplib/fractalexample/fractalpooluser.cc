@@ -3,7 +3,6 @@
 #include <qwidget.h>
 #include <qmainwindow.h>
 #include <qimage.h>
-#include <qtimer.h>
 #include <qpainter.h>
 #include <qstatusbar.h>
 #include <qthread.h>
@@ -51,10 +50,6 @@ class FractalPU : public QMainWindow,
    }
 
 
-   public slots:
-   void timeoutExpired();
-
-
    protected:
    void paintEvent(QPaintEvent* paintEvent);
    void closeEvent(QCloseEvent* closeEvent);
@@ -76,7 +71,6 @@ class FractalPU : public QMainWindow,
 
    bool                      Running;
    QImage*                   Image;
-   QTimer*                   TimeoutTimer;
 
    const unsigned char*      PoolHandle;
    size_t                    PoolHandleSize;
@@ -99,25 +93,20 @@ FractalPU::FractalPU(const size_t width,
                      const char*  name)
    : QMainWindow(parent, name)
 {
-   Image        = NULL;
-   TimeoutTimer = NULL;
-
+   Image          = NULL;
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
    ConfigDirName  = QString(configDirName);
 
    QString Buffer;
    QFile AllconfigFile(ConfigDirName + "scenarios.conf");
-   if ( !AllconfigFile.open( IO_ReadOnly ) )
-   {
+   if(!AllconfigFile.open( IO_ReadOnly ) ) {
       std::cerr << "Opening config file failed for "
                 << ConfigDirName + "scenarios.conf" << std::endl;
    }
-   else
-   {
-      while(!AllconfigFile.atEnd())
-      {
-          AllconfigFile.readLine(Buffer, 255);
+   else {
+      while(!AllconfigFile.atEnd()) {
+         AllconfigFile.readLine(Buffer, 255);
          Buffer = Buffer.stripWhiteSpace();
          ConfigList.append(Buffer);
       }
@@ -133,8 +122,6 @@ FractalPU::FractalPU(const size_t width,
 
 FractalPU::~FractalPU()
 {
-   delete TimeoutTimer;
-   TimeoutTimer = NULL;
    delete Image;
    Image = NULL;
 }
@@ -174,8 +161,8 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
    Running = false;
-   wait();
-   std::cout << "Good bye!" << std::endl;
+   // std::cout << "Good-bye!" << std::endl;
+   wait(TRUE);
    qApp->exit(0);
 }
 
@@ -239,7 +226,7 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
             break;
          }
          const uint32_t point = ntohl(data->Buffer[p]);
-         const QColor color(((point + (2 * Run) + PoolElementUsages) % 72) * 5, 255, 255, QColor::Hsv);
+         const QColor color(((point + (2 * Run) + (2 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
          setPoint(x, y, color.rgb());
          p++;
 
@@ -253,31 +240,25 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
 }
 
 
-void FractalPU::timeoutExpired()
-{
-   std::cerr << "##### Timeout expired -> Customer is not satisfied with this service!" << std::endl;
-}
-
 void FractalPU::getNextParameters()
 {
    if(ConfigList.count() == 0) {
       std::cerr << "Config file list empty" << std::endl;
       return;
    }
-   size_t Element = random32() % ConfigList.count();
+   const size_t element = random32() % ConfigList.count();
 
-
-   QString File(ConfigList[Element]);
-   QDomDocument doc( "XMLFractalSave" );
+   QString File(ConfigList[element]);
+   QDomDocument doc("XMLFractalSave");
    QFile file(ConfigDirName + File); //url.prettyURL().mid(5) );
-   if( !file.open( IO_ReadOnly ) ) {
+   if(!file.open(IO_ReadOnly)) {
       std::cerr << "Config file open failed" << ConfigDirName + File << std::endl;
       return;
    }
 
    QString Error;
    int Line, Column;
-   if( !doc.setContent( &file , false, &Error, &Line, &Column) ) {
+   if(!doc.setContent( &file , false, &Error, &Line, &Column)) {
       file.close();
       std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
             << " and Column: " << QString().setNum(Column) << std::endl;
@@ -288,12 +269,11 @@ void FractalPU::getNextParameters()
    QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
    QString AlgorithmName = algorithm.firstChild().toText().data();
    if(AlgorithmName == "MandelbrotN") {
-      Parameter.AlgorithmID   = FGPA_MANDELBROTN;
+      Parameter.AlgorithmID = FGPA_MANDELBROTN;
    }
    else if(AlgorithmName == "Mandelbrot") {
-      Parameter.AlgorithmID   = FGPA_MANDELBROT;
+      Parameter.AlgorithmID = FGPA_MANDELBROT;
    }
-
 
    Parameter.C1Real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
    Parameter.C1Imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
@@ -325,11 +305,7 @@ void FractalPU::run()
    Run               = 0;
    PoolElementUsages = 0;
 
-   TimeoutTimer = new QTimer;
-   Q_CHECK_PTR(TimeoutTimer);
-   connect(TimeoutTimer, SIGNAL(timeout()), this, SLOT(timeoutExpired()));
-
-   std::cerr << "Creating session..." << std::endl;
+   // std::cerr << "Creating session..." << std::endl;
    for(;;) {
       LastPoolElementID = 0;
 
@@ -373,7 +349,7 @@ void FractalPU::run()
          qApp->unlock();
 
          rspSessionSetStatusText(Session, "Sending parameter command...");
-         std::cerr << "Sending parameter command..." << std::endl;
+         // std::cout << "Sending parameter command..." << std::endl;
          qApp->lock();
          statusBar()->message("Sending parameter command...");
          qApp->unlock();
@@ -382,7 +358,6 @@ void FractalPU::run()
          // ====== Begin image calculation ==================================
          bool success = false;
          if(sendParameter()) {
-            TimeoutTimer->start(2000, TRUE);
 
             // ====== Handle received result chunks =========================
             FractalGeneratorData data;
@@ -399,8 +374,6 @@ void FractalPU::run()
                      LastPoolElementID = tags[0].Data;
                      PoolElementUsages++;
                   }
-                  TimeoutTimer->stop();
-                  TimeoutTimer->start(5000, TRUE);
 
                   qApp->lock();
                   const DataStatus status = handleData(&data, received);
@@ -436,11 +409,9 @@ void FractalPU::run()
 
 finish:
          // ====== Image calculation completed ==============================
-         TimeoutTimer->stop();
-
          const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
          rspSessionSetStatusText(Session, statusText);
-         std::cout << statusText << std::endl;
+         // std::cout << statusText << std::endl;
          qApp->lock();
          statusBar()->message(statusText);
          qApp->unlock();
@@ -469,9 +440,6 @@ finish:
          }
       }
    }
-
-   delete TimeoutTimer;
-   TimeoutTimer = NULL;
 }
 
 
