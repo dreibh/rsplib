@@ -57,7 +57,6 @@ class FractalPU : public QMainWindow,
 
 
    protected:
-   void paintImage(const size_t startY, const size_t endY);
    void paintEvent(QPaintEvent* paintEvent);
    void closeEvent(QCloseEvent* closeEvent);
 
@@ -66,6 +65,7 @@ class FractalPU : public QMainWindow,
    virtual void run();
    bool sendParameter();
    void getNextParameters();
+   void paintImage(const size_t startY, const size_t endY);
 
    enum DataStatus {
       Okay      = 0,
@@ -408,7 +408,12 @@ void FractalPU::run()
                   }
                   TimeoutTimer->stop();
                   TimeoutTimer->start(5000, TRUE);
-                  switch(handleData(&data, received)) {
+
+                  lock();
+                  const DataStatus status = handleData(&data, received);
+                  unlock();
+
+                  switch(status) {
                      case Finalizer:
                         success = true;
                         goto finish;
