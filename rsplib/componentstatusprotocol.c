@@ -3,6 +3,8 @@
 #include "netutilities.h"
 #include "loglevel.h"
 #include "rsplib-internals.h"
+#include "netutilities.h"
+#include "stringutilities.h"
 
 
 #ifdef __cplusplus
@@ -10,6 +12,7 @@ extern "C" {
 #endif
 
 
+/* ###### Create new ComponentAssociationEntry ########################### */
 struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t elements)
 {
    struct ComponentAssociationEntry* associationArray =
@@ -21,16 +24,19 @@ struct ComponentAssociationEntry* componentAssociationEntryArrayNew(const size_t
 }
 
 
+/* ###### Delete ComponentAssociationEntry ############################### */
 void componentAssociationEntryArrayDelete(struct ComponentAssociationEntry* associationArray)
 {
    free(associationArray);
 }
 
 
+/* ###### Send CSP Status message ######################################## */
 ssize_t componentStatusSend(const union sockaddr_union*             reportAddress,
                             const uint64_t                          reportInterval,
                             const uint64_t                          senderID,
                             const char*                             statusText,
+                            const char*                             componentAddress,
                             const struct ComponentAssociationEntry* associationArray,
                             const size_t                            associations)
 {
@@ -51,6 +57,7 @@ ssize_t componentStatusSend(const union sockaddr_union*             reportAddres
       csph->SenderTimeStamp = hton64(getMicroTime());
       csph->ReportInterval  = hton64(reportInterval);
       strncpy((char*)&csph->StatusText, statusText, sizeof(csph->StatusText));
+      strncpy((char*)&csph->ComponentAddress, componentAddress, sizeof(csph->ComponentAddress));
       csph->Associations = htonl(associations);
       for(i = 0;i < associations;i++) {
          csph->AssociationArray[i].ReceiverID = hton64(associationArray[i].ReceiverID);
@@ -77,6 +84,45 @@ ssize_t componentStatusSend(const union sockaddr_union*             reportAddres
 }
 
 
+/* ###### Fill in component address string ############################### */
+void componentStatusGetComponentAddress(char*        componentAddress,
+                                        int          sd,
+                                        sctp_assoc_t assocID)
+{
+   union sockaddr_union* addressArray;
+   int                   addresses;
+   size_t                i;
+   char                  str[CSPH_COMPONENT_ADDRESS_SIZE];
+
+   componentAddress[0] = 0x00;
+   if(sd >= 0) {
+      addresses = getladdrsplus(sd, assocID, &addressArray);
+   }
+   else {
+      addresses = gatherLocalAddresses(&addressArray);
+   }
+   if(addresses > 0) {
+      for(i = 0;i < addresses;i++) {
+         if(getScope((const struct sockaddr*)&addressArray[i]) >= 6) {
+            if(address2string((const struct sockaddr*)&addressArray[i], (char*)&str, sizeof(str), false)) {
+               if(componentAddress[0] != 0x00) {
+                  safestrcat(componentAddress, ", ", CSPH_COMPONENT_ADDRESS_SIZE);
+               }
+               safestrcat(componentAddress, str, CSPH_COMPONENT_ADDRESS_SIZE);
+            }
+         }
+      }
+      free(addressArray);
+   }
+   if(componentAddress[0] == 0x00) {
+      snprintf(componentAddress, CSPH_COMPONENT_ADDRESS_SIZE, "(local only)");
+   }
+   /* printf("CA=<%s>\n",componentAddress); */
+}
+
+
+
+
 /* ###### Report status ################################################## */
 static void cspReporterCallback(struct Dispatcher* dispatcher,
                                 struct Timer*      timer,
@@ -85,6 +131,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
    struct CSPReporter*               cspReporter = (struct CSPReporter*)userData;
    struct ComponentAssociationEntry* caeArray    = NULL;
    char                              statusText[CSPH_STATUS_TEXT_SIZE];
+   char                              componentAddress[CSPH_COMPONENT_ADDRESS_SIZE];
    size_t                            caeArraySize;
 
    LOG_VERBOSE3
@@ -94,12 +141,14 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
    statusText[0] = 0x00;
    caeArraySize = cspReporter->CSPGetReportFunction(cspReporter->CSPGetReportFunctionUserData,
                                                     &caeArray,
-                                                    (char*)&statusText);
+                                                    (char*)&statusText,
+                                                    (char*)&componentAddress);
 
    componentStatusSend(&cspReporter->CSPReportAddress,
                        cspReporter->CSPReportInterval,
                        cspReporter->CSPIdentifier,
                        statusText,
+                       componentAddress,
                        caeArray, caeArraySize);
 
    if(caeArray) {
@@ -115,6 +164,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
 }
 
 
+/* ###### Constructor #################################################### */
 void cspReporterNew(struct CSPReporter*         cspReporter,
                     struct Dispatcher*          dispatcher,
                     const uint64_t              cspIdentifier,
@@ -123,7 +173,8 @@ void cspReporterNew(struct CSPReporter*         cspReporter,
                     size_t                      (*cspGetReportFunction)(
                                                    void*                              userData,
                                                    struct ComponentAssociationEntry** caeArray,
-                                                   char*                              statusText),
+                                                   char*                              statusText,
+                                                   char*                              componentAddress),
                     void*                       cspGetReportFunctionUserData)
 {
    cspReporter->StateMachine = dispatcher;
@@ -142,6 +193,7 @@ void cspReporterNew(struct CSPReporter*         cspReporter,
 }
 
 
+/* ###### Destructor ##################################################### */
 void cspReporterDelete(struct CSPReporter* cspReporter)
 {
    timerDelete(&cspReporter->CSPReportTimer);
@@ -154,15 +206,18 @@ void cspReporterDelete(struct CSPReporter* cspReporter)
 extern struct Dispatcher gDispatcher;
 
 
+/* ###### rsplib GetReport function ###################################### */
 static size_t rsplibGetReportFunction(
                  void*                              userData,
                  struct ComponentAssociationEntry** caeArray,
-                 char*                              statusText)
+                 char*                              statusText,
+                 char*                              componentAddress)
 {
-   return(rspGetComponentStatus(caeArray, statusText));
+   return(rspGetComponentStatus(caeArray, statusText, componentAddress));
 }
 
 
+/* ###### rsplib creation of CSP Reporter ################################ */
 void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,
                              const uint64_t              cspIdentifier,
                              const union sockaddr_union* cspReportAddress,

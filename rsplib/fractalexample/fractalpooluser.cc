@@ -467,7 +467,7 @@ int main(int argc, char** argv)
 #ifdef ENABLE_CSP
    struct CSPReporter   cspReporter;
    uint64_t             cspIdentifier     = 0;
-   unsigned int         cspReportInterval = 0;
+   unsigned int         cspReportInterval = 333333;
    union sockaddr_union cspReportAddress;
 #endif
    pthread_t            rsplibThread;

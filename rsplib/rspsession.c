@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.30 2004/12/16 16:16:59 dreibh Exp $
+ *  $Id: rspsession.c,v 1.31 2005/03/02 13:34:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1300,6 +1300,7 @@ void rspSessionSetStatusText(struct SessionDescriptor* session,
 size_t rspSessionCreateComponentStatus(
           struct ComponentAssociationEntry** caeArray,
           char*                              statusText,
+          char*                              componentAddress,
           const int                          registrarSocket,
           const RegistrarIdentifierType      registrarID,
           const int                          registrarSocketProtocol,
@@ -1320,7 +1321,8 @@ size_t rspSessionCreateComponentStatus(
    *caeArray    = componentAssociationEntryArrayNew(1 + sessions);
    caeArraySize = 0;
    if(*caeArray) {
-      statusText[0] = 0x00;
+      statusText[0]       = 0x00;
+      componentAddress[0] = 0x00;
       if(registrarSocket >= 0) {
          (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, registrarID);
          (*caeArray)[caeArraySize].Duration   = getMicroTime() - registrarConnectionTimeStamp;
@@ -1329,6 +1331,7 @@ size_t rspSessionCreateComponentStatus(
          (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
          caeArraySize++;
       }
+      componentStatusGetComponentAddress(componentAddress, -1, 0);
 
       list = g_list_first(gSessionList);
       while(list != NULL) {

@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.10 2004/11/19 16:42:46 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.11 2005/03/02 13:34:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -89,6 +89,7 @@ struct CSPObject
    uint64_t                          ReportInterval;
    char                              Description[128];
    char                              StatusText[128];
+   char                              ComponentAddress[128];
    size_t                            Associations;
    struct ComponentAssociationEntry* AssociationArray;
 };
@@ -102,8 +103,9 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    size_t                  i;
 
    fprintf(fd,"\x1b[%um", 30 + (unsigned int)CID_GROUP(cspObject->ID) % 8);
-   fprintf(fd, "%s: lr=%5ums, int=%4Ldms, A=%u, %s\n",
+   fprintf(fd, "%s [%s]: lr=%5ums, int=%4Ldms, A=%u %s\n",
            cspObject->Description,
+           cspObject->ComponentAddress,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
            (unsigned int)cspObject->Associations,
@@ -220,6 +222,10 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
                         &csph->StatusText,
                         sizeof(cspObject->StatusText));
                cspObject->StatusText[sizeof(cspObject->StatusText) - 1] = 0x00;
+               memcpy(&cspObject->ComponentAddress,
+                        &csph->ComponentAddress,
+                        sizeof(cspObject->ComponentAddress));
+               cspObject->ComponentAddress[sizeof(cspObject->ComponentAddress) - 1] = 0x00;
                if(cspObject->AssociationArray) {
                   componentAssociationEntryArrayDelete(cspObject->AssociationArray);
                }

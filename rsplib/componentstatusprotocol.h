@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <inttypes.h>
+#include <ext_socket.h>
 #include "sockaddrunion.h"
 #include "dispatcher.h"
 #include "timer.h"
@@ -33,7 +34,8 @@ struct ComponentAssociationEntry
 };
 
 
-#define CSPH_STATUS_TEXT_SIZE 128
+#define CSPH_STATUS_TEXT_SIZE       128
+#define CSPH_COMPONENT_ADDRESS_SIZE 128
 
 struct ComponentStatusProtocolHeader
 {
@@ -41,17 +43,18 @@ struct ComponentStatusProtocolHeader
    uint16_t                         Version;
    uint32_t                         Length;
 
-   uint64_t                        SenderID;
-   uint64_t                        ReportInterval;
-   uint64_t                        SenderTimeStamp;
+   uint64_t                         SenderID;
+   uint64_t                         ReportInterval;
+   uint64_t                         SenderTimeStamp;
 
    char                             StatusText[CSPH_STATUS_TEXT_SIZE];
+   char                             ComponentAddress[CSPH_COMPONENT_ADDRESS_SIZE];
 
    uint32_t                         Associations;
    struct ComponentAssociationEntry AssociationArray[0];
 };
 
-#define CSP_VERSION  0x0100
+#define CSP_VERSION  0x0101
 #define CSPHT_STATUS 0x0001
 
 
@@ -72,10 +75,15 @@ struct CSPReporter
    size_t               (*CSPGetReportFunction)(
                            void*                              userData,
                            struct ComponentAssociationEntry** caeArray,
-                           char*                              statusText);
+                           char*                              statusText,
+                           char*                              componentAddress);
    void*                CSPGetReportFunctionUserData;
 };
 
+
+void componentStatusGetComponentAddress(char*        componentAddress,
+                                        int          sd,
+                                        sctp_assoc_t assocID);
 
 void cspReporterNew(struct CSPReporter*         cspReporter,
                     struct Dispatcher*          dispatcher,
@@ -85,7 +93,8 @@ void cspReporterNew(struct CSPReporter*         cspReporter,
                     size_t                      (*cspGetReportFunction)(
                                                    void*                              userData,
                                                    struct ComponentAssociationEntry** caeArray,
-                                                   char*                              statusText),
+                                                   char*                              statusText,
+                                                   char*                              componentAddress),
                     void*                       cspGetReportFunctionUserData);
 void cspReporterDelete(struct CSPReporter* cspReporter);
 void cspReporterNewForRspLib(struct CSPReporter*         cspReporter,

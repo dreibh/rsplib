@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.3 2004/11/22 18:07:53 dreibh Exp $
+ *  $Id: registrar.c,v 1.4 2005/03/02 13:34:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -463,7 +463,8 @@ void registrarDumpPeers(struct Registrar* registrar);
 static size_t registrarGetReportFunction(
                  void*                              userData,
                  struct ComponentAssociationEntry** caeArray,
-                 char*                              statusText);
+                 char*                              statusText,
+                 char*                              componentAddress);
 #endif
 
 
@@ -1501,7 +1502,6 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    struct TransportAddressBlock*     remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    union sockaddr_union*             addressArray;
-   /* struct TagItem                    tags[8]; */
    int                               addresses;
 
    LOG_ACTION
@@ -3065,10 +3065,11 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 static size_t registrarGetReportFunction(
                  void*                              userData,
                  struct ComponentAssociationEntry** caeArray,
-                 char*                              statusText)
+                 char*                              statusText,
+                 char*                              componentAddress)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
-   struct Registrar*             registrar = (struct Registrar*)userData;
+   struct Registrar*              registrar = (struct Registrar*)userData;
    size_t                         caeArraySize;
    size_t                         peers;
    size_t                         pools;
@@ -3083,6 +3084,7 @@ static size_t registrarGetReportFunction(
    snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
             "%u PEs in %u Pools, %u Peers",
             poolElements, pools, peers);
+   componentStatusGetComponentAddress(componentAddress, registrar->ASAPSocket, 0);
 
    *caeArray    = componentAssociationEntryArrayNew(peers);
    caeArraySize = 0;

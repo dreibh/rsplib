@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.22 2004/11/19 16:42:47 dreibh Exp $
+ *  $Id: rsplib.c,v 1.23 2005/03/02 13:34:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,8 +58,9 @@ static struct ThreadSafety  gThreadSafety;
 size_t rspSessionCreateComponentStatus(
           struct ComponentAssociationEntry** caeArray,
           char*                              statusText,
+          char*                              componentAddress,
           const int                          registrarSocket,
-          const RegistrarIdentifierType           registrarID,
+          const RegistrarIdentifierType      registrarID,
           const int                          registrarSocketProtocol,
           const unsigned long long           registrarConnectionTimeStamp);
 
@@ -517,10 +518,12 @@ int rspSelect(int             n,
 
 /* ###### Get PE/PU status ############################################### */
 size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
-                             char*                              statusText)
+                             char*                              statusText,
+                             char*                              componentAddress)
 {
    return(rspSessionCreateComponentStatus(caeArray,
                                           statusText,
+                                          componentAddress,
                                           gAsapInstance->RegistrarSocket,
                                           gAsapInstance->RegistrarID,
                                           gAsapInstance->RegistrarSocketProtocol,

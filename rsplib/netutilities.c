@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.43 2004/12/03 17:55:09 dreibh Exp $
+ *  $Id: netutilities.c,v 1.44 2005/03/02 13:34:16 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -571,7 +571,10 @@ size_t gatherLocalAddresses(union sockaddr_union** addressArray)
    string2address(checkIPv6() ? "[::]" : "0.0.0.0", &anyAddress);
    sd = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd >= 0) {
-      if(ext_bind(sd, (struct sockaddr*)&anyAddress, getSocklen(&anyAddress.sa)) == 0) {
+      /* The sctplib1 has a bug when binding to port 0. bindplus() avoids this
+         problem by selecting a port!
+         if(sd, (struct sockaddr*)&anyAddress, getSocklen(&anyAddress.sa)) == 0) { */
+      if(bindplus(sd, &anyAddress, 1)) {
          addresses = getAddressesFromSocket(sd, addressArray);
       }
       ext_close(sd);
@@ -591,7 +594,7 @@ void deleteAddressArray(union sockaddr_union* addressArray)
 
 /* ###### Duplicate address array ######################################## */
 union sockaddr_union* duplicateAddressArray(const union sockaddr_union* addressArray,
-                                            const size_t                   addresses)
+                                            const size_t                addresses)
 {
    const size_t size = sizeof(union sockaddr_union) * addresses;
 

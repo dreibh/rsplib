@@ -47,10 +47,12 @@
   *
   * @param caeArray Reference to store pointer to resulting ComponentAssociationEntry array to.
   * @param statusText Reference of buffer to store status text to.
+  * @param componentAddress Reference of buffer to store component address to.
   * @return Number of ComponentAssociationEntries created.
 */
 size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
-                             char*                              statusText);
+                             char*                              statusText,
+                             char*                              componentAddress);
 
 
 #ifdef __cplusplus
