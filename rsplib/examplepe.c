@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.10 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: examplepe.c,v 1.11 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -198,7 +198,7 @@ int main(int argc, char** argv)
    int                           i;
    GList*                        list;
 
-
+   string2address("127.0.0.1:2960", &cspReportAddress);
    start = getMicroTime();
    stop  = 0;
    for(i = 1;i < argc;i++) {
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[i]);
-         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         printf("Usage: %s {-sctp|-tcp} {-port=local port} {-stop=seconds} {-ph=Pool Handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight}  {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PE Identifier}\n" ,
                 argv[0]);
          exit(1);
       }

@@ -236,6 +236,7 @@ void FractalPU::timeoutExpired()
 
 void FractalPU::run()
 {
+   char     statusText[128];
    TagItem  tags[16];
 
    Run                     = 0;
@@ -268,6 +269,8 @@ void FractalPU::run()
       LastPoolElementID = 0;
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {
+         rspSessionSetCSPStatus(Session, "Sending parameter command...");
+
          std::cerr << "Sending parameter command..." << std::endl;
          Run++;
          PoolElementUsages = 0;
@@ -281,6 +284,7 @@ void FractalPU::run()
             tags[1].Tag  = TAG_RspIO_Timeout;
             tags[1].Data = (tagdata_t)2000000;
             tags[2].Tag  = TAG_DONE;
+            size_t packets = 0;
             ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
             while(received != 0) {
                if(received > 0) {
@@ -299,6 +303,9 @@ void FractalPU::run()
                         std::cerr << "ERROR: Invalid data block received!" << std::endl;
                       break;
                      default:
+                        packets++;
+                        snprintf((char*)&statusText, "Received data packet #%u\n", packets);
+                        rspSessionSetCSPStatus(Session, statusText);
                       break;
                   }
                }
@@ -308,6 +315,7 @@ void FractalPU::run()
 
 finish:
          TimeoutTimer->stop();
+         rspSessionSetCSPStatus(Session, "Image completed!");
 
          std::cout << "Image completed!" << std::endl;
          rspDeleteSession(Session);
@@ -324,23 +332,54 @@ finish:
 
 int main(int argc, char** argv)
 {
-   int n;
-   for(n = 1;n < argc;n++) {
-      if(!(strncmp(argv[n],"-log",4))) {
-         if(initLogging(argv[n]) == false) {
+   uint64_t             cspIdentifier     = 0;
+   unsigned int         cspReportInterval = 0;
+   union sockaddr_union cspReportAddress;
+   struct TagItem       tags[16];
+   int                  i;
+
+   string2address("127.0.0.1:2960", &cspReportAddress);
+   for(i = 1;i < argc;i++) {
+      if(!(strncasecmp(argv[i], "-identifier=", 12))) {
+         cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
+         cspReportInterval = atol((char*)&argv[i][19]);
+      }
+      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
+         if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
+            fprintf(stderr,
+                    "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
+                    (char*)&argv[i][18]);
+            exit(1);
+         }
+         if(cspReportInterval <= 0) {
+            cspReportInterval = 250000;
+         }
+      }
+      else if(!(strncmp(argv[i],"-log",4))) {
+         if(initLogging(argv[i]) == false) {
             exit(1);
          }
       }
    }
+
    beginLogging();
-   if(rspInitialize(NULL) != 0) {
+   tags[0].Tag  = TAG_RspLib_CSPReportAddress;
+   tags[0].Data = (tagdata_t)&cspReportAddress;
+   tags[1].Tag  = TAG_RspLib_CSPReportInterval;
+   tags[1].Data = (tagdata_t)cspReportInterval;
+   tags[2].Tag  = TAG_RspLib_CSPIdentifier;
+   tags[2].Data = (tagdata_t)&cspIdentifier;
+   tags[3].Tag  = TAG_DONE;
+   if(rspInitialize((struct TagItem*)&tags) != 0) {
       std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
       exit(1);
    }
-   for(n = 1;n < argc;n++) {
-      if(!(strncmp(argv[n], "-nameserver=" ,12))) {
-         if(rspAddStaticNameServer((char*)&argv[n][12]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[n]);
+   for(i = 1;i < argc;i++) {
+      if(!(strncmp(argv[i], "-nameserver=" ,12))) {
+         if(rspAddStaticNameServer((char*)&argv[i][12]) != RSPERR_OKAY) {
+            fprintf(stderr, "ERROR: Bad name server setting: %s\n", argv[i]);
             exit(1);
          }
       }

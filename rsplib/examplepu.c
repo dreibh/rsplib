@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.6 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: examplepu.c,v 1.7 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -168,6 +168,7 @@ int main(int argc, char** argv)
    int                       result;
    int                       i, n;
 
+   string2address("127.0.0.1:2960", &cspReportAddress);
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
@@ -202,7 +203,7 @@ int main(int argc, char** argv)
       }
       else {
          puts("Bad arguments!");
-         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
+         printf("Usage: %s {-nameserver=Nameserver address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PU Identifier (used for CSP only)}\n",argv[0]);
          exit(1);
       }
    }

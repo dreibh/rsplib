@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.6 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: rsplib.h,v 1.7 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -342,6 +342,10 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
                      const size_t                   peds,
                      const card64                   timeout,
                      struct TagItem*                tags CPP_DEFAULT(NULL));
+
+
+void rspSessionSetCSPStatus(struct SessionDescriptor* session,
+                            const char*               statusText);
 
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.15 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: rspsession.c,v 1.16 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -108,6 +108,8 @@ struct SessionDescriptor
 
    struct MessageBuffer*         MessageBuffer;
    struct TagItem*               Tags;
+
+   char                          CSPStatusText[128];
 };
 
 
@@ -516,6 +518,7 @@ static struct SessionDescriptor* rspSessionNew(
       session->CookieSize               = 0;
       session->CookieEcho               = NULL;
       session->CookieEchoSize           = 0;
+      session->CSPStatusText[0]         = 0x00;
       session->ConnectTimeout           = (card64)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->NameResolutionRetryDelay = (card64)tagListGetData(tags, TAG_RspSession_NameResolutionRetryDelay, 250000);
       if(session->PoolElement != NULL) {
@@ -1228,6 +1231,19 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
 }
 
 
+/* ###### Set session's CSP status text ################################## */
+void rspSessionSetCSPStatus(struct SessionDescriptor* session,
+                            const char*               statusText)
+{
+   threadSafetyLock(&session->Mutex);
+   safestrcpy((char*)&session->CSPStatusText,
+              statusText,
+              sizeof(session->CSPStatusText));
+   threadSafetyUnlock(&session->Mutex);
+}
+
+
+/* ###### Send CSP report ################################################ */
 void rspSendCSPReport(const int                   nameServerSocket,
                       const ENRPIdentifierType    nameServerID,
                       const int                   nameServerSocketProtocol,
@@ -1242,7 +1258,7 @@ void rspSendCSPReport(const int                   nameServerSocket,
    struct SessionDescriptor*         session;
    size_t                            sessions;
 
-   LOG_NOTE
+   LOG_VERBOSE3
    fputs("Sending a Component Status Protocol report...\n", stdlog);
    LOG_END
 
@@ -1250,6 +1266,7 @@ void rspSendCSPReport(const int                   nameServerSocket,
    caeArray     = componentAssociationEntryArrayNew(1 + sessions);
    caeArraySize = 0;
    if(caeArray) {
+      statusText[0] = 0x00;
       if(nameServerSocket >= 0) {
          caeArray[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, nameServerID);
          caeArray[caeArraySize].Duration   = ~0;
@@ -1272,19 +1289,26 @@ void rspSendCSPReport(const int                   nameServerSocket,
                caeArray[caeArraySize].PPID       = 0;
                caeArraySize++;
             }
+            if(session->CSPStatusText[0] != 0x00) {
+               safestrcpy((char*)&statusText,
+                          session->CSPStatusText,
+                          sizeof(statusText));
+            }
          }
 
          list = g_list_next(gSessionList);
       }
 
-      snprintf((char*)&statusText, sizeof(statusText),
-               "%u Session%s", sessions, (sessions == 1) ? "" : "s");
+      if((statusText[0] == 0x00) || (sessions != 1)) {
+         snprintf((char*)&statusText, sizeof(statusText),
+                  "%u Session%s", sessions, (sessions == 1) ? "" : "s");
+      }
 
       if(componentStatusSend(cspReportAddress,
                              cspReportInterval,
                              cspIdentifier,
                              (const char*)&statusText,
-                             (struct ComponentAssociationEntry*)&caeArray,
+                             caeArray,
                              caeArraySize) < 0) {
          LOG_WARNING
          fputs("Unable to send Component Status Protocol report\n", stdlog);

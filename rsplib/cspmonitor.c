@@ -1,5 +1,5 @@
 /*
- *  $Id: cspmonitor.c,v 1.2 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: cspmonitor.c,v 1.3 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -49,6 +49,38 @@
 /* #define FAST_BREAK */
 
 
+
+/* ###### Get description for ID ######################################### */
+static void getDescriptionForID(const uint64_t id,
+                                char*          buffer,
+                                const size_t   bufferSize)
+{
+   switch(CID_GROUP(id)) {
+      case CID_GROUP_NAMESERVER:
+         snprintf(buffer, bufferSize,
+                  "Name Server  $%08Lx",
+                  CID_OBJECT(id));
+         break;
+      case CID_GROUP_POOLELEMENT:
+         snprintf(buffer, bufferSize,
+                  "Pool Element $%08Lx",
+                  CID_OBJECT(id));
+         break;
+      case CID_GROUP_POOLUSER:
+         snprintf(buffer, bufferSize,
+                  "Pool User    $%08Lx",
+                  CID_OBJECT(id));
+         break;
+      default:
+         snprintf(buffer, bufferSize,
+                  "ID $%Lx",
+                  CID_OBJECT(id));
+         break;
+   }
+}
+
+
+
 struct CSPObject
 {
    struct LeafLinkedRedBlackTreeNode Node;
@@ -66,7 +98,8 @@ struct CSPObject
 static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
-   size_t i;
+   char                    str[256];
+   size_t                  i;
 
    fprintf(fd,"\x1b[%um", 30 + (unsigned int)CID_GROUP(cspObject->ID) % 8);
    fprintf(fd, "%s: lr=%5ums, int=%4Ldms, A=%u, %s\n",
@@ -76,8 +109,10 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
            cspObject->Associations,
            cspObject->StatusText);
    for(i = 0;i < cspObject->Associations;i++) {
-      fprintf(fd,"   -> $%016Lx proto=%4u ppid=$%08x\n",
-              cspObject->AssociationArray[i].ReceiverID,
+      getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
+                          (char*)&str, sizeof(str));
+      fprintf(fd,"   -> %s proto=%4u ppid=$%08x\n",
+              str,
               cspObject->AssociationArray[i].ProtocolID,
               cspObject->AssociationArray[i].PPID);
    }
@@ -131,7 +166,6 @@ void purgeCSPObjects(LeafLinkedRedBlackTree* objectStorage)
 }
 
 
-
 static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
 {
    struct ComponentStatusProtocolHeader* csph;
@@ -171,32 +205,9 @@ static void handleMessage(int sd, LeafLinkedRedBlackTree* objectStorage)
             if(cspObject) {
                cspObject->LastReportTimeStamp = getMicroTime();
                cspObject->ReportInterval      = csph->ReportInterval;
-               switch(CID_GROUP(cspObject->ID)) {
-                  case CID_GROUP_NAMESERVER:
-                     snprintf((char*)&cspObject->Description,
-                              sizeof(cspObject->Description),
-                              "Name Server $%08Lx",
-                              CID_OBJECT(cspObject->ID));
-                   break;
-                  case CID_GROUP_POOLELEMENT:
-                     snprintf((char*)&cspObject->Description,
-                              sizeof(cspObject->Description),
-                              "Pool Element $%08Lx",
-                              CID_OBJECT(cspObject->ID));
-                   break;
-                  case CID_GROUP_POOLUSER:
-                     snprintf((char*)&cspObject->Description,
-                              sizeof(cspObject->Description),
-                              "Pool User $%08Lx",
-                              CID_OBJECT(cspObject->ID));
-                   break;
-                  default:
-                     snprintf((char*)&cspObject->Description,
-                              sizeof(cspObject->Description),
-                              "ID $%Lx",
-                              CID_OBJECT(cspObject->ID));
-                   break;
-               }
+               getDescriptionForID(cspObject->ID,
+                                   (char*)&cspObject->Description,
+                                   sizeof(cspObject->Description));
                memcpy(&cspObject->StatusText,
                         &csph->StatusText,
                         sizeof(cspObject->StatusText));

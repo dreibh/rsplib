@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.35 2004/09/16 16:24:43 dreibh Exp $
+ *  $Id: nameserver.c,v 1.36 2004/09/17 13:52:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -3082,7 +3082,7 @@ static void cspReportCallback(struct Dispatcher* dispatcher,
                              nameServer->CSPReportInterval,
                              CID_COMPOUND(CID_GROUP_NAMESERVER, nameServer->ServerID),
                              (const char*)&statusText,
-                             (struct ComponentAssociationEntry*)&caeArray,
+                             caeArray,
                              caeArraySize) < 0) {
          LOG_WARNING
          fputs("Unable to send Component Status Protocol report\n", stdlog);
@@ -3389,7 +3389,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
+         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}  {-cspreportaddress=Address} {-cspreportinterval=Microseconds} {-identifier=PE Identifier}\n",argv[0]);
          exit(1);
       }
    }
@@ -3432,6 +3432,7 @@ int main(int argc, char** argv)
    /* ====== Print information =========================================== */
    puts("The rsplib Name Server - Version 1.00");
    puts("=====================================\n");
+   printf("Server ID:              %08x\n", nameServer->ServerID);
    printf("ASAP Address:           ");
    transportAddressBlockPrint(asapAddress, stdout);
    puts("");
