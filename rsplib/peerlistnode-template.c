@@ -115,12 +115,11 @@ void ST_CLASS(peerListNodeDelete)(struct ST_CLASS(PeerListNode)* peerListNode)
    CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListIndexStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode));
 
-   peerListNode->Identifier          = 0;
    peerListNode->Flags               = 0;
    peerListNode->LastUpdateTimeStamp = 0;
    peerListNode->TimerCode           = 0;
    peerListNode->TimerTimeStamp      = 0;
-   /* Do not clear AddressBlock and UserData yet, it must be used for
+   /* Do not clear AddressBlock, UserData and Identifier yet, they may be used for
       user-specific dispose function! */
 }
 

@@ -83,7 +83,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement fork
+noinst_PROGRAMS = nameserver examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork
 # examplepe2 examplepu2
 
 
@@ -106,6 +106,10 @@ simpleexamplepu_LDFLAGS = -static $(all_libraries) -L.
 examplepe_SOURCES = examplepe.c
 examplepe_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 examplepe_LDFLAGS = -static $(all_libraries) -L.
+
+testregistrator_SOURCES = testregistrator.c
+testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+testregistrator_LDFLAGS = -static $(all_libraries) -L.
 
 examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)

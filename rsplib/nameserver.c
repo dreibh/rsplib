@@ -1,5 +1,5 @@
 /*
- *  $Id: nameserver.c,v 1.20 2004/08/06 15:43:25 dreibh Exp $
+ *  $Id: nameserver.c,v 1.21 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -149,6 +149,7 @@ struct NameServer
 struct PoolElementNodeReference
 {
    struct STN_CLASSNAME              Node;
+   struct PoolHandle                 Handle;
    struct ST_CLASS(PoolElementNode)* Reference;
 };
 
@@ -214,6 +215,7 @@ struct NameServerUserNode* nameServerAddUser(
    }
 
    if(nameServerUserNode != NULL) {
+      cmpPoolElementNodeReference.Reference = poolElementNode;
       poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(Find)(
                                     &nameServerUserNode->PoolElementNodeReferenceStorage,
                                     &cmpPoolElementNodeReference.Node);
@@ -222,6 +224,7 @@ struct NameServerUserNode* nameServerAddUser(
          if(poolElementNodeReference != NULL) {
             STN_METHOD(New)(&poolElementNodeReference->Node);
             poolElementNodeReference->Reference = poolElementNode;
+            poolElementNodeReference->Handle    = poolElementNode->OwnerPoolNode->Handle;
             ST_METHOD(Insert)(&nameServerUserNode->PoolElementNodeReferenceStorage,
                               &poolElementNodeReference->Node);
          }
@@ -407,15 +410,41 @@ static void nameServerSocketCallback(struct Dispatcher* dispatcher,
 static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                     void*                             userData)
 {
-   struct NameServer*         nameServer         = (struct NameServer*)userData;
-   struct NameServerUserNode* nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
+   struct NameServer*               nameServer         = (struct NameServer*)userData;
+   struct NameServerUserNode*       nameServerUserNode = (struct NameServerUserNode*)poolElementNode->UserData;
+   struct PoolElementNodeReference* poolElementNodeReference;
+   struct PoolElementNodeReference  cmpPoolElementNodeReference;
+   struct ST_CLASS(PoolNode)        delPoolNode;
+   struct ST_CLASS(PoolElementNode) delPoolElementNode;
 
    if(nameServerUserNode) {
-
-      /* ====== Send update to peers =============================== */
+      /* ====== Send PeerNameUpdate to delete PE ========================= */
       if(poolElementNode->HomeNSIdentifier == nameServer->ServerID) {
-         sendPeerNameUpdate(nameServer, poolElementNode, PNUP_DEL_PE);
+         /* The ASAP draft wants a full Pool Element Parameter, so
+            we have to fill it. AddressBlock is still valid, we
+            set the policy to default (RR), since it is already gone. */
+         cmpPoolElementNodeReference.Reference = poolElementNode;
+         poolElementNodeReference = (struct PoolElementNodeReference*)ST_METHOD(Find)(
+                                       &nameServerUserNode->PoolElementNodeReferenceStorage,
+                                       &cmpPoolElementNodeReference.Node);
+         if(poolElementNodeReference) {
+            delPoolNode.Handle                  = poolElementNodeReference->Handle;
+            delPoolElementNode.Identifier       = poolElementNode->Identifier;
+            delPoolElementNode.HomeNSIdentifier = nameServer->ServerID;
+            delPoolElementNode.RegistrationLife = 0;
+            delPoolElementNode.AddressBlock     = poolElementNode->AddressBlock;
+            delPoolElementNode.OwnerPoolNode    = &delPoolNode;
+            poolPolicySettingsNew(&delPoolElementNode.PolicySettings);
+            delPoolElementNode.PolicySettings.PolicyType = PPT_ROUNDROBIN;
+            sendPeerNameUpdate(nameServer, &delPoolElementNode, PNUP_DEL_PE);
+         }
+         else {
+            LOG_ERROR
+            fprintf(stderr, "Reference to PE $%08x not found\n", poolElementNode->Identifier);
+            LOG_END_FATAL
+         }
       }
+
 
       nameServerRemoveUser(nameServer,
                            nameServerUserNode->Socket,
@@ -574,6 +603,7 @@ struct NameServer* nameServerNew(const ENRPIdentifierType      serverID,
                               nameServerSocketCallback,
                               (void*)nameServer);
    }
+
    return(nameServer);
 }
 
@@ -792,8 +822,8 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
 
    if(nameServer->InInitializationPhase) {
       nameServer->InInitializationPhase = false;
-      LOG_ACTION
-      fputs("Initialization phase ended. The name server is ready!\n", stdlog);
+      LOG_NOTE
+      fputs("Initialization phase ended after ENRP announce timeout. The name server is ready!\n", stdlog);
       LOG_END
       if(nameServer->ASAPSendAnnounces) {
          timerStart(nameServer->ASAPAnnounceTimer, getMicroTime() + nameServer->MentorDiscoveryInterval);
@@ -1034,7 +1064,8 @@ static void sendPeerNameUpdate(struct NameServer*                nameServer,
    message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
       message->Type                     = EHT_PEER_NAME_UPDATE;
-      message->Flags                    = action;
+      message->Flags                    = 0x00;
+      message->Action                   = action;
       message->SenderID                 = nameServer->ServerID;
       message->Handle                   = poolElementNode->OwnerPoolNode->Handle;
       message->PoolElementPtr           = poolElementNode;
@@ -1045,7 +1076,7 @@ static void sendPeerNameUpdate(struct NameServer*                nameServer,
       ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL),
       fputs(" of pool ", stdlog);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-      fprintf(stdlog, ", action $%04...\n", action);
+      fprintf(stdlog, ", action $%04x...\n", action);
       LOG_END
 
       if(nameServer->ENRPUseMulticast) {
@@ -1503,7 +1534,7 @@ static void handleEndpointUnreachable(struct NameServer*      nameServer,
    else {
       LOG_WARNING
       fprintf(stdlog,
-              "EndpointUnreachable for not-existing pool element $%08x of pool ",
+              "EndpointUnreachable for non-existing pool element $%08x of pool ",
               message->Identifier);
       poolHandlePrint(&message->Handle, stdlog);
       fputs("\n", stdlog);
@@ -1518,7 +1549,7 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
                                  sctp_assoc_t            assocID,
                                  struct RSerPoolMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    int                               result;
 
    if(message->SenderID == nameServer->ServerID) {
@@ -1538,60 +1569,91 @@ static void handlePeerNameUpdate(struct NameServer*      nameServer,
    LOG_END
 
    if(message->Action == PNUP_ADD_PE) {
-      result = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
-                  &nameServer->Namespace,
-                  &message->Handle,
-                  message->PoolElementPtr->HomeNSIdentifier,
-                  message->PoolElementPtr->Identifier,
-                  message->PoolElementPtr->RegistrationLife,
-                  &message->PoolElementPtr->PolicySettings,
-                  message->PoolElementPtr->AddressBlock,
-                  getMicroTime(),
-                  &poolElementNode);
-      if(message->Error == RSPERR_OKAY) {
-         LOG_ACTION
-         fputs("Successfully registered to pool ", stdlog);
-         poolHandlePrint(&message->Handle, stdlog);
-         fputs(" pool element ", stdlog);
-         ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
-         fputs("\n", stdlog);
-         LOG_END
+      if(message->PoolElementPtr->HomeNSIdentifier != nameServer->ServerID) {
+         result = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                     &nameServer->Namespace,
+                     &message->Handle,
+                     message->PoolElementPtr->HomeNSIdentifier,
+                     message->PoolElementPtr->Identifier,
+                     message->PoolElementPtr->RegistrationLife,
+                     &message->PoolElementPtr->PolicySettings,
+                     message->PoolElementPtr->AddressBlock,
+                     getMicroTime(),
+                     &newPoolElementNode);
+         if(result == RSPERR_OKAY) {
+            LOG_ACTION
+            fputs("Successfully registered to pool ", stdlog);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(" pool element ", stdlog);
+            ST_CLASS(poolElementNodePrint)(newPoolElementNode, stdlog, PENPO_FULL);
+            fputs("\n", stdlog);
+            LOG_END
 
-         if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
-            ST_CLASS(poolNamespaceNodeDeactivateTimer)(
+            if(STN_METHOD(IsLinked)(&newPoolElementNode->PoolElementTimerStorageNode)) {
+               ST_CLASS(poolNamespaceNodeDeactivateTimer)(
+                  &nameServer->Namespace.Namespace,
+                  newPoolElementNode);
+            }
+            ST_CLASS(poolNamespaceNodeActivateTimer)(
                &nameServer->Namespace.Namespace,
-               poolElementNode);
-         }
-         ST_CLASS(poolNamespaceNodeActivateTimer)(
-            &nameServer->Namespace.Namespace,
-            poolElementNode,
-            PENT_EXPIRY,
-            getMicroTime() + poolElementNode->RegistrationLife);
-         timerRestart(nameServer->NamespaceActionTimer,
-                     ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
-                        &nameServer->Namespace));
+               newPoolElementNode,
+               PENT_EXPIRY,
+               getMicroTime() + newPoolElementNode->RegistrationLife);
+            timerRestart(nameServer->NamespaceActionTimer,
+                        ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                           &nameServer->Namespace));
 
-         LOG_VERBOSE3
-         fputs("Namespace content:\n", stdlog);
-         nameServerDumpNamespace(nameServer);
-         fputs("Users:\n", stdlog);
-         nameServerDumpUsers(nameServer);
-         LOG_END
+            LOG_VERBOSE3
+            fputs("Namespace content:\n", stdlog);
+            nameServerDumpNamespace(nameServer);
+            fputs("Users:\n", stdlog);
+            nameServerDumpUsers(nameServer);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fputs("Failed to register to pool ", stdlog);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(" pool element ", stdlog);
+            ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(result, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
       }
       else {
-         LOG_WARNING
-         fputs("Failed to register to pool ", stdlog);
-         poolHandlePrint(&message->Handle, stdlog);
-         fputs(" pool element ", stdlog);
-         ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-         fputs(": ", stdlog);
-         rserpoolErrorPrint(message->Error, stdlog);
-         fputs("\n", stdlog);
+         LOG_ERROR
+         fprintf(stdlog, "NS $%08x sent me a PeerNameUpdate for a PE owned by myself!",
+                 message->SenderID);
          LOG_END
       }
    }
 
    else if(message->Action == PNUP_DEL_PE) {
+      result = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
+                  &nameServer->Namespace,
+                  &message->Handle,
+                  message->PoolElementPtr->Identifier);
+      if(message->Error == RSPERR_OKAY) {
+         LOG_ACTION
+         fprintf(stdlog, "Successfully deregistered pool element $%08x from pool ",
+                 message->PoolElementPtr->Identifier);
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+      }
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "Failed to deregister pool element $%08x from pool ",
+                 message->PoolElementPtr->Identifier);
+         poolHandlePrint(&message->Handle, stdlog);
+         fputs(": ", stdlog);
+         rserpoolErrorPrint(result, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+
+      }
    }
 
    else {
@@ -1686,7 +1748,7 @@ static void handlePeerPresence(struct NameServer*      nameServer,
 
          if((nameServer->InInitializationPhase) &&
             (nameServer->MentorServerID == 0)) {
-            LOG_WARNING
+            LOG_ACTION
             fputs("Trying ", stdlog);
             ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
             fputs(" as mentor server...\n", stdlog);
@@ -1880,7 +1942,8 @@ static void handlePeerNameTableRequest(struct NameServer*      nameServer,
                      message->SenderID,
                      NULL);
 
-   response = rserpoolMessageNew(NULL, 65536);
+   /* We allow only 1400 bytes per NameTableResponse... */
+   response = rserpoolMessageNew(NULL, 1400);
    if(response != NULL) {
       response->Type                      = EHT_PEER_NAME_TABLE_RESPONSE;
       response->AssocID                   = assocID;
@@ -1892,6 +1955,7 @@ static void handlePeerNameTableRequest(struct NameServer*      nameServer,
       response->PeerListNodePtr           = peerListNode;
       response->PeerListNodePtrAutoDelete = false;
       response->NamespacePtr              = &nameServer->Namespace;
+      response->NamespacePtrAutoDelete    = false;
 
       if(peerListNode == NULL) {
          message->Flags |= EHT_PEER_NAME_TABLE_RESPONSE_REJECT;
@@ -1923,6 +1987,10 @@ static void handlePeerNameTableResponse(struct NameServer*      nameServer,
                                         sctp_assoc_t            assocID,
                                         struct RSerPoolMessage* message)
 {
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   unsigned int                      result;
+
    if(message->SenderID == nameServer->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
@@ -1937,12 +2005,95 @@ static void handlePeerNameTableResponse(struct NameServer*      nameServer,
    LOG_END
 
    if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
+      if(message->NamespacePtr) {
+         poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementOwnershipNode)(&message->NamespacePtr->Namespace);
+         while(poolElementNode != NULL) {
+            if(poolElementNode->HomeNSIdentifier != nameServer->ServerID) {
+               result = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                           &nameServer->Namespace,
+                           &poolElementNode->OwnerPoolNode->Handle,
+                           poolElementNode->HomeNSIdentifier,
+                           poolElementNode->Identifier,
+                           poolElementNode->RegistrationLife,
+                           &poolElementNode->PolicySettings,
+                           poolElementNode->AddressBlock,
+                           getMicroTime(),
+                           &newPoolElementNode);
+               if(result == RSPERR_OKAY) {
+                  LOG_ACTION
+                  fputs("Successfully registered to pool ", stdlog);
+                  poolHandlePrint(&message->Handle, stdlog);
+                  fputs(" pool element ", stdlog);
+                  ST_CLASS(poolElementNodePrint)(newPoolElementNode, stdlog, PENPO_FULL);
+                  fputs("\n", stdlog);
+                  LOG_END
 
+                  if(!STN_METHOD(IsLinked)(&newPoolElementNode->PoolElementTimerStorageNode)) {
+                     ST_CLASS(poolNamespaceNodeActivateTimer)(
+                        &nameServer->Namespace.Namespace,
+                        newPoolElementNode,
+                        PENT_EXPIRY,
+                        getMicroTime() + newPoolElementNode->RegistrationLife);
+                  }
+               }
+               else {
+                  LOG_WARNING
+                  fputs("Failed to register to pool ", stdlog);
+                  poolHandlePrint(&message->Handle, stdlog);
+                  fputs(" pool element ", stdlog);
+                  ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+                  fputs(": ", stdlog);
+                  rserpoolErrorPrint(result, stdlog);
+                  fputs("\n", stdlog);
+                  LOG_END
+               }
+            }
+            else {
+               LOG_ERROR
+               fprintf(stdlog, "NS $%08x sent me a NameTableResponse containing a PE owned by myself: ",
+                       message->SenderID);
+               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+               fputs("\n", stdlog);
+               LOG_END
+            }
+            poolElementNode = ST_CLASS(poolNamespaceNodeGetNextPoolElementOwnershipNode)(&message->NamespacePtr->Namespace, poolElementNode);
+         }
+
+         timerRestart(nameServer->NamespaceActionTimer,
+                      ST_CLASS(poolNamespaceManagementGetNextTimerTimeStamp)(
+                         &nameServer->Namespace));
+
+
+         LOG_VERBOSE3
+         fputs("Namespace content:\n", stdlog);
+         nameServerDumpNamespace(nameServer);
+         fputs("Peers:\n", stdlog);
+         nameServerDumpPeers(nameServer);
+         LOG_END
+
+
+         if(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND) {
+            LOG_VERBOSE
+            fprintf(stdlog, "NameTableResponse has MoreToSend flag set -> sending NameTableRequest to peer $%08x to get more data\n",
+                    message->SenderID);
+            LOG_END
+            sendPeerNameTableRequest(nameServer, fd, message->AssocID, 0, NULL, 0, message->SenderID);
+         }
+         else {
+            if((nameServer->InInitializationPhase) &&
+               (nameServer->MentorServerID == message->SenderID)) {
+               nameServer->InInitializationPhase = false;
+               LOG_NOTE
+               fputs("Initialization phase ended after obtaining namespace from mentor server. The name server is ready!\n", stdlog);
+               LOG_END
+            }
+         }
+      }
    }
    else {
       LOG_ACTION
       fprintf(stdlog, "Rejected PeerNameTableResponse from peer $%08x\n",
-            message->SenderID);
+              message->SenderID);
       LOG_END
    }
 }
@@ -2451,8 +2602,14 @@ int main(int argc, char** argv)
    puts("");
 
 
-   /* ====== Main loop =================================================== */
+   /* ====== We are ready! =============================================== */
    beginLogging();
+   LOG_NOTE
+   fputs("Name server startet. Going into initialization phase...\n", stdlog);
+   LOG_END
+
+
+   /* ====== Main loop =================================================== */
    while(!breakDetected()) {
       dispatcherGetSelectParameters(nameServer->StateMachine, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
       timeout.tv_sec  = min(0, timeout.tv_sec);

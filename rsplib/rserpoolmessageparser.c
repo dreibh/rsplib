@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.13 2004/08/23 10:48:57 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.14 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1428,44 +1428,39 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   while(message->Position < message->BufferSize) {
-      peerListNode = scanServerInformationParameter(message);
-printf("node=%p\n",peerListNode);
-      if(peerListNode == NULL) {
-         break;
-      }
+   if(!(message->Flags & EHT_PEER_LIST_RESPONSE_REJECT)) {
+      while(message->Position < message->BufferSize) {
+         peerListNode = scanServerInformationParameter(message);
+         if(peerListNode == NULL) {
+            break;
+         }
 
-puts("x1");
-      if(message->PeerListPtr == NULL) {
-         message->PeerListPtr = (struct ST_CLASS(PeerList)*)malloc(sizeof(struct ST_CLASS(PeerList)));
          if(message->PeerListPtr == NULL) {
-            message->Error = RSPERR_OUT_OF_MEMORY;
-            free(peerListNode);
+            message->PeerListPtr = (struct ST_CLASS(PeerList)*)malloc(sizeof(struct ST_CLASS(PeerList)));
+            if(message->PeerListPtr == NULL) {
+               message->Error = RSPERR_OUT_OF_MEMORY;
+               free(peerListNode);
+               return(false);
+            }
+            ST_CLASS(peerListNew)(message->PeerListPtr, 0);
+         }
+         ST_CLASS(peerListAddPeerListNode)(message->PeerListPtr,
+                                           peerListNode,
+                                           &errorCode);
+         if(errorCode != RSPERR_OKAY) {
+            LOG_WARNING
+            fputs("PeerListResponse contains bad peer ", stdlog);
+            ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+            fputs(". Unable to add it: ", stdlog);
+            rserpoolErrorPrint(errorCode, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            message->Error = (uint16_t)errorCode;
             return(false);
          }
-         ST_CLASS(peerListNew)(message->PeerListPtr, 0);
       }
-puts("x2");
-      ST_CLASS(peerListAddPeerListNode)(message->PeerListPtr,
-                                        peerListNode,
-                                        &errorCode);
-      if(errorCode != RSPERR_OKAY) {
-puts("x2.1");
-         LOG_WARNING
-         fputs("PeerListResponse contains bad peer ", stdlog);
-         ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fputs(". Unable to add it: ", stdlog);
-         rserpoolErrorPrint(errorCode, stdlog);
-         fputs("\n", stdlog);
-         LOG_END
-         message->Error = (uint16_t)errorCode;
-puts("x2.2");
-         return(false);
-      }
-puts("x3");
    }
 
-puts("x4");
    return(true);
 }
 
@@ -1492,6 +1487,7 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*  sp;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    size_t                            scannedPoolElementParameters;
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
@@ -1502,24 +1498,49 @@ static bool scanPeerNameTableResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   while(scanPoolHandleParameter(message, &message->Handle)) {
-
-   // CREATE POOL....??????????
-
-      scannedPoolElementParameters = 0;
-      poolElementNode = scanPoolElementParameter(message);
-      while(poolElementNode) {
-         scannedPoolElementParameters++;
-         // ADD PEN.... ????????????????
-
-         poolElementNode = scanPoolElementParameter(message);
-      }
-
-      if(scannedPoolElementParameters == 0) {
-         LOG_WARNING
-         fputs("PeerNameTableResponse contains empty pool\n", stdlog);
-         LOG_END
+   if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
+      message->NamespacePtr = (struct ST_CLASS(PoolNamespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolNamespaceManagement)));
+      if(message->NamespacePtr == NULL) {
+         message->Error = RSPERR_OUT_OF_MEMORY;
          return(false);
+      }
+      ST_CLASS(poolNamespaceManagementNew)(message->NamespacePtr, 0, NULL, NULL, NULL);
+
+      while(scanPoolHandleParameter(message, &message->Handle)) {
+         scannedPoolElementParameters = 0;
+         poolElementNode = scanPoolElementParameter(message);
+         while(poolElementNode) {
+            scannedPoolElementParameters++;
+
+            message->Error = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                                message->NamespacePtr,
+                                &message->Handle,
+                                poolElementNode->HomeNSIdentifier,
+                                poolElementNode->Identifier,
+                                poolElementNode->RegistrationLife,
+                                &poolElementNode->PolicySettings,
+                                poolElementNode->AddressBlock,
+                                0, &newPoolElementNode);
+            if(message->Error != RSPERR_OKAY) {
+               LOG_WARNING
+               fputs("NameTableResponse contains bad/inconsistent entry: ", stdlog);
+               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+               fputs(" - Unable to use it: ", stdlog);
+               rserpoolErrorPrint(message->Error, stdlog);
+               fputs("\n", stdlog);
+               LOG_END
+               return(false);
+            }
+
+            poolElementNode = scanPoolElementParameter(message);
+         }
+
+         if(scannedPoolElementParameters == 0) {
+            LOG_WARNING
+            fputs("PeerNameTableResponse contains empty pool\n", stdlog);
+            LOG_END
+            return(false);
+         }
       }
    }
 
@@ -1929,6 +1950,9 @@ struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
       message->CookiePtrAutoDelete                    = true;
       message->PoolElementPtrArrayAutoDelete          = true;
       message->TransportAddressBlockListPtrAutoDelete = true;
+      message->NamespacePtrAutoDelete                 = true;
+      message->PeerListNodePtrAutoDelete              = true;
+      message->PeerListPtrAutoDelete                  = true;
 
       LOG_VERBOSE3
       fprintf(stdlog, "Scanning message, size=%u...\n",

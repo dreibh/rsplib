@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.14 2004/07/29 15:10:33 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.15 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -776,7 +776,7 @@ static void handleNameServerConnectionEvent(
          }
          else {
             LOG_WARNING
-            fprintf(stdlog, "Received unexpected message type #%d\n",
+            fprintf(stdlog, "Received unexpected message type $%04x\n",
                     message->Type);
             LOG_END
          }

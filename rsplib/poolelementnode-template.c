@@ -65,8 +65,6 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode));
 
-   poolElementNode->Identifier            = 0;
-   poolElementNode->HomeNSIdentifier      = 0;
    poolElementNode->RegistrationLife      = 0;
    poolElementNode->OwnerPoolNode         = NULL;
    poolElementNode->SeqNumber             = 0;
@@ -78,8 +76,8 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    poolElementNode->LastUpdateTimeStamp   = 0;
    poolElementNode->TimerTimeStamp        = 0;
    poolElementNode->TimerCode             = 0;
-   /* Do not clear AddressBlock and UserData yet, it must be used for
-      user-specific dispose function! */
+   /* Do not clear AddressBlock, UserData, Identifier and HomeNSIdentifier yet,
+      they may be necessary for user-specific dispose function! */
 
    STN_METHOD(Delete)(&poolElementNode->PoolElementOwnershipStorageNode);
    STN_METHOD(Delete)(&poolElementNode->PoolElementTimerStorageNode);
@@ -141,6 +139,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
       safestrcat(buffer, tmp, bufferSize);
    }
    if((fields & PENPO_USERTRANSPORT) &&
+      (poolElementNode->AddressBlock != NULL) &&
       (poolElementNode->AddressBlock->Addresses > 0)) {
       transportAddressBlockGetDescription(poolElementNode->AddressBlock,
                                           (char*)&transportAddressDescription,

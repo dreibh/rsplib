@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.3 2004/07/19 09:06:54 dreibh Exp $
+ *  $Id: loglevel.h,v 1.4 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -52,8 +52,8 @@ extern "C" {
 
 #define LOGLEVEL_ERROR     1
 #define LOGLEVEL_WARNING   2
-#define LOGLEVEL_ACTION    3
-#define LOGLEVEL_NOTE      4
+#define LOGLEVEL_NOTE      3
+#define LOGLEVEL_ACTION    4
 #define LOGLEVEL_VERBOSE1  5
 #define LOGLEVEL_VERBOSE2  6
 #define LOGLEVEL_VERBOSE3  7

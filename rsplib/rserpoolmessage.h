@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.5 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.6 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -300,63 +300,64 @@ struct rserpool_targetparameter
 
 struct RSerPoolMessage
 {
-   unsigned int                      Type;
-   uint16_t                          Error;
-   uint8_t                           Flags;
-   uint16_t                          Action;
-   union sockaddr_union*             AddressArray;
-   size_t                            Addresses;
+   unsigned int                              Type;
+   uint16_t                                  Error;
+   uint8_t                                   Flags;
+   uint16_t                                  Action;
+   union sockaddr_union*                     AddressArray;
+   size_t                                    Addresses;
 
-   char*                             OperationErrorData;
-   size_t                            OperationErrorLength;
+   char*                                     OperationErrorData;
+   size_t                                    OperationErrorLength;
 
-   char*                             OffendingParameterTLV;
-   size_t                            OffendingParameterTLVLength;
-   bool                              OffendingParameterTLVAutoDelete;
-   char*                             OffendingMessageTLV;
-   size_t                            OffendingMessageTLVLength;
-   bool                              OffendingMessageTLVAutoDelete;
+   char*                                     OffendingParameterTLV;
+   size_t                                    OffendingParameterTLVLength;
+   bool                                      OffendingParameterTLVAutoDelete;
+   char*                                     OffendingMessageTLV;
+   size_t                                    OffendingMessageTLVLength;
+   bool                                      OffendingMessageTLVAutoDelete;
 
-   char*                             Buffer;
-   bool                              BufferAutoDelete;
-   size_t                            BufferSize;
-   size_t                            OriginalBufferSize;
-   size_t                            Position;
+   char*                                     Buffer;
+   bool                                      BufferAutoDelete;
+   size_t                                    BufferSize;
+   size_t                                    OriginalBufferSize;
+   size_t                                    Position;
 
-   PoolElementIdentifierType         Identifier;
-   PoolElementChecksumType           Checksum;
-   struct PoolPolicySettings         PolicySettings;
-   struct PoolHandle                 Handle;
+   PoolElementIdentifierType                 Identifier;
+   PoolElementChecksumType                   Checksum;
+   struct PoolPolicySettings                 PolicySettings;
+   struct PoolHandle                         Handle;
 
-   ENRPIdentifierType                NSIdentifier;
-   unsigned int                      NSFlags;
-   ENRPIdentifierType                SenderID;
-   ENRPIdentifierType                ReceiverID;
+   ENRPIdentifierType                        NSIdentifier;
+   unsigned int                              NSFlags;
+   ENRPIdentifierType                        SenderID;
+   ENRPIdentifierType                        ReceiverID;
 
-   struct ST_CLASS(PoolElementNode)* PoolElementPtr;
-   bool                              PoolElementPtrAutoDelete;
+   struct ST_CLASS(PoolElementNode)*         PoolElementPtr;
+   bool                                      PoolElementPtrAutoDelete;
 
-   void*                             CookiePtr;
-   bool                              CookiePtrAutoDelete;
-   size_t                            CookieSize;
+   void*                                     CookiePtr;
+   bool                                      CookiePtrAutoDelete;
+   size_t                                    CookieSize;
 
-   struct TransportAddressBlock*     TransportAddressBlockListPtr;
-   bool                              TransportAddressBlockListPtrAutoDelete;
+   struct TransportAddressBlock*             TransportAddressBlockListPtr;
+   bool                                      TransportAddressBlockListPtrAutoDelete;
 
-   struct ST_CLASS(PoolElementNode)* PoolElementPtrArray[MAX_MAX_NAME_RESOLUTION_ITEMS];
-   size_t                            PoolElementPtrArraySize;
-   bool                              PoolElementPtrArrayAutoDelete;
+   struct ST_CLASS(PoolElementNode)*         PoolElementPtrArray[MAX_MAX_NAME_RESOLUTION_ITEMS];
+   size_t                                    PoolElementPtrArraySize;
+   bool                                      PoolElementPtrArrayAutoDelete;
 
-   struct ST_CLASS(PeerListNode)*    PeerListNodePtr;
-   bool                              PeerListNodePtrAutoDelete;
-   struct ST_CLASS(PeerList)*        PeerListPtr;
-   bool                              PeerListPtrAutoDelete;
+   struct ST_CLASS(PeerListNode)*            PeerListNodePtr;
+   bool                                      PeerListNodePtrAutoDelete;
+   struct ST_CLASS(PeerList)*                PeerListPtr;
+   bool                                      PeerListPtrAutoDelete;
 
    struct ST_CLASS(PoolNamespaceManagement)* NamespacePtr;
+   bool                                      NamespacePtrAutoDelete;
 
-   sctp_assoc_t                      AssocID;
-   unsigned short                    StreamID;
-   uint32_t                          PPID;
+   sctp_assoc_t                              AssocID;
+   unsigned short                            StreamID;
+   uint32_t                                  PPID;
 };
 
 

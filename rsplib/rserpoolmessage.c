@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.6 2004/07/29 15:10:34 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.7 2004/08/23 15:17:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -56,7 +56,7 @@ struct RSerPoolMessage* rserpoolMessageNew(char* buffer, const size_t bufferSize
    if(buffer == NULL) {
       message = (struct RSerPoolMessage*)malloc(sizeof(struct RSerPoolMessage) + bufferSize);
       if(message != NULL) {
-         memset(message,0,sizeof(struct RSerPoolMessage));
+         memset(message, 0, sizeof(struct RSerPoolMessage));
          message->Buffer             = (char*)((long)message + (long)sizeof(struct RSerPoolMessage));
          message->BufferSize         = bufferSize;
          message->OriginalBufferSize = bufferSize;
@@ -65,7 +65,7 @@ struct RSerPoolMessage* rserpoolMessageNew(char* buffer, const size_t bufferSize
    else {
       message = (struct RSerPoolMessage*)malloc(sizeof(struct RSerPoolMessage));
       if(message != NULL) {
-         memset(message,0,sizeof(struct RSerPoolMessage));
+         memset(message, 0, sizeof(struct RSerPoolMessage));
          message->Buffer             = buffer;
          message->BufferSize         = bufferSize;
          message->OriginalBufferSize = bufferSize;
@@ -136,10 +136,11 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          ST_CLASS(peerListNodeDelete)(message->PeerListNodePtr);
          free(message->PeerListNodePtr);
       }
-      if(message->PeerListPtrAutoDelete) {
+      if((message->PeerListPtrAutoDelete) && (message->PeerListPtr)) {
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                            message->PeerListPtr);
          while(peerListNode != NULL) {
+            ST_CLASS(peerListRemovePeerListNode)(message->PeerListPtr, peerListNode);
             ST_CLASS(peerListNodeDelete)(peerListNode);
             transportAddressBlockDelete(peerListNode->AddressBlock);
             free(peerListNode->AddressBlock);
@@ -147,6 +148,12 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
             peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                               message->PeerListPtr);
          }
+      }
+      if((message->NamespacePtrAutoDelete) && (message->NamespacePtr)) {
+         ST_CLASS(poolNamespaceManagementClear)(message->NamespacePtr);
+         ST_CLASS(poolNamespaceManagementDelete)(message->NamespacePtr);
+         free(message->NamespacePtr);
+         message->NamespacePtr = NULL;
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
          free(message->OffendingParameterTLV);
@@ -340,7 +347,7 @@ void* getSpace(struct RSerPoolMessage* message,
            "Buffer size too low!\np=%u + h=%u > size=%u\n",
            (unsigned int)message->Position, (unsigned int)headerSize,
            (unsigned int)message->BufferSize);
-   LOG_END_FATAL  // ?????????????????
+   LOG_END
 
    return(NULL);
 }
