@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.9 2004/07/29 16:32:55 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.10 2004/07/30 11:01:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1429,22 +1429,27 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
 
    while(message->Position < message->BufferSize) {
       peerListNode = scanServerInformationParameter(message);
+printf("node=%p\n",peerListNode);
       if(peerListNode == NULL) {
          break;
       }
 
+puts("x1");
       if(message->PeerListPtr == NULL) {
          message->PeerListPtr = (struct ST_CLASS(PeerList)*)malloc(sizeof(struct ST_CLASS(PeerList)));
-         if(message->PeerListPtr) {
+         if(message->PeerListPtr == NULL) {
             message->Error = RSPERR_OUT_OF_MEMORY;
             free(peerListNode);
             return(false);
          }
+         ST_CLASS(peerListNew)(message->PeerListPtr, 0);
       }
+puts("x2");
       ST_CLASS(peerListAddPeerListNode)(message->PeerListPtr,
                                         peerListNode,
                                         &errorCode);
       if(errorCode != RSPERR_OKAY) {
+puts("x2.1");
          LOG_WARNING
          fputs("PeerListResponse contains bad peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
@@ -1453,10 +1458,13 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
          fputs("\n", stdlog);
          LOG_END
          message->Error = (uint16_t)errorCode;
+puts("x2.2");
          return(false);
       }
+puts("x3");
    }
 
+puts("x4");
    return(true);
 }
 
@@ -1913,7 +1921,7 @@ struct RSerPoolMessage* rserpoolPacket2Message(char*          packet,
       LOG_WARNING
       fprintf(stdlog, "Format error in message at byte %u!\n",
               (unsigned int)message->Position);
-      LOG_END
+      LOG_END_FATAL  // =???????????????
       rserpoolMessageDelete(message);
       message = NULL;
    }

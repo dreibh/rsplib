@@ -20,10 +20,11 @@
  *
  */
 
-#ifndef POOLMANAGEMENT_H
-#define POOLMANAGEMENT_H
+#ifndef POOLNAMESPACEMANAGEMENT_H
+#define POOLNAMESPACEMANAGEMENT_H
 
 
+#include "config.h"
 #include "rserpoolerror.h"
 #include "poolnamespacemanagement-basics.h"
 #include "poolhandle.h"

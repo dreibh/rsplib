@@ -20,6 +20,7 @@
  *
  */
 
+#include "config.h"
 #include "transportaddressblock.h"
 #include "stringutilities.h"
 #include "debug.h"
