@@ -24,7 +24,9 @@
 #define POOLMANAGEMENT_H
 
 
+#include "rserpoolerror.h"
 #include "poolnamespacemanagement-basics.h"
+#include "poolhandle.h"
 #include "poolpolicysettings.h"
 #include "transportaddressblock.h"
 #include "stringutilities.h"

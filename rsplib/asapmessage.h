@@ -1,5 +1,5 @@
 /*
- *  $Id: asapmessage.h,v 1.2 2004/07/13 14:23:37 dreibh Exp $
+ *  $Id: asapmessage.h,v 1.3 2004/07/16 15:35:40 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -236,8 +236,7 @@ struct ASAPMessage
 
    PoolElementIdentifierType           Identifier;
    struct PoolPolicySettings           PolicySettings;
-   unsigned char                       PoolHandle[MAX_POOLHANDLESIZE];
-   size_t                              PoolHandleSize;
+   struct PoolHandle                   Handle;
 
    struct ST_CLASS(PoolElementNode)*   PoolElementPtr;
    bool                                PoolElementPtrAutoDelete;

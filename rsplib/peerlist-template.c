@@ -127,9 +127,9 @@ unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
                 struct ST_CLASS(PeerListNode)* peerListNode)
 {
    if(peerListNode->Identifier == peerList->OwnIdentifier) {
-      return(PENC_INVALID_ID);
+      return(RSPERR_INVALID_ID);
    }
-   return(PENC_OKAY);
+   return(RSPERR_OKAY);
 }
 
 
@@ -142,7 +142,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
    struct STN_CLASSNAME* result;
 
    *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
-   if(*errorCode != PENC_OKAY) {
+   if(*errorCode != RSPERR_OKAY) {
       return(NULL);
    }
 
@@ -150,10 +150,10 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
                               &peerListNode->PeerListIndexStorageNode);
    if(result == &peerListNode->PeerListIndexStorageNode) {
       peerListNode->OwnerPeerList = peerList;
-      *errorCode = PENC_OKAY;
+      *errorCode = RSPERR_OKAY;
       return(peerListNode);
    }
-   *errorCode = PENC_DUPLICATE_ID;
+   *errorCode = RSPERR_DUPLICATE_ID;
    return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(result));
 }
 
@@ -166,7 +166,7 @@ void ST_CLASS(peerListUpdatePeerListNode)(
         unsigned int*                        errorCode)
 {
    *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
-   if(*errorCode == PENC_OKAY) {
+   if(*errorCode == RSPERR_OKAY) {
       ST_CLASS(peerListNodeUpdate)(peerListNode, source);
    }
 }

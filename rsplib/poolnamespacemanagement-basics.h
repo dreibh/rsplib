@@ -36,27 +36,11 @@ extern "C" {
 #endif
 
 
-#define MAX_POOLHANDLESIZE         32
 #define MAX_PE_TRANSPORTADDRESSES 128
 
 typedef uint32_t ENRPIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
 typedef uint32_t PoolElementSeqNumberType;
-
-
-#define PENC_OKAY                           0
-#define PENC_NO_RESOURCES                   1
-#define PENC_NOT_FOUND                      2
-#define PENC_INVALID_ID                     3
-#define PENC_DUPLICATE_ID                   4
-#define PENC_WRONG_PROTOCOL                 5
-#define PENC_WRONG_CONTROLCHANNEL_HANDLING  6
-#define PENC_INCOMPATIBLE_POOL_POLICY       7
-#define PENC_INVALID_POOL_POLICY            8
-#define PENC_INVALID_POOL_HANDLE            9
-#define PENC_INVALID_ADDRESSES             10
-
-#define _PENC_LAST_CODE                    11
 
 
 #define PENPO_POLICYINFO      (1 << 0)   /* constants set by PE      */
@@ -92,18 +76,6 @@ typedef uint32_t PoolElementSeqNumberType;
 
 
 const char* poolNamespaceManagementGetErrorDescription(const unsigned int errorCode);
-
-void poolHandleGetDescription(const unsigned char* poolHandle,
-                              const size_t         poolHandleSize,
-                              char*                buffer,
-                              const size_t         bufferSize);
-void poolHandlePrint(const unsigned char* poolHandle,
-                     const size_t         poolHandleSize,
-                     FILE*                fd);
-int poolHandleComparison(const unsigned char* poolHandle1,
-                         const size_t         poolHandleSize1,
-                         const unsigned char* poolHandle2,
-                         const size_t         poolHandleSize2);
 
 PoolElementIdentifierType getPoolElementIdentifier();
 

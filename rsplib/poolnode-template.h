@@ -42,8 +42,7 @@ struct ST_CLASS(PoolNode)
    struct ST_CLASSNAME                 PoolElementIndexStorage;
    struct ST_CLASS(PoolNamespaceNode)* OwnerPoolNamespaceNode;
 
-   size_t                              PoolHandleSize;
-   unsigned char                       PoolHandle[MAX_POOLHANDLESIZE];
+   struct PoolHandle                   Handle;
    const struct ST_CLASS(PoolPolicy)*  Policy;
    int                                 Protocol;
    int                                 Flags;
@@ -58,8 +57,7 @@ int ST_CLASS(poolIndexStorageNodeComparison)(const void *nodePtr1, const void *n
 
 
 void ST_CLASS(poolNodeNew)(struct ST_CLASS(PoolNode)*         poolNode,
-                           const unsigned char*               poolHandle,
-                           const size_t                       poolHandleSize,
+                           const struct PoolHandle*           poolHandle,
                            const struct ST_CLASS(PoolPolicy)* poolPolicy,
                            const int                          protocol,
                            const int                          flags);

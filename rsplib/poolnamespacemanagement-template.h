@@ -93,19 +93,16 @@ inline size_t ST_CLASS(poolNamespaceManagementGetPoolElements)(
 /* ###### Get number of pool elements of given pool ###################### */
 inline size_t ST_CLASS(poolNamespaceManagementGetPoolElementsOfPool)(
                  struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                 const unsigned char*                      poolHandle,
-                 const size_t                              poolHandleSize)
+                 const struct PoolHandle*                  poolHandle)
 {
    return(ST_CLASS(poolNamespaceNodeGetPoolElementNodesOfPool)(
              &poolNamespaceManagement->Namespace,
-             poolHandle, poolHandleSize));
+             poolHandle));
 }
-
 
 unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
                 const ENRPIdentifierType                  homeNSIdentifier,
                 const PoolElementIdentifierType           poolElementIdentifier,
                 const unsigned int                        registrationLife,
@@ -113,6 +110,28 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 const struct TransportAddressBlock*       transportAddressBlock,
                 const unsigned long long                  currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**        poolElementNode);
+
+
+/* ###### Registration ################################################### */
+inline unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElementByPtr)(
+                       struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
+                       const struct PoolHandle*                  poolHandle,
+                       const struct ST_CLASS(PoolElementNode)*   originalPoolElementNode,
+                       const unsigned long long                  currentTimeStamp,
+                       struct ST_CLASS(PoolElementNode)**        poolElementNode)
+{
+   return(ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+             poolNamespaceManagement,
+             poolHandle,
+             originalPoolElementNode->HomeNSIdentifier,
+             originalPoolElementNode->Identifier,
+             originalPoolElementNode->RegistrationLife,
+             &originalPoolElementNode->PolicySettings,
+             originalPoolElementNode->AddressBlock,
+             currentTimeStamp,
+             poolElementNode));
+}
+
 
 void ST_CLASS(poolNamespaceManagementRestartPoolElementExpiryTimer)(
         struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
@@ -126,13 +145,12 @@ size_t ST_CLASS(poolNamespaceManagementPurgeExpiredPoolElements)(
 
 inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceManagementFindPoolElement)(
                                             struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                                            const unsigned char*                      poolHandle,
-                                            const size_t                              poolHandleSize,
+                                            const struct PoolHandle*                  poolHandle,
                                             const PoolElementIdentifierType           poolElementIdentifier)
 {
    return(ST_CLASS(poolNamespaceNodeFindPoolElementNode)(
              &poolNamespaceManagement->Namespace,
-             poolHandle, poolHandleSize,
+             poolHandle,
              poolElementIdentifier));
 }
 
@@ -143,14 +161,12 @@ unsigned int ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
 
 unsigned int ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
                 const PoolElementIdentifierType           poolElementIdentifier);
 
 unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
                 struct ST_CLASS(PoolElementNode)**        poolElementNodeArray,
                 size_t*                                   poolElementNodes,
                 const size_t                              maxNameResolutionItems,
@@ -163,8 +179,7 @@ unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
 
 struct ST_CLASS(NameTableExtract)
 {
-   unsigned char                     LastPoolHandle[MAX_POOLHANDLESIZE];
-   size_t                            LastPoolHandleSize;
+   struct PoolHandle                 LastPoolHandle;
    PoolElementIdentifierType         LastPoolElementIdentifier;
    size_t                            PoolElementNodes;
    struct ST_CLASS(PoolElementNode)* PoolElementNodeArray[NTE_MAX_POOL_ELEMENT_NODES];

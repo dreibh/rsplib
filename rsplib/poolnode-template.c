@@ -21,40 +21,35 @@
  */
 
 /* ###### Print ########################################################## */
-void ST_CLASS(poolIndexStorageNodePrint)(const void *nodePtr, FILE* fd)
+void ST_CLASS(poolIndexStorageNodePrint)(const void* nodePtr, FILE* fd)
 {
    const struct ST_CLASS(PoolNode)* poolNode = (struct ST_CLASS(PoolNode)*)nodePtr;
    fprintf(fd, "\"");
-   poolHandlePrint(poolNode->PoolHandle, poolNode->PoolHandleSize, fd);
+   poolHandlePrint(&poolNode->Handle, fd);
    fprintf(fd, "\"");
 }
 
 
 /* ###### Comparison ##################################################### */
-int ST_CLASS(poolIndexStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2)
+int ST_CLASS(poolIndexStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2)
 {
-   const struct ST_CLASS(PoolNode)* node1 = (struct ST_CLASS(PoolNode)*)nodePtr1;
-   const struct ST_CLASS(PoolNode)* node2 = (struct ST_CLASS(PoolNode)*)nodePtr2;
-   return(poolHandleComparison(node1->PoolHandle,
-                               node1->PoolHandleSize,
-                               node2->PoolHandle,
-                               node2->PoolHandleSize));
+   const struct ST_CLASS(PoolNode)* poolNode1 = (struct ST_CLASS(PoolNode)*)nodePtr1;
+   const struct ST_CLASS(PoolNode)* poolNode2 = (struct ST_CLASS(PoolNode)*)nodePtr2;
+   return(poolHandleComparison(&poolNode1->Handle, &poolNode2->Handle));
 }
 
 
 /* ###### Initialize ##################################################### */
 void ST_CLASS(poolNodeNew)(struct ST_CLASS(PoolNode)*         poolNode,
-                           const unsigned char*               poolHandle,
-                           const size_t                       poolHandleSize,
+                           const struct PoolHandle*           poolHandle,
                            const struct ST_CLASS(PoolPolicy)* poolPolicy,
                            const int                          protocol,
                            const int                          flags)
 {
-   CHECK(poolHandleSize < MAX_POOLHANDLESIZE);
-
    STN_METHOD(New)(&poolNode->PoolIndexStorageNode);
-   memcpy(poolNode->PoolHandle, poolHandle, poolHandleSize);
-   poolNode->PoolHandleSize         = poolHandleSize;
+   poolHandleNew(&poolNode->Handle,
+                 poolHandle->Handle,
+                 poolHandle->Size);
    poolNode->Policy                 = poolPolicy;
    poolNode->Protocol               = protocol;
    poolNode->Flags                  = flags;
@@ -71,13 +66,11 @@ void ST_CLASS(poolNodeDelete)(struct ST_CLASS(PoolNode)* poolNode)
 {
    CHECK(!STN_METHOD(IsLinked)(&poolNode->PoolIndexStorageNode));
    CHECK(ST_METHOD(IsEmpty)(&poolNode->PoolElementSelectionStorage));
-
-   poolNode->PoolHandle[0]  = 0x00;
-   poolNode->PoolHandleSize = 0;
-   poolNode->Protocol       = 0;
-   poolNode->UserData       = NULL;
+   poolHandleDelete(&poolNode->Handle);
    ST_METHOD(Delete)(&poolNode->PoolElementSelectionStorage);
    ST_METHOD(Delete)(&poolNode->PoolElementIndexStorage);
+   poolNode->Protocol = 0;
+   poolNode->UserData = NULL;
 }
 
 
@@ -102,7 +95,7 @@ void ST_CLASS(poolNodeGetDescription)(struct ST_CLASS(PoolNode)* poolNode,
        break;
    }
 
-   poolHandleGetDescription(poolNode->PoolHandle, poolNode->PoolHandleSize,
+   poolHandleGetDescription(&poolNode->Handle,
                             poolHandleDescription, sizeof(poolHandleDescription));
 
    safestrcpy(buffer, "Pool \"", bufferSize);
@@ -183,39 +176,39 @@ unsigned int ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(
                 struct ST_CLASS(PoolElementNode)*   poolElementNode)
 {
    if(poolElementNode->Identifier == 0) {
-      return(PENC_INVALID_ID);
+      return(RSPERR_INVALID_ID);
    }
 
    if(poolNode->Protocol != poolElementNode->AddressBlock->Protocol) {
-      return(PENC_WRONG_PROTOCOL);
+      return(RSPERR_WRONG_PROTOCOL);
    }
 
    if((poolElementNode->AddressBlock->Addresses < 1) ||
       (poolElementNode->AddressBlock->Addresses > MAX_PE_TRANSPORTADDRESSES)) {
-      return(PENC_INVALID_ADDRESSES);
+      return(RSPERR_INVALID_ADDRESSES);
    }
 
    if(poolNode->Flags & PNF_CONTROLCHANNEL) {
       if(!poolElementNode->AddressBlock->Flags & TABF_CONTROLCHANNEL) {
-         return(PENC_WRONG_CONTROLCHANNEL_HANDLING);
+         return(RSPERR_WRONG_CONTROLCHANNEL_HANDLING);
       }
    }
    else {
       if(poolElementNode->AddressBlock->Flags & TABF_CONTROLCHANNEL) {
-         return(PENC_WRONG_CONTROLCHANNEL_HANDLING);
+         return(RSPERR_WRONG_CONTROLCHANNEL_HANDLING);
       }
    }
 
    if(!poolPolicySettingsIsValid(&poolElementNode->PolicySettings)) {
-      return(PENC_INVALID_POOL_POLICY);
+      return(RSPERR_INVALID_POOL_POLICY);
    }
 
    if(poolPolicySettingsAdapt(&poolElementNode->PolicySettings,
                               poolNode->Policy->Type) == 0) {
-      return(PENC_INCOMPATIBLE_POOL_POLICY);
+      return(RSPERR_INCOMPATIBLE_POOL_POLICY);
    }
 
-   return(PENC_OKAY);
+   return(RSPERR_OKAY);
 }
 
 
@@ -228,7 +221,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeAddPoolElementNode)(
    struct STN_CLASSNAME* result;
 
    *errorCode = ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(poolNode, poolElementNode);
-   if(*errorCode != PENC_OKAY) {
+   if(*errorCode != RSPERR_OKAY) {
       return(NULL);
    }
 
@@ -249,10 +242,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeAddPoolElementNode)(
          poolNode->Policy->InitializePoolElementNodeFunction(poolElementNode);
       }
       ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(poolNode, poolElementNode);
-      *errorCode = PENC_OKAY;
+      *errorCode = RSPERR_OKAY;
       return(poolElementNode);
    }
-   *errorCode = PENC_DUPLICATE_ID;
+   *errorCode = RSPERR_DUPLICATE_ID;
    return(ST_CLASS(getPoolElementNodeFromPoolElementIndexStorageNode)(result));
 }
 
@@ -265,7 +258,7 @@ void ST_CLASS(poolNodeUpdatePoolElementNode)(
         unsigned int*                           errorCode)
 {
    *errorCode = ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(poolNode, poolElementNode);
-   if(*errorCode == PENC_OKAY) {
+   if(*errorCode == RSPERR_OKAY) {
       if(ST_CLASS(poolElementNodeUpdate)(poolElementNode, source)) {
          /*
             Policy information has changed. Now, the node has to be re-inserted (Selection only).

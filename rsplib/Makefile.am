@@ -3,12 +3,10 @@ lib_LTLIBRARIES = librsplib.la libnetutilities.la libutilities.la librandomizer.
 librsplibincludedir      = $(prefix)/include/rserpool
 librsplibinclude_HEADERS = rsplib.h rsplib-tags.h
 librsplib_la_SOURCES = \
-asapcache.c \
-asapcache.h \
 asapcreator.c \
 asapcreator.h \
-asaperror.c \
-asaperror.h \
+rserpoolerror.c \
+rserpoolerror.h \
 asapinstance.c \
 asapinstance.h \
 asapmessage.c \

@@ -139,8 +139,7 @@ inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeGetLastPoolEl
 
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementPropertyNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const unsigned char*                poolHandle,
-                                     const size_t                        poolHandleSize,
+                                     const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier);
 
 
@@ -190,8 +189,7 @@ inline size_t ST_CLASS(poolNamespaceNodeGetPoolNodes)(
 
 size_t ST_CLASS(poolNamespaceNodeGetPoolElementNodesOfPool)(
           struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-          const unsigned char*                poolHandle,
-          const size_t                        poolHandleSize);
+          const struct PoolHandle*            poolHandle);
 
 
 /* ###### Get first PoolNode ############################################# */
@@ -233,12 +231,10 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeAddPoolNode)(
                               struct ST_CLASS(PoolNode)*          poolNode);
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindPoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                              const unsigned char*                poolHandle,
-                              const size_t                        poolHandleSize);
+                              const struct PoolHandle*            poolHandle);
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                              const unsigned char*                poolHandle,
-                              const size_t                        poolHandleSize);
+                              const struct PoolHandle*            poolHandle);
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeRemovePoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
                               struct ST_CLASS(PoolNode)*          poolNode);
@@ -251,13 +247,12 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeAddPoolElementNode)(
 
 inline struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindPoolElementNode)(
                                             struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                            const unsigned char*                poolHandle,
-                                            const size_t                        poolHandleSize,
+                                            const struct PoolHandle*            poolHandle,
                                             const PoolElementIdentifierType     poolElementIdentifier)
 {
    struct ST_CLASS(PoolNode)* poolNode = ST_CLASS(poolNamespaceNodeFindPoolNode)(
                                             poolNamespaceNode,
-                                            poolHandle, poolHandleSize);
+                                            poolHandle);
    if(poolNode != NULL) {
       return(ST_CLASS(poolNodeFindPoolElementNode)(poolNode, poolElementIdentifier));
    }
@@ -329,24 +324,23 @@ void ST_CLASS(poolNamespaceNodeClear)(struct ST_CLASS(PoolNamespaceNode)* poolNa
 /* ###### Select PoolElementNodes by Pool Policy ######################### */
 inline size_t ST_CLASS(poolNamespaceNodeSelectPoolElementNodesByPolicy)(
                  struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                 const unsigned char*                poolHandle,
-                 const size_t                        poolHandleSize,
+                 const struct PoolHandle*            poolHandle,
                  struct ST_CLASS(PoolElementNode)**  poolElementNodeArray,
                  const size_t                        maxPoolElementNodes,
                  const size_t                        maxIncrement,
                  unsigned int*                       errorCode)
 {
-   struct ST_CLASS(PoolNode)* poolNode = ST_CLASS(poolNamespaceNodeFindPoolNode)(poolNamespaceNode, poolHandle, poolHandleSize);
+   struct ST_CLASS(PoolNode)* poolNode = ST_CLASS(poolNamespaceNodeFindPoolNode)(poolNamespaceNode, poolHandle);
    size_t                     count    = 0;
    if(poolNode != NULL) {
-      *errorCode = PENC_OKAY;
+      *errorCode = RSPERR_OKAY;
       count = poolNode->Policy->SelectionFunction(poolNode, poolElementNodeArray, maxPoolElementNodes, maxIncrement);
 #ifdef VERIFY
       ST_CLASS(poolNamespaceNodeVerify)(poolNamespaceNode);
 #endif
    }
    else {
-      *errorCode = PENC_NOT_FOUND;
+      *errorCode = RSPERR_NOT_FOUND;
    }
    return(count);
 }

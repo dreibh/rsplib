@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.2 2004/07/16 15:35:40 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,10 +42,7 @@
 #include "asapmessage.h"
 #include "asapcreator.h"
 #include "asapparser.h"
-#include "asapcache.h"
 #include "utilities.h"
-#include "asaperror.h"
-#include "asapcache.h"
 #include "rsplib-tags.h"
 
 
@@ -58,111 +55,110 @@ static void asapNameServerConnectionHandler(struct Dispatcher* dispatcher,
                                             int                eventMask,
                                             void*              userData);
 
-static void asapDisconnectFromNameServer(struct ASAPInstance* asap);
+static void asapDisconnectFromNameServer(struct ASAPInstance* asapInstance);
 
 
 
 /* ###### Get configuration from file #################################### */
-static void asapConfigure(struct ASAPInstance* asap, struct TagItem* tags)
+static void asapConfigure(struct ASAPInstance* asapInstance, struct TagItem* tags)
 {
    /* ====== ASAP Instance settings ======================================= */
-   asap->NameServerRequestMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerRequestMaxTrials,
+   asapInstance->NameServerRequestMaxTrials = tagListGetData(tags, TAG_RspLib_NameServerRequestMaxTrials,
                                                      ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS);
-   asap->NameServerRequestTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerRequestTimeout,
+   asapInstance->NameServerRequestTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerRequestTimeout,
                                                            ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT);
-   asap->NameServerResponseTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerResponseTimeout,
+   asapInstance->NameServerResponseTimeout = (card64)tagListGetData(tags, TAG_RspLib_NameServerResponseTimeout,
                                                             ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT);
-   asap->CacheElementTimeout = (card64)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
+   asapInstance->CacheElementTimeout = (card64)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
                                                       ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
-   asap->CacheMaintenanceInterval = (card64)tagListGetData(tags, TAG_RspLib_CacheMaintenanceInterval,
-                                                           ASAP_DEFAULT_CACHE_MAINTENANCE_INTERVAL);
 
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",       asap->NameServerRequestMaxTrials);
-   fprintf(stdlog, "nameserver.request.timeout     = %Lu [탎]\n", asap->NameServerRequestTimeout);
-   fprintf(stdlog, "nameserver.response.timeout    = %Lu [탎]\n", asap->NameServerResponseTimeout);
-   fprintf(stdlog, "cache.elementtimeout           = %Lu [탎]\n", asap->CacheElementTimeout);
-   fprintf(stdlog, "cache.mtinterval               = %Lu [탎]\n", asap->CacheMaintenanceInterval);
+   fprintf(stdlog, "nameserver.request.maxtrials   = %u\n",       asapInstance->NameServerRequestMaxTrials);
+   fprintf(stdlog, "nameserver.request.timeout     = %Lu [탎]\n", asapInstance->NameServerRequestTimeout);
+   fprintf(stdlog, "nameserver.response.timeout    = %Lu [탎]\n", asapInstance->NameServerResponseTimeout);
+   fprintf(stdlog, "cache.elementtimeout           = %Lu [탎]\n", asapInstance->CacheElementTimeout);
    LOG_END
 }
 
 
 /* ###### Constructor #################################################### */
-struct ASAPInstance* asapNew(struct Dispatcher* dispatcher, struct TagItem* tags)
+struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher, struct TagItem* tags)
 {
-   struct ASAPInstance* asap = NULL;
+   struct ASAPInstance* asapInstance = NULL;
    if(dispatcher != NULL) {
-      asap = (struct ASAPInstance*)malloc(sizeof(struct ASAPInstance));
-      if(asap != NULL) {
-         asap->StateMachine = dispatcher;
+      asapInstance = (struct ASAPInstance*)malloc(sizeof(struct ASAPInstance));
+      if(asapInstance != NULL) {
+         asapInstance->StateMachine = dispatcher;
 
-         asapConfigure(asap, tags);
+         asapConfigure(asapInstance, tags);
 
-         asap->NameServerSocket         = -1;
-         asap->NameServerSocketProtocol = 0;
-         asap->Buffer           = messageBufferNew(65536);
-         asap->Cache            = asapCacheNew(asap->StateMachine,
-                                               asap->CacheMaintenanceInterval,
-                                               asap->CacheElementTimeout);
-         asap->NameServerTable  = serverTableNew(asap->StateMachine, tags);
-         if((asap->Buffer == NULL) || (asap->Cache == NULL) || (asap->NameServerTable == NULL)) {
-            asapDelete(asap);
-            asap = NULL;
+         asapInstance->NameServerSocket         = -1;
+         asapInstance->NameServerSocketProtocol = 0;
+         ST_CLASS(poolNamespaceManagementNew)(&asapInstance->Cache,
+                                              0x00000000,
+                                              NULL, NULL);
+         ST_CLASS(poolNamespaceManagementNew)(&asapInstance->OwnPoolElements,
+                                              0x00000000,
+                                              NULL, NULL);
+         asapInstance->Buffer          = messageBufferNew(65536);
+         asapInstance->NameServerTable = serverTableNew(asapInstance->StateMachine, tags);
+         if((asapInstance->Buffer == NULL) || (asapInstance->NameServerTable == NULL)) {
+            asapDelete(asapInstance);
+            asapInstance = NULL;
          }
       }
    }
-   return(asap);
+   return(asapInstance);
 }
 
 
 /* ###### Destructor ##################################################### */
-void asapDelete(struct ASAPInstance* asap)
+void asapDelete(struct ASAPInstance* asapInstance)
 {
-   if(asap) {
-      asapDisconnectFromNameServer(asap);
-      if(asap->Cache) {
-         asapCacheDelete(asap->Cache);
-         asap->Cache = NULL;
+   if(asapInstance) {
+      ST_CLASS(poolNamespaceManagementClear)(&asapInstance->OwnPoolElements);
+      ST_CLASS(poolNamespaceManagementDelete)(&asapInstance->OwnPoolElements);
+      ST_CLASS(poolNamespaceManagementClear)(&asapInstance->Cache);
+      ST_CLASS(poolNamespaceManagementDelete)(&asapInstance->Cache);
+      if(asapInstance->NameServerTable) {
+         serverTableDelete(asapInstance->NameServerTable);
+         asapInstance->NameServerTable = NULL;
       }
-      if(asap->NameServerTable) {
-         serverTableDelete(asap->NameServerTable);
-         asap->NameServerTable = NULL;
+      if(asapInstance->AsapServerAnnounceConfigFile) {
+         free(asapInstance->AsapServerAnnounceConfigFile);
+         asapInstance->AsapServerAnnounceConfigFile = NULL;
       }
-      if(asap->AsapServerAnnounceConfigFile) {
-         free(asap->AsapServerAnnounceConfigFile);
-         asap->AsapServerAnnounceConfigFile = NULL;
+      if(asapInstance->AsapNameServersConfigFile) {
+         free(asapInstance->AsapNameServersConfigFile);
+         asapInstance->AsapNameServersConfigFile = NULL;
       }
-      if(asap->AsapNameServersConfigFile) {
-         free(asap->AsapNameServersConfigFile);
-         asap->AsapNameServersConfigFile = NULL;
+      if(asapInstance->Buffer) {
+         messageBufferDelete(asapInstance->Buffer);
+         asapInstance->Buffer = NULL;
       }
-      if(asap->Buffer) {
-         messageBufferDelete(asap->Buffer);
-         asap->Buffer = NULL;
-      }
-      free(asap);
+      free(asapInstance);
    }
 }
 
 
 /* ###### Connect to name server ######################################### */
-static bool asapConnectToNameServer(struct ASAPInstance* asap,
+static bool asapConnectToNameServer(struct ASAPInstance* asapInstance,
                                     const int            protocol)
 {
    bool result = true;
 
-   if(asap->NameServerSocket < 0) {
-      asap->NameServerSocket = serverTableFindServer(asap->NameServerTable,
-                                                     protocol);
-      if(asap->NameServerSocket >= 0) {
-         asap->NameServerSocketProtocol = protocol;
-         dispatcherAddFDCallback(asap->StateMachine,
-                                 asap->NameServerSocket,
+   if(asapInstance->NameServerSocket < 0) {
+      asapInstance->NameServerSocket = serverTableFindServer(asapInstance->NameServerTable,
+                                                             protocol);
+      if(asapInstance->NameServerSocket >= 0) {
+         asapInstance->NameServerSocketProtocol = protocol;
+         dispatcherAddFDCallback(asapInstance->StateMachine,
+                                 asapInstance->NameServerSocket,
                                  FDCE_Read|FDCE_Exception,
                                  asapNameServerConnectionHandler,
-                                 (gpointer)asap);
+                                 (gpointer)asapInstance);
          LOG_ACTION
          fputs("Connection to name server server successfully established\n", stdlog);
          LOG_END
@@ -180,22 +176,23 @@ static bool asapConnectToNameServer(struct ASAPInstance* asap,
 
 
 /* ###### Disconnect from name server #################################### */
-static void asapDisconnectFromNameServer(struct ASAPInstance* asap)
+static void asapDisconnectFromNameServer(struct ASAPInstance* asapInstance)
 {
-   if(asap->NameServerSocket >= 0) {
-      dispatcherRemoveFDCallback(asap->StateMachine, asap->NameServerSocket);
-      ext_close(asap->NameServerSocket);
+   if(asapInstance->NameServerSocket >= 0) {
+      dispatcherRemoveFDCallback(asapInstance->StateMachine, asapInstance->NameServerSocket);
+      ext_close(asapInstance->NameServerSocket);
       LOG_ACTION
       fputs("Disconnected from nameserver\n", stdlog);
       LOG_END
-      asap->NameServerSocket         = -1;
-      asap->NameServerSocketProtocol = 0;
+      asapInstance->NameServerSocket         = -1;
+      asapInstance->NameServerSocketProtocol = 0;
    }
 }
 
 
 /* ###### Receive response from name server ############################## */
-enum ASAPError asapReceiveResponse(struct ASAPInstance* asap, struct ASAPMessage** message)
+static unsigned int asapReceiveResponse(struct ASAPInstance* asapInstance,
+                                          struct ASAPMessage** message)
 {
    ssize_t received;
 
@@ -204,17 +201,17 @@ enum ASAPError asapReceiveResponse(struct ASAPInstance* asap, struct ASAPMessage
    LOG_END
 
    do {
-      received = messageBufferRead(asap->Buffer, asap->NameServerSocket,
-                                   (asap->NameServerSocketProtocol == IPPROTO_SCTP) ? PPID_ASAP : 0,
-                                   asap->NameServerResponseTimeout,
-                                   asap->NameServerResponseTimeout);
+      received = messageBufferRead(asapInstance->Buffer, asapInstance->NameServerSocket,
+                                   (asapInstance->NameServerSocketProtocol == IPPROTO_SCTP) ? PPID_ASAP : 0,
+                                   asapInstance->NameServerResponseTimeout,
+                                   asapInstance->NameServerResponseTimeout);
       LOG_VERBOSE2
       fprintf(stdlog, "received=%d\n", received);
       LOG_END
    } while((received == RspRead_PartialRead) || (received == RspRead_Timeout));
 
    if(received > 0) {
-      *message = asapPacket2Message((char*)&asap->Buffer->Buffer, received, asap->Buffer->Size);
+      *message = asapPacket2Message((char*)&asapInstance->Buffer->Buffer, received, asapInstance->Buffer->Size);
    }
    else {
       *message = NULL;
@@ -224,70 +221,70 @@ enum ASAPError asapReceiveResponse(struct ASAPInstance* asap, struct ASAPMessage
       LOG_VERBOSE2
       fputs("Response successfully received\n",stdlog);
       LOG_END
-      return(ASAP_Okay);
+      return(RSPERR_OKAY);
    }
 
    LOG_WARNING
    fputs("Receiving response failed\n", stdlog);
    LOG_END_FATAL
-   return(ASAP_ReadError);
+   return(RSPERR_READ_ERROR);
 }
 
 
 /* ###### Send request to name server #################################### */
-static enum ASAPError asapSendRequest(struct ASAPInstance* asap,
+static unsigned int asapSendRequest(struct ASAPInstance* asapInstance,
                                       struct ASAPMessage*  request)
 {
    bool result;
 
-   if(asapConnectToNameServer(asap,0) == false) {
+   if(asapConnectToNameServer(asapInstance, IPPROTO_SCTP) == false) {
       LOG_ERROR
       fputs("No name server server available\n", stdlog);
       LOG_END
-      return(ASAP_NoNameServerFound);
+      return(RSPERR_NO_NAMESERVER);
    }
 
-   result = asapMessageSend(asap->NameServerSocket,
-                            asap->NameServerRequestTimeout,
+   result = asapMessageSend(asapInstance->NameServerSocket,
+                            asapInstance->NameServerRequestTimeout,
                             request);
    if(result) {
-      return(ASAP_Okay);
+      return(RSPERR_OKAY);
    }
 
    LOG_ERROR
    fputs("Sending request failed\n", stdlog);
    LOG_END
-   return(ASAP_WriteError);
+   return(RSPERR_WRITE_ERROR);
 }
 
 
 /* ###### Send request to name server and wait for response ############## */
-static enum ASAPError asapIO(struct ASAPInstance* asap,
-                             struct ASAPMessage*  message,
-                             struct ASAPMessage** responsePtr,
-                             uint16_t*            error)
+static unsigned int asapDoIO(struct ASAPInstance* asapInstance,
+                               struct ASAPMessage*  message,
+                               struct ASAPMessage** responsePtr,
+                               uint16_t*            error)
 {
    struct ASAPMessage* response;
-   enum ASAPError      result = ASAP_Okay;
+   unsigned int      result = RSPERR_OKAY;
    cardinal            i;
 
    if(responsePtr != NULL) {
       *responsePtr = NULL;
    }
-   *error = ASAP_Okay;
+   *error = RSPERR_OKAY;
 
 
-   for(i = 0;i < asap->NameServerRequestMaxTrials;i++) {
+   for(i = 0;i < asapInstance->NameServerRequestMaxTrials;i++) {
       LOG_VERBOSE2
       fprintf(stdlog, "Request trial #%d - sending request...\n",i + 1);
       LOG_END
 
-      result = asapSendRequest(asap, message);
-      if(result == ASAP_Okay) {
+      result = asapSendRequest(asapInstance, message);
+      if(result == RSPERR_OKAY) {
          LOG_VERBOSE2
          fprintf(stdlog, "Request trial #%d - waiting for response...\n",i + 1);
          LOG_END
-         result = asapReceiveResponse(asap, &response);
+         result = asapReceiveResponse(asapInstance, &response);
          while(response != NULL) {
             *error = response->Error;
 
@@ -304,7 +301,7 @@ static enum ASAPError asapIO(struct ASAPInstance* asap,
                else {
                   asapMessageDelete(response);
                }
-               return(ASAP_Okay);
+               return(RSPERR_OKAY);
             }
             else {
                LOG_WARNING
@@ -312,12 +309,12 @@ static enum ASAPError asapIO(struct ASAPInstance* asap,
                        message->Type, response->Type);
                LOG_END
                asapMessageDelete(response);
-               return(ASAP_InvalidValues);
+               return(RSPERR_INVALID_VALUES);
             }
 
             asapMessageDelete(response);
-            result = asapReceiveResponse(asap, &response);
-            if(result == ASAP_Okay) {
+            result = asapReceiveResponse(asapInstance, &response);
+            if(result == RSPERR_OKAY) {
                LOG_VERBOSE2
                fprintf(stdlog, "Request trial #%d - Success\n",i + 1);
                LOG_END
@@ -329,7 +326,7 @@ static enum ASAPError asapIO(struct ASAPInstance* asap,
       LOG_ERROR
       fprintf(stdlog, "Request trial #%d failed\n",i + 1);
       LOG_END
-      asapDisconnectFromNameServer(asap);
+      asapDisconnectFromNameServer(asapInstance);
    }
 
    return(result);
@@ -337,77 +334,90 @@ static enum ASAPError asapIO(struct ASAPInstance* asap,
 
 
 /* ###### Register pool element ########################################## */
-enum ASAPError asapRegister(struct ASAPInstance* asap,
-                            struct PoolHandle*   poolHandle,
-                            struct PoolElement*  poolElement)
+unsigned int asapRegister(struct ASAPInstance*              asapInstance,
+                            struct PoolHandle*                poolHandle,
+                            struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   struct ASAPMessage* message;
-   struct PoolElement* newPoolElement;
-   enum ASAPError      result;
-   uint16_t            error;
+   struct ASAPMessage*               message;
+   struct ST_CLASS(PoolElementNode)* newPoolElement;
+   unsigned int                    ioResult;
+   uint16_t                          nameServerResult;
+   unsigned int                      namespaceMgtResult;
 
-   dispatcherLock(asap->StateMachine);
+   dispatcherLock(asapInstance->StateMachine);
 
    LOG_ACTION
-   fputs("Trying to register ", stdlog);
-   poolElementPrint(poolElement, stdlog);
-   fputs("to pool ", stdlog);
+   fputs("Trying to register to pool ", stdlog);
    poolHandlePrint(poolHandle, stdlog);
+   fputs(" pool element ", stdlog);
+   ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
    fputs("\n", stdlog);
    LOG_END
 
    message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
       message->Type           = AHT_REGISTRATION;
-      message->PoolHandlePtr  = poolHandle;
-      message->PoolElementPtr = poolElement;
+      message->Handle         = *poolHandle;
+      message->PoolElementPtr = poolElementNode;
 
-      result = asapIO(asap, message, NULL, &error);
-      if(result == ASAP_Okay) {
-         if(error == ASAP_Okay) {
-            newPoolElement = asapCacheUpdatePoolElement(asap->Cache, poolHandle, message->PoolElementPtr, false);
-            if(newPoolElement != NULL) {
-               /* asapCacheUpdatePoolElement() may not directly increment the user counter,
-                  since this would also increment it in case of re-registration only. */
-               if(newPoolElement->UserCounter == 0) {
-                  newPoolElement->UserCounter++;
-               }
-               newPoolElement->UserData = (void*)asap;
+      ioResult = asapDoIO(asapInstance, message, NULL, &nameServerResult);
+      if(ioResult == RSPERR_OKAY) {
+         if(nameServerResult == RSPERR_OKAY) {
+            namespaceMgtResult = ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                                    &asapInstance->OwnPoolElements,
+                                    poolHandle,
+                                    message->PoolElementPtr->HomeNSIdentifier,
+                                    message->PoolElementPtr->Identifier,
+                                    message->PoolElementPtr->RegistrationLife,
+                                    &message->PoolElementPtr->PolicySettings,
+                                    message->PoolElementPtr->AddressBlock,
+                                    getMicroTime(),
+                                    &newPoolElement);
+            if(namespaceMgtResult == RSPERR_OKAY) {
+               newPoolElement->UserData = (void*)asapInstance;
+            }
+            else {
+               LOG_ERROR
+               fprintf(stdlog, "Unable to register pool element $%08x of pool ",
+                       poolElementNode->Identifier);
+               poolHandlePrint(poolHandle, stdlog);
+               fputs(" to OwnPoolElements\n", stdlog);
+               LOG_END_FATAL
             }
          }
          else {
-            result = (enum ASAPError)error;
+            ioResult = (unsigned int)nameServerResult;
          }
       }
 
       asapMessageDelete(message);
    }
    else {
-      result = ASAP_OutOfMemory;
+      ioResult = RSPERR_NO_RESOURCES;
    }
 
    LOG_ACTION
    fputs("Registration result is ", stdlog);
-   asapErrorPrint(result, stdlog);
+   rserpoolErrorPrint(ioResult, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   dispatcherUnlock(asap->StateMachine);
-   return(result);
+   dispatcherUnlock(asapInstance->StateMachine);
+   return(ioResult);
 }
 
 
 /* ###### Deregister pool element ######################################## */
-enum ASAPError asapDeregister(struct ASAPInstance*        asap,
-                              struct PoolHandle*          poolHandle,
-                              const PoolElementIdentifier identifier)
+unsigned int asapDeregister(struct ASAPInstance*            asapInstance,
+                            struct PoolHandle*              poolHandle,
+                            const PoolElementIdentifierType identifier)
 {
-   struct PoolElement* poolElement;
    struct ASAPMessage* message;
-   enum ASAPError      result;
-   uint16_t            error;
+   unsigned int        ioResult;
+   uint16_t            nameServerResult;
+   unsigned int        namespaceMgtResult;
 
-   dispatcherLock(asap->StateMachine);
+   dispatcherLock(asapInstance->StateMachine);
 
    LOG_ACTION
    fprintf(stdlog, "Trying to deregister $%08x from pool ",identifier);
@@ -417,84 +427,50 @@ enum ASAPError asapDeregister(struct ASAPInstance*        asap,
 
    message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
-      message->Type          = AHT_DEREGISTRATION;
-      message->PoolHandlePtr = poolHandle;
-      message->Identifier    = identifier;
+      message->Type       = AHT_DEREGISTRATION;
+      message->Handle     = *poolHandle;
+      message->Identifier = identifier;
 
-      result = asapIO(asap,message,NULL,&error);
-      if((result == ASAP_Okay) && (error == ASAP_Okay)) {
-         poolElement = asapCacheFindPoolElement(asap->Cache, poolHandle, identifier);
-         if(poolElement) {
-            asapCachePurgePoolElement(asap->Cache, poolHandle, poolElement, true);
-         }
+      ioResult = asapDoIO(asapInstance, message, NULL, &nameServerResult);
+      if((ioResult == RSPERR_OKAY) && (nameServerResult == RSPERR_OKAY)) {
+         namespaceMgtResult = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
+                                 &asapInstance->OwnPoolElements,
+                                 poolHandle,
+                                 identifier);
+         LOG_ERROR
+         fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
+                 identifier);
+         poolHandlePrint(poolHandle, stdlog);
+         fputs(" from OwnPoolElements\n", stdlog);
+         LOG_END_FATAL
       }
 
       asapMessageDelete(message);
    }
    else {
-      result = ASAP_OutOfMemory;
+      ioResult = RSPERR_NO_RESOURCES;
    }
 
    LOG_ACTION
    fputs("Deregistration result is ", stdlog);
-   asapErrorPrint(result, stdlog);
+   rserpoolErrorPrint(ioResult, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   dispatcherUnlock(asap->StateMachine);
-   return(result);
+   dispatcherUnlock(asapInstance->StateMachine);
+   return(ioResult);
 }
 
-
-/* ###### Do name lookup ################################################# */
-static enum ASAPError asapDoNameLookup(struct ASAPInstance* asap,
-                                       struct PoolHandle*   poolHandle)
-{
-   struct ASAPMessage* message;
-   struct ASAPMessage* response;
-   enum ASAPError      result;
-   uint16_t            error;
-
-   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
-   if(message != NULL) {
-      message->Type          = AHT_NAME_RESOLUTION;
-      message->PoolHandlePtr = poolHandle;
-
-      result = asapIO(asap,message,&response,&error);
-
-      if(result == ASAP_Okay) {
-         result = (enum ASAPError)response->Error;
-         if(result == ASAP_Okay) {
-            if(response->PoolPtr != NULL) {
-               asapCacheUpdatePool(asap->Cache, response->PoolPtr);
-            }
-            if(response->PoolElementPtr != NULL) {
-               asapCacheUpdatePoolElement(asap->Cache,poolHandle,
-                                          response->PoolElementPtr,
-                                          false);
-            }
-         }
-         asapMessageDelete(response);
-      }
-
-      asapMessageDelete(message);
-   }
-   else {
-      result = ASAP_OutOfMemory;
-   }
-
-   return(result);
-}
 
 
 /* ###### Report pool element failure ####################################### */
-enum ASAPError asapFailure(struct ASAPInstance*        asap,
-                           struct PoolHandle*          poolHandle,
-                           const PoolElementIdentifier identifier)
+unsigned int asapFailure(struct ASAPInstance*            asapInstance,
+                         struct PoolHandle*              poolHandle,
+                         const PoolElementIdentifierType identifier)
 {
-   struct ASAPMessage* message;
-   struct PoolElement* found;
-   enum ASAPError      result = ASAP_Okay;
+   struct ASAPMessage*               message;
+   struct ST_CLASS(PoolElementNode)* found;
+   unsigned int                      ioResult;
 
    LOG_ACTION
    fprintf(stdlog, "Failure reported for pool element $%08x of pool ",
@@ -504,126 +480,168 @@ enum ASAPError asapFailure(struct ASAPInstance*        asap,
    LOG_END
 
    /* ====== Remove pool element from cache ================================= */
-   dispatcherLock(asap->StateMachine);
-   found = asapCacheFindPoolElement(asap->Cache, poolHandle, identifier);
+   dispatcherLock(asapInstance->StateMachine);
+
+   found = ST_CLASS(poolNamespaceManagementFindPoolElement)(
+              &asapInstance->Cache,
+              poolHandle,
+              identifier);
    if(found != NULL) {
-      found->Flags |= PEF_FAILED;
-      asapCachePurgePoolElement(asap->Cache, poolHandle, found, false);
+      ioResult = ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
+                          &asapInstance->Cache,
+                          poolHandle,
+                          identifier);
+      CHECK(ioResult == RSPERR_OKAY);
    }
    else {
       LOG_VERBOSE
-      fputs("Pool element not found\n", stdlog);
+      fputs("Pool element does not exist in cache\n", stdlog);
       LOG_END
    }
 
    /* ====== Report unreachability ========================================== */
    message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
    if(message != NULL) {
-      message->Type          = AHT_ENDPOINT_UNREACHABLE;
-      message->PoolHandlePtr = poolHandleDuplicate(poolHandle);
-      if(message->PoolHandlePtr) {
-         message->Identifier              = identifier;
-         message->PoolHandlePtrAutoDelete = true;
-
-         result = asapSendRequest(asap, message);
-      }
-      else {
-         result = ASAP_OutOfMemory;
-      }
+      message->Type       = AHT_ENDPOINT_UNREACHABLE;
+      message->Handle     = *poolHandle;
+      message->Identifier = identifier;
+      ioResult = asapSendRequest(asapInstance, message);
    }
 
-   dispatcherUnlock(asap->StateMachine);
-   return(ASAP_Okay);
+   dispatcherUnlock(asapInstance->StateMachine);
+   return(ioResult);
+}
+
+
+/* ###### Do name lookup ################################################# */
+static unsigned int asapDoNameResolution(struct ASAPInstance* asapInstance,
+                                         struct PoolHandle*   poolHandle)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   struct ASAPMessage*               message;
+   struct ASAPMessage*               response;
+   unsigned int                      ioResult;
+   uint16_t                          nameServerResult;
+   GList*                            list;
+
+   message = asapMessageNew(NULL, ASAP_BUFFER_SIZE);
+   if(message != NULL) {
+      message->Type   = AHT_NAME_RESOLUTION;
+      message->Handle = *poolHandle;
+
+      ioResult = asapDoIO(asapInstance, message, &response, &nameServerResult);
+      if(ioResult == RSPERR_OKAY) {
+         if(nameServerResult == RSPERR_OKAY) {
+            list = g_list_first(message->PoolElementListPtr);
+            while(list != NULL) {
+               poolElementNode = (struct ST_CLASS(PoolElementNode)*)list->data;
+               LOG_VERBOSE2
+               fputs("Adding pool element to cache: ", stdlog);
+               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+               fputs("\n", stdlog);
+               LOG_END
+               ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                  &asapInstance->Cache,
+                  poolHandle,
+                  poolElementNode->HomeNSIdentifier,
+                  poolElementNode->Identifier,
+                  poolElementNode->RegistrationLife,
+                  &poolElementNode->PolicySettings,
+                  poolElementNode->AddressBlock,
+                  getMicroTime(),
+                  &newPoolElementNode);
+               list = g_list_next(list);
+            }
+         }
+         asapMessageDelete(response);
+      }
+
+      asapMessageDelete(message);
+   }
+   else {
+      ioResult = RSPERR_NO_RESOURCES;
+   }
+
+   return(ioResult);
 }
 
 
 /* ###### Do name lookup from cache ###################################### */
-static enum ASAPError asapNameResolutionFromCache(struct ASAPInstance* asap,
-                                                  struct PoolHandle*   poolHandle,
-                                                  struct Pool**        poolPtr)
+static unsigned int asapNameResolutionFromCache(
+                         struct ASAPInstance*               asapInstance,
+                         struct PoolHandle*                 poolHandle,
+                         struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                         size_t*                            poolElementNodes)
 {
-   struct Pool*   pool;
-   enum ASAPError result = ASAP_NotFound;
+   unsigned int result;
+   size_t         i;
 
-   dispatcherLock(asap->StateMachine);
-   pool = asapCacheFindPool(asap->Cache, poolHandle);
+   dispatcherLock(asapInstance->StateMachine);
 
    LOG_ACTION
-   fprintf(stdlog, "Name Resolution for handle ");
+   fprintf(stdlog, "Name Resolution for pool ");
    poolHandlePrint(poolHandle, stdlog);
    fputs(":\n", stdlog);
-   poolPrint(pool, stdlog);
+   ST_CLASS(poolNamespaceManagementPrint)(&asapInstance->Cache,
+                                          stdlog, PENPO_ONLY_POLICY);
    LOG_END
 
-   if(pool != NULL) {
-      if(poolPtr != NULL) {
-         *poolPtr = poolDuplicate(pool);
+   if(ST_CLASS(poolNamespaceManagementNameResolution)(
+         &asapInstance->Cache,
+         poolHandle,
+         poolElementNodeArray,
+         poolElementNodes,
+         maxNameResolutionItems,
+         1000000000) == RSPERR_OKAY) {
+      LOG_VERBOSE
+      fprintf(stdlog, "Got %u items:\n", *poolElementNodes);
+      for(i = 0;i < *poolElementNodes;i++) {
+         fprintf(stdlog, "#%u: ", i + 1);
+         ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
+                                        stdlog, PENPO_FULL);
       }
-      result = ASAP_Okay;
+      LOG_END
+      result = RSPERR_OKAY;
    }
    else {
-      if(poolPtr != NULL) {
-         *poolPtr = NULL;
-      }
+      result = RSPERR_NOT_FOUND;
    }
 
-   dispatcherUnlock(asap->StateMachine);
-   return(result);
-}
-
-
-/* ###### Do name lookup from name server ################################ */
-static enum ASAPError asapNameResolutionFromServer(struct ASAPInstance* asap,
-                                                   struct PoolHandle*   poolHandle,
-                                                   struct Pool**        poolPtr)
-{
-   enum ASAPError result;
-
-   dispatcherLock(asap->StateMachine);
-
-   result = asapDoNameLookup(asap, poolHandle);
-   if(result == ASAP_Okay) {
-      result = asapNameResolutionFromCache(asap, poolHandle, poolPtr);
-   }
-   else {
-      if(poolPtr != NULL) {
-         *poolPtr = NULL;
-      }
-   }
-
-   dispatcherUnlock(asap->StateMachine);
-
+   dispatcherUnlock(asapInstance->StateMachine);
    return(result);
 }
 
 
 /* ###### Do name resolution for given pool handle ####################### */
-enum ASAPError asapNameResolution(struct ASAPInstance* asap,
-                                  struct PoolHandle*   poolHandle,
-                                  struct Pool**        poolPtr)
+unsigned int asapNameResolution(struct ASAPInstance*               asapInstance,
+                                  struct PoolHandle*                 poolHandle,
+                                  struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                                  size_t*                            poolElementNodes)
 {
-   enum ASAPError result;
+   unsigned int result;
 
    LOG_VERBOSE
    fputs("Trying name resolution from cache...\n", stdlog);
    LOG_END
 
-   result = asapNameResolutionFromCache(asap, poolHandle, poolPtr);
-   if(result != ASAP_Okay) {
-      if(poolPtr != NULL) {
-         poolDelete(*poolPtr);
-      }
-
+   result = asapNameResolutionFromCache(asapInstance, poolHandle,
+                                        poolElementNodeArray,
+                                        poolElementNodes);
+   if(result != RSPERR_OKAY) {
       LOG_VERBOSE
-      fputs("Trying name resolution from server...\n", stdlog);
+      fputs("No results in cache. Trying name resolution at name server...\n", stdlog);
       LOG_END
-      result = asapNameResolutionFromServer(asap, poolHandle, poolPtr);
-
-      if(result != ASAP_Okay) {
+      result = asapDoNameResolution(asapInstance, poolHandle);
+      if(result == RSPERR_OKAY) {
+         result = asapNameResolutionFromCache(asapInstance, poolHandle,
+                                             poolElementNodeArray,
+                                             poolElementNodes);
+      }
+      else {
          LOG_VERBOSE
-         fputs("Failed -> Getting old results from cache...\n", stdlog);
+         fputs("Name resolution not succesful\n", stdlog);
          LOG_END
-         result = asapNameResolutionFromCache(asap, poolHandle, poolPtr);
       }
    }
 
@@ -631,86 +649,37 @@ enum ASAPError asapNameResolution(struct ASAPInstance* asap,
 }
 
 
-/* ###### Select pool element by policy ################################## */
-struct PoolElement* asapSelectPoolElement(struct ASAPInstance* asap,
-                                          struct PoolHandle*   poolHandle,
-                                          enum ASAPError*      error)
-{
-   struct Pool*        pool;
-   struct PoolElement* poolElement;
-   struct PoolElement* selected;
-   enum ASAPError      result;
-   card64              now;
-
-   poolElement = NULL;
-   dispatcherLock(asap->StateMachine);
-
-   pool = asapCacheFindPool(asap->Cache,poolHandle);
-   now  = getMicroTime();
-   if(pool == NULL) {
-      result = asapDoNameLookup(asap,poolHandle);
-   }
-   else {
-      result = ASAP_Okay;
-   }
-
-   pool = asapCacheFindPool(asap->Cache,poolHandle);
-   if(pool != NULL) {
-      selected = poolSelectByPolicy(pool);
-      if(selected != NULL) {
-         poolElement = poolElementDuplicate(selected);
-      }
-      else if(result == ASAP_Okay) {
-         result = ASAP_NotFound;
-      }
-   }
-   else if(result == ASAP_Okay) {
-      result = ASAP_NotFound;
-   }
-
-   dispatcherUnlock(asap->StateMachine);
-
-   if(error) {
-      *error = result;
-   }
-   return(poolElement);
-}
-
-
 /* ###### Handle endpoint keepalive ###################################### */
-static void asapHandleEndpointKeepAlive(struct ASAPInstance* asap,
+static void asapHandleEndpointKeepAlive(struct ASAPInstance* asapInstance,
                                         struct ASAPMessage*  message)
 {
-   struct Pool*        pool;
-   struct PoolElement* poolElement;
-   GList*              list;
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
 
    LOG_VERBOSE2
-   fprintf(stdlog, "Endpoint KeepAlive for pool handle ");
-   poolHandlePrint(message->PoolHandlePtr, stdlog);
+   fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool ", message->Identifier);
+   poolHandlePrint(message->PoolHandle, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   pool = asapCacheFindPool(asap->Cache, message->PoolHandlePtr);
-   if(pool != NULL) {
-      list = g_list_first(pool->PoolElementList);
-      while(list != NULL) {
-         poolElement = (struct PoolElement*)list->data;
-         if(poolElement->UserData == (void*)asap) {
-            message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
-            message->Identifier = poolElement->Identifier;
+   poolElementNode = ST_CLASS(poolNamespaceManagementFindPoolElement)(
+                        &asapInstance->OwnPoolElements,
+                        message->PoolHandle,
+                        message->Identifier);
+   if(poolElementNode) {
+      message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
+      message->Identifier = poolElementNode->Identifier;
 
-            LOG_VERBOSE2
-            fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
-            LOG_END
-            asapSendRequest(asap,message);
-         }
-         list = g_list_next(list);
-      }
+      LOG_VERBOSE2
+      fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
+      LOG_END
+      asapSendRequest(asapInstancemessage);
    }
    else {
       LOG_WARNING
-      fputs("Pool not found\n", stdlog);
+      fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool ",
+              message->Identifier);
+      poolHandlePrint(message->PoolHandle, stdlog);
+      fputs(" received. We do *not* own this PE\n", stdlog);
       LOG_END
    }
 }
@@ -718,25 +687,25 @@ static void asapHandleEndpointKeepAlive(struct ASAPInstance* asap,
 
 /* ###### Handle incoming requests from name server (keepalives) ######### */
 static void asapNameServerConnectionHandler(struct Dispatcher* dispatcher,
-                                      int                fd,
-                                      int                eventMask,
-                                      void*              userData)
+                                            int                fd,
+                                            int                eventMask,
+                                            void*              userData)
 {
-   struct ASAPInstance* asap = (struct ASAPInstance*)userData;
+   struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
    struct ASAPMessage*  message;
-   enum ASAPError       result;
+   unsigned int       result;
 
-   dispatcherLock(asap->StateMachine);
+   dispatcherLock(asapInstance->StateMachine);
 
    LOG_VERBOSE2
    fputs("Entering Connection Handler...\n", stdlog);
    LOG_END
 
    if(eventMask & (FDCE_Read|FDCE_Exception)) {
-      result = asapReceiveResponse(asap, &message);
-      if(result == ASAP_Okay) {
+      result = asapReceiveResponse(asapInstance, &message);
+      if(result == RSPERR_OKAY) {
          if(message->Type == AHT_ENDPOINT_KEEP_ALIVE) {
-            asapHandleEndpointKeepAlive(asap, message);
+            asapHandleEndpointKeepAlive(asapInstance, message);
          }
          else {
             LOG_WARNING
@@ -750,7 +719,7 @@ static void asapNameServerConnectionHandler(struct Dispatcher* dispatcher,
          LOG_ACTION
          fputs("Disconnecting from name server server due to failure\n", stdlog);
          LOG_END
-         asapDisconnectFromNameServer(asap);
+         asapDisconnectFromNameServer(asapInstance);
       }
    }
 
@@ -758,5 +727,5 @@ static void asapNameServerConnectionHandler(struct Dispatcher* dispatcher,
    fputs("Leaving Connection Handler\n", stdlog);
    LOG_END
 
-   dispatcherUnlock(asap->StateMachine);
+   dispatcherUnlock(asapInstance->StateMachine);
 }

@@ -32,7 +32,7 @@ int safestrcpy(char* dest, const char* src, const size_t size)
       dest[size - 1] = 0x00;
       return(strlen(dest) < size);
    }
-   return(0);
+   return(false);
 }
 
 
@@ -44,7 +44,7 @@ int safestrcat(char* dest, const char* src, const size_t size)
 
    if(l1 + l2 < (int)size) {
       strcat(dest,src);
-      return(1);
+      return(true);
    }
    else if((int)size > l2) {
       strcat((char*)&dest[size - l2],src);
@@ -52,7 +52,7 @@ int safestrcat(char* dest, const char* src, const size_t size)
    else {
       safestrcpy(dest,src,size);
    }
-   return(0);
+   return(false);
 }
 
 
@@ -107,7 +107,7 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
             buffer[i++] = *c;
          }
          else {
-            return(0);
+            return(false);
             break;
          }
       }
@@ -115,13 +115,13 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
          buffer[i++] = 0x00;
       }
       else {
-         return(0);
+         return(false);
       }
       *position = (size_t)((long)end - (long)input);
       while(input[*position] == ' ') {
          (*position)++;
       }
-      return(1);
+      return(true);
    }
    else {
       i = strlen((char*)&input[*position]);
@@ -132,7 +132,7 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
       }
       safestrcpy(buffer,"",bufferSize);
    }
-   return(0);
+   return(false);
 }
 
 

@@ -23,6 +23,8 @@
 #ifndef STRINGUTILITIES_H
 #define STRINGUTILITIES_H
 
+#include <string.h>
+
 
 /**
   * strcpy() with length check. The result is truncated if the destination

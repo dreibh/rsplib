@@ -38,7 +38,6 @@ void ST_CLASS(poolNamespaceNodeDelete)(struct ST_CLASS(PoolNamespaceNode)* poolN
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolIndexStorage));
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementTimerStorage));
    CHECK(ST_METHOD(IsEmpty)(&poolNamespaceNode->PoolElementPropertyStorage));
-
    ST_METHOD(Delete)(&poolNamespaceNode->PoolIndexStorage);
    ST_METHOD(Delete)(&poolNamespaceNode->PoolElementTimerStorage);
    ST_METHOD(Delete)(&poolNamespaceNode->PoolElementPropertyStorage);
@@ -63,12 +62,11 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeAddPoolNode)(
 /* ###### Get number of pool elements of certain pool #################### */
 size_t ST_CLASS(poolNamespaceNodeGetPoolElementNodesOfPool)(
           struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-          const unsigned char*                poolHandle,
-          const size_t                        poolHandleSize)
+          const struct PoolHandle*            poolHandle)
 {
    struct ST_CLASS(PoolNode)* poolNode = ST_CLASS(poolNamespaceNodeFindPoolNode)(
                                             poolNamespaceNode,
-                                            poolHandle, poolHandleSize);
+                                            poolHandle);
    if(poolNode) {
       return(ST_CLASS(poolNodeGetPoolElementNodes)(poolNode));
    }
@@ -79,16 +77,12 @@ size_t ST_CLASS(poolNamespaceNodeGetPoolElementNodesOfPool)(
 /* ###### Find PoolNode ################################################## */
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindPoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                              const unsigned char*                poolHandle,
-                              const size_t                        poolHandleSize)
+                              const struct PoolHandle*            poolHandle)
 {
-   CHECK((poolHandleSize > 0) && (poolHandleSize <= MAX_POOLHANDLESIZE));
-
    struct ST_CLASS(PoolNode)* poolNode;
    struct ST_CLASS(PoolNode)  cmpPoolNode;
-   memcpy(&cmpPoolNode.PoolHandle, poolHandle, poolHandleSize);
-   cmpPoolNode.PoolHandleSize = poolHandleSize;
 
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
    poolNode = (struct ST_CLASS(PoolNode)*)ST_METHOD(Find)(&poolNamespaceNode->PoolIndexStorage,
                                                           &cmpPoolNode.PoolIndexStorageNode);
    return(poolNode);
@@ -98,16 +92,12 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindPoolNode)(
 /* ###### Find PoolNode ################################################## */
 struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
                               struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                              const unsigned char*                poolHandle,
-                              const size_t                        poolHandleSize)
+                              const struct PoolHandle*            poolHandle)
 {
    struct ST_CLASS(PoolNode)* poolNode;
    struct ST_CLASS(PoolNode)  cmpPoolNode;
 
-   CHECK((poolHandleSize > 0) && (poolHandleSize <= MAX_POOLHANDLESIZE));
-   memcpy(&cmpPoolNode.PoolHandle, poolHandle, poolHandleSize);
-   cmpPoolNode.PoolHandleSize = poolHandleSize;
-
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
    poolNode = (struct ST_CLASS(PoolNode)*)ST_METHOD(GetNearestNext)(&poolNamespaceNode->PoolIndexStorage,
                                                                     &cmpPoolNode.PoolIndexStorageNode);
    return(poolNode);
@@ -117,17 +107,14 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
 /* ###### Find nearest next property ##################################### */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementPropertyNode)(
                                      struct ST_CLASS(PoolNamespaceNode)* poolNamespaceNode,
-                                     const unsigned char*                poolHandle,
-                                     const size_t                        poolHandleSize,
+                                     const struct PoolHandle*            poolHandle,
                                      const PoolElementIdentifierType     poolElementIdentifier)
 {
    struct ST_CLASS(PoolNode)        cmpPoolNode;
    struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
    struct STN_CLASSNAME*            propertyNode;
 
-   CHECK((poolHandleSize > 0) && (poolHandleSize <= MAX_POOLHANDLESIZE));
-   memcpy(&cmpPoolNode.PoolHandle, poolHandle, poolHandleSize);
-   cmpPoolNode.PoolHandleSize = poolHandleSize;
+   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
    cmpPoolElementNode.OwnerPoolNode = &cmpPoolNode;
    cmpPoolElementNode.Identifier    = poolElementIdentifier;
 
@@ -163,7 +150,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNamespaceNodeAddPoolElementNode)(
    struct ST_CLASS(PoolElementNode)* result = ST_CLASS(poolNodeAddPoolElementNode)(poolNode, poolElementNode, errorCode);
    struct STN_CLASSNAME*             result2;
    if(result == poolElementNode) {
-      CHECK(*errorCode == PENC_OKAY);
+      CHECK(*errorCode == RSPERR_OKAY);
       poolNamespaceNode->PoolElements++;
       if(poolNamespaceNode->HomeNSIdentifier == poolElementNode->HomeNSIdentifier) {
          result2 = ST_METHOD(Insert)(&poolNamespaceNode->PoolElementPropertyStorage,
@@ -309,9 +296,7 @@ void ST_CLASS(poolNamespaceNodePrint)(
       poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementPropertyNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - \"");
-         poolHandlePrint(poolElementNode->OwnerPoolNode->PoolHandle,
-                        poolElementNode->OwnerPoolNode->PoolHandleSize,
-                        fd);
+         poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_ONLY_ID);
          fputs("\n", fd);
@@ -326,9 +311,7 @@ void ST_CLASS(poolNamespaceNodePrint)(
       poolElementNode = ST_CLASS(poolNamespaceNodeGetFirstPoolElementTimerNode)(poolNamespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - \"");
-         poolHandlePrint(poolElementNode->OwnerPoolNode->PoolHandle,
-                        poolElementNode->OwnerPoolNode->PoolHandleSize,
-                        fd);
+         poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_ONLY_ID);
          fprintf(fd, " code=%u ts=%Lu\n", poolElementNode->TimerCode, poolElementNode->TimerTimeStamp);

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.2 2004/07/16 15:35:40 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -45,8 +45,7 @@
 #include "tagitem.h"
 #include "asapmessage.h"
 #include "messagebuffer.h"
-#include "poolnamespace.h"
-#include "asaperror.h"
+#include "poolnamespacemanagement.h"
 #include "servertable.h"
 
 #include <glib.h>
@@ -60,24 +59,25 @@ extern "C" {
 
 struct ASAPInstance
 {
-   struct Dispatcher*    StateMachine;
-   int                   NameServerSocket;
-   int                   NameServerSocketProtocol;
+   struct Dispatcher*                       StateMachine;
+   int                                      NameServerSocket;
+   int                                      NameServerSocketProtocol;
 
-   struct ServerTable*   NameServerTable;
-   struct ASAPCache*     Cache;
+   struct ServerTable*                      NameServerTable;
+   struct ST_CLASS(PoolNamespaceManagement) Cache;
+   struct ST_CLASS(PoolNamespaceManagement) OwnPoolElements;
 
-   char*                 AsapServerAnnounceConfigFile;
-   char*                 AsapNameServersConfigFile;
+   char*                                    AsapServerAnnounceConfigFile;
+   char*                                    AsapNameServersConfigFile;
 
-   card64                CacheElementTimeout;
-   card64                CacheMaintenanceInterval;
+   card64                                   CacheElementTimeout;
+   card64                                   CacheMaintenanceInterval;
 
-   cardinal              NameServerRequestMaxTrials;
-   card64                NameServerRequestTimeout;
-   card64                NameServerResponseTimeout;
+   cardinal                                 NameServerRequestMaxTrials;
+   card64                                   NameServerRequestTimeout;
+   card64                                   NameServerResponseTimeout;
 
-   struct MessageBuffer* Buffer;
+   struct MessageBuffer*                    Buffer;
 };
 
 
@@ -120,11 +120,11 @@ void asapDelete(struct ASAPInstance* asap);
   * @param asap ASAPInstance.
   * @param poolHandle Pool handle.
   * @param poolElement Pool Element.
-  * @return ASAP_Okay in case of success; error code otherwise.
+  * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-enum ASAPError asapRegister(struct ASAPInstance* asap,
-                            struct PoolHandle*   poolHandle,
-                            struct PoolElement*  poolElement);
+unsigned int asapRegister(struct ASAPInstance*               asap,
+                          struct PoolHandle*                 poolHandle,
+                          struct ST_CLASS(PoolElementNode)*  poolElement);
 
 /**
   * Deregister pool element.
@@ -132,11 +132,11 @@ enum ASAPError asapRegister(struct ASAPInstance* asap,
   * @param asap ASAPInstance.
   * @param poolHandle Pool handle.
   * @param identifier Pool element identifier.
-  * @return ASAP_Okay in case of success; error code otherwise.
+  * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-enum ASAPError asapDeregister(struct ASAPInstance*        asap,
-                              struct PoolHandle*          poolHandle,
-                              const PoolElementIdentifier identifier);
+unsigned int asapDeregister(struct ASAPInstance*            asap,
+                            struct PoolHandle*              poolHandle,
+                            const PoolElementIdentifierType identifier);
 
 /**
   * Report failure of pool element.
@@ -144,11 +144,11 @@ enum ASAPError asapDeregister(struct ASAPInstance*        asap,
   * @param asap ASAPInstance.
   * @param poolHandle Pool handle.
   * @param identifier Pool element identifier.
-  * @return ASAP_Okay in case of success; error code otherwise.
+  * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-enum ASAPError asapFailure(struct ASAPInstance*        asap,
-                           struct PoolHandle*          poolHandle,
-                           const PoolElementIdentifier identifier);
+unsigned int asapFailure(struct ASAPInstance*            asap,
+                         struct PoolHandle*              poolHandle,
+                         const PoolElementIdentifierType identifier);
 
 /**
   * Query name server for pool handle and select one pool element
@@ -161,7 +161,7 @@ enum ASAPError asapFailure(struct ASAPInstance*        asap,
   */
 struct PoolElement* asapSelectPoolElement(struct ASAPInstance* asap,
                                           struct PoolHandle*   poolHandle,
-                                          enum ASAPError*      error);
+                                          unsigned int*        error);
 
 /**
   * Do name resolution of given pool handle. The resulting pool pointer
@@ -169,12 +169,13 @@ struct PoolElement* asapSelectPoolElement(struct ASAPInstance* asap,
   *
   * @param asap ASAPInstance.
   * @param poolHandle Pool handle.
-  * @param poolPtr Reference to store reply to.
-  * @return ASAP_Okay in case of success; error code otherwise.
+  * @param ?`???????????????????????
+  * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-enum ASAPError asapNameResolution(struct ASAPInstance* asap,
-                                  struct PoolHandle*   poolHandle,
-                                  struct Pool**        poolPtr);
+unsigned int asapNameResolution(struct ASAPInstance*               asapInstance,
+                                struct PoolHandle*                 poolHandle,
+                                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                                size_t*                            poolElementNodes);
 
 
 #ifdef __cplusplus

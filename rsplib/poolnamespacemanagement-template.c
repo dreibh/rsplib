@@ -108,8 +108,20 @@ void ST_CLASS(poolNamespaceManagementClear)(
 /* ###### Registration ################################################### */
 unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
+                const ENRPIdentifierType                  homeNSIdentifier,
+                const PoolElementIdentifierType           poolElementIdentifier,
+                const unsigned int                        registrationLife,
+                const struct PoolPolicySettings*          poolPolicySettings,
+                const struct TransportAddressBlock*       transportAddressBlock,
+                const unsigned long long                  currentTimeStamp,
+                struct ST_CLASS(PoolElementNode)**        poolElementNode);
+
+
+/* ###### Registration ################################################### */
+unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
+                struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
+                const struct PoolHandle*                  poolHandle,
                 const ENRPIdentifierType                  homeNSIdentifier,
                 const PoolElementIdentifierType           poolElementIdentifier,
                 const unsigned int                        registrationLife,
@@ -123,27 +135,28 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
    unsigned int                             errorCode;
 
    *poolElementNode = 0;
-   if((poolHandleSize < 1) || (poolHandleSize > MAX_POOLHANDLESIZE)) {
-      return(PENC_INVALID_POOL_HANDLE);
+   if((poolHandle->Size < 1) || (poolHandle->Size > MAX_POOLHANDLESIZE)) {
+      return(RSPERR_INVALID_POOL_HANDLE);
    }
    poolPolicy = ST_CLASS(poolPolicyGetPoolPolicyByType)(poolPolicySettings->PolicyType);
    if(poolPolicy == NULL) {
-      return(PENC_INVALID_POOL_POLICY);
+      return(RSPERR_INVALID_POOL_POLICY);
    }
    if(poolNamespaceManagement->NewPoolNode == NULL) {
       poolNamespaceManagement->NewPoolNode = (struct ST_CLASS(PoolNode)*)malloc(sizeof(struct ST_CLASS(PoolNode)));
       if(poolNamespaceManagement->NewPoolNode == NULL) {
-         return(PENC_NO_RESOURCES);
+         return(RSPERR_NO_RESOURCES);
       }
    }
-   ST_CLASS(poolNodeNew)(poolNamespaceManagement->NewPoolNode, poolHandle, poolHandleSize, poolPolicy,
+   ST_CLASS(poolNodeNew)(poolNamespaceManagement->NewPoolNode,
+                         poolHandle, poolPolicy,
                          transportAddressBlock->Protocol,
                          (transportAddressBlock->Flags & TABF_CONTROLCHANNEL) ? PNF_CONTROLCHANNEL : 0);
 
    if(poolNamespaceManagement->NewPoolElementNode == NULL) {
       poolNamespaceManagement->NewPoolElementNode = (struct ST_CLASS(PoolElementNode)*)malloc(sizeof(struct ST_CLASS(PoolElementNode)));
       if(poolNamespaceManagement->NewPoolElementNode == NULL) {
-         return(PENC_NO_RESOURCES);
+         return(RSPERR_NO_RESOURCES);
       }
    }
 
@@ -165,7 +178,7 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
                                                                             &poolNamespaceManagement->NewPoolNode,
                                                                             &poolNamespaceManagement->NewPoolElementNode,
                                                                             &errorCode);
-   if(errorCode == PENC_OKAY) {
+   if(errorCode == RSPERR_OKAY) {
       (*poolElementNode)->LastUpdateTimeStamp = currentTimeStamp;
 
       userTransport = transportAddressBlockDuplicate(transportAddressBlock);
@@ -179,10 +192,10 @@ unsigned int ST_CLASS(poolNamespaceManagementRegisterPoolElement)(
       else {
          ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
             poolNamespaceManagement,
-            poolHandle, poolHandleSize,
+            poolHandle,
             poolElementIdentifier);
          *poolElementNode = NULL;
-         errorCode = PENC_NO_RESOURCES;
+         errorCode = RSPERR_NO_RESOURCES;
       }
    }
 
@@ -213,35 +226,33 @@ unsigned int ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
 #ifdef VERIFY
       ST_CLASS(poolNamespaceNodeVerify)(&poolNamespaceManagement->Namespace);
 #endif
-   return(PENC_OKAY);
+   return(RSPERR_OKAY);
 }
 
 
 /* ###### Deregistration ################################################# */
 unsigned int ST_CLASS(poolNamespaceManagementDeregisterPoolElement)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
                 const PoolElementIdentifierType           poolElementIdentifier)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode = ST_CLASS(poolNamespaceNodeFindPoolElementNode)(
                                                           &poolNamespaceManagement->Namespace,
-                                                          poolHandle, poolHandleSize,
+                                                          poolHandle,
                                                           poolElementIdentifier);
    if(poolElementNode) {
       return(ST_CLASS(poolNamespaceManagementDeregisterPoolElementByPtr)(
                 poolNamespaceManagement,
                 poolElementNode));
    }
-   return(PENC_NOT_FOUND);
+   return(RSPERR_NOT_FOUND);
 }
 
 
 /* ###### Name Resolution ################################################ */
 unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
                 struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                const unsigned char*                      poolHandle,
-                const size_t                              poolHandleSize,
+                const struct PoolHandle*                  poolHandle,
                 struct ST_CLASS(PoolElementNode)**        poolElementNodeArray,
                 size_t*                                   poolElementNodes,
                 const size_t                              maxNameResolutionItems,
@@ -250,7 +261,7 @@ unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
    unsigned int errorCode;
    *poolElementNodes = ST_CLASS(poolNamespaceNodeSelectPoolElementNodesByPolicy)(
                           &poolNamespaceManagement->Namespace,
-                          poolHandle, poolHandleSize,
+                          poolHandle,
                           poolElementNodeArray,
                           maxNameResolutionItems, maxIncrement,
                           &errorCode);
@@ -262,7 +273,7 @@ unsigned int ST_CLASS(poolNamespaceManagementNameResolution)(
    size_t i;
    puts("--- Selection -------------------------------------------------------");
    printf("Pool \"");
-   poolHandlePrint(poolHandle, poolHandleSize);
+   poolHandlePrint(poolHandle, stdout);
    puts("\":");
    for(i = 0;i < *poolElementNodes;i++) {
       printf("#%02u -> ", i);
@@ -290,8 +301,7 @@ static int ST_CLASS(getPropertyNameTable)(
    else {
       poolElementNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolElementPropertyNode)(
                            &poolNamespaceManagement->Namespace,
-                           nameTableExtract->LastPoolHandle,
-                           nameTableExtract->LastPoolHandleSize,
+                           &nameTableExtract->LastPoolHandle,
                            nameTableExtract->LastPoolElementIdentifier);
    }
 
@@ -308,10 +318,7 @@ static int ST_CLASS(getPropertyNameTable)(
    if(nameTableExtract->PoolElementNodes > 0) {
       struct ST_CLASS(PoolElementNode)* lastPoolElementNode = nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      memcpy(nameTableExtract->LastPoolHandle,
-             lastPoolNode->PoolHandle,
-             lastPoolNode->PoolHandleSize);
-      nameTableExtract->LastPoolHandleSize        = lastPoolNode->PoolHandleSize;
+      nameTableExtract->LastPoolHandle            = lastPoolNode->Handle;
       nameTableExtract->LastPoolElementIdentifier = lastPoolElementNode->Identifier;
    }
 
@@ -320,9 +327,8 @@ static int ST_CLASS(getPropertyNameTable)(
    for(size_t i = 0;i < nameTableExtract->PoolElementNodes;i++) {
       poolElementNode = nameTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
-      poolHandlePrint(poolElementNode->OwnerPoolNode->PoolHandle,
-                      poolElementNode->OwnerPoolNode->PoolHandleSize);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->PoolHandleSize, poolElementNode->Identifier);
+      poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
+      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->HandleSize, poolElementNode->Identifier);
       puts("");
    }
 #endif
@@ -332,8 +338,8 @@ static int ST_CLASS(getPropertyNameTable)(
 
 /* ###### Get name table from namespace ################################## */
 static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolNamespaceManagement)* poolNamespaceManagement,
-                                        struct ST_CLASS(NameTableExtract)*  nameTableExtract,
-                                        const unsigned int                  flags)
+                                        struct ST_CLASS(NameTableExtract)*        nameTableExtract,
+                                        const unsigned int                        flags)
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -341,8 +347,7 @@ static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolNamespaceManagement)
    nameTableExtract->PoolElementNodes = 0;
    if(flags & NTEF_START) {
       nameTableExtract->LastPoolElementIdentifier = 0;
-      nameTableExtract->LastPoolHandleSize        = 0;
-      nameTableExtract->LastPoolHandle[0]         = 0x00;
+      nameTableExtract->LastPoolHandle.Size       = 0;
       poolNode = ST_CLASS(poolNamespaceNodeGetFirstPoolNode)(&poolNamespaceManagement->Namespace);
       if(poolNode == NULL) {
          return(0);
@@ -352,17 +357,17 @@ static int ST_CLASS(getGlobalNameTable)(struct ST_CLASS(PoolNamespaceManagement)
    else {
       poolNode = ST_CLASS(poolNamespaceNodeFindPoolNode)(
                     &poolNamespaceManagement->Namespace,
-                    (unsigned char*)&nameTableExtract->LastPoolHandle, nameTableExtract->LastPoolHandleSize);
+                    &nameTableExtract->LastPoolHandle);
       if(poolNode == NULL) {
          poolNode = ST_CLASS(poolNamespaceNodeFindNearestNextPoolNode)(
                        &poolNamespaceManagement->Namespace,
-                       (unsigned char*)&nameTableExtract->LastPoolHandle, nameTableExtract->LastPoolHandleSize);
+                       &nameTableExtract->LastPoolHandle);
       }
       if(poolNode == NULL) {
          return(0);
       }
-      if(poolHandleComparison((unsigned char*)&nameTableExtract->LastPoolHandle, nameTableExtract->LastPoolHandleSize,
-                              (unsigned char*)&poolNode->PoolHandle, poolNode->PoolHandleSize) == 0) {
+      if(poolHandleComparison(&nameTableExtract->LastPoolHandle,
+                              &poolNode->Handle) == 0) {
          poolElementNode = ST_CLASS(poolNodeFindNearestNextPoolElementNode)(poolNode, nameTableExtract->LastPoolElementIdentifier);
       }
       else {
@@ -394,10 +399,7 @@ finish:
    if(nameTableExtract->PoolElementNodes > 0) {
       struct ST_CLASS(PoolElementNode)* lastPoolElementNode = nameTableExtract->PoolElementNodeArray[nameTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      memcpy(nameTableExtract->LastPoolHandle,
-             lastPoolNode->PoolHandle,
-             lastPoolNode->PoolHandleSize);
-      nameTableExtract->LastPoolHandleSize        = lastPoolNode->PoolHandleSize;
+      nameTableExtract->LastPoolHandle            = lastPoolNode->Handle;
       nameTableExtract->LastPoolElementIdentifier = lastPoolElementNode->Identifier;
    }
 
@@ -407,9 +409,9 @@ finish:
    for(size_t i = 0;i < nameTableExtract->PoolElementNodes;i++) {
       poolElementNode = nameTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
-      poolHandlePrint(poolElementNode->OwnerPoolNode->PoolHandle,
-                      poolElementNode->OwnerPoolNode->PoolHandleSize);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->PoolHandleSize, poolElementNode->Identifier);
+      poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
+      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle->Size,
+                             poolElementNode->Identifier);
       puts("");
    }
 #endif

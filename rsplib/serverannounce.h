@@ -1,5 +1,5 @@
 /*
- *  $Id: serverannounce.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id: serverannounce.h,v 1.2 2004/07/16 15:35:40 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,7 +41,7 @@
 
 
 #include "tdtypes.h"
-#include "transportaddress.h"
+#include "transportaddressblock.h"
 
 
 #ifdef __cplusplus

@@ -24,7 +24,8 @@
 #define DEBUG_H
 
 
-#include "stdio.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 /*

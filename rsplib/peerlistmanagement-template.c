@@ -93,7 +93,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    if(peerListManagement->NewPeerListNode == NULL) {
       peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
       if(peerListManagement->NewPeerListNode == NULL) {
-         return(PENC_NO_RESOURCES);
+         return(RSPERR_NO_RESOURCES);
       }
    }
 
@@ -106,7 +106,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    *peerListNode = ST_CLASS(peerListAddOrUpdatePeerListNode)(&peerListManagement->List,
                                                              &peerListManagement->NewPeerListNode,
                                                              &errorCode);
-   if(errorCode == PENC_OKAY) {
+   if(errorCode == RSPERR_OKAY) {
       (*peerListNode)->LastUpdateTimeStamp = currentTimeStamp;
 
       userTransport = transportAddressBlockDuplicate(transportAddressBlock);
@@ -122,7 +122,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
             peerListManagement,
             *peerListNode);
          *peerListNode = NULL;
-         errorCode = PENC_NO_RESOURCES;
+         errorCode = RSPERR_NO_RESOURCES;
       }
    }
 
@@ -145,7 +145,7 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
 #ifdef VERIFY
    ST_CLASS(peerListNodeVerify)(&peerListManagement->List);
 #endif
-   return(PENC_OKAY);
+   return(RSPERR_OKAY);
 }
 
 
@@ -162,7 +162,7 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 peerListManagement,
                 peerListNode));
    }
-   return(PENC_NOT_FOUND);
+   return(RSPERR_NOT_FOUND);
 }
 
 
