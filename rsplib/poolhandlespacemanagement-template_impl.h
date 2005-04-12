@@ -56,12 +56,17 @@ static void ST_CLASS(poolHandlespaceManagementPoolElementNodeDisposer)(void* arg
    struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement = (struct ST_CLASS(PoolHandlespaceManagement)*)arg2;
    if((poolElementNode->UserData) && (poolHandlespaceManagement->PoolElementNodeUserDataDisposer))  {
       poolHandlespaceManagement->PoolElementNodeUserDataDisposer(poolElementNode,
-                                                               poolHandlespaceManagement->DisposerUserData);
+                                                                 poolHandlespaceManagement->DisposerUserData);
       poolElementNode->UserData = NULL;
    }
    transportAddressBlockDelete(poolElementNode->UserTransport);
    free(poolElementNode->UserTransport);
    poolElementNode->UserTransport = NULL;
+   if(poolElementNode->RegistratorTransport) {
+      transportAddressBlockDelete(poolElementNode->RegistratorTransport);
+      free(poolElementNode->RegistratorTransport);
+      poolElementNode->RegistratorTransport = NULL;
+   }
    free(poolElementNode);
 }
 
