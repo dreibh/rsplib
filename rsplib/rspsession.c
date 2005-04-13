@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.34 2005/04/13 15:16:49 dreibh Exp $
+ *  $Id: rspsession.c,v 1.35 2005/04/13 16:17:14 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1344,6 +1344,7 @@ size_t rspSessionCreateComponentStatus(
                (*caeArray)[caeArraySize].ProtocolID = session->SocketProtocol;
                (*caeArray)[caeArraySize].PPID       = 0;
                caeArraySize++;
+               componentStatusGetComponentAddress(componentAddress, session->Socket, 0);
             }
             if(session->StatusTextText[0] != 0x00) {
                safestrcpy(statusText,
