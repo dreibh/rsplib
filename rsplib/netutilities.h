@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.16 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: netutilities.h,v 1.17 2005/04/13 15:16:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -194,7 +194,7 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
   * @param address sockaddr structure.
   * @return Port or 0 in case of error.
   */
-uint16_t getPort(struct sockaddr* address);
+uint16_t getPort(const struct sockaddr* address);
 
 /**
   * Set port in sockaddr structure.
@@ -211,7 +211,7 @@ bool setPort(struct sockaddr* address, const uint16_t port);
   * @param address sockaddr structure.
   * @return Address family
   */
-int getFamily(struct sockaddr* address);
+int getFamily(const struct sockaddr* address);
 
 /**
   * Get relative scope of address. This function supports IPv4 and IPv6

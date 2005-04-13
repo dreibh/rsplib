@@ -52,7 +52,7 @@ void ST_CLASS(poolHandlespaceManagementNew)(
 static void ST_CLASS(poolHandlespaceManagementPoolElementNodeDisposer)(void* arg1,
                                                                        void* arg2)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode                 = (struct ST_CLASS(PoolElementNode)*)arg1;
+   struct ST_CLASS(PoolElementNode)* poolElementNode                     = (struct ST_CLASS(PoolElementNode)*)arg1;
    struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement = (struct ST_CLASS(PoolHandlespaceManagement)*)arg2;
    if((poolElementNode->UserData) && (poolHandlespaceManagement->PoolElementNodeUserDataDisposer))  {
       poolHandlespaceManagement->PoolElementNodeUserDataDisposer(poolElementNode,

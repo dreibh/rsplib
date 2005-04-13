@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.33 2005/04/02 18:44:26 tuexen Exp $
+ *  $Id: rspsession.c,v 1.34 2005/04/13 15:16:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1139,7 +1139,7 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
                      struct PoolElementDescriptor** pedArray,
                      unsigned int*                  pedStatusArray,
                      const size_t                   peds,
-                     const unsigned card64          timeout,
+                     const unsigned long long       timeout,
                      struct TagItem*                tags)
 {
    struct TagItem mytags[16];

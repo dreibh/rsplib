@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.6 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: registrar.c,v 1.7 2005/04/13 15:16:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -861,7 +861,7 @@ static void sendPeerPresence(struct Registrar*             registrar,
 {
    struct RSerPoolMessage*       message;
    struct ST_CLASS(PeerListNode) peerListNode;
-   char                          localAddressArrayBuffer[MAX_NS_TRANSPORTADDRESSES * sizeof(struct TransportAddressBlock)];
+   char                          localAddressArrayBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
 
    message = rserpoolMessageNew(NULL, 65536);
@@ -884,6 +884,12 @@ static void sendPeerPresence(struct Registrar*             registrar,
                                    registrar->ServerID,
                                    registrar->ENRPUseMulticast ? PLNF_MULTICAST : 0,
                                    localAddressArray);
+
+         LOG_VERBOSE4
+         fputs("Sending PeerPresence using peer list entry: \n", stdlog);
+         ST_CLASS(peerListNodePrint)(&peerListNode, stdlog, ~0);
+         fputs("\n", stdlog);
+         LOG_END
          if(rserpoolMessageSend((sd == registrar->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
                               sd, assocID, msgSendFlags, 0, message) == false) {
             LOG_WARNING
@@ -1688,11 +1694,15 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
          to copy all data before!
          Obviously, this is a waste of CPU cycles, memory and bandwidth...
       */
+      memset(&delPoolNode, 0, sizeof(delPoolNode));
+      memset(&delPoolElementNode, 0, sizeof(delPoolElementNode));
       delPoolNode                      = *(poolElementNode->OwnerPoolNode);
       delPoolElementNode               = *poolElementNode;
       delPoolElementNode.OwnerPoolNode = &delPoolNode;
-      delPoolElementNode.UserTransport  = transportAddressBlockDuplicate(poolElementNode->UserTransport);
-      if(delPoolElementNode.UserTransport != NULL) {
+      delPoolElementNode.RegistratorTransport = transportAddressBlockDuplicate(poolElementNode->RegistratorTransport);
+      delPoolElementNode.UserTransport        = transportAddressBlockDuplicate(poolElementNode->UserTransport);
+      if((delPoolElementNode.UserTransport != NULL) &&
+         (delPoolElementNode.RegistratorTransport != NULL)) {
 
          message->Error = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                              &registrar->Handlespace,
@@ -1715,7 +1725,7 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
          }
          else {
             LOG_WARNING
-            fprintf(stdlog, "Failed to deregister for pool element $%08x of pool ",
+            fprintf(stdlog, "Failed to deregister pool element $%08x of pool ",
                     message->Identifier);
             poolHandlePrint(&message->Handle, stdlog);
             fputs(": ", stdlog);
@@ -1729,6 +1739,14 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
          delPoolElementNode.UserTransport = NULL;
       }
       else {
+         if(delPoolElementNode.UserTransport) {
+            transportAddressBlockDelete(delPoolElementNode.UserTransport);
+            free(delPoolElementNode.UserTransport);
+         }
+         if(delPoolElementNode.RegistratorTransport) {
+            transportAddressBlockDelete(delPoolElementNode.RegistratorTransport);
+            free(delPoolElementNode.RegistratorTransport);
+         }
          message->Error = RSPERR_OUT_OF_MEMORY;
       }
    }

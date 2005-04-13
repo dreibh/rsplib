@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.51 2005/04/12 11:00:22 dreibh Exp $
+ *  $Id: netutilities.c,v 1.52 2005/04/13 15:16:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -431,6 +431,7 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
 #define MAX_AUTOSELECT_PORT   60000
 
 
+#if 0
 /* ###### Convert mixed IPv4/IPv6 addresses to IPv6-format ############### */
 static struct sockaddr_in6* convertToIPv6(const struct sockaddr* addrs,
                                           const int              addrcnt)
@@ -480,6 +481,7 @@ static struct sockaddr_in6* convertToIPv6(const struct sockaddr* addrs,
 
    return(newAddressArray);
 }
+#endif
 
 
 /* ###### Wrapper for sctp_bindx() ######################################## */
@@ -488,6 +490,7 @@ static int my_sctp_bindx(int              sockfd,
                          int              addrcnt,
                          int              flags)
 {
+#if 0
 #warning Using Solaris-compatible sctp_bindx()!
    union sockaddr_union* addrArray = (union sockaddr_union*)addrs;
    struct sockaddr_in6*  newAddressArray;
@@ -495,6 +498,9 @@ static int my_sctp_bindx(int              sockfd,
 
    result = sctp_bindx(sockfd, addrs, addrcnt, flags);
    return(result);
+#else
+   return(sctp_bindx(sockfd, addrs, addrcnt, flags));
+#endif
 }
 
 
@@ -503,6 +509,7 @@ static int my_sctp_connectx(int                    sockfd,
                             const struct sockaddr* addrs,
                             int                    addrcnt)
 {
+#if 0
 #warning Using Solaris-compatible sctp_connectx()!
    struct sockaddr_in6*  newAddressArray;
    int                   result;
@@ -524,6 +531,9 @@ result=-1;
 //   }
 
    return(result);
+#else
+   return(sctp_connectx(sockfd, addrs, addrcnt));
+#endif
 }
 
 
@@ -550,7 +560,6 @@ union sockaddr_union* unpack_sockaddr(struct sockaddr* addrArray,
                LOG_ERROR
                fprintf(stderr, "ERROR: unpack_sockaddr() - Unknown address type #%d\n",
                        addrArray->sa_family);
-               fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_union array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
                LOG_END_FATAL
              break;
          }
@@ -580,7 +589,6 @@ struct sockaddr* pack_sockaddr_union(const union sockaddr_union* addrArray,
             LOG_ERROR
             fprintf(stderr, "ERROR: pack_sockaddr_union() - Unknown address type #%d\n",
                     ((struct sockaddr*)&addrArray[i])->sa_family);
-            fputs("IMPORTANT NOTE:\nThe standardizers have changed the socket API; the sockaddr_union array has been replaced by a variable-sized sockaddr_in/in6 blocks. Do not blame us for this change, send your complaints to the standardizers at sctp-impl@external.cisco.com!", stderr);
             LOG_END_FATAL
           break;
       }
@@ -617,6 +625,7 @@ size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
    socklen_t            addressLength;
    ssize_t              addresses;
    ssize_t              result;
+   ssize_t              i;
 
    LOG_VERBOSE4
    fputs("Getting transport addresses from socket...\n",stdlog);
@@ -653,6 +662,14 @@ size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
       fprintf(stdlog, "Obtained %d address(es)\n",addresses);
       LOG_END
    }
+
+   LOG_VERBOSE4
+   fprintf(stdlog, "Obtained addresses: %u\n", addresses);
+   for(i = 0;i < addresses;i++) {
+      fputaddress((const struct sockaddr*)&addressArray[i], true, stdlog);
+      fputs("\n", stdlog);
+   }
+   LOG_END
 
    return((size_t)addresses);
 }
@@ -1082,7 +1099,7 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
 
 
 /* ###### Get port ####################################################### */
-uint16_t getPort(struct sockaddr* address)
+uint16_t getPort(const struct sockaddr* address)
 {
    if(address != NULL) {
       switch(address->sa_family) {
@@ -1130,7 +1147,7 @@ bool setPort(struct sockaddr* address, uint16_t port)
 
 
 /* ###### Get address family ############################################# */
-int getFamily(struct sockaddr* address)
+int getFamily(const struct sockaddr* address)
 {
    if(address != NULL) {
       return(address->sa_family);
@@ -1978,9 +1995,9 @@ size_t getladdrsplus(const int              fd,
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
    uint16_t port;
-   size_t   i;
 #endif
 #endif
+   size_t i;
 
    if(addrs > 0) {
 #ifdef LINUX
@@ -2004,8 +2021,18 @@ size_t getladdrsplus(const int              fd,
       }
 #endif
 #endif
+
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
+
+      LOG_VERBOSE5
+      fprintf(stdlog, "getladdrsplus() - Number of addresses: %u\n", addrs);
+      for(i = 0;i < addrs;i++) {
+         fprintf(stdlog, " - #%u: ", i);
+         fputaddress(&(*addressArray)[i].sa, true, stdlog);
+         fputs("\n", stdlog);
+      }
+      LOG_END
    }
    return(addrs);
 }

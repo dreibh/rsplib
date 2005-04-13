@@ -317,7 +317,6 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
           int                           sockFD,
           const size_t                  maxAddresses)
 {
-   union sockaddr_union  sctpAddressArray[MAX_ADDRESSES];
    union sockaddr_union* localAddressArray;
    size_t                sctpAddresses;
 
@@ -329,15 +328,14 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
       if(sctpAddresses > MAX_ADDRESSES) {
          sctpAddresses = MAX_ADDRESSES;
       }
-      memcpy(&sctpAddressArray, localAddressArray, sctpAddresses * sizeof(union sockaddr_union));
-      free(localAddressArray);
 
       transportAddressBlockNew(sctpAddress,
                                IPPROTO_SCTP,
-                               getPort((struct sockaddr*)&sctpAddressArray[0]),
+                               getPort(&localAddressArray[0].sa),
                                0,
-                               (union sockaddr_union*)&sctpAddressArray,
+                               localAddressArray,
                                sctpAddresses);
+      free(localAddressArray);
    }
    return(sctpAddresses);
 }

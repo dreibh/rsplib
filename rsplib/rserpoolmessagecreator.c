@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.22 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.23 2005/04/13 15:16:49 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -183,7 +183,7 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
        break;
       default:
          LOG_ERROR
-         fputs("Unknown address family\n", stdlog);
+         fprintf(stdlog, "Unknown address family %u\n", address->sa_family);
          LOG_END_FATAL
          return(false);
        break;
