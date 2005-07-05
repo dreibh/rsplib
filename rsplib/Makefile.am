@@ -29,6 +29,8 @@ doublelinkedringlist.c \
 ext_socket.h \
 fdcallback.c \
 fdcallback.h \
+poolhandlespacechecksum.c \
+poolhandlespacechecksum.h \
 leaflinkedbinarytree.c \
 leaflinkedbinarytree.h \
 leaflinkedredblacktree.c \

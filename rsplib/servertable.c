@@ -1,5 +1,5 @@
 /*
- *  $Id: servertable.c,v 1.30 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: servertable.c,v 1.31 2005/07/05 14:06:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -166,7 +166,7 @@ struct ServerTable* serverTableNew(struct Dispatcher* dispatcher,
    if(serverTable != NULL) {
       serverTable->Dispatcher        = dispatcher;
       serverTable->LastAnnounceHeard = 0;
-      ST_CLASS(peerListManagementNew)(&serverTable->ServerList, 0, NULL, NULL);
+      ST_CLASS(peerListManagementNew)(&serverTable->ServerList, NULL, 0, NULL, NULL);
 
       /* ====== ASAP Instance settings ==================================== */
       serverTable->RegistrarConnectMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarConnectMaxTrials,

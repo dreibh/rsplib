@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.31 2005/07/05 10:44:14 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.32 2005/07/05 14:06:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1483,7 +1483,7 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   if(!(message->Flags & EHT_PEER_LIST_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHT_LIST_RESPONSE_REJECT)) {
       while(message->Position < message->BufferSize) {
          peerListNode = scanServerInformationParameter(message);
          if(peerListNode == NULL) {
@@ -1553,7 +1553,7 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHT_HANDLE_TABLE_RESPONSE_REJECT)) {
       message->HandlespacePtr = (struct ST_CLASS(PoolHandlespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolHandlespaceManagement)));
       if(message->HandlespacePtr == NULL) {
          message->Error = RSPERR_OUT_OF_MEMORY;
@@ -1977,7 +1977,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
         break;
 
        /* ====== ENRP ==================================================== */
-       case EHT_PEER_PRESENCE:
+       case EHT_PRESENCE:
           LOG_VERBOSE2
           fputs("Scanning PeerPresence message...\n", stdlog);
           LOG_END
@@ -1985,7 +1985,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_NAME_TABLE_REQUEST:
+       case EHT_HANDLE_TABLE_REQUEST:
           LOG_VERBOSE2
           fputs("Scanning PeerHandleTableRequest message...\n", stdlog);
           LOG_END
@@ -1993,7 +1993,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_NAME_TABLE_RESPONSE:
+       case EHT_HANDLE_TABLE_RESPONSE:
           LOG_VERBOSE2
           fputs("Scanning PeerHandleTableResponse message...\n", stdlog);
           LOG_END
@@ -2001,7 +2001,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_NAME_UPDATE:
+       case EHT_NAME_UPDATE:
           LOG_VERBOSE2
           fputs("Scanning PeerNameUpdate message...\n", stdlog);
           LOG_END
@@ -2009,7 +2009,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_LIST_REQUEST:
+       case EHT_LIST_REQUEST:
           LOG_VERBOSE2
           fputs("Scanning PeerListRequest message...\n", stdlog);
           LOG_END
@@ -2017,7 +2017,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_LIST_RESPONSE:
+       case EHT_LIST_RESPONSE:
           LOG_VERBOSE2
           fputs("Scanning PeerListResponse message...\n", stdlog);
           LOG_END
@@ -2025,7 +2025,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_INIT_TAKEOVER:
+       case EHT_INIT_TAKEOVER:
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeover message...\n", stdlog);
           LOG_END
@@ -2033,7 +2033,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_INIT_TAKEOVER_ACK:
+       case EHT_INIT_TAKEOVER_ACK:
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
           LOG_END
@@ -2041,7 +2041,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_TAKEOVER_SERVER:
+       case EHT_TAKEOVER_SERVER:
           LOG_VERBOSE2
           fputs("Scanning PeerTakeoverServer message...\n", stdlog);
           LOG_END
@@ -2049,7 +2049,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_OWNERSHIP_CHANGE:
+       case EHT_OWNERSHIP_CHANGE:
           LOG_VERBOSE2
           fputs("Scanning PeerOwnershipChange message...\n", stdlog);
           LOG_END
@@ -2057,7 +2057,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_PEER_ERROR:
+       case EHT_ERROR:
           LOG_VERBOSE2
           fputs("Scanning PeerError (ENRP) message...\n", stdlog);
           LOG_END

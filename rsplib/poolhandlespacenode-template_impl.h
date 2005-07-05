@@ -724,7 +724,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeAddPoolElementNode
 
 
 /* ###### Update PoolElementNode's ownership ############################# */
-static void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
+void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
               struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
               struct ST_CLASS(PoolElementNode)*     poolElementNode,
               const RegistrarIdentifierType         newHomeRegistrarIdentifier)

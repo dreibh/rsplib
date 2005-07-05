@@ -115,6 +115,21 @@ struct TransportAddressBlock* transportAddressBlockDuplicate(const struct Transp
 int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
                                     const void* transportAddressBlockPtr2);
 
+/**
+  * Compare TransportAddressBlocks for overlaps. The address blocks are
+  * considered as equal when ports and flags are equal AND there is at least
+  * one common address. For different address blocks, this function is
+  * equal to transportAddressBlockComparison().
+  *
+  * @param transportAddressBlockPtr1 TransportAddressBlock 1.
+  * @param transportAddressBlockPtr2 TransportAddressBlock 2.
+  * @return Comparison result.
+  *
+  * @see transportAddressBlockComparison
+  */
+int transportAddressBlockOverlapComparison(const void* transportAddressBlockPtr1,
+                                           const void* transportAddressBlockPtr2);
+
 
 /**
   * Initialize TransportAddressBlock with local addresses

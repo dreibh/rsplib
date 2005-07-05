@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.14 2005/07/05 10:44:14 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.15 2005/07/05 14:06:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -241,17 +241,17 @@ struct rserpool_errorcause
 
 
 #define EHT_ENRP_MODIFIER            0xee00
-#define EHT_PEER_PRESENCE            (0x01 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_NAME_TABLE_REQUEST  (0x02 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_NAME_TABLE_RESPONSE (0x03 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_NAME_UPDATE         (0x04 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_LIST_REQUEST        (0x05 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_LIST_RESPONSE       (0x06 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_INIT_TAKEOVER       (0x07 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_INIT_TAKEOVER_ACK   (0x08 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_TAKEOVER_SERVER     (0x09 | EHT_ENRP_MODIFIER)
-#define EHT_PEER_OWNERSHIP_CHANGE    (0x0a | EHT_ENRP_MODIFIER)
-#define EHT_PEER_ERROR               (0x0b | EHT_ENRP_MODIFIER)
+#define EHT_PRESENCE            (0x01 | EHT_ENRP_MODIFIER)
+#define EHT_HANDLE_TABLE_REQUEST  (0x02 | EHT_ENRP_MODIFIER)
+#define EHT_HANDLE_TABLE_RESPONSE (0x03 | EHT_ENRP_MODIFIER)
+#define EHT_NAME_UPDATE         (0x04 | EHT_ENRP_MODIFIER)
+#define EHT_LIST_REQUEST        (0x05 | EHT_ENRP_MODIFIER)
+#define EHT_LIST_RESPONSE       (0x06 | EHT_ENRP_MODIFIER)
+#define EHT_INIT_TAKEOVER       (0x07 | EHT_ENRP_MODIFIER)
+#define EHT_INIT_TAKEOVER_ACK   (0x08 | EHT_ENRP_MODIFIER)
+#define EHT_TAKEOVER_SERVER     (0x09 | EHT_ENRP_MODIFIER)
+#define EHT_OWNERSHIP_CHANGE    (0x0a | EHT_ENRP_MODIFIER)
+#define EHT_ERROR               (0x0b | EHT_ENRP_MODIFIER)
 
 
 struct rserpool_peerpresenceparameter
@@ -296,11 +296,11 @@ struct rserpool_targetparameter
 };
 
 
-#define EHF_PEER_PRESENCE_REPLY_REQUIRED              (1 << 0)
-#define EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY (1 << 0)
-#define EHT_PEER_LIST_RESPONSE_REJECT                 (1 << 0)
-#define EHT_PEER_NAME_TABLE_RESPONSE_REJECT           (1 << 0)
-#define EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND     (1 << 1)
+#define EHF_PRESENCE_REPLY_REQUIRED                (1 << 0)
+#define EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY (1 << 0)
+#define EHT_LIST_RESPONSE_REJECT                   (1 << 0)
+#define EHT_HANDLE_TABLE_RESPONSE_REJECT           (1 << 0)
+#define EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND     (1 << 1)
 
 
 struct RSerPoolMessage

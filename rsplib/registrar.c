@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.7 2005/04/13 15:16:49 dreibh Exp $
+ *  $Id: registrar.c,v 1.8 2005/07/05 14:06:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -407,52 +407,52 @@ void takeoverProcessListDeleteTakeoverProcess(
 
 struct Registrar
 {
-   RegistrarIdentifierType                       ServerID;
+   RegistrarIdentifierType                    ServerID;
 
-   struct Dispatcher                        StateMachine;
+   struct Dispatcher                          StateMachine;
    struct ST_CLASS(PoolHandlespaceManagement) Handlespace;
-   struct ST_CLASS(PeerListManagement)      Peers;
-   struct Timer                             HandlespaceActionTimer;
-   struct Timer                             PeerActionTimer;
+   struct ST_CLASS(PeerListManagement)        Peers;
+   struct Timer                               HandlespaceActionTimer;
+   struct Timer                               PeerActionTimer;
 
-   int                                      ASAPAnnounceSocket;
-   struct FDCallback                        ASAPSocketFDCallback;
-   union sockaddr_union                     ASAPAnnounceAddress;
-   bool                                     ASAPSendAnnounces;
-   int                                      ASAPSocket;
-   struct Timer                             ASAPAnnounceTimer;
+   int                                        ASAPAnnounceSocket;
+   struct FDCallback                          ASAPSocketFDCallback;
+   union sockaddr_union                       ASAPAnnounceAddress;
+   bool                                       ASAPSendAnnounces;
+   int                                        ASAPSocket;
+   struct Timer                               ASAPAnnounceTimer;
 
-   int                                      ENRPMulticastOutputSocket;
-   int                                      ENRPMulticastInputSocket;
-   struct FDCallback                        ENRPMulticastInputSocketFDCallback;
-   union sockaddr_union                     ENRPMulticastAddress;
-   int                                      ENRPUnicastSocket;
-   struct FDCallback                        ENRPUnicastSocketFDCallback;
-   bool                                     ENRPAnnounceViaMulticast;
-   bool                                     ENRPUseMulticast;
-   struct Timer                             ENRPAnnounceTimer;
+   int                                        ENRPMulticastOutputSocket;
+   int                                        ENRPMulticastInputSocket;
+   struct FDCallback                          ENRPMulticastInputSocketFDCallback;
+   union sockaddr_union                       ENRPMulticastAddress;
+   int                                        ENRPUnicastSocket;
+   struct FDCallback                          ENRPUnicastSocketFDCallback;
+   bool                                       ENRPAnnounceViaMulticast;
+   bool                                       ENRPUseMulticast;
+   struct Timer                               ENRPAnnounceTimer;
 
-   bool                                     InInitializationPhase;
-   RegistrarIdentifierType                       MentorServerID;
+   bool                                       InInitializationPhase;
+   RegistrarIdentifierType                    MentorServerID;
 
-   struct TakeoverProcessList               Takeovers;
-   struct Timer                             TakeoverExpiryTimer;
+   struct TakeoverProcessList                 Takeovers;
+   struct Timer                               TakeoverExpiryTimer;
 
-   size_t                                   MaxBadPEReports;
-   unsigned long long                       ServerAnnounceCycle;
-   unsigned long long                       EndpointMonitoringHeartbeatInterval;
-   unsigned long long                       EndpointKeepAliveTransmissionInterval;
-   unsigned long long                       EndpointKeepAliveTimeoutInterval;
-   unsigned long long                       PeerHeartbeatCycle;
-   unsigned long long                       PeerMaxTimeLastHeard;
-   unsigned long long                       PeerMaxTimeNoResponse;
-   unsigned long long                       MentorHuntTimeout;
-   unsigned long long                       TakeoverExpiryInterval;
+   size_t                                     MaxBadPEReports;
+   unsigned long long                         ServerAnnounceCycle;
+   unsigned long long                         EndpointMonitoringHeartbeatInterval;
+   unsigned long long                         EndpointKeepAliveTransmissionInterval;
+   unsigned long long                         EndpointKeepAliveTimeoutInterval;
+   unsigned long long                         PeerHeartbeatCycle;
+   unsigned long long                         PeerMaxTimeLastHeard;
+   unsigned long long                         PeerMaxTimeNoResponse;
+   unsigned long long                         MentorHuntTimeout;
+   unsigned long long                         TakeoverExpiryInterval;
 
 #ifdef ENABLE_CSP
-   struct CSPReporter                       CSPReporter;
-   unsigned long long                       CSPReportInterval;
-   union sockaddr_union                     CSPReportAddress;
+   struct CSPReporter                         CSPReporter;
+   unsigned long long                         CSPReportInterval;
+   union sockaddr_union                       CSPReportAddress;
 #endif
 };
 
@@ -486,16 +486,16 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                );
 void registrarDelete(struct Registrar* registrar);
 
-static void sendPeerNameUpdate(struct Registrar*                registrar,
-                               struct ST_CLASS(PoolElementNode)* poolElementNode,
-                               const uint16_t                    action);
-static void sendPeerInitTakeover(struct Registrar*       registrar,
-                                 const RegistrarIdentifierType targetID);
-static void sendPeerInitTakeoverAck(struct Registrar*       registrar,
-                                    const int                sd,
-                                    const sctp_assoc_t       assocID,
-                                    const RegistrarIdentifierType receiverID,
-                                    const RegistrarIdentifierType targetID);
+static void sendHandleUpdate(struct Registrar*                registrar,
+                             struct ST_CLASS(PoolElementNode)* poolElementNode,
+                             const uint16_t                    action);
+static void sendInitTakeover(struct Registrar*       registrar,
+                             const RegistrarIdentifierType targetID);
+static void sendInitTakeoverAck(struct Registrar*       registrar,
+                                const int                sd,
+                                const sctp_assoc_t       assocID,
+                                const RegistrarIdentifierType receiverID,
+                                const RegistrarIdentifierType targetID);
 static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData);
@@ -503,8 +503,8 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData);
 static void handlespaceActionTimerCallback(struct Dispatcher* dispatcher,
-                                         struct Timer*      timer,
-                                         void*              userData);
+                                           struct Timer*      timer,
+                                           void*              userData);
 static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                                     struct Timer*      timer,
                                     void*              userData);
@@ -512,9 +512,9 @@ static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
                                         struct Timer*      timer,
                                         void*              userData);
 static void registrarSocketCallback(struct Dispatcher* dispatcher,
-                                     int                fd,
-                                     unsigned int       eventMask,
-                                     void*              userData);
+                                    int                fd,
+                                    unsigned int       eventMask,
+                                    void*              userData);
 
 
 static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElementNode,
@@ -564,11 +564,12 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       dispatcherNew(&registrar->StateMachine,
                     dispatcherDefaultLock, dispatcherDefaultUnlock, NULL);
       ST_CLASS(poolHandlespaceManagementNew)(&registrar->Handlespace,
-                                           registrar->ServerID,
-                                           NULL,
-                                           poolElementNodeDisposer,
-                                           registrar);
+                                             registrar->ServerID,
+                                             NULL,
+                                             poolElementNodeDisposer,
+                                             registrar);
       ST_CLASS(peerListManagementNew)(&registrar->Peers,
+                                      &registrar->Handlespace,
                                       registrar->ServerID,
                                       peerListNodeDisposer,
                                       registrar);
@@ -815,8 +816,8 @@ static void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar
          LOG_END
 
          if(poolElementNode->HomeRegistrarIdentifier == registrar->ServerID) {
-            /* We own this PE -> send PeerNameUpdate for its removal. */
-            sendPeerNameUpdate(registrar, poolElementNode, PNUP_DEL_PE);
+            /* We own this PE -> send HandleUpdate for its removal. */
+            sendHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
 
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
@@ -850,14 +851,14 @@ static void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar
 
 
 /* ###### Send ENRP peer presence message ################################ */
-static void sendPeerPresence(struct Registrar*             registrar,
-                             int                           sd,
-                             const sctp_assoc_t            assocID,
-                             int                           msgSendFlags,
-                             const union sockaddr_union*   destinationAddressList,
-                             const size_t                  destinationAddresses,
-                             const RegistrarIdentifierType receiverID,
-                             const bool                    replyRequired)
+static void sendPresence(struct Registrar*             registrar,
+                         int                           sd,
+                         const sctp_assoc_t            assocID,
+                         int                           msgSendFlags,
+                         const union sockaddr_union*   destinationAddressList,
+                         const size_t                  destinationAddresses,
+                         const RegistrarIdentifierType receiverID,
+                         const bool                    replyRequired)
 {
    struct RSerPoolMessage*       message;
    struct ST_CLASS(PeerListNode) peerListNode;
@@ -866,16 +867,17 @@ static void sendPeerPresence(struct Registrar*             registrar,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type                      = EHT_PEER_PRESENCE;
+      message->Type                      = EHT_PRESENCE;
       message->PPID                      = PPID_ENRP;
       message->AssocID                   = assocID;
       message->AddressArray              = (union sockaddr_union*)destinationAddressList;
       message->Addresses                 = destinationAddresses;
-      message->Flags                     = replyRequired ? EHF_PEER_PRESENCE_REPLY_REQUIRED : 0x00;
+      message->Flags                     = replyRequired ? EHF_PRESENCE_REPLY_REQUIRED : 0x00;
       message->PeerListNodePtr           = &peerListNode;
       message->PeerListNodePtrAutoDelete = false;
       message->SenderID                  = registrar->ServerID;
       message->ReceiverID                = receiverID;
+      message->Checksum                  = ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(&registrar->Handlespace);
 
       if(transportAddressBlockGetLocalAddressesFromSCTPSocket(localAddressArray,
                                                               registrar->ASAPSocket,
@@ -908,19 +910,19 @@ static void sendPeerPresence(struct Registrar*             registrar,
 
 
 /* ###### Send ENRP peer list request message ############################ */
-static void sendPeerListRequest(struct Registrar*           registrar,
-                                int                         sd,
-                                const sctp_assoc_t          assocID,
-                                int                         msgSendFlags,
-                                const union sockaddr_union* destinationAddressList,
-                                const size_t                destinationAddresses,
-                                RegistrarIdentifierType     receiverID)
+static void sendListRequest(struct Registrar*           registrar,
+                            int                         sd,
+                            const sctp_assoc_t          assocID,
+                            int                         msgSendFlags,
+                            const union sockaddr_union* destinationAddressList,
+                            const size_t                destinationAddresses,
+                            RegistrarIdentifierType     receiverID)
 {
    struct RSerPoolMessage* message;
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type         = EHT_PEER_LIST_REQUEST;
+      message->Type         = EHT_LIST_REQUEST;
       message->PPID         = PPID_ENRP;
       message->AssocID      = assocID;
       message->AddressArray = (union sockaddr_union*)destinationAddressList;
@@ -931,7 +933,7 @@ static void sendPeerListRequest(struct Registrar*           registrar,
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, message) == false) {
          LOG_WARNING
-         fputs("Sending PeerListRequest failed\n", stdlog);
+         fputs("Sending ListRequest failed\n", stdlog);
          LOG_END
       }
       rserpoolMessageDelete(message);
@@ -940,19 +942,19 @@ static void sendPeerListRequest(struct Registrar*           registrar,
 
 
 /* ###### Send ENRP peer handle table request message ###################### */
-static void sendPeerHandleTableRequest(struct Registrar*           registrar,
-                                     int                         sd,
-                                     const sctp_assoc_t          assocID,
-                                     int                         msgSendFlags,
-                                     const union sockaddr_union* destinationAddressList,
-                                     const size_t                destinationAddresses,
-                                     RegistrarIdentifierType     receiverID)
+static void sendHandleTableRequest(struct Registrar*           registrar,
+                                    int                         sd,
+                                    const sctp_assoc_t          assocID,
+                                    int                         msgSendFlags,
+                                    const union sockaddr_union* destinationAddressList,
+                                    const size_t                destinationAddresses,
+                                    RegistrarIdentifierType     receiverID)
 {
    struct RSerPoolMessage* message;
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type         = EHT_PEER_NAME_TABLE_REQUEST;
+      message->Type         = EHT_HANDLE_TABLE_REQUEST;
       message->PPID         = PPID_ENRP;
       message->AssocID      = assocID;
       message->AddressArray = (union sockaddr_union*)destinationAddressList;
@@ -963,7 +965,7 @@ static void sendPeerHandleTableRequest(struct Registrar*           registrar,
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, message) == false) {
          LOG_WARNING
-         fputs("Sending PeerHandleTableRequest failed\n", stdlog);
+         fputs("Sending HandleTableRequest failed\n", stdlog);
          LOG_END
       }
       rserpoolMessageDelete(message);
@@ -999,7 +1001,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    }
 
    if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-      sendPeerPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+      sendPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                        (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                        0, false);
    }
@@ -1011,7 +1013,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
          fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
                   peerListNode->Identifier);
          LOG_END
-         sendPeerPresence(registrar,
+         sendPresence(registrar,
                           registrar->ENRPUnicastSocket, 0, 0,
                           peerListNode->AddressBlock->AddressArray,
                           peerListNode->AddressBlock->Addresses,
@@ -1148,8 +1150,8 @@ static void handlespaceActionTimerCallback(struct Dispatcher* dispatcher,
          }
 
          if(poolElementNode->HomeRegistrarIdentifier == registrar->ServerID) {
-            /* We own this PE -> send PeerNameUpdate for its removal. */
-            sendPeerNameUpdate(registrar, poolElementNode, PNUP_DEL_PE);
+            /* We own this PE -> send HandleUpdate for its removal. */
+            sendHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
 
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
@@ -1216,7 +1218,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          fprintf(stdlog, " not head since MaxTimeLastHeard=%lluus -> requesting immediate PeerPresence\n",
                  registrar->PeerMaxTimeLastHeard);
          LOG_END
-         sendPeerPresence(registrar,
+         sendPresence(registrar,
                           registrar->ENRPUnicastSocket,
                           0, 0,
                           peerListNode->AddressBlock->AddressArray,
@@ -1251,7 +1253,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
             fprintf(stdlog, "Initiating takeover of dead peer $%08x\n",
                     peerListNode->Identifier);
             LOG_END
-            sendPeerInitTakeover(registrar, peerListNode->Identifier);
+            sendInitTakeover(registrar, peerListNode->Identifier);
          }
 
          result = ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
@@ -1292,7 +1294,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
 
 
 /* ###### Send peer init takeover ######################################## */
-static void sendPeerInitTakeover(struct Registrar*             registrar,
+static void sendInitTakeover(struct Registrar*             registrar,
                                  const RegistrarIdentifierType targetID)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -1300,7 +1302,7 @@ static void sendPeerInitTakeover(struct Registrar*             registrar,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
-      message->Type         = EHT_PEER_INIT_TAKEOVER;
+      message->Type         = EHT_INIT_TAKEOVER;
       message->Flags        = 0x00;
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = 0;
@@ -1318,7 +1320,7 @@ static void sendPeerInitTakeover(struct Registrar*             registrar,
                                 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
-            fputs("Sending PeerNameUpdate via ENRP multicast socket failed\n", stdlog);
+            fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
             LOG_END
          }
       }
@@ -1347,7 +1349,7 @@ static void sendPeerInitTakeover(struct Registrar*             registrar,
 
 
 /* ###### Send peer init takeover acknowledgement ######################## */
-static void sendPeerInitTakeoverAck(struct Registrar*             registrar,
+static void sendInitTakeoverAck(struct Registrar*             registrar,
                                     const int                     sd,
                                     const sctp_assoc_t            assocID,
                                     const RegistrarIdentifierType receiverID,
@@ -1357,7 +1359,7 @@ static void sendPeerInitTakeoverAck(struct Registrar*             registrar,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
-      message->Type         = EHT_PEER_INIT_TAKEOVER_ACK;
+      message->Type         = EHT_INIT_TAKEOVER_ACK;
       message->AssocID      = assocID;
       message->Flags        = 0x00;
       message->SenderID     = registrar->ServerID;
@@ -1382,16 +1384,16 @@ static void sendPeerInitTakeoverAck(struct Registrar*             registrar,
 
 
 /* ###### Send peer name update ########################################## */
-static void sendPeerNameUpdate(struct Registrar*                 registrar,
-                               struct ST_CLASS(PoolElementNode)* poolElementNode,
-                               const uint16_t                    action)
+static void sendHandleUpdate(struct Registrar*                 registrar,
+                             struct ST_CLASS(PoolElementNode)* poolElementNode,
+                             const uint16_t                    action)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct RSerPoolMessage*        message;
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
-      message->Type                     = EHT_PEER_NAME_UPDATE;
+      message->Type                     = EHT_NAME_UPDATE;
       message->Flags                    = 0x00;
       message->Action                   = action;
       message->SenderID                 = registrar->ServerID;
@@ -1400,7 +1402,7 @@ static void sendPeerNameUpdate(struct Registrar*                 registrar,
       message->PoolElementPtrAutoDelete = false;
 
       LOG_VERBOSE
-      fputs("Sending PeerNameUpdate for pool element ", stdlog);
+      fputs("Sending HandleUpdate for pool element ", stdlog);
       ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL),
       fputs(" of pool ", stdlog);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
@@ -1409,7 +1411,7 @@ static void sendPeerNameUpdate(struct Registrar*                 registrar,
 
       if(registrar->ENRPUseMulticast) {
          LOG_VERBOSE2
-         fputs("Sending PeerNameUpdate via ENRP multicast socket...\n", stdlog);
+         fputs("Sending HandleUpdate via ENRP multicast socket...\n", stdlog);
          LOG_END
          message->ReceiverID    = 0;
          message->AddressArray  = &registrar->ENRPMulticastAddress;
@@ -1419,7 +1421,7 @@ static void sendPeerNameUpdate(struct Registrar*                 registrar,
                                 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
-            fputs("Sending PeerNameUpdate via ENRP multicast socket failed\n", stdlog);
+            fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
             LOG_END
          }
       }
@@ -1431,7 +1433,7 @@ static void sendPeerNameUpdate(struct Registrar*                 registrar,
             message->AddressArray = peerListNode->AddressBlock->AddressArray;
             message->Addresses    = peerListNode->AddressBlock->Addresses;
             LOG_VERBOSE
-            fprintf(stdlog, "Sending PeerNameUpdate to unicast peer $%08x...\n",
+            fprintf(stdlog, "Sending HandleUpdate to unicast peer $%08x...\n",
                     peerListNode->Identifier);
             LOG_END
             rserpoolMessageSend(IPPROTO_SCTP,
@@ -1619,7 +1621,8 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
             LOG_END
 
             /* ====== Send update to peers =============================== */
-            sendPeerNameUpdate(registrar, poolElementNode, PNUP_ADD_PE);
+puts("?????????????");
+// ?????            sendHandleUpdate(registrar, poolElementNode, PNUP_ADD_PE);
          }
          else {
             LOG_WARNING
@@ -1687,7 +1690,7 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
                         message->Identifier);
    if(poolElementNode != NULL) {
       /*
-         The ASAP draft says that PeerNameUpdate has to include a full
+         The ASAP draft says that HandleUpdate has to include a full
          Pool Element Parameter, even if this is unnecessary for
          a removal (ID would be sufficient). Since we cannot guarantee
          that deregistration in the handlespace is successful, we have
@@ -1711,8 +1714,8 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
             message->Flags = 0x00;
 
             if(delPoolElementNode.HomeRegistrarIdentifier == registrar->ServerID) {
-               /* We own this PE -> send PeerNameUpdate for its removal. */
-               sendPeerNameUpdate(registrar, &delPoolElementNode, PNUP_DEL_PE);
+               /* We own this PE -> send HandleUpdate for its removal. */
+               sendHandleUpdate(registrar, &delPoolElementNode, PNUP_DEL_PE);
             }
 
             LOG_ACTION
@@ -1917,8 +1920,8 @@ static void handleEndpointUnreachable(struct Registrar*       registrar,
          LOG_END
 
          if(poolElementNode->HomeRegistrarIdentifier == registrar->ServerID) {
-            /* We own this PE -> send PeerNameUpdate for its removal. */
-            sendPeerNameUpdate(registrar, poolElementNode, PNUP_DEL_PE);
+            /* We own this PE -> send HandleUpdate for its removal. */
+            sendHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
 
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
@@ -1957,7 +1960,7 @@ static void handleEndpointUnreachable(struct Registrar*       registrar,
 
 
 /* ###### Handle peer name update ######################################## */
-static void handlePeerNameUpdate(struct Registrar*       registrar,
+static void handleHandleUpdate(struct Registrar*       registrar,
                                  int                     fd,
                                  sctp_assoc_t            assocID,
                                  struct RSerPoolMessage* message)
@@ -1968,13 +1971,13 @@ static void handlePeerNameUpdate(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own PeerNameUpdate message\n", stdlog);
+      fputs("Skipping our own HandleUpdate message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_ACTION
-   fputs("Got PeerNameUpdate for pool element ", stdlog);
+   fputs("Got HandleUpdate for pool element ", stdlog);
    ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
    fputs(" of pool ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
@@ -2037,7 +2040,7 @@ static void handlePeerNameUpdate(struct Registrar*       registrar,
       }
       else {
          LOG_ERROR
-         fprintf(stdlog, "PR $%08x sent me a PeerNameUpdate for a PE owned by myself!",
+         fprintf(stdlog, "PR $%08x sent me a HandleUpdate for a PE owned by myself!",
                  message->SenderID);
          LOG_END
       }
@@ -2071,7 +2074,7 @@ static void handlePeerNameUpdate(struct Registrar*       registrar,
 
    else {
       LOG_WARNING
-      fprintf(stdlog, "Got PeerNameUpdate with invalid action $%04x\n",
+      fprintf(stdlog, "Got HandleUpdate with invalid action $%04x\n",
               message->Action);
       LOG_END
    }
@@ -2079,14 +2082,14 @@ static void handlePeerNameUpdate(struct Registrar*       registrar,
 
 
 /* ###### Handle peer presence ########################################### */
-static void handlePeerPresence(struct Registrar*       registrar,
-                               int                     fd,
-                               sctp_assoc_t            assocID,
-                               struct RSerPoolMessage* message)
+static void handlePresence(struct Registrar*       registrar,
+                           int                     fd,
+                           sctp_assoc_t            assocID,
+                           struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
-   struct TakeoverProcess* takeoverProcess;
-   int                     result;
+   struct TakeoverProcess*        takeoverProcess;
+   int                            result;
 
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
@@ -2120,11 +2123,28 @@ static void handlePeerPresence(struct Registrar*       registrar,
                   &peerListNode);
 
       if(result == RSPERR_OKAY) {
+         /* ====== Checksum handling ================================== */
+         peerListNode->ExpectedHandlespaceChecksum = message->Checksum;
+
          LOG_VERBOSE2
          fputs("Successfully added peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
          fputs("\n", stdlog);
          LOG_END
+
+         /* ====== Check if synchronization is necessary ============== */
+         if(assocID != 0) {
+            /* Attention: We only synchronize on SCTP-received Presence messages! */
+            if(peerListNode->ComputedHandlespaceChecksum != peerListNode->ExpectedHandlespaceChecksum) {
+               LOG_ACTION
+               fprintf(stdlog, "Synchronization with peer $%08x is necessary -> requesting handle table...\n",
+                       peerListNode->Identifier);
+               LOG_END
+               sendHandleTableRequest(registrar, fd, assocID, 0,
+                                      NULL, 0,
+                                      peerListNode->Identifier);
+            }
+         }
 
          /* ====== Activate keep alive timer ========================== */
          if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
@@ -2147,19 +2167,20 @@ static void handlePeerPresence(struct Registrar*       registrar,
          registrarDumpPeers(registrar);
          LOG_END
 
-         if((message->Flags & EHF_PEER_PRESENCE_REPLY_REQUIRED) &&
+         if((message->Flags & EHF_PRESENCE_REPLY_REQUIRED) &&
             (fd != registrar->ENRPMulticastOutputSocket) &&
             (message->SenderID != 0)) {
             LOG_VERBOSE
             fputs("PeerPresence with ReplyRequired flag set -> Sending reply...\n", stdlog);
             LOG_END
-            sendPeerPresence(registrar,
+            sendPresence(registrar,
                              fd, message->AssocID, 0,
                              NULL, 0,
                              message->SenderID,
                              false);
          }
 
+         /* ====== Initialization phase ================================== */
          if((registrar->InInitializationPhase) &&
             (registrar->MentorServerID == 0)) {
             LOG_ACTION
@@ -2168,25 +2189,25 @@ static void handlePeerPresence(struct Registrar*       registrar,
             fputs(" as mentor server...\n", stdlog);
             LOG_END
             registrar->MentorServerID = peerListNode->Identifier;
-            sendPeerPresence(registrar,
-                             registrar->ENRPUnicastSocket,
-                             0, 0,
-                             peerListNode->AddressBlock->AddressArray,
-                             peerListNode->AddressBlock->Addresses,
-                             peerListNode->Identifier,
-                             false);
-            sendPeerListRequest(registrar,
-                                registrar->ENRPUnicastSocket,
-                                0, 0,
-                                peerListNode->AddressBlock->AddressArray,
-                                peerListNode->AddressBlock->Addresses,
-                                peerListNode->Identifier);
-            sendPeerHandleTableRequest(registrar,
-                                     registrar->ENRPUnicastSocket,
-                                     0, 0,
-                                     peerListNode->AddressBlock->AddressArray,
-                                     peerListNode->AddressBlock->Addresses,
-                                     peerListNode->Identifier);
+            sendPresence(registrar,
+                         registrar->ENRPUnicastSocket,
+                         0, 0,
+                         peerListNode->AddressBlock->AddressArray,
+                         peerListNode->AddressBlock->Addresses,
+                         peerListNode->Identifier,
+                         false);
+            sendListRequest(registrar,
+                            registrar->ENRPUnicastSocket,
+                            0, 0,
+                            peerListNode->AddressBlock->AddressArray,
+                            peerListNode->AddressBlock->Addresses,
+                            peerListNode->Identifier);
+            sendHandleTableRequest(registrar,
+                                   registrar->ENRPUnicastSocket,
+                                   0, 0,
+                                   peerListNode->AddressBlock->AddressArray,
+                                   peerListNode->AddressBlock->Addresses,
+                                   peerListNode->Identifier);
          }
       }
       else {
@@ -2215,10 +2236,10 @@ static void handlePeerPresence(struct Registrar*       registrar,
 
 
 /* ###### Handle peer init takeover ###################################### */
-static void handlePeerInitTakeover(struct Registrar*       registrar,
-                                   int                     fd,
-                                   sctp_assoc_t            assocID,
-                                   struct RSerPoolMessage* message)
+static void handleInitTakeover(struct Registrar*       registrar,
+                               int                     fd,
+                               sctp_assoc_t            assocID,
+                               struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct TakeoverProcess*        takeoverProcess;
@@ -2244,7 +2265,7 @@ static void handlePeerInitTakeover(struct Registrar*       registrar,
               message->SenderID);
       LOG_END
       if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-         sendPeerPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+         sendPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                           (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                           0, false);
       }
@@ -2256,7 +2277,7 @@ static void handlePeerInitTakeover(struct Registrar*       registrar,
             fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
                      peerListNode->Identifier);
             LOG_END
-            sendPeerPresence(registrar,
+            sendPresence(registrar,
                              registrar->ENRPUnicastSocket, 0, 0,
                              peerListNode->AddressBlock->AddressArray,
                              peerListNode->AddressBlock->Addresses,
@@ -2281,7 +2302,7 @@ static void handlePeerInitTakeover(struct Registrar*       registrar,
                  registrar->ServerID);
          LOG_END
          /* Acknowledge peer's takeover */
-         sendPeerInitTakeoverAck(registrar,
+         sendInitTakeoverAck(registrar,
                                  fd, assocID,
                                  message->SenderID, message->RegistrarIdentifier);
          /* Cancel our takeover process */
@@ -2307,7 +2328,7 @@ static void handlePeerInitTakeover(struct Registrar*       registrar,
               message->SenderID,
               message->RegistrarIdentifier);
       LOG_END
-      sendPeerInitTakeoverAck(registrar,
+      sendInitTakeoverAck(registrar,
                               fd, assocID,
                               message->SenderID, message->RegistrarIdentifier);
    }
@@ -2315,7 +2336,7 @@ static void handlePeerInitTakeover(struct Registrar*       registrar,
 
 
 /* ###### Send ENRP peer takeover server message ######################### */
-static void sendPeerTakeoverServer(struct Registrar*             registrar,
+static void sendTakeoverServer(struct Registrar*             registrar,
                                    int                           sd,
                                    const sctp_assoc_t            assocID,
                                    int                           msgSendFlags,
@@ -2328,7 +2349,7 @@ static void sendPeerTakeoverServer(struct Registrar*             registrar,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type         = EHT_PEER_TAKEOVER_SERVER;
+      message->Type         = EHT_TAKEOVER_SERVER;
       message->PPID         = PPID_ENRP;
       message->AssocID      = assocID;
       message->AddressArray = (union sockaddr_union*)destinationAddressList;
@@ -2350,7 +2371,7 @@ static void sendPeerTakeoverServer(struct Registrar*             registrar,
 
 
 /* ###### Send ENRP peer ownership change message(s) ##################### */
-static void sendPeerOwnershipChange(struct Registrar*            registrar,
+static void sendOwnershipChange(struct Registrar*            registrar,
                                     int                           sd,
                                     const sctp_assoc_t            assocID,
                                     int                           msgSendFlags,
@@ -2364,7 +2385,7 @@ static void sendPeerOwnershipChange(struct Registrar*            registrar,
 
    message = rserpoolMessageNew(NULL, 250);  /* ?????????????? */
    if(message) {
-      message->Type                   = EHT_PEER_OWNERSHIP_CHANGE;
+      message->Type                   = EHT_OWNERSHIP_CHANGE;
       message->PPID                   = PPID_ENRP;
       message->AssocID                = assocID;
       message->AddressArray           = (union sockaddr_union*)destinationAddressList;
@@ -2408,11 +2429,11 @@ static void doTakeover(struct Registrar*       registrar,
 
    /* ====== Report takeover to peers ==================================== */
    if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-      sendPeerTakeoverServer(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+      sendTakeoverServer(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                              (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                              0,
                              takeoverProcess->TargetID);
-      sendPeerOwnershipChange(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+      sendOwnershipChange(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                               (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                               0,
                               takeoverProcess->TargetID);
@@ -2425,13 +2446,13 @@ static void doTakeover(struct Registrar*       registrar,
          fprintf(stdlog, "Sending PeerTakeoverServer to unicast peer $%08x...\n",
                   peerListNode->Identifier);
          LOG_END
-         sendPeerTakeoverServer(registrar,
+         sendTakeoverServer(registrar,
                                 registrar->ENRPUnicastSocket, 0, 0,
                                 peerListNode->AddressBlock->AddressArray,
                                 peerListNode->AddressBlock->Addresses,
                                 peerListNode->Identifier,
                                 takeoverProcess->TargetID);
-         sendPeerOwnershipChange(registrar,
+         sendOwnershipChange(registrar,
                                  registrar->ENRPUnicastSocket, 0, 0,
                                  peerListNode->AddressBlock->AddressArray,
                                  peerListNode->AddressBlock->Addresses,
@@ -2480,7 +2501,7 @@ static void doTakeover(struct Registrar*       registrar,
 
 
 /* ###### Handle peer init takeover ack ################################## */
-static void handlePeerInitTakeoverAck(struct Registrar*       registrar,
+static void handleInitTakeoverAck(struct Registrar*       registrar,
                                       int                     fd,
                                       sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
@@ -2532,7 +2553,7 @@ static void handlePeerInitTakeoverAck(struct Registrar*       registrar,
 
 
 /* ###### Handle peer takeover server #################################### */
-static void handlePeerTakeoverServer(struct Registrar*       registrar,
+static void handleTakeoverServer(struct Registrar*       registrar,
                                      int                     fd,
                                      sctp_assoc_t            assocID,
                                      struct RSerPoolMessage* message)
@@ -2554,7 +2575,7 @@ static void handlePeerTakeoverServer(struct Registrar*       registrar,
 
 
 /* ###### Handle peer change ownership ################################### */
-static void handlePeerOwnershipChange(struct Registrar*       registrar,
+static void handleOwnershipChange(struct Registrar*       registrar,
                                       int                     fd,
                                       sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
@@ -2575,7 +2596,7 @@ static void handlePeerOwnershipChange(struct Registrar*       registrar,
 
 
 /* ###### Handle peer list request ####################################### */
-static void handlePeerListRequest(struct Registrar*       registrar,
+static void handleListRequest(struct Registrar*       registrar,
                                   int                     fd,
                                   sctp_assoc_t            assocID,
                                   struct RSerPoolMessage* message)
@@ -2585,19 +2606,19 @@ static void handlePeerListRequest(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own PeerListRequest message\n", stdlog);
+      fputs("Skipping our own ListRequest message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got PeerListRequest from peer $%08x\n",
+   fprintf(stdlog, "Got ListRequest from peer $%08x\n",
            message->SenderID);
    LOG_END
 
    response = rserpoolMessageNew(NULL, 65536);
    if(response != NULL) {
-      response->Type       = EHT_PEER_LIST_RESPONSE;
+      response->Type       = EHT_LIST_RESPONSE;
       response->AssocID    = assocID;
       response->Flags      = 0x00;
       response->SenderID   = registrar->ServerID;
@@ -2623,7 +2644,7 @@ static void handlePeerListRequest(struct Registrar*       registrar,
 
 
 /* ###### Handle peer list response ###################################### */
-static void handlePeerListResponse(struct Registrar*       registrar,
+static void handleListResponse(struct Registrar*       registrar,
                                    int                     fd,
                                    sctp_assoc_t            assocID,
                                    struct RSerPoolMessage* message)
@@ -2645,7 +2666,7 @@ static void handlePeerListResponse(struct Registrar*       registrar,
            message->SenderID);
    LOG_END
 
-   if(!(message->Flags & EHT_PEER_LIST_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHT_LIST_RESPONSE_REJECT)) {
       if(message->PeerListPtr) {
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                            message->PeerListPtr);
@@ -2669,7 +2690,7 @@ static void handlePeerListResponse(struct Registrar*       registrar,
                   getMicroTime() + registrar->PeerMaxTimeLastHeard);
 
                /* ====== New peer -> Send Peer Presence ================== */
-               sendPeerPresence(registrar,
+               sendPresence(registrar,
                                 registrar->ENRPUnicastSocket, 0, 0,
                                 newPeerListNode->AddressBlock->AddressArray,
                                 newPeerListNode->AddressBlock->Addresses,
@@ -2702,7 +2723,7 @@ static void handlePeerListResponse(struct Registrar*       registrar,
 
 
 /* ###### Handle peer handle table request ################################# */
-static void handlePeerHandleTableRequest(struct Registrar*       registrar,
+static void handleHandleTableRequest(struct Registrar*       registrar,
                                        int                     fd,
                                        sctp_assoc_t            assocID,
                                        struct RSerPoolMessage* message)
@@ -2713,13 +2734,13 @@ static void handlePeerHandleTableRequest(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own PeerHandleTableRequest message\n", stdlog);
+      fputs("Skipping our own HandleTableRequest message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got PeerHandleTableRequest from peer $%08x\n",
+   fprintf(stdlog, "Got HandleTableRequest from peer $%08x\n",
            message->SenderID);
    LOG_END
 
@@ -2731,7 +2752,7 @@ static void handlePeerHandleTableRequest(struct Registrar*       registrar,
    /* We allow only 1400 bytes per HandleTableResponse... */
    response = rserpoolMessageNew(NULL, 1400);
    if(response != NULL) {
-      response->Type                      = EHT_PEER_NAME_TABLE_RESPONSE;
+      response->Type                      = EHT_HANDLE_TABLE_RESPONSE;
       response->AssocID                   = assocID;
       response->Flags                     = 0x00;
       response->SenderID                  = registrar->ServerID;
@@ -2744,21 +2765,21 @@ static void handlePeerHandleTableRequest(struct Registrar*       registrar,
       response->HandlespacePtrAutoDelete    = false;
 
       if(peerListNode == NULL) {
-         message->Flags |= EHT_PEER_NAME_TABLE_RESPONSE_REJECT;
+         message->Flags |= EHT_HANDLE_TABLE_RESPONSE_REJECT;
          LOG_WARNING
-         fprintf(stdlog, "PeerHandleTableRequest from peer $%08x -> This peer is unknown, rejecting request!\n",
+         fprintf(stdlog, "HandleTableRequest from peer $%08x -> This peer is unknown, rejecting request!\n",
                  message->SenderID);
          LOG_END
       }
 
       LOG_VERBOSE
-      fprintf(stdlog, "Sending PeerHandleTableResponse to peer $%08x...\n",
+      fprintf(stdlog, "Sending HandleTableResponse to peer $%08x...\n",
               message->SenderID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              fd, assocID, 0, 0, response) == false) {
          LOG_WARNING
-         fputs("Sending PeerHandleTableResponse failed\n", stdlog);
+         fputs("Sending HandleTableResponse failed\n", stdlog);
          LOG_END
       }
 
@@ -2768,7 +2789,7 @@ static void handlePeerHandleTableRequest(struct Registrar*       registrar,
 
 
 /* ###### Handle handle table response ##################################### */
-static void handlePeerHandleTableResponse(struct Registrar*       registrar,
+static void handleHandleTableResponse(struct Registrar*       registrar,
                                         int                     fd,
                                         sctp_assoc_t            assocID,
                                         struct RSerPoolMessage* message)
@@ -2790,7 +2811,7 @@ static void handlePeerHandleTableResponse(struct Registrar*       registrar,
            message->SenderID);
    LOG_END
 
-   if(!(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHT_HANDLE_TABLE_RESPONSE_REJECT)) {
       if(message->HandlespacePtr) {
          poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
          while(poolElementNode != NULL) {
@@ -2860,12 +2881,12 @@ static void handlePeerHandleTableResponse(struct Registrar*       registrar,
          LOG_END
 
 
-         if(message->Flags & EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND) {
+         if(message->Flags & EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND) {
             LOG_VERBOSE
             fprintf(stdlog, "HandleTableResponse has MoreToSend flag set -> sending HandleTableRequest to peer $%08x to get more data\n",
                     message->SenderID);
             LOG_END
-            sendPeerHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
+            sendHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
          }
          else {
             if((registrar->InInitializationPhase) &&
@@ -2881,7 +2902,7 @@ static void handlePeerHandleTableResponse(struct Registrar*       registrar,
    }
    else {
       LOG_ACTION
-      fprintf(stdlog, "Rejected PeerHandleTableResponse from peer $%08x\n",
+      fprintf(stdlog, "Rejected HandleTableResponse from peer $%08x\n",
               message->SenderID);
       LOG_END
    }
@@ -2909,35 +2930,35 @@ static void handleMessage(struct Registrar*       registrar,
       case AHT_ENDPOINT_UNREACHABLE:
          handleEndpointUnreachable(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_PRESENCE:
-         handlePeerPresence(registrar, sd, message->AssocID, message);
+      case EHT_PRESENCE:
+         handlePresence(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_NAME_UPDATE:
-         handlePeerNameUpdate(registrar, sd, message->AssocID, message);
+      case EHT_NAME_UPDATE:
+         handleHandleUpdate(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_LIST_REQUEST:
-         handlePeerListRequest(registrar, sd, message->AssocID, message);
+      case EHT_LIST_REQUEST:
+         handleListRequest(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_LIST_RESPONSE:
-         handlePeerListResponse(registrar, sd, message->AssocID, message);
+      case EHT_LIST_RESPONSE:
+         handleListResponse(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_NAME_TABLE_REQUEST:
-         handlePeerHandleTableRequest(registrar, sd, message->AssocID, message);
+      case EHT_HANDLE_TABLE_REQUEST:
+         handleHandleTableRequest(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_NAME_TABLE_RESPONSE:
-         handlePeerHandleTableResponse(registrar, sd, message->AssocID, message);
+      case EHT_HANDLE_TABLE_RESPONSE:
+         handleHandleTableResponse(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_INIT_TAKEOVER:
-         handlePeerInitTakeover(registrar, sd, message->AssocID, message);
+      case EHT_INIT_TAKEOVER:
+         handleInitTakeover(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_INIT_TAKEOVER_ACK:
-         handlePeerInitTakeoverAck(registrar, sd, message->AssocID, message);
+      case EHT_INIT_TAKEOVER_ACK:
+         handleInitTakeoverAck(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_TAKEOVER_SERVER:
-         handlePeerTakeoverServer(registrar, sd, message->AssocID, message);
+      case EHT_TAKEOVER_SERVER:
+         handleTakeoverServer(registrar, sd, message->AssocID, message);
        break;
-      case EHT_PEER_OWNERSHIP_CHANGE:
-         handlePeerOwnershipChange(registrar, sd, message->AssocID, message);
+      case EHT_OWNERSHIP_CHANGE:
+         handleOwnershipChange(registrar, sd, message->AssocID, message);
        break;
       default:
          LOG_WARNING
@@ -3019,7 +3040,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                         message->Type = AHT_PEER_ERROR;
                      }
                      else if(message->PPID == PPID_ENRP) {
-                        message->Type = EHT_PEER_ERROR;
+                        message->Type = EHT_ERROR;
                      }
                      rserpoolMessageSend(IPPROTO_SCTP,
                                        fd, assocID, 0, 0, message);

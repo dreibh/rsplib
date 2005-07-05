@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.24 2005/07/05 10:44:14 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.25 2005/07/05 14:06:06 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -906,8 +906,8 @@ static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
-   if(beginMessage(message, EHT_PEER_PRESENCE,
-                   message->Flags & EHF_PEER_PRESENCE_REPLY_REQUIRED,
+   if(beginMessage(message, EHT_PRESENCE,
+                   message->Flags & EHF_PRESENCE_REPLY_REQUIRED,
                    PPID_ENRP) == NULL) {
       return(false);
    }
@@ -935,7 +935,7 @@ static bool createPeerListRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
-   if(beginMessage(message, EHT_PEER_LIST_REQUEST,
+   if(beginMessage(message, EHT_LIST_REQUEST,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -966,8 +966,8 @@ static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(beginMessage(message, EHT_PEER_LIST_RESPONSE,
-                   message->Flags & EHT_PEER_LIST_RESPONSE_REJECT,
+   if(beginMessage(message, EHT_LIST_RESPONSE,
+                   message->Flags & EHT_LIST_RESPONSE_REJECT,
                    PPID_ENRP) == NULL) {
       return(false);
    }
@@ -1004,8 +1004,8 @@ static bool createPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
-   if(beginMessage(message, EHT_PEER_NAME_TABLE_REQUEST,
-                   message->Flags & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY,
+   if(beginMessage(message, EHT_HANDLE_TABLE_REQUEST,
+                   message->Flags & EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY,
                    PPID_ENRP) == NULL) {
       return(false);
    }
@@ -1024,17 +1024,17 @@ static bool createPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 /* ###### Create peer handle table response ################################ */
 static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_serverparameter*   sp;
-   struct ST_CLASS(HandleTableExtract)* nte;
-   struct PoolHandle*                 lastPoolHandle;
-   unsigned int                       flags;
-   int                                result;
-   size_t                             i;
-   size_t                             oldPosition;
-   struct rserpool_header*            header;
+   struct rserpool_serverparameter*     sp;
+   struct ST_CLASS(HandleTableExtract)* hte;
+   struct PoolHandle*                   lastPoolHandle;
+   unsigned int                         flags;
+   int                                  result;
+   size_t                               i;
+   size_t                               oldPosition;
+   struct rserpool_header*              header;
 
-   header = beginMessage(message, EHT_PEER_NAME_TABLE_RESPONSE,
-                         message->Flags & (EHT_PEER_NAME_TABLE_RESPONSE_REJECT|EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND),
+   header = beginMessage(message, EHT_HANDLE_TABLE_RESPONSE,
+                         message->Flags & (EHT_HANDLE_TABLE_RESPONSE_REJECT|EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND),
                          PPID_ENRP);
    if(header == NULL) {
       return(false);
@@ -1048,36 +1048,38 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
    if(message->PeerListNodePtr) {
-      flags = (message->Action & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? HTEF_OWNCHILDSONLY : 0;
-      nte = (struct ST_CLASS(HandleTableExtract)*)message->PeerListNodePtr->UserData;
-      if(nte == NULL) {
+      flags = (message->Action & EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? HTEF_OWNCHILDSONLY : 0;
+      hte = (struct ST_CLASS(HandleTableExtract)*)message->PeerListNodePtr->UserData;
+printf("hte=%p\n",hte);
+      if(hte == NULL) {
          flags |= HTEF_START;
-         nte = (struct ST_CLASS(HandleTableExtract)*)malloc(sizeof(struct ST_CLASS(HandleTableExtract)));
-         if(nte == NULL) {
+         hte = (struct ST_CLASS(HandleTableExtract)*)malloc(sizeof(struct ST_CLASS(HandleTableExtract)));
+         if(hte == NULL) {
             return(false);
          }
-         message->PeerListNodePtr->UserData = nte;
+         message->PeerListNodePtr->UserData = hte;
       }
 
       oldPosition = message->Position;
       result = ST_CLASS(poolHandlespaceManagementGetHandleTable)(
                   message->HandlespacePtr,
                   message->HandlespacePtr->Handlespace.HomeRegistrarIdentifier,
-                  nte,
+                  hte,
                   flags);
       if(result > 0) {
          lastPoolHandle = NULL;
-         for(i = 0;i < nte->PoolElementNodes;i++) {
+         for(i = 0;i < hte->PoolElementNodes;i++) {
             LOG_NOTE
-            ST_CLASS(poolElementNodePrint)(nte->PoolElementNodeArray[i], stdlog, ~0);
+            ST_CLASS(poolElementNodePrint)(hte->PoolElementNodeArray[i], stdlog, ~0);
             fputs("\n", stdlog);
             LOG_END
 
-            if(lastPoolHandle != &nte->PoolElementNodeArray[i]->OwnerPoolNode->Handle) {
-               lastPoolHandle = &nte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
+            if(lastPoolHandle != &hte->PoolElementNodeArray[i]->OwnerPoolNode->Handle) {
+               lastPoolHandle = &hte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
                oldPosition = message->Position;
                if(createPoolHandleParameter(message, lastPoolHandle) == false) {
                   if(i < 1) {
+puts("XXXXXXXX1");
                      return(false);
                   }
                   message->Position = oldPosition;
@@ -1085,9 +1087,10 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
                }
             }
 
-            CHECK(nte->PoolElementNodeArray[i]->RegistratorTransport != NULL);
-            if(createPoolElementParameter(message, nte->PoolElementNodeArray[i]) == false) {
+            CHECK(hte->PoolElementNodeArray[i]->RegistratorTransport != NULL);
+            if(createPoolElementParameter(message, hte->PoolElementNodeArray[i]) == false) {
                if(i < 1) {
+puts("XXXXXXXX2");
                   return(false);
                }
                message->Position = oldPosition;
@@ -1095,12 +1098,18 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
             }
             oldPosition = message->Position;
 
-            nte->LastPoolHandle            = nte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
-            nte->LastPoolElementIdentifier = nte->PoolElementNodeArray[i]->Identifier;
+            hte->LastPoolHandle            = hte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
+            hte->LastPoolElementIdentifier = hte->PoolElementNodeArray[i]->Identifier;
          }
-         if((nte->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
-            (i != nte->PoolElementNodes)) {
-            header->ah_flags |= EHT_PEER_NAME_TABLE_RESPONSE_MORE_TO_SEND;
+         if((hte->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
+            (i != hte->PoolElementNodes)) {
+puts("---MORE!!!!!!!");
+            header->ah_flags |= EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
+         }
+         else {
+puts("---END1");
+            free(message->PeerListNodePtr->UserData);
+            message->PeerListNodePtr->UserData = NULL;
          }
       }
    }
@@ -1116,7 +1125,7 @@ static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
 
    CHECK(message->PoolElementPtr->RegistratorTransport != NULL);
 
-   if(beginMessage(message, EHT_PEER_NAME_UPDATE,
+   if(beginMessage(message, EHT_NAME_UPDATE,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1148,7 +1157,7 @@ static bool createPeerInitTakeoverMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
-   if(beginMessage(message, EHT_PEER_INIT_TAKEOVER,
+   if(beginMessage(message, EHT_INIT_TAKEOVER,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1171,7 +1180,7 @@ static bool createPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
-   if(beginMessage(message, EHT_PEER_INIT_TAKEOVER_ACK,
+   if(beginMessage(message, EHT_INIT_TAKEOVER_ACK,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1194,7 +1203,7 @@ static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
-   if(beginMessage(message, EHT_PEER_TAKEOVER_SERVER,
+   if(beginMessage(message, EHT_TAKEOVER_SERVER,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1222,7 +1231,7 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    size_t                           oldPosition;
    size_t                           i;
 
-   if(beginMessage(message, EHT_PEER_OWNERSHIP_CHANGE,
+   if(beginMessage(message, EHT_OWNERSHIP_CHANGE,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1293,7 +1302,7 @@ static bool createENRPPeerErrorMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
-   if(beginMessage(message, EHT_PEER_ERROR,
+   if(beginMessage(message, EHT_ERROR,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1452,7 +1461,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
         break;
 
        /* ====== ENRP ==================================================== */
-       case EHT_PEER_PRESENCE:
+       case EHT_PRESENCE:
           LOG_VERBOSE2
           fputs("Creating PeerPresence message...\n", stdlog);
           LOG_END
@@ -1460,7 +1469,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_NAME_TABLE_REQUEST:
+       case EHT_HANDLE_TABLE_REQUEST:
           LOG_VERBOSE2
           fputs("Creating PeerHandleTableRequest message...\n", stdlog);
           LOG_END
@@ -1468,7 +1477,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_NAME_TABLE_RESPONSE:
+       case EHT_HANDLE_TABLE_RESPONSE:
           LOG_VERBOSE2
           fputs("Creating PeerHandleTableResponse message...\n", stdlog);
           LOG_END
@@ -1476,7 +1485,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_NAME_UPDATE:
+       case EHT_NAME_UPDATE:
           LOG_VERBOSE2
           fputs("Creating PeerNameUpdate message...\n", stdlog);
           LOG_END
@@ -1484,7 +1493,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_LIST_REQUEST:
+       case EHT_LIST_REQUEST:
           LOG_VERBOSE2
           fputs("Creating PeerListRequest message...\n", stdlog);
           LOG_END
@@ -1492,7 +1501,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_LIST_RESPONSE:
+       case EHT_LIST_RESPONSE:
           LOG_VERBOSE2
           fputs("Creating PeerListResponse message...\n", stdlog);
           LOG_END
@@ -1500,7 +1509,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_INIT_TAKEOVER:
+       case EHT_INIT_TAKEOVER:
           LOG_VERBOSE2
           fputs("Creating PeerInitTakeover message...\n", stdlog);
           LOG_END
@@ -1508,7 +1517,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_INIT_TAKEOVER_ACK:
+       case EHT_INIT_TAKEOVER_ACK:
           LOG_VERBOSE2
           fputs("Creating PeerInitTakeoverAck message...\n", stdlog);
           LOG_END
@@ -1516,7 +1525,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_TAKEOVER_SERVER:
+       case EHT_TAKEOVER_SERVER:
           LOG_VERBOSE2
           fputs("Creating PeerTakeoverServer message...\n", stdlog);
           LOG_END
@@ -1524,7 +1533,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_OWNERSHIP_CHANGE:
+       case EHT_OWNERSHIP_CHANGE:
           LOG_VERBOSE2
           fputs("Creating PeerOwnershipChange message...\n", stdlog);
           LOG_END
@@ -1532,7 +1541,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_PEER_ERROR:
+       case EHT_ERROR:
           LOG_VERBOSE2
           fputs("Creating PeerError (ENRP) message...\n", stdlog);
           LOG_END

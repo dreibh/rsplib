@@ -82,6 +82,12 @@ static void ST_CLASS(peerListManagementPeerListNodeDisposer)(void* arg1,
 void ST_CLASS(peerListManagementDelete)(
         struct ST_CLASS(PeerListManagement)* peerListManagement)
 {
+   if(peerListManagement->Handlespace) {
+      peerListManagement->Handlespace->PoolNodeUpdateNotification = NULL;
+      peerListManagement->Handlespace->NotificationUserData       = NULL;
+   }
+   peerListManagement->Handlespace = NULL;
+
    ST_CLASS(peerListManagementClear)(peerListManagement);
    if(peerListManagement->NewPeerListNode) {
       ST_CLASS(peerListNodeDelete)(peerListManagement->NewPeerListNode);

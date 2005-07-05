@@ -201,11 +201,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindPoolElementNod
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      const struct PoolHandle*              poolHandle,
                                      const PoolElementIdentifierType       poolElementIdentifier);
-// ??????????????????
-/*void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
+void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
         struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
         struct ST_CLASS(PoolElementNode)*     poolElementNode,
-        const RegistrarIdentifierType         newHomeRegistrarIdentifier);*/
+        const RegistrarIdentifierType         newHomeRegistrarIdentifier);
 void ST_CLASS(poolHandlespaceNodeUpdateConnectionOfPoolElementNode)(
         struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
         struct ST_CLASS(PoolElementNode)*     poolElementNode,

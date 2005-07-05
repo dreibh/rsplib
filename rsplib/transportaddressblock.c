@@ -309,6 +309,65 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
 }
 
 
+/* ###### Overlap comparison of TransportAddressBlocks ################### */
+int transportAddressBlockOverlapComparison(const void* transportAddressBlockPtr1,
+                                           const void* transportAddressBlockPtr2)
+{
+   const struct TransportAddressBlock* transportAddressBlock1 = (const struct TransportAddressBlock*)transportAddressBlockPtr1;
+   const struct TransportAddressBlock* transportAddressBlock2 = (const struct TransportAddressBlock*)transportAddressBlockPtr2;
+   int                                 result;
+   size_t                              i, j;
+
+   if((transportAddressBlock1 == NULL) &&
+      (transportAddressBlock2 != NULL)) {
+      return(-1);
+   }
+   else if((transportAddressBlock1 != NULL) &&
+      (transportAddressBlock2 == NULL)) {
+      return(1);
+   }
+   if(transportAddressBlock1->Port < transportAddressBlock2->Port) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Port > transportAddressBlock2->Port) {
+      return(1);
+   }
+   if(transportAddressBlock1->Flags < transportAddressBlock2->Flags) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Flags > transportAddressBlock2->Flags) {
+      return(1);
+   }
+
+   for(i = 0;i < transportAddressBlock1->Addresses;i++) {
+      for(j = 0;j < transportAddressBlock2->Addresses;j++) {
+         result = addresscmp((const struct sockaddr*)&transportAddressBlock1->AddressArray[i],
+                             (const struct sockaddr*)&transportAddressBlock2->AddressArray[j],
+                             false);
+         if(result == 0) {
+            return(0);
+         }
+      }
+   }
+
+   if(transportAddressBlock1->Addresses < transportAddressBlock2->Addresses) {
+      return(-1);
+   }
+   else if(transportAddressBlock1->Addresses > transportAddressBlock2->Addresses) {
+      return(1);
+   }
+   for(i = 0;i < transportAddressBlock1->Addresses;i++) {
+      result = addresscmp((const struct sockaddr*)&transportAddressBlock1->AddressArray[i],
+                          (const struct sockaddr*)&transportAddressBlock2->AddressArray[i],
+                          false);
+      if(result != 0) {
+         return(result);
+      }
+   }
+   return(0);
+}
+
+
 #ifndef HAVE_TEST
 /* ###### Get addresses from SCTP socket ################################# */
 #define MAX_ADDRESSES 128
@@ -317,6 +376,7 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
           int                           sockFD,
           const size_t                  maxAddresses)
 {
+   union sockaddr_union  sctpAddressArray[MAX_ADDRESSES];
    union sockaddr_union* localAddressArray;
    size_t                sctpAddresses;
 
@@ -328,14 +388,15 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
       if(sctpAddresses > MAX_ADDRESSES) {
          sctpAddresses = MAX_ADDRESSES;
       }
+      memcpy(&sctpAddressArray, localAddressArray, sctpAddresses * sizeof(union sockaddr_union));
+      free(localAddressArray);
 
       transportAddressBlockNew(sctpAddress,
                                IPPROTO_SCTP,
-                               getPort(&localAddressArray[0].sa),
+                               getPort((struct sockaddr*)&sctpAddressArray[0]),
                                0,
-                               localAddressArray,
+                               (union sockaddr_union*)&sctpAddressArray,
                                sctpAddresses);
-      free(localAddressArray);
    }
    return(sctpAddresses);
 }

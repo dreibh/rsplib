@@ -210,9 +210,6 @@ HandlespaceChecksumType ST_CLASS(poolElementNodeComputeChecksum)(
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->Identifier,
                                          sizeof(poolElementNode->Identifier));
-   checksum = handlespaceChecksumCompute(checksum,
-                                         (const char*)&poolElementNode->HomeRegistrarIdentifier,
-                                         sizeof(poolElementNode->HomeRegistrarIdentifier));
    return(checksum);
 }
 
