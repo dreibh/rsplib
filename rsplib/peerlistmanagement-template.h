@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPeerList PeerList List Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,9 @@ extern "C" {
 
 struct ST_CLASS(PeerListManagement)
 {
-   struct ST_CLASS(PeerList)      List;
-   struct ST_CLASS(PeerListNode)* NewPeerListNode;
+   struct ST_CLASS(PeerList)                   List;
+   struct ST_CLASS(PeerListNode)*              NewPeerListNode;
+   struct ST_CLASS(PoolHandlespaceManagement)* Handlespace;
 
    void (*PeerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
                                         void*                          userData);
@@ -42,8 +43,9 @@ struct ST_CLASS(PeerListManagement)
 
 
 void ST_CLASS(peerListManagementNew)(
-        struct ST_CLASS(PeerListManagement)* peerListManagement,
-        const RegistrarIdentifierType             ownRegistrarIdentifier,
+        struct ST_CLASS(PeerListManagement)*        peerListManagement,
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        const RegistrarIdentifierType        ownRegistrarIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
                                              void*                          userData),
         void* disposerUserData);
@@ -61,29 +63,29 @@ size_t ST_CLASS(peerListManagementGetPeers)(
           const struct ST_CLASS(PeerListManagement)* peerListManagement);
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const RegistrarIdentifierType             registrarIdentifier,
+                const RegistrarIdentifierType        registrarIdentifier,
                 const unsigned int                   flags,
                 const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
                 struct ST_CLASS(PeerListNode)**      peerListNode);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const RegistrarIdentifierType             registrarIdentifier,
+                                  const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const RegistrarIdentifierType             registrarIdentifier,
+                                  const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                         const RegistrarIdentifierType             registrarIdentifier,
-                                         const struct TransportAddressBlock*  transportAddressBlock);
+                                  const RegistrarIdentifierType        registrarIdentifier,
+                                  const struct TransportAddressBlock*  transportAddressBlock);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const RegistrarIdentifierType             registrarIdentifier,
+                const RegistrarIdentifierType        registrarIdentifier,
                 const struct TransportAddressBlock*  transportAddressBlock);
 unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                       struct ST_CLASS(PeerListManagement)* peerListManagement);
@@ -94,6 +96,9 @@ void ST_CLASS(peerListManagementRestartPeerListNodeExpiryTimer)(
 size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
           struct ST_CLASS(PeerListManagement)* peerListManagement,
           const unsigned long long             currentTimeStamp);
+void ST_CLASS(peerListManagementVerifyChecksumsInHandlespace)(
+        struct ST_CLASS(PeerListManagement)*        peerListManagement,
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 
 
 #ifdef __cplusplus

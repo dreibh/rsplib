@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,12 +47,15 @@ struct ST_CLASS(PeerListNode)
    struct STN_CLASSNAME          PeerListTimerStorageNode;
    struct ST_CLASS(PeerList)*    OwnerPeerList;
 
-   RegistrarIdentifierType            Identifier;
+   RegistrarIdentifierType       Identifier;
    unsigned int                  Flags;
    unsigned long long            LastUpdateTimeStamp;
 
    unsigned int                  TimerCode;
    unsigned long long            TimerTimeStamp;
+
+   HandlespaceChecksumType       ExpectedHandlespaceChecksum;
+   HandlespaceChecksumType       ComputedHandlespaceChecksum;
 
    struct TransportAddressBlock* AddressBlock;
    void*                         UserData;

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef POOLMANAGEMENT_BASICS_H
-#define POOLMANAGEMENT_BASICS_H
+#ifndef POOLHANDLESPACEMANAGEMENT_BASICS_H
+#define POOLHANDLESPACEMANAGEMENT_BASICS_H
 
 
 #include <sys/types.h>
@@ -45,7 +45,6 @@ extern "C" {
 
 typedef uint32_t RegistrarIdentifierType;
 typedef uint32_t PoolElementIdentifierType;
-typedef uint32_t PoolElementChecksumType;
 typedef uint32_t PoolElementSeqNumberType;
 
 #define UNDEFINED_POOL_ELEMENT_IDENTIFIER 0
@@ -61,6 +60,7 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PENPO_USERTRANSPORT          (1 << 6)   /* User transport           */
 #define PENPO_REGISTRATORTRANSPORT   (1 << 7)   /* Registrator transport    */
 #define PENPO_CONNECTION             (1 << 8)   /* Connection (sd/assoc)    */
+#define PENPO_CHECKSUM               (1 << 9)   /* PE entry checksum        */
 
 #define PNPO_INDEX                   (1 << 16)  /* PEs of pool by index     */
 #define PNPO_SELECTION               (1 << 17)  /* PEs of pool by selection */
@@ -85,6 +85,14 @@ typedef uint32_t PoolElementSeqNumberType;
 
 #define PLPO_FULL           (~0)
 #define PLPO_ONLY_INDEX     (PLPO_PEERS_INDEX)
+
+
+enum PoolNodeUpdateAction
+{
+   PNUA_Create = 0x01,
+   PNUA_Delete = 0x02,
+   PNUA_Update = 0x03
+};
 
 
 const char* poolHandlespaceManagementGetErrorDescription(const unsigned int errorCode);

@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool List Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,18 +29,34 @@
 */
 
 
+static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
+               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+               struct ST_CLASS(PoolElementNode)*           poolElementNode,
+               enum PoolNodeUpdateAction                   updateAction,
+               HandlespaceChecksumType                     preUpdateChecksum,
+               RegistrarIdentifierType                     preUpdateHomeRegistrar,
+               void*                                       userData);
+
+
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListManagementNew)(
-        struct ST_CLASS(PeerListManagement)* peerListManagement,
-        const RegistrarIdentifierType             ownRegistrarIdentifier,
+        struct ST_CLASS(PeerListManagement)*        peerListManagement,
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        const RegistrarIdentifierType               ownRegistrarIdentifier,
         void (*peerListNodeUserDataDisposer)(struct ST_CLASS(PeerListNode)* peerListNode,
-                                             void*                             userData),
+                                             void*                          userData),
         void* disposerUserData)
 {
    ST_CLASS(peerListNew)(&peerListManagement->List, ownRegistrarIdentifier);
    peerListManagement->NewPeerListNode              = NULL;
+   peerListManagement->Handlespace                  = poolHandlespaceManagement;
    peerListManagement->PeerListNodeUserDataDisposer = peerListNodeUserDataDisposer;
    peerListManagement->DisposerUserData             = disposerUserData;
+
+   if(peerListManagement->Handlespace) {
+      peerListManagement->Handlespace->PoolNodeUpdateNotification = ST_CLASS(peerListManagementPoolNodeUpdateNotification);
+      peerListManagement->Handlespace->NotificationUserData       = (void*)peerListManagement;
+   }
 }
 
 
@@ -115,7 +131,7 @@ size_t ST_CLASS(peerListManagementGetPeers)(
 /* ###### Find PeerListNode ############################################## */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const RegistrarIdentifierType             registrarIdentifier,
+                                  const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindPeerListNode)(
@@ -128,7 +144,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindPeerListNode)(
 /* ###### Find nearest prev PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const RegistrarIdentifierType             registrarIdentifier,
+                                  const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindNearestPrevPeerListNode)(
@@ -141,7 +157,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestPrevPeerLis
 /* ###### Find nearest next PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
-                                  const RegistrarIdentifierType             registrarIdentifier,
+                                  const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock)
 {
    return(ST_CLASS(peerListFindNearestNextPeerListNode)(
@@ -168,12 +184,13 @@ unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
 /* ###### Registration ################################################### */
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
-                const RegistrarIdentifierType             registrarIdentifier,
+                const RegistrarIdentifierType        registrarIdentifier,
                 const unsigned int                   flags,
                 const struct TransportAddressBlock*  transportAddressBlock,
                 const unsigned long long             currentTimeStamp,
                 struct ST_CLASS(PeerListNode)**      peerListNode)
 {
+   struct ST_CLASS(PeerListNode) updatedPeerListNode;
    struct TransportAddressBlock* userTransport;
    unsigned int                  errorCode;
 
@@ -181,6 +198,29 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
       peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
       if(peerListManagement->NewPeerListNode == NULL) {
          return(RSPERR_NO_RESOURCES);
+      }
+   }
+
+   if( ((flags & PLNF_DYNAMIC) && (registrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER)) ||
+       ((!(flags & PLNF_DYNAMIC)) && (registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER)) ) {
+      return(RSPERR_INVALID_ID);
+   }
+
+   /* Check, if a static entry is updated with an ID */
+   if(registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+      *peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                   0,
+                                                                   transportAddressBlock);
+      if(*peerListNode) {
+         ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
+                                   registrarIdentifier,
+                                   ((*peerListNode)->Flags &~ PLNF_DYNAMIC),
+                                   (*peerListNode)->AddressBlock);
+         ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
+                                              &updatedPeerListNode, &errorCode);
+         CHECK(errorCode == RSPERR_OKAY);
+
+         return(RSPERR_OKAY);
       }
    }
 
@@ -203,6 +243,13 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
             free((*peerListNode)->AddressBlock);
          }
          (*peerListNode)->AddressBlock = userTransport;
+
+         if(peerListManagement->Handlespace) {
+            (*peerListNode)->ComputedHandlespaceChecksum =
+               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                  &peerListManagement->Handlespace->Handlespace,
+                  (*peerListNode)->Identifier);
+         }
       }
       else {
          ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
@@ -214,7 +261,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    }
 
 #ifdef VERIFY
-   ST_CLASS(peerListNodeVerify)(&peerListManagement->List);
+   ST_CLASS(peerListVerify)(&peerListManagement->List);
 #endif
    return(errorCode);
 }
@@ -225,12 +272,28 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode)
 {
-   ST_CLASS(peerListRemovePeerListNode)(&peerListManagement->List, peerListNode);
-   ST_CLASS(peerListNodeDelete)(peerListNode);
-   ST_CLASS(peerListManagementPeerListNodeDisposer)(peerListNode, peerListManagement);
+   struct ST_CLASS(PeerListNode) updatedPeerListNode;
+   unsigned int                  errorCode;
+
+   /* Check, if a static entry with ID should be turned into ID-less entry only */
+   if((!(peerListNode->Flags & PLNF_DYNAMIC)) &&
+      (peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
+                                0,
+                                peerListNode->Flags,
+                                peerListNode->AddressBlock);
+      ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, peerListNode,
+                                           &updatedPeerListNode, &errorCode);
+      CHECK(errorCode == RSPERR_OKAY);
+   }
+   else {
+      ST_CLASS(peerListRemovePeerListNode)(&peerListManagement->List, peerListNode);
+      ST_CLASS(peerListNodeDelete)(peerListNode);
+      ST_CLASS(peerListManagementPeerListNodeDisposer)(peerListNode, peerListManagement);
+   }
 
 #ifdef VERIFY
-   ST_CLASS(peerListNodeVerify)(&peerListManagement->List);
+   ST_CLASS(peerListVerify)(&peerListManagement->List);
 #endif
    return(RSPERR_OKAY);
 }
@@ -300,4 +363,77 @@ size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
    }
 
    return(purgedPeerLists);
+}
+
+
+/* ###### PE update callback for checksum consistency with handlespace ### */
+static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
+               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+               struct ST_CLASS(PoolElementNode)*           poolElementNode,
+               enum PoolNodeUpdateAction                   updateAction,
+               HandlespaceChecksumType                     preUpdateChecksum,
+               RegistrarIdentifierType                     preUpdateHomeRegistrar,
+               void*                                       userData)
+{
+   struct ST_CLASS(PeerListManagement)* peerListManagement      = (struct ST_CLASS(PeerListManagement)*)userData;
+   RegistrarIdentifierType              homeRegistrarIdentifier = poolElementNode->HomeRegistrarIdentifier;
+   struct ST_CLASS(PeerListNode)*       peerListNode;
+
+   if(updateAction == PNUA_Create) {
+      peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                  homeRegistrarIdentifier,
+                                                                  NULL);
+      if(peerListNode) {
+         peerListNode->ComputedHandlespaceChecksum =
+            handlespaceChecksumAdd(peerListNode->ComputedHandlespaceChecksum,
+                                 poolElementNode->Checksum);
+      }
+   }
+   else if(updateAction == PNUA_Delete) {
+      peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                  homeRegistrarIdentifier,
+                                                                  NULL);
+      if(peerListNode) {
+         peerListNode->ComputedHandlespaceChecksum =
+            handlespaceChecksumSub(peerListNode->ComputedHandlespaceChecksum,
+                                    poolElementNode->Checksum);
+      }
+   }
+   else if(updateAction == PNUA_Update) {
+      peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                  preUpdateHomeRegistrar,
+                                                                  NULL);
+      if(peerListNode) {
+         peerListNode->ComputedHandlespaceChecksum =
+            handlespaceChecksumSub(peerListNode->ComputedHandlespaceChecksum,
+                                   preUpdateChecksum);
+      }
+
+      peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                  homeRegistrarIdentifier,
+                                                                  NULL);
+      if(peerListNode) {
+         peerListNode->ComputedHandlespaceChecksum =
+            handlespaceChecksumAdd(peerListNode->ComputedHandlespaceChecksum,
+                                   poolElementNode->Checksum);
+      }
+   }
+}
+
+
+/* ###### Verify computed ownership checksums in handlespace ############# */
+void ST_CLASS(peerListManagementVerifyChecksumsInHandlespace)(
+        struct ST_CLASS(PeerListManagement)*        peerListManagement,
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   struct ST_CLASS(PeerListNode)* peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerListManagement->List);
+   while(peerListNode != NULL) {
+      if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+         CHECK(peerListNode->ComputedHandlespaceChecksum ==
+                  ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                     &poolHandlespaceManagement->Handlespace,
+                     peerListNode->Identifier));
+      }
+      peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerListManagement->List, peerListNode);
+   }
 }

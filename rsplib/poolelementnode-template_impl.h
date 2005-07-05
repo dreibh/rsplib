@@ -39,6 +39,7 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
 
    poolElementNode->OwnerPoolNode               = NULL;
 
+   poolElementNode->Checksum                    = INITIAL_HANDLESPACE_CHECKSUM;
    poolElementNode->Identifier                  = identifier;
    poolElementNode->HomeRegistrarIdentifier     = homeRegistrarIdentifier;
    poolElementNode->RegistrationLife            = registrationLife;
@@ -75,6 +76,7 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&poolElementNode->PoolElementConnectionStorageNode));
 
+   poolElementNode->Checksum                    = 0;
    poolElementNode->RegistrationLife            = 0;
    poolElementNode->OwnerPoolNode               = NULL;
    poolElementNode->SeqNumber                   = 0;
@@ -117,6 +119,11 @@ void ST_CLASS(poolElementNodeGetDescription)(
       snprintf((char*)&tmp, sizeof(tmp), " c=(S%d,A%u)",
                poolElementNode->ConnectionSocketDescriptor,
                (unsigned int)poolElementNode->ConnectionAssocID);
+      safestrcat(buffer, tmp, bufferSize);
+   }
+   if(fields & PENPO_CHECKSUM) {
+      snprintf((char*)&tmp, sizeof(tmp), " chsum=$%08x",
+               (unsigned int)poolElementNode->Checksum);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_HOME_PR) {
@@ -189,6 +196,24 @@ void ST_CLASS(poolElementNodePrint)(
                                            (char*)&buffer, sizeof(buffer),
                                            fields);
    fputs(buffer, fd);
+}
+
+
+/* ###### Compute PE checksum ############################################ */
+HandlespaceChecksumType ST_CLASS(poolElementNodeComputeChecksum)(
+                           const struct ST_CLASS(PoolElementNode)* poolElementNode)
+{
+   HandlespaceChecksumType checksum = 0;
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->OwnerPoolNode->Handle.Handle,
+                                         poolElementNode->OwnerPoolNode->Handle.Size);
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->Identifier,
+                                         sizeof(poolElementNode->Identifier));
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->HomeRegistrarIdentifier,
+                                         sizeof(poolElementNode->HomeRegistrarIdentifier));
+   return(checksum);
 }
 
 

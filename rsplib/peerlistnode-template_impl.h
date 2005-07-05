@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,8 @@ void ST_CLASS(peerListIndexStorageNodePrint)(const void *nodePtr, FILE* fd)
 
 
 /* ###### Comparison ##################################################### */
-int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2)
+int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
+                                                 const void* nodePtr2)
 {
    const struct ST_CLASS(PeerListNode)* node1 = (struct ST_CLASS(PeerListNode)*)nodePtr1;
    const struct ST_CLASS(PeerListNode)* node2 = (struct ST_CLASS(PeerListNode)*)nodePtr2;
@@ -40,9 +41,9 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1, const voi
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   if(node1->Identifier == 0) {
-      return(transportAddressBlockComparison(node1->AddressBlock,
-                                             node2->AddressBlock));
+   if(node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
+      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                    node2->AddressBlock));
    }
    return(0);
 }
@@ -58,7 +59,8 @@ void ST_CLASS(peerListTimerStorageNodePrint)(const void* nodePtr, FILE* fd)
 
 
 /* ###### Comparison ##################################################### */
-int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2)
+int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1,
+                                                 const void *nodePtr2)
 {
    const struct ST_CLASS(PeerListNode)* node1 =
       ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)((void*)nodePtr1);
@@ -77,9 +79,9 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const voi
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   if(node1->Identifier == 0) {
-      return(transportAddressBlockComparison(node1->AddressBlock,
-                                             node2->AddressBlock));
+   if(node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
+      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                    node2->AddressBlock));
    }
    return(0);
 }
@@ -87,25 +89,26 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const voi
 
 /* ###### Initialize ##################################################### */
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
-                               const RegistrarIdentifierType       identifier,
+                               const RegistrarIdentifierType  identifier,
                                const unsigned int             flags,
                                struct TransportAddressBlock*  transportAddressBlock)
 {
    STN_METHOD(New)(&peerListNode->PeerListIndexStorageNode);
    STN_METHOD(New)(&peerListNode->PeerListTimerStorageNode);
 
-   peerListNode->OwnerPeerList       = NULL;
+   peerListNode->OwnerPeerList               = NULL;
 
-   peerListNode->Identifier          = identifier;
-   peerListNode->Flags               = flags;
+   peerListNode->Identifier                  = identifier;
+   peerListNode->Flags                       = flags;
+   peerListNode->ComputedHandlespaceChecksum = INITIAL_HANDLESPACE_CHECKSUM;
+   peerListNode->ExpectedHandlespaceChecksum = INITIAL_HANDLESPACE_CHECKSUM;
 
-   peerListNode->LastUpdateTimeStamp = 0;
+   peerListNode->LastUpdateTimeStamp         = 0;
+   peerListNode->TimerCode                   = 0;
+   peerListNode->TimerTimeStamp              = 0;
 
-   peerListNode->TimerCode           = 0;
-   peerListNode->TimerTimeStamp      = 0;
-
-   peerListNode->AddressBlock        = transportAddressBlock;
-   peerListNode->UserData            = NULL;
+   peerListNode->AddressBlock                = transportAddressBlock;
+   peerListNode->UserData                    = NULL;
 }
 
 
@@ -161,9 +164,10 @@ void ST_CLASS(peerListNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize,
-            "$%08x upd=%llu flgs=",
+            "$%08x upd=%llu chsum=$%x flags=",
             peerListNode->Identifier,
-            peerListNode->LastUpdateTimeStamp);
+            peerListNode->LastUpdateTimeStamp,
+            peerListNode->ComputedHandlespaceChecksum);
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {
       safestrcat(buffer, "static", bufferSize);
    }

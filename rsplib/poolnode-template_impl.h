@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       while(poolElementNode != NULL) {
          fprintf(fd, "   - idx:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
-         fputs("\n", fd);
+         puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
       }
    }
@@ -143,7 +143,7 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
       while(poolElementNode != NULL) {
          fprintf(fd, "   - sel:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
-         fputs("\n", fd);
+         puts("");
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
       }
    }

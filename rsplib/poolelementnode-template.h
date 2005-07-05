@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,8 +51,9 @@ struct ST_CLASS(PoolElementNode)
    struct STN_CLASSNAME          PoolElementOwnershipStorageNode;
    struct ST_CLASS(PoolNode)*    OwnerPoolNode;
 
+   HandlespaceChecksumType       Checksum;
    PoolElementIdentifierType     Identifier;
-   RegistrarIdentifierType            HomeRegistrarIdentifier;
+   RegistrarIdentifierType       HomeRegistrarIdentifier;
    unsigned int                  RegistrationLife;
    struct PoolPolicySettings     PolicySettings;
 
@@ -79,7 +80,7 @@ struct ST_CLASS(PoolElementNode)
 
 void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                   const PoolElementIdentifierType   identifier,
-                                  const RegistrarIdentifierType          homeRegistrarIdentifier,
+                                  const RegistrarIdentifierType     homeRegistrarIdentifier,
                                   const unsigned int                registrationLife,
                                   const struct PoolPolicySettings*  pps,
                                   struct TransportAddressBlock*     userTransport,
@@ -96,6 +97,8 @@ void ST_CLASS(poolElementNodePrint)(
         struct ST_CLASS(PoolElementNode)* poolElementNode,
         FILE*                             fd,
         const unsigned int                fields);
+HandlespaceChecksumType ST_CLASS(poolElementNodeComputeChecksum)(
+                           const struct ST_CLASS(PoolElementNode)* poolElementNode);
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(void* node);

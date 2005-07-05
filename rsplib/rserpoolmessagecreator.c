@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.23 2005/04/13 15:16:49 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.24 2005/07/05 10:44:14 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -524,9 +524,9 @@ static bool createRegistrarIdentifierParameter(
 
 
 /* ###### Create pool element checksum parameter ####################### */
-static bool createPoolElementChecksumParameter(
+static bool createHandlespaceChecksumParameter(
                struct RSerPoolMessage*       message,
-               const PoolElementChecksumType poolElementChecksum)
+               const HandlespaceChecksumType poolElementChecksum)
 {
    uint32_t* checksum;
    size_t    tlvPosition = 0;
@@ -919,7 +919,7 @@ static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-   if(createPoolElementChecksumParameter(message, message->Checksum) == false) {
+   if(createHandlespaceChecksumParameter(message, message->Checksum) == false) {
       return(false);
    }
    if(createServerInformationParameter(message, message->PeerListNodePtr) == false) {
@@ -1048,10 +1048,10 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
    if(message->PeerListNodePtr) {
-      flags = (message->Action & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? NTEF_OWNCHILDSONLY : 0;
+      flags = (message->Action & EHF_PEER_NAME_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? HTEF_OWNCHILDSONLY : 0;
       nte = (struct ST_CLASS(HandleTableExtract)*)message->PeerListNodePtr->UserData;
       if(nte == NULL) {
-         flags |= NTEF_START;
+         flags |= HTEF_START;
          nte = (struct ST_CLASS(HandleTableExtract)*)malloc(sizeof(struct ST_CLASS(HandleTableExtract)));
          if(nte == NULL) {
             return(false);
@@ -1235,9 +1235,9 @@ static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
    sp->sp_sender_id   = htonl(message->SenderID);
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
-   flags = NTEF_OWNCHILDSONLY;
+   flags = HTEF_OWNCHILDSONLY;
    if(message->ExtractContinuation->LastPoolElementIdentifier == 0) {
-      flags |= NTEF_START;
+      flags |= HTEF_START;
    }
 
    oldPosition = message->Position;

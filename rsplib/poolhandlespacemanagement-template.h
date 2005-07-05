@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,11 +35,20 @@ struct ST_CLASS(PoolHandlespaceManagement)
    struct ST_CLASS(PoolHandlespaceNode) Handlespace;
    struct ST_CLASS(PoolNode)*           NewPoolNode;
    struct ST_CLASS(PoolElementNode)*    NewPoolElementNode;
-   void*                                DisposerUserData;
+
    void (*PoolNodeUserDataDisposer)(struct ST_CLASS(PoolNode)* poolNode,
                                     void*                      userData);
    void (*PoolElementNodeUserDataDisposer)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                            void*                             userData);
+   void* DisposerUserData;
+
+   void (*PoolNodeUpdateNotification)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                      struct ST_CLASS(PoolElementNode)*           poolElementNode,
+                                      enum PoolNodeUpdateAction                   updateAction,
+                                      HandlespaceChecksumType                     preUpdateChecksum,
+                                      RegistrarIdentifierType                     preUpdateHomeRegistrar,
+                                      void*                                       userData);
+   void* NotificationUserData;
 };
 
 
@@ -50,7 +59,7 @@ void ST_CLASS(poolHandlespaceManagementNew)(
                                          void*                      userData),
         void (*poolElementNodeUserDataDisposer)(struct ST_CLASS(PoolElementNode)* poolElementNode,
                                                 void*                             userData),
-                                                void* disposerUserData);
+        void* disposerUserData);
 void ST_CLASS(poolHandlespaceManagementDelete)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementPrint)(
@@ -61,6 +70,10 @@ void ST_CLASS(poolHandlespaceManagementVerify)(
                struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementClear)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum)(
+                           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(
+                           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 size_t ST_CLASS(poolHandlespaceManagementGetPools)(
           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 size_t ST_CLASS(poolHandlespaceManagementGetPoolElements)(
@@ -123,8 +136,8 @@ unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
 
 
 #define NTE_MAX_POOL_ELEMENT_NODES 128
-#define NTEF_START                 (1 << 0)
-#define NTEF_OWNCHILDSONLY         (1 << 1)
+#define HTEF_START                 (1 << 0)
+#define HTEF_OWNCHILDSONLY         (1 << 1)
 
 struct ST_CLASS(HandleTableExtract)
 {
@@ -138,7 +151,7 @@ struct ST_CLASS(HandleTableExtract)
 int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
-       struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
+       struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
        const unsigned int                          flags);
 
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.13 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.14 2005/07/05 10:44:14 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -329,7 +329,7 @@ struct RSerPoolMessage
    size_t                                      Position;
 
    PoolElementIdentifierType                   Identifier;
-   PoolElementChecksumType                     Checksum;
+   HandlespaceChecksumType                     Checksum;
    struct PoolPolicySettings                   PolicySettings;
    struct PoolHandle                           Handle;
 

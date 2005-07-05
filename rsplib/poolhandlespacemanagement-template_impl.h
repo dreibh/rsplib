@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,27 @@
 */
 
 
+/* ###### Helper function for update notification ######################## */
+static void ST_CLASS(poolNodeUpdateNotification)(
+   struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+   struct ST_CLASS(PoolElementNode)*     poolElementNode,
+   enum PoolNodeUpdateAction             updateAction,
+   HandlespaceChecksumType               preUpdateChecksum,
+   RegistrarIdentifierType               preUpdateHomeRegistrar,
+   void*                                 userData)
+{
+   struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement = (struct ST_CLASS(PoolHandlespaceManagement)*)userData;
+   if(poolHandlespaceManagement->PoolNodeUpdateNotification) {
+      poolHandlespaceManagement->PoolNodeUpdateNotification(poolHandlespaceManagement,
+                                                            poolElementNode,
+                                                            updateAction,
+                                                            preUpdateChecksum,
+                                                            preUpdateHomeRegistrar,
+                                                            poolHandlespaceManagement->NotificationUserData);
+   }
+}
+
+
 /* ###### Initialize ##################################################### */
 void ST_CLASS(poolHandlespaceManagementNew)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
@@ -39,12 +60,16 @@ void ST_CLASS(poolHandlespaceManagementNew)(
                                                 void*                             userData),
         void* disposerUserData)
 {
-   ST_CLASS(poolHandlespaceNodeNew)(&poolHandlespaceManagement->Handlespace, homeRegistrarIdentifier);
+   ST_CLASS(poolHandlespaceNodeNew)(&poolHandlespaceManagement->Handlespace, homeRegistrarIdentifier,
+                                    ST_CLASS(poolNodeUpdateNotification),
+                                    (void*)poolHandlespaceManagement);
    poolHandlespaceManagement->NewPoolNode                     = NULL;
    poolHandlespaceManagement->NewPoolElementNode              = NULL;
    poolHandlespaceManagement->PoolNodeUserDataDisposer        = poolNodeUserDataDisposer;
    poolHandlespaceManagement->PoolElementNodeUserDataDisposer = poolElementNodeUserDataDisposer;
    poolHandlespaceManagement->DisposerUserData                = disposerUserData;
+   poolHandlespaceManagement->PoolNodeUpdateNotification      = NULL;
+   poolHandlespaceManagement->NotificationUserData            = NULL;
 }
 
 
@@ -52,7 +77,7 @@ void ST_CLASS(poolHandlespaceManagementNew)(
 static void ST_CLASS(poolHandlespaceManagementPoolElementNodeDisposer)(void* arg1,
                                                                        void* arg2)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode                     = (struct ST_CLASS(PoolElementNode)*)arg1;
+   struct ST_CLASS(PoolElementNode)*           poolElementNode           = (struct ST_CLASS(PoolElementNode)*)arg1;
    struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement = (struct ST_CLASS(PoolHandlespaceManagement)*)arg2;
    if((poolElementNode->UserData) && (poolHandlespaceManagement->PoolElementNodeUserDataDisposer))  {
       poolHandlespaceManagement->PoolElementNodeUserDataDisposer(poolElementNode,
@@ -111,6 +136,22 @@ void ST_CLASS(poolHandlespaceManagementClear)(
                                       ST_CLASS(poolHandlespaceManagementPoolNodeDisposer),
                                       ST_CLASS(poolHandlespaceManagementPoolElementNodeDisposer),
                                       (void*)poolHandlespaceManagement);
+}
+
+
+/* ###### Get handlespace checksum ####################################### */
+HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum)(
+                           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetHandlespaceChecksum)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get ownership checksum ######################################### */
+HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(
+                           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(&poolHandlespaceManagement->Handlespace));
 }
 
 
@@ -421,12 +462,12 @@ unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
 /* ###### Get name table from handlespace ################################## */
 static int ST_CLASS(getOwnershipHandleTable)(
               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-              struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
+              struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
               const RegistrarIdentifierType               homeRegistrarIdentifier,
               const unsigned int                          flags)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-   if(flags & NTEF_START) {
+   if(flags & HTEF_START) {
       poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                            &poolHandlespaceManagement->Handlespace,
                            homeRegistrarIdentifier);
@@ -452,8 +493,8 @@ static int ST_CLASS(getOwnershipHandleTable)(
    if(handleTableExtract->PoolElementNodes > 0) {
       struct ST_CLASS(PoolElementNode)* lastPoolElementNode = handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes - 1];
       struct ST_CLASS(PoolNode)* lastPoolNode               = lastPoolElementNode->OwnerPoolNode;
-      handleTableExtract->LastPoolHandle                      = lastPoolNode->Handle;
-      handleTableExtract->LastPoolElementIdentifier           = lastPoolElementNode->Identifier;
+      handleTableExtract->LastPoolHandle                    = lastPoolNode->Handle;
+      handleTableExtract->LastPoolElementIdentifier         = lastPoolElementNode->Identifier;
    }
 
 #ifdef PRINT_GETNAMETABLE_RESULT
@@ -472,14 +513,14 @@ static int ST_CLASS(getOwnershipHandleTable)(
 
 /* ###### Get name table from handlespace ################################## */
 static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-                                        struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
-                                        const unsigned int                          flags)
+                                          struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
+                                          const unsigned int                          flags)
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
    handleTableExtract->PoolElementNodes = 0;
-   if(flags & NTEF_START) {
+   if(flags & HTEF_START) {
       handleTableExtract->LastPoolElementIdentifier = 0;
       handleTableExtract->LastPoolHandle.Size       = 0;
       poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&poolHandlespaceManagement->Handlespace);
@@ -557,10 +598,10 @@ finish:
 int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
-       struct ST_CLASS(HandleTableExtract)*          handleTableExtract,
+       struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
        const unsigned int                          flags)
 {
-   if(flags & NTEF_OWNCHILDSONLY) {
+   if(flags & HTEF_OWNCHILDSONLY) {
       return(ST_CLASS(getOwnershipHandleTable)(
                 poolHandlespaceManagement, handleTableExtract,
                 homeRegistrarIdentifier,

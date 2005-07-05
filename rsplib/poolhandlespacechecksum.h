@@ -20,11 +20,17 @@
  *
  */
 
-#ifndef POOLHANDLE_H
-#define POOLHANDLE_H
+#ifndef POOLHANDLESPACECHECKSUM_H
+#define POOLHANDLESPACECHECKSUM_H
 
-#include <ctype.h>
+
+#include <sys/types.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
 
 
 #ifdef __cplusplus
@@ -32,27 +38,18 @@ extern "C" {
 #endif
 
 
-#define MAX_POOLHANDLESIZE 32
+typedef uint32_t HandlespaceChecksumType;
 
-struct PoolHandle
-{
-   size_t        Size;
-   unsigned char Handle[MAX_POOLHANDLESIZE];
-};
+#define INITIAL_HANDLESPACE_CHECKSUM 0x00000000
 
 
-void poolHandleNew(struct PoolHandle*   poolHandle,
-                   const unsigned char* handle,
-                   const size_t         size);
-void poolHandleDelete(struct PoolHandle* poolHandle);
-void poolHandleGetDescription(const struct PoolHandle* poolHandle,
-                              char*                    buffer,
-                              const size_t             bufferSize);
-void poolHandlePrint(const struct PoolHandle* poolHandle,
-                     FILE*                    fd);
-int poolHandleComparison(const struct PoolHandle* poolHandle1,
-                         const struct PoolHandle* poolHandle2);
-
+HandlespaceChecksumType handlespaceChecksumAdd(const HandlespaceChecksumType a,
+                                               const HandlespaceChecksumType b);
+HandlespaceChecksumType handlespaceChecksumSub(const HandlespaceChecksumType a,
+                                               const HandlespaceChecksumType b);
+HandlespaceChecksumType handlespaceChecksumCompute(HandlespaceChecksumType checksum,
+                                                   const char*             buffer,
+                                                   size_t                  size);
 
 #ifdef __cplusplus
 }

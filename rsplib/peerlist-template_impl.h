@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 
 
 /* ###### Initialize ##################################################### */
-void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)* peerList,
-                           const RegistrarIdentifierType   ownIdentifier)
+void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)*    peerList,
+                           const RegistrarIdentifierType ownIdentifier)
 {
    ST_METHOD(New)(&peerList->PeerListIndexStorage,
                   ST_CLASS(peerListIndexStorageNodePrint),
@@ -42,7 +42,7 @@ void ST_CLASS(peerListDelete)(struct ST_CLASS(PeerList)* peerList)
    ST_METHOD(Delete)(&peerList->PeerListIndexStorage);
    ST_METHOD(Delete)(&peerList->PeerListTimerStorage);
 
-   peerList->OwnIdentifier = 0;
+   peerList->OwnIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
 }
 
 
@@ -272,7 +272,7 @@ unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
                 struct ST_CLASS(PeerList)*     peerList,
                 struct ST_CLASS(PeerListNode)* peerListNode)
 {
-   if((peerList->OwnIdentifier != 0) &&
+   if((peerList->OwnIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) &&
       (peerListNode->Identifier == peerList->OwnIdentifier)) {
       return(RSPERR_INVALID_ID);
    }
@@ -312,14 +312,30 @@ void ST_CLASS(peerListUpdatePeerListNode)(
         const struct ST_CLASS(PeerListNode)* source,
         unsigned int*                        errorCode)
 {
+   struct STN_CLASSNAME* result;
+
    *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
    if(*errorCode == RSPERR_OKAY) {
+      /* Update ID: turn 0 -> ID or turn ID -> 0 */
+      if(peerListNode->Identifier != source->Identifier) {
+         CHECK((peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
+               (source->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER));
+         result = ST_METHOD(Remove)(&peerList->PeerListIndexStorage,
+                                    &peerListNode->PeerListIndexStorageNode);
+         CHECK(result == &peerListNode->PeerListIndexStorageNode);
+
+         peerListNode->Identifier = source->Identifier;
+
+         result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
+                                    &peerListNode->PeerListIndexStorageNode);
+         CHECK(result == &peerListNode->PeerListIndexStorageNode);
+      }
       ST_CLASS(peerListNodeUpdate)(peerListNode, source);
    }
 }
 
 
-/* ###### Add or Update PeerListNpde ##################################### */
+/* ###### Add or Update PeerListNode ##################################### */
 /*
    Allocation behavior:
    User program places PeerListNode data in new memory area.
@@ -372,7 +388,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
 /* ###### Find nearest prev PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const RegistrarIdentifierType            identifier,
+                                  const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;
@@ -392,7 +408,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
 /* ###### Find nearest next PeerListNode ################################# */
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const RegistrarIdentifierType            identifier,
+                                  const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
    struct ST_CLASS(PeerListNode) cmpElement;

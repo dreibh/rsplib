@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.30 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.31 2005/07/05 10:44:14 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1001,7 +1001,7 @@ static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
 
 
 /* ###### Scan pool element checksum parameter ########################### */
-static bool scanPoolElementChecksumParameter(struct RSerPoolMessage* message)
+static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
 {
    uint32_t* checksum;
    size_t    tlvPosition = 0;
@@ -1438,7 +1438,7 @@ static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   if(scanPoolElementChecksumParameter(message) == false) {
+   if(scanHandlespaceChecksumParameter(message) == false) {
       return(false);
    }
 
