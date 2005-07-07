@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.25 2005/07/05 14:06:06 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.26 2005/07/07 14:21:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1050,7 +1050,6 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
    if(message->PeerListNodePtr) {
       flags = (message->Action & EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY) ? HTEF_OWNCHILDSONLY : 0;
       hte = (struct ST_CLASS(HandleTableExtract)*)message->PeerListNodePtr->UserData;
-printf("hte=%p\n",hte);
       if(hte == NULL) {
          flags |= HTEF_START;
          hte = (struct ST_CLASS(HandleTableExtract)*)malloc(sizeof(struct ST_CLASS(HandleTableExtract)));
@@ -1069,7 +1068,7 @@ printf("hte=%p\n",hte);
       if(result > 0) {
          lastPoolHandle = NULL;
          for(i = 0;i < hte->PoolElementNodes;i++) {
-            LOG_NOTE
+            LOG_VERBOSE2
             ST_CLASS(poolElementNodePrint)(hte->PoolElementNodeArray[i], stdlog, ~0);
             fputs("\n", stdlog);
             LOG_END
@@ -1079,7 +1078,6 @@ printf("hte=%p\n",hte);
                oldPosition = message->Position;
                if(createPoolHandleParameter(message, lastPoolHandle) == false) {
                   if(i < 1) {
-puts("XXXXXXXX1");
                      return(false);
                   }
                   message->Position = oldPosition;
@@ -1090,7 +1088,6 @@ puts("XXXXXXXX1");
             CHECK(hte->PoolElementNodeArray[i]->RegistratorTransport != NULL);
             if(createPoolElementParameter(message, hte->PoolElementNodeArray[i]) == false) {
                if(i < 1) {
-puts("XXXXXXXX2");
                   return(false);
                }
                message->Position = oldPosition;
@@ -1103,15 +1100,14 @@ puts("XXXXXXXX2");
          }
          if((hte->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
             (i != hte->PoolElementNodes)) {
-puts("---MORE!!!!!!!");
             header->ah_flags |= EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
          }
-         else {
-puts("---END1");
-            free(message->PeerListNodePtr->UserData);
-            message->PeerListNodePtr->UserData = NULL;
-         }
       }
+   }
+
+   if(hte->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) {
+      free(message->PeerListNodePtr->UserData);
+      message->PeerListNodePtr->UserData = NULL;
    }
 
    return(finishMessage(message));

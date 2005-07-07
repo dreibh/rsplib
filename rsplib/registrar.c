@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.8 2005/07/05 14:06:06 dreibh Exp $
+ *  $Id: registrar.c,v 1.9 2005/07/07 14:21:54 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -973,6 +973,7 @@ static void sendHandleTableRequest(struct Registrar*           registrar,
 }
 
 
+/* ###### Initialization is complete ##################################### */
 static void registrarInitializationComplete(struct Registrar* registrar)
 {
    registrar->InInitializationPhase = false;
@@ -1061,8 +1062,8 @@ static void takeoverExpiryTimerCallback(struct Dispatcher* dispatcher,
 
 
 /* ###### Send Endpoint Keep Alive ####################################### */
-static void sendEndpointEndpointKeepAlive(struct Registrar*                 registrar,
-                                          struct ST_CLASS(PoolElementNode)* poolElementNode)
+static void sendEndpointKeepAlive(struct Registrar*                 registrar,
+                                  struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    struct RSerPoolMessage* message;
 
@@ -1121,7 +1122,7 @@ static void handlespaceActionTimerCallback(struct Dispatcher* dispatcher,
             &registrar->Handlespace.Handlespace,
             poolElementNode);
 
-         sendEndpointEndpointKeepAlive(registrar, poolElementNode);
+         sendEndpointKeepAlive(registrar, poolElementNode);
 
          ST_CLASS(poolHandlespaceNodeActivateTimer)(
             &registrar->Handlespace.Handlespace,
@@ -1840,7 +1841,7 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
 
 
 /* ###### Handle endpoint keepalive acknowledgement ###################### */
-static void handleEndpointEndpointKeepAliveAck(struct Registrar*       registrar,
+static void handleEndpointKeepAliveAck(struct Registrar*       registrar,
                                                int                     fd,
                                                sctp_assoc_t            assocID,
                                                struct RSerPoolMessage* message)
@@ -1848,7 +1849,7 @@ static void handleEndpointEndpointKeepAliveAck(struct Registrar*       registrar
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got EndpointEndpointKeepAliveAck for pool element $%08x of pool ",
+   fprintf(stdlog, "Got EndpointKeepAliveAck for pool element $%08x of pool ",
            message->Identifier);
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
@@ -1878,7 +1879,7 @@ static void handleEndpointEndpointKeepAliveAck(struct Registrar*       registrar
    else {
       LOG_WARNING
       fprintf(stdlog,
-              "EndpointEndpointKeepAliveAck for not-existing pool element $%08x of pool ",
+              "EndpointKeepAliveAck for not-existing pool element $%08x of pool ",
               message->Identifier);
       poolHandlePrint(&message->Handle, stdlog);
       fputs("\n", stdlog);
@@ -2380,24 +2381,24 @@ static void sendOwnershipChange(struct Registrar*            registrar,
                                     const RegistrarIdentifierType receiverID,
                                     const RegistrarIdentifierType targetID)
 {
-   struct RSerPoolMessage*           message;
-   struct ST_CLASS(HandleTableExtract) nte;
+   struct RSerPoolMessage*             message;
+   struct ST_CLASS(HandleTableExtract) hte;
 
    message = rserpoolMessageNew(NULL, 250);  /* ?????????????? */
    if(message) {
-      message->Type                   = EHT_OWNERSHIP_CHANGE;
-      message->PPID                   = PPID_ENRP;
-      message->AssocID                = assocID;
-      message->AddressArray           = (union sockaddr_union*)destinationAddressList;
-      message->Addresses              = destinationAddresses;
-      message->Flags                  = 0x00;
-      message->SenderID               = registrar->ServerID;
-      message->ReceiverID             = receiverID;
-      message->RegistrarIdentifier           = targetID;
+      message->Type                     = EHT_OWNERSHIP_CHANGE;
+      message->PPID                     = PPID_ENRP;
+      message->AssocID                  = assocID;
+      message->AddressArray             = (union sockaddr_union*)destinationAddressList;
+      message->Addresses                = destinationAddresses;
+      message->Flags                    = 0x00;
+      message->SenderID                 = registrar->ServerID;
+      message->ReceiverID               = receiverID;
+      message->RegistrarIdentifier      = targetID;
       message->HandlespacePtr           = &registrar->Handlespace;
       message->HandlespacePtrAutoDelete = false;
-      message->ExtractContinuation    = &nte;
-      nte.LastPoolElementIdentifier   = 0;
+      message->ExtractContinuation      = &hte;
+      hte.LastPoolElementIdentifier     = 0;
 
       do {
          if(rserpoolMessageSend((sd == registrar->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
@@ -2407,7 +2408,7 @@ static void sendOwnershipChange(struct Registrar*            registrar,
             LOG_END
             break;
          }
-      } while(nte.LastPoolElementIdentifier != 0);
+      } while(hte.LastPoolElementIdentifier != 0);
       rserpoolMessageDelete(message);
    }
 }
@@ -2925,7 +2926,7 @@ static void handleMessage(struct Registrar*       registrar,
          handleDeregistrationRequest(registrar, sd, message->AssocID, message);
        break;
       case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-         handleEndpointEndpointKeepAliveAck(registrar, sd, message->AssocID, message);
+         handleEndpointKeepAliveAck(registrar, sd, message->AssocID, message);
        break;
       case AHT_ENDPOINT_UNREACHABLE:
          handleEndpointUnreachable(registrar, sd, message->AssocID, message);
@@ -3618,7 +3619,7 @@ int main(int argc, char** argv)
 
    /* ====== We are ready! =============================================== */
    LOG_NOTE
-   fputs("Name server startet. Going into initialization phase...\n", stdlog);
+   fputs("Registrar started. Going into initialization phase...\n", stdlog);
    LOG_END
 
 
