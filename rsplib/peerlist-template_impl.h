@@ -376,6 +376,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
 
    cmpElement.Identifier   = identifier;
    cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
+puts("find...");
    result = ST_METHOD(Find)(&peerList->PeerListIndexStorage,
                             &cmpElement.PeerListIndexStorageNode);
    if(result) {

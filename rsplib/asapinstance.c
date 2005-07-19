@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.34 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.35 2005/07/19 08:46:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -48,9 +48,9 @@
 
 
 static void handleRegistrarConnectionEvent(struct Dispatcher* dispatcher,
-                                            int                fd,
-                                            unsigned int       eventMask,
-                                            void*              userData);
+                                           int                fd,
+                                           unsigned int       eventMask,
+                                           void*              userData);
 static void asapInstanceHandleEndpointKeepAlive(
                struct ASAPInstance*    asapInstance,
                struct RSerPoolMessage* message);
@@ -74,10 +74,10 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",      (unsigned int)asapInstance->RegistrarRequestMaxTrials);
-   fprintf(stdlog, "registrar.request.timeout     = %lluus\n",  asapInstance->RegistrarRequestTimeout);
-   fprintf(stdlog, "registrar.response.timeout    = %lluus\n",  asapInstance->RegistrarResponseTimeout);
-   fprintf(stdlog, "cache.elementtimeout           = %lluus\n", asapInstance->CacheElementTimeout);
+   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",     (unsigned int)asapInstance->RegistrarRequestMaxTrials);
+   fprintf(stdlog, "registrar.request.timeout     = %lluus\n", asapInstance->RegistrarRequestTimeout);
+   fprintf(stdlog, "registrar.response.timeout    = %lluus\n", asapInstance->RegistrarResponseTimeout);
+   fprintf(stdlog, "cache.elementtimeout          = %lluus\n", asapInstance->CacheElementTimeout);
    LOG_END
 }
 

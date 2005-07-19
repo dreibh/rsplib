@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.32 2005/07/05 14:06:06 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.33 2005/07/19 08:46:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -2001,7 +2001,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
              return(false);
           }
         break;
-       case EHT_NAME_UPDATE:
+       case EHT_HANDLE_UPDATE:
           LOG_VERBOSE2
           fputs("Scanning PeerNameUpdate message...\n", stdlog);
           LOG_END

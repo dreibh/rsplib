@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.9 2005/07/07 14:21:54 dreibh Exp $
+ *  $Id: registrar.c,v 1.10 2005/07/19 08:46:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1394,7 +1394,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message != NULL) {
-      message->Type                     = EHT_NAME_UPDATE;
+      message->Type                     = EHT_HANDLE_UPDATE;
       message->Flags                    = 0x00;
       message->Action                   = action;
       message->SenderID                 = registrar->ServerID;
@@ -2934,7 +2934,7 @@ static void handleMessage(struct Registrar*       registrar,
       case EHT_PRESENCE:
          handlePresence(registrar, sd, message->AssocID, message);
        break;
-      case EHT_NAME_UPDATE:
+      case EHT_HANDLE_UPDATE:
          handleHandleUpdate(registrar, sd, message->AssocID, message);
        break;
       case EHT_LIST_REQUEST:

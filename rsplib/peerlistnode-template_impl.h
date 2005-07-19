@@ -35,16 +35,18 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
    const struct ST_CLASS(PeerListNode)* node1 = (struct ST_CLASS(PeerListNode)*)nodePtr1;
    const struct ST_CLASS(PeerListNode)* node2 = (struct ST_CLASS(PeerListNode)*)nodePtr2;
 
+   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
+      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                    node2->AddressBlock));
+   }
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   if(node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
-      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
-                                                    node2->AddressBlock));
-   }
+
    return(0);
 }
 
@@ -73,16 +75,19 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1,
    else if(node1->TimerTimeStamp > node2->TimerTimeStamp) {
       return(1);
    }
+
+   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
+      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                    node2->AddressBlock));
+   }
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   if(node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
-      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
-                                                    node2->AddressBlock));
-   }
+
    return(0);
 }
 

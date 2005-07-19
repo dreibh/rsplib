@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.15 2005/07/05 14:06:06 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.16 2005/07/19 08:46:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -244,7 +244,7 @@ struct rserpool_errorcause
 #define EHT_PRESENCE            (0x01 | EHT_ENRP_MODIFIER)
 #define EHT_HANDLE_TABLE_REQUEST  (0x02 | EHT_ENRP_MODIFIER)
 #define EHT_HANDLE_TABLE_RESPONSE (0x03 | EHT_ENRP_MODIFIER)
-#define EHT_NAME_UPDATE         (0x04 | EHT_ENRP_MODIFIER)
+#define EHT_HANDLE_UPDATE         (0x04 | EHT_ENRP_MODIFIER)
 #define EHT_LIST_REQUEST        (0x05 | EHT_ENRP_MODIFIER)
 #define EHT_LIST_RESPONSE       (0x06 | EHT_ENRP_MODIFIER)
 #define EHT_INIT_TAKEOVER       (0x07 | EHT_ENRP_MODIFIER)

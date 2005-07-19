@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.26 2005/07/07 14:21:54 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.27 2005/07/19 08:46:31 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1121,7 +1121,7 @@ static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
 
    CHECK(message->PoolElementPtr->RegistratorTransport != NULL);
 
-   if(beginMessage(message, EHT_NAME_UPDATE,
+   if(beginMessage(message, EHT_HANDLE_UPDATE,
                    message->Flags & 0x00,
                    PPID_ENRP) == NULL) {
       return(false);
@@ -1481,7 +1481,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case EHT_NAME_UPDATE:
+       case EHT_HANDLE_UPDATE:
           LOG_VERBOSE2
           fputs("Creating PeerNameUpdate message...\n", stdlog);
           LOG_END
