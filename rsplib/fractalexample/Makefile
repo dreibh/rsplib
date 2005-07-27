@@ -6,7 +6,7 @@ all:   	fractalpooluser
 
 
 fractalpooluser:	fractalpooluser.o fractalpooluser.moc
-	$(CPP) fractalpooluser.o -o fractalpooluser -L/usr/lib/qt3/lib -L/usr/local/lib -L../.libs ../.libs/librsplib.a -lsctpsocket -lsctplib -lglib -lqt-mt
+	$(CPP) fractalpooluser.o -o fractalpooluser ../netdouble.o  -L/usr/lib/qt3/lib -L/usr/local/lib -L../.libs ../.libs/librsplib.a -lsctpsocket -lsctplib -lglib -lqt-mt
 
 fractalpooluser.o:	fractalpooluser.cc fractalpooluser.moc
 	$(CPP) fractalpooluser.cc -c -o fractalpooluser.o $(CXXFLAGS) -I/usr/lib/qt3/include -I.. -I../..
