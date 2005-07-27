@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.14 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.15 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -132,6 +132,8 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
       }
       if((message->PeerListNodePtrAutoDelete) && (message->PeerListNodePtr)) {
          ST_CLASS(peerListNodeDelete)(message->PeerListNodePtr);
+         transportAddressBlockDelete(message->PeerListNodePtr->AddressBlock);
+         free(message->PeerListNodePtr->AddressBlock);
          free(message->PeerListNodePtr);
       }
       if((message->PeerListPtrAutoDelete) && (message->PeerListPtr)) {
@@ -214,7 +216,7 @@ bool rserpoolMessageSend(int                     protocol,
          return(true);
       }
       LOG_ERROR
-      logerror("Write error");
+      logerror("sendtoplus() error");
       LOG_END
    }
    else {

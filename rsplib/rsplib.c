@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.25 2005/03/08 17:10:06 tuexen Exp $
+ *  $Id: rsplib.c,v 1.26 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -130,6 +130,7 @@ const char* rspGetErrorDescription(const unsigned int errorCode)
 unsigned int rspAddStaticRegistrar(const char* addressString)
 {
    union sockaddr_union addressArray[MAX_PE_TRANSPORTADDRESSES];
+   unsigned int         result;
    char                 str[1024];
    size_t               addresses;
    char*                address;
@@ -160,10 +161,12 @@ unsigned int rspAddStaticRegistrar(const char* addressString)
          return(RSPERR_INVALID_VALUES);
       }
 
-      return(serverTableAddStaticEntry(
-                gAsapInstance->RegistrarTable,
-                (union sockaddr_union*)&addressArray,
-                addresses));
+      lock(&gDispatcher, NULL);
+      result = registrarTableAddStaticEntry(gAsapInstance->RegistrarSet,
+                                            (union sockaddr_union*)&addressArray,
+                                            addresses);
+      unlock(&gDispatcher, NULL);
+      return(result);
    }
    else {
       LOG_ERROR
@@ -527,7 +530,7 @@ size_t rspGetComponentStatus(struct ComponentAssociationEntry** caeArray,
                                           statusText,
                                           componentAddress,
                                           gAsapInstance->RegistrarSocket,
-                                          gAsapInstance->RegistrarID,
-                                          gAsapInstance->RegistrarSocketProtocol,
+                                          gAsapInstance->RegistrarIdentifier,
+                                          IPPROTO_SCTP,
                                           gAsapInstance->RegistrarConnectionTimeStamp));
 }

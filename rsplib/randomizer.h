@@ -23,6 +23,7 @@
 #ifndef RANDOMIZER_H
 #define RANDOMIZER_H
 
+#include "tdtypes.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

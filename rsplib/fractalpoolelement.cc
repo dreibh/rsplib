@@ -40,7 +40,10 @@
 #include "componentstatusprotocol.h"
 #endif
 
-#include "fractalgeneratorexample.h"
+#include "fractalgeneratorpackets.h"
+
+
+using namespace std;
 
 
 class ServiceThread : public TDThread
@@ -85,19 +88,19 @@ ServiceThread::ServiceThread(const size_t failureAfter)
    FailureAfter        = failureAfter;
    LastSendTimeStamp   = 0;
    LastCookieTimeStamp = 0;
-   std::cout << "Created thread " << ID << "..." << std::endl;
+   cout << "Created thread " << ID << "..." << endl;
 }
 
 ServiceThread::~ServiceThread()
 {
-   std::cout << "Stopping thread " << ID << "..." << std::endl;
+   cout << "Stopping thread " << ID << "..." << endl;
    Shutdown = true;
    waitForFinish();
    if(Session) {
       rspDeleteSession(Session);
       Session = NULL;
    }
-   std::cout << "Thread " << ID << " has been stopped." << std::endl;
+   cout << "Thread " << ID << " has been stopped." << endl;
 }
 
 
@@ -118,17 +121,17 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
    Status.Parameter.AlgorithmID   = ntohl(parameter->AlgorithmID);
    Status.CurrentX                = 0;
    Status.CurrentY                = 0;
-   std::cout << "Parameters: w=" << Status.Parameter.Width
-            << " h=" << Status.Parameter.Width
-            << " c1=" << std::complex<double>(Status.Parameter.C1Real, Status.Parameter.C1Imag)
-            << " c2=" << std::complex<double>(Status.Parameter.C2Real, Status.Parameter.C2Imag)
-            << " n=" << Status.Parameter.N
-            << " maxIterations=" << Status.Parameter.MaxIterations
-            << " algorithmID=" << Status.Parameter.AlgorithmID << std::endl;
+   cout << "Parameters: w=" << Status.Parameter.Width
+        << " h=" << Status.Parameter.Width
+        << " c1=" << complex<double>(networkToDouble(Status.Parameter.C1Real), networkToDouble(Status.Parameter.C1Imag))
+        << " c2=" << complex<double>(networkToDouble(Status.Parameter.C2Real), networkToDouble(Status.Parameter.C2Imag))
+        << " n=" << networkToDouble(Status.Parameter.N)
+        << " maxIterations=" << Status.Parameter.MaxIterations
+        << " algorithmID=" << Status.Parameter.AlgorithmID << endl;
    if((Status.Parameter.Width > 65536)           ||
       (Status.Parameter.Height > 65536)          ||
       (Status.Parameter.MaxIterations > 1000000)) {
-      std::cerr << "Bad parameters!" << std::endl;
+      cerr << "Bad parameters!" << endl;
       return(false);
    }
    return(true);
@@ -139,15 +142,15 @@ bool ServiceThread::handleCookieEcho(const FractalGeneratorCookie* cookie,
                                      const size_t                  size)
 {
    if(IsNewSession == false) {
-      std::cerr << "Bad cookie: session is not new!" << std::endl;
+      cerr << "Bad cookie: session is not new!" << endl;
       return(false);
    }
    if(size != sizeof(struct FractalGeneratorCookie)) {
-      std::cerr << "Bad cookie: invalid size!" << std::endl;
+      cerr << "Bad cookie: invalid size!" << endl;
       return(false);
    }
    if(strncmp(cookie->ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID))) {
-      std::cerr << "Bad cookie: invalid ID!" << std::endl;
+      cerr << "Bad cookie: invalid ID!" << endl;
       return(false);
    }
    IsNewSession = false;
@@ -157,8 +160,8 @@ bool ServiceThread::handleCookieEcho(const FractalGeneratorCookie* cookie,
    }
    Status.CurrentX = ntohl(cookie->CurrentX);
    Status.CurrentY = ntohl(cookie->CurrentY);
-   std::cout << "Cookie: x=" << Status.CurrentX
-             << " y=" << Status.CurrentY << std::endl;
+   cout << "Cookie: x=" << Status.CurrentX
+        << " y=" << Status.CurrentY << endl;
    return(true);
 }
 
@@ -181,7 +184,7 @@ bool ServiceThread::sendCookie()
    if(rspSessionSendCookie(Session,
                            (unsigned char*)&cookie,
                            sizeof(cookie), NULL) == 0) {
-      std::cerr << "Writing cookie failed!" << std::endl;
+      cerr << "Writing cookie failed!" << endl;
       return(false);
    }
    LastCookieTimeStamp = getMicroTime();
@@ -203,7 +206,7 @@ bool ServiceThread::sendData(FractalGeneratorData* data)
                       data,
                       dataSize,
                       NULL) < 0) {
-      std::cerr << "Writing data failed!" << std::endl;
+      cerr << "Writing data failed!" << endl;
       return(false);
    }
    data->Points = 0;
@@ -216,15 +219,15 @@ bool ServiceThread::sendData(FractalGeneratorData* data)
 
 void ServiceThread::run()
 {
-   char                             buffer[4096];
-   struct TagItem                   tags[16];
-   struct FractalGeneratorData      data;
-   ssize_t                          received;
-   double                           stepX;
-   double                           stepY;
-   std::complex<double>             z;
-   size_t                           i;
-   size_t                           dataPackets = 0;
+   char                        buffer[4096];
+   struct TagItem              tags[16];
+   struct FractalGeneratorData data;
+   ssize_t                     received;
+   double                      stepX;
+   double                      stepY;
+   complex<double>             z;
+   size_t                      i;
+   size_t                      dataPackets = 0;
 
    while(!Shutdown) {
       tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
@@ -241,7 +244,7 @@ void ServiceThread::run()
                }
             }
             else {
-               std::cerr << "Cookie echo did not come via control channel?!" << std::endl;
+               cerr << "Cookie echo did not come via control channel?!" << endl;
             }
          }
          else {
@@ -253,26 +256,30 @@ void ServiceThread::run()
          }
 
          IsNewSession = false;
-
          data.Points = 0;
-         stepX = (Status.Parameter.C2Real - Status.Parameter.C1Real) / Status.Parameter.Width;
-         stepY = (Status.Parameter.C2Imag - Status.Parameter.C1Imag) / Status.Parameter.Height;
+         const double c1real = networkToDouble(Status.Parameter.C1Real);
+         const double c1imag = networkToDouble(Status.Parameter.C1Imag);
+         const double c2real = networkToDouble(Status.Parameter.C2Real);
+         const double c2imag = networkToDouble(Status.Parameter.C2Imag);
+         const double n      = networkToDouble(Status.Parameter.N);
+         stepX = (c2real - c1real) / Status.Parameter.Width;
+         stepY = (c2imag - c1imag) / Status.Parameter.Height;
          LastCookieTimeStamp = LastSendTimeStamp = getMicroTime();
 
          if(!sendCookie()) {
-            std::cerr << "Sending cookie (start) failed!" << std::endl;
+            cerr << "Sending cookie (start) failed!" << endl;
             goto finish;
          }
          while(Status.CurrentY < Status.Parameter.Height) {
             while(Status.CurrentX < Status.Parameter.Width) {
-               const std::complex<double> c =
-                  std::complex<double>(Status.Parameter.C1Real + ((double)Status.CurrentX * stepX),
-                                       Status.Parameter.C1Imag + ((double)Status.CurrentY * stepY));
+               const complex<double> c =
+                  complex<double>(c1real + ((double)Status.CurrentX * stepX),
+                                  c1imag + ((double)Status.CurrentY * stepY));
 
                // ====== Algorithms =========================================
                switch(Status.Parameter.AlgorithmID) {
                   case FGPA_MANDELBROT:
-                     z = std::complex<double>(0.0, 0.0);
+                     z = complex<double>(0.0, 0.0);
                      for(i = 0;i < Status.Parameter.MaxIterations;i++) {
                         z = z*z - c;
                         if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
@@ -281,9 +288,9 @@ void ServiceThread::run()
                      }
                    break;
                   case FGPA_MANDELBROTN:
-                     z = std::complex<double>(0.0, 0.0);
+                     z = complex<double>(0.0, 0.0);
                      for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                        z = pow(z, (int)rint(Status.Parameter.N)) - c;
+                        z = pow(z, (int)rint(n)) - c;
                         if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
                            break;
                         }
@@ -305,15 +312,15 @@ void ServiceThread::run()
                if( (data.Points >= FGD_MAX_POINTS) ||
                   (LastSendTimeStamp + 1000000 < getMicroTime()) ) {
                   if(!sendData(&data)) {
-                     std::cerr << "Sending data failed!" << std::endl;
+                     cerr << "Sending data failed!" << endl;
                      goto finish;
                   }
 
                   dataPackets++;
                   if((FailureAfter > 0) && (dataPackets > FailureAfter)) {
                      sendCookie();
-                     std::cerr << "Failure Tester -> Disconnect after "
-                               << dataPackets << " packets!" << std::endl;
+                     cerr << "Failure Tester -> Disconnect after "
+                          << dataPackets << " packets!" << endl;
                      goto finish;
                   }
                }
@@ -325,19 +332,19 @@ void ServiceThread::run()
 
             if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
                if(!sendCookie()) {
-                  std::cerr << "Sending cookie failed!" << std::endl;
+                  cerr << "Sending cookie failed!" << endl;
                   goto finish;
                }
             }
             if(Shutdown) {
-               std::cerr << "Aborting session due to server shutdown!" << std::endl;
+               cerr << "Aborting session due to server shutdown!" << endl;
                goto finish;
             }
          }
 
          if(data.Points > 0) {
             if(!sendData(&data)) {
-               std::cerr << "Sending data (last block) failed!" << std::endl;
+               cerr << "Sending data (last block) failed!" << endl;
                goto finish;
             }
          }
@@ -345,7 +352,7 @@ void ServiceThread::run()
          data.StartX = 0xffffffff;
          data.StartY = 0xffffffff;
          if(!sendData(&data)) {
-            std::cerr << "Sending data (finalizer) failed!" << std::endl;
+            cerr << "Sending data (finalizer) failed!" << endl;
             goto finish;
          }
       }
@@ -356,7 +363,7 @@ void ServiceThread::run()
 
    // ====== Shutdown connection ==========================================
 finish:
-   std::cerr << "Thread-Ende!" << std::endl;
+   cerr << "Thread-Ende!" << endl;
 LOG_ACTION
 LOG_END
    rspDeleteSession(Session);
@@ -603,7 +610,7 @@ int main(int argc, char** argv)
             policyType = PPT_WEIGHTED_RANDOM;
          }
          else {
-            std::cerr << "ERROR: Unknown policy type \"" << (char*)&argv[i][8] << "\"!" << std::endl;
+            cerr << "ERROR: Unknown policy type \"" << (char*)&argv[i][8] << "\"!" << endl;
             exit(1);
          }
       }
@@ -625,21 +632,21 @@ int main(int argc, char** argv)
          /* Process this later */
       }
       else {
-         std::cerr << "Bad argument \"" << argv[i] << "\"!"  << std::endl;
-         std::cerr << "Usage: " << argv[0]
-                   << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} {-failureafter=Packets}";
+         cerr << "Bad argument \"" << argv[i] << "\"!"  << endl;
+         cerr << "Usage: " << argv[0]
+              << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-stop=seconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} {-failureafter=Packets}";
 #ifdef ENABLE_CSP
-         std::cerr << "{-cspreportaddress=Address} {-cspreportinterval=Microseconds} ";
+         cerr << "{-cspreportaddress=Address} {-cspreportinterval=Microseconds} ";
 #endif
-         std::cerr << " {-identifier=PE Identifier}"
-                   << std::endl;
+         cerr << " {-identifier=PE Identifier}"
+              << endl;
          exit(1);
       }
    }
 
    beginLogging();
    if(rspInitialize(NULL) != 0) {
-      std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
+      cerr << "ERROR: Unable to initialize rsplib!" << endl;
       finishLogging();
       exit(1);
    }
@@ -653,8 +660,8 @@ int main(int argc, char** argv)
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-registrar=" ,11))) {
          if(rspAddStaticRegistrar((char*)&argv[i][11]) != RSPERR_OKAY) {
-            std::cerr << "ERROR: Bad registrar setting: "
-                      << argv[i] << "!" << std::endl;
+            cerr << "ERROR: Bad registrar setting: "
+                 << argv[i] << "!" << endl;
             exit(1);
          }
       }
@@ -662,7 +669,7 @@ int main(int argc, char** argv)
 
 
    if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
-      std::cerr << "ERROR: Unable to create rsplib main loop thread!" << std::endl;
+      cerr << "ERROR: Unable to create rsplib main loop thread!" << endl;
    }
 
    tags[0].Tag  = TAG_PoolPolicy_Type;
@@ -691,9 +698,9 @@ int main(int argc, char** argv)
 
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
-      std::cout << "Fractal Generator Pool Element - Version 1.0" << std::endl
-                << "--------------------------------------------" << std::endl << std::endl
-                << "Failure After: " << failureAfter << " packets" << std::endl << std::endl;
+      cout << "Fractal Generator Pool Element - Version 1.0" << endl
+           << "--------------------------------------------" << endl << endl
+           << "Failure After: " << failureAfter << " packets" << endl << endl;
 
 #ifndef FAST_BREAK
       installBreakDetector();
@@ -743,12 +750,12 @@ int main(int argc, char** argv)
                   tags[7].Tag  = TAG_DONE;
                   serviceThread->Session = rspAcceptSession(pedArray[0], (struct TagItem*)&tags);
                   if(serviceThread->Session) {
-                     std::cout << "Adding new client." << std::endl;
+                     cout << "Adding new client." << endl;
                      stl.add(serviceThread);
                      serviceThread->start();
                   }
                   else {
-                     std::cerr << "ERROR: Unable to accept new session!" << std::endl;
+                     cerr << "ERROR: Unable to accept new session!" << endl;
                      delete serviceThread;
                   }
                }
@@ -762,22 +769,22 @@ int main(int argc, char** argv)
 
          /* ====== Check auto-stop timer ==================================== */
          if((stop > 0) && (getMicroTime() >= stop)) {
-            std::cerr << "Auto-stop time reached -> exiting!" << std::endl;
+            cerr << "Auto-stop time reached -> exiting!" << endl;
             break;
          }
       }
 
-      std::cout << "Closing sessions..." << std::endl;
+      cout << "Closing sessions..." << endl;
       stl.removeAll();
-      std::cout << "Removing Pool Element..." << std::endl;
+      cout << "Removing Pool Element..." << endl;
       rspDeletePoolElement(poolElement, NULL);
    }
    else {
-      std::cerr << "ERROR: Unable to create pool element!" << std::endl;
+      cerr << "ERROR: Unable to create pool element!" << endl;
       exit(1);
    }
 
-   std::cout << "Removing main thread..." << std::endl;
+   cout << "Removing main thread..." << endl;
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);
 #ifdef ENABLE_CSP
@@ -787,6 +794,6 @@ int main(int argc, char** argv)
 #endif
    rspCleanUp();
    finishLogging();
-   std::cout << std::endl << "Terminated!" << std::endl;
+   cout << endl << "Terminated!" << endl;
    return(0);
 }

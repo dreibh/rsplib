@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.27 2005/07/19 08:46:31 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.28 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -642,14 +642,15 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE, message->Flags & 0x00, PPID_ASAP) == NULL) {
+   if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE,
+                   message->Flags & AHF_ENDPOINT_KEEP_ALIVE_HOME, PPID_ASAP) == NULL) {
       return(false);
    }
 
    if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
+   if(createRegistrarIdentifierParameter(message, message->RegistrarIdentifier) == false) {
       return(false);
    }
 
@@ -699,7 +700,7 @@ static bool createRegistrationMessage(struct RSerPoolMessage* message)
    CHECK(message->PoolElementPtr->RegistratorTransport == NULL);
 
    if(beginMessage(message, AHT_REGISTRATION,
-                   message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == NULL) {
+                   message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
 
@@ -730,7 +731,7 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
    }
 
    if(beginMessage(message, AHT_REGISTRATION_RESPONSE,
-                   message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == NULL) {
+                   message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
 
@@ -767,7 +768,7 @@ static bool createDeregistrationMessage(struct RSerPoolMessage* message)
 static bool createDeregistrationResponseMessage(struct RSerPoolMessage* message)
 {
    if(beginMessage(message, AHT_DEREGISTRATION_RESPONSE,
-                   message->Flags & AHF_DEREGISTRATION_REJECT, PPID_ASAP) == NULL) {
+                   message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
 
@@ -967,7 +968,7 @@ static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
    }
 
    if(beginMessage(message, EHT_LIST_RESPONSE,
-                   message->Flags & EHT_LIST_RESPONSE_REJECT,
+                   message->Flags & EHF_LIST_RESPONSE_REJECT,
                    PPID_ENRP) == NULL) {
       return(false);
    }
@@ -1034,7 +1035,7 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
    struct rserpool_header*              header;
 
    header = beginMessage(message, EHT_HANDLE_TABLE_RESPONSE,
-                         message->Flags & (EHT_HANDLE_TABLE_RESPONSE_REJECT|EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND),
+                         message->Flags & (EHF_HANDLE_TABLE_RESPONSE_REJECT|EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND),
                          PPID_ENRP);
    if(header == NULL) {
       return(false);
@@ -1100,7 +1101,7 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
          }
          if((hte->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
             (i != hte->PoolElementNodes)) {
-            header->ah_flags |= EHT_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
+            header->ah_flags |= EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
          }
       }
    }
@@ -1212,82 +1213,6 @@ static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
    tp->tp_sender_id   = htonl(message->SenderID);
    tp->tp_receiver_id = htonl(message->ReceiverID);
    tp->tp_target_id   = htonl(message->RegistrarIdentifier);
-
-   return(finishMessage(message));
-}
-
-
-/* ###### Create peer ownership change ################################### */
-static bool createPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
-{
-   struct rserpool_serverparameter* sp;
-   struct PoolHandle*               lastPoolHandle;
-   unsigned int                     flags;
-   unsigned int                     result;
-   size_t                           oldPosition;
-   size_t                           i;
-
-   if(beginMessage(message, EHT_OWNERSHIP_CHANGE,
-                   message->Flags & 0x00,
-                   PPID_ENRP) == NULL) {
-      return(false);
-   }
-
-   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
-   if(sp == NULL) {
-      return(false);
-   }
-   sp->sp_sender_id   = htonl(message->SenderID);
-   sp->sp_receiver_id = htonl(message->ReceiverID);
-
-   flags = HTEF_OWNCHILDSONLY;
-   if(message->ExtractContinuation->LastPoolElementIdentifier == 0) {
-      flags |= HTEF_START;
-   }
-
-   oldPosition = message->Position;
-   result = ST_CLASS(poolHandlespaceManagementGetHandleTable)(
-               message->HandlespacePtr,
-               message->RegistrarIdentifier,
-               message->ExtractContinuation,
-               flags);
-   if(result > 0) {
-      lastPoolHandle = NULL;
-      for(i = 0;i < message->ExtractContinuation->PoolElementNodes;i++) {
-         LOG_NOTE
-         ST_CLASS(poolElementNodePrint)(message->ExtractContinuation->PoolElementNodeArray[i], stdlog, ~0);
-         fputs("\n", stdlog);
-         LOG_END
-
-         if(lastPoolHandle != &message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle) {
-            lastPoolHandle = &message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
-            oldPosition = message->Position;
-            if(createPoolHandleParameter(message, lastPoolHandle) == false) {
-               if(i < 1) {
-                  return(false);
-               }
-               message->Position = oldPosition;
-               break;
-            }
-         }
-
-         if(createPoolElementIdentifierParameter(message, message->ExtractContinuation->PoolElementNodeArray[i]->Identifier) == false) {
-            if(i < 1) {
-               return(false);
-            }
-            message->Position = oldPosition;
-            break;
-         }
-         oldPosition = message->Position;
-
-         message->ExtractContinuation->LastPoolHandle            = message->ExtractContinuation->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
-         message->ExtractContinuation->LastPoolElementIdentifier = message->ExtractContinuation->PoolElementNodeArray[i]->Identifier;
-      }
-      if((message->ExtractContinuation->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) ||
-         (i >= message->ExtractContinuation->PoolElementNodes)) {
-         message->ExtractContinuation->LastPoolElementIdentifier = 0;
-      }
-   }
 
    return(finishMessage(message));
 }
@@ -1526,14 +1451,6 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           fputs("Creating PeerTakeoverServer message...\n", stdlog);
           LOG_END
           if(createPeerTakeoverServerMessage(message) == true) {
-             return(message->Position);
-          }
-        break;
-       case EHT_OWNERSHIP_CHANGE:
-          LOG_VERBOSE2
-          fputs("Creating PeerOwnershipChange message...\n", stdlog);
-          LOG_END
-          if(createPeerOwnershipChangeMessage(message) == true) {
              return(message->Position);
           }
         break;

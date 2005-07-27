@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.1 2005/07/19 08:46:31 dreibh Exp $
+ *  $Id: registrartable.c,v 1.2 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -80,6 +80,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
    if(received > 0) {
       result = rserpoolPacket2Message((char*)&buffer,
                                       &senderAddress,
+                                      0,
                                       PPID_ASAP,
                                       received, sizeof(buffer),
                                       &message);
@@ -159,59 +160,15 @@ static void registrarAnnouceFDCallback(struct Dispatcher* dispatcher,
 struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
                                          struct TagItem*    tags)
 {
-   union sockaddr_union* announceAddress;
-   union sockaddr_union  defaultAnnounceAddress;
-   struct RegistrarTable*   registrarTable = (struct RegistrarTable*)malloc(sizeof(struct RegistrarTable));
-   struct sctp_event_subscribe sctpEvents;
+   union sockaddr_union*  announceAddress;
+   union sockaddr_union   defaultAnnounceAddress;
+   struct RegistrarTable* registrarTable = (struct RegistrarTable*)malloc(sizeof(struct RegistrarTable));
 
    if(registrarTable != NULL) {
       registrarTable->Dispatcher        = dispatcher;
       registrarTable->LastAnnounceHeard = 0;
       registrarTable->AnnounceSocket    = -1;
-      registrarTable->RegistrarSocket   = -1;
       ST_CLASS(peerListManagementNew)(&registrarTable->RegistrarList, NULL, 0, NULL, NULL);
-
-
-      /* ====== Registrar socket ========================================== */
-      registrarTable->RegistrarSocket = ext_socket(checkIPv6() ? AF_INET6 : AF_INET,
-                                                SOCK_SEQPACKET,
-                                                IPPROTO_SCTP);
-      if(registrarTable->RegistrarSocket < 0) {
-         LOG_ERROR
-         logerror("Creating registrar socket failed");
-         LOG_END
-         registrarTableDelete(registrarTable);
-         return(false);
-      }
-
-      setNonBlocking(registrarTable->RegistrarSocket);
-
-      if(ext_listen(registrarTable->RegistrarSocket, 10) < 0) {
-         registrarTableDelete(registrarTable);
-         return(false);
-      }
-
-      memset(&sctpEvents, 0, sizeof(sctpEvents));
-      sctpEvents.sctp_data_io_event          = 1;
-      sctpEvents.sctp_association_event      = 1;
-      sctpEvents.sctp_address_event          = 1;
-      sctpEvents.sctp_send_failure_event     = 1;
-      sctpEvents.sctp_peer_error_event       = 1;
-      sctpEvents.sctp_shutdown_event         = 1;
-      sctpEvents.sctp_partial_delivery_event = 1;
-      sctpEvents.sctp_adaption_layer_event   = 1;
-
-      if(ext_setsockopt(registrarTable->RegistrarSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
-         logerror("setsockopt() for SCTP_EVENTS on registrar socket failed");
-         exit(1);
-      }
-
-      // ??????????????
-//       autoCloseTimeout = 30;
-//       if(ext_setsockopt(registrarTable->RegistrarSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
-//          logerror("setsockopt() for SCTP_AUTOCLOSE on registrar socket failed");
-//          exit(1);
-//       }
 
 
       /* ====== ASAP Instance settings ==================================== */
@@ -299,10 +256,6 @@ void registrarTableDelete(struct RegistrarTable* registrarTable)
          ext_close(registrarTable->AnnounceSocket);
          registrarTable->AnnounceSocket = -1;
       }
-      if(registrarTable->RegistrarSocket >= 0) {
-         ext_close(registrarTable->RegistrarSocket);
-         registrarTable->RegistrarSocket = -1;
-      }
       ST_CLASS(peerListManagementClear)(&registrarTable->RegistrarList);
       ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
       free(registrarTable);
@@ -353,6 +306,7 @@ unsigned int registrarTableAddStaticEntry(struct RegistrarTable* registrarTable,
 
 /* ###### Try more registrars ########################################### */
 static void tryNextBlock(struct RegistrarTable*         registrarTable,
+                         int                            registrarFD,
                          RegistrarIdentifierType*       lastRegistrarIdentifier,
                          struct TransportAddressBlock** lastTransportAddressBlock)
 {
@@ -388,7 +342,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
             fputs("...\n",  stdlog);
             LOG_END
 
-            if(sendtoplus(registrarTable->RegistrarSocket, NULL, 0, 0,
+            if(sendtoplus(registrarFD, NULL, 0, 0,
                           transportAddressBlock->AddressArray,
                           transportAddressBlock->Addresses,
                           0, 0, 0, 0xffffffff, 0) < 0) {
@@ -479,13 +433,14 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
       /* Try next block of addresses */
       tryNextBlock(registrarTable,
+                   registrarFD,
                    &lastRegistrarIdentifier,
                    &lastTransportAddressBlock);
 
       /* Wait for event */
       FD_ZERO(&rfdset);
-      FD_SET(registrarTable->RegistrarSocket, &rfdset);
-      n = registrarTable->RegistrarSocket;
+      FD_SET(registrarFD, &rfdset);
+      n = registrarFD;
       if(registrarTable->AnnounceSocket >= 0) {
          FD_SET(registrarTable->AnnounceSocket, &rfdset);
          n = max(n, registrarTable->AnnounceSocket);
@@ -528,20 +483,18 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             handleRegistrarAnnounceCallback(registrarTable, registrarTable->AnnounceSocket);
          }
          for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
-            if(FD_ISSET(registrarTable->RegistrarSocket, &rfdset)) {
+            if(FD_ISSET(registrarFD, &rfdset)) {
                flags = MSG_PEEK;
-               if( (recvfromplus(registrarTable->RegistrarSocket,
+               if( (recvfromplus(registrarFD,
                                  &notification, sizeof(notification), &flags,
                                  NULL, 0,
                                  NULL, NULL, NULL, 0) > 0) &&
                    (flags & MSG_NOTIFICATION) ) {
-                      puts("NOTIF!");
                   if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
                      if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
-                        n = getpaddrsplus(registrarTable->RegistrarSocket,
+                        n = getpaddrsplus(registrarFD,
                                           notification.sn_assoc_change.sac_assoc_id,
                                           &peerAddressArray);
-                        printf("COMM UP=%u   n=%u\n", notification.sn_assoc_change.sac_assoc_id,n);
                         if(n > 0) {
                            LOG_ACTION
                            fputs("Successfully found registrar at ",  stdlog);
@@ -549,6 +502,7 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                            fputs("\n", stdlog);
                            LOG_END
 
+                           /* ====== Get registrar's entry =============== */
                            struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
                            if(registrarAddressBlock) {
                               transportAddressBlockNew(registrarAddressBlock,
@@ -556,23 +510,16 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                                        getPort(&peerAddressArray[0].sa),
                                                        0,
                                                        peerAddressArray, n);
-
-                              transportAddressBlockPrint(registrarAddressBlock, stdlog);
-                              puts("");
-
-                                 puts("-------------------------");
-                                 ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList,stdlog,~0);
-                                 puts("-------------------------");
-
                               peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                                                 &registrarTable->RegistrarList,
                                                 0,
                                                 registrarAddressBlock);
                               if(peerListNode) {
-                                 puts("LIST NODE: ");
+                                 *registrarIdentifier = peerListNode->Identifier;
                               }
-                              else puts("NO NODE!!!!");
-
+                              else {
+                                 *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
+                              }
 
                               free(registrarAddressBlock);
                            }
@@ -585,9 +532,6 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                         }
 
                         return(notification.sn_assoc_change.sac_assoc_id);
-                     }
-                     else if(notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) {
-                        printf("CLOST=%u\n",notification.sn_assoc_change.sac_assoc_id);
                      }
                   }
                }

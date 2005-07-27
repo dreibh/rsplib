@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.33 2005/07/19 08:46:31 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.34 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1196,7 +1196,7 @@ static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   if(scanPoolElementIdentifierParameter(message) == false) {
+   if(scanRegistrarIdentifierParameter(message) == false) {
       return(false);
    }
    return(true);
@@ -1483,7 +1483,7 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   if(!(message->Flags & EHT_LIST_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHF_LIST_RESPONSE_REJECT)) {
       while(message->Position < message->BufferSize) {
          peerListNode = scanServerInformationParameter(message);
          if(peerListNode == NULL) {
@@ -1553,7 +1553,7 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
    message->SenderID   = ntohl(sp->sp_sender_id);
    message->ReceiverID = ntohl(sp->sp_receiver_id);
 
-   if(!(message->Flags & EHT_HANDLE_TABLE_RESPONSE_REJECT)) {
+   if(!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) {
       message->HandlespacePtr = (struct ST_CLASS(PoolHandlespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolHandlespaceManagement)));
       if(message->HandlespacePtr == NULL) {
          message->Error = RSPERR_OUT_OF_MEMORY;
@@ -1690,83 +1690,6 @@ static bool scanPeerTakeoverServerMessage(struct RSerPoolMessage* message)
    message->SenderID     = ntohl(tp->tp_sender_id);
    message->ReceiverID   = ntohl(tp->tp_receiver_id);
    message->RegistrarIdentifier = ntohl(tp->tp_target_id);
-
-   return(true);
-}
-
-
-/* ###### Scan peer take ownership message ############################### */
-static bool scanPeerOwnershipChangeMessage(struct RSerPoolMessage* message)
-{
-   struct rserpool_serverparameter*  sp;
-   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
-   size_t                            scannedPoolElementIdentifiers;
-   static struct PoolPolicySettings  dummyPoolPolicySettings;
-   static char                       dummyTransportAddressBlockBuffer[transportAddressBlockGetSize(1)];
-   struct TransportAddressBlock*     dummyTransportAddressBlock = (struct TransportAddressBlock*)&dummyTransportAddressBlockBuffer;
-   struct sockaddr_in                dummyAddress;
-
-   sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
-   if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
-      return(false);
-   }
-   message->SenderID     = ntohl(sp->sp_sender_id);
-   message->ReceiverID   = ntohl(sp->sp_receiver_id);
-
-   message->HandlespacePtr = (struct ST_CLASS(PoolHandlespaceManagement)*)malloc(sizeof(struct ST_CLASS(PoolHandlespaceManagement)));
-   if(message->HandlespacePtr == NULL) {
-      message->Error = RSPERR_OUT_OF_MEMORY;
-      return(false);
-   }
-   ST_CLASS(poolHandlespaceManagementNew)(message->HandlespacePtr, 0, NULL, NULL, NULL);
-
-
-   poolPolicySettingsNew(&dummyPoolPolicySettings);
-   dummyPoolPolicySettings.PolicyType = PPT_ROUNDROBIN;
-   memset(&dummyAddress, 0, sizeof(dummyAddress));
-   dummyAddress.sin_family = AF_INET;
-   transportAddressBlockNew(dummyTransportAddressBlock,
-                            IPPROTO_SCTP, 0xffff, 0,
-                            (union sockaddr_union*)&dummyAddress, 1);
-
-   while(scanPoolHandleParameter(message, &message->Handle)) {
-      scannedPoolElementIdentifiers = 0;
-      while(scanPoolElementIdentifierParameter(message)) {
-         scannedPoolElementIdentifiers++;
-
-         message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                             message->HandlespacePtr,
-                             &message->Handle,
-                             0,
-                             message->Identifier,
-                             0,
-                             &dummyPoolPolicySettings,
-                             dummyTransportAddressBlock,
-                             dummyTransportAddressBlock,
-                             -1, 0,
-                             0,
-                             &newPoolElementNode);
-         if(message->Error != RSPERR_OKAY) {
-            LOG_WARNING
-            fprintf(stdlog,
-                    "PeerOwnershipChange contains bad/inconsistent entry for ID $%08x: ",
-                    message->Identifier);
-            rserpoolErrorPrint(message->Error, stdlog);
-            fputs("\n", stdlog);
-            LOG_END
-            return(false);
-         }
-      }
-
-      if(scannedPoolElementIdentifiers == 0) {
-         LOG_WARNING
-         fputs("PeerOwnershipChange contains empty pool\n", stdlog);
-         LOG_END
-         message->Error = RSPERR_INVALID_VALUES;
-         return(false);
-      }
-   }
 
    return(true);
 }
@@ -1966,105 +1889,97 @@ static bool scanMessage(struct RSerPoolMessage* message)
          if(scanDeregistrationResponseMessage(message) == false) {
             return(false);
          }
-       break;
-       case AHT_PEER_ERROR:
+        break;
+      case AHT_PEER_ERROR:
           LOG_VERBOSE2
           fputs("Scanning PeerError (ASAP) message...\n", stdlog);
           LOG_END
           if(scanASAPPeerErrorMessage(message) == false) {
              return(false);
           }
-        break;
+       break;
 
        /* ====== ENRP ==================================================== */
-       case EHT_PRESENCE:
+      case EHT_PRESENCE:
           LOG_VERBOSE2
           fputs("Scanning PeerPresence message...\n", stdlog);
           LOG_END
           if(scanPeerPresenceMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_HANDLE_TABLE_REQUEST:
+       break;
+      case EHT_HANDLE_TABLE_REQUEST:
           LOG_VERBOSE2
           fputs("Scanning PeerHandleTableRequest message...\n", stdlog);
           LOG_END
           if(scanPeerHandleTableRequestMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_HANDLE_TABLE_RESPONSE:
+       break;
+      case EHT_HANDLE_TABLE_RESPONSE:
           LOG_VERBOSE2
           fputs("Scanning PeerHandleTableResponse message...\n", stdlog);
           LOG_END
           if(scanPeerHandleTableResponseMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_HANDLE_UPDATE:
+       break;
+      case EHT_HANDLE_UPDATE:
           LOG_VERBOSE2
           fputs("Scanning PeerNameUpdate message...\n", stdlog);
           LOG_END
           if(scanPeerNameUpdateMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_LIST_REQUEST:
+       break;
+      case EHT_LIST_REQUEST:
           LOG_VERBOSE2
           fputs("Scanning PeerListRequest message...\n", stdlog);
           LOG_END
           if(scanPeerListRequestMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_LIST_RESPONSE:
+       break;
+      case EHT_LIST_RESPONSE:
           LOG_VERBOSE2
           fputs("Scanning PeerListResponse message...\n", stdlog);
           LOG_END
           if(scanPeerListResponseMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_INIT_TAKEOVER:
+       break;
+      case EHT_INIT_TAKEOVER:
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeover message...\n", stdlog);
           LOG_END
           if(scanPeerInitTakeoverMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_INIT_TAKEOVER_ACK:
+       break;
+      case EHT_INIT_TAKEOVER_ACK:
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
           LOG_END
           if(scanPeerInitTakeoverAckMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_TAKEOVER_SERVER:
+       break;
+      case EHT_TAKEOVER_SERVER:
           LOG_VERBOSE2
           fputs("Scanning PeerTakeoverServer message...\n", stdlog);
           LOG_END
           if(scanPeerTakeoverServerMessage(message) == false) {
              return(false);
           }
-        break;
-       case EHT_OWNERSHIP_CHANGE:
-          LOG_VERBOSE2
-          fputs("Scanning PeerOwnershipChange message...\n", stdlog);
-          LOG_END
-          if(scanPeerOwnershipChangeMessage(message) == false) {
-             return(false);
-          }
-        break;
-       case EHT_ERROR:
+       break;
+      case EHT_ERROR:
           LOG_VERBOSE2
           fputs("Scanning PeerError (ENRP) message...\n", stdlog);
           LOG_END
           if(scanENRPPeerErrorMessage(message) == false) {
              return(false);
           }
-        break;
+       break;
 
        /* ====== Unknown ================================================= */
       default:
@@ -2082,6 +1997,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
 /* ###### Convert packet to RSerPoolMessage ############################## */
 unsigned int rserpoolPacket2Message(char*                       packet,
                                     const union sockaddr_union* sourceAddress,
+                                    const sctp_assoc_t          assocID,
                                     const uint32_t              ppid,
                                     const size_t                packetSize,
                                     const size_t                minBufferSize,
@@ -2095,6 +2011,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       else {
          memset(&(*message)->SourceAddress, 0, sizeof(*sourceAddress));
       }
+      (*message)->AssocID                                = assocID;
       (*message)->PPID                                   = ppid;
       (*message)->OriginalBufferSize                     = max(packetSize, minBufferSize);
       (*message)->Position                               = 0;
@@ -2102,7 +2019,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       (*message)->CookiePtrAutoDelete                    = true;
       (*message)->PoolElementPtrArrayAutoDelete          = true;
       (*message)->TransportAddressBlockListPtrAutoDelete = true;
-      (*message)->HandlespacePtrAutoDelete                 = true;
+      (*message)->HandlespacePtrAutoDelete               = true;
       (*message)->PeerListNodePtrAutoDelete              = true;
       (*message)->PeerListPtrAutoDelete                  = true;
 

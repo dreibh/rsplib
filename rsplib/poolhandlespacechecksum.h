@@ -39,17 +39,22 @@ extern "C" {
 
 
 typedef uint32_t HandlespaceChecksumType;
+typedef uint64_t HandlespaceChecksumAccumulatorType;
+#define HandlespaceChecksumBits (sizeof(HandlespaceChecksumType) * 8)
+#define HandlespaceChecksumMask ((HandlespaceChecksumType)-1)
 
-#define INITIAL_HANDLESPACE_CHECKSUM 0x00000000
+#define INITIAL_HANDLESPACE_CHECKSUM 0
 
 
-HandlespaceChecksumType handlespaceChecksumAdd(const HandlespaceChecksumType a,
-                                               const HandlespaceChecksumType b);
-HandlespaceChecksumType handlespaceChecksumSub(const HandlespaceChecksumType a,
-                                               const HandlespaceChecksumType b);
-HandlespaceChecksumType handlespaceChecksumCompute(HandlespaceChecksumType checksum,
-                                                   const char*             buffer,
-                                                   size_t                  size);
+HandlespaceChecksumAccumulatorType handlespaceChecksumAdd(const HandlespaceChecksumAccumulatorType a,
+                                                          const HandlespaceChecksumAccumulatorType b);
+HandlespaceChecksumAccumulatorType handlespaceChecksumSub(const HandlespaceChecksumAccumulatorType a,
+                                                          const HandlespaceChecksumAccumulatorType b);
+HandlespaceChecksumAccumulatorType handlespaceChecksumCompute(HandlespaceChecksumAccumulatorType sum,
+                                                              const char*                        buffer,
+                                                              size_t                             size);
+HandlespaceChecksumType handlespaceChecksumFinish(HandlespaceChecksumAccumulatorType sum);
+
 
 #ifdef __cplusplus
 }

@@ -102,7 +102,7 @@ void componentStatusGetComponentAddress(char*        componentAddress,
       addresses = gatherLocalAddresses(&addressArray);
    }
    if(addresses > 0) {
-      for(i = 0;i < addresses;i++) {
+      for(i = 0;i < (size_t)addresses;i++) {
          if(getScope((const struct sockaddr*)&addressArray[i]) >= 6) {
             if(address2string((const struct sockaddr*)&addressArray[i], (char*)&str, sizeof(str), false)) {
                if(componentAddress[0] != 0x00) {

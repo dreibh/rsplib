@@ -10,6 +10,7 @@
 #include <complex>
 #include <qstringlist.h>
 #include <qdom.h>
+#include <qdir.h>
 
 #include <iostream>
 
@@ -21,8 +22,10 @@
 #include "loglevel.h"
 #include "netutilities.h"
 
-#include "fractalgeneratorexample.h"
+#include "fractalgeneratorpackets.h"
 
+
+using namespace std;
 
 
 class FractalPU : public QMainWindow,
@@ -81,10 +84,11 @@ class FractalPU : public QMainWindow,
    size_t                    PoolElementUsages;
 
    QStringList               ConfigList;
-   QString                   ConfigDirName;
+   QDir                      ConfigDirectory;
 };
 
 
+/* ###### Constructor #################################################### */
 FractalPU::FractalPU(const size_t width,
                      const size_t height,
                      const char*  poolHandle,
@@ -96,22 +100,31 @@ FractalPU::FractalPU(const size_t width,
    Image          = NULL;
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
-   ConfigDirName  = QString(configDirName);
 
-   QString Buffer;
-   QFile AllconfigFile(ConfigDirName + "scenarios.conf");
-   if(!AllconfigFile.open( IO_ReadOnly ) ) {
-      std::cerr << "Opening config file failed for "
-                << ConfigDirName + "scenarios.conf" << std::endl;
+   // ====== Initialize file and directory names ============================
+   ConfigDirectory = QDir(configDirName);
+   if(ConfigDirectory.exists() != TRUE) {
+      cerr << "WARNING: Configuration directory " << configDirName << " does not exist!" << endl;
+      ConfigDirectory = QDir::current();
+   }
+   const QString configFileName = ConfigDirectory.filePath("scenarios.conf");
+
+   // ====== Read configuration =============================================
+   QFile configFile(configFileName);
+   if(!configFile.open( IO_ReadOnly ) ) {
+      cerr << "WARNING: Unable to open configuration file "
+                << configFileName << "!" << endl;
    }
    else {
-      while(!AllconfigFile.atEnd()) {
-         AllconfigFile.readLine(Buffer, 255);
-         Buffer = Buffer.stripWhiteSpace();
-         ConfigList.append(Buffer);
+      QString buffer;
+      while(!configFile.atEnd()) {
+         configFile.readLine(buffer, 255);
+         buffer = buffer.stripWhiteSpace();
+         ConfigList.append(buffer);
       }
    }
 
+   // ====== Initialize widget and PU thread ================================
    resize(width, height);
    setCaption("Fractal Pool User");
    statusBar()->message("Welcome to Fractal PU!", 3000);
@@ -120,6 +133,7 @@ FractalPU::FractalPU(const size_t width,
 }
 
 
+/* ###### Destructor ##################################################### */
 FractalPU::~FractalPU()
 {
    delete Image;
@@ -127,7 +141,7 @@ FractalPU::~FractalPU()
 }
 
 
-
+/* ###### Paint fractal image ############################################ */
 void FractalPU::paintImage(const size_t startY, const size_t endY)
 {
    QPainter p;
@@ -135,11 +149,12 @@ void FractalPU::paintImage(const size_t startY, const size_t endY)
    p.drawImage(0, startY,
                *Image,
                0, startY,
-               Image->width(), endY + 1);
+               Image->width(), endY + 1 - startY);
    p.end();
 }
 
 
+/* ###### Handle Paint event ############################################# */
 void FractalPU::paintEvent(QPaintEvent* paintEvent)
 {
    qApp->lock();
@@ -158,15 +173,17 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
 }
 
 
+/* ###### Handle Close event ############################################# */
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
    Running = false;
-   // std::cout << "Good-bye!" << std::endl;
+   // cout << "Good-bye!" << endl;
    wait(TRUE);
    qApp->exit(0);
 }
 
 
+/* ###### Send Parameter message ######################################### */
 bool FractalPU::sendParameter()
 {
    FractalGeneratorParameter parameter;
@@ -187,13 +204,14 @@ bool FractalPU::sendParameter()
    tags[1].Tag  = TAG_DONE;
    if(rspSessionWrite(Session, &parameter, sizeof(parameter),
                       (TagItem*)&tags) <= 0) {
-      std::cerr << "ERROR: SessionWrite failed!" << std::endl;
+      cerr << "ERROR: SessionWrite failed!" << endl;
       return(false);
    }
    return(true);
 }
 
 
+/* ###### Handle Data message ############################################ */
 FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
                                             const size_t                size)
 {
@@ -220,10 +238,11 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
    if(points > FGD_MAX_POINTS) {
       return(Invalid);
    }
+
    while(y < (size_t)Image->height()) {
       while(x < (size_t)Image->width()) {
          if(p > points) {
-            break;
+            goto finished;
          }
          const uint32_t point = ntohl(data->Buffer[p]);
          const QColor color(((point + (2 * Run) + (2 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
@@ -235,53 +254,71 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
       x = 0;
       y++;
    }
+
+finished:
    paintImage(ntohl(data->StartY), y);
    return(Okay);
 }
 
 
+/* ###### Get parameters from config file ################################ */
 void FractalPU::getNextParameters()
 {
    if(ConfigList.count() == 0) {
-      std::cerr << "Config file list empty" << std::endl;
+      // cerr << "Config file list empty" << endl;
       return;
    }
    const size_t element = random32() % ConfigList.count();
 
-   QString File(ConfigList[element]);
+   QString parameterFileName(ConfigList[element]);
    QDomDocument doc("XMLFractalSave");
-   QFile file(ConfigDirName + File); //url.prettyURL().mid(5) );
-   if(!file.open(IO_ReadOnly)) {
-      std::cerr << "Config file open failed" << ConfigDirName + File << std::endl;
+   cout << "Getting parameters from " << ConfigDirectory.filePath(parameterFileName) << "..." << endl;
+   QFile parameterFile(ConfigDirectory.filePath(parameterFileName));
+   if(!parameterFile.open(IO_ReadOnly)) {
+      cerr << "WARNING: Cannot open parameter file " << parameterFileName << "!" << endl;
       return;
    }
 
-   QString Error;
-   int Line, Column;
-   if(!doc.setContent( &file , false, &Error, &Line, &Column)) {
-      file.close();
-      std::cerr << "Config file list empty""Fractalgenerator" << Error << " in Line:" << QString().setNum(Line)
-            << " and Column: " << QString().setNum(Column) << std::endl;
+   QString error;
+   int line, column;
+   if(!doc.setContent(&parameterFile, false, &error, &line, &column)) {
+      parameterFile.close();
+      cerr << "WARNING: Error in parameter file " << parameterFileName << ":" << endl
+                << error << " in line " << line << ", column " << column << endl;
       return;
    }
-   file.close();
+   parameterFile.close();
 
    QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
-   QString AlgorithmName = algorithm.firstChild().toText().data();
-   if(AlgorithmName == "MandelbrotN") {
+   const QString algorithmName = algorithm.firstChild().toText().data();
+   if(algorithmName == "MandelbrotN") {
       Parameter.AlgorithmID = FGPA_MANDELBROTN;
    }
-   else if(AlgorithmName == "Mandelbrot") {
+   else if(algorithmName == "Mandelbrot") {
+      Parameter.AlgorithmID = FGPA_MANDELBROT;
+   }
+   else {
+      cerr << "WARNING: Unknown algorithm name in parameter file " << parameterFileName << "!" << endl
+           << "Assuming Mandelbrot..." << endl;
       Parameter.AlgorithmID = FGPA_MANDELBROT;
    }
 
-   Parameter.C1Real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
-   Parameter.C1Imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
-   Parameter.C2Real = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
-   Parameter.C2Imag = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
+   const double c1real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
+   const double c1imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
+   const double c2real = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
+   const double c2imag = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
 
-   QDomElement useroptions = doc.elementsByTagName("Useroptions").item(0).toElement();
-   QDomNode child = useroptions.firstChild();
+   Parameter.C1Real = doubleToNetwork(c1real);
+   Parameter.C1Imag = doubleToNetwork(c1imag);
+   Parameter.C2Real = doubleToNetwork(c2real);
+   Parameter.C2Imag = doubleToNetwork(c2imag);
+
+   // Defaults; will be overwritten if specified in the parameter file.
+   Parameter.N             = doubleToNetwork(2.0);
+   Parameter.MaxIterations = 123;
+
+   QDomElement userOptions = doc.elementsByTagName("Useroptions").item(0).toElement();
+   QDomNode child = userOptions.firstChild();
    while(!child.isNull()) {
       const QString name  = child.nodeName();
       const QString value = child.firstChild().toText().data();
@@ -289,13 +326,15 @@ void FractalPU::getNextParameters()
          Parameter.MaxIterations = value.toInt();
       }
       else if(name == "N") {
-         Parameter.N = value.toDouble();
+         const double n = value.toDouble();
+         Parameter.N = doubleToNetwork(n);
       }
       child = child.nextSibling();
    }
 }
 
 
+/* ###### Fractal PU thread ############################################## */
 void FractalPU::run()
 {
    char    statusText[128];
@@ -305,7 +344,7 @@ void FractalPU::run()
    Run               = 0;
    PoolElementUsages = 0;
 
-   // std::cerr << "Creating session..." << std::endl;
+   // cerr << "Creating session..." << endl;
    for(;;) {
       LastPoolElementID = 0;
 
@@ -333,11 +372,11 @@ void FractalPU::run()
          qApp->lock();
          Parameter.Width         = width();
          Parameter.Height        = height();
-         Parameter.C1Real        = -1.5;
-         Parameter.C1Imag        = 1.5;
-         Parameter.C2Real        = 1.5;
-         Parameter.C2Imag        = -1.5;
-         Parameter.N             = 12.34567890;
+         Parameter.C1Real        = doubleToNetwork(-1.5);
+         Parameter.C1Imag        = doubleToNetwork(1.5);
+         Parameter.C2Real        = doubleToNetwork(1.5);
+         Parameter.C2Imag        = doubleToNetwork(-1.5);
+         Parameter.N             = doubleToNetwork(12.34567890);
          Parameter.MaxIterations = 1024;
          Parameter.AlgorithmID   = FGPA_MANDELBROT;
          getNextParameters();
@@ -349,7 +388,7 @@ void FractalPU::run()
          qApp->unlock();
 
          rspSessionSetStatusText(Session, "Sending parameter command...");
-         // std::cout << "Sending parameter command..." << std::endl;
+         // cout << "Sending parameter command..." << endl;
          qApp->lock();
          statusBar()->message("Sending parameter command...");
          qApp->unlock();
@@ -385,7 +424,7 @@ void FractalPU::run()
                         goto finish;
                       break;
                      case Invalid:
-                        std::cerr << "ERROR: Invalid data block received!" << std::endl;
+                        cerr << "ERROR: Invalid data block received!" << endl;
                       break;
                      default:
                         packets++;
@@ -411,7 +450,7 @@ finish:
          // ====== Image calculation completed ==============================
          const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
          rspSessionSetStatusText(Session, statusText);
-         // std::cout << statusText << std::endl;
+         // cout << statusText << endl;
          qApp->lock();
          statusBar()->message(statusText);
          qApp->unlock();
@@ -515,7 +554,7 @@ int main(int argc, char** argv)
 
    beginLogging();
    if(rspInitialize(NULL) != 0) {
-      std::cerr << "ERROR: Unable to initialize rsplib!" << std::endl;
+      cerr << "ERROR: Unable to initialize rsplib!" << endl;
       exit(1);
    }
 #ifdef ENABLE_CSP

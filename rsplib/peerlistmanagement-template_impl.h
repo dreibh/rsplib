@@ -33,7 +33,7 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                struct ST_CLASS(PoolElementNode)*           poolElementNode,
                enum PoolNodeUpdateAction                   updateAction,
-               HandlespaceChecksumType                     preUpdateChecksum,
+               HandlespaceChecksumAccumulatorType          preUpdateChecksum,
                RegistrarIdentifierType                     preUpdateHomeRegistrar,
                void*                                       userData);
 
@@ -200,13 +200,6 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    struct TransportAddressBlock* userTransport;
    unsigned int                  errorCode;
 
-   if(peerListManagement->NewPeerListNode == NULL) {
-      peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
-      if(peerListManagement->NewPeerListNode == NULL) {
-         return(RSPERR_NO_RESOURCES);
-      }
-   }
-
    if( ((flags & PLNF_DYNAMIC) && (registrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER)) ||
        ((!(flags & PLNF_DYNAMIC)) && (registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER)) ) {
       return(RSPERR_INVALID_ID);
@@ -215,18 +208,28 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    /* Check, if a static entry is updated with an ID */
    if(registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
       *peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
-                                                                   0,
+                                                                   UNDEFINED_REGISTRAR_IDENTIFIER,
                                                                    transportAddressBlock);
       if(*peerListNode) {
-         ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
-                                   registrarIdentifier,
-                                   ((*peerListNode)->Flags &~ PLNF_DYNAMIC),
-                                   (*peerListNode)->AddressBlock);
-         ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
-                                              &updatedPeerListNode, &errorCode);
-         CHECK(errorCode == RSPERR_OKAY);
+         /* When the found ID is a static entry, update this entry with
+            the ID */
+         if(!((*peerListNode)->Flags & PLNF_DYNAMIC)) {
+            ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
+                                    registrarIdentifier,
+                                    (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
+                                    (*peerListNode)->AddressBlock);
+            ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
+                                                &updatedPeerListNode, &errorCode);
+            CHECK(errorCode == RSPERR_OKAY);
+            return(RSPERR_OKAY);
+         }
+      }
+   }
 
-         return(RSPERR_OKAY);
+   if(peerListManagement->NewPeerListNode == NULL) {
+      peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
+      if(peerListManagement->NewPeerListNode == NULL) {
+         return(RSPERR_NO_RESOURCES);
       }
    }
 
@@ -251,7 +254,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
          (*peerListNode)->AddressBlock = userTransport;
 
          if(peerListManagement->Handlespace) {
-            (*peerListNode)->ComputedHandlespaceChecksum =
+            (*peerListNode)->OwnershipChecksum =
                ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
                   &peerListManagement->Handlespace->Handlespace,
                   (*peerListNode)->Identifier);
@@ -377,7 +380,7 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                struct ST_CLASS(PoolElementNode)*           poolElementNode,
                enum PoolNodeUpdateAction                   updateAction,
-               HandlespaceChecksumType                     preUpdateChecksum,
+               HandlespaceChecksumAccumulatorType          preUpdateChecksum,
                RegistrarIdentifierType                     preUpdateHomeRegistrar,
                void*                                       userData)
 {
@@ -390,9 +393,9 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                                                                   homeRegistrarIdentifier,
                                                                   NULL);
       if(peerListNode) {
-         peerListNode->ComputedHandlespaceChecksum =
-            handlespaceChecksumAdd(peerListNode->ComputedHandlespaceChecksum,
-                                 poolElementNode->Checksum);
+         peerListNode->OwnershipChecksum =
+            handlespaceChecksumAdd(peerListNode->OwnershipChecksum,
+                                   poolElementNode->Checksum);
       }
    }
    else if(updateAction == PNUA_Delete) {
@@ -400,9 +403,9 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                                                                   homeRegistrarIdentifier,
                                                                   NULL);
       if(peerListNode) {
-         peerListNode->ComputedHandlespaceChecksum =
-            handlespaceChecksumSub(peerListNode->ComputedHandlespaceChecksum,
-                                    poolElementNode->Checksum);
+         peerListNode->OwnershipChecksum =
+            handlespaceChecksumSub(peerListNode->OwnershipChecksum,
+                                   poolElementNode->Checksum);
       }
    }
    else if(updateAction == PNUA_Update) {
@@ -410,8 +413,8 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                                                                   preUpdateHomeRegistrar,
                                                                   NULL);
       if(peerListNode) {
-         peerListNode->ComputedHandlespaceChecksum =
-            handlespaceChecksumSub(peerListNode->ComputedHandlespaceChecksum,
+         peerListNode->OwnershipChecksum =
+            handlespaceChecksumSub(peerListNode->OwnershipChecksum,
                                    preUpdateChecksum);
       }
 
@@ -419,8 +422,8 @@ static void ST_CLASS(peerListManagementPoolNodeUpdateNotification)(
                                                                   homeRegistrarIdentifier,
                                                                   NULL);
       if(peerListNode) {
-         peerListNode->ComputedHandlespaceChecksum =
-            handlespaceChecksumAdd(peerListNode->ComputedHandlespaceChecksum,
+         peerListNode->OwnershipChecksum =
+            handlespaceChecksumAdd(peerListNode->OwnershipChecksum,
                                    poolElementNode->Checksum);
       }
    }
@@ -435,7 +438,7 @@ void ST_CLASS(peerListManagementVerifyChecksumsInHandlespace)(
    struct ST_CLASS(PeerListNode)* peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerListManagement->List);
    while(peerListNode != NULL) {
       if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
-         CHECK(peerListNode->ComputedHandlespaceChecksum ==
+         CHECK(peerListNode->OwnershipChecksum ==
                   ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
                      &poolHandlespaceManagement->Handlespace,
                      peerListNode->Identifier));

@@ -32,12 +32,12 @@ extern "C" {
 
 struct ST_CLASS(PeerList)
 {
-   struct ST_CLASSNAME PeerListIndexStorage;
-   struct ST_CLASSNAME PeerListTimerStorage;
+   struct ST_CLASSNAME      PeerListIndexStorage;
+   struct ST_CLASSNAME      PeerListTimerStorage;
 
    RegistrarIdentifierType  OwnIdentifier;
 
-   void*               UserData;
+   void*                    UserData;
 };
 
 

@@ -45,7 +45,7 @@ struct ST_CLASS(PoolHandlespaceManagement)
    void (*PoolNodeUpdateNotification)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                                       struct ST_CLASS(PoolElementNode)*           poolElementNode,
                                       enum PoolNodeUpdateAction                   updateAction,
-                                      HandlespaceChecksumType                     preUpdateChecksum,
+                                      HandlespaceChecksumAccumulatorType          preUpdateChecksum,
                                       RegistrarIdentifierType                     preUpdateHomeRegistrar,
                                       void*                                       userData);
    void* NotificationUserData;

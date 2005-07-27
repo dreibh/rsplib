@@ -44,37 +44,37 @@ struct ST_CLASS(PoolNode);
 
 struct ST_CLASS(PoolElementNode)
 {
-   struct STN_CLASSNAME          PoolElementSelectionStorageNode;
-   struct STN_CLASSNAME          PoolElementIndexStorageNode;
-   struct STN_CLASSNAME          PoolElementTimerStorageNode;
-   struct STN_CLASSNAME          PoolElementConnectionStorageNode;
-   struct STN_CLASSNAME          PoolElementOwnershipStorageNode;
-   struct ST_CLASS(PoolNode)*    OwnerPoolNode;
+   struct STN_CLASSNAME               PoolElementSelectionStorageNode;
+   struct STN_CLASSNAME               PoolElementIndexStorageNode;
+   struct STN_CLASSNAME               PoolElementTimerStorageNode;
+   struct STN_CLASSNAME               PoolElementConnectionStorageNode;
+   struct STN_CLASSNAME               PoolElementOwnershipStorageNode;
+   struct ST_CLASS(PoolNode)*         OwnerPoolNode;
 
-   HandlespaceChecksumType       Checksum;
-   PoolElementIdentifierType     Identifier;
-   RegistrarIdentifierType       HomeRegistrarIdentifier;
-   unsigned int                  RegistrationLife;
-   struct PoolPolicySettings     PolicySettings;
+   HandlespaceChecksumAccumulatorType Checksum;
+   PoolElementIdentifierType          Identifier;
+   RegistrarIdentifierType            HomeRegistrarIdentifier;
+   unsigned int                       RegistrationLife;
+   struct PoolPolicySettings          PolicySettings;
 
-   PoolElementSeqNumberType      SeqNumber;
-   PoolElementSeqNumberType      RoundCounter;
-   unsigned int                  VirtualCounter;
-   unsigned int                  Degradation;
-   unsigned int                  UnreachabilityReports;
-   unsigned long long            SelectionCounter;
-   unsigned long long            LastUpdateTimeStamp;
+   PoolElementSeqNumberType           SeqNumber;
+   PoolElementSeqNumberType           RoundCounter;
+   unsigned int                       VirtualCounter;
+   unsigned int                       Degradation;
+   unsigned int                       UnreachabilityReports;
+   unsigned long long                 SelectionCounter;
+   unsigned long long                 LastUpdateTimeStamp;
 
-   unsigned int                  TimerCode;
-   unsigned long long            TimerTimeStamp;
+   unsigned int                       TimerCode;
+   unsigned long long                 TimerTimeStamp;
 
-   int                           ConnectionSocketDescriptor;
-   sctp_assoc_t                  ConnectionAssocID;
+   int                                ConnectionSocketDescriptor;
+   sctp_assoc_t                       ConnectionAssocID;
 
-   struct TransportAddressBlock* UserTransport;
-   struct TransportAddressBlock* RegistratorTransport;
+   struct TransportAddressBlock*      UserTransport;
+   struct TransportAddressBlock*      RegistratorTransport;
 
-   void*                         UserData;
+   void*                              UserData;
 };
 
 
@@ -97,8 +97,8 @@ void ST_CLASS(poolElementNodePrint)(
         struct ST_CLASS(PoolElementNode)* poolElementNode,
         FILE*                             fd,
         const unsigned int                fields);
-HandlespaceChecksumType ST_CLASS(poolElementNodeComputeChecksum)(
-                           const struct ST_CLASS(PoolElementNode)* poolElementNode);
+HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
+                                      const struct ST_CLASS(PoolElementNode)* poolElementNode);
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(getPoolElementNodeFromPoolElementSelectionStorageNode)(void* node);

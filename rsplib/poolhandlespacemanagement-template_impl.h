@@ -34,7 +34,7 @@ static void ST_CLASS(poolNodeUpdateNotification)(
    struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
    struct ST_CLASS(PoolElementNode)*     poolElementNode,
    enum PoolNodeUpdateAction             updateAction,
-   HandlespaceChecksumType               preUpdateChecksum,
+   HandlespaceChecksumAccumulatorType    preUpdateChecksum,
    RegistrarIdentifierType               preUpdateHomeRegistrar,
    void*                                 userData)
 {
@@ -143,7 +143,7 @@ void ST_CLASS(poolHandlespaceManagementClear)(
 HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum)(
                            const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
 {
-   return(ST_CLASS(poolHandlespaceNodeGetHandlespaceChecksum)(&poolHandlespaceManagement->Handlespace));
+   return(handlespaceChecksumFinish(ST_CLASS(poolHandlespaceNodeGetHandlespaceChecksum)(&poolHandlespaceManagement->Handlespace)));
 }
 
 
@@ -151,7 +151,7 @@ HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum
 HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(
                            const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
 {
-   return(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(&poolHandlespaceManagement->Handlespace));
+   return(handlespaceChecksumFinish(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(&poolHandlespaceManagement->Handlespace)));
 }
 
 

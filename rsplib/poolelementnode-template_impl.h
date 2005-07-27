@@ -123,7 +123,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
    }
    if(fields & PENPO_CHECKSUM) {
       snprintf((char*)&tmp, sizeof(tmp), " chsum=$%08x",
-               (unsigned int)poolElementNode->Checksum);
+               (unsigned int)handlespaceChecksumFinish(poolElementNode->Checksum));
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_HOME_PR) {
@@ -200,16 +200,32 @@ void ST_CLASS(poolElementNodePrint)(
 
 
 /* ###### Compute PE checksum ############################################ */
-HandlespaceChecksumType ST_CLASS(poolElementNodeComputeChecksum)(
-                           const struct ST_CLASS(PoolElementNode)* poolElementNode)
+HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
+                                      const struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   HandlespaceChecksumType checksum = 0;
+   HandlespaceChecksumAccumulatorType checksum = INITIAL_HANDLESPACE_CHECKSUM;
+
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->OwnerPoolNode->Handle.Handle,
                                          poolElementNode->OwnerPoolNode->Handle.Size);
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->Identifier,
                                          sizeof(poolElementNode->Identifier));
+
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->HomeRegistrarIdentifier,
+                                         sizeof(poolElementNode->HomeRegistrarIdentifier));
+
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->PolicySettings.Weight,
+                                         sizeof(poolElementNode->PolicySettings.Weight));
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->PolicySettings.Load,
+                                         sizeof(poolElementNode->PolicySettings.Load));
+   checksum = handlespaceChecksumCompute(checksum,
+                                         (const char*)&poolElementNode->PolicySettings.LoadDegradation,
+                                         sizeof(poolElementNode->PolicySettings.LoadDegradation));
+
    return(checksum);
 }
 

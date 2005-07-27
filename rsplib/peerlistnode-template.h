@@ -43,22 +43,21 @@ struct ST_CLASS(PeerList);
 
 struct ST_CLASS(PeerListNode)
 {
-   struct STN_CLASSNAME          PeerListIndexStorageNode;
-   struct STN_CLASSNAME          PeerListTimerStorageNode;
-   struct ST_CLASS(PeerList)*    OwnerPeerList;
+   struct STN_CLASSNAME               PeerListIndexStorageNode;
+   struct STN_CLASSNAME               PeerListTimerStorageNode;
+   struct ST_CLASS(PeerList)*         OwnerPeerList;
 
-   RegistrarIdentifierType       Identifier;
-   unsigned int                  Flags;
-   unsigned long long            LastUpdateTimeStamp;
+   RegistrarIdentifierType            Identifier;
+   unsigned int                       Flags;
+   unsigned long long                 LastUpdateTimeStamp;
 
-   unsigned int                  TimerCode;
-   unsigned long long            TimerTimeStamp;
+   unsigned int                       TimerCode;
+   unsigned long long                 TimerTimeStamp;
 
-   HandlespaceChecksumType       ExpectedHandlespaceChecksum;
-   HandlespaceChecksumType       ComputedHandlespaceChecksum;
+   HandlespaceChecksumAccumulatorType OwnershipChecksum;
 
-   struct TransportAddressBlock* AddressBlock;
-   void*                         UserData;
+   struct TransportAddressBlock*      AddressBlock;
+   void*                              UserData;
 };
 
 
@@ -72,12 +71,14 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageN
 struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node);
 
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
-                               const RegistrarIdentifierType       identifier,
+                               const RegistrarIdentifierType  identifier,
                                const unsigned int             flags,
                                struct TransportAddressBlock*  transportAddressBlock);
 void ST_CLASS(peerListNodeDelete)(struct ST_CLASS(PeerListNode)* peerListNode);
 int ST_CLASS(peerListNodeUpdate)(struct ST_CLASS(PeerListNode)*       peerListNode,
                                  const struct ST_CLASS(PeerListNode)* source);
+HandlespaceChecksumType ST_CLASS(peerListNodeGetOwnershipChecksum)(
+                           const struct ST_CLASS(PeerListNode)* peerListNode);
 void ST_CLASS(peerListNodeGetDescription)(
         const struct ST_CLASS(PeerListNode)* peerListNode,
         char*                                buffer,

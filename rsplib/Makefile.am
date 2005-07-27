@@ -71,14 +71,14 @@ poolpolicy-template.h \
 poolpolicy-template_impl.h \
 randomizer.c \
 randomizer.h \
+registrartable.c \
+registrartable.h \
 rserpoolerror.c \
 rserpoolerror.h \
 rsplib.c \
 rsplib.h \
 rsplib-tags.h \
 rspsession.c \
-servertable.c \
-servertable.h \
 stringutilities.c \
 stringutilities.h \
 sockaddrunion.h \
@@ -124,7 +124,7 @@ testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-fractalpoolelement_SOURCES = fractalpoolelement.cc fractalgeneratorexample.h
+fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c fractalgeneratorexample.h
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 fork_SOURCES = fork.c

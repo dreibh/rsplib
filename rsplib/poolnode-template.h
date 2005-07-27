@@ -37,18 +37,18 @@ struct ST_CLASS(PoolHandlespaceNode);
 
 struct ST_CLASS(PoolNode)
 {
-   struct STN_CLASSNAME                PoolIndexStorageNode;
-   struct ST_CLASSNAME                 PoolElementSelectionStorage;
-   struct ST_CLASSNAME                 PoolElementIndexStorage;
+   struct STN_CLASSNAME                  PoolIndexStorageNode;
+   struct ST_CLASSNAME                   PoolElementSelectionStorage;
+   struct ST_CLASSNAME                   PoolElementIndexStorage;
    struct ST_CLASS(PoolHandlespaceNode)* OwnerPoolHandlespaceNode;
 
-   struct PoolHandle                   Handle;
-   const struct ST_CLASS(PoolPolicy)*  Policy;
-   int                                 Protocol;
-   int                                 Flags;
-   PoolElementSeqNumberType            GlobalSeqNumber;
+   struct PoolHandle                     Handle;
+   const struct ST_CLASS(PoolPolicy)*    Policy;
+   int                                   Protocol;
+   int                                   Flags;
+   PoolElementSeqNumberType              GlobalSeqNumber;
 
-   void*                               UserData;
+   void*                                 UserData;
 };
 
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.16 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.17 2005/07/27 10:26:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -42,9 +42,8 @@
 #include "dispatcher.h"
 #include "tagitem.h"
 #include "rserpoolmessage.h"
-#include "messagebuffer.h"
 #include "poolhandlespacemanagement.h"
-#include "servertable.h"
+#include "registrartable.h"
 
 
 #ifdef __cplusplus
@@ -55,12 +54,13 @@ extern "C" {
 struct ASAPInstance
 {
    struct Dispatcher*                         StateMachine;
-   unsigned long long                         RegistrarConnectionTimeStamp;
-   int                                        RegistrarSocket;
-   RegistrarIdentifierType                    RegistrarID;
-   int                                        RegistrarSocketProtocol;
 
-   struct ServerTable*                        RegistrarTable;
+   int                                        RegistrarHuntSocket;
+   int                                        RegistrarSocket;
+   RegistrarIdentifierType                    RegistrarIdentifier;
+   unsigned long long                         RegistrarConnectionTimeStamp;
+
+   struct RegistrarTable*                     RegistrarSet;
    struct ST_CLASS(PoolHandlespaceManagement) Cache;
    struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
 
@@ -70,12 +70,12 @@ struct ASAPInstance
    unsigned long long                         CacheElementTimeout;
    unsigned long long                         CacheMaintenanceInterval;
 
+   struct FDCallback                          RegistrarHuntFDCallback;
    struct FDCallback                          RegistrarFDCallback;
+
    size_t                                     RegistrarRequestMaxTrials;
    unsigned long long                         RegistrarRequestTimeout;
    unsigned long long                         RegistrarResponseTimeout;
-
-   struct MessageBuffer*                      Buffer;
 };
 
 

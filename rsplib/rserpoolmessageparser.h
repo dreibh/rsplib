@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.h,v 1.3 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: rserpoolmessageparser.h,v 1.4 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -61,6 +61,7 @@ extern "C" {
   */
 unsigned int rserpoolPacket2Message(char*                       packet,
                                     const union sockaddr_union* sourceAddress,
+                                    const sctp_assoc_t          assocID,
                                     const uint32_t              ppid,
                                     const size_t                packetSize,
                                     const size_t                minBufferSize,

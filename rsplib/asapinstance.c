@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.35 2005/07/19 08:46:31 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.36 2005/07/27 10:26:17 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -35,7 +35,6 @@
  *
  */
 
-
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "asapinstance.h"
@@ -53,8 +52,11 @@ static void handleRegistrarConnectionEvent(struct Dispatcher* dispatcher,
                                            void*              userData);
 static void asapInstanceHandleEndpointKeepAlive(
                struct ASAPInstance*    asapInstance,
-               struct RSerPoolMessage* message);
-static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstance);
+               struct RSerPoolMessage* message,
+               int                     fd);
+static void asapInstanceDisconnectFromRegistrar(
+               struct ASAPInstance* asapInstance,
+               bool                 sendAbort);
 
 
 /* ###### Get configuration from file #################################### */
@@ -86,7 +88,10 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
 struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
                                      struct TagItem*    tags)
 {
-   struct ASAPInstance* asapInstance = NULL;
+   struct ASAPInstance*        asapInstance = NULL;
+   struct sctp_event_subscribe sctpEvents;
+   int                         autoCloseTimeout;
+
    if(dispatcher != NULL) {
       asapInstance = (struct ASAPInstance*)malloc(sizeof(struct ASAPInstance));
       if(asapInstance != NULL) {
@@ -95,21 +100,76 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          asapInstanceConfigure(asapInstance, tags);
 
          asapInstance->RegistrarConnectionTimeStamp = 0;
+         asapInstance->RegistrarHuntSocket          = -1;
          asapInstance->RegistrarSocket              = -1;
-         asapInstance->RegistrarID                  = 0;
-         asapInstance->RegistrarSocketProtocol      = 0;
+         asapInstance->RegistrarIdentifier          = 0;
          ST_CLASS(poolHandlespaceManagementNew)(&asapInstance->Cache,
                                                 0x00000000,
                                                 NULL, NULL, NULL);
          ST_CLASS(poolHandlespaceManagementNew)(&asapInstance->OwnPoolElements,
                                                 0x00000000,
                                                 NULL, NULL, NULL);
-         asapInstance->Buffer         = messageBufferNew(65536);
-         asapInstance->RegistrarTable = serverTableNew(asapInstance->StateMachine, tags);
-         if((asapInstance->Buffer == NULL) || (asapInstance->RegistrarTable == NULL)) {
+         asapInstance->RegistrarSet = registrarTableNew(asapInstance->StateMachine, tags);
+         if(asapInstance->RegistrarSet == NULL) {
             asapInstanceDelete(asapInstance);
-            asapInstance = NULL;
+            return(NULL);
          }
+
+         /* ====== Registrar socket ========================================== */
+         asapInstance->RegistrarHuntSocket = ext_socket(checkIPv6() ? AF_INET6 : AF_INET,
+                                                        SOCK_SEQPACKET,
+                                                        IPPROTO_SCTP);
+         if(asapInstance->RegistrarHuntSocket < 0) {
+            LOG_ERROR
+            logerror("Creating registrar socket failed");
+            LOG_END
+            asapInstanceDelete(asapInstance);
+            return(NULL);
+         }
+
+         if(bindplus(asapInstance->RegistrarHuntSocket, NULL, 0) == false) {
+            LOG_ERROR
+            logerror("Binding registrar socket failed");
+            LOG_END
+            asapInstanceDelete(asapInstance);
+            return(NULL);
+         }
+
+         setNonBlocking(asapInstance->RegistrarHuntSocket);
+
+         if(ext_listen(asapInstance->RegistrarHuntSocket, 10) < 0) {
+            asapInstanceDelete(asapInstance);
+            return(NULL);
+         }
+
+         memset(&sctpEvents, 0, sizeof(sctpEvents));
+         sctpEvents.sctp_data_io_event          = 1;
+         sctpEvents.sctp_association_event      = 1;
+         sctpEvents.sctp_address_event          = 1;
+         sctpEvents.sctp_send_failure_event     = 1;
+         sctpEvents.sctp_peer_error_event       = 1;
+         sctpEvents.sctp_shutdown_event         = 1;
+         sctpEvents.sctp_partial_delivery_event = 1;
+         sctpEvents.sctp_adaption_layer_event   = 1;
+
+         if(ext_setsockopt(asapInstance->RegistrarHuntSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
+            logerror("setsockopt() for SCTP_EVENTS on registrar socket failed");
+            asapInstanceDelete(asapInstance);
+            return(NULL);
+         }
+
+         autoCloseTimeout = 30;
+         if(ext_setsockopt(asapInstance->RegistrarHuntSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
+            logerror("setsockopt() for SCTP_AUTOCLOSE on registrar socket failed");
+            exit(1);
+         }
+
+         fdCallbackNew(&asapInstance->RegistrarHuntFDCallback,
+                       asapInstance->StateMachine,
+                       asapInstance->RegistrarHuntSocket,
+                       FDCE_Read|FDCE_Exception,
+                       handleRegistrarConnectionEvent,
+                       (void*)asapInstance);
       }
    }
    return(asapInstance);
@@ -120,14 +180,18 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
 void asapInstanceDelete(struct ASAPInstance* asapInstance)
 {
    if(asapInstance) {
-      asapInstanceDisconnectFromRegistrar(asapInstance);
+      asapInstanceDisconnectFromRegistrar(asapInstance, false);
+      if(asapInstance->RegistrarHuntSocket) {
+         fdCallbackDelete(&asapInstance->RegistrarHuntFDCallback);
+         ext_close(asapInstance->RegistrarHuntSocket);
+      }
       ST_CLASS(poolHandlespaceManagementClear)(&asapInstance->OwnPoolElements);
       ST_CLASS(poolHandlespaceManagementDelete)(&asapInstance->OwnPoolElements);
       ST_CLASS(poolHandlespaceManagementClear)(&asapInstance->Cache);
       ST_CLASS(poolHandlespaceManagementDelete)(&asapInstance->Cache);
-      if(asapInstance->RegistrarTable) {
-         serverTableDelete(asapInstance->RegistrarTable);
-         asapInstance->RegistrarTable = NULL;
+      if(asapInstance->RegistrarSet) {
+         registrarTableDelete(asapInstance->RegistrarSet);
+         asapInstance->RegistrarSet = NULL;
       }
       if(asapInstance->AsapServerAnnounceConfigFile) {
          free(asapInstance->AsapServerAnnounceConfigFile);
@@ -137,10 +201,6 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
          free(asapInstance->AsapRegistrarsConfigFile);
          asapInstance->AsapRegistrarsConfigFile = NULL;
       }
-      if(asapInstance->Buffer) {
-         messageBufferDelete(asapInstance->Buffer);
-         asapInstance->Buffer = NULL;
-      }
       free(asapInstance);
    }
 }
@@ -148,124 +208,102 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 
 /* ###### Connect to registrar ############################################ */
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
-                                            const int            protocol)
+                                           int                  sd)
 {
-   struct sctp_event_subscribe events;
-   bool                        result = true;
+   sctp_assoc_t assocID;
 
    if(asapInstance->RegistrarSocket < 0) {
-      asapInstance->RegistrarSocket =
-         serverTableFindServer(asapInstance->RegistrarTable,
-                               &asapInstance->RegistrarID);
-      if(asapInstance->RegistrarSocket >= 0) {
-         asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
-         asapInstance->RegistrarSocketProtocol      = protocol;
-
-         /* ====== Enable data IO events ================================= */
-         if(asapInstance->RegistrarSocketProtocol == IPPROTO_SCTP) {
-            memset((char*)&events, 0 ,sizeof(events));
-            events.sctp_data_io_event = 1;
-            if(ext_setsockopt(asapInstance->RegistrarSocket,
-                              IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events)) < 0) {
-               LOG_ERROR
-               perror("setsockopt() failed for SCTP_EVENTS on registrar socket");
-               LOG_END
-            }
+      if(sd < 0) {
+         LOG_NOTE
+         fputs("Starting registrar hunt...\n", stdlog);
+         LOG_END
+         assocID = registrarTableGetRegistrar(asapInstance->RegistrarSet,
+                                              asapInstance->RegistrarHuntSocket,
+                                              &asapInstance->RegistrarIdentifier);
+         if(assocID == 0) {
+            LOG_ERROR
+            fputs("Unable to connect to a registrar\n", stdlog);
+            LOG_END
+            return(false);
          }
 
-         fdCallbackNew(&asapInstance->RegistrarFDCallback,
-                       asapInstance->StateMachine,
-                       asapInstance->RegistrarSocket,
-                       FDCE_Read|FDCE_Exception,
-                       handleRegistrarConnectionEvent,
-                       (void*)asapInstance);
+         LOG_VERBOSE3
+         fprintf(stdlog, "Connection to registrar $%08x successfully established on association %u\n",
+               asapInstance->RegistrarIdentifier, assocID);
+         LOG_END
 
-         LOG_NOTE
-         fputs("Connection to registrar successfully established\n", stdlog);
+         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket,
+                                                      assocID, NULL, NULL);
+         if(sd < 0) {
+            LOG_ERROR
+            logerror("sctp_peeloff() for registrar association failed");
+            LOG_END
+            return(false);
+         }
+
+         LOG_VERBOSE3
+         fprintf(stdlog, "Connection to registrar peeled off to socket %d\n",
+                 asapInstance->RegistrarSocket);
          LOG_END
       }
-      else {
-         LOG_ERROR
-         fputs("Unable to connect to a registrar\n", stdlog);
-         LOG_END
-         result = false;
-      }
+
+      asapInstance->RegistrarSocket = sd;
+      fdCallbackNew(&asapInstance->RegistrarFDCallback,
+                    asapInstance->StateMachine,
+                    asapInstance->RegistrarSocket,
+                    FDCE_Read|FDCE_Exception,
+                    handleRegistrarConnectionEvent,
+                    (void*)asapInstance);
+
+      LOG_NOTE
+      fprintf(stdlog, "Connected to registrar $%08x\n", asapInstance->RegistrarIdentifier);
+      LOG_END
    }
-
-   return(result);
+   return(true);
 }
 
 
 /* ###### Disconnect from registrar #################################### */
-static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstance)
+static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstance,
+                                                bool                 sendAbort)
 {
    if(asapInstance->RegistrarSocket >= 0) {
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
+      if(sendAbort) {
+         /* Abort association to current registrar */
+         sendtoplus(asapInstance->RegistrarSocket, NULL, 0, MSG_ABORT,
+                  NULL, 0,
+                  0, 0, 0, 0xffffffff, 0);
+      }
       ext_close(asapInstance->RegistrarSocket);
-      LOG_NOTE
+      asapInstance->RegistrarSocket              = -1;
+      asapInstance->RegistrarConnectionTimeStamp = 0;
+      asapInstance->RegistrarIdentifier          = UNDEFINED_REGISTRAR_IDENTIFIER;
+
+      LOG_ACTION
       fputs("Disconnected from registrar\n", stdlog);
       LOG_END
-      asapInstance->RegistrarConnectionTimeStamp = 0;
-      asapInstance->RegistrarSocket              = -1;
-      asapInstance->RegistrarID                  = 0;
-      asapInstance->RegistrarSocketProtocol      = 0;
    }
 }
 
 
-/* ###### Receive response from registrar ############################## */
-static unsigned int asapInstanceReceiveResponse(struct ASAPInstance*     asapInstance,
-                                                struct RSerPoolMessage** message)
+/* ###### Handle SCTP notification on registrar socket ################### */
+static void handleNotificationOnRegistrarSocket(struct ASAPInstance*           asapInstance,
+                                                const union sctp_notification* notification)
 {
-   ssize_t              received;
-   unsigned int         result;
-   union sockaddr_union sourceAddress;
-   socklen_t            sourceAddressLength;
-
-   LOG_VERBOSE2
-   fputs("Waiting for response...\n",stdlog);
-   LOG_END
-
-   do {
-      sourceAddressLength = sizeof(sourceAddress);
-      received = messageBufferRead(asapInstance->Buffer, asapInstance->RegistrarSocket,
-                                   &sourceAddress, &sourceAddressLength,
-                                   (asapInstance->RegistrarSocketProtocol == IPPROTO_SCTP) ? PPID_ASAP : 0,
-                                   asapInstance->RegistrarResponseTimeout,
-                                   asapInstance->RegistrarResponseTimeout);
-      LOG_VERBOSE2
-      fprintf(stdlog, "received=%d, timeout=%Ld\n", received, asapInstance->RegistrarResponseTimeout);
+   if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
+       (notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ) {
+      LOG_WARNING
+      fputs("Registrar connection lost\n", stdlog);
       LOG_END
-   } while(received == RspRead_PartialRead);
-
-   if(received > 0) {
-      result = rserpoolPacket2Message((char*)&asapInstance->Buffer->Buffer,
-                                      &sourceAddress,
-                                      PPID_ASAP,
-                                      received, asapInstance->Buffer->Size,
-                                      message);
-      if(result != RSPERR_OKAY) {
-         if(*message) {
-            rserpoolMessageDelete(*message);
-            *message = NULL;
-         }
-      }
+      asapInstanceDisconnectFromRegistrar(asapInstance, true);
    }
-   else {
-      *message = NULL;
-   }
-
-   if(*message != NULL) {
-      LOG_VERBOSE2
-      fputs("Response successfully received\n",stdlog);
+   else if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
+      LOG_WARNING
+      fputs("Registrar connection is shutting down\n", stdlog);
       LOG_END
-      return(RSPERR_OKAY);
+      asapInstanceDisconnectFromRegistrar(asapInstance, true);
    }
-
-   LOG_WARNING
-   fputs("Receiving response failed\n", stdlog);
-   LOG_END
-   return(RSPERR_READ_ERROR);
 }
 
 
@@ -275,14 +313,14 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
 {
    bool result;
 
-   if(asapInstanceConnectToRegistrar(asapInstance, IPPROTO_SCTP) == false) {
+   if(asapInstanceConnectToRegistrar(asapInstance, -1) == false) {
       LOG_ERROR
       fputs("No registrar available\n", stdlog);
       LOG_END
       return(RSPERR_NO_REGISTRAR);
    }
 
-   result = rserpoolMessageSend(asapInstance->RegistrarSocketProtocol,
+   result = rserpoolMessageSend(IPPROTO_SCTP,
                                 asapInstance->RegistrarSocket,
                                 0, 0,
                                 asapInstance->RegistrarRequestTimeout,
@@ -305,58 +343,97 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
                                      uint16_t*                error)
 {
    struct RSerPoolMessage* response;
+   ssize_t                 received;
+   union sockaddr_union    sourceAddress;
+   socklen_t               sourceAddressLength;
+   uint32_t                ppid;
+   int                     flags;
+   char                    buffer[65536];
    unsigned int            result = RSPERR_OKAY;
    size_t                  i;
 
    *responsePtr = NULL;
    *error = RSPERR_OKAY;
-
    for(i = 0;i < asapInstance->RegistrarRequestMaxTrials;i++) {
       LOG_VERBOSE2
       fprintf(stdlog, "Request trial #%u - sending request...\n", (unsigned int)i + 1);
       LOG_END
 
+      /* ====== Send request ============================================= */
       result = asapInstanceSendRequest(asapInstance, message);
       if(result == RSPERR_OKAY) {
          LOG_VERBOSE2
          fprintf(stdlog, "Request trial #%u - waiting for response...\n", (unsigned int)i + 1);
          LOG_END
-         result = asapInstanceReceiveResponse(asapInstance, &response);
-         while(result == RSPERR_OKAY) {
-            *error = response->Error;
 
-            if(response->Type == AHT_ENDPOINT_KEEP_ALIVE) {
-               asapInstanceHandleEndpointKeepAlive(asapInstance, response);
+         /* ====== Receive response ====================================== */
+         flags               = 0;
+         sourceAddressLength = sizeof(sourceAddress);
+         received = recvfromplus(asapInstance->RegistrarSocket,
+                                 (char*)&buffer, sizeof(buffer),
+                                 &flags,
+                                 (struct sockaddr*)&sourceAddress, &sourceAddressLength,
+                                 &ppid, 0, NULL,
+                                 asapInstance->RegistrarResponseTimeout);
+         while(received > 0) {
+            /* ====== Handle notification ================================ */
+            if(flags & MSG_NOTIFICATION) {
+               handleNotificationOnRegistrarSocket(asapInstance, (union sctp_notification*)&buffer);
             }
-            else if(response->Type == AHT_ENDPOINT_KEEP_ALIVE_ACK) {
-            }
-            else if( ((response->Type == AHT_REGISTRATION_RESPONSE)    && (message->Type == AHT_REGISTRATION))   ||
-                     ((response->Type == AHT_DEREGISTRATION_RESPONSE)  && (message->Type == AHT_DEREGISTRATION)) ||
-                     ((response->Type == AHT_HANDLE_RESOLUTION_RESPONSE) && (message->Type == AHT_HANDLE_RESOLUTION)) ) {
-               LOG_VERBOSE2
-               fprintf(stdlog, "Request trial #%u - Success\n", (unsigned int)i + 1);
-               LOG_END
-               *responsePtr = response;
-               return(RSPERR_OKAY);
-            }
+
+            /* ====== Handle response ==================================== */
             else {
-               LOG_WARNING
-               fprintf(stdlog, "Bad request/response type pair: %02x/%02x\n",
-                       message->Type, response->Type);
-               LOG_END
-               rserpoolMessageDelete(response);
-               return(RSPERR_INVALID_VALUES);
+               if(rserpoolPacket2Message((char*)&buffer,
+                                         &sourceAddress,
+                                         0,
+                                         ppid,
+                                         received, sizeof(buffer),
+                                         &response) == RSPERR_OKAY) {
+                  *error = response->Error;
+
+                  if(response->Type == AHT_ENDPOINT_KEEP_ALIVE) {
+                     asapInstanceHandleEndpointKeepAlive(asapInstance, response, asapInstance->RegistrarSocket);
+                  }
+                  else if(response->Type == AHT_ENDPOINT_KEEP_ALIVE_ACK) {
+                  }
+                  else if( ((response->Type == AHT_REGISTRATION_RESPONSE)    && (message->Type == AHT_REGISTRATION))   ||
+                           ((response->Type == AHT_DEREGISTRATION_RESPONSE)  && (message->Type == AHT_DEREGISTRATION)) ||
+                           ((response->Type == AHT_HANDLE_RESOLUTION_RESPONSE) && (message->Type == AHT_HANDLE_RESOLUTION)) ) {
+                     LOG_VERBOSE2
+                     fprintf(stdlog, "Request trial #%u - Success\n", (unsigned int)i + 1);
+                     LOG_END
+                     *responsePtr = response;
+                     return(RSPERR_OKAY);
+                  }
+                  else {
+                     LOG_WARNING
+                     fprintf(stdlog, "Bad request/response type pair: %02x/%02x\n",
+                             message->Type, response->Type);
+                     LOG_END
+                     rserpoolMessageDelete(response);
+                     return(RSPERR_INVALID_VALUES);
+                  }
+
+                  rserpoolMessageDelete(response);
+               }
             }
 
-            rserpoolMessageDelete(response);
-            result = asapInstanceReceiveResponse(asapInstance, &response);
+            /* ====== Continue receiving response ======================== */
+            flags               = 0;
+            sourceAddressLength = sizeof(sourceAddress);
+            received = recvfromplus(asapInstance->RegistrarSocket,
+                                    (char*)&buffer, sizeof(buffer),
+                                    &flags,
+                                    (struct sockaddr*)&sourceAddress, &sourceAddressLength,
+                                    &ppid, 0, NULL,
+                                    asapInstance->RegistrarResponseTimeout);
          }
       }
 
       LOG_ERROR
       fprintf(stdlog, "Request trial #%u failed\n", (unsigned int)i + 1);
       LOG_END
-      asapInstanceDisconnectFromRegistrar(asapInstance);
+      asapInstanceDisconnectFromRegistrar(asapInstance, true);
    }
 
    return(result);
@@ -396,17 +473,17 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
       if(result == RSPERR_OKAY) {
          if(registrarResult == RSPERR_OKAY) {
             handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                                    &asapInstance->OwnPoolElements,
-                                    poolHandle,
-                                    message->PoolElementPtr->HomeRegistrarIdentifier,
-                                    message->PoolElementPtr->Identifier,
-                                    message->PoolElementPtr->RegistrationLife,
-                                    &message->PoolElementPtr->PolicySettings,
-                                    message->PoolElementPtr->UserTransport,
-                                    NULL,
-                                    -1, 0,
-                                    getMicroTime(),
-                                    &newPoolElementNode);
+                                      &asapInstance->OwnPoolElements,
+                                      poolHandle,
+                                      message->PoolElementPtr->HomeRegistrarIdentifier,
+                                      message->PoolElementPtr->Identifier,
+                                      message->PoolElementPtr->RegistrationLife,
+                                      &message->PoolElementPtr->PolicySettings,
+                                      message->PoolElementPtr->UserTransport,
+                                      NULL,
+                                      -1, 0,
+                                      getMicroTime(),
+                                      &newPoolElementNode);
             if(handlespaceMgtResult == RSPERR_OKAY) {
                newPoolElementNode->UserData = (void*)asapInstance;
                if(response->Identifier != poolElementNode->Identifier) {
@@ -767,51 +844,100 @@ unsigned int asapInstanceHandleResolution(
 /* ###### Handle endpoint keepalive ###################################### */
 static void asapInstanceHandleEndpointKeepAlive(
                struct ASAPInstance*    asapInstance,
-               struct RSerPoolMessage* message)
+               struct RSerPoolMessage* message,
+               int                     fd)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolNode)*        poolNode;
+   int                               sd;
 
    LOG_VERBOSE2
-   fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool ", message->Identifier);
+   fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool via assoc %u",
+           message->Identifier, message->AssocID);
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
 
-   poolElementNode = ST_CLASS(poolHandlespaceManagementFindPoolElement)(
-                        &asapInstance->OwnPoolElements,
-                        &message->Handle,
-                        message->Identifier);
-   if(poolElementNode) {
-      message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
-      message->Flags      = 0x00;
-      message->Identifier = poolElementNode->Identifier;
+   /* Does message come via association on registrar *hunt* socket
+      instead of peeled-off registrar socket? */
+   if(fd == asapInstance->RegistrarHuntSocket) {
+      if(message->Flags & AHF_ENDPOINT_KEEP_ALIVE_HOME) {
+         LOG_NOTE
+         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x -> replacing home registrar",
+               message->RegistrarIdentifier,
+               message->AssocID,
+               asapInstance->RegistrarIdentifier);
+         LOG_END
 
-      LOG_VERBOSE2
-      fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
-      LOG_END
-      asapInstanceSendRequest(asapInstance, message);
+         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket, message->AssocID, NULL, NULL);
+         if(sd >= 0) {
+            asapInstanceDisconnectFromRegistrar(asapInstance, true);
+            if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
+               /* The new registrar ID is already known */
+               asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
+            }
+         }
+         else {
+            LOG_ERROR
+            logerror("sctp_peeloff() for incoming registrar association from new registrar failed");
+            LOG_END
+         }
+      }
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x. The H bit is not set, therefore ignoring it.",
+               message->RegistrarIdentifier,
+               message->AssocID,
+               asapInstance->RegistrarIdentifier);
+         LOG_END
+      }
    }
    else {
-      LOG_WARNING
-      fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool ",
-              message->Identifier);
-      poolHandlePrint(&message->Handle, stdlog);
-      fputs(" received. We do *not* own this PE\n", stdlog);
-      LOG_END
+      if(asapInstance->RegistrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
+         message->RegistrarIdentifier = message->RegistrarIdentifier;
+      }
+   }
+
+
+   /* ====== Send ENDPOINT_KEEP_ALIVE_ACK for each PE ==================== */
+   poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&asapInstance->OwnPoolElements.Handlespace);
+   while(poolNode != NULL) {
+      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
+      while(poolElementNode != NULL) {
+
+         message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
+         message->Flags      = 0x00;
+         message->Identifier = poolElementNode->Identifier;
+
+         LOG_VERBOSE2
+         fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
+         LOG_END
+         asapInstanceSendRequest(asapInstance, message);
+
+         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
+      }
+
+      poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(&asapInstance->OwnPoolElements.Handlespace, poolNode);
    }
 }
 
 
-/* ###### Handle incoming requests from registrar (keepalives) ######### */
+/* ###### Handle incoming requests from registrar (keep-alives) ########## */
 static void handleRegistrarConnectionEvent(
                struct Dispatcher* dispatcher,
                int                fd,
                unsigned int       eventMask,
                void*              userData)
 {
-   struct ASAPInstance*     asapInstance = (struct ASAPInstance*)userData;
-   struct RSerPoolMessage*  message;
-   unsigned int             result;
+   struct ASAPInstance*    asapInstance = (struct ASAPInstance*)userData;
+   struct RSerPoolMessage* message;
+   ssize_t                 received;
+   union sockaddr_union    sourceAddress;
+   socklen_t               sourceAddressLength;
+   uint32_t                ppid;
+   sctp_assoc_t            assocID;
+   int                     flags;
+   char                    buffer[65536];
 
    dispatcherLock(asapInstance->StateMachine);
 
@@ -819,26 +945,49 @@ static void handleRegistrarConnectionEvent(
    fputs("Entering Connection Handler...\n", stdlog);
    LOG_END
 
-   if(fd == asapInstance->RegistrarSocket) {
-      if(eventMask & (FDCE_Read|FDCE_Exception)) {
-         result = asapInstanceReceiveResponse(asapInstance, &message);
-         if(result == RSPERR_OKAY) {
-            if(message->Type == AHT_ENDPOINT_KEEP_ALIVE) {
-               asapInstanceHandleEndpointKeepAlive(asapInstance, message);
+   if( ((fd == asapInstance->RegistrarHuntSocket) || (fd == asapInstance->RegistrarSocket)) &&
+       (eventMask & (FDCE_Read|FDCE_Exception)) ) {
+      flags               = 0;
+      sourceAddressLength = sizeof(sourceAddress);
+      received = recvfromplus(fd,
+                              (char*)&buffer, sizeof(buffer),
+                              &flags,
+                              (struct sockaddr*)&sourceAddress, &sourceAddressLength,
+                              &ppid, &assocID, NULL,
+                              asapInstance->RegistrarResponseTimeout);
+      if(received > 0) {
+         /* ====== Handle notification ================================ */
+         if(flags & MSG_NOTIFICATION) {
+            if(fd == asapInstance->RegistrarSocket) {
+               handleNotificationOnRegistrarSocket(asapInstance, (union sctp_notification*)&buffer);
+            }
+         }
+
+         /* ====== Handle message ===================================== */
+         else {
+            if(rserpoolPacket2Message((char*)&buffer,
+                                       &sourceAddress,
+                                       assocID,
+                                       ppid,
+                                       received, sizeof(buffer),
+                                       &message) == RSPERR_OKAY) {
+               if(message->Type == AHT_ENDPOINT_KEEP_ALIVE) {
+                  asapInstanceHandleEndpointKeepAlive(asapInstance, message, fd);
+               }
+               else {
+                  LOG_WARNING
+                  fprintf(stdlog, "Received unexpected message type $%04x\n",
+                           message->Type);
+                  LOG_END
+               }
+               rserpoolMessageDelete(message);
             }
             else {
                LOG_WARNING
-               fprintf(stdlog, "Received unexpected message type $%04x\n",
-                       message->Type);
+               fputs("Disconnecting from registrar due to failure\n", stdlog);
                LOG_END
+               asapInstanceDisconnectFromRegistrar(asapInstance, true);
             }
-            rserpoolMessageDelete(message);
-         }
-         else {
-            LOG_WARNING
-            fputs("Disconnecting from registrar due to failure\n", stdlog);
-            LOG_END
-            asapInstanceDisconnectFromRegistrar(asapInstance);
          }
       }
    }

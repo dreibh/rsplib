@@ -32,21 +32,21 @@ extern "C" {
 
 struct ST_CLASS(PoolHandlespaceNode)
 {
-   struct ST_CLASSNAME      PoolIndexStorage;             /* Pools                          */
-   struct ST_CLASSNAME      PoolElementTimerStorage;      /* PEs with timer event scheduled */
-   struct ST_CLASSNAME      PoolElementConnectionStorage; /* PEs by connection              */
-   struct ST_CLASSNAME      PoolElementOwnershipStorage;  /* PEs by ownership               */
+   struct ST_CLASSNAME                 PoolIndexStorage;             /* Pools                          */
+   struct ST_CLASSNAME                 PoolElementTimerStorage;      /* PEs with timer event scheduled */
+   struct ST_CLASSNAME                 PoolElementConnectionStorage; /* PEs by connection              */
+   struct ST_CLASSNAME                 PoolElementOwnershipStorage;  /* PEs by ownership               */
 
-   HandlespaceChecksumType  HandlespaceChecksum;          /* Handlespace checksum           */
-   HandlespaceChecksumType  OwnershipChecksum;            /* Ownership checksum             */
-   RegistrarIdentifierType  HomeRegistrarIdentifier;      /* This NS's Identifier           */
-   size_t                   PoolElements;                 /* Number of Pool Elements        */
+   HandlespaceChecksumAccumulatorType  HandlespaceChecksum;          /* Handlespace checksum           */
+   HandlespaceChecksumAccumulatorType  OwnershipChecksum;            /* Ownership checksum             */
+   RegistrarIdentifierType             HomeRegistrarIdentifier;      /* This NS's Identifier           */
+   size_t                              PoolElements;                 /* Number of Pool Elements        */
 
    void* NotificationUserData;
    void (*PoolNodeUpdateNotification)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                       struct ST_CLASS(PoolElementNode)*     poolElementNode,
                                       enum PoolNodeUpdateAction             updateAction,
-                                      HandlespaceChecksumType               preUpdateChecksum,
+                                      HandlespaceChecksumAccumulatorType    preUpdateChecksum,
                                       RegistrarIdentifierType               preUpdateHomeRegistrar,
                                       void*                                 userData);
 };
@@ -57,20 +57,20 @@ void ST_CLASS(poolHandlespaceNodeNew)(struct ST_CLASS(PoolHandlespaceNode)* pool
                                       void (*poolNodeUpdateNotification)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                                                          struct ST_CLASS(PoolElementNode)*     poolElementNode,
                                                                          enum PoolNodeUpdateAction             updateAction,
-                                                                         HandlespaceChecksumType               preUpdateChecksum,
+                                                                         HandlespaceChecksumAccumulatorType    preUpdateChecksum,
                                                                          RegistrarIdentifierType               preUpdateHomeRegistrar,
                                                                          void*                                 userData),
                                       void* notificationUserData);
 void ST_CLASS(poolHandlespaceNodeDelete)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
-HandlespaceChecksumType ST_CLASS(poolHandlespaceNodeGetHandlespaceChecksum)(
-                           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
-HandlespaceChecksumType ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
-                           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
-HandlespaceChecksumType ST_CLASS(poolHandlespaceNodeComputeHandlespaceChecksum)(
-                           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
-HandlespaceChecksumType ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-                           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                           const RegistrarIdentifierType               registrarIdentifier);
+HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeGetHandlespaceChecksum)(
+                                      const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
+                                      const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeComputeHandlespaceChecksum)(
+                                      const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                                      const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+                                      const RegistrarIdentifierType               registrarIdentifier);
 size_t ST_CLASS(poolHandlespaceNodeGetTimerNodes)(
           struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(

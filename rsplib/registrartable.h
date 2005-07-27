@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.h,v 1.1 2005/07/19 08:46:31 dreibh Exp $
+ *  $Id: registrartable.h,v 1.2 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -36,8 +36,8 @@
  */
 
 
-#ifndef SERVERTABLE_H
-#define SERVERTABLE_H
+#ifndef REGISTRARTABLE_H
+#define REGISTRARTABLE_H
 
 
 #include "tdtypes.h"
@@ -63,9 +63,6 @@ struct RegistrarTable
    union sockaddr_union                AnnounceAddress;
    struct FDCallback                   AnnounceSocketFDCallback;
    unsigned long long                  LastAnnounceHeard;
-
-   int                                 RegistrarSocket;
-   sctp_assoc_t                        RegistrarAssocID;
 
    unsigned long long                  RegistrarAnnounceTimeout;
    unsigned long long                  RegistrarConnectTimeout;
@@ -112,7 +109,7 @@ unsigned int registrarTableAddStaticEntry(struct RegistrarTable*   registrarTabl
   */
 sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                         int                      registrarFD,
-                                        RegistrarIdentifierType* registrarIdentifier)
+                                        RegistrarIdentifierType* registrarIdentifier);
 
 
 #ifdef __cplusplus

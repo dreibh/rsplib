@@ -1,5 +1,5 @@
 /*
- *  $Id: randomizer.c,v 1.10 2004/11/12 00:16:51 dreibh Exp $
+ *  $Id: randomizer.c,v 1.11 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -43,6 +43,8 @@
 
 
 #ifdef NDEBUG
+#undef min
+#undef max
 #include <omnetpp.h>
 #else
 /*
@@ -92,7 +94,7 @@ uint64_t random64()
 uint32_t random32()
 {
 #ifdef NDEBUG
-#warning Using OMNeT++ random generator
+#warning Using OMNeT++ random generator instead of time-seeded one!
    const double value = uniform(0.0, (double)0xffffffff);
    return((uint32_t)rint(value));
 #else

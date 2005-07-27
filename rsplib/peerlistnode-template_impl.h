@@ -34,17 +34,35 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
 {
    const struct ST_CLASS(PeerListNode)* node1 = (struct ST_CLASS(PeerListNode)*)nodePtr1;
    const struct ST_CLASS(PeerListNode)* node2 = (struct ST_CLASS(PeerListNode)*)nodePtr2;
+   int                                  result;
 
+   /* One of the nodes has an undefined ID, i.e. static entry.
+      => Only comparison by address overlap possible */
    if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
       (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
-      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
-                                                    node2->AddressBlock));
+      result = transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                      node2->AddressBlock);
+      if(result == 0) {
+         return(0);
+      }
+      /* No overlap -> continue comparison */
    }
+
+   /* Compare IDs */
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
+   }
+
+   /* The IDs are equal. If both IDs are undefined, we compare
+      the addresses completely to get a sorting order. */
+   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) &&
+      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      result = transportAddressBlockComparison(node1->AddressBlock,
+                                               node2->AddressBlock);
+      return(result);
    }
 
    return(0);
@@ -75,20 +93,8 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1,
    else if(node1->TimerTimeStamp > node2->TimerTimeStamp) {
       return(1);
    }
-
-   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
-      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
-      return(transportAddressBlockOverlapComparison(node1->AddressBlock,
-                                                    node2->AddressBlock));
-   }
-   if(node1->Identifier < node2->Identifier) {
-      return(-1);
-   }
-   else if(node1->Identifier > node2->Identifier) {
-      return(1);
-   }
-
-   return(0);
+   /* Same timestamps => use regular comparison */
+   return(ST_CLASS(peerListIndexStorageNodeComparison)(nodePtr1, nodePtr2));
 }
 
 
@@ -101,19 +107,18 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
    STN_METHOD(New)(&peerListNode->PeerListIndexStorageNode);
    STN_METHOD(New)(&peerListNode->PeerListTimerStorageNode);
 
-   peerListNode->OwnerPeerList               = NULL;
+   peerListNode->OwnerPeerList       = NULL;
 
-   peerListNode->Identifier                  = identifier;
-   peerListNode->Flags                       = flags;
-   peerListNode->ComputedHandlespaceChecksum = INITIAL_HANDLESPACE_CHECKSUM;
-   peerListNode->ExpectedHandlespaceChecksum = INITIAL_HANDLESPACE_CHECKSUM;
+   peerListNode->Identifier          = identifier;
+   peerListNode->Flags               = flags;
+   peerListNode->OwnershipChecksum   = INITIAL_HANDLESPACE_CHECKSUM;
 
-   peerListNode->LastUpdateTimeStamp         = 0;
-   peerListNode->TimerCode                   = 0;
-   peerListNode->TimerTimeStamp              = 0;
+   peerListNode->LastUpdateTimeStamp = 0;
+   peerListNode->TimerCode           = 0;
+   peerListNode->TimerTimeStamp      = 0;
 
-   peerListNode->AddressBlock                = transportAddressBlock;
-   peerListNode->UserData                    = NULL;
+   peerListNode->AddressBlock        = transportAddressBlock;
+   peerListNode->UserData            = NULL;
 }
 
 
@@ -159,6 +164,14 @@ int ST_CLASS(peerListNodeUpdate)(struct ST_CLASS(PeerListNode)*       peerListNo
 }
 
 
+/* ###### Get ownership checksum ######################################### */
+HandlespaceChecksumType ST_CLASS(peerListNodeGetOwnershipChecksum)(
+                           const struct ST_CLASS(PeerListNode)* peerListNode)
+{
+   return(handlespaceChecksumFinish(peerListNode->OwnershipChecksum));
+}
+
+
 /* ###### Get textual description ######################################## */
 void ST_CLASS(peerListNodeGetDescription)(
         const struct ST_CLASS(PeerListNode)* peerListNode,
@@ -169,10 +182,10 @@ void ST_CLASS(peerListNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize,
-            "$%08x upd=%llu chsum=$%x flags=",
+            "$%08x upd=%llu chsum=$%08x flags=",
             peerListNode->Identifier,
             peerListNode->LastUpdateTimeStamp,
-            peerListNode->ComputedHandlespaceChecksum);
+            (unsigned int)handlespaceChecksumFinish(peerListNode->OwnershipChecksum));
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {
       safestrcat(buffer, "static", bufferSize);
    }

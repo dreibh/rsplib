@@ -1,5 +1,5 @@
 /*
- *  $Id: sockaddrunion.h,v 1.4 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: sockaddrunion.h,v 1.5 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *

@@ -41,6 +41,11 @@
 #include "componentstatusprotocol.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /**
   * Get component status. The resulting status is dynamically allocated and has to
   * be freed by the caller!

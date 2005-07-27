@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.35 2005/04/13 16:17:14 dreibh Exp $
+ *  $Id: rspsession.c,v 1.36 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -894,7 +894,7 @@ static unsigned int handleRSerPoolMessage(struct SessionDescriptor* session,
 
    threadSafetyLock(&session->Mutex);
 
-   result = rserpoolPacket2Message(buffer, NULL, PPID_ASAP, size, size, &message);
+   result = rserpoolPacket2Message(buffer, NULL, 0, PPID_ASAP, size, size, &message);
    if(message != NULL) {
       if(result == RSPERR_OKAY) {
          LOG_VERBOSE2

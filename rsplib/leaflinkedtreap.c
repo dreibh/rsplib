@@ -110,8 +110,8 @@ int leafLinkedTreapIsEmpty(struct LeafLinkedTreap* llt)
 
 /* ###### Internal method for printing a node ############################# */
 static void leafLinkedTreapPrintNode(struct LeafLinkedTreap*     llt,
-                                            struct LeafLinkedTreapNode* node,
-                                            FILE*                       fd)
+                                     struct LeafLinkedTreapNode* node,
+                                     FILE*                       fd)
 {
    llt->PrintFunction(node, fd);
 #ifdef DEBUG
@@ -396,14 +396,14 @@ LeafLinkedTreapNodeValueType leafLinkedTreapGetValueSum(
 
 
 /* ##### Update value sum ################################################ */
-static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
+inline static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
 {
    node->ValueSum = node->LeftSubtree->ValueSum + node->Value + node->RightSubtree->ValueSum;
 }
 
 
 /* ##### Update value sum of left and right subtree + current ones ####### */
-static void leafLinkedTreapUpdateLeftAndRightValueSums(
+inline static void leafLinkedTreapUpdateLeftAndRightValueSums(
                       struct LeafLinkedTreapNode* node)
 {
    leafLinkedTreapUpdateValueSum(node->LeftSubtree);

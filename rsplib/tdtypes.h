@@ -1,5 +1,5 @@
 /*
- *  $Id: tdtypes.h,v 1.8 2004/11/12 00:25:16 dreibh Exp $
+ *  $Id: tdtypes.h,v 1.9 2005/07/27 10:26:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,6 +41,9 @@
 
 
 #ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef NDEBUG
 #include "config.h"
 #endif
 

@@ -95,14 +95,14 @@ void leafLinkedRedBlackTreeDelete(struct LeafLinkedRedBlackTree* llrbt)
 
 
 /* ##### Update value sum ################################################ */
-static void leafLinkedRedBlackTreeUpdateValueSum(struct LeafLinkedRedBlackTreeNode* node)
+inline static void leafLinkedRedBlackTreeUpdateValueSum(struct LeafLinkedRedBlackTreeNode* node)
 {
    node->ValueSum = node->LeftSubtree->ValueSum + node->Value + node->RightSubtree->ValueSum;
 }
 
 
 /* ##### Update value sum for node and all parents up to tree root ####### */
-static void leafLinkedRedBlackTreeUpdateValueSumsUpToRoot(
+inline static void leafLinkedRedBlackTreeUpdateValueSumsUpToRoot(
                       struct LeafLinkedRedBlackTree*     llrbt,
                       struct LeafLinkedRedBlackTreeNode* node)
 {
@@ -362,7 +362,7 @@ LeafLinkedRedBlackTreeNodeValueType leafLinkedRedBlackTreeGetValueSum(
 
 
 /* ##### Rotation with left subtree ###################################### */
-static void leafLinkedRedBlackTreeRotateLeft(
+inline static void leafLinkedRedBlackTreeRotateLeft(
                       struct LeafLinkedRedBlackTreeNode* node)
 {
    struct LeafLinkedRedBlackTreeNode* lower;
@@ -390,7 +390,7 @@ static void leafLinkedRedBlackTreeRotateLeft(
 
 
 /* ##### Rotation with ripht subtree ##################################### */
-static void leafLinkedRedBlackTreeRotateRight(
+inline static void leafLinkedRedBlackTreeRotateRight(
                       struct LeafLinkedRedBlackTreeNode* node)
 {
    struct LeafLinkedRedBlackTreeNode* lower;

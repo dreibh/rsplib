@@ -25,31 +25,32 @@
 
 
 /* ###### Add checksums a and b ########################################## */
-HandlespaceChecksumType handlespaceChecksumAdd(const HandlespaceChecksumType a,
-                                               const HandlespaceChecksumType b)
+HandlespaceChecksumAccumulatorType handlespaceChecksumAdd(const HandlespaceChecksumAccumulatorType a,
+                                                          const HandlespaceChecksumAccumulatorType b)
 {
-   return(~(~a + ~b));
+   HandlespaceChecksumAccumulatorType sum = a + b;
+   return(sum);
 }
 
 
 /* ###### Subtract checksum b from a ##################################### */
-HandlespaceChecksumType handlespaceChecksumSub(const HandlespaceChecksumType a,
-                                               const HandlespaceChecksumType b)
+HandlespaceChecksumAccumulatorType handlespaceChecksumSub(const HandlespaceChecksumAccumulatorType a,
+                                                          const HandlespaceChecksumAccumulatorType b)
 {
-   return(~(~a - ~b));
+   HandlespaceChecksumAccumulatorType sum = a - b;
+   return(sum);
 }
 
 
 /* ###### Compute handlespace checksum ################################### */
-HandlespaceChecksumType handlespaceChecksumCompute(HandlespaceChecksumType checksum,
-                                                   const char*             buffer,
-                                                   size_t                  size)
+HandlespaceChecksumAccumulatorType handlespaceChecksumCompute(HandlespaceChecksumAccumulatorType sum,
+                                                              const char*                        buffer,
+                                                              size_t                             size)
 {
-   HandlespaceChecksumType* addr  = (HandlespaceChecksumType*)buffer;
-   HandlespaceChecksumType  sum   = 0;
+   HandlespaceChecksumType* addr = (HandlespaceChecksumType*)buffer;
    HandlespaceChecksumType  tmp;
 
-   while(size >= sizeof(*addr))  {
+   while(size >= sizeof(*addr)) {
       sum += *addr++;
       size -= sizeof(*addr);
    }
@@ -60,6 +61,15 @@ HandlespaceChecksumType handlespaceChecksumCompute(HandlespaceChecksumType check
       sum += tmp;
    }
 
-   checksum = ~sum;
-   return(checksum);
+   return(sum);
+}
+
+
+/* ###### Strip off carry part of the checksum ########################### */
+HandlespaceChecksumType handlespaceChecksumFinish(HandlespaceChecksumAccumulatorType sum)
+{
+   while(sum >> HandlespaceChecksumBits) {
+      sum = (sum & HandlespaceChecksumMask) + (sum >> HandlespaceChecksumBits);
+   }
+   return((HandlespaceChecksumType)~sum);
 }

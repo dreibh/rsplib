@@ -26,8 +26,8 @@
 
 #include "config.h"
 #include "rserpoolerror.h"
-#include "poolhandlespacemanagement-basics.h"
 #include "poolhandlespacechecksum.h"
+#include "poolhandlespacemanagement-basics.h"
 #include "poolhandle.h"
 #include "poolpolicysettings.h"
 #include "transportaddressblock.h"
