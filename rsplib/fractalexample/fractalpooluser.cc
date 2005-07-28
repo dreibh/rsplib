@@ -241,7 +241,7 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
 
    while(y < (size_t)Image->height()) {
       while(x < (size_t)Image->width()) {
-         if(p > points) {
+         if(p >= points) {
             goto finished;
          }
          const uint32_t point = ntohl(data->Buffer[p]);
@@ -376,7 +376,7 @@ void FractalPU::run()
          Parameter.C1Imag        = doubleToNetwork(1.5);
          Parameter.C2Real        = doubleToNetwork(1.5);
          Parameter.C2Imag        = doubleToNetwork(-1.5);
-         Parameter.N             = doubleToNetwork(12.34567890);
+         Parameter.N             = doubleToNetwork(2.0);
          Parameter.MaxIterations = 1024;
          Parameter.AlgorithmID   = FGPA_MANDELBROT;
          getNextParameters();
