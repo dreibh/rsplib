@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.34 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.35 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1174,7 +1174,7 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
                              newTransportAddressBlock);
 
    LOG_VERBOSE3
-   fprintf(stdlog, "Scanned server information parameter for NS $%08x, flags=$%08x, address=",
+   fprintf(stdlog, "Scanned server information parameter for registrar $%08x, flags=$%08x, address=",
            peerListNode->Identifier, peerListNode->Flags);
    transportAddressBlockPrint(transportAddressBlock, stdlog);
    fputs("\n", stdlog);
@@ -1426,7 +1426,7 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer presence message ##################################### */
-static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
+static bool scanPresenceMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1452,7 +1452,7 @@ static bool scanPeerPresenceMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer list request message ################################# */
-static bool scanPeerListRequestMessage(struct RSerPoolMessage* message)
+static bool scanListRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1469,7 +1469,7 @@ static bool scanPeerListRequestMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer list response message ################################ */
-static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
+static bool scanListResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
    struct ST_CLASS(PeerListNode)*   peerListNode;
@@ -1504,12 +1504,13 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
                                            &errorCode);
          if(errorCode != RSPERR_OKAY) {
             LOG_WARNING
-            fputs("PeerListResponse contains bad peer ", stdlog);
+            fputs("ListResponse contains bad peer ", stdlog);
             ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
             fputs(". Unable to add it: ", stdlog);
             rserpoolErrorPrint(errorCode, stdlog);
             fputs("\n", stdlog);
             LOG_END
+            free(peerListNode);
             message->Error = (uint16_t)errorCode;
             return(false);
          }
@@ -1521,7 +1522,7 @@ static bool scanPeerListResponseMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer handle table request message ########################### */
-static bool scanPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
+static bool scanHandleTableRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1538,7 +1539,7 @@ static bool scanPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer handle table response message ########################## */
-static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
+static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*  sp;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -1566,6 +1567,8 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
          poolElementNode = scanPoolElementParameter(message);
          while(poolElementNode) {
             if(poolElementNode->RegistratorTransport == NULL) {
+               free(poolElementNode->UserTransport);
+               free(poolElementNode);
                message->Error = RSPERR_INVALID_REGISTRATOR;
                return(false);
             }
@@ -1583,6 +1586,12 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
                                 -1, 0,
                                 0,
                                 &newPoolElementNode);
+
+            /* These structures were used temporarily only */
+            free(poolElementNode->UserTransport);
+            free(poolElementNode->RegistratorTransport);
+            free(poolElementNode);
+
             if(message->Error != RSPERR_OKAY) {
                LOG_WARNING
                fputs("HandleTableResponse contains bad/inconsistent entry: ", stdlog);
@@ -1599,7 +1608,7 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
 
          if(scannedPoolElementParameters == 0) {
             LOG_WARNING
-            fputs("PeerHandleTableResponse contains empty pool\n", stdlog);
+            fputs("HandleTableResponse contains empty pool\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
@@ -1612,7 +1621,7 @@ static bool scanPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer handle table response message ########################## */
-static bool scanPeerNameUpdateMessage(struct RSerPoolMessage* message)
+static bool scanHandleUpdateMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_peernameupdateparameter* pnup;
 
@@ -1642,7 +1651,7 @@ static bool scanPeerNameUpdateMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer init takeover message ################################ */
-static bool scanPeerInitTakeoverMessage(struct RSerPoolMessage* message)
+static bool scanInitTakeoverMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1660,7 +1669,7 @@ static bool scanPeerInitTakeoverMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer init takeover acknowledgement message ################ */
-static bool scanPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
+static bool scanInitTakeoverAckMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1678,7 +1687,7 @@ static bool scanPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Scan peer takeover server message ############################## */
-static bool scanPeerTakeoverServerMessage(struct RSerPoolMessage* message)
+static bool scanTakeoverServerMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1904,47 +1913,47 @@ static bool scanMessage(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Scanning PeerPresence message...\n", stdlog);
           LOG_END
-          if(scanPeerPresenceMessage(message) == false) {
+          if(scanPresenceMessage(message) == false) {
              return(false);
           }
        break;
       case EHT_HANDLE_TABLE_REQUEST:
           LOG_VERBOSE2
-          fputs("Scanning PeerHandleTableRequest message...\n", stdlog);
+          fputs("Scanning HandleTableRequest message...\n", stdlog);
           LOG_END
-          if(scanPeerHandleTableRequestMessage(message) == false) {
+          if(scanHandleTableRequestMessage(message) == false) {
              return(false);
           }
        break;
       case EHT_HANDLE_TABLE_RESPONSE:
           LOG_VERBOSE2
-          fputs("Scanning PeerHandleTableResponse message...\n", stdlog);
+          fputs("Scanning HandleTableResponse message...\n", stdlog);
           LOG_END
-          if(scanPeerHandleTableResponseMessage(message) == false) {
+          if(scanHandleTableResponseMessage(message) == false) {
              return(false);
           }
        break;
       case EHT_HANDLE_UPDATE:
           LOG_VERBOSE2
-          fputs("Scanning PeerNameUpdate message...\n", stdlog);
+          fputs("Scanning HandleUpdate message...\n", stdlog);
           LOG_END
-          if(scanPeerNameUpdateMessage(message) == false) {
+          if(scanHandleUpdateMessage(message) == false) {
              return(false);
           }
        break;
       case EHT_LIST_REQUEST:
           LOG_VERBOSE2
-          fputs("Scanning PeerListRequest message...\n", stdlog);
+          fputs("Scanning ListRequest message...\n", stdlog);
           LOG_END
-          if(scanPeerListRequestMessage(message) == false) {
+          if(scanListRequestMessage(message) == false) {
              return(false);
           }
        break;
       case EHT_LIST_RESPONSE:
           LOG_VERBOSE2
-          fputs("Scanning PeerListResponse message...\n", stdlog);
+          fputs("Scanning ListResponse message...\n", stdlog);
           LOG_END
-          if(scanPeerListResponseMessage(message) == false) {
+          if(scanListResponseMessage(message) == false) {
              return(false);
           }
        break;
@@ -1952,7 +1961,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeover message...\n", stdlog);
           LOG_END
-          if(scanPeerInitTakeoverMessage(message) == false) {
+          if(scanInitTakeoverMessage(message) == false) {
              return(false);
           }
        break;
@@ -1960,7 +1969,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
           LOG_END
-          if(scanPeerInitTakeoverAckMessage(message) == false) {
+          if(scanInitTakeoverAckMessage(message) == false) {
              return(false);
           }
        break;
@@ -1968,7 +1977,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Scanning PeerTakeoverServer message...\n", stdlog);
           LOG_END
-          if(scanPeerTakeoverServerMessage(message) == false) {
+          if(scanTakeoverServerMessage(message) == false) {
              return(false);
           }
        break;

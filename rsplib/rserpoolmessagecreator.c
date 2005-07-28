@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.28 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.29 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -903,7 +903,7 @@ static bool createCookieEchoMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer presence ########################################### */
-static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
+static bool createPresenceMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -932,7 +932,7 @@ static bool createPeerPresenceMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer list request ####################################### */
-static bool createPeerListRequestMessage(struct RSerPoolMessage* message)
+static bool createListRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -954,7 +954,7 @@ static bool createPeerListRequestMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer list response ###################################### */
-static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
+static bool createListResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
    struct ST_CLASS(PeerListNode)*   peerListNode;
@@ -1001,7 +1001,7 @@ static bool createPeerListResponseMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer handle table request ################################# */
-static bool createPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
+static bool createHandleTableRequestMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1023,7 +1023,7 @@ static bool createPeerHandleTableRequestMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer handle table response ################################ */
-static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message)
+static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*     sp;
    struct ST_CLASS(HandleTableExtract)* hte;
@@ -1116,7 +1116,7 @@ static bool createPeerHandleTableResponseMessage(struct RSerPoolMessage* message
 
 
 /* ###### Create peer name update ######################################## */
-static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
+static bool createNameUpdateMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_peernameupdateparameter* pnup;
 
@@ -1150,7 +1150,7 @@ static bool createPeerNameUpdateMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer init takeover ###################################### */
-static bool createPeerInitTakeoverMessage(struct RSerPoolMessage* message)
+static bool createInitTakeoverMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1173,7 +1173,7 @@ static bool createPeerInitTakeoverMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer init takeover acknowledgement ###################### */
-static bool createPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
+static bool createInitTakeoverAckMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1196,7 +1196,7 @@ static bool createPeerInitTakeoverAckMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer takeover server #################################### */
-static bool createPeerTakeoverServerMessage(struct RSerPoolMessage* message)
+static bool createTakeoverServerMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_targetparameter* tp;
 
@@ -1386,47 +1386,47 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Creating PeerPresence message...\n", stdlog);
           LOG_END
-          if(createPeerPresenceMessage(message) == true) {
+          if(createPresenceMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_HANDLE_TABLE_REQUEST:
           LOG_VERBOSE2
-          fputs("Creating PeerHandleTableRequest message...\n", stdlog);
+          fputs("Creating HandleTableRequest message...\n", stdlog);
           LOG_END
-          if(createPeerHandleTableRequestMessage(message) == true) {
+          if(createHandleTableRequestMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_HANDLE_TABLE_RESPONSE:
           LOG_VERBOSE2
-          fputs("Creating PeerHandleTableResponse message...\n", stdlog);
+          fputs("Creating HandleTableResponse message...\n", stdlog);
           LOG_END
-          if(createPeerHandleTableResponseMessage(message) == true) {
+          if(createHandleTableResponseMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_HANDLE_UPDATE:
           LOG_VERBOSE2
-          fputs("Creating PeerNameUpdate message...\n", stdlog);
+          fputs("Creating HandleUpdate message...\n", stdlog);
           LOG_END
-          if(createPeerNameUpdateMessage(message) == true) {
+          if(createNameUpdateMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_LIST_REQUEST:
           LOG_VERBOSE2
-          fputs("Creating PeerListRequest message...\n", stdlog);
+          fputs("Creating ListRequest message...\n", stdlog);
           LOG_END
-          if(createPeerListRequestMessage(message) == true) {
+          if(createListRequestMessage(message) == true) {
              return(message->Position);
           }
         break;
        case EHT_LIST_RESPONSE:
           LOG_VERBOSE2
-          fputs("Creating PeerListResponse message...\n", stdlog);
+          fputs("Creating ListResponse message...\n", stdlog);
           LOG_END
-          if(createPeerListResponseMessage(message) == true) {
+          if(createListResponseMessage(message) == true) {
              return(message->Position);
           }
         break;
@@ -1434,7 +1434,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Creating PeerInitTakeover message...\n", stdlog);
           LOG_END
-          if(createPeerInitTakeoverMessage(message) == true) {
+          if(createInitTakeoverMessage(message) == true) {
              return(message->Position);
           }
         break;
@@ -1442,7 +1442,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Creating PeerInitTakeoverAck message...\n", stdlog);
           LOG_END
-          if(createPeerInitTakeoverAckMessage(message) == true) {
+          if(createInitTakeoverAckMessage(message) == true) {
              return(message->Position);
           }
         break;
@@ -1450,7 +1450,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Creating PeerTakeoverServer message...\n", stdlog);
           LOG_END
-          if(createPeerTakeoverServerMessage(message) == true) {
+          if(createTakeoverServerMessage(message) == true) {
              return(message->Position);
           }
         break;

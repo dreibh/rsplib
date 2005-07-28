@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.15 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.16 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -103,10 +103,20 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
    if(message != NULL) {
       if((message->PoolElementPtr) && (message->PoolElementPtrAutoDelete)) {
          ST_CLASS(poolElementNodeDelete)(message->PoolElementPtr);
+         transportAddressBlockDelete(message->PoolElementPtr->UserTransport);
+         free(message->PoolElementPtr->UserTransport);
+         message->PoolElementPtr->UserTransport = NULL;
+         if(message->PoolElementPtr->RegistratorTransport) {
+            transportAddressBlockDelete(message->PoolElementPtr->RegistratorTransport);
+            free(message->PoolElementPtr->RegistratorTransport);
+            message->PoolElementPtr->RegistratorTransport = NULL;
+         }
          free(message->PoolElementPtr);
+         message->PoolElementPtr = NULL;
       }
       if((message->CookiePtr) && (message->CookiePtrAutoDelete)) {
          free(message->CookiePtr);
+         message->CookiePtr = NULL;
       }
       if(message->TransportAddressBlockListPtrAutoDelete) {
          transportAddressBlock = message->TransportAddressBlockListPtr;
@@ -116,6 +126,7 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
             free(transportAddressBlock);
             transportAddressBlock = nextTransportAddressBlock;
          }
+         message->TransportAddressBlockListPtr = NULL;
       }
       message->TransportAddressBlockListPtr = NULL;
       if(message->PoolElementPtrArrayAutoDelete) {
@@ -123,8 +134,15 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          for(i = 0;i < message->PoolElementPtrArraySize;i++) {
             if(message->PoolElementPtrArray[i]) {
                ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);
+
                transportAddressBlockDelete(message->PoolElementPtrArray[i]->UserTransport);
                free(message->PoolElementPtrArray[i]->UserTransport);
+               message->PoolElementPtrArray[i]->UserTransport = NULL;
+
+               transportAddressBlockDelete(message->PoolElementPtrArray[i]->RegistratorTransport);
+               free(message->PoolElementPtrArray[i]->RegistratorTransport);
+               message->PoolElementPtrArray[i]->RegistratorTransport = NULL;
+
                free(message->PoolElementPtrArray[i]);
                message->PoolElementPtrArray[i] = NULL;
             }
@@ -134,7 +152,9 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          ST_CLASS(peerListNodeDelete)(message->PeerListNodePtr);
          transportAddressBlockDelete(message->PeerListNodePtr->AddressBlock);
          free(message->PeerListNodePtr->AddressBlock);
+         message->PeerListNodePtr->AddressBlock = NULL;
          free(message->PeerListNodePtr);
+         message->PeerListNodePtr = NULL;
       }
       if((message->PeerListPtrAutoDelete) && (message->PeerListPtr)) {
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
@@ -144,10 +164,13 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
             ST_CLASS(peerListNodeDelete)(peerListNode);
             transportAddressBlockDelete(peerListNode->AddressBlock);
             free(peerListNode->AddressBlock);
-            free(message->PeerListNodePtr);
+            peerListNode->AddressBlock = NULL;
+            free(peerListNode);
             peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                               message->PeerListPtr);
          }
+         free(message->PeerListPtr);
+         message->PeerListPtr = NULL;
       }
       if((message->HandlespacePtrAutoDelete) && (message->HandlespacePtr)) {
          ST_CLASS(poolHandlespaceManagementClear)(message->HandlespacePtr);
@@ -157,9 +180,11 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
       }
       if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
          free(message->OffendingParameterTLV);
+         message->OffendingParameterTLV = NULL;
       }
       if((message->OffendingMessageTLV) && (message->OffendingMessageTLVAutoDelete)) {
          free(message->OffendingMessageTLV);
+         message->OffendingMessageTLV = NULL;
       }
 
       buffer             = message->Buffer;

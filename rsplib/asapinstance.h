@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.17 2005/07/27 10:26:17 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.18 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -63,9 +63,6 @@ struct ASAPInstance
    struct RegistrarTable*                     RegistrarSet;
    struct ST_CLASS(PoolHandlespaceManagement) Cache;
    struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
-
-   char*                                      AsapServerAnnounceConfigFile;
-   char*                                      AsapRegistrarsConfigFile;
 
    unsigned long long                         CacheElementTimeout;
    unsigned long long                         CacheMaintenanceInterval;

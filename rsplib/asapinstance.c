@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.36 2005/07/27 10:26:17 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.37 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -121,7 +121,7 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
                                                         IPPROTO_SCTP);
          if(asapInstance->RegistrarHuntSocket < 0) {
             LOG_ERROR
-            logerror("Creating registrar socket failed");
+            logerror("Creating registrar hunt socket failed");
             LOG_END
             asapInstanceDelete(asapInstance);
             return(NULL);
@@ -129,7 +129,7 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
 
          if(bindplus(asapInstance->RegistrarHuntSocket, NULL, 0) == false) {
             LOG_ERROR
-            logerror("Binding registrar socket failed");
+            logerror("Binding registrar hunt socket failed");
             LOG_END
             asapInstanceDelete(asapInstance);
             return(NULL);
@@ -138,6 +138,9 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          setNonBlocking(asapInstance->RegistrarHuntSocket);
 
          if(ext_listen(asapInstance->RegistrarHuntSocket, 10) < 0) {
+            LOG_ERROR
+            logerror("Unable to turn registrar hunt socket into listening mode");
+            LOG_END
             asapInstanceDelete(asapInstance);
             return(NULL);
          }
@@ -153,14 +156,14 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          sctpEvents.sctp_adaption_layer_event   = 1;
 
          if(ext_setsockopt(asapInstance->RegistrarHuntSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
-            logerror("setsockopt() for SCTP_EVENTS on registrar socket failed");
+            logerror("setsockopt() for SCTP_EVENTS on registrar hunt socket failed");
             asapInstanceDelete(asapInstance);
             return(NULL);
          }
 
          autoCloseTimeout = 30;
          if(ext_setsockopt(asapInstance->RegistrarHuntSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
-            logerror("setsockopt() for SCTP_AUTOCLOSE on registrar socket failed");
+            logerror("setsockopt() for SCTP_AUTOCLOSE on registrar hunt socket failed");
             exit(1);
          }
 
@@ -192,14 +195,6 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
       if(asapInstance->RegistrarSet) {
          registrarTableDelete(asapInstance->RegistrarSet);
          asapInstance->RegistrarSet = NULL;
-      }
-      if(asapInstance->AsapServerAnnounceConfigFile) {
-         free(asapInstance->AsapServerAnnounceConfigFile);
-         asapInstance->AsapServerAnnounceConfigFile = NULL;
-      }
-      if(asapInstance->AsapRegistrarsConfigFile) {
-         free(asapInstance->AsapRegistrarsConfigFile);
-         asapInstance->AsapRegistrarsConfigFile = NULL;
       }
       free(asapInstance);
    }
@@ -428,12 +423,19 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
                                     &ppid, 0, NULL,
                                     asapInstance->RegistrarResponseTimeout);
          }
-      }
 
-      LOG_ERROR
-      fprintf(stdlog, "Request trial #%u failed\n", (unsigned int)i + 1);
-      LOG_END
-      asapInstanceDisconnectFromRegistrar(asapInstance, true);
+         LOG_ERROR
+         fprintf(stdlog, "Request trial #%u failed - no valid response from registrar\n", (unsigned int)i + 1);
+         LOG_END
+         asapInstanceDisconnectFromRegistrar(asapInstance, true);
+         result = RSPERR_READ_ERROR;
+      }
+      else {
+         LOG_ERROR
+         fprintf(stdlog, "Request trial #%u failed - unable to send request\n", (unsigned int)i + 1);
+         LOG_END
+         asapInstanceDisconnectFromRegistrar(asapInstance, true);
+      }
    }
 
    return(result);
@@ -1003,3 +1005,4 @@ static void handleRegistrarConnectionEvent(
 
    dispatcherUnlock(asapInstance->StateMachine);
 }
+

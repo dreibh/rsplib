@@ -1,2 +1,6 @@
-Reservierte Portnummern:
-ASAP: 3863
+- Registrar:
+  Filterung von Registrar-Transport
+- Registrar-Table:
+  Timeouts korrigieren
+- Fractal-PU:
+  PE funktioniert nicht richtig mit Valgrind (Übertragung von n ...)

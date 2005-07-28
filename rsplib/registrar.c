@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.11 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: registrar.c,v 1.12 2005/07/28 13:05:00 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1366,6 +1366,8 @@ static void sendInitTakeover(struct Registrar*             registrar,
                            &registrar->Peers.List,
                            peerListNode);
       }
+
+      rserpoolMessageDelete(message);
    }
 }
 
@@ -1542,7 +1544,6 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    fputs("\n", stdlog);
    LOG_END
 
-
    message->Type       = AHT_REGISTRATION_RESPONSE;
    message->Flags      = 0x00;
    message->Error      = RSPERR_OKAY;
@@ -1670,7 +1671,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
 
       if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
          LOG_WARNING
-         logerror("Sending registration response failed");
+         logerror("Sending RegistrationResponse failed");
          LOG_END
       }
    }
@@ -1759,6 +1760,8 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
          transportAddressBlockDelete(delPoolElementNode.UserTransport);
          free(delPoolElementNode.UserTransport);
          delPoolElementNode.UserTransport = NULL;
+         transportAddressBlockDelete(delPoolElementNode.RegistratorTransport);
+         free(delPoolElementNode.RegistratorTransport);
       }
       else {
          if(delPoolElementNode.UserTransport) {
@@ -1784,7 +1787,7 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
 
    if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
       LOG_WARNING
-      logerror("Sending deregistration response failed");
+      logerror("Sending DeregistrationResponse failed");
       LOG_END
    }
 }
@@ -2384,6 +2387,7 @@ static void sendTakeoverServer(struct Registrar*             registrar,
          fputs("Sending TakeoverServer failed\n", stdlog);
          LOG_END
       }
+
       rserpoolMessageDelete(message);
    }
 }
