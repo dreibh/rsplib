@@ -1,1 +1,1 @@
-"RSerPool Traffic" (asap&&(asap.message_type!=0x0a)&&(asap.message_type!=0x07)&&(asap.message_type!=0x08))||(enrp&&(enrp.message_type!=1))||((sctp.chunk_type != 3)&&(sctp.chunk_type != 4)&&(sctp.chunk_type != 5))
+"RSerPool Traffic" (asap&&(asap.message_type!=0x0a)&&(asap.message_type!=0x07)&&(asap.message_type!=0x08))||(enrp&&(enrp.message_type!=1))||((!(asap||enrp))&&(sctp.chunk_type != 3)&&(sctp.chunk_type != 4)&&(sctp.chunk_type != 5))
