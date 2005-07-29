@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.2 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: registrartable.c,v 1.3 2005/07/29 09:18:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -173,13 +173,13 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
 
       /* ====== ASAP Instance settings ==================================== */
       registrarTable->RegistrarConnectMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarConnectMaxTrials,
-                                                              ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS);
+                                                              ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS);
       registrarTable->RegistrarConnectTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
-                                                                     ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT);
+                                                                     ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
       registrarTable->RegistrarAnnounceTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
-                                                                      ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT);
+                                                                      ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
 
-      CHECK(string2address(ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
+      CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
       announceAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceAddress,
                                                                  (tagdata_t)&defaultAnnounceAddress);
       memcpy(&registrarTable->AnnounceAddress, announceAddress, sizeof(registrarTable->AnnounceAddress));
@@ -314,6 +314,14 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    struct ST_CLASS(PeerListNode)* peerListNode;
    size_t                         i;
 
+   i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
+         &registrarTable->RegistrarList,
+         getMicroTime());
+   LOG_VERBOSE3
+   fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
+   ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_FULL);
+   LOG_END
+
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                         &registrarTable->RegistrarList,
@@ -353,6 +361,10 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
                LOG_END
             }
          }
+      }
+      else {
+         *lastRegistrarIdentifier   = UNDEFINED_REGISTRAR_IDENTIFIER;
+         *lastTransportAddressBlock = NULL;
       }
    }
 }
@@ -414,8 +426,8 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
              (start + registrarTable->RegistrarConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > registrarTable->RegistrarConnectMaxTrials) {
-               LOG_ERROR
-               fputs("No registrar found!\n", stdlog);
+               LOG_ACTION
+               fputs("Registrar hunt procedure did not find any registrar!\n", stdlog);
                LOG_END
                if(lastTransportAddressBlock) {
                   transportAddressBlockDelete(lastTransportAddressBlock);

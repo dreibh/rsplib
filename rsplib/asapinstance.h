@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.18 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: asapinstance.h,v 1.19 2005/07/29 09:18:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -65,7 +65,6 @@ struct ASAPInstance
    struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
 
    unsigned long long                         CacheElementTimeout;
-   unsigned long long                         CacheMaintenanceInterval;
 
    struct FDCallback                          RegistrarHuntFDCallback;
    struct FDCallback                          RegistrarFDCallback;
@@ -76,16 +75,16 @@ struct ASAPInstance
 };
 
 
-#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT                5000000
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_ADDRESS "239.0.0.1:3863"
-#define ASAP_DEFAULT_NAMESERVER_ANNOUNCE_TIMEOUT         30000000
-#define ASAP_DEFAULT_NAMESERVER_CONNECT_MAXTRIALS               3
-#define ASAP_DEFAULT_NAMESERVER_CONNECT_TIMEOUT           1500000
-#define ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS               1
-#define ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT           1500000
-#define ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT          1500000
+#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT               5000000
+#define ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS "239.0.0.1:3863"
+#define ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT          5000000
+#define ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS               3
+#define ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT           1500000
+#define ASAP_DEFAULT_REGISTRAR_REQUEST_MAXTRIALS               1
+#define ASAP_DEFAULT_REGISTRAR_REQUEST_TIMEOUT           1500000
+#define ASAP_DEFAULT_REGISTRAR_RESPONSE_TIMEOUT          1500000
 
-#define ASAP_BUFFER_SIZE                                    65536
+#define ASAP_BUFFER_SIZE                                   65536
 
 
 /**

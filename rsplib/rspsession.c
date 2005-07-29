@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.36 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rspsession.c,v 1.37 2005/07/29 09:18:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -286,7 +286,7 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
 printf("(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
    }
    else {
-      LOG_WARNING
+      LOG_ERROR
       fprintf(stdlog, "(Re-)Registration failed: ");
       rserpoolErrorPrint(result, stdlog);
       fputs("\n", stdlog);
@@ -337,16 +337,24 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
 void rspDeletePoolElement(struct PoolElementDescriptor* ped,
                           struct TagItem*               tags)
 {
-   GList* list;
+   GList*       list;
+   unsigned int result;
 
    if(ped) {
       list = g_list_first(ped->SessionList);
       if(list == NULL) {
          timerDelete(&ped->ReregistrationTimer);
          if(ped->Identifier != 0x00000000) {
-            rspDeregister((unsigned char*)&ped->Handle.Handle,
-                          ped->Handle.Size,
-                          ped->Identifier, tags);
+            result = rspDeregister((unsigned char*)&ped->Handle.Handle,
+                                   ped->Handle.Size,
+                                   ped->Identifier, tags);
+            if(result != RSPERR_OKAY) {
+               LOG_ERROR
+               fprintf(stdlog, "Deregistration failed: ");
+               rserpoolErrorPrint(result, stdlog);
+               fputs("\n", stdlog);
+               LOG_END
+            }
          }
          if(ped->Socket >= 0) {
             ext_close(ped->Socket);
@@ -448,7 +456,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
          return(NULL);
       }
       if((ped->SocketType == SOCK_STREAM) && (ext_listen(ped->Socket, 5) < 0)) {
-         LOG_WARNING
+         LOG_ERROR
          logerror("Unable to set socket for new pool element to listen mode");
          LOG_END
       }

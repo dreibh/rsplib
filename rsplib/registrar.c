@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.12 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: registrar.c,v 1.13 2005/07/29 09:18:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1476,6 +1476,16 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 
 
 /* ###### Filter address array ########################################### */
+/*
+   This function takes the given addresses from sourceAddressBlock and
+   writes valid addresses to validAddressBlock, the amount of
+   valid addresses is returned.
+
+   A valid address must fulfil the following conditions:
+   - the address must have a sufficient scope,
+   - the address must be in assocAddressArray or
+     assocAddressArray == NULL
+*/
 static size_t filterValidAddresses(
                  const struct TransportAddressBlock* sourceAddressBlock,
                  const union sockaddr_union*         assocAddressArray,
@@ -1489,14 +1499,20 @@ static size_t filterValidAddresses(
    for(i = 0;i < sourceAddressBlock->Addresses;i++) {
       selectionArray[i] = false;
       if(getScope((const struct sockaddr*)&sourceAddressBlock->AddressArray[i]) >= 4) {
-         for(j = 0;j < assocAddresses;j++) {
-            if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
-                        (const struct sockaddr*)&assocAddressArray[j],
-                        false) == 0) {
-               selectionArray[i] = true;
-               selected++;
-               break;
+         if(assocAddressArray != NULL)
+            for(j = 0;j < assocAddresses;j++) {
+               if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
+                           (const struct sockaddr*)&assocAddressArray[j],
+                           false) == 0) {
+                  selectionArray[i] = true;
+                  selected++;
+                  break;
+               }
             }
+         }
+         else {
+            selectionArray[i] = true;
+            selected++;
          }
       }
    }

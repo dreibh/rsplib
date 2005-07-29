@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.37 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.38 2005/07/29 09:18:23 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -64,11 +64,11 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
 {
    /* ====== ASAP Instance settings ======================================= */
    asapInstance->RegistrarRequestMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarRequestMaxTrials,
-                                                             ASAP_DEFAULT_NAMESERVER_REQUEST_MAXTRIALS);
+                                                            ASAP_DEFAULT_REGISTRAR_REQUEST_MAXTRIALS);
    asapInstance->RegistrarRequestTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarRequestTimeout,
-                                                                   ASAP_DEFAULT_NAMESERVER_REQUEST_TIMEOUT);
+                                                                  ASAP_DEFAULT_REGISTRAR_REQUEST_TIMEOUT);
    asapInstance->RegistrarResponseTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarResponseTimeout,
-                                                                    ASAP_DEFAULT_NAMESERVER_RESPONSE_TIMEOUT);
+                                                                   ASAP_DEFAULT_REGISTRAR_RESPONSE_TIMEOUT);
    asapInstance->CacheElementTimeout = (card64)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
                                                               ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
 
@@ -209,14 +209,14 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
 
    if(asapInstance->RegistrarSocket < 0) {
       if(sd < 0) {
-         LOG_NOTE
+         LOG_ACTION
          fputs("Starting registrar hunt...\n", stdlog);
          LOG_END
          assocID = registrarTableGetRegistrar(asapInstance->RegistrarSet,
                                               asapInstance->RegistrarHuntSocket,
                                               &asapInstance->RegistrarIdentifier);
          if(assocID == 0) {
-            LOG_ERROR
+            LOG_ACTION
             fputs("Unable to connect to a registrar\n", stdlog);
             LOG_END
             return(false);
@@ -224,8 +224,9 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
 
          LOG_VERBOSE3
          fprintf(stdlog, "Connection to registrar $%08x successfully established on association %u\n",
-               asapInstance->RegistrarIdentifier, assocID);
+                 asapInstance->RegistrarIdentifier, assocID);
          LOG_END
+         asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
 
          sd = sctp_peeloff(asapInstance->RegistrarHuntSocket,
                                                       assocID, NULL, NULL);
@@ -309,12 +310,8 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
    bool result;
 
    if(asapInstanceConnectToRegistrar(asapInstance, -1) == false) {
-      LOG_ERROR
-      fputs("No registrar available\n", stdlog);
-      LOG_END
       return(RSPERR_NO_REGISTRAR);
    }
-
    result = rserpoolMessageSend(IPPROTO_SCTP,
                                 asapInstance->RegistrarSocket,
                                 0, 0,
@@ -324,9 +321,6 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
       return(RSPERR_OKAY);
    }
 
-   LOG_ERROR
-   fputs("Sending request failed\n", stdlog);
-   LOG_END
    return(RSPERR_WRITE_ERROR);
 }
 
@@ -424,14 +418,14 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
                                     asapInstance->RegistrarResponseTimeout);
          }
 
-         LOG_ERROR
+         LOG_VERBOSE2
          fprintf(stdlog, "Request trial #%u failed - no valid response from registrar\n", (unsigned int)i + 1);
          LOG_END
          asapInstanceDisconnectFromRegistrar(asapInstance, true);
          result = RSPERR_READ_ERROR;
       }
       else {
-         LOG_ERROR
+         LOG_VERBOSE2
          fprintf(stdlog, "Request trial #%u failed - unable to send request\n", (unsigned int)i + 1);
          LOG_END
          asapInstanceDisconnectFromRegistrar(asapInstance, true);
@@ -645,6 +639,14 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
       message->Handle     = *poolHandle;
       message->Identifier = identifier;
       result = asapInstanceSendRequest(asapInstance, message);
+      if(result != RSPERR_OKAY) {
+         LOG_VERBOSE2
+         fprintf(stdlog, "Failed to send failure report for pool element $%08x of pool ",
+               (unsigned int)identifier);
+         poolHandlePrint(poolHandle, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+      }
       rserpoolMessageDelete(message);
    }
    else {
@@ -714,7 +716,7 @@ static unsigned int asapInstanceDoHandleResolution(struct ASAPInstance* asapInst
             }
          }
          else {
-            LOG_WARNING
+            LOG_VERBOSE2
             fprintf(stdlog, "Handle Resolution at registrar for pool ");
             poolHandlePrint(poolHandle, stdlog);
             fputs(" failed: ", stdlog);
@@ -726,7 +728,7 @@ static unsigned int asapInstanceDoHandleResolution(struct ASAPInstance* asapInst
          rserpoolMessageDelete(response);
       }
       else {
-         LOG_WARNING
+         LOG_VERBOSE2
          fprintf(stdlog, "Handle Resolution at registrar for pool ");
          poolHandlePrint(poolHandle, stdlog);
          fputs(" failed: ", stdlog);
@@ -851,6 +853,7 @@ static void asapInstanceHandleEndpointKeepAlive(
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolNode)*        poolNode;
+   unsigned int                      result;
    int                               sd;
 
    LOG_VERBOSE2
@@ -876,7 +879,8 @@ static void asapInstanceHandleEndpointKeepAlive(
             asapInstanceDisconnectFromRegistrar(asapInstance, true);
             if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
                /* The new registrar ID is already known */
-               asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
+               asapInstance->RegistrarIdentifier          = message->RegistrarIdentifier;
+               asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
             }
          }
          else {
@@ -914,7 +918,12 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_VERBOSE2
          fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
          LOG_END
-         asapInstanceSendRequest(asapInstance, message);
+         result = asapInstanceSendRequest(asapInstance, message);
+         if(result != RSPERR_OKAY) {
+            LOG_WARNING
+            fprintf(stdlog, "Failed to send KeepAliveAck for pool element $%08x\n", message->Identifier);
+            LOG_END
+         }
 
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
       }

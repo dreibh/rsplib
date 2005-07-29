@@ -1,6 +1,4 @@
 - Registrar-Table:
-  Timeouts korrigieren!
-- Fractal-PU:
-  PE funktioniert nicht richtig mit Valgrind (Übertragung von n ...)
+  Timeouts korrigieren! OK
 - Registrar:
   Filterung von Registrar-Transport
