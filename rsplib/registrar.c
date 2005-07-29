@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.13 2005/07/29 09:18:23 dreibh Exp $
+ *  $Id: registrar.c,v 1.14 2005/07/29 11:26:51 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1499,7 +1499,7 @@ static size_t filterValidAddresses(
    for(i = 0;i < sourceAddressBlock->Addresses;i++) {
       selectionArray[i] = false;
       if(getScope((const struct sockaddr*)&sourceAddressBlock->AddressArray[i]) >= 4) {
-         if(assocAddressArray != NULL)
+         if(assocAddressArray != NULL) {
             for(j = 0;j < assocAddresses;j++) {
                if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
                            (const struct sockaddr*)&assocAddressArray[j],
