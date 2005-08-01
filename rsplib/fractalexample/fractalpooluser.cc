@@ -348,11 +348,10 @@ void FractalPU::run()
    for(;;) {
       LastPoolElementID = 0;
 
-      /*
       tags[0].Tag  = TAG_TuneSCTP_MinRTO;
       tags[0].Data = 200;
       tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
-      tags[1].Data = 500;
+      tags[1].Data = 1000;
       tags[2].Tag  = TAG_TuneSCTP_InitialRTO;
       tags[2].Data = 250;
       tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
@@ -362,8 +361,7 @@ void FractalPU::run()
       tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
       tags[5].Data = 12;
       tags[6].Tag  = TAG_DONE;
-      */
-      tags[0].Tag  = TAG_DONE;
+      // tags[0].Tag  = TAG_DONE;
 
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {

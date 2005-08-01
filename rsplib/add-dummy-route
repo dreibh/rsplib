@@ -4,11 +4,11 @@
 
 if [ ! -e /etc/sysconfig/network-scripts/ifcfg-dummy0 ] ; then
    echo "Manual ifconfig..."
+   ifconfig dummy0 down
    ifconfig dummy0 172.31.255.1 netmask 255.255.255.0 up
    ip addr add 2000:1:2:3:4:5:6:7/64 dev dummy0
-   ip addr add fec0:1:2:3:4:5:6:7/64 dev dummy0
-   ip addr add fec1:9:8:7:6:5:4:3/64 dev dummy0
-   ip
+   # ip addr add fec0:1:2:3:4:5:6:7/64 dev dummy0
+   # ip addr add fec1:9:8:7:6:5:4:3/64 dev dummy0
 else
    ifup dummy0
 fi

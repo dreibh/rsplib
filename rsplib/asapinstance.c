@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.39 2005/08/01 10:01:18 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.40 2005/08/01 17:32:48 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -857,8 +857,8 @@ static void asapInstanceHandleEndpointKeepAlive(
    int                               sd;
 
    LOG_VERBOSE2
-   fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool via assoc %u",
-           message->Identifier, (unsigned int)message->AssocID);
+   fprintf(stdlog, "EndpointKeepAlive from registrar $%08x via assoc %u for pool ",
+           message->RegistrarIdentifier, (unsigned int)message->AssocID);
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
@@ -900,7 +900,7 @@ static void asapInstanceHandleEndpointKeepAlive(
    }
    else {
       if(asapInstance->RegistrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
-         message->RegistrarIdentifier = message->RegistrarIdentifier;
+         asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
       }
    }
 
