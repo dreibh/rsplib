@@ -1,5 +1,5 @@
 /*
- *  $Id: netdouble.c,v 1.1 2005/07/28 14:15:15 dreibh Exp $
+ *  $Id: netdouble.c,v 1.2 2005/08/01 10:01:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -36,6 +36,7 @@
  */
 
 #include <math.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 
 #include "netdouble.h"

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.52 2005/04/13 15:16:49 dreibh Exp $
+ *  $Id: netutilities.c,v 1.53 2005/08/01 10:01:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -505,9 +505,9 @@ static int my_sctp_bindx(int              sockfd,
 
 
 /* ###### Wrapper for sctp_connectx() #################################### */
-static int my_sctp_connectx(int                    sockfd,
-                            const struct sockaddr* addrs,
-                            int                    addrcnt)
+static int my_sctp_connectx(int              sockfd,
+                            struct sockaddr* addrs,
+                            int              addrcnt)
 {
 #if 0
 #warning Using Solaris-compatible sctp_connectx()!

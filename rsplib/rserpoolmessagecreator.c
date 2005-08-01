@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.29 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.30 2005/08/01 10:01:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1026,7 +1026,7 @@ static bool createHandleTableRequestMessage(struct RSerPoolMessage* message)
 static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter*     sp;
-   struct ST_CLASS(HandleTableExtract)* hte;
+   struct ST_CLASS(HandleTableExtract)* hte = NULL;
    struct PoolHandle*                   lastPoolHandle;
    unsigned int                         flags;
    int                                  result;
@@ -1106,6 +1106,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
       }
    }
 
+   CHECK(hte != NULL);
    if(hte->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) {
       free(message->PeerListNodePtr->UserData);
       message->PeerListNodePtr->UserData = NULL;

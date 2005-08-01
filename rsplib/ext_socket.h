@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.4 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: ext_socket.h,v 1.5 2005/08/01 10:01:18 dreibh Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -57,9 +57,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  1
-#define SOCKETAPI_MINOR_VERSION  4000
-
-
+#define SOCKETAPI_MINOR_VERSION  7000
 
 
 #define MSG_UNORDERED    (1 << 31)
@@ -76,6 +74,16 @@
 #define MSG_ADDR_OVER    (1 << 25)
 #define MSG_SEND_TO_ALL  (1 << 24)
 #define MSG_MULTIADDRS   (1 << 23)
+
+#define SCTP_UNORDERED    MSG_UNORDERED
+#define SCTP_UNBUNDLED    MSG_UNBUNDLED
+#define SCTP_NOTIFICATION MSG_NOTIFICATION
+#define SCTP_ABORT        MSG_ABORT
+#define SCTP_EOF          MSG_EOF
+#define SCTP_SHUTDOWN     MSG_SHUTDOWN
+#define SCTP_ADDR_OVER    MSG_ADDR_OVER
+#define SCTP_SEND_TO_ALL  MSG_SEND_TO_ALL
+#define SCTP_MULTIADDRS   MSG_MULTIADDRS
 
 
 typedef unsigned int   sctp_assoc_t;
@@ -426,7 +434,7 @@ int ext_connectx(int                    sockfd,
                  int                    addrcnt);
 #define sctp_connectx ext_connectx
 
-int sctp_peeloff(int sockfd, sctp_assoc_t id, struct sockaddr* addr, socklen_t* addrlen);
+int sctp_peeloff(int sockfd, sctp_assoc_t id);
 
 int sctp_getpaddrs(int sockfd, sctp_assoc_t id, struct sockaddr** addrs);
 void sctp_freepaddrs(struct sockaddr* addrs);

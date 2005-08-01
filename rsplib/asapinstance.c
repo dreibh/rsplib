@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.38 2005/07/29 09:18:23 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.39 2005/08/01 10:01:18 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -224,12 +224,12 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
 
          LOG_VERBOSE3
          fprintf(stdlog, "Connection to registrar $%08x successfully established on association %u\n",
-                 asapInstance->RegistrarIdentifier, assocID);
+                 asapInstance->RegistrarIdentifier, (unsigned int)assocID);
          LOG_END
          asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
 
          sd = sctp_peeloff(asapInstance->RegistrarHuntSocket,
-                                                      assocID, NULL, NULL);
+                                                      assocID);
          if(sd < 0) {
             LOG_ERROR
             logerror("sctp_peeloff() for registrar association failed");
@@ -858,7 +858,7 @@ static void asapInstanceHandleEndpointKeepAlive(
 
    LOG_VERBOSE2
    fprintf(stdlog, "Endpoint KeepAlive for $%08x of pool via assoc %u",
-           message->Identifier, message->AssocID);
+           message->Identifier, (unsigned int)message->AssocID);
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
@@ -870,11 +870,11 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_NOTE
          fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x -> replacing home registrar",
                message->RegistrarIdentifier,
-               message->AssocID,
+               (unsigned int)message->AssocID,
                asapInstance->RegistrarIdentifier);
          LOG_END
 
-         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket, message->AssocID, NULL, NULL);
+         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket, message->AssocID);
          if(sd >= 0) {
             asapInstanceDisconnectFromRegistrar(asapInstance, true);
             if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
@@ -893,7 +893,7 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_WARNING
          fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x. The H bit is not set, therefore ignoring it.",
                message->RegistrarIdentifier,
-               message->AssocID,
+               (unsigned int)message->AssocID,
                asapInstance->RegistrarIdentifier);
          LOG_END
       }
