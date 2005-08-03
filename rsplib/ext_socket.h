@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.5 2005/08/01 10:01:18 dreibh Exp $
+ *  $Id: ext_socket.h,v 1.6 2005/08/03 09:53:42 dreibh Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -559,6 +559,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#include <netinet/in.h>
 #include <netinet/sctp.h>
 
 #endif

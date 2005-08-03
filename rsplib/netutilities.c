@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.53 2005/08/01 10:01:18 dreibh Exp $
+ *  $Id: netutilities.c,v 1.54 2005/08/03 09:53:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -61,7 +61,6 @@
 #endif
 
 #ifdef HAVE_KERNEL_SCTP
-#ifndef HAVE_SCTP_CONNECTX
 static const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
                                                    int                    addrcnt)
 {
@@ -99,7 +98,6 @@ static const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
    LOG_END
    return(bestScopedAddress);
 }
-#endif
 #endif
 
 #ifdef HAVE_KERNEL_SCTP
@@ -532,7 +530,14 @@ result=-1;
 
    return(result);
 #else
-   return(sctp_connectx(sockfd, addrs, addrcnt));
+#ifdef LINUX
+#warning Using sctp_connectx() warpping instead of sctp_connectx()! SHOULD BE REMOVED!
+   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
+   return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
+#else
+   int result = sctp_connectx(sockfd, addrs, addrcnt);
+   return(result);
+#endif
 #endif
 }
 
@@ -1719,7 +1724,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t)sizeof(rtoinfo)) < 0) {
          result = false;
          LOG_WARNING
-         perror("SCTP_RTOINFO");
+         logerror("SCTP_RTOINFO");
          fprintf(stdlog, "Unable to update RTO info of socket %d, assoc %u\n", sockfd, (unsigned int)assocID);
          LOG_END
       }
@@ -1757,7 +1762,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t)sizeof(assocParams)) < 0) {
          result = false;
          LOG_WARNING
-         perror("SCTP_ASSOCINFO");
+         logerror("SCTP_ASSOCINFO");
          fprintf(stdlog, "Unable to update Assoc info of socket %d, assoc %u\n", sockfd, (unsigned int)assocID);
          LOG_END
       }
@@ -1857,6 +1862,26 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
       LOG_END
    }
 
+   return(result);
+}
+
+
+/* ###### Establish connection ########################################### */
+int connectplus(int                   sockfd,
+                union sockaddr_union* addressArray,
+                const size_t          addresses)
+{
+   struct sockaddr* packedAddresses;
+   int              result;
+
+   packedAddresses = pack_sockaddr_union(addressArray, addresses);
+   if(packedAddresses) {
+      result = my_sctp_connectx(sockfd, packedAddresses, addresses);
+      free(packedAddresses);
+   }
+   else {
+      result = -ENOMEM;
+   }
    return(result);
 }
 

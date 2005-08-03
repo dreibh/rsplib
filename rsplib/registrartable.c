@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.3 2005/07/29 09:18:23 dreibh Exp $
+ *  $Id: registrartable.c,v 1.4 2005/08/03 09:53:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -312,6 +312,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
 {
    struct TransportAddressBlock*  transportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
+   int                            result;
    size_t                         i;
 
    i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
@@ -350,11 +351,12 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
             fputs("...\n",  stdlog);
             LOG_END
 
-            if(sendtoplus(registrarFD, NULL, 0, 0,
-                          transportAddressBlock->AddressArray,
-                          transportAddressBlock->Addresses,
-                          0, 0, 0, 0xffffffff, 0) < 0) {
-               LOG_VERBOSE
+            result = connectplus(registrarFD,
+                                 transportAddressBlock->AddressArray,
+                                 transportAddressBlock->Addresses);
+            if((result < 0) &&
+               (errno != EINPROGRESS) && (errno != EISCONN)) {
+               LOG_WARNING
                fputs("Connection to registrar ",  stdlog);
                transportAddressBlockPrint(transportAddressBlock, stdlog);
                fputs(" failed\n",  stdlog);

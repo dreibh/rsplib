@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.17 2005/04/13 15:16:49 dreibh Exp $
+ *  $Id: netutilities.h,v 1.18 2005/08/03 09:53:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -299,6 +299,18 @@ size_t getSocklen(const struct sockaddr* address);
 bool bindplus(int                   sockfd,
               union sockaddr_union* addressArray,
               const size_t          addresses);
+
+/**
+  * Establish a connection.
+  *
+  * @param sockfd Socket descriptor.
+  * @param addressArray Destination address or NULL for connection-oriented socket.
+  * @param addresses Length of destination address or 0 if not given.
+  * @return 0 in case of success; error code <0 otherwise.
+  */
+int connectplus(int                   sockfd,
+                union sockaddr_union* addressArray,
+                const size_t          addresses);
 
 /**
   * Wrapper for sendmsg() with timeout and support for SCTP parameters.
