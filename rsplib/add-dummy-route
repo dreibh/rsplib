@@ -1,6 +1,11 @@
 #!/bin/sh
 
+/etc/init.d/shorewall stop
 /etc/init.d/iptables stop
+/etc/init.d/ip6tables stop
+
+iptables -L
+ip6tables -L
 
 if [ ! -e /etc/sysconfig/network-scripts/ifcfg-dummy0 ] ; then
    echo "Manual ifconfig..."

@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.54 2005/08/03 09:53:42 dreibh Exp $
+ *  $Id: netutilities.c,v 1.55 2005/08/03 10:40:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -55,49 +55,10 @@
 #include <sys/sockio.h>
 #endif
 
+
 #ifdef SOLARIS
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
 #define CMSG_LEN(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + (len))
-#endif
-
-#ifdef HAVE_KERNEL_SCTP
-static const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
-                                                   int                    addrcnt)
-{
-   const struct sockaddr* bestScopedAddress = addrs;
-   unsigned int           bestScope   = getScope(addrs);
-   unsigned int           newScope;
-   const struct sockaddr* a;
-   size_t                 i;
-
-   LOG_VERBOSE4
-   fputs("Finding best scope out of address set:\n", stdlog);
-   a = addrs;
-   for(i = 0;i < addrcnt;i++) {
-      fputs("   - ", stdlog);
-      fputaddress(a, true, stdlog);
-      fprintf(stdlog, ", scope=%u\n", getScope(a));
-      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
-   }
-   LOG_END
-
-   a = addrs;
-   for(i = 1;i < addrcnt;i++) {
-      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
-      newScope = getScope(a);
-      if(newScope > bestScope) {
-         bestScopedAddress = a;
-         bestScope   = newScope;
-      }
-   }
-
-   LOG_VERBOSE4
-   fputs("Using address ", stdlog);
-   fputaddress(bestScopedAddress, true, stdlog);
-   fprintf(stdlog, ", scope=%u\n", bestScope);
-   LOG_END
-   return(bestScopedAddress);
-}
 #endif
 
 #ifdef HAVE_KERNEL_SCTP
@@ -530,11 +491,12 @@ result=-1;
 
    return(result);
 #else
-#ifdef LINUX
+#if defined LINUX && defined HAVE_KERNEL_SCTP
 #warning Using sctp_connectx() warpping instead of sctp_connectx()! SHOULD BE REMOVED!
    const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
    return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
 #else
+#warning Using sctp_connectx()
    int result = sctp_connectx(sockfd, addrs, addrcnt);
    return(result);
 #endif
@@ -1004,6 +966,46 @@ unsigned int getScope(const struct sockaddr* address)
       LOG_END_FATAL
    }
    return(0);
+}
+
+
+/* ###### Get one address of highest scope from address array ############ */
+const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
+                                            int                    addrcnt)
+{
+   const struct sockaddr* bestScopedAddress = addrs;
+   unsigned int           bestScope   = getScope(addrs);
+   unsigned int           newScope;
+   const struct sockaddr* a;
+   size_t                 i;
+
+   LOG_VERBOSE4
+   fputs("Finding best scope out of address set:\n", stdlog);
+   a = addrs;
+   for(i = 0;i < addrcnt;i++) {
+      fputs("   - ", stdlog);
+      fputaddress(a, true, stdlog);
+      fprintf(stdlog, ", scope=%u\n", getScope(a));
+      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
+   }
+   LOG_END
+
+   a = addrs;
+   for(i = 1;i < addrcnt;i++) {
+      a = (const struct sockaddr*)((long)a + (long)getSocklen(a));
+      newScope = getScope(a);
+      if(newScope > bestScope) {
+         bestScopedAddress = a;
+         bestScope   = newScope;
+      }
+   }
+
+   LOG_VERBOSE4
+   fputs("Using address ", stdlog);
+   fputaddress(bestScopedAddress, true, stdlog);
+   fprintf(stdlog, ", scope=%u\n", bestScope);
+   LOG_END
+   return(bestScopedAddress);
 }
 
 

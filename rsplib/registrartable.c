@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.4 2005/08/03 09:53:42 dreibh Exp $
+ *  $Id: registrartable.c,v 1.5 2005/08/03 10:40:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -201,21 +201,20 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       registrarTable->AnnounceSocket = ext_socket(registrarTable->AnnounceAddress.sa.sa_family,
                                                SOCK_DGRAM, IPPROTO_UDP);
       if(registrarTable->AnnounceSocket >= 0) {
+         fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
+                     registrarTable->Dispatcher,
+                     registrarTable->AnnounceSocket,
+                     FDCE_Read,
+                     registrarAnnouceFDCallback,
+                     registrarTable);
+
          setReusable(registrarTable->AnnounceSocket, 1);
          if(bindplus(registrarTable->AnnounceSocket,
                      &registrarTable->AnnounceAddress,
                      1) == true) {
-            if(joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                         &registrarTable->AnnounceAddress,
-                                         true)) {
-               fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
-                           registrarTable->Dispatcher,
-                           registrarTable->AnnounceSocket,
-                           FDCE_Read,
-                           registrarAnnouceFDCallback,
-                           registrarTable);
-            }
-            else {
+            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
+                                          &registrarTable->AnnounceAddress,
+                                          true)) {
                LOG_ERROR
                fputs("Joining multicast group ",  stdlog);
                fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress, true, stdlog);

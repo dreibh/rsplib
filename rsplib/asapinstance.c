@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.40 2005/08/01 17:32:48 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.41 2005/08/03 10:40:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -127,6 +127,13 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
             return(NULL);
          }
 
+         fdCallbackNew(&asapInstance->RegistrarHuntFDCallback,
+                       asapInstance->StateMachine,
+                       asapInstance->RegistrarHuntSocket,
+                       FDCE_Read|FDCE_Exception,
+                       handleRegistrarConnectionEvent,
+                       (void*)asapInstance);
+
          if(bindplus(asapInstance->RegistrarHuntSocket, NULL, 0) == false) {
             LOG_ERROR
             logerror("Binding registrar hunt socket failed");
@@ -166,13 +173,6 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
             logerror("setsockopt() for SCTP_AUTOCLOSE on registrar hunt socket failed");
             exit(1);
          }
-
-         fdCallbackNew(&asapInstance->RegistrarHuntFDCallback,
-                       asapInstance->StateMachine,
-                       asapInstance->RegistrarHuntSocket,
-                       FDCE_Read|FDCE_Exception,
-                       handleRegistrarConnectionEvent,
-                       (void*)asapInstance);
       }
    }
    return(asapInstance);

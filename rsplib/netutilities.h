@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.18 2005/08/03 09:53:42 dreibh Exp $
+ *  $Id: netutilities.h,v 1.19 2005/08/03 10:40:27 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -222,6 +222,15 @@ int getFamily(const struct sockaddr* address);
   */
 unsigned int getScope(const struct sockaddr* address);
 
+/**
+  * Get one address of highest scope from address array.
+  *
+  * @param addrs Address array.
+  * @param addrcnt Address count.
+  * @return Selected address.
+  */
+const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
+                                            int                    addrcnt);
 
 
 /**
