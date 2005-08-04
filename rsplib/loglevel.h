@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.7 2005/08/04 09:28:45 dreibh Exp $
+ *  $Id: loglevel.h,v 1.8 2005/08/04 11:19:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -91,9 +91,9 @@ void setLogColor(const unsigned int color);
               __FUNCTION__                   \
               );                             \
       setLogColor(c1);                       \
-      fputs(prefix,stdlog);                  \
       printTimeStamp(stdlog);                \
-      setLogColor(c2);
+      setLogColor(c2);                       \
+      fputs(prefix,stdlog);
 
 #define LOG_END             \
       setLogColor(0);       \

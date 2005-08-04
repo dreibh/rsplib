@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.15 2005/08/04 09:28:45 dreibh Exp $
+ *  $Id: registrar.c,v 1.16 2005/08/04 11:19:38 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1837,10 +1837,14 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
                        HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS,
                        HANDLERESOLUTION_MAX_INCREMENT);
    if(message->Error == RSPERR_OKAY) {
-      LOG_VERBOSE
-      fprintf(stdlog, "Got %u element(s):\n", (unsigned int)poolElementNodes);
+      LOG_VERBOSE1
+      fprintf(stdlog, "Selected %u element%s\n", (unsigned int)poolElementNodes,
+              (poolElementNodes == 1) ? "" : "s");
+      LOG_END
+      LOG_VERBOSE2
+      fputs("Selected pool elements:\n", stdlog);
       for(i = 0;i < poolElementNodes;i++) {
-         fprintf(stdlog, "#%02u: ", (unsigned int)i + 1);
+         fprintf(stdlog, "#%02u: PE ", (unsigned int)i + 1);
          ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
                   stdlog,
                   PENPO_USERTRANSPORT|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_UR_REPORTS|PENPO_HOME_PR);
