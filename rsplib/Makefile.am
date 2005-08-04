@@ -124,7 +124,7 @@ testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 examplepu_SOURCES = examplepu.c
 examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c fractalgeneratorexample.h
+fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c netdouble.h fractalgeneratorpackets.h
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 fork_SOURCES = fork.c
