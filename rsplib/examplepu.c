@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.16 2004/12/16 16:16:59 dreibh Exp $
+ *  $Id: examplepu.c,v 1.17 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -54,9 +54,9 @@
 
 
 struct SessionDescriptor* Session;
-card64                    OutCalls = 0;
-card64                    InBytes  = 0;
-card64                    OutBytes = 0;
+unsigned long long        OutCalls = 0;
+unsigned long long        InBytes  = 0;
+unsigned long long        OutBytes = 0;
 
 
 /* ###### Handle standard input ############################################# */
@@ -122,10 +122,10 @@ static void handleAutoTimer()
 /* ###### Handle server reply ############################################### */
 static void handleServerReply()
 {
-   struct TagItem tags[16];
-   char           buffer[8193];
-   ssize_t        received;
-   static card64  counter = 1;
+   struct TagItem            tags[16];
+   char                      buffer[8193];
+   ssize_t                   received;
+   static unsigned long long counter = 1;
 
    tags[0].Tag = TAG_RspIO_PE_ID;
    tags[1].Tag = TAG_DONE;
@@ -166,10 +166,10 @@ int main(int argc, char** argv)
    unsigned int              statusArray[1];
    fd_set                    readfdset;
    char*                     poolHandle    = "EchoPool";
-   card64                    autoInterval  = 0;
-   card64                    selectTimeout = 0;
-   card64                    nextAutoSend  = 250000;
-   card64                    now;
+   unsigned long long        autoInterval  = 0;
+   unsigned long long        selectTimeout = 0;
+   unsigned long long        nextAutoSend  = 250000;
+   unsigned long long        now;
    int                       result;
    int                       i, n;
 
@@ -181,7 +181,7 @@ int main(int argc, char** argv)
          poolHandle = (char*)&argv[i][4];
       }
       else if(!(strncmp(argv[i],"-auto=",6))) {
-         autoInterval = 1000 * (card64)atol((char*)&argv[i][6]);
+         autoInterval = 1000 * (unsigned long long)atol((char*)&argv[i][6]);
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-identifier=", 12))) {

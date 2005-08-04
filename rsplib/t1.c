@@ -14,9 +14,9 @@ int main(int argc, char** argv)
    int fd2;
    int a,b;
    char buf[256];
-   card64 z=0;
+   unsigned long long z=0;
    struct sockaddr_storage adr;
-   card64 start,now;
+   unsigned long long start,now;
    struct timeval timeout;
 
    rspInitialize(NULL);

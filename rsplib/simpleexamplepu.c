@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepu.c,v 1.9 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: simpleexamplepu.c,v 1.10 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -54,10 +54,10 @@
 static int      DataSocket         = -1;
 static uint32_t Identifier         = 0x00000000;
 static char*    PoolName           = NULL;
-static card64   InBytes            = 0;
-static card64   OutBytes           = 0;
-static card64   OutCalls           = 0;
-static card64   ConnectTimeout     = 3000000;
+static unsigned long long   InBytes            = 0;
+static unsigned long long   OutBytes           = 0;
+static unsigned long long   OutCalls           = 0;
+static unsigned long long   ConnectTimeout     = 3000000;
 
 
 
@@ -188,7 +188,7 @@ static void sendToPoolElement(char* buffer)
 #endif
    io.iov_base = buffer;
    io.iov_len  = received;
-   OutBytes += (card64)received;
+   OutBytes += (unsigned long long)received;
 
    result = ext_sendmsg(DataSocket, &msg, msg.msg_flags);
    if(result < 0) {
@@ -243,7 +243,7 @@ static void handleServerReply()
    struct msghdr msg;
    struct iovec  io;
    ssize_t       received;
-   static card64 counter = 1;
+   static unsigned long long counter = 1;
 
    msg.msg_name       = NULL;
    msg.msg_namelen    = 0;
@@ -266,8 +266,8 @@ static void handleServerReply()
 
 /*
       printf("[in=%lld out=%lld] P%lld.%lld> ",
-             (card64)InBytes, (card64)OutBytes,
-             (card64)Handle, (card64)counter++);
+             (unsigned long long)InBytes, (unsigned long long)OutBytes,
+             (unsigned long long)Handle, (unsigned long long)counter++);
 */
       printf("[in=%lld",InBytes);
       printf(" out=%lld] P",OutBytes);
@@ -291,10 +291,10 @@ int main(int argc, char** argv)
    int            result;
    struct timeval timeout;
    fd_set         readfdset;
-   card64         now;
-   card64         selectTimeout = 0;
-   card64         autoInterval  = 0;
-   card64         nextAutoSend  = 0;
+   unsigned long long         now;
+   unsigned long long         selectTimeout = 0;
+   unsigned long long         autoInterval  = 0;
+   unsigned long long         nextAutoSend  = 0;
 
    if(argc < 2) {
       printf("Usage: %s [Pool Name] {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n",argv[0]);
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
             }
          }
          else if(!(strncmp(argv[n],"-auto=",6))) {
-            autoInterval = 1000 * (card64)atol((char*)&argv[n][6]);
+            autoInterval = 1000 * (unsigned long long)atol((char*)&argv[n][6]);
          }
          else {
             puts("Bad arguments!");

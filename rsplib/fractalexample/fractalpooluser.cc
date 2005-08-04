@@ -348,6 +348,7 @@ void FractalPU::run()
    for(;;) {
       LastPoolElementID = 0;
 
+/*
       tags[0].Tag  = TAG_TuneSCTP_MinRTO;
       tags[0].Data = 200;
       tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
@@ -361,7 +362,8 @@ void FractalPU::run()
       tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
       tags[5].Data = 12;
       tags[6].Tag  = TAG_DONE;
-      // tags[0].Tag  = TAG_DONE;
+*/
+      tags[0].Tag  = TAG_DONE;
 
       Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
       if(Session) {
@@ -437,6 +439,10 @@ void FractalPU::run()
                         qApp->unlock();
                       break;
                   }
+               }
+               else if(received == RspRead_Timeout) {
+                  puts("Timeout occurred -> forcing failover!");
+                  rspSessionFailover(Session);
                }
 
                if(!Running) {

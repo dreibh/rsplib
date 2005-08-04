@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.21 2004/12/16 16:16:58 dreibh Exp $
+ *  $Id: examplepe.c,v 1.22 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -200,8 +200,8 @@ int main(int argc, char** argv)
 #endif
 
    GList*                        clientList                     = NULL;
-   card64                        start                          = getMicroTime();
-   card64                        stop                           = 0;
+   unsigned long long            start                          = getMicroTime();
+   unsigned long long            stop                           = 0;
    int                           type                           = SOCK_STREAM;
    int                           protocol                       = IPPROTO_SCTP;
    unsigned short                port                           = 0;
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
          protocol = IPPROTO_TCP;
       }
       else if(!(strncmp(argv[i], "-stop=" ,6))) {
-         stop = start + ((card64)1000000 * (card64)atol((char*)&argv[i][6]));
+         stop = start + ((unsigned long long)1000000 * (unsigned long long)atol((char*)&argv[i][6]));
       }
       else if(!(strncmp(argv[i], "-port=" ,6))) {
          port = atol((char*)&argv[i][6]);

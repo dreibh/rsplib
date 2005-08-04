@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.41 2005/08/03 10:40:27 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.42 2005/08/04 15:11:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -65,12 +65,12 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance, struct TagI
    /* ====== ASAP Instance settings ======================================= */
    asapInstance->RegistrarRequestMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarRequestMaxTrials,
                                                             ASAP_DEFAULT_REGISTRAR_REQUEST_MAXTRIALS);
-   asapInstance->RegistrarRequestTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarRequestTimeout,
-                                                                  ASAP_DEFAULT_REGISTRAR_REQUEST_TIMEOUT);
-   asapInstance->RegistrarResponseTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarResponseTimeout,
-                                                                   ASAP_DEFAULT_REGISTRAR_RESPONSE_TIMEOUT);
-   asapInstance->CacheElementTimeout = (card64)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
-                                                              ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
+   asapInstance->RegistrarRequestTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarRequestTimeout,
+                                                                              ASAP_DEFAULT_REGISTRAR_REQUEST_TIMEOUT);
+   asapInstance->RegistrarResponseTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarResponseTimeout,
+                                                                               ASAP_DEFAULT_REGISTRAR_RESPONSE_TIMEOUT);
+   asapInstance->CacheElementTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
+                                                                          ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
 
 
    /* ====== Show results =================================================== */

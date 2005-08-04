@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.26 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rsplib.c,v 1.27 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -392,18 +392,18 @@ int rspSelect(int             n,
               fd_set*         exceptfds,
               struct timeval* timeout)
 {
-   struct timeval mytimeout;
-   fd_set         myreadfds;
-   fd_set         mywritefds;
-   fd_set         myexceptfds;
-   fd_set         testfds;
-   card64         testTS;
-   int            myn;
-   int            i;
-   card64         asapTimeout;
-   card64         userTimeout;
-   card64         newTimeout;
-   int            result;
+   struct timeval     mytimeout;
+   fd_set             myreadfds;
+   fd_set             mywritefds;
+   fd_set             myexceptfds;
+   fd_set             testfds;
+   unsigned long long testTS;
+   unsigned long long asapTimeout;
+   unsigned long long userTimeout;
+   unsigned long long newTimeout;
+   int                result;
+   int                myn;
+   int                i;
 
    /* ====== Schedule ==================================================== */
    /* pthreads seem to have the property that scheduling is quite
@@ -415,15 +415,15 @@ int rspSelect(int             n,
    /* ====== Collect data for ext_select() call ========================== */
    lock(&gDispatcher, NULL);
    if(timeout == NULL) {
-      userTimeout = (card64)~0;
+      userTimeout = (unsigned long long)~0;
       mytimeout.tv_sec  = ~0;
       mytimeout.tv_usec = 0;
    }
    else {
-      userTimeout = ((card64)timeout->tv_sec * 1000000) + (card64)timeout->tv_usec;
+      userTimeout = ((unsigned long long)timeout->tv_sec * 1000000) + (unsigned long long)timeout->tv_usec;
    }
    dispatcherGetSelectParameters(&gDispatcher, &myn, &myreadfds, &mywritefds, &myexceptfds, &testfds, &testTS, &mytimeout);
-   asapTimeout = ((card64)mytimeout.tv_sec * 1000000) + (card64)mytimeout.tv_usec;
+   asapTimeout = ((unsigned long long)mytimeout.tv_sec * 1000000) + (unsigned long long)mytimeout.tv_usec;
    newTimeout  = min(userTimeout, asapTimeout);
    mytimeout.tv_sec  = newTimeout / 1000000;
    mytimeout.tv_usec = newTimeout % 1000000;

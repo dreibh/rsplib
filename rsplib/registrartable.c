@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.6 2005/08/04 09:28:46 dreibh Exp $
+ *  $Id: registrartable.c,v 1.7 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -57,7 +57,7 @@
 
 /* ###### Registrar announce callback  ######################################### */
 static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTable,
-                                            int                 sd)
+                                            int                    sd)
 {
    struct RSerPoolMessage*        message;
    struct ST_CLASS(PeerListNode)* peerListNode;
@@ -68,7 +68,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
    unsigned int                   result;
    size_t                         i;
 
-   LOG_VERBOSE2
+   LOG_VERBOSE3
    fputs("Trying to receive registrar announce...\n",  stdlog);
    LOG_END
 
@@ -123,7 +123,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
                         getMicroTime());
                   LOG_VERBOSE3
                   fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
-                  ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_FULL);
+                  ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
                   LOG_END
                }
             }
@@ -174,9 +174,9 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       /* ====== ASAP Instance settings ==================================== */
       registrarTable->RegistrarConnectMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarConnectMaxTrials,
                                                               ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS);
-      registrarTable->RegistrarConnectTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
+      registrarTable->RegistrarConnectTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
                                                                      ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
-      registrarTable->RegistrarAnnounceTimeout = (card64)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
+      registrarTable->RegistrarAnnounceTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
                                                                       ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
 
       CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
@@ -317,9 +317,9 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
          &registrarTable->RegistrarList,
          getMicroTime());
-   LOG_VERBOSE3
+   LOG_VERBOSE2
    fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
-   ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_FULL);
+   ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
    LOG_END
 
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
@@ -385,11 +385,13 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    RegistrarIdentifierType        lastRegistrarIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
    struct ST_CLASS(PeerListNode)* peerListNode;
-   card64                         start;
-   card64                         nextTimeout;
+   sctp_assoc_t                   assocID;
+   ssize_t                        received;
+   unsigned long long             start;
+   unsigned long long             nextTimeout;
+   unsigned long long             lastTrialTimeStamp;
    fd_set                         rfdset;
    unsigned int                   trials;
-   unsigned int                   i;
    int                            n, result;
    int                            flags;
 
@@ -412,13 +414,14 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    if(peerListNode) {
       lastRegistrarIdentifier   = peerListNode->Identifier;
       lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);
-      LOG_NOTE
+      LOG_VERBOSE
       fputs("Randomized registrar hunt start: ", stdlog);
       ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
       fputs("\n", stdlog);
       LOG_END
    }
 
+   lastTrialTimeStamp = 0;
    for(;;) {
       if((lastRegistrarIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
          /* Start new trial, when
@@ -447,11 +450,14 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          }
       }
 
-      /* Try next block of addresses */
-      tryNextBlock(registrarTable,
-                   registrarFD,
-                   &lastRegistrarIdentifier,
-                   &lastTransportAddressBlock);
+      if(lastTrialTimeStamp + registrarTable->RegistrarConnectTimeout < getMicroTime()) {
+         /* Try next block of addresses */
+         tryNextBlock(registrarTable,
+                     registrarFD,
+                     &lastRegistrarIdentifier,
+                     &lastTransportAddressBlock);
+         lastTrialTimeStamp = getMicroTime();
+      }
 
       /* Wait for event */
       FD_ZERO(&rfdset);
@@ -462,8 +468,8 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          n = max(n, registrarTable->AnnounceSocket);
       }
       nextTimeout = registrarTable->RegistrarConnectTimeout;
-      selectTimeout.tv_sec  = nextTimeout / (card64)1000000;
-      selectTimeout.tv_usec = nextTimeout % (card64)1000000;
+      selectTimeout.tv_sec  = nextTimeout / (unsigned long long)1000000;
+      selectTimeout.tv_usec = nextTimeout % (unsigned long long)1000000;
 
       LOG_VERBOSE3
       fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
@@ -498,58 +504,84 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          if(FD_ISSET(registrarTable->AnnounceSocket, &rfdset)) {
             handleRegistrarAnnounceCallback(registrarTable, registrarTable->AnnounceSocket);
          }
-         for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
-            if(FD_ISSET(registrarFD, &rfdset)) {
-               flags = MSG_PEEK;
-               if( (recvfromplus(registrarFD,
-                                 &notification, sizeof(notification), &flags,
-                                 NULL, 0,
-                                 NULL, NULL, NULL, 0) > 0) &&
-                   (flags & MSG_NOTIFICATION) ) {
-                  if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
-                     if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
-                        n = getpaddrsplus(registrarFD,
-                                          notification.sn_assoc_change.sac_assoc_id,
-                                          &peerAddressArray);
-                        if(n > 0) {
-                           LOG_ACTION
-                           fputs("Successfully found registrar at ",  stdlog);
-                           fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
-                           fputs("\n", stdlog);
-                           LOG_END
+         if(FD_ISSET(registrarFD, &rfdset)) {
+            flags    = MSG_PEEK;
+            received = recvfromplus(registrarFD,
+                                    &notification, sizeof(notification), &flags,
+                                    NULL, 0,
+                                    NULL, &assocID, NULL, 0);
+            if(received > 0) {
+               if(flags & MSG_NOTIFICATION) {
+                  /* ====== Notification received ======================== */
+                  flags = 0;
+                  if( (recvfromplus(registrarFD,
+                                    &notification, sizeof(notification), &flags,
+                                    NULL, 0,
+                                    NULL, NULL, NULL, 0) > 0) &&
+                     (flags & MSG_NOTIFICATION) ) {
+                     /* ====== Association change notification =========== */
+                     if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
+                        if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
+                           n = getpaddrsplus(registrarFD,
+                                             notification.sn_assoc_change.sac_assoc_id,
+                                             &peerAddressArray);
+                           if(n > 0) {
+                              LOG_ACTION
+                              fputs("Successfully found registrar at ",  stdlog);
+                              fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
+                              fputs("\n", stdlog);
+                              LOG_END
 
-                           /* ====== Get registrar's entry =============== */
-                           struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
-                           if(registrarAddressBlock) {
-                              transportAddressBlockNew(registrarAddressBlock,
-                                                       IPPROTO_SCTP,
-                                                       getPort(&peerAddressArray[0].sa),
-                                                       0,
-                                                       peerAddressArray, n);
-                              peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
-                                                &registrarTable->RegistrarList,
-                                                0,
-                                                registrarAddressBlock);
-                              if(peerListNode) {
-                                 *registrarIdentifier = peerListNode->Identifier;
-                              }
-                              else {
-                                 *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
+                              /* ====== Get registrar's entry =============== */
+                              struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
+                              if(registrarAddressBlock) {
+                                 transportAddressBlockNew(registrarAddressBlock,
+                                                            IPPROTO_SCTP,
+                                                            getPort(&peerAddressArray[0].sa),
+                                                            0,
+                                                            peerAddressArray, n);
+                                 peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
+                                                   &registrarTable->RegistrarList,
+                                                   0,
+                                                   registrarAddressBlock);
+                                 if(peerListNode) {
+                                    *registrarIdentifier = peerListNode->Identifier;
+                                 }
+                                 else {
+                                    *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
+                                 }
+
+                                 free(registrarAddressBlock);
                               }
 
-                              free(registrarAddressBlock);
+                              if(lastTransportAddressBlock) {
+                                 transportAddressBlockDelete(lastTransportAddressBlock);
+                                 free(lastTransportAddressBlock);
+                              }
+                              free(peerAddressArray);
                            }
 
-                           if(lastTransportAddressBlock) {
-                              transportAddressBlockDelete(lastTransportAddressBlock);
-                              free(lastTransportAddressBlock);
-                           }
-                           free(peerAddressArray);
+                           return(notification.sn_assoc_change.sac_assoc_id);
                         }
-
-                        return(notification.sn_assoc_change.sac_assoc_id);
                      }
                   }
+                  else {
+                     LOG_ERROR
+                     fputs("Peeked notification but failed to read it\n", stdlog);
+                     LOG_END_FATAL
+                  }
+               }
+               else {
+                  LOG_WARNING
+                  fprintf(stdlog, "Received data on assoc %u -> hopefully this is a registrar",
+                          (unsigned int)assocID);
+                  LOG_END
+                  *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
+                  if(lastTransportAddressBlock) {
+                     transportAddressBlockDelete(lastTransportAddressBlock);
+                     free(lastTransportAddressBlock);
+                  }
+                  return(assocID);
                }
             }
          }

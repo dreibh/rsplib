@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.13 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id: rsplib.h,v 1.14 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -306,6 +306,14 @@ ssize_t rspSessionWrite(struct SessionDescriptor* sd,
                         struct TagItem*           tags CPP_DEFAULT(NULL));
 
 /**
+  * Force session failover.
+  *
+  * @param sd SessionDescriptor.
+  * @return true in case of success; false otherwise.
+  */
+bool rspSessionFailover(struct SessionDescriptor* session);
+
+/**
   * Send cookie.
   *
   * @param sd SessionDescriptor.
@@ -338,7 +346,7 @@ int rspSessionSelect(struct SessionDescriptor**     sessionArray,
                      struct PoolElementDescriptor** pedArray,
                      unsigned int*                  pedStatusArray,
                      const size_t                   peds,
-                     const card64                   timeout,
+                     const unsigned long long       timeout,
                      struct TagItem*                tags CPP_DEFAULT(NULL));
 
 

@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.h,v 1.3 2004/12/16 16:16:59 dreibh Exp $
+ *  $Id: messagebuffer.h,v 1.4 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,7 +58,7 @@ struct MessageBuffer
    size_t Size;
    size_t ToGo;
    size_t Position;
-   card64 StartTimeStamp;
+   unsigned long long StartTimeStamp;
    char   Buffer[0];
 };
 
@@ -97,13 +97,13 @@ void messageBufferDelete(struct MessageBuffer* mb);
   * @param readTimeout Maximum timeout to read complete message.
   * @return Size of message read or error code (< 0) in case of error.
   */
-ssize_t messageBufferRead(struct MessageBuffer* mb,
-                          int                   fd,
-                          union sockaddr_union* sourceAddress,
-                          socklen_t*            sourceAddressLength,
-                          const uint32_t        requiredPPID,
-                          const card64          peekTimeout,
-                          const card64          readTimeout);
+ssize_t messageBufferRead(struct MessageBuffer*    mb,
+                          int                      fd,
+                          union sockaddr_union*    sourceAddress,
+                          socklen_t*               sourceAddressLength,
+                          const uint32_t           requiredPPID,
+                          const unsigned long long peekTimeout,
+                          const unsigned long long readTimeout);
 
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.37 2005/07/29 09:18:23 dreibh Exp $
+ *  $Id: rspsession.c,v 1.38 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -659,7 +659,7 @@ static void rspSessionSendBusinessCard(struct SessionDescriptor* session)
 
 
 /* ###### Do session failover ################################################*/
-static bool rspSessionFailover(struct SessionDescriptor* session)
+bool rspSessionFailover(struct SessionDescriptor* session)
 {
    struct EndpointAddressInfo* eai;
    struct EndpointAddressInfo* eai2;

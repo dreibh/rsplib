@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.16 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.17 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -214,7 +214,7 @@ bool rserpoolMessageSend(int                     protocol,
                          int                     fd,
                          sctp_assoc_t            assocID,
                          int                     flags,
-                         const card64            timeout,
+                         const unsigned long long            timeout,
                          struct RSerPoolMessage* message)
 {
    size_t   messageLength;

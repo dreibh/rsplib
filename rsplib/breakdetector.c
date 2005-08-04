@@ -1,5 +1,5 @@
 /*
- *  $Id: breakdetector.c,v 1.3 2004/11/10 22:07:34 dreibh Exp $
+ *  $Id: breakdetector.c,v 1.4 2005/08/04 15:11:56 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -58,8 +58,8 @@ static bool   PrintedBreak  = false;
 static bool   Quiet         = false;
 static pid_t  MainThreadPID = 0;
 #ifdef KILL_AFTER_TIMEOUT
-static bool   PrintedKill   = false;
-static card64 LastDetection = (card64)-1;
+static bool               PrintedKill   = false;
+static unsigned long long LastDetection = (unsigned long long)-1;
 #endif
 
 
@@ -70,13 +70,13 @@ void breakDetector(int signum)
 
 #ifdef KILL_AFTER_TIMEOUT
    if(!PrintedKill) {
-      const card64 now = getMicroTime();
-      if(LastDetection == (card64)-1) {
+      const unsigned long long now = getMicroTime();
+      if(LastDetection == (unsigned long long)-1) {
          LastDetection = now;
       }
       else if(now - LastDetection >= 2000000) {
          PrintedKill = true;
-         fprintf(stderr,"\n*** Kill ***\n\n");
+         fprintf(stderr,"\x1b[0m\n*** Kill ***\n\n");
          kill(MainThreadPID,SIGKILL);
       }
    }
@@ -93,7 +93,7 @@ void installBreakDetector()
    MainThreadPID = getpid();
 #ifdef KILL_AFTER_TIMEOUT
    PrintedKill   = false;
-   LastDetection = (card64)-1;
+   LastDetection = (unsigned long long)-1;
 #endif
    signal(SIGINT,&breakDetector);
 }
@@ -105,7 +105,7 @@ void uninstallBreakDetector()
    signal(SIGINT,SIG_DFL);
 #ifdef KILL_AFTER_TIMEOUT
    PrintedKill   = false;
-   LastDetection = (card64)-1;
+   LastDetection = (unsigned long long)-1;
 #endif
    DetectedBreak = false;
    PrintedBreak  = false;
@@ -118,7 +118,7 @@ bool breakDetected()
 {
    if((DetectedBreak) && (!PrintedBreak)) {
       if(!Quiet) {
-         fprintf(stderr,"\n*** Break ***    Signal #%d\n\n",SIGINT);
+         fprintf(stderr,"\x1b[0m\n*** Break ***    Signal #%d\n\n",SIGINT);
       }
       PrintedBreak = getMicroTime();
    }

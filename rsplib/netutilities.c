@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.55 2005/08/03 10:40:27 dreibh Exp $
+ *  $Id: netutilities.c,v 1.56 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -491,15 +491,8 @@ result=-1;
 
    return(result);
 #else
-#if defined LINUX && defined HAVE_KERNEL_SCTP
-#warning Using sctp_connectx() warpping instead of sctp_connectx()! SHOULD BE REMOVED!
-   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
-   return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
-#else
-#warning Using sctp_connectx()
    int result = sctp_connectx(sockfd, addrs, addrcnt);
    return(result);
-#endif
 #endif
 }
 

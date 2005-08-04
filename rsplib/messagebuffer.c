@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.7 2004/11/13 03:24:13 dreibh Exp $
+ *  $Id: messagebuffer.c,v 1.8 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -67,13 +67,13 @@ void messageBufferDelete(struct MessageBuffer* mb)
 
 
 /* ###### Read from buffer ################################################ */
-ssize_t messageBufferRead(struct MessageBuffer* mb,
-                          int                   sd,
-                          union sockaddr_union* sourceAddress,
-                          socklen_t*            sourceAddressLength,
-                          const uint32_t        requiredPPID,
-                          const card64          peekTimeout,
-                          const card64          totalTimeout)
+ssize_t messageBufferRead(struct MessageBuffer*    mb,
+                          int                      sd,
+                          union sockaddr_union*    sourceAddress,
+                          socklen_t*               sourceAddressLength,
+                          const uint32_t           requiredPPID,
+                          const unsigned long long peekTimeout,
+                          const unsigned long long totalTimeout)
 {
    struct TLVHeader header;
    ssize_t          received=0;
@@ -144,7 +144,7 @@ ssize_t messageBufferRead(struct MessageBuffer* mb,
       flags    = 0;
       received = recvfromplus(sd, (char*)&mb->Buffer[mb->Position], mb->ToGo, &flags,
                               (struct sockaddr*)sourceAddress, sourceAddressLength,
-                              &ppid, &assocID, &streamID, (card64)timeout);
+                              &ppid, &assocID, &streamID, (unsigned long long)timeout);
       if(received > 0) {
          mb->ToGo     -= received;
          mb->Position += received;

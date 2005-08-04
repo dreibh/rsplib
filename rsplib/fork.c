@@ -1,5 +1,5 @@
 /*
- *  $Id: fork.c,v 1.3 2004/11/16 21:37:05 tuexen Exp $
+ *  $Id: fork.c,v 1.4 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -59,17 +59,17 @@ enum ForkProcessStatus
 
 struct ForkProcess
 {
-   card64                 Start;
-   card64                 End;
-   card64                 Kill;
+   unsigned long long                 Start;
+   unsigned long long                 End;
+   unsigned long long                 Kill;
    pid_t                  PID;
    enum ForkProcessStatus Status;
 };
 
 
-card64 vary(const card64 timeout)
+unsigned long long vary(const unsigned long long timeout)
 {
-   card64 newTimeout = random64() % timeout;
+   unsigned long long newTimeout = random64() % timeout;
    if(newTimeout < MIN_RUNTIME) {
       newTimeout = MIN_RUNTIME;
    }
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
    struct ForkProcess process[MAX_PROCESSES];
    char*              argcopy[MAX_ARGS];
    pid_t              mainProgramPID;
-   card64             now;
+   unsigned long long             now;
    unsigned long      timeout;
    size_t             count;
    size_t             progarg;

@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.17 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.18 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -409,12 +409,12 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message);
   * @param message RSerPoolMessage.
   * @return true in case of success; false otherwise.
   */
-bool rserpoolMessageSend(int                     protocol,
-                         int                     fd,
-                         sctp_assoc_t            assocID,
-                         int                     flags,
-                         const card64            timeout,
-                         struct RSerPoolMessage* message);
+bool rserpoolMessageSend(int                      protocol,
+                         int                      fd,
+                         sctp_assoc_t             assocID,
+                         int                      flags,
+                         const unsigned long long timeout,
+                         struct RSerPoolMessage*  message);
 
 /**
   * For internal usage only!

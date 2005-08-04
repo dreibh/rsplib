@@ -1,5 +1,5 @@
 /*
- *  $Id: threadsafety.c,v 1.2 2004/11/11 21:08:17 tuexen Exp $
+ *  $Id: threadsafety.c,v 1.3 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -41,7 +41,7 @@
 #include "threadsafety.h"
 
 
-static card64 gMutexCounter = 0;
+static unsigned long long gMutexCounter = 0;
 
 
 void threadSafetyInit(struct ThreadSafety* threadSafety,

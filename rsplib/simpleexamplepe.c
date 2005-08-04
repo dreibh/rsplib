@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.9 2004/11/12 15:56:49 dreibh Exp $
+ *  $Id: simpleexamplepe.c,v 1.10 2005/08/04 15:11:57 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -241,8 +241,8 @@ static void doDeregistration()
 static void* registrationMainLoop(void* args)
 {
    struct timeval timeout;
-   card64         start;
-   card64         now;
+   unsigned long long         start;
+   unsigned long long         now;
 
    for(;;) {
       /* ====== Do registration/reregistration ============================== */
@@ -442,8 +442,8 @@ int main(int argc, char** argv)
    int            result;
    struct timeval timeout;
    fd_set         readfdset;
-   card64         start;
-   card64         stop;
+   unsigned long long         start;
+   unsigned long long         stop;
    GList*         list;
 
    start = getMicroTime();
@@ -478,7 +478,7 @@ int main(int argc, char** argv)
          ListenSocketType     = SOCK_STREAM;
       }
       else if(!(strncmp(argv[n], "-stop=",6))) {
-         stop = start + ((card64)1000000 * (card64)atol((char*)&argv[n][6]));
+         stop = start + ((unsigned long long)1000000 * (unsigned long long)atol((char*)&argv[n][6]));
       }
       else if(!(strncmp(argv[n], "-port=",6))) {
          ListenPort = atol((char*)&argv[n][6]);
