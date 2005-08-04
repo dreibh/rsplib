@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.42 2005/08/04 15:11:56 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.43 2005/08/04 16:45:42 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -267,9 +267,9 @@ static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstanc
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
       if(sendAbort) {
          /* Abort association to current registrar */
-         sendtoplus(asapInstance->RegistrarSocket, NULL, 0, MSG_ABORT,
-                  NULL, 0,
-                  0, 0, 0, 0xffffffff, 0);
+         sendtoplus(asapInstance->RegistrarSocket, NULL, 0, SCTP_ABORT,
+                    NULL, 0,
+                    0, 0, 0, 0xffffffff, 0);
       }
       ext_close(asapInstance->RegistrarSocket);
       asapInstance->RegistrarSocket              = -1;
