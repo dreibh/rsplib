@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.56 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id: netutilities.c,v 1.57 2005/08/04 17:01:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1806,10 +1806,10 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
             peerParams.spp_hbinterval = tagListGetData(tags, TAG_TuneSCTP_Heartbeat,  peerParams.spp_hbinterval);
 #ifdef HAVE_SPP_FLAGS
             if(peerParams.spp_hbinterval > 0) {
-               peerParams.spp_flags |= SPP_HB_ENABLED;
+               peerParams.spp_flags |= SPP_HB_ENABLE;
             }
             else {
-               peerParams.spp_flags |= SPP_HB_DISABLED;
+               peerParams.spp_flags |= SPP_HB_DISABLE;
             }
 #endif
             peerParams.spp_pathmaxrxt = tagListGetData(tags, TAG_TuneSCTP_PathMaxRXT, peerParams.spp_pathmaxrxt);;

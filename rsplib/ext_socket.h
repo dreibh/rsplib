@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.7 2005/08/04 16:45:42 dreibh Exp $
+ *  $Id: ext_socket.h,v 1.8 2005/08/04 17:01:46 dreibh Exp $
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -291,12 +291,12 @@ struct sctp_setstrm_timeout
 };
 
 
-#define SPP_HB_ENABLED         (1 << 0)
-#define SPP_HB_DISABLED        (1 << 1)
-#define SPP_PMTUD_ENABLED      (1 << 2)
-#define SPP_PMTUD_DISABLED     (1 << 3)
-#define SPP_SACKDELAY_ENABLED  (1 << 4)
-#define SPP_SACKDELAY_DISABLED (1 << 5)
+#define SPP_HB_ENABLE         (1 << 0)
+#define SPP_HB_DISABLE        (1 << 1)
+#define SPP_PMTUD_ENABLE      (1 << 2)
+#define SPP_PMTUD_DISABLE     (1 << 3)
+#define SPP_SACKDELAY_ENABLE  (1 << 4)
+#define SPP_SACKDELAY_DISABLE (1 << 5)
 
 struct sctp_paddrparams {
    sctp_assoc_t            spp_assoc_id;
@@ -576,6 +576,24 @@ int sctp_enableCRC32(const unsigned int enable);
 #define SCTP_EOF MSG_EOF
 #endif
 
+#ifndef SPP_HB_ENABLE
+#define SPP_HB_ENABLE SPP_HB_ENABLED
+#endif
+#ifndef SPP_HB_DISABLE
+#define SPP_HB_DISABLE SPP_HB_DISABLED
+#endif
+#ifndef SPP_PMTUD_ENABLE
+#define SPP_PMTUD_ENABLE SPP_PMTUD_ENABLED
+#endif
+#ifndef SPP_PMTUD_DISABLE
+#define SPP_PMTUD_DISABLE SPP_PMTUD_DISABLED
+#endif
+#ifndef SPP_SACKDELAY_ENABLE
+#define SPP_SACKDELAY_ENABLE SPP_SACKDELAY_ENABLED
+#endif
+#ifndef SPP_SACKDELAY_DISABLE
+#define SPP_SACKDELAY_DISABLE SPP_SACKDELAY_DISABLED
+#endif
 
 #endif
 
