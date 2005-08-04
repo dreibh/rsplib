@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.5 2005/08/03 10:40:27 dreibh Exp $
+ *  $Id: registrartable.c,v 1.6 2005/08/04 09:28:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -364,8 +364,11 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
          }
       }
       else {
-         *lastRegistrarIdentifier   = UNDEFINED_REGISTRAR_IDENTIFIER;
+         if(*lastTransportAddressBlock) {
+            free(*lastTransportAddressBlock);
+         }
          *lastTransportAddressBlock = NULL;
+         *lastRegistrarIdentifier   = UNDEFINED_REGISTRAR_IDENTIFIER;
       }
    }
 }

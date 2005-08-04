@@ -1,0 +1,8 @@
+#!/bin/sh
+
+/etc/init.d/shorewall stop
+/etc/init.d/iptables stop
+/etc/init.d/ip6tables stop
+
+iptables -L
+ip6tables -L

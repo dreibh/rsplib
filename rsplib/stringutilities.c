@@ -21,6 +21,7 @@
  */
 
 #include "stringutilities.h"
+#include "debug.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -29,32 +30,22 @@
 /* ###### Length-checking strcpy() ###################################### */
 int safestrcpy(char* dest, const char* src, const size_t size)
 {
-   if(size > 0) {
-      strncpy(dest,src,size);
-      dest[size - 1] = 0x00;
-      return(strlen(dest) < size);
-   }
-   return(0);
+   CHECK(size > 0);
+   strncpy(dest, src, size);
+   dest[size - 1] = 0x00;
+   return(strlen(dest) < size);
 }
 
 
 /* ###### Length-checking strcat() ###################################### */
 int safestrcat(char* dest, const char* src, const size_t size)
 {
-   const int l1  = strlen(dest);
-   const int l2  = strlen(src);
+   const int l1 = strlen(dest);
+   const int l2 = strlen(src);
 
-   if(l1 + l2 < (int)size) {
-      strcat(dest,src);
-      return(1);
-   }
-   else if((int)size > l2) {
-      strcat((char*)&dest[size - l2],src);
-   }
-   else {
-      safestrcpy(dest,src,size);
-   }
-   return(0);
+   strncat(dest, src, size - l1 - 1);
+   dest[size - 1] = 0x00;
+   return(l1 + l2 < size);
 }
 
 

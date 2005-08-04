@@ -155,7 +155,7 @@ void transportAddressBlockGetDescription(
         const size_t                        bufferSize)
 {
 
-   char   addressString[64];
+   char   addressString[96];
    char   protocolString[32];
    size_t i;
 
@@ -207,7 +207,7 @@ void transportAddressBlockPrint(
         const struct TransportAddressBlock* transportAddressBlock,
         FILE*                               fd)
 {
-   char buffer[256];
+   char buffer[512];
    transportAddressBlockGetDescription(transportAddressBlock,
                                        (char*)&buffer, sizeof(buffer));
    fputs(buffer, fd);

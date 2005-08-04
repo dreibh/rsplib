@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.14 2005/07/29 11:26:51 dreibh Exp $
+ *  $Id: registrar.c,v 1.15 2005/08/04 09:28:45 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1427,7 +1427,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 
       LOG_VERBOSE
       fputs("Sending HandleUpdate for pool element ", stdlog);
-      ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL),
+      ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, 0),
       fputs(" of pool ", stdlog);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
       fprintf(stdlog, ", action $%04x...\n", action);
@@ -1585,7 +1585,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
       if(filterValidAddresses(message->PoolElementPtr->UserTransport,
                               addressArray, addresses,
                               validAddressBlock) > 0) {
-         LOG_VERBOSE1
+         LOG_VERBOSE2
          fputs("Valid addresses: ", stdlog);
          transportAddressBlockPrint(validAddressBlock, stdlog);
          fputs("\n", stdlog);
@@ -1609,7 +1609,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
             fputs("Successfully registered to pool ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
             fputs(" pool element ", stdlog);
-            ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+            ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, 0);
             fputs("\n", stdlog);
             LOG_END
 

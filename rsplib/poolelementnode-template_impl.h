@@ -115,42 +115,50 @@ void ST_CLASS(poolElementNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize, "$%08x", poolElementNode->Identifier);
+   if(fields & (PENPO_CONNECTION|PENPO_CHECKSUM|PENPO_HOME_PR|PENPO_REGLIFE|PENPO_UR_REPORTS|PENPO_LASTUPDATE)) {
+      safestrcat(buffer, "\n     ", bufferSize);
+   }
    if(fields & PENPO_CONNECTION) {
-      snprintf((char*)&tmp, sizeof(tmp), " c=(S%d,A%u)",
+      snprintf((char*)&tmp, sizeof(tmp), "c=(S%d,A%u) ",
                poolElementNode->ConnectionSocketDescriptor,
                (unsigned int)poolElementNode->ConnectionAssocID);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_CHECKSUM) {
-      snprintf((char*)&tmp, sizeof(tmp), " chsum=$%08x",
+      snprintf((char*)&tmp, sizeof(tmp), "chsum=$%08x ",
                (unsigned int)handlespaceChecksumFinish(poolElementNode->Checksum));
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_HOME_PR) {
-      snprintf((char*)&tmp, sizeof(tmp), " home=$%08x",
+      snprintf((char*)&tmp, sizeof(tmp), "home=$%08x ",
                poolElementNode->HomeRegistrarIdentifier);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_REGLIFE) {
-      snprintf((char*)&tmp, sizeof(tmp), " life=%ums",
+      snprintf((char*)&tmp, sizeof(tmp), "life=%ums ",
                poolElementNode->RegistrationLife);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_UR_REPORTS) {
-      snprintf((char*)&tmp, sizeof(tmp), " ur=%u",
+      snprintf((char*)&tmp, sizeof(tmp), "ur=%u ",
                poolElementNode->UnreachabilityReports);
+      safestrcat(buffer, tmp, bufferSize);
+   }
+   if(fields & PENPO_LASTUPDATE) {
+      snprintf((char*)&tmp, sizeof(tmp), "upd=%llu ",
+               poolElementNode->LastUpdateTimeStamp);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_POLICYINFO) {
       poolPolicySettingsGetDescription(&poolElementNode->PolicySettings,
                                        (char*)&poolPolicySettingsDescription,
                                        sizeof(poolPolicySettingsDescription));
-      snprintf((char*)&tmp, sizeof(tmp), "   [%s]",
+      snprintf((char*)&tmp, sizeof(tmp), "\n     %s",
                poolPolicySettingsDescription);
       safestrcat(buffer, tmp, bufferSize);
    }
    if(fields & PENPO_POLICYSTATE) {
-      snprintf((char*)&tmp, sizeof(tmp), "   seq=%llu val=%llu rd=%u vrt=%u deg=$%x {sel=%llu s/w=%1.1f}",
+      snprintf((char*)&tmp, sizeof(tmp), "\n     seq=%llu val=%llu rd=%u vrt=%u deg=$%x {sel=%llu s/w=%1.1f}",
                (unsigned long long)poolElementNode->SeqNumber,
                poolElementNode->PoolElementSelectionStorageNode.Value,
                poolElementNode->RoundCounter,
@@ -158,11 +166,6 @@ void ST_CLASS(poolElementNodeGetDescription)(
                poolElementNode->Degradation,
                poolElementNode->SelectionCounter,
                (double)poolElementNode->SelectionCounter / (double)poolElementNode->PolicySettings.Weight);
-      safestrcat(buffer, tmp, bufferSize);
-   }
-   if(fields & PENPO_LASTUPDATE) {
-      snprintf((char*)&tmp, sizeof(tmp), "   upd=%llu",
-               poolElementNode->LastUpdateTimeStamp);
       safestrcat(buffer, tmp, bufferSize);
    }
    if((fields & PENPO_USERTRANSPORT) &&
@@ -212,6 +215,7 @@ HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
                                          (const char*)&poolElementNode->Identifier,
                                          sizeof(poolElementNode->Identifier));
 
+/*
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->HomeRegistrarIdentifier,
                                          sizeof(poolElementNode->HomeRegistrarIdentifier));
@@ -225,7 +229,7 @@ HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->PolicySettings.LoadDegradation,
                                          sizeof(poolElementNode->PolicySettings.LoadDegradation));
-
+*/
    return(checksum);
 }
 
