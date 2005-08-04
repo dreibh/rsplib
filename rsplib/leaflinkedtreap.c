@@ -396,15 +396,15 @@ LeafLinkedTreapNodeValueType leafLinkedTreapGetValueSum(
 
 
 /* ##### Update value sum ################################################ */
-inline static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
+static void leafLinkedTreapUpdateValueSum(struct LeafLinkedTreapNode* node)
 {
    node->ValueSum = node->LeftSubtree->ValueSum + node->Value + node->RightSubtree->ValueSum;
 }
 
 
 /* ##### Update value sum of left and right subtree + current ones ####### */
-inline static void leafLinkedTreapUpdateLeftAndRightValueSums(
-                      struct LeafLinkedTreapNode* node)
+static void leafLinkedTreapUpdateLeftAndRightValueSums(
+               struct LeafLinkedTreapNode* node)
 {
    leafLinkedTreapUpdateValueSum(node->LeftSubtree);
    leafLinkedTreapUpdateValueSum(node->RightSubtree);
