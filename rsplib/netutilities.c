@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.57 2005/08/04 17:01:46 dreibh Exp $
+ *  $Id: netutilities.c,v 1.58 2005/08/05 09:07:36 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -2046,9 +2046,9 @@ size_t getladdrsplus(const int              fd,
       sctp_freeladdrs(packedAddresses);
 
       LOG_VERBOSE5
-      fprintf(stdlog, "getladdrsplus() - Number of addresses: %u\n", addrs);
+      fprintf(stdlog, "getladdrsplus() - Number of addresses: %u\n", (unsigned int)addrs);
       for(i = 0;i < addrs;i++) {
-         fprintf(stdlog, " - #%u: ", i);
+         fprintf(stdlog, " - #%u: ", (unsigned int)i);
          fputaddress(&(*addressArray)[i].sa, true, stdlog);
          fputs("\n", stdlog);
       }

@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.16 2005/08/04 11:19:38 dreibh Exp $
+ *  $Id: registrar.c,v 1.17 2005/08/05 09:07:37 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -1084,7 +1084,8 @@ static void sendEndpointKeepAlive(struct Registrar*                 registrar,
       message->Flags               = newHomeRegistrar ? AHF_ENDPOINT_KEEP_ALIVE_HOME : 0x00;
       if(poolElementNode->ConnectionSocketDescriptor >= 0) {
          LOG_VERBOSE3
-         fprintf(stdlog, "Sending via association %u...\n", poolElementNode->ConnectionAssocID);
+         fprintf(stdlog, "Sending via association %u...\n",
+                 (unsigned int)poolElementNode->ConnectionAssocID);
          LOG_END
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       poolElementNode->ConnectionSocketDescriptor,
