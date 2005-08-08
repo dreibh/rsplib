@@ -1,8 +1,8 @@
 CXXFLAGS = -O0 -g -Wall -DHAVE_CONFIG_H
 CPP=g++
 MOC=/usr/lib/qt3/bin/moc
-#SCTPLIBS=-lsctpsocket -lsctplib
-SCTPLIBS=-lsctp
+SCTPLIBS=-lsctpsocket -lsctplib
+#SCTPLIBS=-lsctp
 
 all:   	fractalpooluser
 
