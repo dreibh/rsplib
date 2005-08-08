@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessageparser.c,v 1.35 2005/07/28 13:05:00 dreibh Exp $
+ *  $Id: rserpoolmessageparser.c,v 1.36 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -967,43 +967,10 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan PR identifier parameter ################################### */
-static bool scanRegistrarIdentifierParameter(struct RSerPoolMessage* message)
-{
-   uint32_t* registrarIdentifier;
-   size_t    tlvPosition = 0;
-   size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_REGISTRAR_IDENTIFIER, true);
-   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
-      return(false);
-   }
-
-   tlvLength -= sizeof(struct rserpool_tlv_header);
-   if(tlvLength != sizeof(uint32_t)) {
-      LOG_WARNING
-      fputs("PR Identifier too short!\n", stdlog);
-      LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
-      return(false);
-   }
-
-   registrarIdentifier = (uint32_t*)getSpace(message, tlvLength);
-   if(registrarIdentifier == NULL) {
-      return(false);
-   }
-   message->RegistrarIdentifier = ntohl(*registrarIdentifier);
-
-   LOG_VERBOSE3
-   fprintf(stdlog, "Scanned PR Identifier $%08x\n", message->Identifier);
-   LOG_END
-
-   return(checkFinishTLV(message, tlvPosition));
-}
-
-
 /* ###### Scan pool element checksum parameter ########################### */
 static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
 {
-   uint32_t* checksum;
+   uint16_t* checksum;
    size_t    tlvPosition = 0;
    size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_CHECKSUM, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
@@ -1011,7 +978,7 @@ static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
    }
 
    tlvLength -= sizeof(struct rserpool_tlv_header);
-   if(tlvLength != sizeof(uint32_t)) {
+   if(tlvLength != sizeof(uint16_t)) {
       LOG_WARNING
       fputs("Pool element checksum too short!\n", stdlog);
       LOG_END
@@ -1019,11 +986,11 @@ static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
       return(false);
    }
 
-   checksum = (uint32_t*)getSpace(message, tlvLength);
+   checksum = (uint16_t*)getSpace(message, tlvLength);
    if(checksum == NULL) {
       return(false);
    }
-   message->Checksum = ntohl(*checksum);
+   message->Checksum = *checksum;
 
    LOG_VERBOSE3
    fprintf(stdlog, "Scanned pool element checksum $%08x\n", message->Checksum);
@@ -1193,10 +1160,15 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
 /* ###### Scan endpoint keepalive message ################################ */
 static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
-   if(scanPoolHandleParameter(message, &message->Handle) == false) {
+   uint32_t* registrarIdentifier;
+
+   registrarIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(registrarIdentifier == NULL) {
       return(false);
    }
-   if(scanRegistrarIdentifierParameter(message) == false) {
+   message->RegistrarIdentifier = ntohl(*registrarIdentifier);
+
+   if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
    return(true);
@@ -1344,8 +1316,15 @@ static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
 /* ###### Scan handle resolution response message ############################# */
 static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
+   uint32_t*                     registrarIdentifier;
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+
+   registrarIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(registrarIdentifier == NULL) {
+      return(false);
+   }
+   message->RegistrarIdentifier = ntohl(*registrarIdentifier);
 
    transportAddressBlockNew(&transportAddressBlock[0],
                             IPPROTO_SCTP,
@@ -1356,10 +1335,6 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
    if(message->TransportAddressBlockListPtr == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;
       return(false);
-   }
-
-   if(scanRegistrarIdentifierParameter(message) == false) {
-      message->RegistrarIdentifier = 0;
    }
 
    return(true);
@@ -1899,7 +1874,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
             return(false);
          }
         break;
-      case AHT_PEER_ERROR:
+      case AHT_ERROR:
           LOG_VERBOSE2
           fputs("Scanning PeerError (ASAP) message...\n", stdlog);
           LOG_END

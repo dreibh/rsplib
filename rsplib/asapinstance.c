@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.43 2005/08/04 16:45:42 dreibh Exp $
+ *  $Id: asapinstance.c,v 1.44 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -184,7 +184,7 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 {
    if(asapInstance) {
       asapInstanceDisconnectFromRegistrar(asapInstance, false);
-      if(asapInstance->RegistrarHuntSocket) {
+      if(asapInstance->RegistrarHuntSocket >= 0) {
          fdCallbackDelete(&asapInstance->RegistrarHuntFDCallback);
          ext_close(asapInstance->RegistrarHuntSocket);
       }

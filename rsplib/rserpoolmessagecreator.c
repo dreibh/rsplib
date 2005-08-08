@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.30 2005/08/01 10:01:18 dreibh Exp $
+ *  $Id: rserpoolmessagecreator.c,v 1.31 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -500,46 +500,23 @@ static bool createPoolElementIdentifierParameter(
 }
 
 
-/* ###### Create PR identifier parameter ################################# */
-static bool createRegistrarIdentifierParameter(
-               struct RSerPoolMessage*       message,
-               const RegistrarIdentifierType registrarIdentifier)
-{
-   uint32_t* identifier;
-   size_t    tlvPosition;
-
-   /* ATT_REGISTRAR_IDENTIFIER is optional => Also set ATT_ACTION_CONTINUE! */
-   if(beginTLV(message, &tlvPosition, ATT_REGISTRAR_IDENTIFIER|ATT_ACTION_CONTINUE) == false) {
-      return(false);
-   }
-
-   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
-   if(identifier == NULL) {
-      return(false);
-   }
-   *identifier = htonl(registrarIdentifier);
-
-   return(finishTLV(message, tlvPosition));
-}
-
-
 /* ###### Create pool element checksum parameter ####################### */
 static bool createHandlespaceChecksumParameter(
                struct RSerPoolMessage*       message,
                const HandlespaceChecksumType poolElementChecksum)
 {
-   uint32_t* checksum;
+   uint16_t* checksum;
    size_t    tlvPosition = 0;
 
    if(beginTLV(message, &tlvPosition, ATT_POOL_ELEMENT_CHECKSUM) == false) {
       return(false);
    }
 
-   checksum = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   checksum = (uint16_t*)getSpace(message, sizeof(uint16_t));
    if(checksum == NULL) {
       return(false);
    }
-   *checksum = htonl(poolElementChecksum);
+   *checksum = poolElementChecksum;
 
    return(finishTLV(message, tlvPosition));
 }
@@ -642,15 +619,20 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
+   uint32_t* identifier;
+
    if(beginMessage(message, AHT_ENDPOINT_KEEP_ALIVE,
                    message->Flags & AHF_ENDPOINT_KEEP_ALIVE_HOME, PPID_ASAP) == NULL) {
       return(false);
    }
 
-   if(createPoolHandleParameter(message, &message->Handle) == false) {
+   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(identifier == NULL) {
       return(false);
    }
-   if(createRegistrarIdentifierParameter(message, message->RegistrarIdentifier) == false) {
+   *identifier = htonl(message->RegistrarIdentifier);
+
+   if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
 
@@ -740,6 +722,11 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
    }
    if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
       return(false);
+   }
+   if(message->Error != 0x00) {
+      if(createErrorParameter(message) == false) {
+         return(false);
+      }
    }
 
    return(finishMessage(message));
@@ -866,12 +853,18 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
 /* ###### Create server announce message ################################## */
 static bool createServerAnnounceMessage(struct RSerPoolMessage* message)
 {
+   uint32_t* identifier;
+
    if(beginMessage(message, AHT_SERVER_ANNOUNCE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }
-   if(createRegistrarIdentifierParameter(message, message->RegistrarIdentifier) == false) {
+
+   identifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
+   if(identifier == NULL) {
       return(false);
    }
+   *identifier = htonl(message->RegistrarIdentifier);
+
    return(finishMessage(message));
 }
 
@@ -1104,12 +1097,11 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
             header->ah_flags |= EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
          }
       }
-   }
 
-   CHECK(hte != NULL);
-   if(hte->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) {
-      free(message->PeerListNodePtr->UserData);
-      message->PeerListNodePtr->UserData = NULL;
+      if(hte->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) {
+         free(message->PeerListNodePtr->UserData);
+         message->PeerListNodePtr->UserData = NULL;
+      }
    }
 
    return(finishMessage(message));
@@ -1248,7 +1240,7 @@ static bool createENRPPeerErrorMessage(struct RSerPoolMessage* message)
 /* ###### Create peer error ############################################## */
 static bool createASAPPeerErrorMessage(struct RSerPoolMessage* message)
 {
-   if(beginMessage(message, AHT_PEER_ERROR,
+   if(beginMessage(message, AHT_ERROR,
                    message->Flags & 0x00,
                    PPID_ASAP) == NULL) {
       return(false);
@@ -1373,7 +1365,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
              return(message->Position);
           }
         break;
-       case AHT_PEER_ERROR:
+       case AHT_ERROR:
           LOG_VERBOSE2
           fputs("Creating PeerError (ASAP) message...\n", stdlog);
           LOG_END

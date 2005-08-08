@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.c,v 1.17 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id: rserpoolmessage.c,v 1.18 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -210,12 +210,12 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message)
 
 
 /* ###### Send RSerPoolMessage ########################################### */
-bool rserpoolMessageSend(int                     protocol,
-                         int                     fd,
-                         sctp_assoc_t            assocID,
-                         int                     flags,
-                         const unsigned long long            timeout,
-                         struct RSerPoolMessage* message)
+bool rserpoolMessageSend(int                      protocol,
+                         int                      fd,
+                         sctp_assoc_t             assocID,
+                         int                      flags,
+                         const unsigned long long timeout,
+                         struct RSerPoolMessage*  message)
 {
    size_t   messageLength;
    ssize_t  sent;

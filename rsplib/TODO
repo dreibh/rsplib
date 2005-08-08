@@ -2,6 +2,12 @@
   Timeouts korrigieren! OK
 - Registrar:
   Filterung von Registrar-Transport
+  => ASAPTransport
+  => PeerPresence
+  => Announce
+   UDP: nur IP-Header-Sourceadresse
+   SCTP: aus Assoc.
+
 - Socket-API:
  * sctp_peeloff(sd, assocID) ohne Addrs.
  * MSG_ -> SCTP_

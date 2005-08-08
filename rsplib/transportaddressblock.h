@@ -24,10 +24,12 @@
 #define TRANSPORTADDRESSBLOCK_H
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <inttypes.h>
-
 #include <stdio.h>
+#include <ext_socket.h>
 
+#include "tdtypes.h"
 #include "sockaddrunion.h"
 
 
@@ -137,13 +139,35 @@ int transportAddressBlockOverlapComparison(const void* transportAddressBlockPtr1
   *
   * @param transportAddressBlock TransportAddressBlock.
   * @param sockFD Socket FD.
+  * @param assocID Association ID.
   * @param maxAddresses Maximum number of addresses to be returned.
   * @return Number of obtained addresses.
   */
-size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
+size_t transportAddressBlockGetAddressesFromSCTPSocket(
           struct TransportAddressBlock* sctpAddress,
           int                           sockFD,
-          const size_t                  maxAddresses);
+          sctp_assoc_t                  assocID,
+          const size_t                  maxAddresses,
+          const bool                    local);
+
+
+/*
+   This function takes the given addresses from sourceAddressBlock and
+   writes valid addresses to validAddressBlock, the amount of
+   valid addresses is returned.
+
+   A valid address must fulfil the following conditions:
+   - the address must have a sufficient scope,
+   - the address must be in assocAddressArray or
+     assocAddressArray == NULL
+*/
+size_t transportAddressBlockFilter(
+          const struct TransportAddressBlock* originalAddressBlock,
+          const struct TransportAddressBlock* associationAddressBlock,
+          struct TransportAddressBlock*       filteredAddressBlock,
+          const size_t                        maxAddresses,
+          const bool                          filterPort,
+          const unsigned int                  minScope);
 
 
 #ifdef __cplusplus

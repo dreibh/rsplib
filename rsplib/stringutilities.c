@@ -40,9 +40,10 @@ int safestrcpy(char* dest, const char* src, const size_t size)
 /* ###### Length-checking strcat() ###################################### */
 int safestrcat(char* dest, const char* src, const size_t size)
 {
-   const int l1 = strlen(dest);
-   const int l2 = strlen(src);
+   const size_t l1 = strlen(dest);
+   const size_t l2 = strlen(src);
 
+   CHECK(size > 0);
    strncat(dest, src, size - l1 - 1);
    dest[size - 1] = 0x00;
    return(l1 + l2 < size);

@@ -371,16 +371,23 @@ int transportAddressBlockOverlapComparison(const void* transportAddressBlockPtr1
 #ifndef HAVE_TEST
 /* ###### Get addresses from SCTP socket ################################# */
 #define MAX_ADDRESSES 128
-size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
+size_t transportAddressBlockGetAddressesFromSCTPSocket(
           struct TransportAddressBlock* sctpAddress,
           int                           sockFD,
-          const size_t                  maxAddresses)
+          sctp_assoc_t                  assocID,
+          const size_t                  maxAddresses,
+          const bool                    local)
 {
    union sockaddr_union  sctpAddressArray[MAX_ADDRESSES];
-   union sockaddr_union* localAddressArray;
+   union sockaddr_union* endpointAddressArray;
    size_t                sctpAddresses;
 
-   sctpAddresses = getladdrsplus(sockFD, 0, (union sockaddr_union**)&localAddressArray);
+   if(local) {
+      sctpAddresses = getladdrsplus(sockFD, assocID, (union sockaddr_union**)&endpointAddressArray);
+   }
+   else {
+      sctpAddresses = getpaddrsplus(sockFD, assocID, (union sockaddr_union**)&endpointAddressArray);
+   }
    if(sctpAddresses > 0) {
       if(sctpAddresses > maxAddresses) {
          sctpAddresses = maxAddresses;
@@ -388,8 +395,8 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
       if(sctpAddresses > MAX_ADDRESSES) {
          sctpAddresses = MAX_ADDRESSES;
       }
-      memcpy(&sctpAddressArray, localAddressArray, sctpAddresses * sizeof(union sockaddr_union));
-      free(localAddressArray);
+      memcpy(&sctpAddressArray, endpointAddressArray, sctpAddresses * sizeof(union sockaddr_union));
+      free(endpointAddressArray);
 
       transportAddressBlockNew(sctpAddress,
                                IPPROTO_SCTP,
@@ -401,3 +408,59 @@ size_t transportAddressBlockGetLocalAddressesFromSCTPSocket(
    return(sctpAddresses);
 }
 #endif
+
+
+/* ###### Filter address array ########################################### */
+size_t transportAddressBlockFilter(
+          const struct TransportAddressBlock* originalAddressBlock,
+          const struct TransportAddressBlock* associationAddressBlock,
+          struct TransportAddressBlock*       filteredAddressBlock,
+          const size_t                        maxAddresses,
+          const bool                          filterPort,
+          const unsigned int                  minScope)
+{
+   bool   selectionArray[MAX_ADDRESSES];
+   size_t selected = 0;
+   size_t i, j;
+
+   CHECK(maxAddresses <= MAX_ADDRESSES);
+   for(i = 0;i < originalAddressBlock->Addresses;i++) {
+      selectionArray[i] = false;
+      if(getScope((const struct sockaddr*)&originalAddressBlock->AddressArray[i]) >= minScope) {
+         if(associationAddressBlock != NULL) {
+            for(j = 0;j < associationAddressBlock->Addresses;j++) {
+               if(addresscmp(&originalAddressBlock->AddressArray[i].sa,
+                             &associationAddressBlock->AddressArray[j].sa,
+                             filterPort) == 0) {
+                  selectionArray[i] = true;
+                  selected++;
+                  break;
+               }
+            }
+         }
+         else {
+            selectionArray[i] = true;
+            selected++;
+         }
+      }
+   }
+
+   if(selected > 0) {
+      filteredAddressBlock->Next      = NULL;
+      filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
+      filteredAddressBlock->Port      = originalAddressBlock->Port;
+      filteredAddressBlock->Flags     = 0;
+      filteredAddressBlock->Addresses = selected;
+      j = 0;
+      for(i = 0;i < originalAddressBlock->Addresses;i++) {
+         if(selectionArray[i]) {
+            memcpy(&filteredAddressBlock->AddressArray[j],
+                   (const struct sockaddr*)&originalAddressBlock->AddressArray[i],
+                   sizeof(filteredAddressBlock->AddressArray[j]));
+            j++;
+         }
+      }
+   }
+
+   return(selected);
+}

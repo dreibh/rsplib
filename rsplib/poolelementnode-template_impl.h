@@ -206,14 +206,15 @@ void ST_CLASS(poolElementNodePrint)(
 HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
                                       const struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   HandlespaceChecksumAccumulatorType checksum = INITIAL_HANDLESPACE_CHECKSUM;
+   HandlespaceChecksumAccumulatorType checksum   = INITIAL_HANDLESPACE_CHECKSUM;
+   PoolElementIdentifierType          identifier = htonl(poolElementNode->Identifier);
 
    checksum = handlespaceChecksumCompute(checksum,
                                          (const char*)&poolElementNode->OwnerPoolNode->Handle.Handle,
                                          poolElementNode->OwnerPoolNode->Handle.Size);
    checksum = handlespaceChecksumCompute(checksum,
-                                         (const char*)&poolElementNode->Identifier,
-                                         sizeof(poolElementNode->Identifier));
+                                         (const char*)&identifier,
+                                         sizeof(identifier));
 
 /*
    checksum = handlespaceChecksumCompute(checksum,

@@ -38,8 +38,8 @@ extern "C" {
 #endif
 
 
-typedef uint32_t HandlespaceChecksumType;
-typedef uint64_t HandlespaceChecksumAccumulatorType;
+typedef uint16_t HandlespaceChecksumType;
+typedef uint32_t HandlespaceChecksumAccumulatorType;
 #define HandlespaceChecksumBits (sizeof(HandlespaceChecksumType) * 8)
 #define HandlespaceChecksumMask ((HandlespaceChecksumType)-1)
 

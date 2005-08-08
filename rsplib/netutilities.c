@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.58 2005/08/05 09:07:36 dreibh Exp $
+ *  $Id: netutilities.c,v 1.59 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -967,10 +967,10 @@ const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
                                             int                    addrcnt)
 {
    const struct sockaddr* bestScopedAddress = addrs;
-   unsigned int           bestScope   = getScope(addrs);
+   unsigned int           bestScope         = getScope(addrs);
    unsigned int           newScope;
    const struct sockaddr* a;
-   size_t                 i;
+   int                    i;
 
    LOG_VERBOSE4
    fputs("Finding best scope out of address set:\n", stdlog);

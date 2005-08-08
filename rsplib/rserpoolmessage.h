@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.18 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id: rserpoolmessage.h,v 1.19 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -76,7 +76,7 @@ extern "C" {
 #define AHT_COOKIE                     (0x0b | AHT_ASAP_MODIFIER)
 #define AHT_COOKIE_ECHO                (0x0c | AHT_ASAP_MODIFIER)
 #define AHT_BUSINESS_CARD              (0x0d | AHT_ASAP_MODIFIER)
-#define AHT_PEER_ERROR                 (0x0e | AHT_ASAP_MODIFIER)
+#define AHT_ERROR                      (0x0e | AHT_ASAP_MODIFIER)
 
 
 #define AHF_ENDPOINT_KEEP_ALIVE_HOME   (1 << 0)
@@ -117,7 +117,6 @@ struct rserpool_tlv_header
 #define ATT_COOKIE                  0x0b
 #define ATT_POOL_ELEMENT_IDENTIFIER 0x0c
 #define ATT_POOL_ELEMENT_CHECKSUM   0x0d
-#define ATT_REGISTRAR_IDENTIFIER    0x3f
 
 
 struct rserpool_poolelementparameter
@@ -250,7 +249,7 @@ struct rserpool_errorcause
 #define EHT_INIT_TAKEOVER         (0x07 | EHT_ENRP_MODIFIER)
 #define EHT_INIT_TAKEOVER_ACK     (0x08 | EHT_ENRP_MODIFIER)
 #define EHT_TAKEOVER_SERVER       (0x09 | EHT_ENRP_MODIFIER)
-#define EHT_ERROR                 (0x0b | EHT_ENRP_MODIFIER)
+#define EHT_ERROR                 (0x0a | EHT_ENRP_MODIFIER)
 
 
 struct rserpool_peerpresenceparameter

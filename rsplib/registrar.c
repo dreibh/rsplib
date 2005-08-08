@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.17 2005/08/05 09:07:37 dreibh Exp $
+ *  $Id: registrar.c,v 1.18 2005/08/08 09:25:46 dreibh Exp $
  *
  * RSerPool implementation.
  *
@@ -63,6 +63,7 @@
 
 
 #define MAX_NS_TRANSPORTADDRESSES                                           16
+#define MIN_ENDPOINT_ADDRESS_SCOPE                                           4
 #define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       2111111
 #define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
@@ -851,14 +852,14 @@ static void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar
 
 
 /* ###### Send ENRP peer presence message ################################ */
-static void sendPresence(struct Registrar*             registrar,
-                         int                           sd,
-                         const sctp_assoc_t            assocID,
-                         int                           msgSendFlags,
-                         const union sockaddr_union*   destinationAddressList,
-                         const size_t                  destinationAddresses,
-                         const RegistrarIdentifierType receiverID,
-                         const bool                    replyRequired)
+static void sendPeerPresence(struct Registrar*             registrar,
+                             int                           sd,
+                             const sctp_assoc_t            assocID,
+                             int                           msgSendFlags,
+                             const union sockaddr_union*   destinationAddressList,
+                             const size_t                  destinationAddresses,
+                             const RegistrarIdentifierType receiverID,
+                             const bool                    replyRequired)
 {
    struct RSerPoolMessage*       message;
    struct ST_CLASS(PeerListNode) peerListNode;
@@ -879,15 +880,17 @@ static void sendPresence(struct Registrar*             registrar,
       message->ReceiverID                = receiverID;
       message->Checksum                  = ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(&registrar->Handlespace);
 
-      if(transportAddressBlockGetLocalAddressesFromSCTPSocket(localAddressArray,
-                                                              registrar->ASAPSocket,
-                                                              MAX_NS_TRANSPORTADDRESSES) > 0) {
+      if(transportAddressBlockGetAddressesFromSCTPSocket(localAddressArray,
+                                                         registrar->ENRPUnicastSocket,
+                                                         assocID,
+                                                         MAX_NS_TRANSPORTADDRESSES,
+                                                         true) > 0) {
          ST_CLASS(peerListNodeNew)(&peerListNode,
                                    registrar->ServerID,
                                    registrar->ENRPUseMulticast ? PLNF_MULTICAST : 0,
                                    localAddressArray);
 
-         LOG_VERBOSE4
+         LOG_VERBOSE3
          fputs("Sending PeerPresence using peer list entry: \n", stdlog);
          ST_CLASS(peerListNodePrint)(&peerListNode, stdlog, ~0);
          fputs("\n", stdlog);
@@ -1002,7 +1005,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    }
 
    if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-      sendPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+      sendPeerPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                        (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                        0, false);
    }
@@ -1014,7 +1017,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
          fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
                   peerListNode->Identifier);
          LOG_END
-         sendPresence(registrar,
+         sendPeerPresence(registrar,
                           registrar->ENRPUnicastSocket, 0, 0,
                           peerListNode->AddressBlock->AddressArray,
                           peerListNode->AddressBlock->Addresses,
@@ -1241,7 +1244,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          fprintf(stdlog, " not head since MaxTimeLastHeard=%lluus -> requesting immediate PeerPresence\n",
                  registrar->PeerMaxTimeLastHeard);
          LOG_END
-         sendPresence(registrar,
+         sendPeerPresence(registrar,
                           registrar->ENRPUnicastSocket,
                           0, 0,
                           peerListNode->AddressBlock->AddressArray,
@@ -1427,11 +1430,14 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
       message->PoolElementPtrAutoDelete = false;
 
       LOG_VERBOSE
-      fputs("Sending HandleUpdate for pool element ", stdlog);
-      ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, 0),
-      fputs(" of pool ", stdlog);
+      fputs("Sending HandleUpdate for ", stdlog);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
-      fprintf(stdlog, ", action $%04x...\n", action);
+      fprintf(stdlog, "/$%08x, action $%04x\n", poolElementNode->Identifier, action);
+      LOG_END
+      LOG_VERBOSE2
+      fputs("Updated pool element: ", stdlog);
+      ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+      fputs("\n", stdlog);
       LOG_END
 
       if(registrar->ENRPUseMulticast) {
@@ -1476,89 +1482,25 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 }
 
 
-/* ###### Filter address array ########################################### */
-/*
-   This function takes the given addresses from sourceAddressBlock and
-   writes valid addresses to validAddressBlock, the amount of
-   valid addresses is returned.
-
-   A valid address must fulfil the following conditions:
-   - the address must have a sufficient scope,
-   - the address must be in assocAddressArray or
-     assocAddressArray == NULL
-*/
-static size_t filterValidAddresses(
-                 const struct TransportAddressBlock* sourceAddressBlock,
-                 const union sockaddr_union*         assocAddressArray,
-                 const size_t                        assocAddresses,
-                 struct TransportAddressBlock*       validAddressBlock)
-{
-   bool   selectionArray[MAX_PE_TRANSPORTADDRESSES];
-   size_t selected = 0;
-   size_t i, j;
-
-   for(i = 0;i < sourceAddressBlock->Addresses;i++) {
-      selectionArray[i] = false;
-      if(getScope((const struct sockaddr*)&sourceAddressBlock->AddressArray[i]) >= 4) {
-         if(assocAddressArray != NULL) {
-            for(j = 0;j < assocAddresses;j++) {
-               if(addresscmp((const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
-                           (const struct sockaddr*)&assocAddressArray[j],
-                           false) == 0) {
-                  selectionArray[i] = true;
-                  selected++;
-                  break;
-               }
-            }
-         }
-         else {
-            selectionArray[i] = true;
-            selected++;
-         }
-      }
-   }
-
-   if(selected > 0) {
-      validAddressBlock->Next      = NULL;
-      validAddressBlock->Protocol  = sourceAddressBlock->Protocol;
-      validAddressBlock->Port      = sourceAddressBlock->Port;
-      validAddressBlock->Flags     = 0;
-      validAddressBlock->Addresses = selected;
-      j = 0;
-      for(i = 0;i < sourceAddressBlock->Addresses;i++) {
-         if(selectionArray[i]) {
-            memcpy(&validAddressBlock->AddressArray[j],
-                   (const struct sockaddr*)&sourceAddressBlock->AddressArray[i],
-                   sizeof(validAddressBlock->AddressArray[j]));
-            j++;
-         }
-      }
-   }
-
-   return(selected);
-}
-
-
 /* ###### Handle registration request #################################### */
 static void handleRegistrationRequest(struct Registrar*       registrar,
                                       int                     fd,
                                       sctp_assoc_t            assocID,
                                       struct RSerPoolMessage* message)
 {
-   char                              validAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock*     validAddressBlock = (struct TransportAddressBlock*)&validAddressBlockBuffer;
+
    char                              remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
+   char                              asapTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*     asapTransportAddressBlock = (struct TransportAddressBlock*)&asapTransportAddressBlockBuffer;
+   char                              userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*     userTransportAddressBlock = (struct TransportAddressBlock*)&userTransportAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-   union sockaddr_union*             addressArray;
-   int                               addresses;
 
-   LOG_ACTION
-   fprintf(stdlog, "Registration request to pool ");
+   LOG_VERBOSE
+   fputs("Registration request for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
-   fputs(" of pool element ", stdlog);
-   ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-   fputs("\n", stdlog);
+   fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
    LOG_END
 
    message->Type       = AHT_REGISTRATION_RESPONSE;
@@ -1568,14 +1510,10 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
 
 
    /* ====== Get peer addresses ========================================== */
-   addresses = getpaddrsplus(fd, assocID, &addressArray);
-   if(addresses > 0) {
-      transportAddressBlockNew(remoteAddressBlock,
-                               IPPROTO_SCTP,
-                               getPort(&addressArray[0].sa),
-                               0,
-                               addressArray, addresses);
-
+   if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
+                                                      fd, assocID,
+                                                      MAX_NS_TRANSPORTADDRESSES,
+                                                      false) > 0) {
       LOG_VERBOSE2
       fputs("SCTP association's valid peer addresses: ", stdlog);
       transportAddressBlockPrint(remoteAddressBlock, stdlog);
@@ -1583,94 +1521,121 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
       LOG_END
 
       /* ====== Filter addresses ========================================= */
-      if(filterValidAddresses(message->PoolElementPtr->UserTransport,
-                              addressArray, addresses,
-                              validAddressBlock) > 0) {
+      if(transportAddressBlockFilter(message->PoolElementPtr->UserTransport,
+                                     remoteAddressBlock,
+                                     userTransportAddressBlock,
+                                     MAX_NS_TRANSPORTADDRESSES, false, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
          LOG_VERBOSE2
-         fputs("Valid addresses: ", stdlog);
-         transportAddressBlockPrint(validAddressBlock, stdlog);
+         fputs("Filtered user transport addresses: ", stdlog);
+         transportAddressBlockPrint(userTransportAddressBlock, stdlog);
          fputs("\n", stdlog);
          LOG_END
-
-         message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                             &registrar->Handlespace,
-                             &message->Handle,
-                             registrar->ServerID,
-                             message->PoolElementPtr->Identifier,
-                             message->PoolElementPtr->RegistrationLife,
-                             &message->PoolElementPtr->PolicySettings,
-                             validAddressBlock,
-                             remoteAddressBlock,
-                             fd, assocID,
-                             getMicroTime(),
-                             &poolElementNode);
-         if(message->Error == RSPERR_OKAY) {
-            /* ====== Successful registration ============================ */
-            LOG_ACTION
-            fputs("Successfully registered to pool ", stdlog);
-            poolHandlePrint(&message->Handle, stdlog);
-            fputs(" pool element ", stdlog);
-            ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, 0);
+         if(transportAddressBlockFilter(remoteAddressBlock,
+                                        NULL,
+                                        asapTransportAddressBlock,
+                                        MAX_NS_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
+            LOG_VERBOSE2
+            fputs("Filtered ASAP transport addresses: ", stdlog);
+            transportAddressBlockPrint(asapTransportAddressBlock, stdlog);
             fputs("\n", stdlog);
             LOG_END
 
-            /* ====== Tune SCTP association ============================== */
-/*
-            tags[0].Tag = TAG_TuneSCTP_MinRTO;
-            tags[0].Data = 500;
-            tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-            tags[1].Data = 1000;
-            tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-            tags[2].Data = 750;
-            tags[3].Tag = TAG_TuneSCTP_Heartbeat;
-            tags[3].Data = (registrar->EndpointMonitoringHeartbeatInterval / 1000);
-            tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
-            tags[4].Data = 3;
-            tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
-            tags[5].Data = 9;
-            tags[6].Tag = TAG_DONE;
-            if(!tuneSCTP(fd, assocID, (struct TagItem*)&tags)) {
-               LOG_WARNING
-               fprintf(stdlog, "Unable to tune SCTP association %u's parameters\n",
-                       (unsigned int)assocID);
+            message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+                              &registrar->Handlespace,
+                              &message->Handle,
+                              registrar->ServerID,
+                              message->PoolElementPtr->Identifier,
+                              message->PoolElementPtr->RegistrationLife,
+                              &message->PoolElementPtr->PolicySettings,
+                              userTransportAddressBlock,
+                              asapTransportAddressBlock,
+                              fd, assocID,
+                              getMicroTime(),
+                              &poolElementNode);
+            if(message->Error == RSPERR_OKAY) {
+               /* ====== Successful registration ============================ */
+               LOG_ACTION
+               fputs("Successfully registered ", stdlog);
+               poolHandlePrint(&message->Handle, stdlog);
+               fprintf(stdlog, "/$%08x\n", poolElementNode->Identifier);
                LOG_END
-            }
+               LOG_VERBOSE2
+               fputs("Registered pool element: ", stdlog);
+               ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+               fputs("\n", stdlog);
+               LOG_END
+
+               /* ====== Tune SCTP association ============================== */
+/*
+               tags[0].Tag = TAG_TuneSCTP_MinRTO;
+               tags[0].Data = 500;
+               tags[1].Tag = TAG_TuneSCTP_MaxRTO;
+               tags[1].Data = 1000;
+               tags[2].Tag = TAG_TuneSCTP_InitialRTO;
+               tags[2].Data = 750;
+               tags[3].Tag = TAG_TuneSCTP_Heartbeat;
+               tags[3].Data = (registrar->EndpointMonitoringHeartbeatInterval / 1000);
+               tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
+               tags[4].Data = 3;
+               tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
+               tags[5].Data = 9;
+               tags[6].Tag = TAG_DONE;
+               if(!tuneSCTP(fd, assocID, (struct TagItem*)&tags)) {
+                  LOG_WARNING
+                  fprintf(stdlog, "Unable to tune SCTP association %u's parameters\n",
+                        (unsigned int)assocID);
+                  LOG_END
+               }
 */
 
-            /* ====== Activate keep alive timer ========================== */
-            if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
-               ST_CLASS(poolHandlespaceNodeDeactivateTimer)(
+               /* ====== Activate keep alive timer ========================== */
+               if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {
+                  ST_CLASS(poolHandlespaceNodeDeactivateTimer)(
+                     &registrar->Handlespace.Handlespace,
+                     poolElementNode);
+               }
+               ST_CLASS(poolHandlespaceNodeActivateTimer)(
                   &registrar->Handlespace.Handlespace,
-                  poolElementNode);
+                  poolElementNode,
+                  PENT_KEEPALIVE_TRANSMISSION,
+                  getMicroTime() + registrar->EndpointKeepAliveTransmissionInterval);
+               timerRestart(&registrar->HandlespaceActionTimer,
+                           ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
+                              &registrar->Handlespace));
+
+               /* ====== Print debug information ============================ */
+               LOG_VERBOSE3
+               fputs("Handlespace content:\n", stdlog);
+               registrarDumpHandlespace(registrar);
+               LOG_END
+
+               /* ====== Send update to peers =============================== */
+               sendHandleUpdate(registrar, poolElementNode, PNUP_ADD_PE);
             }
-            ST_CLASS(poolHandlespaceNodeActivateTimer)(
-               &registrar->Handlespace.Handlespace,
-               poolElementNode,
-               PENT_KEEPALIVE_TRANSMISSION,
-               getMicroTime() + registrar->EndpointKeepAliveTransmissionInterval);
-            timerRestart(&registrar->HandlespaceActionTimer,
-                         ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
-                            &registrar->Handlespace));
-
-            /* ====== Print debug information ============================ */
-            LOG_VERBOSE3
-            fputs("Handlespace content:\n", stdlog);
-            registrarDumpHandlespace(registrar);
-            LOG_END
-
-            /* ====== Send update to peers =============================== */
-            sendHandleUpdate(registrar, poolElementNode, PNUP_ADD_PE);
+            else {
+               LOG_WARNING
+               fputs("Failed to register to pool ", stdlog);
+               poolHandlePrint(&message->Handle, stdlog);
+               fputs(" pool element ", stdlog);
+               ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+               fputs(": ", stdlog);
+               rserpoolErrorPrint(message->Error, stdlog);
+               fputs("\n", stdlog);
+               LOG_END
+            }
          }
          else {
             LOG_WARNING
-            fputs("Failed to register to pool ", stdlog);
+            fprintf(stdlog, "Registration request for ");
             poolHandlePrint(&message->Handle, stdlog);
-            fputs(" pool element ", stdlog);
+            fputs(" of pool element ", stdlog);
             ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-            fputs(": ", stdlog);
-            rserpoolErrorPrint(message->Error, stdlog);
+            fputs(" was not possible, since no usable ASAP transport addresses are available\n", stdlog);
+            fputs("Addresses from association: ", stdlog);
+            transportAddressBlockPrint(remoteAddressBlock, stdlog);
             fputs("\n", stdlog);
             LOG_END
+            message->Error = RSPERR_NO_USABLE_ASAP_ADDRESSES;
          }
       }
       else {
@@ -1679,12 +1644,16 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
          poolHandlePrint(&message->Handle, stdlog);
          fputs(" of pool element ", stdlog);
          ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-         fputs(" was not possible, since no valid addresses are available\n", stdlog);
+         fputs(" was not possible, since no usable user transport addresses are available\n", stdlog);
+         fputs("Addresses from message: ", stdlog);
+         transportAddressBlockPrint(message->PoolElementPtr->UserTransport, stdlog);
+         fputs("\n", stdlog);
+         fputs("Addresses from association: ", stdlog);
+         transportAddressBlockPrint(remoteAddressBlock, stdlog);
+         fputs("\n", stdlog);
          LOG_END
-         message->Error = RSPERR_NO_USABLE_ADDRESSES;
+         message->Error = RSPERR_NO_USABLE_USER_ADDRESSES;
       }
-      free(addressArray);
-      addressArray = NULL;
 
       if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
          LOG_WARNING
@@ -1712,10 +1681,9 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
    struct ST_CLASS(PoolNode)         delPoolNode;
 
    LOG_ACTION
-   fprintf(stdlog, "Deregistration request for pool element $%08x of pool ",
-           message->Identifier);
+   fputs("Deregistration request for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
-   fputs("\n", stdlog);
+   fprintf(stdlog, "/$%08x\n", message->Identifier);
    LOG_END
 
    message->Type  = AHT_DEREGISTRATION_RESPONSE;
@@ -1971,10 +1939,9 @@ static void handleEndpointUnreachable(struct Registrar*       registrar,
                      poolElementNode);
          if(message->Error == RSPERR_OKAY) {
             LOG_ACTION
-            fprintf(stdlog, "Successfully deregistered pool element $%08x from pool ",
-                  message->Identifier);
+            fputs("Successfully deregistered ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
-            fputs("\n", stdlog);
+            fprintf(stdlog, "/$%08x\n", message->Identifier);
             LOG_END
          }
          else {
@@ -2018,12 +1985,16 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       return;
    }
 
-   LOG_ACTION
-   fputs("Got HandleUpdate for pool element ", stdlog);
-   ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-   fputs(" of pool ", stdlog);
+   LOG_VERBOSE
+   fputs("Got HandleUpdate for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
-   fprintf(stdlog, ", action $%04x\n", message->Action);
+   fprintf(stdlog, "/$%08x, action $%04x\n",
+           message->PoolElementPtr->Identifier, message->Action);
+   LOG_END
+   LOG_VERBOSE2
+   fputs("Updated pool element: ", stdlog);
+   ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+   fputs("\n", stdlog);
    LOG_END
 
    if(message->Action == PNUP_ADD_PE) {
@@ -2042,9 +2013,12 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                      &newPoolElementNode);
          if(result == RSPERR_OKAY) {
             LOG_ACTION
-            fputs("Successfully registered to pool ", stdlog);
+            fputs("Successfully registered ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
-            fputs(" pool element ", stdlog);
+            fprintf(stdlog, "/$%08x\n", newPoolElementNode->Identifier);
+            LOG_END
+            LOG_VERBOSE2
+            fputs("Registered pool element: ", stdlog);
             ST_CLASS(poolElementNodePrint)(newPoolElementNode, stdlog, PENPO_FULL);
             fputs("\n", stdlog);
             LOG_END
@@ -2095,10 +2069,9 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                   message->PoolElementPtr->Identifier);
       if(message->Error == RSPERR_OKAY) {
          LOG_ACTION
-         fprintf(stdlog, "Successfully deregistered pool element $%08x from pool ",
-                 message->PoolElementPtr->Identifier);
+         fputs("Successfully deregistered ", stdlog);
          poolHandlePrint(&message->Handle, stdlog);
-         fputs("\n", stdlog);
+         fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
          LOG_END
       }
       else {
@@ -2123,15 +2096,19 @@ static void handleHandleUpdate(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle peer presence ########################################### */
-static void handlePresence(struct Registrar*       registrar,
-                           int                     fd,
-                           sctp_assoc_t            assocID,
-                           struct RSerPoolMessage* message)
+/* ###### Handle presence ################################################ */
+static void handlePeerPresence(struct Registrar*       registrar,
+                               int                     fd,
+                               sctp_assoc_t            assocID,
+                               struct RSerPoolMessage* message)
 {
    HandlespaceChecksumType        checksum;
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct TakeoverProcess*        takeoverProcess;
+   char                           remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*  remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
+   char                           enrpTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*  enrpTransportAddressBlock = (struct TransportAddressBlock*)&enrpTransportAddressBlockBuffer;
    int                            result;
 
    if(message->SenderID == registrar->ServerID) {
@@ -2152,6 +2129,61 @@ static void handlePresence(struct Registrar*       registrar,
    fputs("\n", stdlog);
    LOG_END
 
+
+   /* ====== Filter addresses ============================================ */
+   if(fd == registrar->ENRPMulticastInputSocket) {
+      transportAddressBlockNew(enrpTransportAddressBlock,
+                               IPPROTO_SCTP,
+                               getPort(&message->SourceAddress.sa),
+                               0,
+                               &message->SourceAddress,
+                               1);
+   }
+   else {
+      if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
+                                                         fd, assocID,
+                                                         MAX_NS_TRANSPORTADDRESSES,
+                                                         false) > 0) {
+         LOG_VERBOSE3
+         fputs("SCTP association's valid peer addresses: ", stdlog);
+         transportAddressBlockPrint(remoteAddressBlock, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+
+         /* ====== Filter addresses ====================================== */
+         if(transportAddressBlockFilter(message->PeerListNodePtr->AddressBlock,
+                                        remoteAddressBlock,
+                                        enrpTransportAddressBlock,
+                                        MAX_NS_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) == 0) {
+            LOG_WARNING
+            fprintf(stdlog, "PeerPresence from peer $%08x contains no usable ENRP endpoint addresses\n",
+                    message->PeerListNodePtr->Identifier);
+            fputs("Addresses from message: ", stdlog);
+            transportAddressBlockPrint(message->PeerListNodePtr->AddressBlock, stdlog);
+            fputs("\n", stdlog);
+            fputs("Addresses from association: ", stdlog);
+            transportAddressBlockPrint(remoteAddressBlock, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            return;
+         }
+      }
+      else {
+         LOG_ERROR
+         fprintf(stdlog, "Unable to obtain peer addresses of FD %d, assoc %u\n",
+               fd, (unsigned int)assocID);
+         LOG_END
+      }
+   }
+   LOG_VERBOSE2
+   fprintf(stdlog, "Using the following ENRP endpoint addresses for peer $%08x: ",
+           message->PeerListNodePtr->Identifier);
+   transportAddressBlockPrint(enrpTransportAddressBlock, stdlog);
+   fputs("\n", stdlog);
+   LOG_END
+
+
+   /* ====== Add/update peer ============================================= */
    if(message->PeerListNodePtr) {
       int flags = PLNF_DYNAMIC;
       if((registrar->ENRPUseMulticast) && (fd == registrar->ENRPMulticastOutputSocket)) {
@@ -2161,19 +2193,19 @@ static void handlePresence(struct Registrar*       registrar,
                   &registrar->Peers,
                   message->PeerListNodePtr->Identifier,
                   flags,
-                  message->PeerListNodePtr->AddressBlock,
+                  enrpTransportAddressBlock,
                   getMicroTime(),
                   &peerListNode);
 
       if(result == RSPERR_OKAY) {
-         /* ====== Checksum handling ================================== */
+         /* ====== Checksum handling ===================================== */
          LOG_VERBOSE2
          fputs("Successfully added peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
          fputs("\n", stdlog);
          LOG_END
 
-         /* ====== Check if synchronization is necessary ============== */
+         /* ====== Check if synchronization is necessary ================= */
          if(assocID != 0) {
             /* Attention: We only synchronize on SCTP-received Presence messages! */
             checksum = TMPL_CLASS(peerListNodeGetOwnershipChecksum, LeafLinkedRedBlackTree)(
@@ -2189,7 +2221,7 @@ static void handlePresence(struct Registrar*       registrar,
             }
          }
 
-         /* ====== Activate keep alive timer ========================== */
+         /* ====== Activate keep alive timer ============================= */
          if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
             ST_CLASS(peerListDeactivateTimer)(
                &registrar->Peers.List,
@@ -2204,7 +2236,7 @@ static void handlePresence(struct Registrar*       registrar,
                       ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                          &registrar->Peers));
 
-         /* ====== Print debug information ============================ */
+         /* ====== Print debug information =============================== */
          LOG_VERBOSE3
          fputs("Peers:\n", stdlog);
          registrarDumpPeers(registrar);
@@ -2216,7 +2248,7 @@ static void handlePresence(struct Registrar*       registrar,
             LOG_VERBOSE
             fputs("PeerPresence with ReplyRequired flag set -> Sending reply...\n", stdlog);
             LOG_END
-            sendPresence(registrar,
+            sendPeerPresence(registrar,
                              fd, message->AssocID, 0,
                              NULL, 0,
                              message->SenderID,
@@ -2232,13 +2264,13 @@ static void handlePresence(struct Registrar*       registrar,
             fputs(" as mentor server...\n", stdlog);
             LOG_END
             registrar->MentorServerID = peerListNode->Identifier;
-            sendPresence(registrar,
-                         registrar->ENRPUnicastSocket,
-                         0, 0,
-                         peerListNode->AddressBlock->AddressArray,
-                         peerListNode->AddressBlock->Addresses,
-                         peerListNode->Identifier,
-                         false);
+            sendPeerPresence(registrar,
+                             registrar->ENRPUnicastSocket,
+                             0, 0,
+                             peerListNode->AddressBlock->AddressArray,
+                             peerListNode->AddressBlock->Addresses,
+                             peerListNode->Identifier,
+                             false);
             sendListRequest(registrar,
                             registrar->ENRPUnicastSocket,
                             0, 0,
@@ -2264,6 +2296,8 @@ static void handlePresence(struct Registrar*       registrar,
       }
    }
 
+
+   /* ====== Takeover handling =========================================== */
    if((takeoverProcess = takeoverProcessListFindTakeoverProcess(&registrar->Takeovers,
                                                                 message->SenderID))) {
       LOG_ACTION
@@ -2308,7 +2342,7 @@ static void handleInitTakeover(struct Registrar*       registrar,
               message->SenderID);
       LOG_END
       if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-         sendPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
+         sendPeerPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                           (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                           0, false);
       }
@@ -2320,7 +2354,7 @@ static void handleInitTakeover(struct Registrar*       registrar,
             fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
                      peerListNode->Identifier);
             LOG_END
-            sendPresence(registrar,
+            sendPeerPresence(registrar,
                              registrar->ENRPUnicastSocket, 0, 0,
                              peerListNode->AddressBlock->AddressArray,
                              peerListNode->AddressBlock->Addresses,
@@ -2661,7 +2695,7 @@ static void handleListResponse(struct Registrar*       registrar,
                   getMicroTime() + registrar->PeerMaxTimeLastHeard);
 
                /* ====== New peer -> Send Peer Presence ================== */
-               sendPresence(registrar,
+               sendPeerPresence(registrar,
                                 registrar->ENRPUnicastSocket, 0, 0,
                                 newPeerListNode->AddressBlock->AddressArray,
                                 newPeerListNode->AddressBlock->Addresses,
@@ -2801,9 +2835,12 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
                            &newPoolElementNode);
                if(result == RSPERR_OKAY) {
                   LOG_ACTION
-                  fputs("Successfully registered to pool ", stdlog);
+                  fputs("Successfully registered ", stdlog);
                   poolHandlePrint(&message->Handle, stdlog);
-                  fputs(" pool element ", stdlog);
+                  fprintf(stdlog, "/$%08x\n", poolElementNode->Identifier);
+                  LOG_END
+                  LOG_VERBOSE2
+                  fputs("Registered pool element: ", stdlog);
                   ST_CLASS(poolElementNodePrint)(newPoolElementNode, stdlog, PENPO_FULL);
                   fputs("\n", stdlog);
                   LOG_END
@@ -2902,7 +2939,7 @@ static void handleMessage(struct Registrar*       registrar,
          handleEndpointUnreachable(registrar, sd, message->AssocID, message);
        break;
       case EHT_PRESENCE:
-         handlePresence(registrar, sd, message->AssocID, message);
+         handlePeerPresence(registrar, sd, message->AssocID, message);
        break;
       case EHT_HANDLE_UPDATE:
          handleHandleUpdate(registrar, sd, message->AssocID, message);
@@ -2981,7 +3018,8 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                ppid = PPID_ENRP;
             }
 
-            result = rserpoolPacket2Message(buffer, NULL, assocID, ppid, received, sizeof(buffer), &message);
+            result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
+                                            received, sizeof(buffer), &message);
             if(message != NULL) {
                if(result == RSPERR_OKAY) {
                   message->BufferAutoDelete = false;
@@ -2999,7 +3037,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                      /* For ASAP or ENRP messages, we can reply
                         error message */
                      if(message->PPID == PPID_ASAP) {
-                        message->Type = AHT_PEER_ERROR;
+                        message->Type = AHT_ERROR;
                      }
                      else if(message->PPID == PPID_ENRP) {
                         message->Type = EHT_ERROR;

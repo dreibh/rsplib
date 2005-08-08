@@ -40,7 +40,8 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_UNRECOGNIZED_MESSAGE,          "unrecognized message" },
    { RSPERR_AUTHORIZATION_FAILURE,         "authorization failure" },
    { RSPERR_INVALID_VALUES,                "invalid values" },
-   { RSPERR_NO_USABLE_ADDRESSES,           "no usable address(es)" },
+   { RSPERR_NO_USABLE_USER_ADDRESSES,      "no usable user endpoint address(es)" },
+   { RSPERR_NO_USABLE_ASAP_ADDRESSES,      "no usable ASAP endpoint address(es)" },
 
    /* Implementation-specific error causes */
    { RSPERR_NOT_INITIALIZED,               "not initialized" },
