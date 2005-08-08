@@ -410,6 +410,7 @@ size_t transportAddressBlockGetAddressesFromSCTPSocket(
 #endif
 
 
+#ifndef HAVE_TEST
 /* ###### Filter address array ########################################### */
 size_t transportAddressBlockFilter(
           const struct TransportAddressBlock* originalAddressBlock,
@@ -464,3 +465,4 @@ size_t transportAddressBlockFilter(
 
    return(selected);
 }
+#endif
