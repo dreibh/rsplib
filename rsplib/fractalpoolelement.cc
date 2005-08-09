@@ -49,7 +49,7 @@ using namespace std;
 class ServiceThread : public TDThread
 {
    public:
-   ServiceThread(const size_t failureAfter);
+   ServiceThread(const size_t failureAfter, const bool testMode);
    ~ServiceThread();
 
    inline bool hasFinished() {
@@ -75,10 +75,11 @@ class ServiceThread : public TDThread
    public:
    SessionDescriptor*  Session;
    size_t              FailureAfter;
+   bool                TestMode;
 };
 
 
-ServiceThread::ServiceThread(const size_t failureAfter)
+ServiceThread::ServiceThread(const size_t failureAfter, const bool testMode)
 {
    static unsigned int IDCounter = 0;
    ID                  = ++IDCounter;
@@ -86,6 +87,7 @@ ServiceThread::ServiceThread(const size_t failureAfter)
    IsNewSession        = true;
    Shutdown            = false;
    FailureAfter        = failureAfter;
+   TestMode            = testMode;
    LastSendTimeStamp   = 0;
    LastCookieTimeStamp = 0;
    cout << "Created thread " << ID << "..." << endl;
@@ -272,33 +274,38 @@ void ServiceThread::run()
          }
          while(Status.CurrentY < Status.Parameter.Height) {
             while(Status.CurrentX < Status.Parameter.Width) {
-               const complex<double> c =
-                  complex<double>(c1real + ((double)Status.CurrentX * stepX),
-                                  c1imag + ((double)Status.CurrentY * stepY));
+               if(!TestMode) {
+                  const complex<double> c =
+                     complex<double>(c1real + ((double)Status.CurrentX * stepX),
+                                    c1imag + ((double)Status.CurrentY * stepY));
 
-               // ====== Algorithms =========================================
-               switch(Status.Parameter.AlgorithmID) {
-                  case FGPA_MANDELBROT:
-                     z = complex<double>(0.0, 0.0);
-                     for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                        z = z*z - c;
-                        if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
-                           break;
+                  // ====== Algorithms =========================================
+                  switch(Status.Parameter.AlgorithmID) {
+                     case FGPA_MANDELBROT:
+                        z = complex<double>(0.0, 0.0);
+                        for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                           z = z*z - c;
+                           if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                              break;
+                           }
                         }
-                     }
-                   break;
-                  case FGPA_MANDELBROTN:
-                     z = complex<double>(0.0, 0.0);
-                     for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                        z = pow(z, (int)rint(n)) - c;
-                        if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
-                           break;
+                     break;
+                     case FGPA_MANDELBROTN:
+                        z = complex<double>(0.0, 0.0);
+                        for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                           z = pow(z, (int)rint(n)) - c;
+                           if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                              break;
+                           }
                         }
-                     }
-                   break;
-                  default:
-                     i = 0;
-                   break;
+                     break;
+                     default:
+                        i = 0;
+                     break;
+                  }
+               }
+               else {
+                  i = (Status.CurrentX * Status.CurrentY) % 256;
                }
                // ===========================================================
 
@@ -490,6 +497,7 @@ int main(int argc, char** argv)
    unsigned int                  policyParameterWeight          = 1;
    unsigned int                  policyParameterLoad            = 0;
    unsigned int                  policyParameterLoadDegradation = 0;
+   bool                          testMode                       = false;
    int                           i;
    int                           result;
 #ifdef ENABLE_CSP
@@ -519,6 +527,9 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
          identifier = atol((char*)&argv[i][12]);
+      }
+      else if(!(strcmp(argv[i], "-testmode"))) {
+         testMode = true;
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
@@ -700,7 +711,8 @@ int main(int argc, char** argv)
    if(poolElement != NULL) {
       cout << "Fractal Generator Pool Element - Version 1.0" << endl
            << "--------------------------------------------" << endl << endl
-           << "Failure After: " << failureAfter << " packets" << endl << endl;
+           << "Failure After: " << failureAfter << " packets" << endl
+           << "Test Mode:     " << (testMode ? "on" : "off") << endl << endl;
 
 #ifndef FAST_BREAK
       installBreakDetector();
@@ -731,7 +743,7 @@ int main(int argc, char** argv)
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
-               ServiceThread* serviceThread = new ServiceThread(failureAfter);
+               ServiceThread* serviceThread = new ServiceThread(failureAfter, testMode);
                if(serviceThread) {
                   tags[0].Tag  = TAG_TuneSCTP_MinRTO;
                   tags[0].Data = 200;
