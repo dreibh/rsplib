@@ -441,8 +441,14 @@ void FractalPU::run()
                   }
                }
                else if(received == RspRead_Timeout) {
-                  puts("Timeout occurred -> forcing failover!");
-                  rspSessionFailover(Session);
+                  if(rspSessionHasCookie(Session)) {
+                     puts("Timeout occurred -> forcing failover!");
+                     rspSessionFailover(Session);
+                  }
+                  else {
+                     puts("No cookie -> restart necessary");
+                     goto finish;
+                  }
                }
 
                if(!Running) {

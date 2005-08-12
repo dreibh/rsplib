@@ -1,5 +1,5 @@
 /*
- *  $Id: rspsession.c,v 1.38 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -645,7 +645,7 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
 }
 
 
-/* ###### Send business card ################################################# */
+/* ###### Send business card ############################################# */
 static void rspSessionSendBusinessCard(struct SessionDescriptor* session)
 {
    if(session->PoolElement) {
@@ -658,7 +658,14 @@ static void rspSessionSendBusinessCard(struct SessionDescriptor* session)
 }
 
 
-/* ###### Do session failover ################################################*/
+/* ###### Check, if session has cookie ################################### */
+bool rspSessionHasCookie(struct SessionDescriptor* session)
+{
+   return(session->Cookie != NULL);
+}
+
+
+/* ###### Do session failover ############################################ */
 bool rspSessionFailover(struct SessionDescriptor* session)
 {
    struct EndpointAddressInfo* eai;
@@ -670,7 +677,7 @@ bool rspSessionFailover(struct SessionDescriptor* session)
    threadSafetyLock(&session->Mutex);
 
    if(session->Socket >= 0) {
-      /* ====== Close connection ============================================ */
+      /* ====== Close connection ========================================= */
       LOG_ACTION
       fprintf(stdlog, "Closing socket %d\n", session->Socket);
       LOG_END

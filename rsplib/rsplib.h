@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.h,v 1.14 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -304,6 +304,14 @@ ssize_t rspSessionWrite(struct SessionDescriptor* sd,
                         const void*               buffer,
                         const size_t              length,
                         struct TagItem*           tags CPP_DEFAULT(NULL));
+
+/**
+  * Check, if session has cookie.
+  *
+  * @param sd SessionDescriptor.
+  * @return true, if cookie is available; false otherwise.
+  */
+bool rspSessionHasCookie(struct SessionDescriptor* session);
 
 /**
   * Force session failover.

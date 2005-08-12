@@ -240,13 +240,8 @@ void ServiceThread::run()
       received = rspSessionRead(Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
       if(received > 0) {
          if(tags[0].Data != 0) {
-            if(tags[0].Data != 0) {
-               if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
-                  goto finish;
-               }
-            }
-            else {
-               cerr << "Cookie echo did not come via control channel?!" << endl;
+            if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
+               goto finish;
             }
          }
          else {
@@ -371,11 +366,7 @@ void ServiceThread::run()
    // ====== Shutdown connection ==========================================
 finish:
    cerr << "Thread-Ende!" << endl;
-LOG_ACTION
-LOG_END
    rspDeleteSession(Session);
-LOG_ACTION
-LOG_END
    Session = NULL;
 }
 

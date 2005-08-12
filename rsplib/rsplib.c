@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib.c,v 1.27 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -487,31 +487,33 @@ int rspSelect(int             n,
    dispatcherHandleSelectResult(&gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
 
    /* ====== Prepare results for user ==================================== */
-   result = 0;
-   if(readfds) {
-      FD_ZERO(readfds);
-      for(i = 0;i < n;i++) {
-         if(FD_ISSET(i,&myreadfds)) {
-            FD_SET(i,readfds);
-            result++;
+   if(result > 0) {
+      result = 0;
+      if(readfds) {
+         FD_ZERO(readfds);
+         for(i = 0;i < n;i++) {
+            if(FD_ISSET(i,&myreadfds)) {
+               FD_SET(i,readfds);
+               result++;
+            }
          }
       }
-   }
-   if(writefds) {
-      FD_ZERO(writefds);
-      for(i = 0;i < n;i++) {
-         if(FD_ISSET(i,&mywritefds)) {
-            FD_SET(i,writefds);
-            result++;
+      if(writefds) {
+         FD_ZERO(writefds);
+         for(i = 0;i < n;i++) {
+            if(FD_ISSET(i,&mywritefds)) {
+               FD_SET(i,writefds);
+               result++;
+            }
          }
       }
-   }
-   if(exceptfds) {
-      FD_ZERO(exceptfds);
-      for(i = 0;i < n;i++) {
-         if(FD_ISSET(i,&myexceptfds)) {
-            FD_SET(i,exceptfds);
-            result++;
+      if(exceptfds) {
+         FD_ZERO(exceptfds);
+         for(i = 0;i < n;i++) {
+            if(FD_ISSET(i,&myexceptfds)) {
+               FD_SET(i,exceptfds);
+               result++;
+            }
          }
       }
    }
