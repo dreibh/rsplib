@@ -98,13 +98,12 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor t4 t5
-# examplepe2 examplepu2 t3
+noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor t4 t5 calcapppoolelement calcapppooluser
 
 
 # ???
-# -static wird überall gesetzt. Im configure-Skript sollte besser
-# eingestellt werden können ob statisch oder dynamisch gelinkt wird!
+# -static wird berall gesetzt. Im configure-Skript sollte besser
+# eingestellt werden kï¿½nen ob statisch oder dynamisch gelinkt wird!
 
 registrar_SOURCES = registrar.c
 registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
@@ -126,6 +125,12 @@ examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS
 
 fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c netdouble.h fractalgeneratorpackets.h
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+
+calcapppooluser_SOURCES = calcapppooluser.cc calcappgeneratorpackets
+calcapppooluser_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+
+calcapppoolelement_SOURCES = calcapppoolelement.cc calcappgeneratorpackets.h
+calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 t5_SOURCES = t5.cc
 t5_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
