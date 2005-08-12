@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.c,v 1.7 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -536,10 +536,10 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                               struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
                               if(registrarAddressBlock) {
                                  transportAddressBlockNew(registrarAddressBlock,
-                                                            IPPROTO_SCTP,
-                                                            getPort(&peerAddressArray[0].sa),
-                                                            0,
-                                                            peerAddressArray, n);
+                                                          IPPROTO_SCTP,
+                                                          getPort(&peerAddressArray[0].sa),
+                                                          0,
+                                                          peerAddressArray, n);
                                  peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                                                    &registrarTable->RegistrarList,
                                                    0,

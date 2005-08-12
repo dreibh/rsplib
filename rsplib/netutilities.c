@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.c,v 1.59 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -1368,13 +1368,16 @@ int sendtoplus(int                      sockfd,
 
    setNonBlocking(sockfd);
    if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+      memset(&sri, 0, sizeof(sri));
       sri.sinfo_assoc_id   = assocID;
       sri.sinfo_stream     = streamID;
       sri.sinfo_ppid       = htonl(ppid);
       sri.sinfo_flags      = flags;
+      /* --- Already resetted to 0 ---
       sri.sinfo_ssn        = 0;
       sri.sinfo_tsn        = 0;
       sri.sinfo_context    = 0;
+      */
       sri.sinfo_timetolive = timeToLive;
 
       if(toaddrs) {

@@ -245,7 +245,7 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
             goto finished;
          }
          const uint32_t point = ntohl(data->Buffer[p]);
-         const QColor color(((point + (2 * Run) + (2 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
+         const QColor color(((point + (2 * Run) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
          setPoint(x, y, color.rgb());
          p++;
 
