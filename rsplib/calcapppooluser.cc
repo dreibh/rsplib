@@ -52,8 +52,36 @@ using namespace std;
 /* Exit immediately on Ctrl-C. No clean shutdown. */
 /* #define FAST_BREAK */
 
-
 unsigned int JobID = 0;
+
+
+void sendCalcAppKeepAliveAck(struct SessionDescriptor* session)
+{
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type      = htonl(CALCAPP_KEEPALIVE_ACK);
+   message.JobID     = htonl(JobID);
+   if(rspSessionWrite(session,
+                      (void*)&message,
+                      sizeof(message),
+                      NULL) <= 0) {
+      cerr << "ERROR: Unable to send CalcAppKeepAlive" << endl;
+      exit(1);
+   }
+}
+
+
+void handleCalcAppKeepAlive(struct SessionDescriptor* session,
+                            CalcAppMessage*           message,
+                            const size_t              size)
+{
+   if(JobID != ntohl(message->JobID)) {
+      cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
+      exit(1);
+   }
+puts("KEEP-ALIVE");
+   sendCalcAppKeepAliveAck(session);
+}
 
 
 void runJob(const char* poolHandle, const double jobSize)
@@ -72,7 +100,7 @@ void runJob(const char* poolHandle, const double jobSize)
       message.JobID   = ++JobID;
       message.JobSize = jobSize;
       if(rspSessionWrite(session, (void*)&message, sizeof(message), NULL) > 0) {
-      
+
          bool finished = false;
          while(!finished) {
             tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
@@ -83,10 +111,9 @@ void runJob(const char* poolHandle, const double jobSize)
             received = rspSessionRead(session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
             if(received > 0) {
                printf("recv=%d\n",received);
-               
+
                if(received >= (ssize_t)sizeof(CalcAppMessage)) {
                   CalcAppMessage* response = (CalcAppMessage*)&buffer;
-                  printf("TYPE=%d\n", ntohl(response->Type));
                   switch(ntohl(response->Type)) {
                      case CALCAPP_ACCEPT:
                         cout << "Job " << JobID << " accepted" << endl;
@@ -94,16 +121,22 @@ void runJob(const char* poolHandle, const double jobSize)
                      case CALCAPP_COMPLETE:
                         cout << "Job " << JobID << " completed" << endl;
                         finished = true;
-                     break;
+                      break;
+                     case CALCAPP_KEEPALIVE:
+                        handleCalcAppKeepAlive(session, response, sizeof(response));
+                      break;
+                     default:
+                        cerr << "ERROR: Unknown message type " << ntohl(response->Type) << endl;
+                      break;
                   }
                }
             }
             else {
                cerr << "ERROR: Unable to start job " << JobID << endl;
                finished = true;
-            }      
+            }
          }
-         
+
       }
 
       rspDeleteSession(session, NULL);
@@ -181,10 +214,10 @@ int main(int argc, char** argv)
 
    cout << "CalcApp Pool User - Version 2.0" << endl;
    cout << "-------------------------------" << endl;
-   
-   
+
+
    runJob(poolHandle, 10000000.0);
-   
+
 
    finishLogging();
    rspCleanUp();
