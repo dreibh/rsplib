@@ -766,7 +766,9 @@ int main(int argc, char** argv)
          }
 
          if(result < 0) {
-            perror("rspSessionSelect() failed");
+            if(errno != EINTR) {
+               perror("rspSessionSelect() failed");
+            }
             break;
          }
 

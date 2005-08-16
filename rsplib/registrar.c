@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c,v 1.18 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -65,7 +65,7 @@
 #define MAX_NS_TRANSPORTADDRESSES                                           16
 #define MIN_ENDPOINT_ADDRESS_SCOPE                                           4
 #define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
-#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       2111111
+#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
 #define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
 #define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
 #define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000

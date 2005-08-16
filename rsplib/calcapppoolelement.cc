@@ -62,7 +62,7 @@ class SessionSet
    struct SessionSetEntry {
       SessionSetEntry*   Next;
       SessionDescriptor* Session;
- 
+
       bool               HasJob;
       unsigned int       JobID;
       double             JobSize;
@@ -82,7 +82,7 @@ class SessionSet
    void sendCalcAppKeepAlive(SessionSetEntry* sessionListEntry);
    void sendCalcAppKeepAliveAck(SessionSetEntry* sessionListEntry);
    void sendCalcAppAbort(SessionSetEntry* sessionListEntry);
-   
+
    void handleJobCompleteTimer(SessionSetEntry* sessionListEntry);
    void handleKeepAliveTransmissionTimer(SessionSetEntry* sessionListEntry);
    void handleKeepAliveTimeoutTimer(SessionSetEntry* sessionListEntry);
@@ -143,7 +143,7 @@ bool SessionSet::addSession(SessionDescriptor* session)
       sessionSetEntry->JobSize    = 0;
       sessionSetEntry->Completed  = 0;
       sessionSetEntry->LastUpdate = 0;
-      
+
       sessionSetEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
       sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
       sessionSetEntry->JobCompleteTimeStamp           = ~0ULL;
@@ -151,9 +151,9 @@ bool SessionSet::addSession(SessionDescriptor* session)
       FirstSession                = sessionSetEntry;
       Sessions++;
       result = true;
-   }  
+   }
    scheduleJobs();
-   
+
    return(result);
 }
 
@@ -179,7 +179,7 @@ void SessionSet::removeSession(SessionDescriptor* session)
       }
       prev  = sessionSetEntry;
       sessionSetEntry = sessionSetEntry->Next;
-   }   
+   }
    scheduleJobs();
 }
 
@@ -207,18 +207,18 @@ unsigned long long SessionSet::initSelectArray(SessionDescriptor** sdArray,
    const size_t       count = getSessions();
    unsigned long long nextTimerTimeStamp = ~0ULL;
    size_t             i;
-   
+
    SessionSetEntry* sessionSetEntry = FirstSession;
    for(i = 0;i < count;i++) {
       CHECK(sessionSetEntry != NULL);
       sdArray[i]      = sessionSetEntry->Session;
       statusArray[i]  = status;
-      
+
       nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->JobCompleteTimeStamp);
       nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->KeepAliveTransmissionTimeStamp);
-      nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->KeepAliveTimeoutTimeStamp);      
-   
-      sessionSetEntry = sessionSetEntry->Next;   
+      nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->KeepAliveTimeoutTimeStamp);
+
+      sessionSetEntry = sessionSetEntry->Next;
    }
 
    return(nextTimerTimeStamp);
@@ -256,7 +256,7 @@ void SessionSet::handleKeepAliveTimeoutTimer(SessionSetEntry* sessionListEntry)
    CHECK(sessionListEntry->HasJob);
    cout << "No keep-alive for job " << sessionListEntry->JobID
         << " -> removing session" << endl;
-   removeSession(sessionListEntry->Session);   
+   removeSession(sessionListEntry->Session);
 }
 
 
@@ -319,7 +319,7 @@ void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionListEntry)
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppAccept" << endl;
-      removeSession(sessionListEntry->Session);     
+      removeSession(sessionListEntry->Session);
    }
 }
 
@@ -342,7 +342,7 @@ void SessionSet::sendCalcAppComplete(SessionSetEntry* sessionListEntry)
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppComplete" << endl;
-      removeSession(sessionListEntry->Session);     
+      removeSession(sessionListEntry->Session);
    }
 }
 
@@ -358,7 +358,7 @@ void SessionSet::sendCalcAppKeepAlive(SessionSetEntry* sessionListEntry)
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppKeepAlive" << endl;
-      removeSession(sessionListEntry->Session);     
+      removeSession(sessionListEntry->Session);
    }
 }
 
@@ -380,7 +380,7 @@ void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionListEntry,
       removeSession(sessionListEntry->Session);
       return;
    }
-   
+
    sessionListEntry->HasJob     = true;
    sessionListEntry->JobID      = message->JobID;
    sessionListEntry->JobSize    = message->JobSize;
@@ -422,7 +422,7 @@ size_t SessionSet::getActiveSessions()
    SessionSetEntry* sessionSetEntry = FirstSession;
    while(sessionSetEntry != NULL) {
       if(sessionSetEntry->HasJob) {
-         activeSessions++;         
+         activeSessions++;
       }
       sessionSetEntry = sessionSetEntry->Next;
    }
@@ -438,7 +438,7 @@ void SessionSet::updateCalculations()
 
    if(activeSessions > 0) {
       const double capacityPerJob = Capacity / (double)activeSessions;
-      
+
       while(sessionSetEntry != NULL) {
          if(sessionSetEntry->HasJob) {
             const unsigned long long elapsed   = now - sessionSetEntry->LastUpdate;
@@ -470,7 +470,7 @@ void SessionSet::scheduleJobs()
             const double calculationsToGo         = sessionSetEntry->JobSize - sessionSetEntry->Completed;
             const unsigned long long timeToGo     = (unsigned long long)ceil(1000000.0 * (calculationsToGo / capacityPerJob));
 
-printf("%Ld  cpj=%f\n",timeToGo,    capacityPerJob);        
+printf("%Ld  cpj=%f\n",timeToGo,    capacityPerJob);
             sessionSetEntry->JobCompleteTimeStamp = now + timeToGo;
          }
          sessionSetEntry = sessionSetEntry->Next;
@@ -608,7 +608,7 @@ int main(int argc, char** argv)
          unsigned long long now       = getMicroTime();
          nextTimer = min(now + 500000, nextTimer);
          unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-printf("NEXT: %Ld\n",timeout);         
+printf("NEXT: %Ld\n",timeout);
          result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
                                    (unsigned int*)&sessionStatusArray,
                                    sessions,
@@ -659,7 +659,9 @@ printf("NEXT: %Ld\n",timeout);
          }
 
          if(result < 0) {
-            perror("rspSessionSelect() failed");
+            if(errno != EINTR) {
+               perror("rspSessionSelect() failed");
+            }
             break;
          }
 

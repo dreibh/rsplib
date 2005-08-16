@@ -165,9 +165,10 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
    struct RegistrarTable* registrarTable = (struct RegistrarTable*)malloc(sizeof(struct RegistrarTable));
 
    if(registrarTable != NULL) {
-      registrarTable->Dispatcher        = dispatcher;
-      registrarTable->LastAnnounceHeard = 0;
-      registrarTable->AnnounceSocket    = -1;
+      registrarTable->Dispatcher          = dispatcher;
+      registrarTable->LastAnnounceHeard   = 0;
+      registrarTable->OutstandingConnects = 0;
+      registrarTable->AnnounceSocket      = -1;
       ST_CLASS(peerListManagementNew)(&registrarTable->RegistrarList, NULL, 0, NULL, NULL);
 
 
@@ -361,6 +362,9 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
                fputs(" failed\n",  stdlog);
                LOG_END
             }
+            else {
+               registrarTable->OutstandingConnects++;
+            }
          }
       }
       else {
@@ -410,6 +414,8 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    lastTransportAddressBlock = NULL;
    start                     = 0;
 
+   registrarTable->OutstandingConnects = 0;
+
    peerListNode = ST_CLASS(peerListGetRandomPeerNode)(&registrarTable->RegistrarList.List);
    if(peerListNode) {
       lastRegistrarIdentifier   = peerListNode->Identifier;
@@ -424,12 +430,16 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    lastTrialTimeStamp = 0;
    for(;;) {
       if((lastRegistrarIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
-         /* Start new trial, when
+         /*
+            Start new trial, when
             - First time
-            - A new registrar announce has been added to the list
-            - The current trial has been running for at least registrarTable->RegistrarConnectTimeout */
+            - A new registrar announce has been added to the list AND
+                 there are no outstanding connects
+            - The current trial has been running for at least
+               registrarTable->RegistrarConnectTimeout
+         */
          if( (start == 0) ||
-             (registrarTable->LastAnnounceHeard >= start) ||
+             ((registrarTable->LastAnnounceHeard >= start) && (registrarTable->OutstandingConnects == 0)) ||
              (start + registrarTable->RegistrarConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > registrarTable->RegistrarConnectMaxTrials) {
@@ -443,6 +453,7 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                return(0);
             }
 
+            lastTrialTimeStamp = 0;
             start = getMicroTime();
             LOG_ACTION
             fprintf(stdlog, "Trial #%u...\n", trials);
@@ -453,9 +464,9 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       if(lastTrialTimeStamp + registrarTable->RegistrarConnectTimeout < getMicroTime()) {
          /* Try next block of addresses */
          tryNextBlock(registrarTable,
-                     registrarFD,
-                     &lastRegistrarIdentifier,
-                     &lastTransportAddressBlock);
+                      registrarFD,
+                      &lastRegistrarIdentifier,
+                      &lastTransportAddressBlock);
          lastTrialTimeStamp = getMicroTime();
       }
 
@@ -563,6 +574,16 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
                            return(notification.sn_assoc_change.sac_assoc_id);
                         }
+                     }
+                     else if((notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+                             (notification.sn_assoc_change.sac_state == SCTP_CANT_STR_ASSOC) ||
+                             (notification.sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
+                        if(registrarTable->OutstandingConnects > 0) {
+                           registrarTable->OutstandingConnects--;
+                        }
+                        LOG_VERBOSE2
+                        fprintf(stdlog, "Failed to establish registrar connection, outstanding=%d\n", registrarTable->OutstandingConnects);
+                        LOG_END
                      }
                   }
                   else {

@@ -1,5 +1,5 @@
 /*
- *  $Id: registrartable.h,v 1.2 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -63,6 +63,7 @@ struct RegistrarTable
    union sockaddr_union                AnnounceAddress;
    struct FDCallback                   AnnounceSocketFDCallback;
    unsigned long long                  LastAnnounceHeard;
+   size_t                              OutstandingConnects;
 
    unsigned long long                  RegistrarAnnounceTimeout;
    unsigned long long                  RegistrarConnectTimeout;

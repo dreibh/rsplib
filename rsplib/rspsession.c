@@ -283,7 +283,8 @@ static bool rspPoolElementUpdateRegistration(struct PoolElementDescriptor* ped)
       LOG_ACTION
       fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
       LOG_END
-printf("(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
+
+      printf("(Re-)Registration successful, ID is $%08x\n", ped->Identifier);
    }
    else {
       LOG_ERROR
