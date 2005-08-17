@@ -54,4 +54,12 @@ struct CalcAppMessage
 };
 
 
+struct CalcAppCookie
+{
+   uint32_t JobID;
+   double   JobSize;
+   double   Completed;
+};
+
+
 #endif

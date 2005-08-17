@@ -607,7 +607,8 @@ bool rspSessionSendCookie(struct SessionDescriptor* session,
       LOG_END
       result = rserpoolMessageSend(session->SocketProtocol,
                                    session->Socket,
-                                   0, 0,
+                                   0,
+                                   (unsigned int)tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
                                    (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
                                    message);
       threadSafetyUnlock(&session->Mutex);

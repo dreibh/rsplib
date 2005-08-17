@@ -100,8 +100,7 @@ ssize_t sctp_send(int                           sd,
 
    sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
    memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
-
-   return(ext_sendmsg(sd, &msg, 0));
+   return(ext_sendmsg(sd, &msg, msg.msg_flags));
 }
 #endif
 
@@ -139,7 +138,7 @@ ssize_t sctp_sendx(int                           sd,
    sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
    memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
 
-   return(ext_sendmsg(sd, &msg, 0));
+   return(ext_sendmsg(sd, &msg, msg.msg_flags));
 }
 #endif
 #endif
@@ -1362,8 +1361,8 @@ int sendtoplus(int                      sockfd,
    char*                  p;
 
    LOG_VERBOSE4
-   fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u toaddrs=%p toaddrcnt=%u...\n",
-           sockfd, (unsigned int)assocID, (unsigned int)length, ppid, streamID, toaddrs, (unsigned int)toaddrcnt);
+   fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u flags=$%x toaddrs=%p toaddrcnt=%u...\n",
+           sockfd, (unsigned int)assocID, (unsigned int)length, ppid, streamID, flags,toaddrs, (unsigned int)toaddrcnt);
    LOG_END
 
    setNonBlocking(sockfd);
@@ -1372,8 +1371,8 @@ int sendtoplus(int                      sockfd,
       sri.sinfo_assoc_id   = assocID;
       sri.sinfo_stream     = streamID;
       sri.sinfo_ppid       = htonl(ppid);
-      sri.sinfo_flags      = flags;
       /* --- Already resetted to 0 ---
+      sri.sinfo_flags      = 0;
       sri.sinfo_ssn        = 0;
       sri.sinfo_tsn        = 0;
       sri.sinfo_context    = 0;

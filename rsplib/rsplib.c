@@ -487,10 +487,18 @@ int rspSelect(int             n,
    dispatcherHandleSelectResult(&gDispatcher, result, &myreadfds, &mywritefds, &myexceptfds, &testfds, testTS);
 
    /* ====== Prepare results for user ==================================== */
+   if(readfds) {
+      FD_ZERO(readfds);
+   }
+   if(writefds) {
+      FD_ZERO(writefds);
+   }
+   if(exceptfds) {
+      FD_ZERO(exceptfds);
+   }
    if(result > 0) {
       result = 0;
       if(readfds) {
-         FD_ZERO(readfds);
          for(i = 0;i < n;i++) {
             if(FD_ISSET(i,&myreadfds)) {
                FD_SET(i,readfds);
@@ -499,7 +507,6 @@ int rspSelect(int             n,
          }
       }
       if(writefds) {
-         FD_ZERO(writefds);
          for(i = 0;i < n;i++) {
             if(FD_ISSET(i,&mywritefds)) {
                FD_SET(i,writefds);
@@ -508,7 +515,6 @@ int rspSelect(int             n,
          }
       }
       if(exceptfds) {
-         FD_ZERO(exceptfds);
          for(i = 0;i < n;i++) {
             if(FD_ISSET(i,&myexceptfds)) {
                FD_SET(i,exceptfds);

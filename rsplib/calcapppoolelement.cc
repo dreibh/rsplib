@@ -49,6 +49,7 @@ class SessionSet
 
    bool addSession(SessionDescriptor* session);
    void removeSession(SessionDescriptor* session);
+   void removeClosed();
    void removeAll();
    size_t getSessions();
    unsigned long long initSelectArray(SessionDescriptor** sdArray,
@@ -61,51 +62,60 @@ class SessionSet
    private:
    unsigned long long KeepAliveTimeoutInterval;
    unsigned long long KeepAliveTransmissionInterval;
+   unsigned long long CookieMaxTime;
+   double             CookieMaxCalculations;
 
    struct SessionSetEntry {
       SessionSetEntry*   Next;
       SessionDescriptor* Session;
 
+      // ------ Variables ---------------------------------------------------
       bool               HasJob;
+      bool               Closing;
       unsigned int       JobID;
       double             JobSize;
       double             Completed;
-      unsigned int       Cookieintervall;
-      unsigned long long LastUpdate;
+      unsigned long long LastUpdateAt;
+      unsigned long long LastCookieAt;
+      double             LastCookieCompleted;
 
+      // ------ Timers ------------------------------------------------------
       unsigned long long KeepAliveTransmissionTimeStamp;
       unsigned long long KeepAliveTimeoutTimeStamp;
       unsigned long long JobCompleteTimeStamp;
-      unsigned long long KeepAliveTimeoutInterval;
-
+      unsigned long long CookieTransmissionTimeStamp;
    };
 
    SessionSetEntry* find(SessionDescriptor* session);
 
-   void sendCalcAppAccept(SessionSetEntry* sessionListEntry);
-   void sendCalcAppReject(SessionSetEntry* sessionListEntry);
-   void Cookie(SessionSetEntry* sessionListEntry);
-   void sendCalcAppComplete(SessionSetEntry* sessionListEntry);
-   void sendCalcAppKeepAlive(SessionSetEntry* sessionListEntry);
-   void sendCalcAppKeepAliveAck(SessionSetEntry* sessionListEntry);
-   void sendCalcAppAbort(SessionSetEntry* sessionListEntry);
+   void sendCalcAppAccept(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppReject(SessionSetEntry* sessionSetEntry);
+   void Cookie(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppComplete(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppKeepAlive(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppAbort(SessionSetEntry* sessionSetEntry);
 
-   void handleJobCompleteTimer(SessionSetEntry* sessionListEntry);
-   void handleKeepAliveTransmissionTimer(SessionSetEntry* sessionListEntry);
-   void handleKeepAliveTimeoutTimer(SessionSetEntry* sessionListEntry);
-   void handleCalcAppRequest(SessionSetEntry* sessionListEntry,
+   void handleCookieTransmissionTimer(SessionSetEntry* sessionSetEntry);
+   void handleJobCompleteTimer(SessionSetEntry* sessionSetEntry);
+   void handleKeepAliveTransmissionTimer(SessionSetEntry* sessionSetEntry);
+   void handleKeepAliveTimeoutTimer(SessionSetEntry* sessionSetEntry);
+   void handleCalcAppRequest(SessionSetEntry* sessionSetEntry,
                              CalcAppMessage*  message,
                              const size_t     size);
-   void handleCalcAppKeepAliveAck(SessionSetEntry* sessionListEntry,
-                             CalcAppMessage*  message,
-                             const size_t     size);
-   void handleCookieEcho(SessionSetEntry* sessionListEntry,
-                         CalcAppMessage*  message,
+   void handleCalcAppKeepAlive(SessionSetEntry* sessionSetEntry,
+                               CalcAppMessage*  message,
+                               const size_t     size);
+   void handleCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry,
+                                  CalcAppMessage*  message,
+                                  const size_t     size);
+   void handleCookieEcho(SessionSetEntry* sessionSetEntry,
+                         CalcAppCookie*   cookie,
                          const size_t     size);
-   void handleCommand(SessionSetEntry* sessionListEntry,
+   void handleMessage(SessionSetEntry* sessionSetEntry,
                       CalcAppMessage*  message,
                       const size_t     size);
-   void handleTimer(SessionSetEntry* sessionListEntry);
+   void handleTimer(SessionSetEntry* sessionSetEntry);
 
    size_t getActiveSessions();
    void updateCalculations();
@@ -117,20 +127,29 @@ class SessionSet
    double           Capacity;
 };
 
+
+// ###### Constructor #######################################################
 SessionSet::SessionSet()
 {
    FirstSession                  = NULL;
    Sessions                      = 0;
+
    Capacity                      = 1000000.0;
    KeepAliveTimeoutInterval      = 2000000;
    KeepAliveTransmissionInterval = 2000000;
+   CookieMaxTime                 = 1000000;
+   CookieMaxCalculations         = 5000000.0;
 }
 
+
+// ###### Destructor ########################################################
 SessionSet::~SessionSet()
 {
    removeAll();
 }
 
+
+// ###### Remove all sessions ###############################################
 void SessionSet::removeAll()
 {
    SessionSetEntry* sessionSetEntry = FirstSession;
@@ -141,6 +160,29 @@ void SessionSet::removeAll()
    CHECK(Sessions == 0);
 }
 
+
+// ###### Remove closed sessions ############################################
+/*
+   During handleEvents() and handleTimers(), sessions may *not* be removed
+   directly; their structures may still be accessed. Instead, they can be
+   marked to be "closing" by setting sessionSetEntry->Closing = true.
+   A call of removeClosed() will remove them finally, after event and
+   timer handling.
+*/
+void SessionSet::removeClosed()
+{
+   SessionSetEntry* sessionSetEntry = FirstSession;
+   while(sessionSetEntry != NULL) {
+      SessionSetEntry* nextSessionSetEntry = sessionSetEntry->Next;
+      if(sessionSetEntry->Closing) {
+         removeSession(sessionSetEntry->Session);
+      }
+      sessionSetEntry = nextSessionSetEntry;
+   }
+}
+
+
+// ###### Add session #######################################################
 bool SessionSet::addSession(SessionDescriptor* session)
 {
    bool result = false;
@@ -148,17 +190,21 @@ bool SessionSet::addSession(SessionDescriptor* session)
    updateCalculations();
    SessionSetEntry* sessionSetEntry = new SessionSetEntry;
    if(sessionSetEntry) {
-      sessionSetEntry->Next       = FirstSession;
-      sessionSetEntry->Session    = session;
-      sessionSetEntry->HasJob     = false;
-      sessionSetEntry->JobID      = 0;
-      sessionSetEntry->JobSize    = 0;
-      sessionSetEntry->Completed  = 0;
-      sessionSetEntry->LastUpdate = 0;
+      sessionSetEntry->Next                = FirstSession;
+      sessionSetEntry->Session             = session;
+      sessionSetEntry->HasJob              = false;
+      sessionSetEntry->Closing             = false;
+      sessionSetEntry->JobID               = 0;
+      sessionSetEntry->JobSize             = 0;
+      sessionSetEntry->Completed           = 0;
+      sessionSetEntry->LastUpdateAt        = 0;
+      sessionSetEntry->LastCookieAt        = 0;
+      sessionSetEntry->LastCookieCompleted = 0.0;
 
       sessionSetEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
       sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
       sessionSetEntry->JobCompleteTimeStamp           = ~0ULL;
+      sessionSetEntry->CookieTransmissionTimeStamp    = ~0ULL;
 
       FirstSession                = sessionSetEntry;
       Sessions++;
@@ -169,6 +215,13 @@ bool SessionSet::addSession(SessionDescriptor* session)
    return(result);
 }
 
+
+// ###### Remove session ####################################################
+/*
+   Never call this function during handleEvents() and handleTimers()!
+   Instead, set sessionSetEntry->Closing = true.and call removeClosed() after
+   event and timer handling.
+*/
 void SessionSet::removeSession(SessionDescriptor* session)
 {
    updateCalculations();
@@ -195,6 +248,8 @@ void SessionSet::removeSession(SessionDescriptor* session)
    scheduleJobs();
 }
 
+
+// ###### Find session ######################################################
 SessionSet::SessionSetEntry* SessionSet::find(SessionDescriptor* session)
 {
    SessionSetEntry* sessionSetEntry = FirstSession;
@@ -207,11 +262,15 @@ SessionSet::SessionSetEntry* SessionSet::find(SessionDescriptor* session)
    return(NULL);
 }
 
+
+// ###### Get number of sessions ############################################
 size_t SessionSet::getSessions()
 {
    return(Sessions);
 }
 
+
+// ###### Initialize session select array ###################################
 unsigned long long SessionSet::initSelectArray(SessionDescriptor** sdArray,
                                                unsigned int*       statusArray,
                                                const unsigned int  status)
@@ -229,6 +288,7 @@ unsigned long long SessionSet::initSelectArray(SessionDescriptor** sdArray,
       nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->JobCompleteTimeStamp);
       nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->KeepAliveTransmissionTimeStamp);
       nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->KeepAliveTimeoutTimeStamp);
+      nextTimerTimeStamp = min(nextTimerTimeStamp, sessionSetEntry->CookieTransmissionTimeStamp);
 
       sessionSetEntry = sessionSetEntry->Next;
    }
@@ -237,161 +297,324 @@ unsigned long long SessionSet::initSelectArray(SessionDescriptor** sdArray,
 }
 
 
-void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionListEntry,
+// ###### Handle incoming CalcAppRequest ####################################
+void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionSetEntry,
                                       CalcAppMessage*  message,
                                       const size_t     received)
 {
-   if(sessionListEntry->HasJob) {
-      cerr << "ERROR: Session already has a job!" << endl;
-      removeSession(sessionListEntry->Session);
+   if(sessionSetEntry->HasJob) {
+      cerr << "ERROR: CalcAppRequest for session that already has a job!" << endl;
+      sessionSetEntry->Closing = true;
       return;
    }
 
-   sessionListEntry->HasJob     = true;
-   sessionListEntry->JobID      = message->JobID;
-   sessionListEntry->JobSize    = message->JobSize;
-   sessionListEntry->Completed  = 0;
-   sessionListEntry->LastUpdate = getMicroTime();
+   sessionSetEntry->HasJob     = true;
+   sessionSetEntry->JobID      = message->JobID;
+   sessionSetEntry->JobSize    = message->JobSize;
+   sessionSetEntry->Completed  = 0;
+   sessionSetEntry->LastUpdateAt = getMicroTime();
 
-   cout << "Job " << sessionListEntry->JobID << " with size "
-        << sessionListEntry->JobSize << " accepted" << endl;
+   cout << "Job " << sessionSetEntry->JobID << " with size "
+        << sessionSetEntry->JobSize << " accepted" << endl;
 
-   sessionListEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-   sessionListEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   sessionSetEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+   sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
 
    updateCalculations();
    scheduleJobs();
 
-   sendCalcAppAccept(sessionListEntry);
+   sendCalcAppAccept(sessionSetEntry);
 }
 
 
-void SessionSet::handleCookieEcho(SessionSetEntry* sessionListEntry,
-                                  CalcAppMessage*  message,
+// ###### Handle incoming CookieEcho ########################################
+void SessionSet::handleCookieEcho(SessionSetEntry* sessionSetEntry,
+                                  CalcAppCookie*   cookie,
                                   const size_t     size)
 {
-   puts("COOKIE ECHO!");
+   if(sessionSetEntry->HasJob) {
+      cerr << "ERROR: CookieEcho for session that already has a job!" << endl;
+      sessionSetEntry->Closing = true;
+      return;
+   }
+
+   sessionSetEntry->HasJob       = true;
+   sessionSetEntry->JobID        = ntohl(cookie->JobID);
+   sessionSetEntry->JobSize      = cookie->JobSize;
+   sessionSetEntry->Completed    = cookie->Completed;
+   sessionSetEntry->LastUpdateAt = getMicroTime();
+
+   cout << "Job " << sessionSetEntry->JobID << " with size "
+        << sessionSetEntry->JobSize << " ("
+        << sessionSetEntry->Completed << " completed) accepted from CookieEcho" << endl;
+
+   sessionSetEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+   sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
+
+   updateCalculations();
+   scheduleJobs();
+
+   sendCalcAppAccept(sessionSetEntry);
 }
 
 
-void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionListEntry)
+// ###### Handle incoming CalcAppAccept #####################################
+void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_ACCEPT);
-   message.JobID = htonl(sessionListEntry->JobID);
-   if(rspSessionWrite(sessionListEntry->Session,
+   message.JobID = htonl(sessionSetEntry->JobID);
+   if(rspSessionWrite(sessionSetEntry->Session,
                       (void*)&message,
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppAccept" << endl;
-      removeSession(sessionListEntry->Session);
+      sessionSetEntry->Closing = true;
    }
 }
 
 
-void SessionSet::sendCalcAppReject(SessionSetEntry* sessionListEntry)
+// ###### Handle incoming CalcAppReject #####################################
+void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type = htonl(CALCAPP_REJECT);
-   removeSession(sessionListEntry->Session);
-   printf("Your Request was denied");
-      if(rspSessionWrite(sessionListEntry->Session,
+   if(rspSessionWrite(sessionSetEntry->Session,
                       (void*)&message,
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppReject" << endl;
-      removeSession(sessionListEntry->Session);
+      sessionSetEntry->Closing = true;
    }
 }
 
 
-void SessionSet::sendCalcAppKeepAlive(SessionSetEntry* sessionListEntry)
+// ###### Handle Cookie Transmission timer ##################################
+void SessionSet::handleCookieTransmissionTimer(SessionSetEntry* sessionSetEntry)
+{
+   puts("cookie TIMER...");
+
+   updateCalculations();
+
+   struct CalcAppCookie cookie;
+   memset(&cookie, 0, sizeof(cookie));
+   cookie.JobID     = htonl(sessionSetEntry->JobID);
+   cookie.JobSize   = sessionSetEntry->JobSize;
+   cookie.Completed = sessionSetEntry->Completed;
+   if(rspSessionSendCookie(sessionSetEntry->Session,
+                           (unsigned char*)&cookie,
+                           sizeof(cookie),
+                           NULL) == false) {
+      cerr << "ERROR: Unable to send Cookie" << endl;
+      sessionSetEntry->Closing = true;
+   }
+
+   sessionSetEntry->LastCookieAt        = getMicroTime();
+   sessionSetEntry->LastCookieCompleted = sessionSetEntry->Completed;
+
+   scheduleJobs();
+
+   puts("-----");
+}
+
+
+// ###### Send CalcAppKeepAlive #############################################
+void SessionSet::sendCalcAppKeepAlive(SessionSetEntry* sessionSetEntry)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type      = htonl(CALCAPP_KEEPALIVE);
-   message.JobID     = htonl(sessionListEntry->JobID);
-   if(rspSessionWrite(sessionListEntry->Session,
+   message.JobID     = htonl(sessionSetEntry->JobID);
+   if(rspSessionWrite(sessionSetEntry->Session,
                       (void*)&message,
                       sizeof(message),
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppKeepAlive" << endl;
-      removeSession(sessionListEntry->Session);
+      sessionSetEntry->Closing = true;
    }
 }
 
 
-void SessionSet::handleJobCompleteTimer(SessionSetEntry* sessionListEntry)
+// ###### Send CalcAppKeepAlive #############################################
+void SessionSet::sendCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry)
 {
-   CHECK(sessionListEntry->HasJob);
-   cout << "Job " << sessionListEntry->JobID << " is complete!" << endl;
-   sendCalcAppComplete(sessionListEntry);
-   removeSession(sessionListEntry->Session);
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type      = htonl(CALCAPP_KEEPALIVE_ACK);
+   message.JobID     = htonl(sessionSetEntry->JobID);
+   if(rspSessionWrite(sessionSetEntry->Session,
+                      (void*)&message,
+                      sizeof(message),
+                      NULL) <= 0) {
+      cerr << "ERROR: Unable to send CalcAppKeepAliveAck" << endl;
+      sessionSetEntry->Closing = true;
+   }
 }
 
 
-void SessionSet::handleKeepAliveTransmissionTimer(SessionSetEntry* sessionListEntry)
+// ###### Handle JobComplete timer ##########################################
+void SessionSet::handleJobCompleteTimer(SessionSetEntry* sessionSetEntry)
 {
-   CHECK(sessionListEntry->HasJob);
-   sessionListEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
-   sessionListEntry->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
+   CHECK(sessionSetEntry->HasJob);
+   cout << "Job " << sessionSetEntry->JobID << " is complete!" << endl;
+   sendCalcAppComplete(sessionSetEntry);
+   sessionSetEntry->Closing = true;
+}
+
+
+// ###### Handle KeepAlive Transmission timer ###############################
+void SessionSet::handleKeepAliveTransmissionTimer(SessionSetEntry* sessionSetEntry)
+{
+   CHECK(sessionSetEntry->HasJob);
+   sessionSetEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
+   sessionSetEntry->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
 puts("Sende KA...");
-   sendCalcAppKeepAlive(sessionListEntry);
+   sendCalcAppKeepAlive(sessionSetEntry);
 }
 
 
-void SessionSet::handleKeepAliveTimeoutTimer(SessionSetEntry* sessionListEntry)
+// ###### Handle KeepAlive Timeout timer ####################################
+void SessionSet::handleKeepAliveTimeoutTimer(SessionSetEntry* sessionSetEntry)
 {
-   CHECK(sessionListEntry->HasJob);
-   sessionListEntry->KeepAliveTimeoutTimeStamp = ~0ULL;
-   cout << "No keep-alive for job " << sessionListEntry->JobID
+   CHECK(sessionSetEntry->HasJob);
+   sessionSetEntry->KeepAliveTimeoutTimeStamp = ~0ULL;
+   cout << "No keep-alive for job " << sessionSetEntry->JobID
         << " -> removing session" << endl;
-   removeSession(sessionListEntry->Session);
+   sessionSetEntry->Closing = true;
 }
 
 
-void SessionSet::handleCalcAppKeepAliveAck(SessionSetEntry* sessionListEntry,
+// ###### Handle incoming CalcAppKeepAlive ##################################
+void SessionSet::handleCalcAppKeepAlive(SessionSetEntry* sessionSetEntry,
+                                        CalcAppMessage*  message,
+                                        const size_t     size)
+{
+   if(!sessionSetEntry->HasJob) {
+      cerr << "ERROR: CalcAppKeepAlive without job!" << endl;
+      sessionSetEntry->Closing = true;
+      return;
+   }
+   if(sessionSetEntry->JobID != ntohl(message->JobID)) {
+      cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
+      sessionSetEntry->Closing = true;
+      return;
+   }
+   sendCalcAppKeepAliveAck(sessionSetEntry);
+}
+
+
+// ###### Handle incoming CalcAppKeepAliveAck ###############################
+void SessionSet::handleCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry,
                                            CalcAppMessage*  message,
                                            const size_t     size)
 {
-   if(sessionListEntry->HasJob) {
-      cerr << "ERROR: Session already has a job!" << endl;
-      removeSession(sessionListEntry->Session);
+   if(!sessionSetEntry->HasJob) {
+      cerr << "ERROR: CalcAppKeepAliveAck without job!" << endl;
+      sessionSetEntry->Closing = true;
       return;
    }
-   if(sessionListEntry->JobID != ntohl(message->JobID)) {
+   if(sessionSetEntry->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppKeepAliveAck for wrong job!" << endl;
-      removeSession(sessionListEntry->Session);
+      sessionSetEntry->Closing = true;
       return;
    }
 puts("KA empfangen");
 
-   sessionListEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
-   sessionListEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+   sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   sessionSetEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
 }
 
 
-void SessionSet::handleTimer(SessionSetEntry* sessionListEntry)
+// ###### Send CalcAppComplete ##############################################
+void SessionSet::sendCalcAppComplete(SessionSetEntry* sessionSetEntry)
+{
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type      = htonl(CALCAPP_COMPLETE);
+   message.JobID     = htonl(sessionSetEntry->JobID);
+   message.JobSize   = sessionSetEntry->JobSize;
+   message.Completed = sessionSetEntry->Completed;
+   if(rspSessionWrite(sessionSetEntry->Session,
+                      (void*)&message,
+                      sizeof(message),
+                      NULL) <= 0) {
+      cerr << "ERROR: Unable to send CalcAppComplete" << endl;
+      sessionSetEntry->Closing = true;
+   }
+}
+
+
+// ###### Handle timers #####################################################
+void SessionSet::handleTimer(SessionSetEntry* sessionSetEntry)
 {
    unsigned long long now = getMicroTime();
 
-   if(sessionListEntry->JobCompleteTimeStamp <= now) {
-      handleJobCompleteTimer(sessionListEntry);
-      sessionListEntry->JobCompleteTimeStamp = ~0ULL;
+   if(sessionSetEntry->JobCompleteTimeStamp <= now) {
+      handleJobCompleteTimer(sessionSetEntry);
+      sessionSetEntry->JobCompleteTimeStamp = ~0ULL;
    }
-   if(sessionListEntry->KeepAliveTransmissionTimeStamp <= now) {
-      handleKeepAliveTransmissionTimer(sessionListEntry);
-      sessionListEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
-   }
-   if(sessionListEntry->KeepAliveTimeoutTimeStamp <= now) {
-      handleKeepAliveTimeoutTimer(sessionListEntry);
-      sessionListEntry->KeepAliveTimeoutTimeStamp = ~0ULL;
+   if(!sessionSetEntry->Closing) {
+      if(sessionSetEntry->CookieTransmissionTimeStamp <= now) {
+         handleCookieTransmissionTimer(sessionSetEntry);
+      }
+      if(!sessionSetEntry->Closing) {
+         if(sessionSetEntry->KeepAliveTransmissionTimeStamp <= now) {
+            handleKeepAliveTransmissionTimer(sessionSetEntry);
+            sessionSetEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
+         }
+         if(!sessionSetEntry->Closing) {
+            if(sessionSetEntry->KeepAliveTimeoutTimeStamp <= now) {
+               handleKeepAliveTimeoutTimer(sessionSetEntry);
+               sessionSetEntry->KeepAliveTimeoutTimeStamp = ~0ULL;
+            }
+         }
+      }
    }
 }
 
 
+// ###### Handle timers #####################################################
+void SessionSet::handleTimers()
+{
+   SessionSetEntry* sessionSetEntry = FirstSession;
+   while(sessionSetEntry != NULL) {
+      // Iterate all session entries and
+      // invoke handleTimer() for each session.
+      handleTimer(sessionSetEntry);
+      sessionSetEntry = sessionSetEntry->Next;
+   }
+}
+
+
+// ###### Handle incoming message from session ##############################
+void SessionSet::handleMessage(SessionSetEntry* sessionSetEntry,
+                               CalcAppMessage*  message,
+                               const size_t     received)
+{
+   if(received >= sizeof(CalcAppMessage)) {
+      printf("Type = %x\n",ntohl(message->Type));
+      switch(ntohl(message->Type)) {
+         case CALCAPP_REQUEST:
+            handleCalcAppRequest(sessionSetEntry, message, received);
+          break;
+         case CALCAPP_KEEPALIVE:
+           handleCalcAppKeepAlive(sessionSetEntry, message, received);
+          break;
+         case CALCAPP_KEEPALIVE_ACK:
+           handleCalcAppKeepAliveAck(sessionSetEntry, message, received);
+          break;
+         default:
+           cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
+           sessionSetEntry->Closing = true;
+          break;
+      }
+   }
+}
+
+
+// ###### Handle socket events, i.e. read incoming messages #################
 void SessionSet::handleEvents(SessionDescriptor* session,
                               const unsigned int sessionEvents)
 {
@@ -402,90 +625,39 @@ void SessionSet::handleEvents(SessionDescriptor* session,
    SessionSetEntry* sessionSetEntry = find(session);
    CHECK(sessionSetEntry != NULL);
 
-
-   tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
-   tags[0].Data = 0;
-   tags[1].Tag  = TAG_RspIO_Timeout;
-   tags[1].Data = 0;
-   tags[2].Tag  = TAG_DONE;
-   received = rspSessionRead(sessionSetEntry->Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
-   if(received > 0) {
-      printf("recv=%d\n",received);
-      if(tags[0].Data != 0) {
-         handleCookieEcho(sessionSetEntry, (struct CalcAppMessage*)&buffer, received);
-      }
-      else {
-         handleCommand(sessionSetEntry, (struct CalcAppMessage*)&buffer, received);
-      }
-   }
-}
-
-
-/*
-void SessionSet::Cookie(SessionSetEntry* sessionListEntry)
-{
-   if (HasJob==true && getMicrotime()%Cookieintervall==0)
-   {
-       message.JobID     = htonl(sessionListEntry->JobID);
-        message.JobSize   = sessionListEntry->JobSize;
-       sendCalcAppComplete(SessionSetEntry* sessionListEntry);
-   }
-}
-*/
-
-
-
-void SessionSet::sendCalcAppComplete(SessionSetEntry* sessionListEntry)
-{
-   struct CalcAppMessage message;
-   memset(&message, 0, sizeof(message));
-   message.Type      = htonl(CALCAPP_COMPLETE);
-   message.JobID     = htonl(sessionListEntry->JobID);
-   message.JobSize   = sessionListEntry->JobSize;
-   if(sessionListEntry->HasJob) {
-      cerr << "ERROR: Session already has a job!" << endl;
-      removeSession(sessionListEntry->Session);
-      return;
-   }   message.Completed = sessionListEntry->Completed;
-   if(rspSessionWrite(sessionListEntry->Session,
-                      (void*)&message,
-                      sizeof(message),
-                      NULL) <= 0) {
-      cerr << "ERROR: Unable to send CalcAppComplete" << endl;
-      removeSession(sessionListEntry->Session);
-   }
-}
-
-
-void SessionSet::handleTimers()
-{
-   SessionSetEntry* sessionSetEntry = FirstSession;
-   while(sessionSetEntry != NULL) {
-      handleTimer(sessionSetEntry);
-      sessionSetEntry = sessionSetEntry->Next;
-   }
-}
-
-
-void SessionSet::handleCommand(SessionSetEntry* sessionListEntry,
-                               CalcAppMessage*  message,
-                               const size_t     received)
-{
-   if(received >= sizeof(CalcAppMessage)) {
-      printf("Type = %x\n",ntohl(message->Type));
-      switch(ntohl(message->Type)) {
-         case CALCAPP_REQUEST:
-            handleCalcAppRequest(sessionListEntry, message, received);
-          break;
-         default:
-           cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
-           removeSession(sessionListEntry->Session);
-          break;
+   if(!sessionSetEntry->Closing) {
+      tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
+      tags[0].Data = 0;
+      tags[1].Tag  = TAG_RspIO_Timeout;
+      tags[1].Data = 0;
+      tags[2].Tag  = TAG_DONE;
+      received = rspSessionRead(sessionSetEntry->Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
+      if(received > 0) {
+         printf("recv=%d\n",received);
+         if(tags[0].Data != 0) {
+            if(received >= (ssize_t)sizeof(CalcAppCookie)) {
+               handleCookieEcho(sessionSetEntry, (struct CalcAppCookie*)&buffer, received);
+            }
+            else {
+               cerr << "ERROR: Received cookie is too short!" << endl;
+               sessionSetEntry->Closing = true;
+            }
+         }
+         else {
+            if(received >= (ssize_t)sizeof(CalcAppMessage)) {
+               handleMessage(sessionSetEntry, (struct CalcAppMessage*)&buffer, received);
+            }
+            else {
+               cerr << "ERROR: Received message is too short!" << endl;
+               sessionSetEntry->Closing = true;
+            }
+         }
       }
    }
 }
 
 
+// ###### Get number of active sessions #####################################
 size_t SessionSet::getActiveSessions()
 {
    size_t           activeSessions  = 0;
@@ -500,6 +672,7 @@ size_t SessionSet::getActiveSessions()
 }
 
 
+// ###### Update calculations until now for all sessions ####################
 void SessionSet::updateCalculations()
 {
    const unsigned long long now     = getMicroTime();
@@ -507,12 +680,15 @@ void SessionSet::updateCalculations()
    const size_t     activeSessions  = getActiveSessions();
 
    if(activeSessions > 0) {
-      const double capacityPerJob = Capacity / (double)activeSessions;
+      const double capacityPerJob = Capacity / ((double)activeSessions * 1000000.0);
 
+static unsigned long long s=getMicroTime();
+printf("NOW=%1.2f\n",(now-s)/1000000.0);
       while(sessionSetEntry != NULL) {
          if(sessionSetEntry->HasJob) {
-            const unsigned long long elapsed   = now - sessionSetEntry->LastUpdate;
-            const double completedCalculations = elapsed / capacityPerJob;
+            const unsigned long long elapsed   = now - sessionSetEntry->LastUpdateAt;
+            const double completedCalculations = elapsed * capacityPerJob;
+printf("   - j%d:  %1.2f in %Ldus\n",        sessionSetEntry->JobID,    completedCalculations,elapsed);
             if(sessionSetEntry->Completed + completedCalculations < sessionSetEntry->JobSize) {
                sessionSetEntry->Completed += completedCalculations;
             }
@@ -520,13 +696,14 @@ void SessionSet::updateCalculations()
                sessionSetEntry->Completed = sessionSetEntry->JobSize;
             }
          }
-         sessionSetEntry->LastUpdate = now;
+         sessionSetEntry->LastUpdateAt = now;
          sessionSetEntry = sessionSetEntry->Next;
       }
    }
 }
 
 
+// ###### Schedule requests of all sessions #################################
 void SessionSet::scheduleJobs()
 {
    const unsigned long long now     = getMicroTime();
@@ -534,14 +711,27 @@ void SessionSet::scheduleJobs()
    const size_t     activeSessions  = getActiveSessions();
 
    if(activeSessions > 0) {
-      const double capacityPerJob = Capacity / (double)activeSessions;
+      const double capacityPerJob = Capacity / ((double)activeSessions * 1000000.0);
       while(sessionSetEntry != NULL) {
          if(sessionSetEntry->HasJob) {
+            // When is the current session's job completed?
             const double calculationsToGo         = sessionSetEntry->JobSize - sessionSetEntry->Completed;
-            const unsigned long long timeToGo     = (unsigned long long)ceil(1000000.0 * (calculationsToGo / capacityPerJob));
+            const unsigned long long timeToGo     = (unsigned long long)ceil(calculationsToGo / capacityPerJob);
 
-printf("%Ld  cpj=%f\n",timeToGo,    capacityPerJob);
-            sessionSetEntry->JobCompleteTimeStamp = now + timeToGo;
+printf("JOB %d, ToGo=%1.2f t=%Ld  cap=%1.4f\n",sessionSetEntry->JobID,calculationsToGo,timeToGo,capacityPerJob);
+
+            // sessionSetEntry->JobCompleteTimeStamp = now + timeToGo;
+            sessionSetEntry->JobCompleteTimeStamp = sessionSetEntry->LastUpdateAt + timeToGo;
+
+            // When is the time to send the next cookie?
+            const double calculationsSinceLastCookie = sessionSetEntry->Completed - sessionSetEntry->LastCookieCompleted;
+            const double timeSinceLastCookie         = now - sessionSetEntry->LastCookieAt;
+            const unsigned long long nextByCalculations =
+               (unsigned long long)rint(max(0.0, CookieMaxCalculations - calculationsSinceLastCookie) / capacityPerJob);
+            const unsigned long long nextByTime =
+               (unsigned long long)rint(max(0.0, CookieMaxTime - timeSinceLastCookie));
+            const unsigned long long nextCookie = min(nextByCalculations, nextByTime);
+            sessionSetEntry->CookieTransmissionTimeStamp = now + nextCookie;
          }
          sessionSetEntry = sessionSetEntry->Next;
       }
@@ -550,6 +740,7 @@ printf("%Ld  cpj=%f\n",timeToGo,    capacityPerJob);
 
 
 
+// ###### Main program ######################################################
 int main(int argc, char** argv)
 {
    uint32_t                      identifier        = 0;
@@ -678,7 +869,7 @@ int main(int argc, char** argv)
          unsigned long long now       = getMicroTime();
          nextTimer = min(now + 500000, nextTimer);
          unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-printf("NEXT: %Ld\n",timeout);
+//printf("NEXT: %Ld\n",timeout);
          result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
                                    (unsigned int*)&sessionStatusArray,
                                    sessions,
@@ -734,6 +925,8 @@ printf("NEXT: %Ld\n",timeout);
             }
             break;
          }
+
+         sessionList.removeClosed();
 
          /* ====== Check auto-stop timer ==================================== */
          if((stop > 0) && (getMicroTime() >= stop)) {
