@@ -200,7 +200,7 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
 
       /* ====== Join announce multicast groups ============================ */
       registrarTable->AnnounceSocket = ext_socket(registrarTable->AnnounceAddress.sa.sa_family,
-                                               SOCK_DGRAM, IPPROTO_UDP);
+                                                  SOCK_DGRAM, IPPROTO_UDP);
       if(registrarTable->AnnounceSocket >= 0) {
          fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
                      registrarTable->Dispatcher,
@@ -212,20 +212,7 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
          setReusable(registrarTable->AnnounceSocket, 1);
          if(bindplus(registrarTable->AnnounceSocket,
                      &registrarTable->AnnounceAddress,
-                     1) == true) {
-            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                          &registrarTable->AnnounceAddress,
-                                          true)) {
-               LOG_ERROR
-               fputs("Joining multicast group ",  stdlog);
-               fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress, true, stdlog);
-               fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
-               LOG_END
-               registrarTableDelete(registrarTable);
-               return(false);
-            }
-         }
-         else {
+                     1) == false) {
             LOG_ERROR
             fputs("Unable to bind multicast socket to address ",  stdlog);
             fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress.sa, true, stdlog);
@@ -458,6 +445,16 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             LOG_ACTION
             fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
+
+            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
+                                          &registrarTable->AnnounceAddress,
+                                          true)) {
+               LOG_WARNING
+               fputs("Joining multicast group ",  stdlog);
+               fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
+               fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+               LOG_END
+            }
          }
       }
 

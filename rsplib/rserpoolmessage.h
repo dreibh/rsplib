@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessage.h,v 1.19 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

@@ -655,11 +655,11 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
          if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
                                       &registrar->ENRPMulticastAddress,
                                       true) == false) {
-            LOG_ERROR
-            logerror("Unable to join ENRP multicast group");
+            LOG_WARNING
+            fputs("Unable to join multicast group ", stdlog);
+            fputaddress(&registrar->ENRPMulticastAddress.sa, true, stdlog);
+            fputs(". Registrar will probably be unable to detect peers!\n", stdlog);
             LOG_END
-            registrarDelete(registrar);
-            return(NULL);
          }
       }
 
@@ -1005,6 +1005,15 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    }
 
    if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
+      if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
+                                   &registrar->ENRPMulticastAddress,
+                                   true) == false) {
+         LOG_WARNING
+         fputs("Unable to join multicast group ", stdlog);
+         fputaddress(&registrar->ENRPMulticastAddress.sa, true, stdlog);
+         fputs(". Registrar will probably be unable to detect peers!\n", stdlog);
+         LOG_END;
+      }
       sendPeerPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                        (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                        0, false);
