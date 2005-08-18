@@ -501,7 +501,7 @@ static struct SessionDescriptor* rspSessionNew(
          free(session);
          return(NULL);
       }
-      session->Tags = tagListDuplicate(tags);  /* ??? FILTER !!! */
+      session->Tags = tagListDuplicate(tags);
       if(session->Tags == NULL) {
          messageBufferDelete(session->MessageBuffer);
          free(session);

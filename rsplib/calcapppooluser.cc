@@ -68,6 +68,7 @@ struct Process {
 };
 
 
+// ###### Send CalcAppRequest message #######################################
 bool sendCalcAppRequest(struct Process* process)
 {
    CalcAppMessage message;
@@ -83,6 +84,7 @@ bool sendCalcAppRequest(struct Process* process)
 }
 
 
+// ###### Send CalcAppKeepAlive message #####################################
 bool sendCalcAppKeepAlive(struct Process* process)
 {
    struct CalcAppMessage message;
@@ -100,6 +102,7 @@ bool sendCalcAppKeepAlive(struct Process* process)
 }
 
 
+// ###### Send CalcAppKeepAliveAck message ##################################
 bool sendCalcAppKeepAliveAck(struct Process* process)
 {
    struct CalcAppMessage message;
@@ -117,18 +120,7 @@ bool sendCalcAppKeepAliveAck(struct Process* process)
 }
 
 
-bool handleCalcAppKeepAlive(struct Process* process,
-                            CalcAppMessage* message,
-                            const size_t    size)
-{
-   if(process->JobID != ntohl(message->JobID)) {
-      cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
-      return(false);
-   }
-   return(sendCalcAppKeepAliveAck(process));
-}
-
-
+// ###### Handle incoming CalcAppAccept message #############################
 bool handleCalcAppAccept(struct Process* process,
                          CalcAppMessage* message,
                          const size_t    size)
@@ -146,6 +138,7 @@ bool handleCalcAppAccept(struct Process* process,
 }
 
 
+// ###### Handle incoming CalcAppReject message #############################
 bool handleCalcAppReject(struct Process* process,
                          CalcAppMessage* message,
                          const size_t    size)
@@ -162,6 +155,20 @@ bool handleCalcAppReject(struct Process* process,
 }
 
 
+// ###### Handle incoming CalcAppKeepAlive message ##########################
+bool handleCalcAppKeepAlive(struct Process* process,
+                            CalcAppMessage* message,
+                            const size_t    size)
+{
+   if(process->JobID != ntohl(message->JobID)) {
+      cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
+      return(false);
+   }
+   return(sendCalcAppKeepAliveAck(process));
+}
+
+
+// ###### Handle incoming CalcAppKeepAliveAck message #######################
 bool handleCalcAppKeepAliveAck(struct Process* process,
                                CalcAppMessage* message,
                                const size_t    size)
@@ -172,16 +179,15 @@ bool handleCalcAppKeepAliveAck(struct Process* process,
    }
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-puts("KEEP-ALIVE-ACK!!!");
    return(true);
 }
 
 
+// ###### Handle KeepAlive Transmission timer ###############################
 bool handleKeepAliveTransmissionTimer(struct Process* process)
 {
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    process->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
-puts("SENDE KEEP-ALIVE...");
    return(sendCalcAppKeepAlive(process));
 }
 
@@ -192,6 +198,10 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
    cout << "Timeout -> Failover" << endl;
 
    rspSessionFailover(process->Session);
+
+   process->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+
    return(true);
 }
 
@@ -199,35 +209,36 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
 bool handleEvents(Process*           process,
                   const unsigned int sessionEvents)
 {
+   bool           finished = false;
+   bool           success  = true;
    char           buffer[4096];
    struct TagItem tags[16];
    ssize_t        received;
-   bool           finished = false;
 
    tags[0].Tag  = TAG_RspIO_Timeout;
-   tags[0].Data = 30000000;
+   tags[0].Data = 0;
    tags[1].Tag  = TAG_DONE;
    received = rspSessionRead(process->Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
    if(received > 0) {
-      printf("recv=%d\n",received);
 
       if(received >= (ssize_t)sizeof(CalcAppMessage)) {
          CalcAppMessage* response = (CalcAppMessage*)&buffer;
          switch(ntohl(response->Type)) {
             case CALCAPP_ACCEPT:
-               handleCalcAppAccept(process, response, sizeof(response));
+               success = handleCalcAppAccept(process, response, sizeof(response));
              break;
             case CALCAPP_REJECT:
-               handleCalcAppReject(process, response, sizeof(response));
+               success = handleCalcAppReject(process, response, sizeof(response));
              break;
             case CALCAPP_KEEPALIVE:
-               handleCalcAppKeepAlive(process, response, sizeof(response));
+               success = handleCalcAppKeepAlive(process, response, sizeof(response));
              break;
             case CALCAPP_KEEPALIVE_ACK:
-               handleCalcAppKeepAliveAck(process, response, sizeof(response));
+               success = handleCalcAppKeepAliveAck(process, response, sizeof(response));
              break;
             case CALCAPP_COMPLETE:
                cout << "Job " << process->JobID << " completed" << endl;
+               success  = true;
                finished = true;
              break;
             default:
@@ -235,17 +246,14 @@ bool handleEvents(Process*           process,
              break;
          }
       }
+
    }
-   else if(received == RspRead_Timeout) {
-      if(rspSessionHasCookie(process->Session)) {
-         puts("Timeout occurred -> forcing failover!");
-         rspSessionFailover(process->Session);
-      }
-      else {
-         puts("No cookie -> restart necessary");
-         finished = true;
-      }
+
+   if(!success) {
+      puts("-- FAILOVER-S --");
+      rspSessionFailover(process->Session);
    }
+
    return(finished);
 }
 
@@ -253,27 +261,37 @@ bool handleEvents(Process*           process,
 // ###### Handle timers #####################################################
 void handleTimer(Process* process)
 {
-   unsigned long long now = getMicroTime();
+   unsigned long long now     = getMicroTime();
+   bool               success = true;
 
    if(process->KeepAliveTransmissionTimeStamp <= now) {
-      handleKeepAliveTransmissionTimer(process);
+      success = handleKeepAliveTransmissionTimer(process);
+printf("s1=%d\n",success);
       process->KeepAliveTransmissionTimeStamp = ~0ULL;
    }
+
 //   if(!process->Closing) {
       if(process->KeepAliveTimeoutTimeStamp <= now) {
-         handleKeepAliveTimeoutTimer(process);
+         success = handleKeepAliveTimeoutTimer(process);
+printf("s2=%d\n",success);
          process->KeepAliveTimeoutTimeStamp = ~0ULL;
       }
 //   }
+
+   if(!success) {
+      puts("-- FAILOVER-T --");
+      rspSessionFailover(process->Session);
+   }
 }
 
 
-
-
+// ###### Run one job #######################################################
 void runJob(const char* poolHandle, const double jobSize)
 {
    struct TagItem tags[16];
-   uint32_t        jobID = 0;
+   uint32_t       jobID = 0;
+
+   tags[0].Tag = TAG_DONE;
 
    Process process;
    process.JobID                          = ++jobID;
@@ -302,7 +320,6 @@ void runJob(const char* poolHandle, const double jobSize)
             nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
             nextTimer = min(nextTimer, process.KeepAliveTimeoutTimeStamp);
             unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-//   printf("NEXT: %Ld\n",timeout);
             int result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
                                           (unsigned int*)&sessionStatusArray,
                                           1,
@@ -330,11 +347,11 @@ void runJob(const char* poolHandle, const double jobSize)
 }
 
 
-/* ###### Main program ###################################################### */
+// ###### Main program ######################################################
 int main(int argc, char** argv)
 {
+   char*          poolHandle = "CalcAppPool";
    struct TagItem tags[16];
-   char*          poolHandle    = "CalcAppPool";
    int            i;
    int            n;
 

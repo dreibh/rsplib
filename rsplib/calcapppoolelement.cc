@@ -394,8 +394,6 @@ void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
 // ###### Handle Cookie Transmission timer ##################################
 void SessionSet::handleCookieTransmissionTimer(SessionSetEntry* sessionSetEntry)
 {
-   puts("cookie TIMER...");
-
    updateCalculations();
 
    struct CalcAppCookie cookie;
@@ -415,8 +413,6 @@ void SessionSet::handleCookieTransmissionTimer(SessionSetEntry* sessionSetEntry)
    sessionSetEntry->LastCookieCompleted = sessionSetEntry->Completed;
 
    scheduleJobs();
-
-   puts("-----");
 }
 
 
@@ -470,7 +466,6 @@ void SessionSet::handleKeepAliveTransmissionTimer(SessionSetEntry* sessionSetEnt
    CHECK(sessionSetEntry->HasJob);
    sessionSetEntry->KeepAliveTransmissionTimeStamp = ~0ULL;
    sessionSetEntry->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
-puts("Sende KA...");
    sendCalcAppKeepAlive(sessionSetEntry);
 }
 
@@ -520,7 +515,6 @@ void SessionSet::handleCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry,
       sessionSetEntry->Closing = true;
       return;
    }
-puts("KA empfangen");
 
    sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
    sessionSetEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
@@ -594,7 +588,6 @@ void SessionSet::handleMessage(SessionSetEntry* sessionSetEntry,
                                const size_t     received)
 {
    if(received >= sizeof(CalcAppMessage)) {
-      printf("Type = %x\n",ntohl(message->Type));
       switch(ntohl(message->Type)) {
          case CALCAPP_REQUEST:
             handleCalcAppRequest(sessionSetEntry, message, received);
@@ -631,9 +624,10 @@ void SessionSet::handleEvents(SessionDescriptor* session,
       tags[1].Tag  = TAG_RspIO_Timeout;
       tags[1].Data = 0;
       tags[2].Tag  = TAG_DONE;
-      received = rspSessionRead(sessionSetEntry->Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
+      received = rspSessionRead(sessionSetEntry->Session,
+                                (char*)&buffer, sizeof(buffer),
+                                (struct TagItem*)&tags);
       if(received > 0) {
-         printf("recv=%d\n",received);
          if(tags[0].Data != 0) {
             if(received >= (ssize_t)sizeof(CalcAppCookie)) {
                handleCookieEcho(sessionSetEntry, (struct CalcAppCookie*)&buffer, received);
@@ -682,13 +676,10 @@ void SessionSet::updateCalculations()
    if(activeSessions > 0) {
       const double capacityPerJob = Capacity / ((double)activeSessions * 1000000.0);
 
-static unsigned long long s=getMicroTime();
-printf("NOW=%1.2f\n",(now-s)/1000000.0);
       while(sessionSetEntry != NULL) {
          if(sessionSetEntry->HasJob) {
             const unsigned long long elapsed   = now - sessionSetEntry->LastUpdateAt;
             const double completedCalculations = elapsed * capacityPerJob;
-printf("   - j%d:  %1.2f in %Ldus\n",        sessionSetEntry->JobID,    completedCalculations,elapsed);
             if(sessionSetEntry->Completed + completedCalculations < sessionSetEntry->JobSize) {
                sessionSetEntry->Completed += completedCalculations;
             }
@@ -718,8 +709,6 @@ void SessionSet::scheduleJobs()
             const double calculationsToGo         = sessionSetEntry->JobSize - sessionSetEntry->Completed;
             const unsigned long long timeToGo     = (unsigned long long)ceil(calculationsToGo / capacityPerJob);
 
-printf("JOB %d, ToGo=%1.2f t=%Ld  cap=%1.4f\n",sessionSetEntry->JobID,calculationsToGo,timeToGo,capacityPerJob);
-
             // sessionSetEntry->JobCompleteTimeStamp = now + timeToGo;
             sessionSetEntry->JobCompleteTimeStamp = sessionSetEntry->LastUpdateAt + timeToGo;
 
@@ -743,12 +732,8 @@ printf("JOB %d, ToGo=%1.2f t=%Ld  cap=%1.4f\n",sessionSetEntry->JobID,calculatio
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   uint32_t                      identifier        = 0;
-   unsigned int                  reregInterval     = 5000;
-   struct PoolElementDescriptor* poolElement;
-   struct TagItem                tags[16];
-   struct PoolElementDescriptor* pedArray[1];
-   unsigned int                  pedStatusArray[FD_SETSIZE];
+   uint32_t                      identifier                     = 0;
+   unsigned int                  reregInterval                  = 5000;
    card64                        start                          = getMicroTime();
    card64                        stop                           = 0;
    int                           type                           = SOCK_STREAM;
@@ -759,6 +744,10 @@ int main(int argc, char** argv)
    unsigned int                  policyParameterWeight          = 1;
    unsigned int                  policyParameterLoad            = 0;
    unsigned int                  policyParameterLoadDegradation = 0;
+   struct PoolElementDescriptor* poolElement;
+   struct TagItem                tags[16];
+   struct PoolElementDescriptor* pedArray[1];
+   unsigned int                  pedStatusArray[FD_SETSIZE];
    int                           i;
    int                           result;
 
