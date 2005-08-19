@@ -360,6 +360,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
          }
          *lastTransportAddressBlock = NULL;
          *lastRegistrarIdentifier   = UNDEFINED_REGISTRAR_IDENTIFIER;
+         break;
       }
    }
 }
