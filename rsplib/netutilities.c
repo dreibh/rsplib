@@ -824,13 +824,13 @@ bool string2address(const char* string, union sockaddr_union* address)
    switch(ipv4address->sin_family) {
       case AF_INET:
          ipv4address->sin_port = htons(portNumber);
-#ifdef HAVE_SA_LEN
+#ifdef HAVE_SIN_LEN
          ipv4address->sin_len  = sizeof(struct sockaddr_in);
 #endif
        break;
       case AF_INET6:
          ipv6address->sin6_port = htons(portNumber);
-#ifdef HAVE_SA_LEN
+#ifdef HAVE_SIN6_LEN
          ipv6address->sin_len  = sizeof(struct sockaddr_in6);
 #endif
        break;
