@@ -831,7 +831,7 @@ bool string2address(const char* string, union sockaddr_union* address)
       case AF_INET6:
          ipv6address->sin6_port = htons(portNumber);
 #ifdef HAVE_SIN6_LEN
-         ipv6address->sin_len  = sizeof(struct sockaddr_in6);
+         ipv6address->sin6_len  = sizeof(struct sockaddr_in6);
 #endif
        break;
       default:
