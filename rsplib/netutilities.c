@@ -1633,6 +1633,7 @@ static bool multicastGroupMgt(int              sockfd,
    struct ip_mreq   mreq;
    struct ifreq     ifr;
    struct ipv6_mreq mreq6;
+   int              result;
 
    if(address->sa_family == AF_INET) {
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
@@ -1660,9 +1661,12 @@ static bool multicastGroupMgt(int              sockfd,
       else {
          mreq6.ipv6mr_interface = 0;
       }
-      return(ext_setsockopt(sockfd,IPPROTO_IPV6,
-                            add ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP,
-                            &mreq6, sizeof(mreq6)) == 0);
+      result = ext_setsockopt(sockfd,IPPROTO_IPV6,
+                              add ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP,
+                              &mreq6, sizeof(mreq6));
+      /* BSD sets errno to EADDRINUSE if socket has already been joined to
+         the multicast group. This is no real error. */
+      return((result == 0) || (errno == EADDRINUSE));
    }
    CHECK(false);
    return(false);
