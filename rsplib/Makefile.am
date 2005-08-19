@@ -132,8 +132,8 @@ calcapppooluser_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 calcapppoolelement_SOURCES = calcapppoolelement.cc calcapppackets.h
 calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-t5_SOURCES = t5.cc
-t5_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+#t5_SOURCES = t5.cc
+#t5_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
@@ -147,6 +147,6 @@ EXTRA_DIST = registrar-example poolelement-example pooluser-example
 #t3_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 #t3_LDFLAGS = -static $(all_libraries) -L.
 
-t4_SOURCES = t4.cc
-t4_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-t4_LDFLAGS = -static $(all_libraries) -L.
+#t4_SOURCES = t4.cc
+#t4_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+#t4_LDFLAGS = -static $(all_libraries) -L.
