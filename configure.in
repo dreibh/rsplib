@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR(admin)
 
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE(rsplib, 0.9.0)
+AM_INIT_AUTOMAKE(rsplib, 0.9.5)
 
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then

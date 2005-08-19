@@ -126,10 +126,10 @@ examplepu_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS
 fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c netdouble.h fractalgeneratorpackets.h
 fractalpoolelement_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-calcapppooluser_SOURCES = calcapppooluser.cc calcappgeneratorpackets
+calcapppooluser_SOURCES = calcapppooluser.cc calcapppackets.h
 calcapppooluser_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
-calcapppoolelement_SOURCES = calcapppoolelement.cc calcappgeneratorpackets.h
+calcapppoolelement_SOURCES = calcapppoolelement.cc calcapppackets.h
 calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
 
 t5_SOURCES = t5.cc
