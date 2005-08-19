@@ -580,7 +580,7 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                            registrarTable->OutstandingConnects--;
                         }
                         LOG_VERBOSE2
-                        fprintf(stdlog, "Failed to establish registrar connection, outstanding=%d\n", registrarTable->OutstandingConnects);
+                        fprintf(stdlog, "Failed to establish registrar connection, outstanding=%ld\n", registrarTable->OutstandingConnects);
                         LOG_END
                      }
                   }
