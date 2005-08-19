@@ -16,3 +16,6 @@ testregistrator
 .libs
 .gdb_history
 .deps
+calcapppoolelement
+calcapppooluser
+registrar
