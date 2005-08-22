@@ -60,6 +60,8 @@ class SessionSet
                      const unsigned int sessionEvents);
 
    private:
+   unsigned long long StartupTimeStamp;
+   double             TotalUsedCalculations;
    unsigned long long KeepAliveTimeoutInterval;
    unsigned long long KeepAliveTransmissionInterval;
    unsigned long long CookieMaxTime;
@@ -134,6 +136,8 @@ SessionSet::SessionSet()
    FirstSession                  = NULL;
    Sessions                      = 0;
 
+   StartupTimeStamp              = getMicroTime();
+   TotalUsedCalculations         = 0.0;
    Capacity                      = 1000000.0;
    KeepAliveTimeoutInterval      = 2000000;
    KeepAliveTransmissionInterval = 2000000;
@@ -146,6 +150,17 @@ SessionSet::SessionSet()
 SessionSet::~SessionSet()
 {
    removeAll();
+
+   const unsigned long long shutdownTimeStamp = getMicroTime();
+   const unsigned long long serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
+
+   const double availableCalculations = serverRuntime * Capacity / 1000000.0;
+   const double utilization           = TotalUsedCalculations / availableCalculations;
+
+   printf("Runtime                = %1.2fs\n",  serverRuntime / 1000000.0);
+   printf("Available Calculations = %1.1f\n",   availableCalculations);
+   printf("Used Calculations      = %1.1f\n",   TotalUsedCalculations);
+   printf("Utilization            = %1.3f%%\n", 100.0 * utilization);
 }
 
 
@@ -681,9 +696,12 @@ void SessionSet::updateCalculations()
             const unsigned long long elapsed   = now - sessionSetEntry->LastUpdateAt;
             const double completedCalculations = elapsed * capacityPerJob;
             if(sessionSetEntry->Completed + completedCalculations < sessionSetEntry->JobSize) {
+               TotalUsedCalculations += completedCalculations;
                sessionSetEntry->Completed += completedCalculations;
             }
             else {
+               CHECK(sessionSetEntry->JobSize - sessionSetEntry->Completed > 0);
+               TotalUsedCalculations += sessionSetEntry->JobSize - sessionSetEntry->Completed;
                sessionSetEntry->Completed = sessionSetEntry->JobSize;
             }
          }

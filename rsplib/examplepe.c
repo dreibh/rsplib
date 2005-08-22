@@ -181,7 +181,7 @@ static void* rsplibMainLoop(void* args)
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   uint32_t                      identifier        = 0;
+   uint32_t                      identifier = 0;
    struct PoolElementDescriptor* poolElement;
    struct TagItem                tags[16];
    pthread_t                     rsplibThread;
