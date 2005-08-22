@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepu.c,v 1.17 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -70,26 +70,37 @@ bool handleFailover(void* userData)
 /* ###### Handle standard input ############################################# */
 static void handleStdIn()
 {
-   char   buffer[8192];
-   size_t lineNumberLength;
-   size_t toSend;
+   char    buffer[8192];
+   size_t  lineNumberLength;
+   size_t  toSend;
+   ssize_t received;
 
    snprintf((char*)&buffer, sizeof(buffer),"%09lld ", ++OutCalls);
    lineNumberLength = strlen(buffer);
 
    setNonBlocking(STDIN_FILENO);
-   fgets((char*)&buffer[lineNumberLength], sizeof(buffer) - lineNumberLength, stdin);
+   received = read(STDIN_FILENO,
+                   (char*)&buffer[lineNumberLength],
+                   sizeof(buffer) - lineNumberLength - 1);
    setBlocking(STDIN_FILENO);
 
-   if(buffer[lineNumberLength] == 0x00) {
+   if(received <= 0) {
+      puts("<Ctrl-D>");
       sendBreak(true);
    }
-   toSend = strlen(buffer);
-   if(rspSessionWrite(Session, (char*)&buffer, toSend, NULL) <= 0) {
-      puts("Writing to pool element failed!");
-   }
    else {
-      OutBytes += toSend;
+      buffer[lineNumberLength + received] = 0x00;
+      if(lineNumberLength + received >= 1) {
+         buffer[lineNumberLength + received - 1] = 0x00;
+      }
+
+      toSend = strlen(buffer);
+      if(rspSessionWrite(Session, (char*)&buffer, toSend, NULL) <= 0) {
+         puts("Writing to pool element failed!");
+      }
+      else {
+         OutBytes += toSend;
+      }
    }
 }
 
@@ -335,7 +346,7 @@ int main(int argc, char** argv)
             handleAutoTimer();
             nextAutoSend += autoInterval;
          }
-         if(result < 0) {
+         if((result < 0) && (errno != EINTR)) {
             perror("rspSelect() failed");
             break;
          }

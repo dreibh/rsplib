@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.c,v 1.8 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -117,6 +117,12 @@ ssize_t messageBufferRead(struct MessageBuffer*    mb,
             LOG_END
             return(RspRead_WrongPPID);
          }
+      }
+      else if(received == 0) {
+         LOG_VERBOSE3
+         fputs("Nothing to read (connection closed?)\n", stdlog);
+         LOG_END
+         return(0);
       }
       else if(errno == EAGAIN) {
          LOG_VERBOSE3

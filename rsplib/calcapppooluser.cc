@@ -57,10 +57,19 @@ unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
 
 
+enum ProcessStatus {
+   PS_Init       = 0,
+   PS_Processing = 1,
+   PS_Failover   = 2,
+   PS_Failed     = 3,
+   PS_Completed  = 4
+};
+
 struct Process {
    SessionDescriptor* Session;
    unsigned int       JobID;
    double             JobSize;
+   ProcessStatus      Status;
 
    // ------ Timers ------------------------------------------------------
    unsigned long long KeepAliveTransmissionTimeStamp;
@@ -69,126 +78,145 @@ struct Process {
 
 
 // ###### Send CalcAppRequest message #######################################
-bool sendCalcAppRequest(struct Process* process)
+void sendCalcAppRequest(struct Process* process)
 {
    CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type    = htonl(CALCAPP_REQUEST);
    message.JobID   = ++process->JobID;
    message.JobSize = process->JobSize;
-   if(rspSessionWrite(process->Session, (void*)&message, sizeof(message), NULL) <= 0) {
-      cerr << "ERROR: Unable to send CalcAppRequest" << endl;
-      return(false);
+
+   ssize_t result = rspSessionWrite(process->Session,
+                                    (void*)&message, sizeof(message), NULL);
+   if(result <= 0) {
+      process->Status = PS_Failed;
    }
-   return(true);
 }
 
 
 // ###### Send CalcAppKeepAlive message #####################################
-bool sendCalcAppKeepAlive(struct Process* process)
+void sendCalcAppKeepAlive(struct Process* process)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_KEEPALIVE);
    message.JobID = htonl(process->JobID);
-   if(rspSessionWrite(process->Session,
-                      (void*)&message,
-                      sizeof(message),
-                      NULL) <= 0) {
-      cerr << "ERROR: Unable to send CalcAppKeepAlive" << endl;
-      return(false);
+
+   ssize_t result = rspSessionWrite(process->Session,
+                                    (void*)&message, sizeof(message), NULL);
+   if(result <= 0) {
+      cerr << "WARNING: Unable to send CalcAppKeepAlive" << endl;
+      process->Status = PS_Failover;
    }
-   return(true);
 }
 
 
 // ###### Send CalcAppKeepAliveAck message ##################################
-bool sendCalcAppKeepAliveAck(struct Process* process)
+void sendCalcAppKeepAliveAck(struct Process* process)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_KEEPALIVE_ACK);
    message.JobID = htonl(process->JobID);
-   if(rspSessionWrite(process->Session,
-                      (void*)&message,
-                      sizeof(message),
-                      NULL) <= 0) {
-      cerr << "ERROR: Unable to send CalcAppKeepAliveAck" << endl;
-      return(false);
+
+   ssize_t result = rspSessionWrite(process->Session,
+                                    (void*)&message, sizeof(message), NULL);
+   if(result <= 0) {
+      cerr << "WARNING: Unable to send CalcAppKeepAliveAck" << endl;
+      process->Status = PS_Failover;
    }
-   return(true);
 }
 
 
 // ###### Handle incoming CalcAppAccept message #############################
-bool handleCalcAppAccept(struct Process* process,
+void handleCalcAppAccept(struct Process* process,
                          CalcAppMessage* message,
                          const size_t    size)
 {
    if(process->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppAccept for wrong job!" << endl;
-      return(false);
+      process->Status = PS_Failed;
+      return;
    }
 
    cout << "Job " << process->JobID << " accepted" << endl;
 
+   process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-   return(true);
 }
 
 
 // ###### Handle incoming CalcAppReject message #############################
-bool handleCalcAppReject(struct Process* process,
+void handleCalcAppReject(struct Process* process,
                          CalcAppMessage* message,
                          const size_t    size)
 {
    if(process->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppReject for wrong job!" << endl;
-      return(false);
+      process->Status = PS_Failed;
+      return;
    }
 
    cout << "Job " << process->JobID << " rejected" << endl;
+   process->Status = PS_Failover;
    rspSessionFailover(process->Session);
-
-   return(true);
 }
 
 
 // ###### Handle incoming CalcAppKeepAlive message ##########################
-bool handleCalcAppKeepAlive(struct Process* process,
+void handleCalcAppKeepAlive(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
    if(process->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
-      return(false);
+      process->Status = PS_Failed;
+      return;
    }
-   return(sendCalcAppKeepAliveAck(process));
+   sendCalcAppKeepAliveAck(process);
 }
 
 
 // ###### Handle incoming CalcAppKeepAliveAck message #######################
-bool handleCalcAppKeepAliveAck(struct Process* process,
+void handleCalcAppKeepAliveAck(struct Process* process,
                                CalcAppMessage* message,
                                const size_t    size)
 {
    if(process->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppKeepAliveAck for wrong job!" << endl;
-      return(false);
+      process->Status = PS_Failed;
+      return;
    }
+
+   process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-   return(true);
+}
+
+
+// ###### Handle incoming CalcAppCompleted message ##########################
+void handleCalcAppCompleted(struct Process* process,
+                            CalcAppMessage* message,
+                            const size_t    size)
+{
+   if(process->JobID != ntohl(message->JobID)) {
+      cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
+      process->Status = PS_Failed;
+      return;
+   }
+
+   cout << "Job " << process->JobID << " completed" << endl;
+   process->Status = PS_Completed;
 }
 
 
 // ###### Handle KeepAlive Transmission timer ###############################
-bool handleKeepAliveTransmissionTimer(struct Process* process)
+void handleKeepAliveTransmissionTimer(struct Process* process)
 {
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    process->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
-   return(sendCalcAppKeepAlive(process));
+   sendCalcAppKeepAlive(process);
 }
 
 
@@ -199,6 +227,7 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
 
    rspSessionFailover(process->Session);
 
+   process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
 
@@ -206,82 +235,73 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
 }
 
 
-bool handleEvents(Process*           process,
+// ###### Handle failover ###################################################
+void handleFailover(Process* process)
+{
+   puts("===== FAILOVER ======");
+   process->Status = PS_Processing;
+}
+
+
+// ###### Handle session events #############################################
+void handleEvents(Process*           process,
                   const unsigned int sessionEvents)
 {
-   bool           finished = false;
-   bool           success  = true;
-   char           buffer[4096];
    struct TagItem tags[16];
+   char           buffer[4096];
    ssize_t        received;
 
    tags[0].Tag  = TAG_RspIO_Timeout;
    tags[0].Data = 0;
    tags[1].Tag  = TAG_DONE;
-   received = rspSessionRead(process->Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
+   received = rspSessionRead(process->Session, (char*)&buffer, sizeof(buffer),
+                             (struct TagItem*)&tags);
    if(received > 0) {
 
       if(received >= (ssize_t)sizeof(CalcAppMessage)) {
          CalcAppMessage* response = (CalcAppMessage*)&buffer;
          switch(ntohl(response->Type)) {
             case CALCAPP_ACCEPT:
-               success = handleCalcAppAccept(process, response, sizeof(response));
+               handleCalcAppAccept(process, response, sizeof(response));
              break;
             case CALCAPP_REJECT:
-               success = handleCalcAppReject(process, response, sizeof(response));
+               handleCalcAppReject(process, response, sizeof(response));
              break;
             case CALCAPP_KEEPALIVE:
-               success = handleCalcAppKeepAlive(process, response, sizeof(response));
+               handleCalcAppKeepAlive(process, response, sizeof(response));
              break;
             case CALCAPP_KEEPALIVE_ACK:
-               success = handleCalcAppKeepAliveAck(process, response, sizeof(response));
+               handleCalcAppKeepAliveAck(process, response, sizeof(response));
              break;
             case CALCAPP_COMPLETE:
-               cout << "Job " << process->JobID << " completed" << endl;
-               success  = true;
-               finished = true;
+               handleCalcAppCompleted(process, response, sizeof(response));
              break;
             default:
                cerr << "ERROR: Unknown message type " << ntohl(response->Type) << endl;
              break;
          }
       }
-
    }
-
-   if(!success) {
-      puts("-- FAILOVER-S --");
-      rspSessionFailover(process->Session);
-   }
-
-   return(finished);
 }
 
 
 // ###### Handle timers #####################################################
 void handleTimer(Process* process)
 {
-   unsigned long long now     = getMicroTime();
-   bool               success = true;
+   unsigned long long now = getMicroTime();
 
    if(process->KeepAliveTransmissionTimeStamp <= now) {
-      success = handleKeepAliveTransmissionTimer(process);
-printf("s1=%d\n",success);
+      handleKeepAliveTransmissionTimer(process);
       process->KeepAliveTransmissionTimeStamp = ~0ULL;
    }
 
 //   if(!process->Closing) {
       if(process->KeepAliveTimeoutTimeStamp <= now) {
-         success = handleKeepAliveTimeoutTimer(process);
-printf("s2=%d\n",success);
+         handleKeepAliveTimeoutTimer(process);
          process->KeepAliveTimeoutTimeStamp = ~0ULL;
       }
 //   }
 
-   if(!success) {
-      puts("-- FAILOVER-T --");
-      rspSessionFailover(process->Session);
-   }
 }
 
 
@@ -291,9 +311,12 @@ void runJob(const char* poolHandle, const double jobSize)
    struct TagItem tags[16];
    uint32_t       jobID = 0;
 
-   tags[0].Tag = TAG_DONE;
+   tags[0].Tag  = TAG_RspIO_MakeFailover;
+   tags[0].Data = 1;
+   tags[1].Tag  = TAG_DONE;
 
    Process process;
+   process.Status                         = PS_Init;
    process.JobID                          = ++jobID;
    process.JobSize                        = jobSize;
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
@@ -302,43 +325,46 @@ void runJob(const char* poolHandle, const double jobSize)
                                       NULL, (struct TagItem*)&tags);
    if(process.Session != NULL) {
 
-      if(sendCalcAppRequest(&process)) {
+      sendCalcAppRequest(&process);
 
-         bool finished = false;
-         while(!finished) {
+      while((process.Status != PS_Failed) &&
+            (process.Status != PS_Completed)) {
 
-            /* ====== Call rspSessionSelect() =============================== */
-            tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-            tags[0].Data = 1;
-            tags[1].Tag  = TAG_DONE;
-            struct SessionDescriptor* sessionDescriptorArray[1];
-            unsigned int              sessionStatusArray[1];
-            sessionDescriptorArray[0] = process.Session;
-            sessionStatusArray[0]     = RspSelect_Read;
-            unsigned long long now    = getMicroTime();
-            unsigned long long nextTimer = now + 500000;
-            nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
-            nextTimer = min(nextTimer, process.KeepAliveTimeoutTimeStamp);
-            unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-            int result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
-                                          (unsigned int*)&sessionStatusArray,
-                                          1,
-                                          NULL, NULL, 0,
-                                          timeout,
-                                          (struct TagItem*)&tags);
-            handleTimer(&process);
+         /* ====== Call rspSessionSelect() =============================== */
+         tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
+         tags[0].Data = 1;
+         tags[1].Tag  = TAG_DONE;
+         struct SessionDescriptor* sessionDescriptorArray[1];
+         unsigned int              sessionStatusArray[1];
+         sessionDescriptorArray[0] = process.Session;
+         sessionStatusArray[0]     = RspSelect_Read;
+         unsigned long long now    = getMicroTime();
+         unsigned long long nextTimer = now + 500000;
+         nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
+         nextTimer = min(nextTimer, process.KeepAliveTimeoutTimeStamp);
+         unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
+         int result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
+                                       (unsigned int*)&sessionStatusArray,
+                                       1,
+                                       NULL, NULL, 0,
+                                       timeout,
+                                       (struct TagItem*)&tags);
+         handleTimer(&process);
 
-            /* ====== Handle results of ext_select() =========================== */
-            if((result > 0) && (sessionStatusArray[0] & RspSelect_Read)) {
-               finished = handleEvents(&process, sessionStatusArray[0]);
+         /* ====== Handle results of ext_select() =========================== */
+         if((result > 0) && (sessionStatusArray[0] & RspSelect_Read)) {
+            handleEvents(&process, sessionStatusArray[0]);
+         }
+
+         if(result < 0) {
+            if(errno != EINTR) {
+               perror("rspSessionSelect() failed");
             }
+            break;
+         }
 
-            if(result < 0) {
-               if(errno != EINTR) {
-                  perror("rspSessionSelect() failed");
-               }
-               break;
-            }
+         if(process.Status == PS_Failover) {
+            handleFailover(&process);
          }
       }
 

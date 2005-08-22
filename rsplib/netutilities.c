@@ -2014,9 +2014,9 @@ size_t getladdrsplus(const int              fd,
 {
    struct sockaddr* packedAddresses;
 #ifdef SOLARIS
-   size_t addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
+   int addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
 #else
-   size_t addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
+   int addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
 #endif
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
@@ -2059,8 +2059,9 @@ size_t getladdrsplus(const int              fd,
          fputs("\n", stdlog);
       }
       LOG_END
+      return((size_t)addrs);
    }
-   return(addrs);
+   return(0);
 }
 
 
@@ -2071,15 +2072,16 @@ size_t getpaddrsplus(const int              fd,
 {
    struct sockaddr* packedAddresses;
 #ifdef SOLARIS
-   size_t addrs = sctp_getpaddrs(fd, assocID, (void **)&packedAddresses);
+   int addrs = sctp_getpaddrs(fd, assocID, (void **)&packedAddresses);
 #else
-   size_t addrs = sctp_getpaddrs(fd, assocID, &packedAddresses);
+   int addrs = sctp_getpaddrs(fd, assocID, &packedAddresses);
 #endif
    if(addrs > 0) {
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freepaddrs(packedAddresses);
+      return((size_t)addrs);
    }
-   return(addrs);
+   return(0);
 }
 
 

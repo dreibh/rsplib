@@ -1143,6 +1143,7 @@ ssize_t rspSessionWrite(struct SessionDescriptor* session,
               session->Socket);
       LOG_END
       rspSessionFailover(session);
+      return(RspRead_Failover);
    }
    tagListSetData(tags, TAG_RspIO_PE_ID, session->Identifier);
    return(result);

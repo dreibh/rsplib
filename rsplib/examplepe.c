@@ -1,5 +1,5 @@
 /*
- *  $Id: examplepe.c,v 1.22 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -167,11 +167,12 @@ static void handleServiceRequest(GList**        clientList,
 static bool RsplibThreadStop = false;
 static void* rsplibMainLoop(void* args)
 {
-   struct timeval timeout;
+   int result;
    while(!RsplibThreadStop) {
-      timeout.tv_sec  = 0;
-      timeout.tv_usec = 50000;
-      rspSelect(0, NULL, NULL, NULL, &timeout);
+      result = rspSelect(0, NULL, NULL, NULL, NULL);
+      if((result < 0) && (errno == EINTR)) {
+         puts("Interrupted rspSelect()!");
+      }
    }
    return(NULL);
 }
@@ -437,7 +438,7 @@ int main(int argc, char** argv)
                                    (struct PoolElementDescriptor**)&pedArray,
                                    (unsigned int*)&pedStatusArray,
                                    1,
-                                   500000,
+                                   1000000,
                                    (struct TagItem*)&tags);
 
          /* ====== Handle results of ext_select() ======================== */
@@ -490,7 +491,7 @@ int main(int argc, char** argv)
             }
             list = g_list_first(clientList);
          }
-         if(result < 0) {
+         if((result < 0) && (errno != EINTR)) {
             perror("rspSessionSelect() failed");
             break;
          }
