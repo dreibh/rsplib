@@ -700,7 +700,7 @@ void SessionSet::updateCalculations()
                sessionSetEntry->Completed += completedCalculations;
             }
             else {
-               CHECK(sessionSetEntry->JobSize - sessionSetEntry->Completed > 0);
+               CHECK(sessionSetEntry->JobSize - sessionSetEntry->Completed >= 0.0);
                TotalUsedCalculations += sessionSetEntry->JobSize - sessionSetEntry->Completed;
                sessionSetEntry->Completed = sessionSetEntry->JobSize;
             }

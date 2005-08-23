@@ -61,12 +61,12 @@ struct Job
 
    unsigned int       JobID;
    double             JobSize;
-   
+
    unsigned long long CompleteTimeStamp;
    unsigned long long QueuingTimeStamp;
    unsigned long long StartupTimeStamp;
    unsigned long long AcceptTimeStamp;
-   
+
 
 };
 
@@ -82,21 +82,21 @@ class JobQueue
    private:
    Job* FirstJob;
    Job* LastJob;
-   
+
    public:
    void PrintStatistics()
    {
         /*	Job* job = FirstJob;
    		while(job != NULL)
-   		{   
-	
+   		{
+
    		cout << job->QueuingTimeStamp << endl;
-	
+
    		job = job->Next;
    		}
 	*/
-	return;	
-   }	
+	return;
+   }
 
 };
 JobQueue :: JobQueue()
@@ -108,11 +108,11 @@ JobQueue :: ~JobQueue()
 {
 	FirstJob = NULL;
 	LastJob  = NULL;
-	
-	
+
+
 }
-		
-	
+
+
 
 
 void JobQueue::enqueue(Job* job)
@@ -128,8 +128,8 @@ void JobQueue::enqueue(Job* job)
 	else
 	{
 		LastJob ->Next = job;
-		LastJob = job;			
-	}	
+		LastJob = job;
+	}
 }
 
 Job* JobQueue::dequeue()
@@ -140,24 +140,24 @@ Job* JobQueue::dequeue()
 	{
 		FirstJob = NULL;
 		LastJob  = NULL;
-	}	
-	else 
+	}
+	else
 	{
 		FirstJob = FirstJob -> Next;
-	}	
+	}
 
    if (job != NULL)
    {
      job->StartupTimeStamp = getMicroTime();
-   } 
-   
+   }
+
    return(job);
 }
 
 
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
-unsigned long long JobInterval                   = 2000000;
+unsigned long long JobInterval                   = 12000000;
 
 
 enum ProcessStatus {
@@ -187,7 +187,7 @@ void sendCalcAppRequest(struct Process* process)
    CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type    = htonl(CALCAPP_REQUEST);
-   message.JobID   = ++process->CurrentJob->JobID;
+   message.JobID   = process->CurrentJob->JobID;
    message.JobSize = process->CurrentJob->JobSize;
 
    ssize_t result = rspSessionWrite(process->Session,
@@ -264,7 +264,9 @@ void handleCalcAppReject(struct Process* process,
    }
 
    cout << "Job " << process->CurrentJob->JobID << " rejected" << endl;
-   process->Status = PS_Failover;
+   process->Status                         = PS_Failover;
+   process->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   process->KeepAliveTransmissionTimeStamp = ~0ULL;
    rspSessionFailover(process->Session);
 }
 
@@ -311,8 +313,8 @@ void handleCalcAppCompleted(struct Process* process,
    double QueueingTime = 0.0;
    double StartupTime = 0.0;
    double ProcessingTime = 0.0;
-   
-   
+
+
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
       process->Status = PS_Failed;
@@ -320,13 +322,15 @@ void handleCalcAppCompleted(struct Process* process,
    }
 
    cout << "Job " << process->CurrentJob->JobID << " completed" << endl;
-   process->Status = PS_Completed;
-   process->CurrentJob->CompleteTimeStamp = getMicroTime();
-   
+   process->Status                         = PS_Completed;
+   process->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   process->KeepAliveTransmissionTimeStamp = ~0ULL;
+   process->CurrentJob->CompleteTimeStamp  = getMicroTime();
+
    QueueingTime = process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp;
    StartupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
    ProcessingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
-   
+
    HandlingDelay = (QueueingTime + StartupTime + ProcessingTime)/ 1000000;
    HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay;
    TotalHandlingDelay+= HandlingDelay;
@@ -344,7 +348,7 @@ void handleNextJobTimer(struct Process* process)
    Job* job = new Job;
    CHECK(job != NULL);
    job->JobID   = ++jobID;
-   job->JobSize = random32()/100000;
+   job->JobSize = (double)(random64() % 10000000ULL);
 
    process->Queue.enqueue(job);
    process->NextJobTimeStamp = getMicroTime() + JobInterval;
@@ -446,11 +450,14 @@ void handleTimer(Process* process)
      }
 //   }
 
+   if(process->NextJobTimeStamp <= now) {
+      handleNextJobTimer(process);
+   }
 }
 
 
 // ###### Run process #######################################################
-void runProcess(const char* poolHandle, const double jobSize)
+void runProcess(const char* poolHandle)
 {
    struct TagItem tags[16];
 
@@ -459,18 +466,20 @@ void runProcess(const char* poolHandle, const double jobSize)
    tags[1].Tag  = TAG_DONE;
 
    Process process;
-   process.Status                         = PS_Init;
    process.NextJobTimeStamp               = getMicroTime() + JobInterval;
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
-   process.Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
-                                      NULL, (struct TagItem*)&tags);
+   process.Session                        = NULL;
    handleNextJobTimer(&process);
 
-   if(process.Session != NULL) {
+   process.CurrentJob = process.Queue.dequeue();
+   while(process.CurrentJob != NULL) {
+      process.Status = PS_Init;
 
-      process.CurrentJob = process.Queue.dequeue();
-      while(process.CurrentJob != NULL) {
+      process.Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
+                                         NULL, (struct TagItem*)&tags);
+      if(process.Session != NULL) {
+
          sendCalcAppRequest(&process);
 
          while((process.Status != PS_Failed) &&
@@ -508,7 +517,11 @@ void runProcess(const char* poolHandle, const double jobSize)
                if(errno != EINTR) {
                   perror("rspSessionSelect() failed");
                }
-               break;
+               goto finished;
+            }
+            if(breakDetected()) {
+               rspDeleteSession(process.Session, NULL);
+               goto finished;
             }
 
             if(process.Status == PS_Failover) {
@@ -516,13 +529,44 @@ void runProcess(const char* poolHandle, const double jobSize)
             }
          }
 
+         rspDeleteSession(process.Session, NULL);
+         process.Session = NULL;
+
          if(process.Status == PS_Completed) {
+            delete process.CurrentJob;
             process.CurrentJob = process.Queue.dequeue();
          }
       }
 
-      rspDeleteSession(process.Session, NULL);
+      while(process.CurrentJob == NULL) {
+         tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
+         tags[0].Data = 1;
+         tags[1].Tag  = TAG_DONE;
+         unsigned long long now       = getMicroTime();
+         unsigned long long nextTimer = now + 500000;
+         nextTimer = min(nextTimer, process.NextJobTimeStamp);
+         unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
+         int result = rspSessionSelect(NULL, NULL, 0,
+                                       NULL, NULL, 0,
+                                       timeout,
+                                       (struct TagItem*)&tags);
+         if(result < 0) {
+            if(errno != EINTR) {
+               perror("rspSessionSelect() failed");
+            }
+            goto finished;
+         }
+         if(breakDetected()) {
+            goto finished;
+         }
+         handleTimer(&process);
+         process.CurrentJob = process.Queue.dequeue();
+      }
+
    }
+
+finished:
+   return;
 }
 
 
@@ -533,7 +577,6 @@ int main(int argc, char** argv)
    struct TagItem tags[16];
    int            i;
    int            n;
-   long		  randomjobsize = random32()/100000;	
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
@@ -599,8 +642,8 @@ int main(int argc, char** argv)
    cout << "-------------------------------" << endl;
 
 
-   runProcess(poolHandle, randomjobsize);
-   
+   runProcess(poolHandle);
+
 
    finishLogging();
    rspCleanUp();
