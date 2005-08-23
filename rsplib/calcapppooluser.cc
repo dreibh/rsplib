@@ -39,9 +39,12 @@
 #include "breakdetector.h"
 #include "rsplib.h"
 #include "calcapppackets.h"
+#include "stdlib.h"
+#include "randomizer.h"
 
 #include <ext_socket.h>
 #include <signal.h>
+
 
 #include <iostream>
 
@@ -58,9 +61,13 @@ struct Job
 
    unsigned int       JobID;
    double             JobSize;
-
+   
+   unsigned long long CompleteTimeStamp;
    unsigned long long QueuingTimeStamp;
    unsigned long long StartupTimeStamp;
+   unsigned long long AcceptTimeStamp;
+   
+
 };
 
 class JobQueue
@@ -75,29 +82,82 @@ class JobQueue
    private:
    Job* FirstJob;
    Job* LastJob;
+   
+   public:
+   void PrintStatistics()
+   {
+        /*	Job* job = FirstJob;
+   		while(job != NULL)
+   		{   
+	
+   		cout << job->QueuingTimeStamp << endl;
+	
+   		job = job->Next;
+   		}
+	*/
+	return;	
+   }	
+
 };
+JobQueue :: JobQueue()
+{
+	FirstJob = NULL;
+	LastJob  = NULL;
+}
+JobQueue :: ~JobQueue()
+{
+	FirstJob = NULL;
+	LastJob  = NULL;
+	
+	
+}
+		
+	
+
 
 void JobQueue::enqueue(Job* job)
 {
-
-
-   job->Next = NULL;
-   job->QueuingTimeStamp = getMicroTime();
-   job->StartupTimeStamp = 0ULL;
+	job->Next = NULL;
+   	job->QueuingTimeStamp = getMicroTime();
+   	job->StartupTimeStamp = 0ULL;
+	if (FirstJob == NULL && LastJob == NULL)
+	{
+		FirstJob = job;
+		LastJob  = job;
+	}
+	else
+	{
+		LastJob ->Next = job;
+		LastJob = job;			
+	}	
 }
 
 Job* JobQueue::dequeue()
 {
    Job* job;
+   job = FirstJob;
+   if (FirstJob == LastJob)
+	{
+		FirstJob = NULL;
+		LastJob  = NULL;
+	}	
+	else 
+	{
+		FirstJob = FirstJob -> Next;
+	}	
 
-   job->StartupTimeStamp = getMicroTime();
+   if (job != NULL)
+   {
+     job->StartupTimeStamp = getMicroTime();
+   } 
+   
    return(job);
 }
 
 
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
-unsigned long long JobInterval                   = 15000000;
+unsigned long long JobInterval                   = 2000000;
 
 
 enum ProcessStatus {
@@ -184,6 +244,7 @@ void handleCalcAppAccept(struct Process* process,
    }
 
    cout << "Job " << process->CurrentJob->JobID << " accepted" << endl;
+   process->CurrentJob->AcceptTimeStamp = getMicroTime();
 
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
@@ -244,6 +305,14 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
+   double HandlingDelay = 0.0;
+   double HandlingSpeed = 0.0;
+   double TotalHandlingDelay = 0.0;
+   double QueueingTime = 0.0;
+   double StartupTime = 0.0;
+   double ProcessingTime = 0.0;
+   
+   
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
       process->Status = PS_Failed;
@@ -252,6 +321,18 @@ void handleCalcAppCompleted(struct Process* process,
 
    cout << "Job " << process->CurrentJob->JobID << " completed" << endl;
    process->Status = PS_Completed;
+   process->CurrentJob->CompleteTimeStamp = getMicroTime();
+   
+   QueueingTime = process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp;
+   StartupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
+   ProcessingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
+   
+   HandlingDelay = (QueueingTime + StartupTime + ProcessingTime)/ 1000000;
+   HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay;
+   TotalHandlingDelay+= HandlingDelay;
+   cout << process->CurrentJob->JobSize << endl;
+   cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
+   cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
 }
 
 
@@ -263,7 +344,7 @@ void handleNextJobTimer(struct Process* process)
    Job* job = new Job;
    CHECK(job != NULL);
    job->JobID   = ++jobID;
-   job->JobSize = 10000000;
+   job->JobSize = random32()/100000;
 
    process->Queue.enqueue(job);
    process->NextJobTimeStamp = getMicroTime() + JobInterval;
@@ -359,6 +440,10 @@ void handleTimer(Process* process)
          handleKeepAliveTimeoutTimer(process);
          process->KeepAliveTimeoutTimeStamp = ~0ULL;
       }
+     if (process->NextJobTimeStamp <= now)
+     {
+      handleNextJobTimer(process);
+     }
 //   }
 
 }
@@ -411,6 +496,7 @@ void runProcess(const char* poolHandle, const double jobSize)
                                           NULL, NULL, 0,
                                           timeout,
                                           (struct TagItem*)&tags);
+	    // process.Queue.PrintStatistics();
             handleTimer(&process);
 
             /* ====== Handle results of ext_select() =========================== */
@@ -447,6 +533,7 @@ int main(int argc, char** argv)
    struct TagItem tags[16];
    int            i;
    int            n;
+   long		  randomjobsize = random32()/100000;	
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
@@ -512,8 +599,8 @@ int main(int argc, char** argv)
    cout << "-------------------------------" << endl;
 
 
-   runProcess(poolHandle, 10000000.0);
-
+   runProcess(poolHandle, randomjobsize);
+   
 
    finishLogging();
    rspCleanUp();
