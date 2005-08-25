@@ -66,8 +66,6 @@ struct Job
    unsigned long long QueuingTimeStamp;
    unsigned long long StartupTimeStamp;
    unsigned long long AcceptTimeStamp;
-
-
 };
 
 class JobQueue
@@ -86,28 +84,28 @@ class JobQueue
    public:
    void PrintStatistics()
    {
-        /*	Job* job = FirstJob;
-   		while(job != NULL)
-   		{
+        /*   Job* job = FirstJob;
+         while(job != NULL)
+         {
 
-   		cout << job->QueuingTimeStamp << endl;
+         cout << job->QueuingTimeStamp << endl;
 
-   		job = job->Next;
-   		}
-	*/
-	return;
+         job = job->Next;
+         }
+   */
+   return;
    }
 
 };
 JobQueue :: JobQueue()
 {
-	FirstJob = NULL;
-	LastJob  = NULL;
+   FirstJob = NULL;
+   LastJob  = NULL;
 }
 JobQueue :: ~JobQueue()
 {
-	FirstJob = NULL;
-	LastJob  = NULL;
+   FirstJob = NULL;
+   LastJob  = NULL;
 
 
 }
@@ -117,19 +115,19 @@ JobQueue :: ~JobQueue()
 
 void JobQueue::enqueue(Job* job)
 {
-	job->Next = NULL;
-   	job->QueuingTimeStamp = getMicroTime();
-   	job->StartupTimeStamp = 0ULL;
-	if (FirstJob == NULL && LastJob == NULL)
-	{
-		FirstJob = job;
-		LastJob  = job;
-	}
-	else
-	{
-		LastJob ->Next = job;
-		LastJob = job;
-	}
+   job->Next = NULL;
+      job->QueuingTimeStamp = getMicroTime();
+      job->StartupTimeStamp = 0ULL;
+   if (FirstJob == NULL && LastJob == NULL)
+   {
+      FirstJob = job;
+      LastJob  = job;
+   }
+   else
+   {
+      LastJob ->Next = job;
+      LastJob = job;
+   }
 }
 
 Job* JobQueue::dequeue()
@@ -137,14 +135,14 @@ Job* JobQueue::dequeue()
    Job* job;
    job = FirstJob;
    if (FirstJob == LastJob)
-	{
-		FirstJob = NULL;
-		LastJob  = NULL;
-	}
-	else
-	{
-		FirstJob = FirstJob -> Next;
-	}
+   {
+      FirstJob = NULL;
+      LastJob  = NULL;
+   }
+   else
+   {
+      FirstJob = FirstJob -> Next;
+   }
 
    if (job != NULL)
    {
@@ -158,8 +156,9 @@ Job* JobQueue::dequeue()
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
 unsigned long long JobInterval                   = 12000000;
-FILE* StatisticsFH;
-unsigned int StatisticsLine = 0;
+FILE*        VectorFH   = NULL;
+FILE*        ScalarFH   = NULL;
+unsigned int VectorLine = 0;
 
 
 enum ProcessStatus {
@@ -175,6 +174,8 @@ struct Process {
    ProcessStatus      Status;
    JobQueue           Queue;
    Job*               CurrentJob;
+
+   size_t             TotalCalcAppRequests;
 
    // ------ Timers ------------------------------------------------------
    unsigned long long NextJobTimeStamp;
@@ -197,6 +198,8 @@ void sendCalcAppRequest(struct Process* process)
    if(result <= 0) {
       process->Status = PS_Failed;
    }
+
+   process->TotalCalcAppRequests++;
 }
 
 
@@ -339,12 +342,12 @@ void handleCalcAppCompleted(struct Process* process,
    cout << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
    cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
-   
-   fprintf(StatisticsFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++StatisticsLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
-      
-   
-   
-   
+
+   fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++VectorLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
+
+
+
+
 }
 
 
@@ -465,7 +468,7 @@ void handleTimer(Process* process)
 
 
 // ###### Run process #######################################################
-void runProcess(const char* poolHandle)
+void runProcess(const char* poolHandle, const char* objectName)
 {
    struct TagItem tags[16];
 
@@ -478,6 +481,7 @@ void runProcess(const char* poolHandle)
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
    process.Session                        = NULL;
+   process.TotalCalcAppRequests           = 0;
    handleNextJobTimer(&process);
 
    process.CurrentJob = process.Queue.dequeue();
@@ -513,7 +517,7 @@ void runProcess(const char* poolHandle)
                                           NULL, NULL, 0,
                                           timeout,
                                           (struct TagItem*)&tags);
-	    // process.Queue.PrintStatistics();
+       // process.Queue.PrintStatistics();
             handleTimer(&process);
 
             /* ====== Handle results of ext_select() =========================== */
@@ -574,6 +578,7 @@ void runProcess(const char* poolHandle)
    }
 
 finished:
+   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests\" %u\n", objectName, process.TotalCalcAppRequests);
    return;
 }
 
@@ -581,15 +586,26 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-  
-   char*          poolHandle = "CalcAppPool";
-   struct TagItem tags[16];
-   int            i;
-   int            n;
+
+   char* poolHandle     = "CalcAppPool";
+   char* objectName     = "scenario.calcapppooluser[0]";
+   char* vectorFileName = "calcapppooluser.vec";
+   char* scalarFileName = "calcapppooluser.sca";
+   int   i;
+   int   n;
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
+      }
+      else if(!(strncmp(argv[i], "-object=" ,8))) {
+         objectName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-vector=" ,8))) {
+         vectorFileName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-scalar=" ,8))) {
+         scalarFileName = (char*)&argv[i][8];
       }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -601,7 +617,7 @@ int main(int argc, char** argv)
       }
       else {
          puts("Bad arguments!");
-         printf("Usage: %s {-registrar=Registrar address(es)} {-ph=Pool handle} {-auto=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n", argv[0]);
+         printf("Usage: %s {-object=object name} {-vector=vector file name} {-scalar=scalar file name} {-registrar=Registrar address(es)} {-ph=Pool handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n", argv[0]);
          exit(1);
       }
    }
@@ -625,45 +641,35 @@ int main(int argc, char** argv)
    }
 
 
-   tags[0].Tag = TAG_DONE;
-/*
-   tags[0].Tag = TAG_TuneSCTP_MinRTO;
-   tags[0].Data = 100;
-   tags[1].Tag = TAG_TuneSCTP_MaxRTO;
-   tags[1].Data = 500;
-   tags[2].Tag = TAG_TuneSCTP_InitialRTO;
-   tags[2].Data = 250;
-   tags[3].Tag = TAG_TuneSCTP_Heartbeat;
-   tags[3].Data = 100;
-   tags[4].Tag = TAG_TuneSCTP_PathMaxRXT;
-   tags[4].Data = 3;
-   tags[5].Tag = TAG_TuneSCTP_AssocMaxRXT;
-   tags[5].Data = 9;
-   tags[6].Tag  = TAG_RspSession_FailoverCallback;
-   tags[6].Data = (tagdata_t)handleFailover;
-   tags[7].Tag  = TAG_RspSession_FailoverUserData;
-   tags[7].Data = (tagdata_t)NULL;
-   tags[8].Tag = TAG_DONE;
-*/
+   cout << "CalcApp Pool User - Version 1.0" << endl
+        << "-------------------------------" << endl << endl
+        << "Object      = " << objectName << endl
+        << "Vector File = " << vectorFileName << endl
+        << "Scalar File = " << scalarFileName << endl
+        << endl;
 
-
-   cout << "CalcApp Pool User - Version 1.0" << endl;
-   cout << "-------------------------------" << endl;
-   
-   StatisticsFH = fopen("testoutput.txt", "w");
-   if (StatisticsFH != 0)
-   {
-   fprintf(StatisticsFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n"); 
-   runProcess(poolHandle);
-   
+   VectorFH = fopen(vectorFileName, "w");
+   if(VectorFH == NULL) {
+      cout << " Unable to open output file " << vectorFileName << endl;
+      finishLogging();
    }
-   else
-   {
-   	cout << " Unable to open Statistics Outputfile" << endl;
-	finishLogging();
-   }		
-   
-   fclose(StatisticsFH);
+   fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n");
+
+   ScalarFH = fopen(scalarFileName, "w");
+   if(ScalarFH == NULL) {
+      cout << " Unable to open output file " << scalarFileName << endl;
+      finishLogging();
+   }
+   fprintf(ScalarFH, "run 1 \"scenario\"\n");
+
+
+   runProcess(poolHandle, objectName);
+
+
+   fclose(ScalarFH);
+   fclose(VectorFH);
+
+
    finishLogging();
    rspCleanUp();
    puts("\nTerminated!");
