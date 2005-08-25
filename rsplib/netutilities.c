@@ -1647,9 +1647,12 @@ static bool multicastGroupMgt(int              sockfd,
       else {
          memset((char*)&mreq.imr_interface, 0, sizeof(mreq.imr_interface));
       }
-      return(ext_setsockopt(sockfd,IPPROTO_IP,
-                            add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
-                            &mreq, sizeof(mreq)) == 0);
+      /* BSD sets errno to EADDRINUSE if socket has already been joined to
+         the multicast group. This is no real error. */
+      result = ext_setsockopt(sockfd,IPPROTO_IP,
+                              add ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
+                              &mreq, sizeof(mreq));
+      return((result == 0) || (errno == EADDRINUSE));
    }
    else if(address->sa_family == AF_INET6) {
       memcpy((char*)&mreq6.ipv6mr_multiaddr,
