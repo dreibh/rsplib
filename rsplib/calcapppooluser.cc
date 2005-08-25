@@ -158,6 +158,8 @@ Job* JobQueue::dequeue()
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
 unsigned long long JobInterval                   = 12000000;
+FILE* StatisticsFH;
+unsigned int StatisticsLine = 0;
 
 
 enum ProcessStatus {
@@ -337,6 +339,12 @@ void handleCalcAppCompleted(struct Process* process,
    cout << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
    cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
+   
+   fprintf(StatisticsFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++StatisticsLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
+      
+   
+   
+   
 }
 
 
@@ -573,6 +581,7 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
+  
    char*          poolHandle = "CalcAppPool";
    struct TagItem tags[16];
    int            i;
@@ -640,11 +649,21 @@ int main(int argc, char** argv)
 
    cout << "CalcApp Pool User - Version 1.0" << endl;
    cout << "-------------------------------" << endl;
-
-
+   
+   StatisticsFH = fopen("testoutput.txt", "w");
+   if (StatisticsFH != 0)
+   {
+   fprintf(StatisticsFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n"); 
    runProcess(poolHandle);
-
-
+   
+   }
+   else
+   {
+   	cout << " Unable to open Statistics Outputfile" << endl;
+	finishLogging();
+   }		
+   
+   fclose(StatisticsFH);
    finishLogging();
    rspCleanUp();
    puts("\nTerminated!");
