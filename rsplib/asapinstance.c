@@ -46,6 +46,11 @@
 #include <ext_socket.h>
 
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+
 static void handleRegistrarConnectionEvent(struct Dispatcher* dispatcher,
                                            int                fd,
                                            unsigned int       eventMask,
