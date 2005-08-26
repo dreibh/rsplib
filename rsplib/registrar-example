@@ -1,2 +1,2 @@
 #!/bin/sh
-./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -maxbadpereports=99999999 -logcolor=on -loglevel=5 $@
+./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -maxbadpereports=99999999 -logcolor=on -loglevel=3 $@

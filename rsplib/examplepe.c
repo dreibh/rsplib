@@ -148,10 +148,12 @@ static void handleServiceRequest(GList**        clientList,
          handleCookieEcho(client, (void*)&buffer, received);
       }
    }
+   /*
    else if(received == RspRead_Timeout) {
       puts("INTERNAL ERROR: Timeout occurred! This should never happen!");
       exit(1);
    }
+   */
    else {
       *clientList = g_list_remove(*clientList, (gpointer)client);
       rspDeleteSession(client->Session, NULL);

@@ -153,12 +153,14 @@ static void handleServerReply()
       puts(buffer);
       fflush(stdout);
    }
+   /*
    else if(errno != EAGAIN) {
       printf("rspSessionRead failed: code %d\n", received);
    }
    else {
       puts("Message/Partial -- DAS SOLLTE NICHT ANGEZEIGT WERDEN!");
    }
+   */
 }
 
 

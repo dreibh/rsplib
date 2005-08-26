@@ -1059,7 +1059,8 @@ ssize_t rspSessionRead(struct SessionDescriptor* session,
          }
          return(RspRead_ControlRead);
       }
-      else if(result == RspRead_ReadError) {
+      else if((result == 0) ||
+              (result == RspRead_ReadError)) {
          if(tagListGetData(tags, TAG_RspIO_MakeFailover, 1) != 0) {
             LOG_VERBOSE
             fprintf(stdlog, "Session failure during read, socket %d. Failover necessary\n",
