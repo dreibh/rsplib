@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.c,v 1.5 2004/11/10 14:44:38 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -52,7 +52,7 @@ FILE**       gStdLog = &_stderr;
 #endif
 
 
-unsigned int        gLogLevel    = LOGLEVEL_NOTE;
+unsigned int        gLogLevel    = LOGLEVEL_ERROR;
 static bool         gColorMode   = true;
 static bool         gCloseStdLog = false;
 struct ThreadSafety gLogMutex;

@@ -493,7 +493,9 @@ int main(int argc, char** argv)
             list = g_list_first(clientList);
          }
          if((result < 0) && (errno != EINTR)) {
-            perror("rspSessionSelect() failed");
+	    /* FIXME
+	    perror("rspSessionSelect() failed");
+            */
             break;
          }
 
