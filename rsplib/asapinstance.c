@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.c,v 1.44 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -314,7 +314,8 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*     asapInstanc
    }
    result = rserpoolMessageSend(IPPROTO_SCTP,
                                 asapInstance->RegistrarSocket,
-                                0, 0,
+                                0,
+                                MSG_NOSIGNAL,
                                 asapInstance->RegistrarRequestTimeout,
                                 request);
    if(result) {
@@ -356,7 +357,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
          LOG_END
 
          /* ====== Receive response ====================================== */
-         flags               = 0;
+         flags               = MSG_NOSIGNAL;
          sourceAddressLength = sizeof(sourceAddress);
          received = recvfromplus(asapInstance->RegistrarSocket,
                                  (char*)&buffer, sizeof(buffer),
@@ -408,7 +409,7 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
             }
 
             /* ====== Continue receiving response ======================== */
-            flags               = 0;
+            flags               = MSG_NOSIGNAL;
             sourceAddressLength = sizeof(sourceAddress);
             received = recvfromplus(asapInstance->RegistrarSocket,
                                     (char*)&buffer, sizeof(buffer),

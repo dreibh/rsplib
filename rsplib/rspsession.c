@@ -636,7 +636,8 @@ static bool rspSessionSendCookieEcho(struct SessionDescriptor* session)
          LOG_END
          result = rserpoolMessageSend(session->SocketProtocol,
                                       session->Socket,
-                                      0, 0,
+                                      0,
+                                      MSG_NOSIGNAL,
                                       0,
                                       message);
          threadSafetyUnlock(&session->Mutex);

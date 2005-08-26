@@ -134,9 +134,9 @@ static void handleServiceRequest(GList**        clientList,
       if(tags[0].Data == 0) {
          client->IsNewClient = false;
          buffer[received]  = 0x00;
-         printf("Echo %u %u> %s", client->CounterStart,
-                                  client->Counter,
-                                  buffer);
+         printf("Echo %u %u> %s\n", client->CounterStart,
+                                    client->Counter,
+                                    buffer);
          client->Counter++;
          rspSessionWrite(client->Session, (char*)&buffer, received, NULL);
 
@@ -169,12 +169,11 @@ static void handleServiceRequest(GList**        clientList,
 static bool RsplibThreadStop = false;
 static void* rsplibMainLoop(void* args)
 {
-   int result;
+   struct timeval timeout;
    while(!RsplibThreadStop) {
-      result = rspSelect(0, NULL, NULL, NULL, NULL);
-      if((result < 0) && (errno == EINTR)) {
-         puts("Interrupted rspSelect()!");
-      }
+      timeout.tv_sec  = 0;
+      timeout.tv_usec = 250000;
+      rspSelect(0, NULL, NULL, NULL, &timeout);
    }
    return(NULL);
 }
@@ -440,7 +439,7 @@ int main(int argc, char** argv)
                                    (struct PoolElementDescriptor**)&pedArray,
                                    (unsigned int*)&pedStatusArray,
                                    1,
-                                   1000000,
+                                   250000,
                                    (struct TagItem*)&tags);
 
          /* ====== Handle results of ext_select() ======================== */
@@ -504,6 +503,8 @@ int main(int argc, char** argv)
             break;
          }
       }
+
+      puts("Shutdown...");
 
       /* ====== Delete sessions and finally pool element ================= */
       list = g_list_first(clientList);
