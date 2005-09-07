@@ -67,6 +67,20 @@ uint32_t random32();
   */
 uint64_t random64();
 
+/**
+  * Get double random value out of interval [0,1).
+  *
+  * @return Random value.
+  */
+double randomExpDouble(const double p);
+
+/**
+  * Get exponential-distributed random value.
+  *
+  * @param p Average value.
+  * @return Random value.
+  */
+double randomExpDouble(const double p);
 
 
 #ifdef __cplusplus

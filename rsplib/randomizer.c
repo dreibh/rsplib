@@ -1,5 +1,5 @@
 /*
- *  $Id: randomizer.c,v 1.11 2005/07/27 10:26:18 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -125,4 +125,18 @@ uint32_t random32()
    }
    return(random());
 #endif
+}
+
+
+/* ###### Get double random value ######################################## */
+double randomDouble()
+{
+   return( (double)random32() / (double)4294967296ULL );
+}
+
+
+/* ###### Get exponential-distributed double random value ################ */
+double randomExpDouble(const double p)
+{
+   return( -p * log(randomDouble()) );
 }
