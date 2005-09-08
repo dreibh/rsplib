@@ -152,13 +152,22 @@ Job* JobQueue::dequeue()
    return(job);
 }
 
-
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
-unsigned long long JobInterval                   = 12000000;
+unsigned long long JobInterval                   = 15000000;
 FILE*        VectorFH   = NULL;
 FILE*        ScalarFH   = NULL;
 unsigned int VectorLine = 0;
+double       JobSizeDeclaration			 = 5000000; 
+unsigned long long runtime;
+double TotalHandlingDelay            = 0.0;
+double AverageHandlingDelay          = 0.0;
+double TotalHandlingSpeed            = 0.0;
+double AverageHandlingSpeed          = 0.0;
+double TotalJobSize      	     = 0.0;
+double AverageJobSize    	     = 0.0;
+unsigned long long TotalJobInterval  = 0;
+unsigned long long AverageJobInterval= 0;
 
 
 enum ProcessStatus {
@@ -176,6 +185,11 @@ struct Process {
    Job*               CurrentJob;
 
    size_t             TotalCalcAppRequests;
+   size_t	      TotalCalcAppAccepted;
+   size_t             TotalCalcAppRejected;
+   size_t             TotalCalcAppKeepAlives;
+   size_t             TotalCalcAppKeepAliveAcks;
+   size_t             TotalCalcAppCompleted;
 
    // ------ Timers ------------------------------------------------------
    unsigned long long NextJobTimeStamp;
@@ -217,6 +231,7 @@ void sendCalcAppKeepAlive(struct Process* process)
       cerr << "WARNING: Unable to send CalcAppKeepAlive" << endl;
       process->Status = PS_Failover;
    }
+   process->TotalCalcAppKeepAlives++;
 }
 
 
@@ -234,6 +249,7 @@ void sendCalcAppKeepAliveAck(struct Process* process)
       cerr << "WARNING: Unable to send CalcAppKeepAliveAck" << endl;
       process->Status = PS_Failover;
    }
+   process->TotalCalcAppKeepAliveAcks++;
 }
 
 
@@ -254,6 +270,8 @@ void handleCalcAppAccept(struct Process* process,
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+   
+   process->TotalCalcAppAccepted++;
 }
 
 
@@ -273,6 +291,8 @@ void handleCalcAppReject(struct Process* process,
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    rspSessionFailover(process->Session);
+   
+   process->TotalCalcAppRejected++;
 }
 
 
@@ -314,7 +334,6 @@ void handleCalcAppCompleted(struct Process* process,
 {
    double HandlingDelay = 0.0;
    double HandlingSpeed = 0.0;
-   double TotalHandlingDelay = 0.0;
    double QueueingTime = 0.0;
    double StartupTime = 0.0;
    double ProcessingTime = 0.0;
@@ -337,17 +356,18 @@ void handleCalcAppCompleted(struct Process* process,
    ProcessingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
 
    HandlingDelay = (QueueingTime + StartupTime + ProcessingTime)/ 1000000;
-   HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay;
+   HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay ;
    TotalHandlingDelay+= HandlingDelay;
-   cout << process->CurrentJob->JobSize << endl;
+   TotalJobSize+= process->CurrentJob->JobSize;
+   TotalJobInterval+= JobInterval;
+   TotalHandlingSpeed+=HandlingSpeed;
+   cout << "JobSize:     " << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
    cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
 
    fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++VectorLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
-
-
-
-
+   process->TotalCalcAppCompleted++;   
+     
 }
 
 
@@ -359,10 +379,10 @@ void handleNextJobTimer(struct Process* process)
    Job* job = new Job;
    CHECK(job != NULL);
    job->JobID   = ++jobID;
-   job->JobSize = (double)(random64() % 10000000ULL);
+   job->JobSize = randomExpDouble(JobSizeDeclaration);
 
    process->Queue.enqueue(job);
-   process->NextJobTimeStamp = getMicroTime() + JobInterval;
+   process->NextJobTimeStamp = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
 }
 
 
@@ -468,7 +488,7 @@ void handleTimer(Process* process)
 
 
 // ###### Run process #######################################################
-void runProcess(const char* poolHandle, const char* objectName)
+void runProcess(const char* poolHandle, const char* objectName, unsigned long long StartTimer)
 {
    struct TagItem tags[16];
 
@@ -477,7 +497,7 @@ void runProcess(const char* poolHandle, const char* objectName)
    tags[1].Tag  = TAG_DONE;
 
    Process process;
-   process.NextJobTimeStamp               = getMicroTime() + JobInterval;
+   process.NextJobTimeStamp               = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
    process.Session                        = NULL;
@@ -519,6 +539,12 @@ void runProcess(const char* poolHandle, const char* objectName)
                                           (struct TagItem*)&tags);
        // process.Queue.PrintStatistics();
             handleTimer(&process);
+	       if (getMicroTime()-StartTimer >= runtime)
+   	       {
+      			goto finished;
+   
+   	       }   
+	    
 
             /* ====== Handle results of ext_select() =========================== */
             if((result > 0) && (sessionStatusArray[0] & RspSelect_Read)) {
@@ -578,7 +604,15 @@ void runProcess(const char* poolHandle, const char* objectName)
    }
 
 finished:
+    AverageHandlingDelay  = TotalHandlingDelay / process.TotalCalcAppCompleted;
+    AverageHandlingSpeed  = TotalHandlingSpeed / process.TotalCalcAppCompleted;
+    AverageJobSize        = TotalJobSize       / process.TotalCalcAppCompleted;
+    AverageJobInterval    = TotalJobInterval   / process.TotalCalcAppCompleted;
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests\" %u\n", objectName, process.TotalCalcAppRequests);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingDelay \" %1.6f\n", objectName, AverageHandlingDelay);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingSpeed \" %1.6f\n", objectName, AverageHandlingSpeed);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobSize       \" %1.6f\n", objectName, AverageJobSize);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %1.6f\n", objectName, AverageJobInterval);
    return;
 }
 
@@ -593,6 +627,7 @@ int main(int argc, char** argv)
    char* scalarFileName = "calcapppooluser.sca";
    int   i;
    int   n;
+   unsigned long long StartTimer = getMicroTime();
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
@@ -606,6 +641,15 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-scalar=" ,8))) {
          scalarFileName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-jobinterval=" ,13))) {
+         JobInterval 	= atol((char*)&argv[i][13]);
+      }
+      else if(!(strncmp(argv[i], "-jobsize=" ,9))) {
+         JobSizeDeclaration 	= atol((char*)&argv[i][9]);
+      }
+      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
+         runtime 	= atol((char*)&argv[i][9]);
       }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -653,6 +697,7 @@ int main(int argc, char** argv)
       cout << " Unable to open output file " << vectorFileName << endl;
       finishLogging();
    }
+   
    fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n");
 
    ScalarFH = fopen(scalarFileName, "w");
@@ -663,7 +708,7 @@ int main(int argc, char** argv)
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
 
 
-   runProcess(poolHandle, objectName);
+   runProcess(poolHandle, objectName, StartTimer);
 
 
    fclose(ScalarFH);

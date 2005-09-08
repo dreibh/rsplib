@@ -58,7 +58,11 @@ class SessionSet
    void handleTimers();
    void handleEvents(SessionDescriptor* session,
                      const unsigned int sessionEvents);
-
+		     
+   inline double getTotalUsedCalculations() const
+   {
+    return TotalUsedCalculations;
+   } 		     
    private:
    unsigned long long StartupTimeStamp;
    double             TotalUsedCalculations;
@@ -128,6 +132,10 @@ class SessionSet
    size_t           Sessions;
    double           Capacity;
 };
+
+FILE*        VectorFH   = NULL;
+FILE*        ScalarFH   = NULL;
+unsigned int VectorLine = 0;
 
 
 // ###### Constructor #######################################################
@@ -705,6 +713,7 @@ void SessionSet::updateCalculations()
                sessionSetEntry->Completed = sessionSetEntry->JobSize;
             }
          }
+	 
          sessionSetEntry->LastUpdateAt = now;
          sessionSetEntry = sessionSetEntry->Next;
       }
@@ -758,7 +767,10 @@ int main(int argc, char** argv)
    int                           protocol                       = IPPROTO_SCTP;
    unsigned short                port                           = 0;
    char*                         poolHandle                     = "CalcAppPool";
-   unsigned int                  policyType                     = PPT_RANDOM;
+   char* 			 objectName     		= "scenario.calcapppoolelement[0]";
+   char* 			 vectorFileName 		= "calcapppoolelement.vec";
+   char* 			 scalarFileName 		= "calcapppoolelement.sca";
+   unsigned int                  policyType                     = PPT_ROUNDROBIN;
    unsigned int                  policyParameterWeight          = 1;
    unsigned int                  policyParameterLoad            = 0;
    unsigned int                  policyParameterLoadDegradation = 0;
@@ -768,6 +780,10 @@ int main(int argc, char** argv)
    unsigned int                  pedStatusArray[FD_SETSIZE];
    int                           i;
    int                           result;
+   unsigned long long            runtime;
+   
+   unsigned long long 		 StartupTimeStamp		= getMicroTime();
+   
 
    start = getMicroTime();
    stop  = 0;
@@ -798,10 +814,22 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-registrar=" ,11))) {
          /* Process this later */
       }
+      else if(!(strncmp(argv[i], "-object=" ,8))) {
+         objectName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-vector=" ,8))) {
+         vectorFileName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-scalar=" ,8))) {
+         scalarFileName = (char*)&argv[i][8];
+	 }
+      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
+      runtime = atol((char*)&argv[i][9]);
+	 }
       else {
          cerr << "Bad argument \"" << argv[i] << "\"!"  << endl;
          cerr << "Usage: " << argv[0]
-              << " {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
+              << "Usage: %s {-object=object name} {-vector=vector file name} {-scalar=scalar file name} {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
               << endl;
          exit(1);
       }
@@ -852,7 +880,26 @@ int main(int argc, char** argv)
    poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
    if(poolElement != NULL) {
       cout << "CalcApp Pool Element - Version 1.0" << endl
-           << "----------------------------------" << endl << endl;
+           << "----------------------------------" << endl << endl
+           << "Object      = " << objectName << endl
+           << "Vector File = " << vectorFileName << endl
+           << "Scalar File = " << scalarFileName << endl
+           << endl;
+
+   VectorFH = fopen(vectorFileName, "w");
+   if(VectorFH == NULL) {
+      cout << " Unable to open output file " << vectorFileName << endl;
+      finishLogging();
+   }
+   fprintf(VectorFH, "Runtime AvailableCalculations UsedCalculations Utilization\n");
+
+   ScalarFH = fopen(scalarFileName, "w");
+   if(ScalarFH == NULL) {
+      cout << " Unable to open output file " << scalarFileName << endl;
+      finishLogging();
+   }
+   fprintf(ScalarFH, "run 1 \"scenario\"\n");
+
 
 #ifndef FAST_BREAK
       installBreakDetector();
@@ -886,6 +933,25 @@ int main(int argc, char** argv)
                                    timeout,
                                    (struct TagItem*)&tags);
          sessionList.handleTimers();
+	 
+	 double	 		 Capacity                      = 1000000.0;
+   	 unsigned long long 		 shutdownTimeStamp             = getMicroTime();
+   	 const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
+   	 const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
+   	 const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
+	 
+	 static unsigned long long lastOutput = 0;
+	 if(getMicroTime() - lastOutput >= 500000ULL) {
+	    lastOutput = getMicroTime();
+  	    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
+
+	 }
+	 if (getMicroTime()-StartupTimeStamp >= runtime)
+   	  {
+      			goto finished;
+   
+   	  }   
+	 
 
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
@@ -938,7 +1004,7 @@ int main(int argc, char** argv)
          /* ====== Check auto-stop timer ==================================== */
          if((stop > 0) && (getMicroTime() >= stop)) {
             cerr << "Auto-stop time reached -> exiting!" << endl;
-            break;
+            break; //fprintf(VectorFH, "Line Runtime AvailableCalculations UsedCalculations Utilization\n");
          }
       }
 
@@ -946,12 +1012,25 @@ int main(int argc, char** argv)
       sessionList.removeAll();
       cout << "Removing Pool Element..." << endl;
       rspDeletePoolElement(poolElement, NULL);
+      
+   double	 		 Capacity                      = 1000000.0;
+   unsigned long long 		 shutdownTimeStamp             = getMicroTime();
+   const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
+   const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
+   const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
+   
+   
+   fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
    }
    else {
       cerr << "ERROR: Unable to create pool element!" << endl;
       exit(1);
    }
+   finished: 
 
+   fclose(ScalarFH);
+   fclose(VectorFH);
+      
    rspCleanUp();
    finishLogging();
    cout << endl << "Terminated!" << endl;
