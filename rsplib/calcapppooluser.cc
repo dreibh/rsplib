@@ -41,6 +41,7 @@
 #include "calcapppackets.h"
 #include "stdlib.h"
 #include "randomizer.h"
+#include "statistics.h"
 
 #include <ext_socket.h>
 #include <signal.h>
@@ -67,6 +68,7 @@ struct Job
    unsigned long long StartupTimeStamp;
    unsigned long long AcceptTimeStamp;
 };
+
 
 class JobQueue
 {
@@ -118,6 +120,8 @@ void JobQueue::enqueue(Job* job)
    job->Next = NULL;
       job->QueuingTimeStamp = getMicroTime();
       job->StartupTimeStamp = 0ULL;
+
+      
    if (FirstJob == NULL && LastJob == NULL)
    {
       FirstJob = job;
@@ -164,11 +168,26 @@ double TotalHandlingDelay            = 0.0;
 double AverageHandlingDelay          = 0.0;
 double TotalHandlingSpeed            = 0.0;
 double AverageHandlingSpeed          = 0.0;
-double TotalJobSize      	     = 0.0;
 double AverageJobSize    	     = 0.0;
 unsigned long long TotalJobInterval  = 0;
 unsigned long long AverageJobInterval= 0;
-
+unsigned int TotalJobsQueued         = 0;
+unsigned int TotalJobsStarted        = 0;
+double TotalJobSizeQueued            = 0.0;
+double TotalJobSizeStarted           = 0.0;
+double TotalJobSizeCompleted         = 0.0;
+Statistics stat1;
+Statistics stat2;
+Statistics stat3;
+Statistics stat4;
+Statistics stat5;
+Statistics stat6;
+Statistics stat7;
+Statistics stat8;
+Statistics stat9;
+Statistics stat10;
+Statistics stat11;
+Statistics stat12;
 
 enum ProcessStatus {
    PS_Init       = 0,
@@ -358,9 +377,23 @@ void handleCalcAppCompleted(struct Process* process,
    HandlingDelay = (QueueingTime + StartupTime + ProcessingTime)/ 1000000;
    HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay ;
    TotalHandlingDelay+= HandlingDelay;
-   TotalJobSize+= process->CurrentJob->JobSize;
+   TotalJobSizeCompleted+= process->CurrentJob->JobSize;
    TotalJobInterval+= JobInterval;
    TotalHandlingSpeed+=HandlingSpeed;
+   
+   stat1.collect(StartupTime/1000000.0);
+   stat2.collect(QueueingTime/1000000.0);
+   stat3.collect(ProcessingTime/1000000.0);
+   stat4.collect(HandlingDelay);
+   stat5.collect(HandlingSpeed/1000000.0);
+   stat6.collect(process->CurrentJob->JobSize);
+   stat7.collect(JobInterval/1000000.0);
+   stat8.collect(StartupTime/1000000.0);
+   stat9.collect(QueueingTime/1000000.0);
+   stat10.collect(ProcessingTime/1000000.0);
+   stat11.collect(HandlingDelay);
+   stat12.collect(HandlingSpeed/1000000.0);
+   
    cout << "JobSize:     " << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
    cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
@@ -382,6 +415,8 @@ void handleNextJobTimer(struct Process* process)
    job->JobSize = randomExpDouble(JobSizeDeclaration);
 
    process->Queue.enqueue(job);
+   TotalJobsQueued++;
+   TotalJobSizeQueued+=job->JobSize;
    process->NextJobTimeStamp = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
 }
 
@@ -502,10 +537,15 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
    process.Session                        = NULL;
    process.TotalCalcAppRequests           = 0;
+   process.TotalCalcAppRejected           = 0;
+   process.TotalCalcAppAccepted           = 0;
+   process.TotalCalcAppCompleted           = 0;
    handleNextJobTimer(&process);
 
    process.CurrentJob = process.Queue.dequeue();
    while(process.CurrentJob != NULL) {
+      TotalJobsStarted++;
+      TotalJobSizeStarted+=process.CurrentJob->JobSize;
       process.Status = PS_Init;
 
       process.Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
@@ -604,7 +644,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    }
 
 finished:
-    AverageHandlingDelay  = TotalHandlingDelay / process.TotalCalcAppCompleted;
+    /* AverageHandlingDelay  = TotalHandlingDelay / process.TotalCalcAppCompleted;
     AverageHandlingSpeed  = TotalHandlingSpeed / process.TotalCalcAppCompleted;
     AverageJobSize        = TotalJobSize       / process.TotalCalcAppCompleted;
     AverageJobInterval    = TotalJobInterval   / process.TotalCalcAppCompleted;
@@ -612,7 +652,35 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingDelay \" %1.6f\n", objectName, AverageHandlingDelay);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingSpeed \" %1.6f\n", objectName, AverageHandlingSpeed);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageJobSize       \" %1.6f\n", objectName, AverageJobSize);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %1.6f\n", objectName, AverageJobInterval);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %llu\n", objectName, AverageJobInterval); */
+   
+   /*fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"mean=%f min=%f max=%f stddev=%f\n", objectName, stat1.mean(), stat1.minimum(), stat1.maximum(), stat1.stddev()); */
+   
+   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, stat1.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, stat2.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, stat3.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"mean=%f \n", objectName, stat4.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, stat5.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, stat6.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, stat7.mean());
+   
+   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"stddev=%f \n", objectName, stat8.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"stddev=%f \n", objectName, stat9.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"stddev=%f \n", objectName, stat10.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"stddev=%f \n", objectName, stat11.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"stddev=%f \n", objectName, stat12.stddev());
+
+   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests     \"%u \n", objectName, process.TotalCalcAppRequests);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppAccepts      \"%u \n", objectName, process.TotalCalcAppAccepted);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRejects      \"%u \n", objectName, process.TotalCalcAppRejected);
+   
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Queued\" %u \n", objectName, TotalJobsQueued);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Started\" %u \n", objectName, TotalJobsStarted);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Completed \" %u \n", objectName, process.TotalCalcAppCompleted);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Queued\" %1.6f \n", objectName, TotalJobSizeQueued);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Started\" %1.6f \n", objectName, TotalJobSizeStarted);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Completed\" %1.6f \n", objectName, TotalJobSizeCompleted);
+   
    return;
 }
 

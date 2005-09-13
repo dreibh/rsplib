@@ -34,6 +34,8 @@
 #include "timeutilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
+#include "randomizer.h"
+#include "statistics.h"
 
 #include "calcapppackets.h"
 
@@ -136,7 +138,11 @@ class SessionSet
 FILE*        VectorFH   = NULL;
 FILE*        ScalarFH   = NULL;
 unsigned int VectorLine = 0;
-
+double       TotalUsedCapacity = 0.0;
+double       TotalPossibleCalculations   = 0.0;
+double       TotalWastedCapacity    = 0.0;
+unsigned int AcceptedJobs      = 0;
+unsigned int RejectedJobs      = 0;
 
 // ###### Constructor #######################################################
 SessionSet::SessionSet()
@@ -384,6 +390,7 @@ void SessionSet::handleCookieEcho(SessionSetEntry* sessionSetEntry,
 // ###### Handle incoming CalcAppAccept #####################################
 void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
 {
+   AcceptedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_ACCEPT);
@@ -394,6 +401,7 @@ void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppAccept" << endl;
       sessionSetEntry->Closing = true;
+      
    }
 }
 
@@ -401,6 +409,7 @@ void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
 // ###### Handle incoming CalcAppReject #####################################
 void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
 {
+   RejectedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type = htonl(CALCAPP_REJECT);
@@ -410,6 +419,7 @@ void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppReject" << endl;
       sessionSetEntry->Closing = true;
+      
    }
 }
 
@@ -826,6 +836,7 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
       runtime = atol((char*)&argv[i][9]);
 	 }
+	 
       else {
          cerr << "Bad argument \"" << argv[i] << "\"!"  << endl;
          cerr << "Usage: " << argv[0]
@@ -945,14 +956,13 @@ int main(int argc, char** argv)
 	    lastOutput = getMicroTime();
   	    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
 
-	 }
+	 }		
+	 
 	 if (getMicroTime()-StartupTimeStamp >= runtime)
    	  {
       			goto finished;
-   
-   	  }   
+          }   
 	 
-
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
@@ -1007,26 +1017,35 @@ int main(int argc, char** argv)
             break; //fprintf(VectorFH, "Line Runtime AvailableCalculations UsedCalculations Utilization\n");
          }
       }
-
+      finished:
       cout << "Closing sessions..." << endl;
       sessionList.removeAll();
       cout << "Removing Pool Element..." << endl;
       rspDeletePoolElement(poolElement, NULL);
       
+    
+   
    double	 		 Capacity                      = 1000000.0;
    unsigned long long 		 shutdownTimeStamp             = getMicroTime();
    const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
    const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
    const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
-   
-   
+   TotalUsedCapacity = sessionList.getTotalUsedCalculations();
+   TotalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
+   TotalWastedCapacity = serverRuntime-TotalUsedCapacity; 
    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity   \" %1.6f \n", objectName, TotalUsedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \" %1.6f \n", objectName, TotalPossibleCalculations);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity  \" %1.6f \n", objectName, TotalWastedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted   \" %u    \n", objectName, AcceptedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected   \" %u    \n", objectName, RejectedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Utilization           \" %1.6f \n", objectName, utilization);
    }
    else {
       cerr << "ERROR: Unable to create pool element!" << endl;
       exit(1);
    }
-   finished: 
+   
 
    fclose(ScalarFH);
    fclose(VectorFH);
