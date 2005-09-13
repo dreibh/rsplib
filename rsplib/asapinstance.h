@@ -1,5 +1,5 @@
 /*
- *  $Id: asapinstance.h,v 1.19 2005/07/29 09:18:23 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

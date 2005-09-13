@@ -1,3 +1,50 @@
+RSerPool-API:
+
+
+Rückgabewerte für rsp_write() / rsp_read():
+  RSPERR_FAILOVER_NECESSARY
+    Nächster Aufruf wird Failover durchführen
+    Prüfung, ob Cookie vorhanden: rsp_has_cookie(...)
+  RSPERR_IO_TIMEOUT:
+    Timeout ist aufgetreten, ggf. manueller Failover notwendig
+
+
+ Rückgabe bei Failover:
+   mit Cookie:
+     Fehler RSPERR_AUTO_FAILOVER
+   ohne Cookie:
+     Fehler RSPERR_MANUAL_FAILOVER
+
+
+
+
+=================
+
+oberhalb von rsp_read() / rsp_write(), z.B. l5_read() / l5_write() ...
+- z.B. PPID = 55555555
+- Multi-Streaming???????
+
+L5DATA:
+SeqNumber
+AckNumber
+Data
+ ...
+
+L5ACK:
+AckNumber
+Cookie (opt.)       !!!!!!!!!!!!!!!
+ ...
+
+
+l5d=l5_init(session, istreams, ostreams)
+l5msg = l5_read(...) {
+   l5_ack(l5ms, cookie)
+}
+l5_cleanup(l5d)
+
+
+=================
+
 - Registrar-Table:
   Timeouts korrigieren! OK
 - Registrar:

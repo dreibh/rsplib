@@ -44,6 +44,8 @@
 #include "rserpoolmessage.h"
 #include "rsplib.h"
 #include "rsplib-tags.h"
+#include "randomizer.h"
+#include "leaflinkedredblacktree.h"
 
 #include <ext_socket.h>
 #include <sys/time.h>
@@ -53,6 +55,12 @@
 /* Maximum number of simultaneous registrar connection trials */
 #define MAX_SIMULTANEOUS_REQUESTS 3
 
+
+struct RegistrarAssocIDNode
+{
+   struct LeafLinkedRedBlackTreeNode Node;
+   sctp_assoc_t                      AssocID;
+};
 
 
 /* ###### Registrar announce callback  ######################################### */
@@ -156,6 +164,29 @@ static void registrarAnnouceFDCallback(struct Dispatcher* dispatcher,
 }
 
 
+/* ###### Compare two registrar association IDs ########################## */
+static int registrarAssocIDNodeComparison(const void* node1, const void* node2)
+{
+   const struct RegistrarAssocIDNode* a1 = (const struct RegistrarAssocIDNode*)node1;
+   const struct RegistrarAssocIDNode* a2 = (const struct RegistrarAssocIDNode*)node2;
+   if(a1->AssocID < a2->AssocID) {
+      return(-1);
+   }
+   else if(a1->AssocID > a2->AssocID) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### Print registrar association ID ################################# */
+static void registrarAssocIDNodePrint(const void* node, FILE* fd)
+{
+   const struct RegistrarAssocIDNode* assocIDNode = (const struct RegistrarAssocIDNode*)node;
+   fprintf(fd, "%u ", assocIDNode->AssocID);
+}
+
+
 /* ###### Constructor ####################################################### */
 struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
                                          struct TagItem*    tags)
@@ -170,6 +201,7 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       registrarTable->OutstandingConnects = 0;
       registrarTable->AnnounceSocket      = -1;
       ST_CLASS(peerListManagementNew)(&registrarTable->RegistrarList, NULL, 0, NULL, NULL);
+      leafLinkedRedBlackTreeNew(&registrarTable->RegistrarAssocIDList, registrarAssocIDNodePrint, registrarAssocIDNodeComparison);
 
 
       /* ====== ASAP Instance settings ==================================== */
@@ -203,11 +235,11 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
                                                   SOCK_DGRAM, IPPROTO_UDP);
       if(registrarTable->AnnounceSocket >= 0) {
          fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
-                     registrarTable->Dispatcher,
-                     registrarTable->AnnounceSocket,
-                     FDCE_Read,
-                     registrarAnnouceFDCallback,
-                     registrarTable);
+                       registrarTable->Dispatcher,
+                       registrarTable->AnnounceSocket,
+                       FDCE_Read,
+                       registrarAnnouceFDCallback,
+                       registrarTable);
 
          setReusable(registrarTable->AnnounceSocket, 1);
          if(bindplus(registrarTable->AnnounceSocket,
@@ -234,6 +266,182 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
 }
 
 
+/* ###### Add registrar assoc ID to list ################################# */
+static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
+                                int                    registrarFD,
+                                sctp_assoc_t           assocID)
+{
+   struct RegistrarAssocIDNode* node = (struct RegistrarAssocIDNode*)malloc(sizeof(struct RegistrarAssocIDNode));
+   if(node != NULL) {
+      leafLinkedRedBlackTreeNodeNew(&node->Node);
+      node->Node.Value = 1;
+      node->AssocID    = assocID;
+
+      CHECK(leafLinkedRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
+
+      LOG_ACTION
+      fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , assocID);
+      fputs("RegistrarAssocIDList: ", stdlog);
+      leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
+      LOG_END
+   }
+   else {
+      /* Abort association to current registrar (if existing) */
+      sendtoplus(registrarFD, NULL, 0, SCTP_ABORT, NULL, 0,
+                 0, assocID, 0, 0xffffffff, 0);
+   }
+}
+
+
+/* ###### Remove registrar assoc ID to list ############################## */
+static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
+                                   int                    registrarFD,
+                                   sctp_assoc_t           assocID)
+{
+   struct RegistrarAssocIDNode        cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   cmpNode.AssocID = assocID;
+   node = leafLinkedRedBlackTreeFind(&registrarTable->RegistrarAssocIDList, &cmpNode.Node);
+   CHECK(node != NULL);
+   CHECK(leafLinkedRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
+   free(node);
+
+   LOG_ACTION
+   fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , assocID);
+   fputs("RegistrarAssocIDList: ", stdlog);
+   leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
+   LOG_END
+}
+
+
+/* ###### Get registrar assoc ID from list ############################### */
+static sctp_assoc_t selectRegistrarAssocID(struct RegistrarTable* registrarTable)
+{
+   size_t                             elements = leafLinkedRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   if(elements > 0) {
+      node = leafLinkedRedBlackTreeGetNodeByValue(&registrarTable->RegistrarAssocIDList, random32() % elements);
+      CHECK(node);
+      return(((struct RegistrarAssocIDNode*)node)->AssocID);
+   }
+   return(0);
+}
+
+
+/* ###### Get registrar assoc ID from list ############################### */
+static int selectRegistrar(struct RegistrarTable*   registrarTable,
+                           int                      registrarFD,
+                           RegistrarIdentifierType* registrarIdentifier)
+{
+   sctp_assoc_t                   assocID;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   union sockaddr_union*          peerAddressArray;
+   int                            sd;
+   size_t                         n;
+
+   sd                   = -1;
+   *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
+
+   assocID = selectRegistrarAssocID(registrarTable);
+   if(assocID != 0) {
+      /* ====== Registrar selected, get some information about it ======== */
+      n = getpaddrsplus(registrarFD, assocID, &peerAddressArray);
+      if(n > 0) {
+         LOG_ACTION
+         fprintf(stdlog, "Assoc %u connected to registrar at ", assocID);
+         fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
+         fputs("\n", stdlog);
+         LOG_END
+
+         /* ====== Get registrar's entry ======================== */
+         struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
+         if(registrarAddressBlock) {
+            transportAddressBlockNew(registrarAddressBlock,
+                                     IPPROTO_SCTP,
+                                     getPort(&peerAddressArray[0].sa),
+                                     0,
+                                     peerAddressArray, n);
+            peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
+                              &registrarTable->RegistrarList,
+                              0,
+                              registrarAddressBlock);
+            if(peerListNode) {
+               *registrarIdentifier = peerListNode->Identifier;
+            }
+            free(registrarAddressBlock);
+         }
+         free(peerAddressArray);
+      }
+
+      sd = registrarTablePeelOffRegistrarAssocID(registrarTable,
+                                                 registrarFD,
+                                                 assocID);
+   }
+   return(sd);
+}
+
+
+/* ###### Peel off registrar assoc ####################################### */
+int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
+                                          int                    registrarFD,
+                                          sctp_assoc_t           assocID)
+{
+   int sd = sctp_peeloff(registrarFD, assocID);
+   if(sd >= 0) {
+      LOG_ACTION
+      fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", assocID);
+      LOG_END
+      removeRegistrarAssocID(registrarTable, registrarFD, assocID);
+   }
+   return(sd);
+}
+
+
+/* ###### Handle notification on registrar hunt socket ################### */
+void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
+                                                           int                            registrarFD,
+                                                           const union sctp_notification* notification)
+{
+   union sockaddr_union* peerAddressArray;
+   size_t                n;
+
+   /* ====== Association change notification ============================= */
+   if(notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) {
+      if(notification->sn_assoc_change.sac_state == SCTP_COMM_UP) {
+         n = getpaddrsplus(registrarFD,
+                           notification->sn_assoc_change.sac_assoc_id,
+                           &peerAddressArray);
+         if(n > 0) {
+            LOG_ACTION
+            fprintf(stdlog, "Assoc %u connected to registrar at ",
+                    notification->sn_assoc_change.sac_assoc_id);
+            fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+            free(peerAddressArray);
+         }
+
+         /* ====== Add registrar assoc ID to list ======================== */
+         addRegistrarAssocID(registrarTable,
+                             registrarFD,
+                             notification->sn_assoc_change.sac_assoc_id);
+      }
+   }
+   else if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+           (notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT)) {
+      LOG_ACTION
+      fprintf(stdlog, "Assoc %u disconnected from registrar\n",
+              notification->sn_assoc_change.sac_assoc_id);
+      LOG_END
+      removeRegistrarAssocID(registrarTable,
+                             registrarFD,
+                             notification->sn_assoc_change.sac_assoc_id);
+   }
+}
+
+
 /* ###### Destructor ##################################################### */
 void registrarTableDelete(struct RegistrarTable* registrarTable)
 {
@@ -243,6 +451,7 @@ void registrarTableDelete(struct RegistrarTable* registrarTable)
          ext_close(registrarTable->AnnounceSocket);
          registrarTable->AnnounceSocket = -1;
       }
+      leafLinkedRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
       ST_CLASS(peerListManagementClear)(&registrarTable->RegistrarList);
       ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
       free(registrarTable);
@@ -367,12 +576,11 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
 
 
 /* ###### Find registrar ################################################### */
-sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
-                                        int                      registrarFD,
-                                        RegistrarIdentifierType* registrarIdentifier)
+int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
+                               int                      registrarFD,
+                               RegistrarIdentifierType* registrarIdentifier)
 {
    struct timeval                 selectTimeout;
-   union sockaddr_union*          peerAddressArray;
    union sctp_notification        notification;
    RegistrarIdentifierType        lastRegistrarIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
@@ -384,19 +592,30 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    unsigned long long             lastTrialTimeStamp;
    fd_set                         rfdset;
    unsigned int                   trials;
-   int                            n, result;
+   int                            result;
    int                            flags;
+   int                            sd;
+   int                            n;
+
 
    *registrarIdentifier = 0;
    if(registrarTable == NULL) {
       return(0);
    }
-
-
    LOG_ACTION
    fputs("Looking for registrar...\n",  stdlog);
    LOG_END
 
+
+   /* ====== Is there already a connection to a registrar? =============== */
+   sd = selectRegistrar(registrarTable, registrarFD,
+                        registrarIdentifier);
+   if(sd >= 0) {
+      return(sd);
+   }
+
+
+   /* ====== Do registrar hunt =========================================== */
    trials                    = 0;
    lastRegistrarIdentifier   = 0;
    lastTransportAddressBlock = NULL;
@@ -528,80 +747,43 @@ sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                     NULL, 0,
                                     NULL, NULL, NULL, 0) > 0) &&
                      (flags & MSG_NOTIFICATION) ) {
-                     /* ====== Association change notification =========== */
-                     if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
-                        if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
-                           n = getpaddrsplus(registrarFD,
-                                             notification.sn_assoc_change.sac_assoc_id,
-                                             &peerAddressArray);
-                           if(n > 0) {
-                              LOG_ACTION
-                              fputs("Successfully found registrar at ",  stdlog);
-                              fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
-                              fputs("\n", stdlog);
-                              LOG_END
-
-                              /* ====== Get registrar's entry =============== */
-                              struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
-                              if(registrarAddressBlock) {
-                                 transportAddressBlockNew(registrarAddressBlock,
-                                                          IPPROTO_SCTP,
-                                                          getPort(&peerAddressArray[0].sa),
-                                                          0,
-                                                          peerAddressArray, n);
-                                 peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
-                                                   &registrarTable->RegistrarList,
-                                                   0,
-                                                   registrarAddressBlock);
-                                 if(peerListNode) {
-                                    *registrarIdentifier = peerListNode->Identifier;
-                                 }
-                                 else {
-                                    *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
-                                 }
-
-                                 free(registrarAddressBlock);
-                              }
-
-                              if(lastTransportAddressBlock) {
-                                 transportAddressBlockDelete(lastTransportAddressBlock);
-                                 free(lastTransportAddressBlock);
-                              }
-                              free(peerAddressArray);
+                        registrarTableHandleNotificationOnRegistrarHuntSocket(registrarTable,
+                                                                              registrarFD,
+                                                                              &notification);
+                        if((notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+                           (notification.sn_assoc_change.sac_state == SCTP_CANT_STR_ASSOC) ||
+                           (notification.sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
+                           if(registrarTable->OutstandingConnects > 0) {
+                              registrarTable->OutstandingConnects--;
                            }
-
-                           return(notification.sn_assoc_change.sac_assoc_id);
+                           LOG_VERBOSE2
+                           fprintf(stdlog, "Failed to establish registrar connection, outstanding=%d\n", registrarTable->OutstandingConnects);
+                           LOG_END
                         }
-                     }
-                     else if((notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
-                             (notification.sn_assoc_change.sac_state == SCTP_CANT_STR_ASSOC) ||
-                             (notification.sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
-                        if(registrarTable->OutstandingConnects > 0) {
-                           registrarTable->OutstandingConnects--;
-                        }
-                        LOG_VERBOSE2
-                        fprintf(stdlog, "Failed to establish registrar connection, outstanding=%ld\n", registrarTable->OutstandingConnects);
-                        LOG_END
-                     }
                   }
-                  else {
-                     LOG_ERROR
-                     fputs("Peeked notification but failed to read it\n", stdlog);
-                     LOG_END_FATAL
+
+                  /* ====== Is there a connection to a registrar? ======== */
+                  sd = selectRegistrar(registrarTable, registrarFD,
+                                       registrarIdentifier);
+                  if(sd >= 0) {
+                     if(lastTransportAddressBlock) {
+                        transportAddressBlockDelete(lastTransportAddressBlock);
+                        free(lastTransportAddressBlock);
+                     }
+                     return(sd);
                   }
                }
                else {
-                  LOG_WARNING
-                  fprintf(stdlog, "Received data on assoc %u -> hopefully this is a registrar",
-                          (unsigned int)assocID);
-                  LOG_END
-                  *registrarIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
-                  if(lastTransportAddressBlock) {
-                     transportAddressBlockDelete(lastTransportAddressBlock);
-                     free(lastTransportAddressBlock);
-                  }
-                  return(assocID);
+                  LOG_ERROR
+                  fputs("Peeked notification but failed to read it\n", stdlog);
+                  LOG_END_FATAL
                }
+            }
+            else {
+               LOG_ERROR
+               fprintf(stdlog, "Received data on assoc %u, but no association is listed\n",
+                       (unsigned int)assocID);
+               LOG_END_FATAL
             }
          }
       }

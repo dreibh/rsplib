@@ -210,42 +210,22 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
-   sctp_assoc_t assocID;
-
    if(asapInstance->RegistrarSocket < 0) {
       if(sd < 0) {
          LOG_ACTION
          fputs("Starting registrar hunt...\n", stdlog);
          LOG_END
-         assocID = registrarTableGetRegistrar(asapInstance->RegistrarSet,
-                                              asapInstance->RegistrarHuntSocket,
-                                              &asapInstance->RegistrarIdentifier);
-         if(assocID == 0) {
+         if(sd < 0) {
+            sd = registrarTableGetRegistrar(asapInstance->RegistrarSet,
+                                            asapInstance->RegistrarHuntSocket,
+                                            &asapInstance->RegistrarIdentifier);
+         }
+         if(sd < 0) {
             LOG_ACTION
             fputs("Unable to connect to a registrar\n", stdlog);
             LOG_END
             return(false);
          }
-
-         LOG_VERBOSE3
-         fprintf(stdlog, "Connection to registrar $%08x successfully established on association %u\n",
-                 asapInstance->RegistrarIdentifier, (unsigned int)assocID);
-         LOG_END
-         asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
-
-         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket,
-                                                      assocID);
-         if(sd < 0) {
-            LOG_ERROR
-            logerror("sctp_peeloff() for registrar association failed");
-            LOG_END
-            return(false);
-         }
-
-         LOG_VERBOSE3
-         fprintf(stdlog, "Connection to registrar peeled off to socket %d\n",
-                 asapInstance->RegistrarSocket);
-         LOG_END
       }
 
       asapInstance->RegistrarSocket = sd;
@@ -874,13 +854,15 @@ static void asapInstanceHandleEndpointKeepAlive(
    if(fd == asapInstance->RegistrarHuntSocket) {
       if(message->Flags & AHF_ENDPOINT_KEEP_ALIVE_HOME) {
          LOG_NOTE
-         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x -> replacing home registrar",
+         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x -> replacing home registrar\n",
                message->RegistrarIdentifier,
                (unsigned int)message->AssocID,
                asapInstance->RegistrarIdentifier);
          LOG_END
 
-         sd = sctp_peeloff(asapInstance->RegistrarHuntSocket, message->AssocID);
+         sd = registrarTablePeelOffRegistrarAssocID(asapInstance->RegistrarSet,
+                                                    asapInstance->RegistrarHuntSocket,
+                                                    message->AssocID);
          if(sd >= 0) {
             asapInstanceDisconnectFromRegistrar(asapInstance, true);
             if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
@@ -976,7 +958,13 @@ static void handleRegistrarConnectionEvent(
          /* ====== Handle notification ================================ */
          if(flags & MSG_NOTIFICATION) {
             if(fd == asapInstance->RegistrarSocket) {
-               handleNotificationOnRegistrarSocket(asapInstance, (union sctp_notification*)&buffer);
+               handleNotificationOnRegistrarSocket(asapInstance,
+                                                   (union sctp_notification*)&buffer);
+            }
+            else if(fd == asapInstance->RegistrarHuntSocket) {
+               registrarTableHandleNotificationOnRegistrarHuntSocket(asapInstance->RegistrarSet,
+                                                                     asapInstance->RegistrarHuntSocket,
+                                                                     (union sctp_notification*)&buffer);
             }
          }
 

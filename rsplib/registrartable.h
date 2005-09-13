@@ -48,6 +48,8 @@
 #include "poolhandlespacemanagement.h"
 #include "rserpoolmessage.h"
 
+#include <ext_socket.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +61,7 @@ struct RegistrarTable
    struct Dispatcher*                  Dispatcher;
 
    struct ST_CLASS(PeerListManagement) RegistrarList;
+   struct LeafLinkedRedBlackTree       RegistrarAssocIDList;
    int                                 AnnounceSocket;
    union sockaddr_union                AnnounceAddress;
    struct FDCallback                   AnnounceSocketFDCallback;
@@ -101,16 +104,39 @@ unsigned int registrarTableAddStaticEntry(struct RegistrarTable*   registrarTabl
                                           size_t                addresses);
 
 /**
+  * Handle notification of registrar hunt socket.
+  *
+  * @param registrarTable RegistrarTable.
+  * @param registrarFD Descriptor of registrar hunt socket.
+  * @param notification Notification to be handled.
+  */
+void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
+                                                           int                            registrarFD,
+                                                           const union sctp_notification* notification);
+
+/**
+  * Peel off registrar assoc ID from registrar hunt socket.
+  *
+  * @param registrarTable RegistrarTable.
+  * @param registrarFD Descriptor of registrar hunt socket.
+  * @param assocID Association ID to peel off.
+  * @return Socket descriptor for peeled-off registrar association.
+  */
+int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
+                                          int                    registrarFD,
+                                          sctp_assoc_t           assocID);
+
+/**
   * Do registrar hunt.
   *
   * @param registrarTable RegistrarTable.
   * @param registrarFD Socket description for registrar connection.
-  * @param registrarIdentifier Reference to store new NS's identifier to.
-  * @return Assoc ID in case of success; false otherwise.
+  * @param registrarIdentifier Reference to store new PR's identifier to.
+  * @return Socket descriptor for peeled-off registrar association.
   */
-sctp_assoc_t registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
-                                        int                      registrarFD,
-                                        RegistrarIdentifierType* registrarIdentifier);
+int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
+                               int                      registrarFD,
+                               RegistrarIdentifierType* registrarIdentifier);
 
 
 #ifdef __cplusplus
