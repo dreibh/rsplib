@@ -98,7 +98,7 @@ librsplib_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor calcapppoolelement calcapppooluser t6
+noinst_PROGRAMS = registrar examplepe examplepu simpleexamplepe simpleexamplepu fractalpoolelement testregistrator fork cspmonitor calcapppoolelement calcapppooluser t6 t7
 
 
 registrar_SOURCES = registrar.c
@@ -133,6 +133,9 @@ calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(th
 
 t6_SOURCES = t6.cc statistics.cc
 t6_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+t7_SOURCES = t7.cc statistics.cc
+t7_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

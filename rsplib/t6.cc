@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 {
    Statistics stat;
 
-   for(size_t i = 0;i < 10000;i++) {
+   for(size_t i = 0;i < 1000000;i++) {
       double d = 999.0 + (random() % 3); // randomExpDouble(1000.0);
 
       stat.collect(d);
