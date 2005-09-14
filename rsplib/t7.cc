@@ -79,15 +79,24 @@ struct LeafLinkedRedBlackTree gSessionSet;
 unsigned char                 gRSerPoolSocketAllocationBitmap[FD_SETSIZE / 8];
 
 
-#define GET_RSP_SOCKET_DESCRIPTOR(sd) \
-   RSerPoolSocket* rserpoolSocket = getRSerPoolSocketForDescriptor(sd); \
+#define GET_RSERPOOL_SOCKET(rserpoolSocket, sd) \
+   rserpoolSocket = getRSerPoolSocketForDescriptor(sd); \
    if(rserpoolSocket == NULL) { \
       LOG_ERROR \
       fprintf(stdlog, "Bad RSerPool socket descriptor %d\n", sd); \
       LOG_END \
       errno = EBADF; \
       return(-1); \
-   } \
+   }
+
+#define CHECK_RSERPOOL_POOLELEMENT(rserpoolSocket) \
+   if(rserpoolSocket->PoolElement == NULL) { \
+      LOG_ERROR \
+      fprintf(stdlog, "RSerPool socket %d is no pool element\n", sd); \
+      LOG_END \
+      errno = EBADF; \
+      return(-1); \
+   }
 
 
 struct PoolElement
@@ -111,7 +120,11 @@ struct PoolElement
 
    bool                              HasControlChannel;
 
-   struct LeafLinkedRedBlackTree     SessionSet;
+   struct LeafLinkedRedBlackTree     SessionSet; //  ??????? WIRD DAS BENÖTIGT? alle Sessions -> RSerPoolSocket
+   /* ????
+   PoolElement -> Registrierung, etc.
+   Socket -> Session-Verwaltung
+   */
 };
 
 
@@ -119,7 +132,7 @@ struct Session
 {
    struct LeafLinkedRedBlackTreeNode GlobalNode;
    struct LeafLinkedRedBlackTreeNode SocketNode;
-   struct LeafLinkedRedBlackTreeNode PoolElementNode;
+   struct LeafLinkedRedBlackTreeNode PoolElementNode; // ???????
 
    struct PoolHandle                 Handle;
    uint32_t                          Identifier;
@@ -365,23 +378,23 @@ static struct PoolElement* poolElementNew(const unsigned char* poolHandle,
                                 sessionPoolElementComparison);
       poolElement->Socket                 = -1;
       poolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
-                                                   0x00000000);
+                                               0x00000000);
       poolElement->SocketDomain           = tagListGetData(tags, TAG_PoolElement_SocketDomain,
-                                                   checkIPv6() ? AF_INET6 : AF_INET);
+                                               checkIPv6() ? AF_INET6 : AF_INET);
       poolElement->SocketType             = tagListGetData(tags, TAG_PoolElement_SocketType,
-                                                   SOCK_STREAM);
+                                               SOCK_STREAM);
       poolElement->SocketProtocol         = tagListGetData(tags, TAG_PoolElement_SocketProtocol,
-                                                   IPPROTO_SCTP);
+                                               IPPROTO_SCTP);
       poolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
-                                                   5000);
+                                               5000);
       poolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
-                                                   (poolElement->ReregistrationInterval * 3) + 3000);
+                                               (poolElement->ReregistrationInterval * 3) + 3000);
       poolElement->PolicyType             = tagListGetData(tags, TAG_PoolPolicy_Type,
-                                                   PPT_ROUNDROBIN);
+                                               PPT_ROUNDROBIN);
       poolElement->PolicyParameterWeight  = tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight,
-                                                   1);
+                                               1);
       poolElement->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
-                                                   0);
+                                               0);
       poolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
 
       /* ====== Create socket ============================================ */
@@ -824,7 +837,8 @@ int rsp_socket(int domain, int type, int protocol)
 /* ###### Delete RSerPool socket ######################################### */
 int rsp_close(int sd)
 {
-   GET_RSP_SOCKET_DESCRIPTOR(sd)
+   RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd)
 
    if(rserpoolSocket->PoolElement) {
       rsp_deregister(sd);
@@ -854,7 +868,8 @@ int rsp_register(int                  sd,
                  const size_t         poolHandleSize,
                  struct TagItem*      tags)
 {
-   GET_RSP_SOCKET_DESCRIPTOR(sd)
+   RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    /* ====== Check for problems ========================================== */
    if(rserpoolSocket->PoolElement != NULL) {
@@ -892,16 +907,9 @@ int rsp_register(int                  sd,
 /* ###### Deregister pool element ######################################## */
 int rsp_deregister(int sd)
 {
-   GET_RSP_SOCKET_DESCRIPTOR(sd)
-
-   /* ====== Check for problems ========================================== */
-   if(rserpoolSocket->PoolElement == NULL) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %d is no pool element\n", sd);
-      LOG_END
-      errno = EBADF;
-      return(-1);
-   }
+   RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+   CHECK_RSERPOOL_POOLELEMENT(rserpoolSocket);
 
    /* ====== Delete pool element ========================================= */
    if(!leafLinkedRedBlackTreeIsEmpty(&rserpoolSocket->PoolElement->SessionSet)) {
@@ -909,12 +917,56 @@ int rsp_deregister(int sd)
       fprintf(stdlog, "RSerPool socket %d's pool element still has sessions\n", sd);
       LOG_END_FATAL
    }
-   threadSafetyDestroy(&rserpoolSocket->PoolElement->Mutex);
-   free(rserpoolSocket->PoolElement);
+   poolElementDelete(rserpoolSocket->PoolElement);
    rserpoolSocket->PoolElement = NULL;
 
    return(0);
 }
+
+
+
+/* ###### Send cookie ######################################################## */
+int rsp_send_cookie(int                  sd,
+                    const unsigned char* cookie,
+                    const size_t         cookieSize,
+                    const unsigned char* poolHandle,
+                    const size_t         poolHandleSize,
+                    struct TagItem*      tags)
+{
+   struct RSerPoolSocket*  rserpoolSocket;
+   struct Session*         session;
+   struct RSerPoolMessage* message;
+   bool                    result = false;
+
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+//   GET_RSERPOOL_SESSION(session, rserpoolSocket, poolHandle, poolHandleSize);
+/*   session = sessionFind(&rserpoolSocket->SessionSet, poolHandle, poolHandleSize);
+   if(session != NULL) {
+
+   }
+
+   message = rserpoolMessageNew(NULL,256 + cookieSize);
+   if(message != NULL) {
+      message->Type       = AHT_COOKIE;
+      message->CookiePtr  = (char*)cookie;
+      message->CookieSize = (size_t)cookieSize;
+      threadSafetyLock(&session->Mutex);
+      LOG_VERBOSE
+      fputs("Sending Cookie\n", stdlog);
+      LOG_END
+      result = rserpoolMessageSend(session->SocketProtocol,
+                                   session->Socket,
+                                   0,
+                                   (unsigned int)tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
+                                   (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
+                                   message);
+      threadSafetyUnlock(&session->Mutex);
+      rserpoolMessageDelete(message);
+   }
+   return(result);*/
+}
+
+
 
 
 

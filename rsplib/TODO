@@ -2,6 +2,8 @@ RSerPool-API:
 
 
 Rückgabewerte für rsp_write() / rsp_read():
+  Notifications!!!!!
+
   RSPERR_FAILOVER_NECESSARY
     Nächster Aufruf wird Failover durchführen
     Prüfung, ob Cookie vorhanden: rsp_has_cookie(...)
