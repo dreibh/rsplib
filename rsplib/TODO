@@ -17,10 +17,37 @@ Rückgabewerte für rsp_write() / rsp_read():
    ohne Cookie:
      Fehler RSPERR_MANUAL_FAILOVER
 
+------
 
+Notifications treten auf bei:
+ read oder write
+ -> nicht innerhalb Wartefunktion mit rsp_select()!
 
 
 =================
+
+TCP-Like:
+ Server:
+   PE -> ein Accept-Socket
+   jede Session: eigenes RSerPool-Socket
+ Client:
+   Session -> eigenes Socket
+
+UDP-Like:
+ Server:
+   PE -> ein UDP-like Socket
+   write() -> Mit Session-ID bzw. PH -> ok.
+   read()  -> Aggregat über mehrere Sessions
+      -> Session-ID wird mit gelesen.
+
+ Client:
+   write() -> Mit Session-ID bzw. PH -> ok.
+   read()  -> Aggregat über mehrere Sessions
+      -> Session-ID wird mit gelesen.
+      Ist das sinnvoll???
+
+=================
+
 
 oberhalb von rsp_read() / rsp_write(), z.B. l5_read() / l5_write() ...
 - z.B. PPID = 55555555
