@@ -48,6 +48,8 @@
 #include <ext_socket.h>
 
 
+
+
 typedef unsigned int rserpool_session_t;
 
 struct rserpool_failover
@@ -70,8 +72,16 @@ union rserpool_notification
 
 // ????????????
 int rsp_deregister(int sd);
-static bool poolElementDoRegistration(struct PoolElement* poolElement);
-static void poolElementDelete(struct PoolElement* poolElement);
+static bool doRegistration(struct RSerPoolSocket* rserpoolSocket);
+static void deletePoolElement(struct PoolElement* poolElement);
+static bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket);
+static void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
+                                        const char*            buffer,
+                                        size_t                 bufferSize);
+static void handleNotification(struct RSerPoolSocket* rserpoolSocket,
+                               const char*            buffer,
+                               size_t                 bufferSize);
+
 // ????????????
 
 
@@ -81,7 +91,9 @@ static bool configureSCTPSocket(int sd, sctp_assoc_t assocID, struct TagItem* ta
    struct sctp_event_subscribe events;
 
    memset((char*)&events, 0 ,sizeof(events));
-   events.sctp_data_io_event = 1;
+   events.sctp_data_io_event     = 1;
+   events.sctp_association_event = 1;
+   events.sctp_shutdown_event    = 1;
    if(ext_setsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events)) < 0) {
       LOG_ERROR
       perror("setsockopt failed for SCTP_EVENTS");
@@ -95,7 +107,7 @@ static bool configureSCTPSocket(int sd, sctp_assoc_t assocID, struct TagItem* ta
 
 extern struct Dispatcher      gDispatcher;
 struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
-struct LeafLinkedRedBlackTree gSessionSet;
+// struct LeafLinkedRedBlackTree gSessionSet;
 unsigned char                 gRSerPoolSocketAllocationBitmap[FD_SETSIZE / 8];
 
 
@@ -128,11 +140,6 @@ struct PoolElement
    uint32_t                          Identifier;
    struct ThreadSafety               Mutex;
 
-   int                               SocketDomain;
-   int                               SocketType;
-   int                               SocketProtocol;
-   int                               Socket;
-
    unsigned int                      PolicyType;
    uint32_t                          PolicyParameterWeight;
    uint32_t                          PolicyParameterLoad;
@@ -142,30 +149,19 @@ struct PoolElement
    unsigned int                      ReregistrationInterval;
 
    bool                              HasControlChannel;
-
-//   struct LeafLinkedRedBlackTree     SessionSet; //  ??????? WIRD DAS BENÖTIGT? alle Sessions -> RSerPoolSocket
-   /* ????
-   PoolElement -> Registrierung, etc.
-   Socket -> Session-Verwaltung
-   */
 };
 
 
 struct Session
 {
-   struct LeafLinkedRedBlackTreeNode SocketNode;
-   struct LeafLinkedRedBlackTreeNode GlobalNode;
+   struct LeafLinkedRedBlackTreeNode Node;
 
    rserpool_session_t                Descriptor;
+   struct RSerPoolSocket*            Socket;
+   sctp_assoc_t                      AssocID;
 
    struct PoolHandle                 Handle;
    uint32_t                          Identifier;
-   struct ThreadSafety               Mutex;
-
-   int                               SocketDomain;
-   int                               SocketType;
-   int                               SocketProtocol;
-   int                               Socket;
 
    bool                              IsIncoming;
 //   struct PoolElement*               PoolElement; ???
@@ -185,36 +181,39 @@ struct Session
 };
 
 
-// static struct Session* getSessionFromPoolElementNode(void* node)
-// {
-//    return((struct Session*)(long)node - ((long)&((struct Session*)node)->PoolElementNode - (long)node));
-// }
-
-
-static struct Session* getSessionFromSocketNode(void* node)
+struct RSerPoolSocket
 {
-   return((struct Session*)(long)node - ((long)&((struct Session*)node)->SocketNode - (long)node));
-}
+   struct LeafLinkedRedBlackTreeNode Node;
+
+   int                               Descriptor;
+   struct ThreadSafety               Mutex;
+
+   int                               SocketDomain;
+   int                               SocketType;
+   int                               SocketProtocol;
+   int                               Socket;
+
+   struct PoolElement*               PoolElement;        /* PE mode                      */
+   struct LeafLinkedRedBlackTree     SessionSet;         /* UDP-like PU mode and PE mode */
+   struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
+
+   char                              MessageBuffer[65536];
+};
 
 
-static struct Session* getSessionFromGlobalNode(void* node)
+
+static void sessionPrint(const void* node, FILE* fd)
 {
-   return((struct Session*)(long)node - ((long)&((struct Session*)node)->GlobalNode - (long)node));
-}
-
-
-static void sessionGlobalPrint(const void* node, FILE* fd)
-{
-   const struct Session* session = (const struct Session*)getSessionFromGlobalNode((void*)node);
+   const struct Session* session = (const struct Session*)node;
 
    poolHandlePrint(&session->Handle, fd);
    fprintf(fd, "/%08x ", session->Identifier);
 }
 
-static int sessionGlobalComparison(const void* node1, const void* node2)
+static int sessionComparison(const void* node1, const void* node2)
 {
-   const struct Session* session1 = (const struct Session*)getSessionFromGlobalNode((void*)node1);
-   const struct Session* session2 = (const struct Session*)getSessionFromGlobalNode((void*)node2);
+   const struct Session* session1 = (const struct Session*)node1;
+   const struct Session* session2 = (const struct Session*)node2;
 
    if(session1->Identifier < session2->Identifier) {
       return(-1);
@@ -225,44 +224,18 @@ static int sessionGlobalComparison(const void* node1, const void* node2)
    return(poolHandleComparison(&session1->Handle, &session2->Handle));
 }
 
-// static void sessionPoolElementPrint(const void* node, FILE* fd)
-// {
-//    const struct Session* session = (const struct Session*)getSessionFromPoolElementNode((void*)node);
-//
-//    poolHandlePrint(&session->Handle, fd);
-//    fprintf(fd, "/%08x ", session->Identifier);
-// }
-//
-// static int sessionPoolElementComparison(const void* node1, const void* node2)
-// {
-//    const struct Session* session1 = (const struct Session*)getSessionFromPoolElementNode((void*)node1);
-//    const struct Session* session2 = (const struct Session*)getSessionFromPoolElementNode((void*)node2);
-//
-//    if(session1->Identifier < session2->Identifier) {
-//       return(-1);
-//    }
-//    else if(session1->Identifier > session2->Identifier) {
-//       return(1);
-//    }
-//    return(poolHandleComparison(&session1->Handle, &session2->Handle));
-// }
-
 
 /* ###### Create new session ############################################# */
-static struct Session* sessionNew(const int            socketDomain,
-                                  const int            socketType,
-                                  const int            socketProtocol,
-                                  const int            socketDescriptor,
-                                  const bool           isIncoming,
-                                  struct PoolElement*  poolElement,
-                                  const unsigned char* poolHandle,
-                                  const size_t         poolHandleSize,
-                                  struct TagItem*      tags)
+static struct Session* sessionNew(struct RSerPoolSocket* rserpoolSocket,
+                                  const sctp_assoc_t     assocID,
+                                  const bool             isIncoming,
+                                  struct PoolElement*    poolElement,
+                                  const unsigned char*   poolHandle,
+                                  const size_t           poolHandleSize,
+                                  struct TagItem*        tags)
 {
    struct Session* session = (struct Session*)malloc(sizeof(struct Session));
    if(session != NULL) {
-      threadSafetyInit(&session->Mutex, "Session");
-
       session->Tags = tagListDuplicate(tags);
       if(session->Tags == NULL) {
          free(session);
@@ -281,15 +254,10 @@ static struct Session* sessionNew(const int            socketDomain,
          session->Handle.Size = 0;
       }
 
-      leafLinkedRedBlackTreeNodeNew(&session->GlobalNode);
-      leafLinkedRedBlackTreeNodeNew(&session->SocketNode);
-//      leafLinkedRedBlackTreeNodeNew(&session->PoolElementNode);
+      leafLinkedRedBlackTreeNodeNew(&session->Node);
       session->Descriptor                 = 0;  // ???????????
-      session->SocketDomain               = socketDomain;
-      session->SocketType                 = socketType;
-      session->SocketProtocol             = socketProtocol;
-      session->Socket                     = socketDescriptor;
-//      session->PoolElement                = poolElement;
+      session->Socket                     = rserpoolSocket;
+      session->AssocID                    = assocID;
       session->IsIncoming                 = isIncoming;
       session->Cookie                     = NULL;
       session->CookieSize                 = 0;
@@ -299,16 +267,10 @@ static struct Session* sessionNew(const int            socketDomain,
       session->ConnectionTimeStamp        = 0;
       session->ConnectTimeout             = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
-//    ????   if(session->PoolElement != NULL) {
-//          threadSafetyLock(&session->PoolElement->Mutex);
-//          CHECK(leafLinkedRedBlackTreeInsert(&session->PoolElement->SessionSet, &session->PoolElementNode) ==
-//                   &session->PoolElementNode);
-//          threadSafetyUnlock(&session->PoolElement->Mutex);
-//       }
 
-      dispatcherLock(&gDispatcher);
-      CHECK(leafLinkedRedBlackTreeInsert(&gSessionSet, &session->GlobalNode) == &session->GlobalNode);
-      dispatcherUnlock(&gDispatcher);
+      threadSafetyLock(&session->Socket->Mutex);
+      CHECK(leafLinkedRedBlackTreeInsert(&session->Socket->SessionSet, &session->Node) == &session->Node);
+      threadSafetyUnlock(&session->Socket->Mutex);
    }
    return(session);
 }
@@ -318,20 +280,9 @@ static struct Session* sessionNew(const int            socketDomain,
 static void sessionDelete(struct Session* session)
 {
    if(session) {
-      dispatcherLock(&gDispatcher);
-      CHECK(leafLinkedRedBlackTreeRemove(&gSessionSet, &session->GlobalNode) == &session->GlobalNode);
-      dispatcherUnlock(&gDispatcher);
-//       if(session->PoolElement) {
-/*         threadSafetyLock(&session->PoolElement->Mutex);
-         CHECK(leafLinkedRedBlackTreeRemove(&session->PoolElement->SessionSet, &session->PoolElementNode) ==
-                  &session->PoolElementNode);
-         threadSafetyUnlock(&session->PoolElement->Mutex); ???????*/
-//          session->PoolElement = NULL;
-//       }
-      if(session->Socket >= 0) {
-         ext_close(session->Socket);
-         session->Socket = -1;
-      }
+      threadSafetyLock(&session->Socket->Mutex);
+      CHECK(leafLinkedRedBlackTreeRemove(&session->Socket->SessionSet, &session->Node) == &session->Node);
+      threadSafetyUnlock(&session->Socket->Mutex);
       if(session->Tags) {
          tagListFree(session->Tags);
          session->Tags = NULL;
@@ -344,10 +295,118 @@ static void sessionDelete(struct Session* session)
          free(session->CookieEcho);
          session->CookieEcho = NULL;
       }
-      threadSafetyDestroy(&session->Mutex);
+      session->Socket = NULL;
       free(session);
    }
 }
+
+
+
+
+#if 0
+/* ###### Read from buffer ################################################ */
+ssize_t new_messageBufferRead(
+                          struct MessageBuffer*    messageBuffer,
+                          int                      sd,
+                          union sockaddr_union*    sourceAddress,
+                          socklen_t*               sourceAddressLength,
+                          const unsigned long long timeout)
+{
+   struct TLVHeader header;
+   ssize_t          received=0;
+   size_t           tlvLength;
+   uint32_t         ppid;
+   sctp_assoc_t     assocID;
+   unsigned short   streamID;
+   int64            timeout;
+   int              flags;
+
+   if(messageBuffer->Position == 0) {
+
+      LOG_VERBOSE4
+      fprintf(stdlog, "Trying to peek TLV header from socket %d, peek timeout %lld [us], total timeout %lld [us]\n",
+              sd, peekTimeout, totalTimeout);
+      LOG_END
+      messageBuffer->StartTimeStamp = getMicroTime();
+      flags = MSG_PEEK;
+      received = recvfromplus(sd, (char*)&header, sizeof(header), &flags,
+                              (struct sockaddr*)sourceAddress, sourceAddressLength,
+                              &ppid, &assocID, &streamID, peekTimeout);
+      if(received > 0) {
+         if(received == sizeof(header)) {
+            tlvLength = (size_t)ntohs(header.Length);
+            if(tlvLength < messageBuffer->Size) {
+               messageBuffer->ToGo = tlvLength;
+            }
+            else {
+               LOG_ERROR
+               fprintf(stdlog, "Message buffer size %d of socket %d is too small to read TLV of length %d\n",
+                        (int)messageBuffer->Size, sd, (int)tlvLength);
+               LOG_END
+               return(RspRead_TooBig);
+            }
+         }
+      }
+      else if(received == 0) {
+         LOG_VERBOSE3
+         fputs("Nothing to read (connection closed?)\n", stdlog);
+         LOG_END
+         return(0);
+      }
+      else if(errno == EAGAIN) {
+         LOG_VERBOSE3
+         fputs("Timeout while trying to read data\n", stdlog);
+         LOG_END
+         return(RspRead_Timeout);
+      }
+      else {
+         LOG_VERBOSE3
+         logerror("Unable to read data");
+         LOG_END
+         return(RspRead_ReadError);
+      }
+   }
+
+   if(messageBuffer->ToGo > 0) {
+      timeout = (int64)totalTimeout - ((int64)getMicroTime() - (int64)messageBuffer->StartTimeStamp);
+      if(timeout < 0) {
+         timeout = 0;
+      }
+      LOG_VERBOSE4
+      fprintf(stdlog, "Trying to read remaining %d bytes from message of length %d from socket %d, timeout %lld [us]\n",
+              (int)messageBuffer->ToGo, (int)(messageBuffer->Position + messageBuffer->ToGo), sd, timeout);
+      LOG_END
+      flags    = 0;
+      received = recvfromplus(sd, (char*)&messageBuffer->Buffer[messageBuffer->Position], messageBuffer->ToGo, &flags,
+                              (struct sockaddr*)sourceAddress, sourceAddressLength,
+                              &ppid, &assocID, &streamID, (unsigned long long)timeout);
+      if(received > 0) {
+         messageBuffer->ToGo     -= received;
+         messageBuffer->Position += received;
+         LOG_VERBOSE4
+         fprintf(stdlog, "Successfully read %d bytes from socket %d, %d bytes to go\n",
+                 received, sd, (int)messageBuffer->ToGo);
+         LOG_END
+         if(messageBuffer->ToGo == 0) {
+            LOG_VERBOSE3
+            fprintf(stdlog, "Successfully read message of %d bytes from socket %d\n",
+                    (int)messageBuffer->Position, sd);
+            LOG_END
+            received      = messageBuffer->Position;
+            messageBuffer->Position = 0;
+         }
+         else {
+            return(RspRead_PartialRead);
+         }
+      }
+   }
+
+   if(received < 0) {
+      received = RspRead_ReadError;
+   }
+   return(received);
+}
+#endif
 
 
 
@@ -358,132 +417,31 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
                                 struct Timer*      timer,
                                 void*              userData)
 {
-   struct PoolElement* poolElement = (struct PoolElement*)userData;
+   struct RSerPoolSocket* rserpoolSocket = (struct RSerPoolSocket*)userData;
 
    LOG_VERBOSE3
    fputs("Starting reregistration\n", stdlog);
    LOG_END
-   threadSafetyLock(&poolElement->Mutex);
 
-   poolElementDoRegistration(poolElement);
+   /* ====== Do reregistration =========================================== */
+   threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
+   doRegistration(rserpoolSocket);
+   timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
+              getMicroTime() + ((unsigned long long)1000 * (unsigned long long)rserpoolSocket->PoolElement->ReregistrationInterval));
+   threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
 
-   timerStart(&poolElement->ReregistrationTimer,
-              getMicroTime() + ((unsigned long long)1000 * (unsigned long long)poolElement->ReregistrationInterval));
-   threadSafetyUnlock(&poolElement->Mutex);
    LOG_VERBOSE3
    fputs("Reregistration completed\n", stdlog);
    LOG_END
 }
 
 
-/* ###### Create pool element ############################################ */
-static struct PoolElement* poolElementNew(const unsigned char* poolHandle,
-                                          const size_t         poolHandleSize,
-                                          struct TagItem*      tags)
-{
-   union sockaddr_union localAddress;
-
-   struct PoolElement* poolElement = (struct PoolElement*)malloc(sizeof(struct PoolElement));
-   if(poolElement != NULL) {
-      /* ====== Initialize pool element ================================== */
-      CHECK(poolHandleSize <= MAX_POOLHANDLESIZE);
-      poolHandleNew(&poolElement->Handle, poolHandle, poolHandleSize);
-
-      threadSafetyInit(&poolElement->Mutex, "RspPoolElement");
-      timerNew(&poolElement->ReregistrationTimer,
-               &gDispatcher,
-               reregistrationTimer,
-               (void*)poolElement);
-/* ???     leafLinkedRedBlackTreeNew(&poolElement->SessionSet,
-                                sessionPoolElementPrint,
-                                sessionPoolElementComparison);*/
-      poolElement->Socket                 = -1;
-      poolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
-                                               0x00000000);
-      poolElement->SocketDomain           = tagListGetData(tags, TAG_PoolElement_SocketDomain,
-                                               checkIPv6() ? AF_INET6 : AF_INET);
-      poolElement->SocketType             = tagListGetData(tags, TAG_PoolElement_SocketType,
-                                               SOCK_STREAM);
-      poolElement->SocketProtocol         = tagListGetData(tags, TAG_PoolElement_SocketProtocol,
-                                               IPPROTO_SCTP);
-      poolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
-                                               5000);
-      poolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
-                                               (poolElement->ReregistrationInterval * 3) + 3000);
-      poolElement->PolicyType             = tagListGetData(tags, TAG_PoolPolicy_Type,
-                                               PPT_ROUNDROBIN);
-      poolElement->PolicyParameterWeight  = tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight,
-                                               1);
-      poolElement->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
-                                               0);
-      poolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
-
-      /* ====== Create socket ============================================ */
-      poolElement->Socket = ext_socket(poolElement->SocketDomain,
-                               poolElement->SocketType,
-                               poolElement->SocketProtocol);
-      if(poolElement->Socket <= 0) {
-         LOG_ERROR
-         logerror("Unable to create socket for new pool element");
-         LOG_END
-         poolElementDelete(poolElement);
-         return(NULL);
-      }
-
-      /* ====== Configure SCTP socket ==================================== */
-      if(poolElement->SocketProtocol == IPPROTO_SCTP) {
-         if(!configureSCTPSocket(poolElement->Socket, 0, tags)) {
-            LOG_ERROR
-            fprintf(stdlog, "Failed to configure SCTP socket FD %d\n", poolElement->Socket);
-            LOG_END
-            poolElementDelete(poolElement);
-            return(NULL);
-         }
-      }
-
-      /* ====== Bind socket ============================================== */
-      memset((void*)&localAddress, 0, sizeof(localAddress));
-      ((struct sockaddr*)&localAddress)->sa_family = poolElement->SocketDomain;
-      setPort((struct sockaddr*)&localAddress, tagListGetData(tags, TAG_PoolElement_LocalPort, 0));
-
-      if(bindplus(poolElement->Socket, (union sockaddr_union*)&localAddress, 1) == false) {
-         LOG_ERROR
-         logerror("Unable to bind socket for new pool element");
-         LOG_END
-         poolElementDelete(poolElement);
-         return(NULL);
-      }
-      if((poolElement->SocketType == SOCK_STREAM) && (ext_listen(poolElement->Socket, 5) < 0)) {
-         LOG_ERROR
-         logerror("Unable to set socket for new pool element to listen mode");
-         LOG_END
-      }
-
-
-      /* ====== Do registration ========================================== */
-      if(poolElementDoRegistration(poolElement) == false) {
-         LOG_ERROR
-         fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
-         LOG_END
-         poolElementDelete(poolElement);
-         return(NULL);
-      }
-
-      /* Okay -> start reregistration timer */
-      timerStart(&poolElement->ReregistrationTimer,
-                 getMicroTime() + ((unsigned long long)1000 * (unsigned long long)poolElement->ReregistrationInterval));
-   }
-
-   return(poolElement);
-}
-
 
 /* ###### Delete pool element ############################################ */
-static void poolElementDelete(struct PoolElement* poolElement)
+static void deletePoolElement(struct PoolElement* poolElement)
 {
    int result;
 
-/* ???  CHECK(leafLinkedRedBlackTreeIsEmpty(&poolElement->SessionSet));*/
    timerDelete(&poolElement->ReregistrationTimer);
    if(poolElement->Identifier != 0x00000000) {
       result = rspDeregister((unsigned char*)&poolElement->Handle.Handle,
@@ -498,10 +456,6 @@ static void poolElementDelete(struct PoolElement* poolElement)
          LOG_END
       }
    }
-   if(poolElement->Socket >= 0) {
-      ext_close(poolElement->Socket);
-      poolElement->Socket = -1;
-   }
    threadSafetyDestroy(&poolElement->Mutex);
    free(poolElement);
 }
@@ -510,7 +464,7 @@ static void poolElementDelete(struct PoolElement* poolElement)
 
 
 /* ###### Reregistration ##################################################### */
-static bool poolElementDoRegistration(struct PoolElement* poolElement)
+static bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
 {
    struct TagItem              tags[16];
    struct EndpointAddressInfo* eai;
@@ -524,6 +478,8 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
    unsigned int                result;
    unsigned int                i;
 
+   CHECK(rserpoolSocket->PoolElement != NULL);
+
    /* ====== Create EndpointAddressInfo structure =========================== */
    eai = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
    if(eai == NULL) {
@@ -532,20 +488,20 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
       LOG_END
       return(false);
    }
-   threadSafetyLock(&poolElement->Mutex);
+   threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
 
-   eai->ai_family   = poolElement->SocketDomain;
-   eai->ai_socktype = poolElement->SocketType;
-   eai->ai_protocol = poolElement->SocketProtocol;
+   eai->ai_family   = rserpoolSocket->SocketDomain;
+   eai->ai_socktype = rserpoolSocket->SocketType;
+   eai->ai_protocol = rserpoolSocket->SocketProtocol;
    eai->ai_next     = NULL;
    eai->ai_addr     = NULL;
    eai->ai_addrs    = 0;
    eai->ai_addrlen  = sizeof(union sockaddr_union);
-   eai->ai_pe_id    = poolElement->Identifier;
+   eai->ai_pe_id    = rserpoolSocket->PoolElement->Identifier;
 
    /* ====== Get local addresses for SCTP socket ========================= */
-   if(poolElement->SocketProtocol == IPPROTO_SCTP) {
-      eai->ai_addrs = getladdrsplus(poolElement->Socket, 0, &eai->ai_addr);
+   if(rserpoolSocket->SocketProtocol == IPPROTO_SCTP) {
+      eai->ai_addrs = getladdrsplus(rserpoolSocket->Socket, 0, &eai->ai_addr);
       if(eai->ai_addrs <= 0) {
          LOG_WARNING
          fputs("Unable to obtain socket's local addresses\n", stdlog);
@@ -590,7 +546,7 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
 
       /* Get local port number */
       socketNameLen = sizeof(socketName);
-      if(ext_getsockname(poolElement->Socket, (struct sockaddr*)&socketName, &socketNameLen) == 0) {
+      if(ext_getsockname(rserpoolSocket->Socket, (struct sockaddr*)&socketName, &socketNameLen) == 0) {
          for(i = 0;i < localAddresses;i++) {
             setPort((struct sockaddr*)&localAddressArray[i], getPort((struct sockaddr*)&socketName));
          }
@@ -606,7 +562,7 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
       }
 
       /* Add addresses to EndpointAddressInfo structure */
-      if(poolElement->SocketProtocol == IPPROTO_SCTP) {
+      if(rserpoolSocket->SocketProtocol == IPPROTO_SCTP) {
          /* SCTP endpoints are described by a list of their
             transport addresses. */
          eai->ai_addrs = localAddresses;
@@ -644,26 +600,28 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
 
    /* ====== Set policy type and parameters ================================= */
    tags[0].Tag  = TAG_PoolPolicy_Type;
-   tags[0].Data = poolElement->PolicyType;
+   tags[0].Data = rserpoolSocket->PoolElement->PolicyType;
    tags[1].Tag  = TAG_PoolPolicy_Parameter_Load;
-   tags[1].Data = poolElement->PolicyParameterLoad;
+   tags[1].Data = rserpoolSocket->PoolElement->PolicyParameterLoad;
    tags[2].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[2].Data = poolElement->PolicyParameterWeight;
+   tags[2].Data = rserpoolSocket->PoolElement->PolicyParameterWeight;
    tags[3].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[3].Data = (tagdata_t)poolElement->HasControlChannel;
+   tags[3].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
    tags[4].Tag  = TAG_END;
 
    /* ====== Do registration ================================================ */
-   result = rspRegister((unsigned char*)&poolElement->Handle.Handle,
-                        poolElement->Handle.Size,
+   result = rspRegister((unsigned char*)&rserpoolSocket->PoolElement->Handle.Handle,
+                        rserpoolSocket->PoolElement->Handle.Size,
                         eai, (struct TagItem*)&tags);
    if(result == RSPERR_OKAY) {
-      poolElement->Identifier = eai->ai_pe_id;
+      rserpoolSocket->PoolElement->Identifier = eai->ai_pe_id;
       LOG_ACTION
-      fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n", poolElement->Identifier);
+      fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n",
+              rserpoolSocket->PoolElement->Identifier);
       LOG_END
 
-      printf("(Re-)Registration successful, ID is $%08x\n", poolElement->Identifier);
+      printf("(Re-)Registration successful, ID is $%08x\n",
+             rserpoolSocket->PoolElement->Identifier);
    }
    else {
       LOG_ERROR
@@ -675,7 +633,7 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
 
 
    /* ====== Clean up ======================================================= */
-   threadSafetyUnlock(&poolElement->Mutex);
+   threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
    if(sctpLocalAddressArray) {
       free(sctpLocalAddressArray);
    }
@@ -707,54 +665,40 @@ static bool poolElementDoRegistration(struct PoolElement* poolElement)
 
 
 
-struct RSerPoolSocket
-{
-   struct LeafLinkedRedBlackTreeNode Node;
-
-   int                               Descriptor;
-   int                               Domain;
-   int                               Type;
-   int                               Protocol;
-
-   struct PoolElement*               PoolElement;        /* PE mode                      */
-   struct LeafLinkedRedBlackTree     SessionSet;         /* UDP-like PU mode and PE mode */
-   struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
-};
-
 
 
 static void rserpoolSocketPrint(const void* node, FILE* fd)
 {
-   const struct RSerPoolSocket* socket = (const struct RSerPoolSocket*)node;
+   const struct RSerPoolSocket* rserpoolSocket = (const struct RSerPoolSocket*)node;
 
-   fprintf(fd, "%d ", socket->Descriptor);
+   fprintf(fd, "%d ", rserpoolSocket->Descriptor);
 }
 
 
 static int rserpoolSocketComparison(const void* node1, const void* node2)
 {
-   const struct RSerPoolSocket* socket1 = (const struct RSerPoolSocket*)node1;
-   const struct RSerPoolSocket* socket2 = (const struct RSerPoolSocket*)node2;
+   const struct RSerPoolSocket* rserpoolSocket1 = (const struct RSerPoolSocket*)node1;
+   const struct RSerPoolSocket* rserpoolSocket2 = (const struct RSerPoolSocket*)node2;
 
-   if(socket1->Descriptor < socket2->Descriptor) {
+   if(rserpoolSocket1->Descriptor < rserpoolSocket2->Descriptor) {
       return(-1);
    }
-   else if(socket1->Descriptor > socket2->Descriptor) {
+   else if(rserpoolSocket1->Descriptor > rserpoolSocket2->Descriptor) {
       return(1);
    }
    return(0);
 }
 
 
-static struct Session* sessionFind(struct RSerPoolSocket* socket,
+static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
                                    rserpool_session_t     sessionID,
                                    const unsigned char*   poolHandle,
                                    const size_t           poolHandleSize)
 {
-   struct Session                     cmpNode;
-   struct LeafLinkedRedBlackTreeNode* found;
+   struct Session  cmpNode;
+   struct Session* foundSession;
 
-   if(socket->ConnectedSession) {
+   if(rserpoolSocket->ConnectedSession) {
       if(sessionID != 0) {
          LOG_WARNING
          fputs("Session ID given for connected RSerPool socket (there is only one session)\n", stdlog);
@@ -765,17 +709,17 @@ static struct Session* sessionFind(struct RSerPoolSocket* socket,
          fputs("Pool handle given for connected RSerPool socket (there is only one session)\n", stdlog);
          LOG_END
       }
-      return(socket->ConnectedSession);
+      return(rserpoolSocket->ConnectedSession);
    }
    else if(sessionID != 0) {
       cmpNode.Descriptor = sessionID;
-      found = leafLinkedRedBlackTreeFind(&socket->SessionSet, &cmpNode.SocketNode);
-      if(found) {
-         return(getSessionFromSocketNode(found));
+      foundSession = (struct Session*)leafLinkedRedBlackTreeFind(&rserpoolSocket->SessionSet, &cmpNode.Node);
+      if(foundSession) {
+         return(foundSession);
       }
       LOG_WARNING
       fprintf(stdlog, "There is no session %u on RSerPool socket %d\n",
-              sessionID, socket->Descriptor);
+              sessionID, rserpoolSocket->Descriptor);
       LOG_END
       errno = EINVAL;
    }
@@ -818,7 +762,7 @@ unsigned int rsp_initialize()
    rspInitialize(NULL);
 
    /* ====== Initialize session storage ================================== */
-   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, sessionGlobalPrint, sessionGlobalComparison);
+   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, sessionPrint, sessionComparison);
 
    /* ====== Initialize RSerPool Socket descriptor storage =============== */
    leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
@@ -864,6 +808,15 @@ int rsp_socket(int domain, int type, int protocol)
    struct RSerPoolSocket* rserpoolSocket;
    size_t                 i, j;
 
+   /* ====== Check for problems ========================================== */
+   if(protocol != IPPROTO_SCTP) {
+      LOG_ERROR
+      fputs("Only SCTP is supported for the Enhanced Mode API\n", stdlog);
+      LOG_END
+      errno = EPROTONOSUPPORT;
+      return(-1);
+   }
+
    /* ====== Initialize RSerPool socket entry ============================ */
    rserpoolSocket = (struct RSerPoolSocket*)malloc(sizeof(struct RSerPoolSocket));
    if(rserpoolSocket == NULL) {
@@ -871,18 +824,26 @@ int rsp_socket(int domain, int type, int protocol)
       return(-1);
    }
 
+   threadSafetyInit(&rserpoolSocket->Mutex, "RSerPoolSocket");
    leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
-   rserpoolSocket->Domain           = domain;
-   rserpoolSocket->Type             = type;
-   rserpoolSocket->Protocol         = protocol;
+   rserpoolSocket->Socket           = -1;
+   rserpoolSocket->SocketDomain     = (domain == 0) ? (checkIPv6() ? AF_INET6 : AF_INET) : domain;
+   rserpoolSocket->SocketType       = type;
+   rserpoolSocket->SocketProtocol   = protocol;
    rserpoolSocket->Descriptor       = -1;
    rserpoolSocket->PoolElement      = NULL;
    rserpoolSocket->ConnectedSession = NULL;
-   leafLinkedRedBlackTreeNew(&rserpoolSocket->SessionSet, sessionGlobalPrint, sessionGlobalComparison);
+   leafLinkedRedBlackTreeNew(&rserpoolSocket->SessionSet, sessionPrint, sessionComparison);
+//    rserpoolSocket->MessageBuffer = messageBufferNew(65536);
+//    if(rserpoolSocket->MessageBuffer == NULL) {
+//       free(rserpoolSocket);
+//       errno = ENOMEM;
+//       return(-1);
+//    }  ????????ßß
 
 
    /* ====== Find available RSerPool socket descriptor =================== */
-   // ????? dispatcherLock(&gDispatcher);
+   dispatcherLock(&gDispatcher);
    for(i = 0;i < (FD_SETSIZE / 8);i++) {
       for(j = 0;j < 8;j++) {
          if(!(gRSerPoolSocketAllocationBitmap[i] & (1 << j))) {
@@ -897,7 +858,7 @@ int rsp_socket(int domain, int type, int protocol)
          }
       }
    }
-   // ????? dispatcherUnlock(&gDispatcher);
+   dispatcherUnlock(&gDispatcher);
 
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
@@ -907,6 +868,61 @@ int rsp_socket(int domain, int type, int protocol)
    }
    return(rserpoolSocket->Descriptor);
 }
+
+
+/* ###### Bind RSerPool socket ########################################### */
+int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt, struct TagItem* tags)
+{
+   RSerPoolSocket*      rserpoolSocket;
+   union sockaddr_union localAddress;
+
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+   if(rserpoolSocket->Socket >= 0) {
+      LOG_ERROR
+      fprintf(stdlog, "RSerPool socket %d already bounded to socket %d\n",
+              rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+      LOG_END
+      errno = EBADFD;
+      return(-1);
+   }
+
+   /* ====== Create socket =============================================== */
+   rserpoolSocket->Socket = ext_socket(rserpoolSocket->SocketDomain,
+                                       SOCK_SEQPACKET,
+                                       rserpoolSocket->SocketProtocol);
+   if(rserpoolSocket->Socket <= 0) {
+      LOG_ERROR
+      logerror("Unable to create socket for RSerPool socket");
+      LOG_END
+      return(-1);
+   }
+   setNonBlocking(rserpoolSocket->Socket);
+
+   /* ====== Configure SCTP socket ======================================= */
+   if(!configureSCTPSocket(rserpoolSocket->Socket, 0, tags)) {
+      LOG_ERROR
+      fputs("Failed to configure SCTP parameters\n", stdlog);
+      LOG_END
+      return(-1);
+   }
+
+   /* ====== Bind socket ================================================= */
+   if(addrs == NULL) {
+      addrs   = (struct sockaddr*)&localAddress;
+      addrcnt = 1;
+      memset((void*)&localAddress, 0, sizeof(localAddress));
+      ((struct sockaddr*)&localAddress)->sa_family = rserpoolSocket->SocketDomain;
+   }
+   if(bindplus(rserpoolSocket->Socket, (union sockaddr_union*)addrs, addrcnt) == false) {
+      LOG_ERROR
+      logerror("Unable to bind socket for new pool element");
+      LOG_END
+      return(-1);
+   }
+
+   return(0);
+}
+
 
 
 /* ###### Delete RSerPool socket ######################################### */
@@ -925,12 +941,14 @@ int rsp_close(int sd)
    }
 
    /* ====== Delete RSerPool socket entry ================================ */
-   // ????? dispatcherLock(&gDispatcher);
+   dispatcherLock(&gDispatcher);
    CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    gRSerPoolSocketAllocationBitmap[sd / 8] &= ~(1 << (sd % 8));
-   // ????? dispatcherUnlock(&gDispatcher);
+   dispatcherUnlock(&gDispatcher);
 
+/*   messageBufferDelete(rserpoolSocket->MessageBuffer);*/
    leafLinkedRedBlackTreeDelete(&rserpoolSocket->SessionSet);
+   threadSafetyDestroy(&rserpoolSocket->Mutex);
    rserpoolSocket->Descriptor = -1;
    free(rserpoolSocket);
    return(0);
@@ -947,16 +965,14 @@ int rsp_register(int                  sd,
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    /* ====== Check for problems ========================================== */
+   if(rserpoolSocket->Socket < 0) {
+      if(rsp_bind(sd, NULL, 0, NULL) < 0) {
+         return(-1);
+      }
+   }
    if(rserpoolSocket->PoolElement != NULL) {
       LOG_ERROR
       fprintf(stdlog, "RSerPool socket %d already is a pool element\n", sd);
-      LOG_END
-      errno = EBADF;
-      return(-1);
-   }
-   if(!leafLinkedRedBlackTreeIsEmpty(&rserpoolSocket->SessionSet)) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %d already has sessions\n", sd);
       LOG_END
       errno = EBADF;
       return(-1);
@@ -965,15 +981,53 @@ int rsp_register(int                  sd,
       LOG_ERROR
       fputs("Pool handle too long\n", stdlog);
       LOG_END
-      errno = EINVAL;
+      errno = ENAMETOOLONG;
+      return(-1);
+   }
+   if(ext_listen(rserpoolSocket->Socket, 10) < 0) {
+      LOG_ERROR
+      logerror("Unable to set socket for new pool element to listen mode");
+      LOG_END
       return(-1);
    }
 
    /* ====== Create pool element ========================================= */
-   rserpoolSocket->PoolElement = poolElementNew(poolHandle, poolHandleSize, tags);
+   rserpoolSocket->PoolElement = (struct PoolElement*)malloc(sizeof(struct PoolElement));
    if(rserpoolSocket->PoolElement == NULL) {
       return(-1);
    }
+   threadSafetyInit(&rserpoolSocket->PoolElement->Mutex, "RspPoolElement");
+   poolHandleNew(&rserpoolSocket->PoolElement->Handle, poolHandle, poolHandleSize);
+   timerNew(&rserpoolSocket->PoolElement->ReregistrationTimer,
+            &gDispatcher,
+            reregistrationTimer,
+            (void*)rserpoolSocket);
+   rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
+                                                            0x00000000);
+   rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
+                                                            60000);
+   rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
+                                                            (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
+   rserpoolSocket->PoolElement->PolicyType             = tagListGetData(tags, TAG_PoolPolicy_Type,
+                                                            PPT_ROUNDROBIN);
+   rserpoolSocket->PoolElement->PolicyParameterWeight  = tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight,
+                                                            1);
+   rserpoolSocket->PoolElement->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
+                                                            0);
+   rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
+
+   /* ====== Do registration ============================================= */
+   if(doRegistration(rserpoolSocket) == false) {
+      LOG_ERROR
+      fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
+      LOG_END
+      deletePoolElement(rserpoolSocket->PoolElement);
+      return(-1);
+   }
+
+   /* ====== start reregistration timer ================================== */
+   timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
+               getMicroTime() + ((unsigned long long)1000 * (unsigned long long)rserpoolSocket->PoolElement->ReregistrationInterval));
 
    return(0);
 }
@@ -987,12 +1041,7 @@ int rsp_deregister(int sd)
    CHECK_RSERPOOL_POOLELEMENT(rserpoolSocket);
 
    /* ====== Delete pool element ========================================= */
-/*  ???  if(!leafLinkedRedBlackTreeIsEmpty(&rserpoolSocket->PoolElement->SessionSet)) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %d's pool element still has sessions\n", sd);
-      LOG_END_FATAL
-   }*/
-   poolElementDelete(rserpoolSocket->PoolElement);
+   deletePoolElement(rserpoolSocket->PoolElement);
    rserpoolSocket->PoolElement = NULL;
 
    return(0);
@@ -1052,7 +1101,7 @@ ssize_t rsp_sendmsg(int                  sd,
                     const unsigned char* poolHandle,
                     size_t               poolHandleSize,
                     uint32_t             sctpPPID,
-                    uint16_t             sctpStreamNo,
+                    uint16_t             sctpStreamID,
                     uint32_t             sctpTimeToLive,
                     unsigned long long   timeout,
                     struct TagItem*      tags)
@@ -1064,10 +1113,10 @@ ssize_t rsp_sendmsg(int                  sd,
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, poolHandle, poolHandleSize);
 
-   result = sendtoplus(session->Socket, data, dataLength,
+   result = sendtoplus(session->Socket->Socket, data, dataLength,
                        MSG_NOSIGNAL,
                        NULL, 0, 0,
-                       sctpStreamNo, sctpPPID, sctpTimeToLive, timeout);
+                       sctpStreamID, sctpPPID, sctpTimeToLive, timeout);
    if((result < 0) && (errno != EAGAIN)) {
       LOG_ACTION
       fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
@@ -1087,30 +1136,34 @@ ssize_t rsp_sendmsg(int                  sd,
 
 
 /* ###### RSerPool socket recvmsg() implementation ####################### */
-ssize_t rsp_readmsg(int                  sd,
+ssize_t rsp_recvmsg(int                  sd,
                     void*                buffer,
                     size_t               bufferLength,
                     unsigned int*        rserpoolFlags,
                     rserpool_session_t*  sessionID,
                     uint32_t*            poolElementID,
                     uint32_t*            sctpPPID,
-                    uint16_t*            sctpStreamNo,
+                    uint16_t*            sctpStreamID,
                     unsigned long long   timeout,
                     struct TagItem*      tags)
 {
-   struct RSerPoolSocket*  rserpoolSocket;
-   struct Session*         session;
+   struct RSerPoolSocket*   rserpoolSocket;
+   struct Session*          session;
+   struct sctp_sndrcvinfo   sinfo;
+   sctp_assoc_t             assocID;
+   int                      flags;
+   ssize_t                  received;
 
    unsigned long long       startTimeStamp;
    unsigned long long       now;
    long long                readTimeout;
-   uint32_t                 ppid;
-   sctp_assoc_t             assocID;
-   unsigned short           streamID;
-   ssize_t                  result;
-   int                      flags;
-   unsigned int             type;
-   size_t                   cookieLength;
+
+//    uint32_t                 ppid;
+//    sctp_assoc_t             assocID;
+//    unsigned short           streamID;
+//    int                      flags;
+//    unsigned int             type;
+//    size_t                   cookieLength;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
@@ -1119,8 +1172,9 @@ ssize_t rsp_readmsg(int                  sd,
            rserpoolSocket->Descriptor, session->Socket);
    LOG_END
 
+#if 0
    /* ====== Cookie Echo ================================================= */
-   if((session->CookieEcho) && (length > 0)) {
+   if((session->CookieEcho) && (bufferLength > 0)) {
       /* A cookie echo has been stored (during rspSessionSelect(). Now,
          the application calls this function. We now return the cookie
          and free its storage space. */
@@ -1135,61 +1189,63 @@ ssize_t rsp_readmsg(int                  sd,
       session->CookieEchoSize = 0;
       return(cookieLength);
    }
+#endif
 
    /* ====== Notification ================================================ */
 
    /* ====== Really read from socket ===================================== */
-   readFD = getSocketToReadFrom(session);
-
-   now = startTimeStamp = getMicroTime();
    do {
       /* ====== Check for timeout ======================================== */
+      now = startTimeStamp = getMicroTime();
       readTimeout = (long long)timeout - ((long long)now - (long long)startTimeStamp);
       if(readTimeout < 0) {
          LOG_VERBOSE
          fprintf(stdlog, "Reading from RSerPool socket %d, socket %d timed out\n",
-                 rserpoolSocket->Descriptor, readFD);
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
          errno = EAGAIN;
          return(0);
       }
 
       /* ====== Read from socket ========================================= */
-      LOG_VERBOSE4
-      fprintf(stdlog, "Trying to read from session, socket %d, with timeout %Ldus\n",
-              session->Socket, readTimeout);
+      LOG_VERBOSE2
+      fprintf(stdlog, "Trying to read from RSerPool socket %d, socket %d with timeout %Ldus\n",
+              rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+              readTimeout);
       LOG_END
-      result = recvfromplus(readfd, buffer, bufferLength, &flags,
-                            NULL, 0,
-                            &sctpPPID, &sctpStreamNo,
-                            timeout);
-
-      /* ====== Handle ASAP messages ===================================== */
-      if((result > 0) && (sctpPPID == PPID_ASAP)) {
-         LOG_VERBOSE2
-         fprintf(stdlog, "Completely received message of length %d on socket %d\n", result, session->Socket);
-         LOG_END
-         type = handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
-         switch(type) {
-            case AHT_COOKIE_ECHO:
-               if(session->CookieEcho) {
-                  tagListSetData(tags, TAG_RspIO_MsgIsCookieEcho, 1);
-                  cookieLength = min(length, session->CookieEchoSize);
-                  if(cookieLength > 0) {
-                     /* The function is called from the user program.
-                        Give the cookie echo back now. */
-                     memcpy(buffer, session->CookieEcho, cookieLength);
-                     free(session->CookieEcho);
-                     session->CookieEcho     = NULL;
-                     session->CookieEchoSize = 0;
-                  }
-                  return(cookieLength);
-               }
-             break;
+      received = recvfromplus(rserpoolSocket->Socket,
+                              (char*)&rserpoolSocket->MessageBuffer,
+                              sizeof(rserpoolSocket->MessageBuffer),
+                              &flags, NULL, 0,
+                              sctpPPID, &assocID, sctpStreamID,
+                              readTimeout);
+      LOG_VERBOSE2
+      fprintf(stdlog, "received=%d\n", received);
+      LOG_END
+      if(received > 0) {
+         /* ====== Handle notification =================================== */
+         if(flags & MSG_NOTIFICATION) {
+            handleNotification(rserpoolSocket,
+                               (const char*)&rserpoolSocket->MessageBuffer, received);
          }
-         return(RspRead_ControlRead);
-      }
 
+         /* ====== Handle ASAP control channel message =================== */
+         else if(sinfo.sinfo_ppid == PPID_ASAP) {
+            handleControlChannelMessage(rserpoolSocket,
+                                        (const char*)&rserpoolSocket->MessageBuffer, received);
+         }
+
+         /* ====== User Data ============================================= */
+         else {
+            break;
+         }
+      }
+   } while(received > 0);
+
+//       /* ====== Handle ASAP messages ===================================== */
+//       if((received > 0) && (sctpPPID == PPID_ASAP)) {
+//          handleControlChannelMessage(rserpoolSocket, (char*)&rserpoolSocket->MessageBuffer, received);
+//       }
       /* ====== Handle failover ======================================= */
 //       else if((result == 0) ||
 //               (result == RspRead_ReadError)) {
@@ -1208,9 +1264,7 @@ ssize_t rsp_readmsg(int                  sd,
 //          return(RspRead_ReadError);
 //       }
 
-      now = getMicroTime();
-   } while(result > 0);
-
+/*
    if(result == RspRead_PartialRead) {
       LOG_VERBOSE2
       fprintf(stdlog, "Partially read message data from socket %d\n", session->Socket);
@@ -1251,56 +1305,176 @@ ssize_t rsp_readmsg(int                  sd,
       tagListSetData(tags, TAG_RspIO_SCTP_StreamID, streamID);
       tagListSetData(tags, TAG_RspIO_SCTP_PPID,     ppid);
       tagListSetData(tags, TAG_RspIO_PE_ID,         session->Identifier);
+   }*/
+   return(received);
+}
+
+
+
+static void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
+                                        const char*            buffer,
+                                        size_t                 bufferSize)
+{
+   LOG_ACTION
+   fprintf(stdlog, "ASAP control channel message for RSerPool socket %d, socket %d\n",
+            rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+   LOG_END
+
+#if 0
+         type = handleRSerPoolMessage(session, (char*)&session->MessageBuffer->Buffer, (size_t)result);
+         switch(type) {
+            case AHT_COOKIE_ECHO:
+               if(session->CookieEcho) {
+                  tagListSetData(tags, TAG_RspIO_MsgIsCookieEcho, 1);
+                  cookieLength = min(length, session->CookieEchoSize);
+                  if(cookieLength > 0) {
+                     /* The function is called from the user program.
+                        Give the cookie echo back now. */
+                     memcpy(buffer, session->CookieEcho, cookieLength);
+                     free(session->CookieEcho);
+                     session->CookieEcho     = NULL;
+                     session->CookieEchoSize = 0;
+                  }
+                  return(cookieLength);
+               }
+            break;
+         }
+#endif
+}
+
+static void handleNotification(struct RSerPoolSocket* rserpoolSocket,
+                               const char*            buffer,
+                               size_t                 bufferSize)
+{
+   union sctp_notification* notification;
+
+   notification = (union sctp_notification*)buffer;
+   LOG_VERBOSE1
+   fprintf(stdlog, "Notification %d for RSerPool socket %d, socket %d\n",
+            notification->sn_header.sn_type,
+            rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+   LOG_END
+
+   if(notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) {
+printf("ASSOC STATE=%d\n",notification->sn_assoc_change.sac_state);
+      switch(notification->sn_assoc_change.sac_state) {
+         case SCTP_COMM_UP:
+            LOG_ACTION
+            fprintf(stdlog, "SCTP_COMM_UP for RSerPool socket %d, socket %d, assoc %u\n",
+                  rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                  notification->sn_assoc_change.sac_assoc_id);
+            LOG_END
+          break;
+            LOG_ACTION
+            fprintf(stdlog, "SCTP_COMM_LOST for RSerPool socket %d, socket %d, assoc %u\n",
+                  rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                  notification->sn_assoc_change.sac_assoc_id);
+            LOG_END
+          break;
+      }
    }
-   return(result);
+   if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
+      LOG_ACTION
+      fprintf(stdlog, "SCTP_SHUTDOWN_EVENT for RSerPool socket %d, socket %d, assoc %u\n",
+            rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+            notification->sn_shutdown_event.sse_assoc_id);
+      LOG_END
+   }
+printf("TYPE=%d  %d  %d\n",notification->sn_header.sn_type,notification->sn_header.sn_length,notification->sn_header.sn_flags);
+//exit(1);
+}
+
+
+static bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket)
+{
+   char                     buffer[65536];
+   struct sctp_sndrcvinfo   sinfo;
+   ssize_t                  result;
+   int                      flags;
+
+   /* ====== Check, if message on socket is notification or ASAP ========= */
+puts("peek...");
+   flags = MSG_PEEK;
+   result = sctp_recvmsg(rserpoolSocket->Socket, (char*)&buffer, 4,
+                         NULL, NULL, &sinfo, &flags);
+printf("flgs=%d   notif=%d\n",flags, (flags & MSG_NOTIFICATION) != 0);
+   if( (result <= 0) ||
+       (! ((flags & MSG_NOTIFICATION) ||
+          (sinfo.sinfo_ppid == PPID_ASAP)) ) ) {
+      /* Message is user data, go back and let user read it. */
+      puts("peek ok -> user data");
+      return(false);
+   }
+
+   LOG_ACTION
+   fputs("Handling control channel message or notification...\n", stdlog);
+   LOG_END
+   rsp_recvmsg(rserpoolSocket->Descriptor, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL);
+
+// ssize_t rsp_recvmsg(int                  sd,
+//                     void*                buffer,
+//                     size_t               bufferLength,
+//                     unsigned int*        rserpoolFlags,
+//                     rserpool_session_t*  sessionID,
+//                     uint32_t*            poolElementID,
+//                     uint32_t*            sctpPPID,
+//                     uint16_t*            sctpStreamID,
+//                     unsigned long long   timeout,
+//                     struct TagItem*      tags)
+//
+// puts("NOTIF!");
+//    /* ====== Read complete message ======================================= */
+//    flags = 0;
+//    result = sctp_recvmsg(rserpoolSocket->Socket, (char*)&buffer, sizeof(buffer),
+//                          NULL, NULL, &sinfo, &flags);
+//    if(result <= 0) {
+//       LOG_ERROR
+//       logerror("Failed to read notification or ASAP control channel message");
+//       LOG_END
+//       return(true);
+//    }
+//
+//    /* ====== Handle notification ========================================= */
+//    if(flags & MSG_NOTIFICATION) {
+//       handleNotification(rserpoolSocket, (const char*)&buffer, result);
+//    }
+//
+//    /* ====== Handle ASAP control channel message ========================= */
+//    else if(sinfo.sinfo_ppid == PPID_ASAP) {
+//       handleControlChannelMessage(rserpoolSocket, (const char*)&buffer, result);
+//    }
+
+   return(true);
 }
 
 
 static int setFDs(fd_set* fds, int sd, const char* description)
 {
-   struct RSerPoolSocket*             socket;
-   struct Session*                    session;
-   struct LeafLinkedRedBlackTreeNode* node;
-   int                                n = 0;
+   struct RSerPoolSocket* rserpoolSocket;
+   int                    n = 0;
 
-   socket = getRSerPoolSocketForDescriptor(sd);
-   if(socket != NULL) {
-      if(socket->PoolElement) {
-         threadSafetyLock(&socket->PoolElement->Mutex);
-         LOG_VERBOSE4
-         fprintf(stdlog, "Setting <%s> on socket %d for RSerPool socket %d (PE)\n",
-                 description, socket->PoolElement->Socket, socket->Descriptor);
-         LOG_END
-         CHECK((socket->PoolElement->Socket > 0) && (socket->PoolElement->Socket < FD_SETSIZE));
-         FD_SET(socket->PoolElement->Socket, fds);
-         n = max(n, socket->PoolElement->Socket);
-         threadSafetyUnlock(&socket->PoolElement->Mutex);
+   rserpoolSocket = getRSerPoolSocketForDescriptor(sd);
+   if(rserpoolSocket != NULL) {
+      threadSafetyLock(&rserpoolSocket->Mutex);
+      if(rserpoolSocket->Socket >= 0) {
+         FD_SET(rserpoolSocket->Socket, fds);
+         n = max(n, rserpoolSocket->Socket);
       }
-      node = leafLinkedRedBlackTreeGetFirst(&socket->SessionSet);
-      while(node != NULL) {
-         session = getSessionFromSocketNode(node);
-         threadSafetyLock(&session->Mutex);
-         LOG_VERBOSE4
-         fprintf(stdlog, "Setting <%s> on socket %d for RSerPool socket %d, session %u\n",
-                 description, session->Socket, socket->Descriptor, session->Descriptor);
-         LOG_END
-         CHECK((session->Socket > 0) && (session->Socket < FD_SETSIZE));
-         FD_SET(session->Socket, fds);
-         n = max(n, session->Socket);
-         threadSafetyUnlock(&session->Mutex);
-      }
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
    }
    return(n);
 }
 
 
-inline int transferFD(int inSD, const fd_set* inFD, int outSD, fd_set* outFD)
+inline static int transferFD(int inSD, const fd_set* inFD, int outSD, fd_set* outFD)
 {
-   if(FD_ISSET(inSD, inFD)) {
-      FD_SET(outSD, outFD);
-      return(1);
+   if((inFD != NULL) && (outFD != NULL)) {
+      if(FD_ISSET(inSD, inFD)) {
+         FD_SET(outSD, outFD);
+         return(1);
+      }
+      FD_CLR(outSD, outFD);
    }
-   FD_CLR(outSD, outFD);
    return(0);
 }
 
@@ -1313,7 +1487,7 @@ int rsp_select(int                      rserpoolN,
                const unsigned long long timeout,
                struct TagItem*          tags)
 {
-   struct RSerPoolSocket*             socket;
+   struct RSerPoolSocket*             rserpoolSocket;
    struct Session*                    session;
    struct LeafLinkedRedBlackTreeNode* node;
    struct TagItem                     mytags[16];
@@ -1336,15 +1510,25 @@ int rsp_select(int                      rserpoolN,
 
    /* ====== Collect data for select() call =============================== */
    n = tagListGetData(tags, TAG_RspSelect_MaxFD, 0);
-   for(i = 0;i < rserpoolN;i++) {
-      if(FD_ISSET(i, rserpoolReadFDs)) {
-         n = max(n, setFDs(readfds, i, "read"));
+   if(rserpoolReadFDs) {
+      for(i = 0;i < rserpoolN;i++) {
+         if(FD_ISSET(i, rserpoolReadFDs)) {
+            n = max(n, setFDs(readfds, i, "read"));
+         }
       }
-      if(FD_ISSET(i, rserpoolWriteFDs)) {
-         n = max(n, setFDs(writefds, i, "write"));
+   }
+   if(rserpoolWriteFDs) {
+      for(i = 0;i < rserpoolN;i++) {
+         if(FD_ISSET(i, rserpoolWriteFDs)) {
+            n = max(n, setFDs(writefds, i, "write"));
+         }
       }
-      if(FD_ISSET(i, rserpoolExceptFDs)) {
-         n = max(n, setFDs(exceptfds, i, "except"));
+   }
+   if(rserpoolExceptFDs) {
+      for(i = 0;i < rserpoolN;i++) {
+         if(FD_ISSET(i, rserpoolExceptFDs)) {
+            n = max(n, setFDs(exceptfds, i, "except"));
+         }
       }
    }
 
@@ -1369,72 +1553,49 @@ int rsp_select(int                      rserpoolN,
    if(result > 0) {
       result = 0;
       for(i = 0;i < rserpoolN;i++) {
-         if( FD_ISSET(i, rserpoolReadFDs) ||
-             FD_ISSET(i, rserpoolWriteFDs) ||
-             FD_ISSET(i, rserpoolExceptFDs) ) {
+         if( ((rserpoolReadFDs) && FD_ISSET(i, rserpoolReadFDs)) ||
+             ((rserpoolWriteFDs) && FD_ISSET(i, rserpoolWriteFDs)) ||
+             ((rserpoolExceptFDs) && FD_ISSET(i, rserpoolExceptFDs)) ) {
+            rserpoolSocket = getRSerPoolSocketForDescriptor(i);
+            if(rserpoolSocket != NULL) {
+               threadSafetyLock(&rserpoolSocket->Mutex);
+               if(rserpoolSocket->Socket >= 0) {
+puts("------------ EVENT");
 
-            socket = getRSerPoolSocketForDescriptor(i);
-            if(socket != NULL) {
-               /* ====== Events for pool element socket ===================== */
-               if(socket->PoolElement) {
-                  threadSafetyLock(&socket->PoolElement->Mutex);
 
-                  /* ====== Transfer events ================================= */
+                  /* ====== Transfer events ============================== */
                   result +=
-                     ((transferFD(socket->PoolElement->Socket, readfds, i, rserpoolReadFDs) +
-                       transferFD(socket->PoolElement->Socket, writefds, i, rserpoolWriteFDs) +
-                       transferFD(socket->PoolElement->Socket, exceptfds, i, rserpoolExceptFDs)) > 0) ? 1 : 0;
+                     ((transferFD(rserpoolSocket->Socket, readfds, i, rserpoolReadFDs) +
+                       transferFD(rserpoolSocket->Socket, writefds, i, rserpoolWriteFDs) +
+                       transferFD(rserpoolSocket->Socket, exceptfds, i, rserpoolExceptFDs)) > 0) ? 1 : 0;
 
-                  threadSafetyUnlock(&socket->PoolElement->Mutex);
-               }
-
-               /* ====== Events for sessions ================================ */
-               node = leafLinkedRedBlackTreeGetFirst(&socket->SessionSet);
-               while(node != NULL) {
-                  session = getSessionFromSocketNode(node);
-                  threadSafetyLock(&session->Mutex);
-
-                  /* ====== Transfer events ================================= */
-                  result +=
-                     ((transferFD(session->Socket, readfds, i, rserpoolReadFDs) +
-                       transferFD(session->Socket, writefds, i, rserpoolWriteFDs) +
-                       transferFD(session->Socket, exceptfds, i, rserpoolExceptFDs)) > 0) ? 1 : 0;
-
-                  /* ======= Check for control channel data ================= */
-                  if((session->Socket >= 0) &&
-                     FD_ISSET(session->Socket, readfds)) {
+                  /* ======= Check for control channel data ============== */
+                  if(FD_ISSET(rserpoolSocket->Socket, readfds)) {
                      LOG_VERBOSE4
-                     fprintf(stdlog, "RSerPool socket %d, session %u has <read> flag set -> Checking for ASAP message...\n",
-                             socket->Descriptor, session->Descriptor);
+                     fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Check, if it has to be handled by rsplib...\n",
+                              rserpoolSocket->Descriptor, session->Descriptor);
                      LOG_END
-
-               /*
-               mytags[0].Tag  = TAG_RspIO_MakeFailover;
-               mytags[0].Data = 0;
-               mytags[1].Tag  = TAG_RspIO_Timeout;
-               mytags[1].Data = ~0;
-               mytags[2].Tag  = TAG_DONE;
-               readResult = rspSessionRead(sessionArray[i], NULL, 0, (struct TagItem*)&mytags);
-               if((readResult != RspRead_PartialRead) &&
-                  (readResult != RspRead_ControlRead)) {
-                  LOG_VERBOSE4
-                  fprintf(stdlog, "Session with socket FD %d has real event\n",
-                          sessionArray[i]->Socket);
-                  LOG_END
-                  sessionStatusArray[i] |= RspSelect_Read;
-               }
-               else {
-                  LOG_VERBOSE4
-                  fprintf(stdlog, "Session with socket FD %d has control data -> Removing <read> flag\n",
-                          sessionArray[i]->Socket);
-                  LOG_END
-               }*/
-
-
+                     /* ?????????????
+                     if(handleControlChannelAndNotifications(rserpoolSocket)) {
+                        LOG_VERBOSE4
+                        fprintf(stdlog, "RSerPool socket %d (socket %d) had <read> event for rsplib only. Clearing <read> flag\n",
+                                 rserpoolSocket->Descriptor, session->Descriptor);
+                        LOG_END
+                        FD_CLR(i, rserpoolReadFDs);
+                     }
+                     */
+                  }
+                  if((rserpoolSocket->Socket >= 0) &&
+                     FD_ISSET(rserpoolSocket->Socket, readfds)) {
+                     LOG_VERBOSE4
+                     fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Checking for ASAP message...\n",
+                              rserpoolSocket->Descriptor, session->Descriptor);
+                     LOG_END
                   }
 
-                  threadSafetyUnlock(&session->Mutex);
+ puts("------------");
                }
+               threadSafetyUnlock(&rserpoolSocket->Mutex);
             }
          }
       }
@@ -1442,6 +1603,7 @@ int rsp_select(int                      rserpoolN,
 
    return(result);
 }
+
 
 
 
@@ -1468,14 +1630,25 @@ int rsp_select(int                      rserpoolN,
 // rsp_cleanup();
 
 
+#include "breakdetector.h"
 
 int main(int argc, char** argv)
 {
+   TagItem tags[16];
    size_t i;
    int sd;
+   fd_set readfds;
+   int n;
 
-   initLogging("-loglevel=6");
+   for(n = 1;n < argc;n++) {
+      if(!(strncmp(argv[n], "-log" ,4))) {
+         if(initLogging(argv[n]) == false) {
+            exit(1);
+         }
+      }
+   }
    beginLogging();
+
    rsp_initialize();
 
 //    for(i = 0;i < 1028;i++) {
@@ -1503,6 +1676,44 @@ int main(int argc, char** argv)
    sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    CHECK(sd > 0);
    rsp_register(sd, (const unsigned char*)"ECHO", 4, NULL);
+
+   installBreakDetector();
+   while(!breakDetected()) {
+//       puts("sel...");
+      FD_ZERO(&readfds);
+      FD_SET(sd, &readfds);
+      n = sd;
+
+      tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
+      tags[0].Data = 1;
+      tags[1].Tag  = TAG_DONE;
+      int result = rsp_select(n + 1, &readfds, NULL, NULL, 1000000, (struct TagItem*)&tags);
+
+      if(result > 0) {
+         printf("result=%d\n", result);
+         if(FD_ISSET(sd, &readfds)) {
+            puts("READ EVENT!");
+
+            char                buffer[1024];
+            unsigned int        rserpoolFlags = 0;
+            rserpool_session_t  sessionID     = 0;
+            uint32_t            poolElementID = 0;
+            uint32_t            sctpPPID      = 0;
+            uint16_t            sctpStreamID  = 0;
+            ssize_t rv = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer), &rserpoolFlags,
+                                     &sessionID,&poolElementID,&sctpPPID,&sctpStreamID,
+                                     0, NULL);
+            printf("===========>> rv=%d\n", rv);
+            if((rv > 0) && (!(rserpoolFlags & MSG_RSERPOOL_NOTIFICATION))) {
+               rserpoolFlags = 0;
+               ssize_t snd = rsp_sendmsg(sd, (char*)&buffer, sizeof(buffer), rserpoolFlags,
+                                         sessionID, NULL, 0, sctpPPID, sctpStreamID, ~0, 0, NULL);
+               printf("snd=%d\n", snd);
+            }
+         }
+      }
+   }
+
 puts("DEREG...");
    rsp_deregister(sd);
 puts("CLOSE...");
