@@ -22,29 +22,31 @@ struct IdentifierBitmap
 #define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
 
 
+/* ###### Constructor #################################################### */
 struct IdentifierBitmap* identifierBitmapNew(const size_t entries)
 {
    const size_t slots = (entries + (IdentifierBitmapSlotsize - (entries % IdentifierBitmapSlotsize))) /
                            IdentifierBitmapSlotsize;
    struct IdentifierBitmap* identifierBitmap = (struct IdentifierBitmap*)malloc(sizeof(IdentifierBitmap) + (slots + 1) * sizeof(size_t));
    if(identifierBitmap) {
-      memset(&identifierBitmap->Bitmap, 0, slots + 1);
-      // identifierBitmap->Bitmap[0] |= (1 << 0);
+      memset(&identifierBitmap->Bitmap, 0, (slots + 1) * sizeof(size_t));
       identifierBitmap->Entries   = entries;
       identifierBitmap->Available = entries;
       identifierBitmap->Slots     = slots;
-printf("=> %d %d %d\n",slots,entries,IdentifierBitmapSlotsize);
    }
    return(identifierBitmap);
 }
 
 
+/* ###### Destructor ##################################################### */
 void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap)
 {
    identifierBitmap->Entries = 0;
    free(identifierBitmap);
 }
 
+
+/* ###### Allocate ID #################################################### */
 int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
 {
    size_t i, j;
@@ -58,35 +60,49 @@ int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
       id = i * IdentifierBitmapSlotsize;
 
       j = 0;
-printf("i=%d\n",i);
       while((j < IdentifierBitmapSlotsize) &&
             (id < (int)identifierBitmap->Entries) &&
-            (!(identifierBitmap->Bitmap[i] & (1 << j)))) {
+            (identifierBitmap->Bitmap[i] & (1 << j))) {
          j++;
          id++;
       }
+      CHECK(id < (int)identifierBitmap->Entries);
 
-      if(id < (int)identifierBitmap->Entries) {
-         identifierBitmap->Bitmap[i] |= (1 << j);
-         identifierBitmap->Available--;
-      }
-      else {
-         puts("BAD!");
-         id = -1;
-      }
+      identifierBitmap->Bitmap[i] |= (1 << j);
+      identifierBitmap->Available--;
    }
 
    return(id);
 }
 
+
+/* ###### Allocate specific ID ########################################### */
+int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
+                                       const int                id)
+{
+   size_t i, j;
+
+   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
+   i = id / IdentifierBitmapSlotsize;
+   j = id % IdentifierBitmapSlotsize;
+   if(identifierBitmap->Bitmap[i] & (1 << j)) {
+      return(-1);
+   }
+   identifierBitmap->Bitmap[i] |= (1 << j);
+   identifierBitmap->Available--;
+   return(id);
+}
+
+
+/* ###### Free ID ######################################################## */
 void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id)
 {
    size_t i, j;
 
-   CHECK((id > 0) && (id < (int)identifierBitmap->Entries));
+   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
    i = id / IdentifierBitmapSlotsize;
    j = id % IdentifierBitmapSlotsize;
-   CHECK(identifierBitmap->Bitmap[i] & 1 << j);
+   CHECK(identifierBitmap->Bitmap[i] & (1 << j));
    identifierBitmap->Bitmap[i] &= ~(1 << j);
    identifierBitmap->Available++;
 }
@@ -96,9 +112,10 @@ void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int
 
 int main(int argc, char** argv)
 {
-   IdentifierBitmap* ib = identifierBitmapNew(16);
+   IdentifierBitmap* ib = identifierBitmapNew(1024);
    size_t i;
 
+   CHECK(identifierBitmapAllocateSpecificID(ib, 0) == 0);
    for(i = 0;i < 17;i++) {
       printf("#%d  ->  id=%d\n", i, identifierBitmapAllocateID(ib));
    }
@@ -107,13 +124,15 @@ int main(int argc, char** argv)
    identifierBitmapFreeID(ib, 11);
    identifierBitmapFreeID(ib, 13);
    identifierBitmapFreeID(ib, 7);
-   identifierBitmapFreeID(ib, 15);
+   identifierBitmapFreeID(ib, 3);
    puts("----");
 
    for(i = 0;i < 6;i++) {
       printf("#%d  ->  id=%d\n", i, identifierBitmapAllocateID(ib));
    }
 
+
+   identifierBitmapDelete(ib);
 
 /*
    Statistics stat;

@@ -49,8 +49,111 @@
 
 
 
+struct IdentifierBitmap
+{
+   size_t Entries;
+   size_t Available;
+
+   size_t Slots;
+   size_t Bitmap[0];
+};
+
+#define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
+
+
+/* ###### Constructor #################################################### */
+struct IdentifierBitmap* identifierBitmapNew(const size_t entries)
+{
+   const size_t slots = (entries + (IdentifierBitmapSlotsize - (entries % IdentifierBitmapSlotsize))) /
+                           IdentifierBitmapSlotsize;
+   struct IdentifierBitmap* identifierBitmap = (struct IdentifierBitmap*)malloc(sizeof(IdentifierBitmap) + (slots + 1) * sizeof(size_t));
+   if(identifierBitmap) {
+      memset(&identifierBitmap->Bitmap, 0, (slots + 1) * sizeof(size_t));
+      identifierBitmap->Entries   = entries;
+      identifierBitmap->Available = entries;
+      identifierBitmap->Slots     = slots;
+   }
+   return(identifierBitmap);
+}
+
+
+/* ###### Destructor ##################################################### */
+void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap)
+{
+   identifierBitmap->Entries = 0;
+   free(identifierBitmap);
+}
+
+
+/* ###### Allocate ID #################################################### */
+int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
+{
+   size_t i, j;
+   int    id = -1;
+
+   if(identifierBitmap->Available > 0) {
+      i = 0;
+      while(identifierBitmap->Bitmap[i] == ~((size_t)0)) {
+         i++;
+      }
+      id = i * IdentifierBitmapSlotsize;
+
+      j = 0;
+      while((j < IdentifierBitmapSlotsize) &&
+            (id < (int)identifierBitmap->Entries) &&
+            (identifierBitmap->Bitmap[i] & (1 << j))) {
+         j++;
+         id++;
+      }
+      CHECK(id < (int)identifierBitmap->Entries);
+
+      identifierBitmap->Bitmap[i] |= (1 << j);
+      identifierBitmap->Available--;
+   }
+
+   return(id);
+}
+
+
+/* ###### Allocate specific ID ########################################### */
+int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
+                                       const int                id)
+{
+   size_t i, j;
+
+   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
+   i = id / IdentifierBitmapSlotsize;
+   j = id % IdentifierBitmapSlotsize;
+   if(identifierBitmap->Bitmap[i] & (1 << j)) {
+      return(-1);
+   }
+   identifierBitmap->Bitmap[i] |= (1 << j);
+   identifierBitmap->Available--;
+   return(id);
+}
+
+
+/* ###### Free ID ######################################################## */
+void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id)
+{
+   size_t i, j;
+
+   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
+   i = id / IdentifierBitmapSlotsize;
+   j = id % IdentifierBitmapSlotsize;
+   CHECK(identifierBitmap->Bitmap[i] & (1 << j));
+   identifierBitmap->Bitmap[i] &= ~(1 << j);
+   identifierBitmap->Available++;
+}
+
+
+
+
 
 typedef unsigned int rserpool_session_t;
+
+#define SESSION_SETSIZE 16384
+
 
 struct rserpool_failover
 {
@@ -107,8 +210,7 @@ static bool configureSCTPSocket(int sd, sctp_assoc_t assocID, struct TagItem* ta
 
 extern struct Dispatcher      gDispatcher;
 struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
-// struct LeafLinkedRedBlackTree gSessionSet;
-unsigned char                 gRSerPoolSocketAllocationBitmap[FD_SETSIZE / 8];
+struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 
 #define GET_RSERPOOL_SOCKET(rserpoolSocket, sd) \
@@ -197,6 +299,7 @@ struct RSerPoolSocket
    struct LeafLinkedRedBlackTree     SessionSet;         /* UDP-like PU mode and PE mode */
    struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
 
+   struct IdentifierBitmap*          SessionAllocationBitmap;
    char                              MessageBuffer[65536];
 };
 
@@ -546,6 +649,7 @@ static bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
 
       /* Get local port number */
       socketNameLen = sizeof(socketName);
+printf("so=%d\n",rserpoolSocket->Socket);
       if(ext_getsockname(rserpoolSocket->Socket, (struct sockaddr*)&socketName, &socketNameLen) == 0) {
          for(i = 0;i < localAddresses;i++) {
             setPort((struct sockaddr*)&localAddressArray[i], getPort((struct sockaddr*)&socketName));
@@ -755,58 +859,54 @@ static struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-unsigned int rsp_initialize()
+int rsp_initialize()
 {
-   size_t i;
-
-   rspInitialize(NULL);
+   rspInitialize(NULL);  // ???????????
 
    /* ====== Initialize session storage ================================== */
    leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, sessionPrint, sessionComparison);
 
    /* ====== Initialize RSerPool Socket descriptor storage =============== */
    leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-   for(i = 1;i < (FD_SETSIZE / 8);i++) {
-      gRSerPoolSocketAllocationBitmap[i] = 0x00;
+   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+   gRSerPoolSocketAllocationBitmap = identifierBitmapNew(FD_SETSIZE);
+   if(gRSerPoolSocketAllocationBitmap == NULL) {
+      errno = ENOMEM;
+      return(-1);
    }
-   gRSerPoolSocketAllocationBitmap[0] = 0x01;
+   CHECK(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, 0) == 0);
 
    return(0);
 }
 
 
 /* ###### Clean-up RSerPool API Library ################################## */
-unsigned int rsp_cleanup()
+void rsp_cleanup()
 {
-   size_t i, j;
-
    leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
 
 
    /* ====== Clean-up RSerPool Socket descriptor storage ================= */
    leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
-   gRSerPoolSocketAllocationBitmap[0] &= ~0x01;
-   for(i = 0;i < (FD_SETSIZE / 8);i++) {
-      for(j = 0;j < 8;j++) {
-         if(gRSerPoolSocketAllocationBitmap[i] & (1 << j)) {
-            LOG_ERROR
-            fprintf(stdlog, "RSerPool socket %d is still registered\n", (i * 8) + j);
-            LOG_END
-         }
+   for(int i = 0;i < FD_SETSIZE;i++) {
+      if(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, i) < 0) {
+         LOG_ERROR
+         fprintf(stdlog, "RSerPool socket %d is still registered\n", i);
+         LOG_END
       }
    }
+   identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
+   gRSerPoolSocketAllocationBitmap = NULL;
 
    rspCleanUp();
-
-   return(0);
 }
 
 
 /* ###### Create RSerPool socket ######################################### */
-int rsp_socket(int domain, int type, int protocol)
+int rsp_socket(int domain, int type, int protocol, struct TagItem* tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
-   size_t                 i, j;
+   int                    fd;
 
    /* ====== Check for problems ========================================== */
    if(protocol != IPPROTO_SCTP) {
@@ -817,52 +917,71 @@ int rsp_socket(int domain, int type, int protocol)
       return(-1);
    }
 
+   /* ====== Create socket =============================================== */
+   domain = (domain == 0) ? (checkIPv6() ? AF_INET6 : AF_INET) : domain;
+   fd = ext_socket(domain, SOCK_SEQPACKET, protocol);
+   if(fd <= 0) {
+      LOG_ERROR
+      logerror("Unable to create socket for RSerPool socket");
+      LOG_END
+      return(-1);
+   }
+   setNonBlocking(fd);
+
+   /* ====== Configure SCTP socket ======================================= */
+   if(!configureSCTPSocket(fd, 0, tags)) {
+      LOG_ERROR
+      fputs("Failed to configure SCTP parameters for socket\n", stdlog);
+      LOG_END
+      close(fd);
+      return(-1);
+   }
+
+
    /* ====== Initialize RSerPool socket entry ============================ */
    rserpoolSocket = (struct RSerPoolSocket*)malloc(sizeof(struct RSerPoolSocket));
    if(rserpoolSocket == NULL) {
+      close(fd);
       errno = ENOMEM;
       return(-1);
    }
 
+   /* ====== Create session ID allocation bitmap ========================= */
+   rserpoolSocket->SessionAllocationBitmap = identifierBitmapNew(SESSION_SETSIZE);
+   if(rserpoolSocket->SessionAllocationBitmap == NULL) {
+      free(rserpoolSocket);
+      close(fd);
+      errno = ENOMEM;
+      return(-1);
+   }
+   CHECK(identifierBitmapAllocateSpecificID(rserpoolSocket->SessionAllocationBitmap, 0) == 0);
+
    threadSafetyInit(&rserpoolSocket->Mutex, "RSerPoolSocket");
    leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
-   rserpoolSocket->Socket           = -1;
-   rserpoolSocket->SocketDomain     = (domain == 0) ? (checkIPv6() ? AF_INET6 : AF_INET) : domain;
+   rserpoolSocket->Socket           = fd;
+printf("SO=%d\n",fd);
+   rserpoolSocket->SocketDomain     = domain;
    rserpoolSocket->SocketType       = type;
    rserpoolSocket->SocketProtocol   = protocol;
    rserpoolSocket->Descriptor       = -1;
    rserpoolSocket->PoolElement      = NULL;
    rserpoolSocket->ConnectedSession = NULL;
    leafLinkedRedBlackTreeNew(&rserpoolSocket->SessionSet, sessionPrint, sessionComparison);
-//    rserpoolSocket->MessageBuffer = messageBufferNew(65536);
-//    if(rserpoolSocket->MessageBuffer == NULL) {
-//       free(rserpoolSocket);
-//       errno = ENOMEM;
-//       return(-1);
-//    }  ????????ßß
-
 
    /* ====== Find available RSerPool socket descriptor =================== */
    dispatcherLock(&gDispatcher);
-   for(i = 0;i < (FD_SETSIZE / 8);i++) {
-      for(j = 0;j < 8;j++) {
-         if(!(gRSerPoolSocketAllocationBitmap[i] & (1 << j))) {
-            rserpoolSocket->Descriptor = (8* i) + j;
-
-            /* ====== Add RSerPool socket entry ========================== */
-            CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
-            gRSerPoolSocketAllocationBitmap[rserpoolSocket->Descriptor / 8] |= (1 << (rserpoolSocket->Descriptor % 8));
-
-            i = FD_SETSIZE;
-            j = 8;
-         }
-      }
+   rserpoolSocket->Descriptor = identifierBitmapAllocateID(gRSerPoolSocketAllocationBitmap);
+   if(rserpoolSocket->Descriptor >= 0) {
+      /* ====== Add RSerPool socket entry ================================ */
+      CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    }
    dispatcherUnlock(&gDispatcher);
 
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
+      identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
       free(rserpoolSocket);
+      close(fd);
       errno = ENOSR;
       return(-1);
    }
@@ -877,34 +996,6 @@ int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt, struct TagItem* tags)
    union sockaddr_union localAddress;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-   if(rserpoolSocket->Socket >= 0) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %d already bounded to socket %d\n",
-              rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-      LOG_END
-      errno = EBADFD;
-      return(-1);
-   }
-
-   /* ====== Create socket =============================================== */
-   rserpoolSocket->Socket = ext_socket(rserpoolSocket->SocketDomain,
-                                       SOCK_SEQPACKET,
-                                       rserpoolSocket->SocketProtocol);
-   if(rserpoolSocket->Socket <= 0) {
-      LOG_ERROR
-      logerror("Unable to create socket for RSerPool socket");
-      LOG_END
-      return(-1);
-   }
-   setNonBlocking(rserpoolSocket->Socket);
-
-   /* ====== Configure SCTP socket ======================================= */
-   if(!configureSCTPSocket(rserpoolSocket->Socket, 0, tags)) {
-      LOG_ERROR
-      fputs("Failed to configure SCTP parameters\n", stdlog);
-      LOG_END
-      return(-1);
-   }
 
    /* ====== Bind socket ================================================= */
    if(addrs == NULL) {
@@ -943,13 +1034,13 @@ int rsp_close(int sd)
    /* ====== Delete RSerPool socket entry ================================ */
    dispatcherLock(&gDispatcher);
    CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
-   gRSerPoolSocketAllocationBitmap[sd / 8] &= ~(1 << (sd % 8));
+   identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
    dispatcherUnlock(&gDispatcher);
 
-/*   messageBufferDelete(rserpoolSocket->MessageBuffer);*/
    leafLinkedRedBlackTreeDelete(&rserpoolSocket->SessionSet);
-   threadSafetyDestroy(&rserpoolSocket->Mutex);
+   identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
    rserpoolSocket->Descriptor = -1;
+   threadSafetyDestroy(&rserpoolSocket->Mutex);
    free(rserpoolSocket);
    return(0);
 }
@@ -961,11 +1052,18 @@ int rsp_register(int                  sd,
                  const size_t         poolHandleSize,
                  struct TagItem*      tags)
 {
-   RSerPoolSocket* rserpoolSocket;
+   RSerPoolSocket*      rserpoolSocket;
+   union sockaddr_union socketName;
+   socklen_t            socketNameLen;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    /* ====== Check for problems ========================================== */
-   if(rserpoolSocket->Socket < 0) {
+   socketNameLen = sizeof(socketName);
+   if(ext_getsockname(rserpoolSocket->Socket, (struct sockaddr*)&socketName, &socketNameLen) < 0) {
+      LOG_VERBOSE
+      fprintf(stdlog, "RSerPool socket %d, socket %d is not bound -> trying to bind it to the ANY address\n",
+              sd, rserpoolSocket->Socket);
+      LOG_END
       if(rsp_bind(sd, NULL, 0, NULL) < 0) {
          return(-1);
       }
@@ -1022,6 +1120,7 @@ int rsp_register(int                  sd,
       fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
       LOG_END
       deletePoolElement(rserpoolSocket->PoolElement);
+      rserpoolSocket->PoolElement = NULL;
       return(-1);
    }
 
@@ -1487,20 +1586,17 @@ int rsp_select(int                      rserpoolN,
                const unsigned long long timeout,
                struct TagItem*          tags)
 {
-   struct RSerPoolSocket*             rserpoolSocket;
-   struct Session*                    session;
-   struct LeafLinkedRedBlackTreeNode* node;
-   struct TagItem                     mytags[16];
-   struct timeval                     mytimeout;
-   fd_set                             myreadfds, mywritefds, myexceptfds;
-   fd_set*                            readfds    = (fd_set*)tagListGetData(tags, TAG_RspSelect_ReadFDs,   (tagdata_t)&myreadfds);
-   fd_set*                            writefds   = (fd_set*)tagListGetData(tags, TAG_RspSelect_WriteFDs,  (tagdata_t)&mywritefds);
-   fd_set*                            exceptfds  = (fd_set*)tagListGetData(tags, TAG_RspSelect_ExceptFDs, (tagdata_t)&myexceptfds);
-   struct timeval*                    to = (struct timeval*)tagListGetData(tags, TAG_RspSelect_Timeout,   (tagdata_t)&mytimeout);
-   int                                readResult;
-   int                                result;
-   int                                i;
-   int                                n;
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   struct timeval         mytimeout;
+   fd_set                 myreadfds, mywritefds, myexceptfds;
+   fd_set*                readfds    = (fd_set*)tagListGetData(tags, TAG_RspSelect_ReadFDs,   (tagdata_t)&myreadfds);
+   fd_set*                writefds   = (fd_set*)tagListGetData(tags, TAG_RspSelect_WriteFDs,  (tagdata_t)&mywritefds);
+   fd_set*                exceptfds  = (fd_set*)tagListGetData(tags, TAG_RspSelect_ExceptFDs, (tagdata_t)&myexceptfds);
+   struct timeval*        to = (struct timeval*)tagListGetData(tags, TAG_RspSelect_Timeout,   (tagdata_t)&mytimeout);
+   int                    result;
+   int                    i;
+   int                    n;
 
    FD_ZERO(&myreadfds);
    FD_ZERO(&mywritefds);
@@ -1635,7 +1731,7 @@ puts("------------ EVENT");
 int main(int argc, char** argv)
 {
    TagItem tags[16];
-   size_t i;
+//    size_t i;
    int sd;
    fd_set readfds;
    int n;
@@ -1673,9 +1769,9 @@ int main(int argc, char** argv)
 //       printf("    *** sd=%d\n",sd);
 //    }
 
-   sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
+   sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
    CHECK(sd > 0);
-   rsp_register(sd, (const unsigned char*)"ECHO", 4, NULL);
+   rsp_register(sd, (const unsigned char*)"EchoPool", 8, NULL);
 
    installBreakDetector();
    while(!breakDetected()) {
