@@ -1134,11 +1134,11 @@ ssize_t rspSessionWrite(struct SessionDescriptor* session,
    ssize_t result = sendtoplus(session->Socket, buffer, length,
                                tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
                                NULL, 0,
+                               tagListGetData(tags, TAG_RspIO_SCTP_PPID, 0x55555555),
                                0,
-                               (const sctp_assoc_t)tagListGetData(tags, TAG_RspIO_SCTP_StreamID, 0),
-                               tagListGetData(tags, TAG_RspIO_SCTP_PPID,       0),
+                               (const uint16_t)tagListGetData(tags, TAG_RspIO_SCTP_StreamID, 0),
                                tagListGetData(tags, TAG_RspIO_SCTP_TimeToLive, 0xffffffff),
-                               tagListGetData(tags, TAG_RspIO_Timeout,         (tagdata_t)~0));
+                               tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0));
    if((result < 0) && (errno != EAGAIN)) {
       LOG_ACTION
       fprintf(stdlog, "Session failure during write, socket %d. Failover necessary\n",
