@@ -262,9 +262,7 @@ struct PoolElement
    uint32_t                          Identifier;
    struct ThreadSafety               Mutex;
 
-   unsigned int                      PolicyType;
-   uint32_t                          PolicyParameterWeight;
-   uint32_t                          PolicyParameterLoad;
+   struct rsp_loadinfo               LoadInfo;
 
    struct Timer                      ReregistrationTimer;
    unsigned int                      RegistrationLife;
@@ -1340,6 +1338,7 @@ int rsp_register(int                        sd,
             reregistrationTimer,
             (void*)rserpoolSocket);
 
+   rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
    rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
                                                             0x00000000);
    rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
@@ -1348,11 +1347,6 @@ int rsp_register(int                        sd,
                                                             (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
    rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
 
-   rserpoolSocket->PoolElement->LoadInfo = *loadinfo;
-   PolicyType                     = loadinfo->rli_policy;
-   rserpoolSocket->PoolElement->PolicyParameterWeight          = loadinfo->rli_weight;
-   rserpoolSocket->PoolElement->PolicyParameterLoad            = loadinfo->rli_load;
-   rserpoolSocket->PoolElement->PolicyParameterLoadDeg = loadinfo->rli_load_degradation;
 
    /* ====== Do registration ============================================= */
    if(doRegistration(rserpoolSocket) == false) {
