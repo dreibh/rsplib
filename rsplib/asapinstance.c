@@ -436,7 +436,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 
    dispatcherLock(asapInstance->StateMachine);
 
-   LOG_ACTION
+   LOG_VERBOSE
    fputs("Trying to register to pool ", stdlog);
    poolHandlePrint(poolHandle, stdlog);
    fputs(" pool element ", stdlog);
@@ -499,7 +499,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
       result = RSPERR_NO_RESOURCES;
    }
 
-   LOG_ACTION
+   LOG_VERBOSE
    fputs("Registration result is: ", stdlog);
    rserpoolErrorPrint(result, stdlog);
    fputs("\n", stdlog);
@@ -523,7 +523,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
 
    dispatcherLock(asapInstance->StateMachine);
 
-   LOG_ACTION
+   LOG_VERBOSE
    fprintf(stdlog, "Trying to deregister $%08x from pool ",identifier);
    poolHandlePrint(poolHandle, stdlog);
    fputs("\n", stdlog);
@@ -569,7 +569,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
       result = RSPERR_NO_RESOURCES;
    }
 
-   LOG_ACTION
+   LOG_VERBOSE
    fputs("Deregistration result is: ", stdlog);
    rserpoolErrorPrint(result, stdlog);
    fputs("\n", stdlog);
@@ -590,7 +590,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
    struct ST_CLASS(PoolElementNode)* found;
    unsigned int                      result;
 
-   LOG_ACTION
+   LOG_VERBOSE
    fprintf(stdlog, "Failure reported for pool element $%08x of pool ",
            (unsigned int)identifier);
    poolHandlePrint(poolHandle, stdlog);
@@ -742,7 +742,7 @@ static unsigned int asapInstanceHandleResolutionFromCache(
    unsigned int result;
    size_t       i;
 
-   LOG_ACTION
+   LOG_VERBOSE
    fprintf(stdlog, "Handle Resolution for pool ");
    poolHandlePrint(poolHandle, stdlog);
    fputs(":\n", stdlog);

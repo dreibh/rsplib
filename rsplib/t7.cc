@@ -214,6 +214,24 @@ struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
 struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 
+struct rsp_info
+{
+
+};
+
+struct rsp_sndrcvinfo
+{
+};
+
+struct rsp_loadinfo
+{
+   uint32_t rli_policy;
+   uint32_t rli_weight;
+   uint32_t rli_load;
+   uint32_t rli_load_degradation;
+};
+
+
 #define GET_RSERPOOL_SOCKET(rserpoolSocket, sd) \
    rserpoolSocket = getRSerPoolSocketForDescriptor(sd); \
    if(rserpoolSocket == NULL) { \
@@ -897,14 +915,16 @@ printf("so=%d\n",rserpoolSocket->Socket);
 
    /* ====== Set policy type and parameters ================================= */
    tags[0].Tag  = TAG_PoolPolicy_Type;
-   tags[0].Data = rserpoolSocket->PoolElement->PolicyType;
-   tags[1].Tag  = TAG_PoolPolicy_Parameter_Load;
-   tags[1].Data = rserpoolSocket->PoolElement->PolicyParameterLoad;
-   tags[2].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[2].Data = rserpoolSocket->PoolElement->PolicyParameterWeight;
-   tags[3].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[3].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
-   tags[4].Tag  = TAG_END;
+   tags[0].Data = rserpoolSocket->PoolElement->LoadInfo.rli_policy;
+   tags[1].Tag  = TAG_PoolPolicy_Parameter_Weight;
+   tags[1].Data = rserpoolSocket->PoolElement->LoadInfo.rli_weight;
+   tags[2].Tag  = TAG_PoolPolicy_Parameter_Load;
+   tags[2].Data = rserpoolSocket->PoolElement->LoadInfo.rli_load;
+   tags[3].Tag  = TAG_PoolPolicy_Parameter_LoadDegradation;
+   tags[3].Data = rserpoolSocket->PoolElement->LoadInfo.rli_load_degradation;
+   tags[4].Tag  = TAG_UserTransport_HasControlChannel;
+   tags[4].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
+   tags[5].Tag  = TAG_END;
 
    /* ====== Do registration ================================================ */
    result = rspRegister((unsigned char*)&rserpoolSocket->PoolElement->Handle.Handle,
@@ -912,7 +932,7 @@ printf("so=%d\n",rserpoolSocket->Socket);
                         eai, (struct TagItem*)&tags);
    if(result == RSPERR_OKAY) {
       rserpoolSocket->PoolElement->Identifier = eai->ai_pe_id;
-      LOG_ACTION
+      LOG_VERBOSE2
       fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n",
               rserpoolSocket->PoolElement->Identifier);
       LOG_END
@@ -1058,7 +1078,7 @@ static struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize()
+int rsp_initialize(struct rsp_info* info)
 {
    rspInitialize(NULL);  // ???????????
 
@@ -1265,10 +1285,11 @@ int rsp_close(int sd)
 
 
 /* ###### Register pool element ########################################## */
-int rsp_register(int                  sd,
-                 const unsigned char* poolHandle,
-                 const size_t         poolHandleSize,
-                 struct TagItem*      tags)
+int rsp_register(int                        sd,
+                 const unsigned char*       poolHandle,
+                 const size_t               poolHandleSize,
+                 const struct rsp_loadinfo* loadinfo,
+                 struct TagItem*            tags)
 {
    RSerPoolSocket*      rserpoolSocket;
    union sockaddr_union socketName;
@@ -1318,19 +1339,20 @@ int rsp_register(int                  sd,
             &gDispatcher,
             reregistrationTimer,
             (void*)rserpoolSocket);
+
    rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
                                                             0x00000000);
    rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
                                                             60000);
    rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
                                                             (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
-   rserpoolSocket->PoolElement->PolicyType             = tagListGetData(tags, TAG_PoolPolicy_Type,
-                                                            PPT_ROUNDROBIN);
-   rserpoolSocket->PoolElement->PolicyParameterWeight  = tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight,
-                                                            1);
-   rserpoolSocket->PoolElement->PolicyParameterLoad    = tagListGetData(tags, TAG_PoolPolicy_Parameter_Load,
-                                                            0);
    rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
+
+   rserpoolSocket->PoolElement->LoadInfo = *loadinfo;
+   PolicyType                     = loadinfo->rli_policy;
+   rserpoolSocket->PoolElement->PolicyParameterWeight          = loadinfo->rli_weight;
+   rserpoolSocket->PoolElement->PolicyParameterLoad            = loadinfo->rli_load;
+   rserpoolSocket->PoolElement->PolicyParameterLoadDeg = loadinfo->rli_load_degradation;
 
    /* ====== Do registration ============================================= */
    if(doRegistration(rserpoolSocket) == false) {
@@ -1367,49 +1389,48 @@ int rsp_deregister(int sd)
 
 
 /* ###### Send cookie ######################################################## */
-int rsp_send_cookie(int                  sd,
-                    const unsigned char* cookie,
-                    const size_t         cookieSize,
-                    const unsigned char* poolHandle,
-                    const size_t         poolHandleSize,
-                    struct TagItem*      tags)
+ssize_t rsp_send_cookie(int                  sd,
+                        const unsigned char* cookie,
+                        const size_t         cookieSize,
+                        rserpool_session_t   sessionID,
+                        unsigned long long   timeout,
+                        struct TagItem*      tags)
 {
    struct RSerPoolSocket*  rserpoolSocket;
-//    struct Session*         session;
-//    struct RSerPoolMessage* message;
+   struct Session*         session;
+   struct RSerPoolMessage* message;
    bool                    result = false;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-//   GET_RSERPOOL_SESSION(session, rserpoolSocket, poolHandle, poolHandleSize);
-/*   session = sessionFind(&rserpoolSocket->SessionSet, poolHandle, poolHandleSize);
-   if(session != NULL) {
+   GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, 0);
 
-   }
+   LOG_VERBOSE1
+   fprintf(stdlog, "Trying to send ASAP_COOKIE via session %u of RSerPool socket %d, socket %d\n",
+           session->SessionID,
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+   LOG_END
 
    message = rserpoolMessageNew(NULL,256 + cookieSize);
    if(message != NULL) {
       message->Type       = AHT_COOKIE;
       message->CookiePtr  = (char*)cookie;
       message->CookieSize = (size_t)cookieSize;
-      threadSafetyLock(&session->Mutex);
-      LOG_VERBOSE
-      fputs("Sending Cookie\n", stdlog);
-      LOG_END
-      result = rserpoolMessageSend(session->SocketProtocol,
-                                   session->Socket,
-                                   0,
+      threadSafetyLock(&rserpoolSocket->Mutex);
+      result = rserpoolMessageSend(IPPROTO_SCTP,
+                                   rserpoolSocket->Socket,
+                                   session->AssocID,
                                    (unsigned int)tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
-                                   (unsigned long long)tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0),
+                                   timeout,
                                    message);
-      threadSafetyUnlock(&session->Mutex);
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
       rserpoolMessageDelete(message);
    }
-   */
-   return(result);
+
+   return((result == true) ? (ssize_t)cookieSize : -1);
 }
 
 
-
+/* ###### RSerPool socket sendmsg() implementation ####################### */
 ssize_t rsp_sendmsg(int                  sd,
                     const void*          data,
                     size_t               dataLength,
@@ -1427,18 +1448,14 @@ ssize_t rsp_sendmsg(int                  sd,
    struct Session*         session;
    ssize_t                 result;
 
-puts("A");
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-puts("B");
    GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, 0);
 
-puts("C");
    LOG_VERBOSE1
    fprintf(stdlog, "Trying to send message via session %u of RSerPool socket %d, socket %d\n",
            session->SessionID,
            rserpoolSocket->Descriptor, rserpoolSocket->Socket);
    LOG_END
-printf("y=%d\n",   rserpoolSocket->Socket);
    result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
                        MSG_NOSIGNAL,
                        NULL, 0,
@@ -1571,12 +1588,12 @@ ssize_t rsp_recvmsg(int                  sd,
 
    if(received > 0) {
       /* ====== Find session ============================================= */
-      threadSafetyLock(&rserpoolSocket->Mutex);
+//  ???      threadSafetyLock(&rserpoolSocket->Mutex);
       session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
       if(session) {
          *sessionID = session->SessionID;
       }
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
+//  ???      threadSafetyUnlock(&rserpoolSocket->Mutex);
 
       /* ====== Copy user data =========================================== */
       if((ssize_t)bufferLength < received) {
@@ -2048,6 +2065,8 @@ int main(int argc, char** argv)
    int sd;
    fd_set readfds;
    int n;
+   struct rsp_loadinfo loadinfo;
+   struct rsp_info info;
 
    for(n = 1;n < argc;n++) {
       if(!(strncmp(argv[n], "-log" ,4))) {
@@ -2058,7 +2077,7 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-   rsp_initialize();
+   rsp_initialize(&info);
 
 //    for(i = 0;i < 1028;i++) {
 //       printf("%d: \n",i);
@@ -2084,7 +2103,10 @@ int main(int argc, char** argv)
 
    sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
    CHECK(sd > 0);
-   rsp_register(sd, (const unsigned char*)"EchoPool", 8, NULL);
+
+   memset(&loadinfo, 0, sizeof(loadinfo));
+   loadinfo.rli_policy = PPT_ROUNDROBIN;
+   rsp_register(sd, (const unsigned char*)"EchoPool", 8, &loadinfo, NULL);
 
    installBreakDetector();
    while(!breakDetected()) {
@@ -2117,7 +2139,6 @@ int main(int argc, char** argv)
                rserpoolFlags = 0;
                ssize_t snd = rsp_sendmsg(sd, (char*)&buffer, sizeof(buffer), rserpoolFlags,
                                          sessionID, NULL, 0, sctpPPID, sctpStreamID, ~0, 0, NULL);
-               printf("snd=%d\n", snd);
             }
          }
       }
