@@ -46,6 +46,39 @@ UDP-Like:
       -> Session-ID wird mit gelesen.
       Ist das sinnvoll???
 
+-----
+
+Failover mit UDP-like Socket:
+  =====
+  RSerPoolSocket: Kommunikationsbeziehung
+   PU: eine einzige Session
+   PE: viele - eingehende - Sessions
+  =====
+  - Je RSerPool-Socket:
+       Remote-PH
+    Session besitzt keinen PH (das hat nur das Socket)!!!!
+  PU: Es gibt nur *eine* Session!
+      CommLost
+      -> Session->AssocID = 0; merken, daß im Failover-Zustand
+      -> connect() ...
+      -> CommUp
+      -> Failover-Zustand -> Session->AssocID = newAssocID
+      -> Failover-Prozedur.
+      OK.
+  PE: Es gibt viele Sessions (eingehende)
+     CommLost
+     -> Session entfernen
+     CommUp
+     -> Session hinzufügen
+     -> Cookie annehmen
+     OK.
+
+     symmetrischer Fall:
+     -------------------
+     PE.Session macht Peel-Off für neue Sessions
+     Bei Ausfall muß dann Socket durch UDP-like ersetzt werden.
+
+
 =================
 
 

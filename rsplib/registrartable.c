@@ -76,7 +76,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
    unsigned int                   result;
    size_t                         i;
 
-   LOG_VERBOSE3
+   LOG_VERBOSE4
    fputs("Trying to receive registrar announce...\n",  stdlog);
    LOG_END
 
@@ -96,7 +96,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
          if(result == RSPERR_OKAY) {
             if(message->Type == AHT_SERVER_ANNOUNCE) {
                if(message->Error == RSPERR_OKAY) {
-                  LOG_VERBOSE2
+                  LOG_VERBOSE3
                   fputs("RegistrarAnnounce from ",  stdlog);
                   address2string((struct sockaddr*)&senderAddress,
                                  (char*)&buffer, sizeof(buffer), true);
@@ -129,7 +129,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
                   i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
                         &registrarTable->RegistrarList,
                         getMicroTime());
-                  LOG_VERBOSE3
+                  LOG_VERBOSE4
                   fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
                   ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
                   LOG_END
@@ -154,11 +154,11 @@ static void registrarAnnouceFDCallback(struct Dispatcher* dispatcher,
                                        unsigned int       eventMask,
                                        void*              userData)
 {
-   LOG_VERBOSE3
+   LOG_VERBOSE4
    fputs("Entering registrarAnnouceFDCallback()...\n", stdlog);
    LOG_END
    handleRegistrarAnnounceCallback((struct RegistrarTable*)userData, fd);
-   LOG_VERBOSE3
+   LOG_VERBOSE4
    fputs("Leaving registrarAnnouceFDCallback()\n", stdlog);
    LOG_END
 }
@@ -279,7 +279,7 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
 
       CHECK(leafLinkedRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
 
-      LOG_ACTION
+      LOG_VERBOSE2
       fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
       leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
@@ -307,7 +307,7 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
    CHECK(leafLinkedRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
    free(node);
 
-   LOG_ACTION
+   LOG_VERBOSE2
    fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , assocID);
    fputs("RegistrarAssocIDList: ", stdlog);
    leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
@@ -349,7 +349,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
       /* ====== Registrar selected, get some information about it ======== */
       n = getpaddrsplus(registrarFD, assocID, &peerAddressArray);
       if(n > 0) {
-         LOG_ACTION
+         LOG_VERBOSE2
          fprintf(stdlog, "Assoc %u connected to registrar at ", assocID);
          fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
          fputs("\n", stdlog);
@@ -390,7 +390,7 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
 {
    int sd = sctp_peeloff(registrarFD, assocID);
    if(sd >= 0) {
-      LOG_ACTION
+      LOG_VERBOSE2
       fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", assocID);
       LOG_END
       removeRegistrarAssocID(registrarTable, registrarFD, assocID);
@@ -414,7 +414,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
                            notification->sn_assoc_change.sac_assoc_id,
                            &peerAddressArray);
          if(n > 0) {
-            LOG_ACTION
+            LOG_VERBOSE2
             fprintf(stdlog, "Assoc %u connected to registrar at ",
                     notification->sn_assoc_change.sac_assoc_id);
             fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
@@ -431,7 +431,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
    }
    else if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
            (notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT)) {
-      LOG_ACTION
+      LOG_VERBOSE2
       fprintf(stdlog, "Assoc %u disconnected from registrar\n",
               notification->sn_assoc_change.sac_assoc_id);
       LOG_END
@@ -483,7 +483,7 @@ unsigned int registrarTableAddStaticEntry(struct RegistrarTable* registrarTable,
                getMicroTime(),
                &peerListNode);
    if(result == RSPERR_OKAY) {
-      LOG_VERBOSE
+      LOG_VERBOSE3
       fputs("Added static entry to registrar table: ", stdlog);
       ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
       fputs("\n", stdlog);
@@ -514,7 +514,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
          &registrarTable->RegistrarList,
          getMicroTime());
-   LOG_VERBOSE2
+   LOG_VERBOSE4
    fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
    ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
    LOG_END
@@ -602,7 +602,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    if(registrarTable == NULL) {
       return(0);
    }
-   LOG_ACTION
+   LOG_VERBOSE
    fputs("Looking for registrar...\n",  stdlog);
    LOG_END
 
@@ -627,7 +627,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    if(peerListNode) {
       lastRegistrarIdentifier   = peerListNode->Identifier;
       lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);
-      LOG_VERBOSE
+      LOG_VERBOSE3
       fputs("Randomized registrar hunt start: ", stdlog);
       ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
       fputs("\n", stdlog);
@@ -650,7 +650,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
              (start + registrarTable->RegistrarConnectTimeout < getMicroTime()) ) {
             trials++;
             if(trials > registrarTable->RegistrarConnectMaxTrials) {
-               LOG_ACTION
+               LOG_VERBOSE
                fputs("Registrar hunt procedure did not find any registrar!\n", stdlog);
                LOG_END
                if(lastTransportAddressBlock) {
@@ -662,7 +662,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
             lastTrialTimeStamp = 0;
             start = getMicroTime();
-            LOG_ACTION
+            LOG_VERBOSE2
             fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
 
@@ -699,7 +699,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       selectTimeout.tv_sec  = nextTimeout / (unsigned long long)1000000;
       selectTimeout.tv_usec = nextTimeout % (unsigned long long)1000000;
 
-      LOG_VERBOSE3
+      LOG_VERBOSE4
       fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
       LOG_END
       /*
@@ -712,12 +712,12 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       result = ext_select(n + 1,
                           &rfdset, NULL, NULL,
                           &selectTimeout);
-      LOG_VERBOSE3
+      LOG_VERBOSE4
       fprintf(stdlog, "select() result=%d\n", result);
       LOG_END
 
       if((result < 0) && (errno == EINTR)) {
-         LOG_ACTION
+         LOG_VERBOSE3
          fputs("Interrupted select() call -> returning immediately!\n",  stdlog);
          LOG_END
          if(lastTransportAddressBlock) {
@@ -756,7 +756,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                            if(registrarTable->OutstandingConnects > 0) {
                               registrarTable->OutstandingConnects--;
                            }
-                           LOG_VERBOSE2
+                           LOG_VERBOSE3
                            fprintf(stdlog, "Failed to establish registrar connection, outstanding=%d\n", registrarTable->OutstandingConnects);
                            LOG_END
                         }

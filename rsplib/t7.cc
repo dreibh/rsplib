@@ -175,6 +175,7 @@ union rserpool_notification
 
 // ????????????
 int rsp_deregister(int sd);
+int rsp_close(int sd);
 static bool doRegistration(struct RSerPoolSocket* rserpoolSocket);
 static void deletePoolElement(struct PoolElement* poolElement);
 static bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket);
@@ -229,9 +230,10 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
       return(-1); \
    }
 
-#define GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, poolHandle, poolHandleSize) \
-   session = sessionFind(rserpoolSocket, sessionID, poolHandle, poolHandleSize); \
-   if(session != NULL) { \
+#define GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, assocID) \
+   session = sessionFind(rserpoolSocket, sessionID, assocID); \
+   if(session == NULL) { \
+      errno = EINVAL; \
       return(-1); \
    }
 
@@ -254,19 +256,24 @@ struct PoolElement
 };
 
 
+
+
+struct SessionStorage
+{
+   struct LeafLinkedRedBlackTree AssocIDSet;
+   struct LeafLinkedRedBlackTree SessionIDSet;
+};
+
+
 struct Session
 {
-   struct LeafLinkedRedBlackTreeNode Node;
+   struct LeafLinkedRedBlackTreeNode SessionIDNode;
+   struct LeafLinkedRedBlackTreeNode AssocIDNode;
 
-   rserpool_session_t                Descriptor;
-   struct RSerPoolSocket*            Socket;
    sctp_assoc_t                      AssocID;
-
-   struct PoolHandle                 Handle;
-   uint32_t                          Identifier;
+   rserpool_session_t                SessionID;
 
    bool                              IsIncoming;
-//   struct PoolElement*               PoolElement; ???
 
    void*                             Cookie;
    size_t                            CookieSize;
@@ -296,7 +303,7 @@ struct RSerPoolSocket
    int                               Socket;
 
    struct PoolElement*               PoolElement;        /* PE mode                      */
-   struct LeafLinkedRedBlackTree     SessionSet;         /* UDP-like PU mode and PE mode */
+   struct SessionStorage             SessionSet;         /* UDP-like PU mode and PE mode */
    struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
 
    struct IdentifierBitmap*          SessionAllocationBitmap;
@@ -305,36 +312,204 @@ struct RSerPoolSocket
 
 
 
-static void sessionPrint(const void* node, FILE* fd)
-{
-   const struct Session* session = (const struct Session*)node;
 
-   poolHandlePrint(&session->Handle, fd);
-   fprintf(fd, "/%08x ", session->Identifier);
+
+/* ###### Get session from assoc ID storage node ######################### */
+inline static struct Session* getSessionFromAssocIDStorageNode(void* node)
+{
+   return((struct Session*)((long)node -
+             ((long)&((struct Session *)node)->AssocIDNode - (long)node)));
 }
 
-static int sessionComparison(const void* node1, const void* node2)
-{
-   const struct Session* session1 = (const struct Session*)node1;
-   const struct Session* session2 = (const struct Session*)node2;
 
-   if(session1->Identifier < session2->Identifier) {
+/* ###### Get session from session ID storage node ####################### */
+inline static struct Session* getSessionFromSessionIDStorageNode(void* node)
+{
+   return((struct Session*)((long)node -
+             ((long)&((struct Session *)node)->SessionIDNode - (long)node)));
+}
+
+
+/* ###### Print assoc ID storage node #################################### */
+static void sessionAssocIDPrint(const void* node, FILE* fd)
+{
+   const struct Session* session = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node);
+
+   fprintf(fd, "A%u[S%u] ", session->AssocID, session->SessionID);
+}
+
+
+/* ###### Compare assoc ID storage nodes ################################# */
+static int sessionAssocIDComparison(const void* node1, const void* node2)
+{
+   const struct Session* session1 = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node1);
+   const struct Session* session2 = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node2);
+
+   if(session1->AssocID < session2->AssocID) {
       return(-1);
    }
-   else if(session1->Identifier > session2->Identifier) {
+   else if(session1->AssocID > session2->AssocID) {
       return(1);
    }
-   return(poolHandleComparison(&session1->Handle, &session2->Handle));
+   return(0);
 }
+
+
+/* ###### Print session ID storage node ################################## */
+static void sessionSessionIDPrint(const void* node, FILE* fd)
+{
+   const struct Session* session = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node);
+
+   fprintf(fd, "%u[A%u] ", session->SessionID, (unsigned int)session->AssocID);
+}
+
+
+/* ###### Compare session ID storage nodes ############################### */
+static int sessionSessionIDComparison(const void* node1, const void* node2)
+{
+   const struct Session* session1 = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node1);
+   const struct Session* session2 = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node2);
+
+   if(session1->SessionID < session2->SessionID) {
+      return(-1);
+   }
+   else if(session1->SessionID > session2->SessionID) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### Constructor #################################################### */
+void sessionStorageNew(struct SessionStorage* sessionStorage)
+{
+   leafLinkedRedBlackTreeNew(&sessionStorage->AssocIDSet, sessionAssocIDPrint, sessionAssocIDComparison);
+   leafLinkedRedBlackTreeNew(&sessionStorage->SessionIDSet, sessionSessionIDPrint, sessionSessionIDComparison);
+}
+
+
+/* ###### Destructor ##################################################### */
+void sessionStorageDelete(struct SessionStorage* sessionStorage)
+{
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->AssocIDSet));
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+   leafLinkedRedBlackTreeDelete(&sessionStorage->AssocIDSet);
+   leafLinkedRedBlackTreeDelete(&sessionStorage->SessionIDSet);
+}
+
+
+/* ###### Add session #################################################### */
+void sessionStorageAddSession(struct SessionStorage* sessionStorage,
+                              struct Session*        session)
+{
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
+
+
+/* ###### Delete session ################################################# */
+void sessionStorageDeleteSession(struct SessionStorage* sessionStorage,
+                                 struct Session*        session)
+{
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
+
+
+/* ###### Update session's assoc ID ###################################### */
+void sessionStorageUpdateSession(struct SessionStorage* sessionStorage,
+                                 struct Session*        session,
+                                 sctp_assoc_t           newAssocID)
+{
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   session->AssocID = newAssocID;
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
+
+
+/* ###### Is session storage empty? ###################################### */
+bool sessionStorageIsEmpty(struct SessionStorage* sessionStorage)
+{
+   return(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+}
+
+
+/* ###### Print session storage ########################################## */
+void sessionStoragePrint(struct SessionStorage* sessionStorage,
+                         FILE*                  fd)
+{
+   fputs("SessionStorage:\n", fd);
+   fputs(" by Session ID: ", fd);
+   leafLinkedRedBlackTreePrint(&sessionStorage->SessionIDSet, fd);
+   fputs(" by Assoc ID:   ", fd);
+   leafLinkedRedBlackTreePrint(&sessionStorage->AssocIDSet, fd);
+}
+
+
+/* ###### Find session by session ID ##################################### */
+struct Session* sessionStorageFindSessionBySessionID(struct SessionStorage* sessionStorage,
+                                                     rserpool_session_t     sessionID)
+{
+   struct Session                     cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   cmpNode.SessionID = sessionID;
+
+   node = leafLinkedRedBlackTreeFind(&sessionStorage->SessionIDSet, &cmpNode.SessionIDNode);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Find session by assoc ID ####################################### */
+struct Session* sessionStorageFindSessionByAssocID(struct SessionStorage* sessionStorage,
+                                                   sctp_assoc_t           assocID)
+{
+   struct Session                     cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   cmpNode.AssocID = assocID;
+
+   node = leafLinkedRedBlackTreeFind(&sessionStorage->AssocIDSet, &cmpNode.AssocIDNode);
+   if(node != NULL) {
+      return(getSessionFromAssocIDStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get first session ############################################## */
+struct Session* sessionStorageGetFirstSession(struct SessionStorage* sessionStorage)
+{
+   struct LeafLinkedRedBlackTreeNode* node;
+   node = leafLinkedRedBlackTreeGetFirst(&sessionStorage->SessionIDSet);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
+   }
+   return(NULL);
+}
+
+
+/* ###### Get next session ############################################### */
+struct Session* sessionStorageGetNextSession(struct SessionStorage* sessionStorage,
+                                             struct Session*        session)
+{
+   struct LeafLinkedRedBlackTreeNode* node;
+   node = leafLinkedRedBlackTreeGetNext(&sessionStorage->SessionIDSet, &session->SessionIDNode);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
+   }
+   return(NULL);
+}
+
 
 
 /* ###### Create new session ############################################# */
-static struct Session* sessionNew(struct RSerPoolSocket* rserpoolSocket,
+static struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
                                   const sctp_assoc_t     assocID,
                                   const bool             isIncoming,
-                                  struct PoolElement*    poolElement,
-                                  const unsigned char*   poolHandle,
-                                  const size_t           poolHandleSize,
                                   struct TagItem*        tags)
 {
    struct Session* session = (struct Session*)malloc(sizeof(struct Session));
@@ -345,21 +520,8 @@ static struct Session* sessionNew(struct RSerPoolSocket* rserpoolSocket,
          return(NULL);
       }
 
-      if(poolHandleSize > 0) {
-         if(poolHandleSize > MAX_POOLHANDLESIZE) {
-            LOG_ERROR
-            fputs("Pool handle too long\n", stdlog);
-            LOG_END_FATAL
-         }
-         poolHandleNew(&session->Handle, poolHandle, poolHandleSize);
-      }
-      else {
-         session->Handle.Size = 0;
-      }
-
-      leafLinkedRedBlackTreeNodeNew(&session->Node);
-      session->Descriptor                 = 0;  // ???????????
-      session->Socket                     = rserpoolSocket;
+      leafLinkedRedBlackTreeNodeNew(&session->AssocIDNode);
+      leafLinkedRedBlackTreeNodeNew(&session->SessionIDNode);
       session->AssocID                    = assocID;
       session->IsIncoming                 = isIncoming;
       session->Cookie                     = NULL;
@@ -371,21 +533,50 @@ static struct Session* sessionNew(struct RSerPoolSocket* rserpoolSocket,
       session->ConnectTimeout             = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
 
-      threadSafetyLock(&session->Socket->Mutex);
-      CHECK(leafLinkedRedBlackTreeInsert(&session->Socket->SessionSet, &session->Node) == &session->Node);
-      threadSafetyUnlock(&session->Socket->Mutex);
+      threadSafetyLock(&rserpoolSocket->Mutex);
+      session->SessionID = identifierBitmapAllocateID(rserpoolSocket->SessionAllocationBitmap);
+      if(session->SessionID >= 0) {
+         sessionStorageAddSession(&rserpoolSocket->SessionSet, session);
+         LOG_ACTION
+         fprintf(stdlog, "Added %s session %u on RSerPool socket %d, socket %d\n",
+                 session->IsIncoming ? "incoming" : "outgoing", session->SessionID,
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         LOG_END
+      }
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
+
+      if(session->SessionID < 0) {
+         LOG_ERROR
+         fprintf(stdlog, "Addeding %s session on RSerPool socket %d, socket %d failed, no more descriptors available\n",
+                 session->IsIncoming ? "incoming" : "outgoing",
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         LOG_END
+         free(session->Tags);
+         free(session);
+         session = NULL;
+      }
    }
    return(session);
 }
 
 
 /* ###### Delete session ################################################# */
-static void sessionDelete(struct Session* session)
+static void deleteSession(struct RSerPoolSocket* rserpoolSocket,
+                          struct Session*        session)
 {
    if(session) {
-      threadSafetyLock(&session->Socket->Mutex);
-      CHECK(leafLinkedRedBlackTreeRemove(&session->Socket->SessionSet, &session->Node) == &session->Node);
-      threadSafetyUnlock(&session->Socket->Mutex);
+      LOG_ACTION
+      fprintf(stdlog, "Removing %s session %u on RSerPool socket %d, socket %d\n",
+               session->IsIncoming ? "incoming" : "outgoing", session->SessionID,
+               rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+      LOG_END
+
+      threadSafetyLock(&rserpoolSocket->Mutex);
+      sessionStorageDeleteSession(&rserpoolSocket->SessionSet, session);
+      identifierBitmapFreeID(rserpoolSocket->SessionAllocationBitmap, session->SessionID);
+      session->SessionID = 0;
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
+
       if(session->Tags) {
          tagListFree(session->Tags);
          session->Tags = NULL;
@@ -398,7 +589,9 @@ static void sessionDelete(struct Session* session)
          free(session->CookieEcho);
          session->CookieEcho = NULL;
       }
-      session->Socket = NULL;
+
+      leafLinkedRedBlackTreeNodeDelete(&session->AssocIDNode);
+      leafLinkedRedBlackTreeNodeDelete(&session->SessionIDNode);
       free(session);
    }
 }
@@ -796,11 +989,9 @@ static int rserpoolSocketComparison(const void* node1, const void* node2)
 
 static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
                                    rserpool_session_t     sessionID,
-                                   const unsigned char*   poolHandle,
-                                   const size_t           poolHandleSize)
+                                   sctp_assoc_t           assocID)
 {
-   struct Session  cmpNode;
-   struct Session* foundSession;
+   struct Session* session;
 
    if(rserpoolSocket->ConnectedSession) {
       if(sessionID != 0) {
@@ -808,18 +999,17 @@ static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
          fputs("Session ID given for connected RSerPool socket (there is only one session)\n", stdlog);
          LOG_END
       }
-      if(poolHandle != NULL) {
+      if(assocID != 0) {
          LOG_WARNING
-         fputs("Pool handle given for connected RSerPool socket (there is only one session)\n", stdlog);
+         fputs("Assoc ID given for connected RSerPool socket (there is only one session)\n", stdlog);
          LOG_END
       }
       return(rserpoolSocket->ConnectedSession);
    }
    else if(sessionID != 0) {
-      cmpNode.Descriptor = sessionID;
-      foundSession = (struct Session*)leafLinkedRedBlackTreeFind(&rserpoolSocket->SessionSet, &cmpNode.Node);
-      if(foundSession) {
-         return(foundSession);
+      session = sessionStorageFindSessionBySessionID(&rserpoolSocket->SessionSet, sessionID);
+      if(session) {
+         return(session);
       }
       LOG_WARNING
       fprintf(stdlog, "There is no session %u on RSerPool socket %d\n",
@@ -827,13 +1017,22 @@ static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
       LOG_END
       errno = EINVAL;
    }
-   else {
-   puts("???? STOP!!!");
-      exit(1);
+   else if(assocID != 0) {
+      session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
+      if(session) {
+         return(session);
+      }
+      LOG_WARNING
+      fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d\n",
+              assocID, rserpoolSocket->Descriptor);
+      LOG_END
+      errno = EINVAL;
    }
+   LOG_ERROR
+   fputs("What session are you looking for?\n", stdlog);
+   LOG_END
    return(NULL);
 }
-
 
 
 static struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
@@ -864,7 +1063,7 @@ int rsp_initialize()
    rspInitialize(NULL);  // ???????????
 
    /* ====== Initialize session storage ================================== */
-   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, sessionPrint, sessionComparison);
+   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
 
    /* ====== Initialize RSerPool Socket descriptor storage =============== */
    leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
@@ -888,11 +1087,12 @@ void rsp_cleanup()
 
    /* ====== Clean-up RSerPool Socket descriptor storage ================= */
    leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
-   for(int i = 0;i < FD_SETSIZE;i++) {
+   for(int i = 1;i < FD_SETSIZE;i++) {
       if(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, i) < 0) {
-         LOG_ERROR
-         fprintf(stdlog, "RSerPool socket %d is still registered\n", i);
+         LOG_WARNING
+         fprintf(stdlog, "RSerPool socket %d is still registered -> closing it\n", i);
          LOG_END
+         rsp_close(i);
       }
    }
    identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
@@ -966,7 +1166,7 @@ printf("SO=%d\n",fd);
    rserpoolSocket->Descriptor       = -1;
    rserpoolSocket->PoolElement      = NULL;
    rserpoolSocket->ConnectedSession = NULL;
-   leafLinkedRedBlackTreeNew(&rserpoolSocket->SessionSet, sessionPrint, sessionComparison);
+   sessionStorageNew(&rserpoolSocket->SessionSet);
 
    /* ====== Find available RSerPool socket descriptor =================== */
    dispatcherLock(&gDispatcher);
@@ -1019,27 +1219,45 @@ int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt, struct TagItem* tags)
 /* ###### Delete RSerPool socket ######################################### */
 int rsp_close(int sd)
 {
-   RSerPoolSocket* rserpoolSocket;
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   struct Session*        nextSession;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd)
 
+   threadSafetyLock(&rserpoolSocket->Mutex);
+
+   /* ====== Close sessions ============================================== */
    if(rserpoolSocket->PoolElement) {
       rsp_deregister(sd);
    }
-   if(!leafLinkedRedBlackTreeIsEmpty(&rserpoolSocket->SessionSet)) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %u still has sessions -> fix your program!", sd);
-      LOG_END_FATAL
+   session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+   while(session != NULL) {
+      nextSession = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+      LOG_ACTION
+      fprintf(stdlog, "RSerPool socket %d, socket %d has open session %u -> closing it\n",
+              rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+              session->SessionID);
+      LOG_END
+      /* Send ABORT to peer */
+      sendtoplus(rserpoolSocket->Socket, NULL, 0, SCTP_ABORT, NULL, 0, 0,
+                 session->AssocID, 0, 0xffffffff, 0);
+      deleteSession(rserpoolSocket, session);
+      session = nextSession;
    }
 
    /* ====== Delete RSerPool socket entry ================================ */
    dispatcherLock(&gDispatcher);
    CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
+   rserpoolSocket->Descriptor = -1;
    dispatcherUnlock(&gDispatcher);
 
-   leafLinkedRedBlackTreeDelete(&rserpoolSocket->SessionSet);
+   sessionStorageDelete(&rserpoolSocket->SessionSet);
    identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
-   rserpoolSocket->Descriptor = -1;
+   if(rserpoolSocket->Socket >= 0) {
+      ext_close(rserpoolSocket->Socket);
+      rserpoolSocket->Socket = -1;
+   }
    threadSafetyDestroy(&rserpoolSocket->Mutex);
    free(rserpoolSocket);
    return(0);
@@ -1209,23 +1427,33 @@ ssize_t rsp_sendmsg(int                  sd,
    struct Session*         session;
    ssize_t                 result;
 
+puts("A");
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-   GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, poolHandle, poolHandleSize);
+puts("B");
+   GET_RSERPOOL_SESSION(session, rserpoolSocket, sessionID, 0);
 
-   result = sendtoplus(session->Socket->Socket, data, dataLength,
+puts("C");
+   LOG_VERBOSE1
+   fprintf(stdlog, "Trying to send message via session %u of RSerPool socket %d, socket %d\n",
+           session->SessionID,
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+   LOG_END
+printf("y=%d\n",   rserpoolSocket->Socket);
+   result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
                        MSG_NOSIGNAL,
-                       NULL, 0, 0,
-                       sctpStreamID, sctpPPID, sctpTimeToLive, timeout);
+                       NULL, 0,
+                       sctpPPID, session->AssocID, sctpStreamID, sctpTimeToLive,
+                       timeout);
    if((result < 0) && (errno != EAGAIN)) {
       LOG_ACTION
       fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
-              rserpoolSocket->Descriptor, session->Descriptor);
+              rserpoolSocket->Descriptor, session->SessionID);
       LOG_END
       return(-1);
 /*      rspSessionFailover(session);
       return(RspRead_Failover);*/
    }
-   tagListSetData(tags, TAG_RspIO_PE_ID, session->Identifier);
+   tagListSetData(tags, TAG_RspIO_PE_ID, session->SessionID);
    return(result);
 }
 
@@ -1246,16 +1474,16 @@ ssize_t rsp_recvmsg(int                  sd,
                     unsigned long long   timeout,
                     struct TagItem*      tags)
 {
-   struct RSerPoolSocket*   rserpoolSocket;
-   struct Session*          session;
-   struct sctp_sndrcvinfo   sinfo;
-   sctp_assoc_t             assocID;
-   int                      flags;
-   ssize_t                  received;
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   struct sctp_sndrcvinfo sinfo;
+   sctp_assoc_t           assocID;
+   int                    flags;
+   ssize_t                received;
 
-   unsigned long long       startTimeStamp;
-   unsigned long long       now;
-   long long                readTimeout;
+   unsigned long long     startTimeStamp;
+   unsigned long long     now;
+   long long              readTimeout;
 
 //    uint32_t                 ppid;
 //    sctp_assoc_t             assocID;
@@ -1268,7 +1496,7 @@ ssize_t rsp_recvmsg(int                  sd,
 
    LOG_VERBOSE3
    fprintf(stdlog, "Trying to read message from RSerPool socket %d, socket %d\n",
-           rserpoolSocket->Descriptor, session->Socket);
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket);
    LOG_END
 
 #if 0
@@ -1340,6 +1568,27 @@ ssize_t rsp_recvmsg(int                  sd,
          }
       }
    } while(received > 0);
+
+   if(received > 0) {
+      /* ====== Find session ============================================= */
+      threadSafetyLock(&rserpoolSocket->Mutex);
+      session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
+      if(session) {
+         *sessionID = session->SessionID;
+      }
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
+
+      /* ====== Copy user data =========================================== */
+      if((ssize_t)bufferLength < received) {
+         LOG_ERROR
+         fputs("Buffer is too small to keep full message\n", stdlog);
+         LOG_END
+         errno = ENOMEM;
+         return(-1);
+      }
+      received = min(received, (ssize_t)bufferLength);
+      memcpy(buffer, (const char*)&rserpoolSocket->MessageBuffer, received);
+   }
 
 //       /* ====== Handle ASAP messages ===================================== */
 //       if((received > 0) && (sctpPPID == PPID_ASAP)) {
@@ -1441,6 +1690,54 @@ static void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
 #endif
 }
 
+
+#define SNT_COMM_LOST      1
+#define SNT_SHUTDOWN_EVENT 2
+
+void notifySession(struct RSerPoolSocket* rserpoolSocket,
+                   sctp_assoc_t           assocID,
+                   unsigned int           notificationType)
+{
+   struct Session*          session;
+
+   threadSafetyLock(&rserpoolSocket->Mutex);
+   session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet,
+                                                assocID);
+   if(session) {
+      switch(notificationType) {
+         case SNT_COMM_LOST:
+         case SNT_SHUTDOWN_EVENT:
+            if(rserpoolSocket->ConnectedSession != session) {
+               LOG_ACTION
+               fprintf(stdlog, "Removing session %u of RSerPool socket %d, socket %d after closure of assoc %u\n",
+                       session->SessionID,
+                       rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                       session->AssocID);
+               LOG_END
+               deleteSession(rserpoolSocket, session);
+            }
+            else {
+               LOG_ACTION
+               fprintf(stdlog, "Removing Assoc ID %u from session %u of RSerPool socket %d, socket %d\n",
+                     session->AssocID, session->SessionID,
+                     rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+
+               LOG_END
+               sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
+            }
+          break;
+      }
+   }
+   else {
+      LOG_WARNING
+      fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d, socket %d\n",
+               assocID, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+      LOG_END
+   }
+   threadSafetyUnlock(&rserpoolSocket->Mutex);
+}
+
+
 static void handleNotification(struct RSerPoolSocket* rserpoolSocket,
                                const char*            buffer,
                                size_t                 bufferSize)
@@ -1463,12 +1760,26 @@ printf("ASSOC STATE=%d\n",notification->sn_assoc_change.sac_state);
                   rserpoolSocket->Descriptor, rserpoolSocket->Socket,
                   notification->sn_assoc_change.sac_assoc_id);
             LOG_END
+            if(addSession(rserpoolSocket,
+                          notification->sn_assoc_change.sac_assoc_id,
+                          true, NULL) == NULL) {
+               LOG_WARNING
+               fprintf(stderr, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
+                       notification->sn_assoc_change.sac_assoc_id,
+                       rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+               LOG_END
+               sendtoplus(rserpoolSocket->Socket, NULL, 0, SCTP_ABORT, NULL, 0, 0,
+                          notification->sn_assoc_change.sac_assoc_id, 0, 0xffffffff, 0);
+            }
           break;
             LOG_ACTION
             fprintf(stdlog, "SCTP_COMM_LOST for RSerPool socket %d, socket %d, assoc %u\n",
                   rserpoolSocket->Descriptor, rserpoolSocket->Socket,
                   notification->sn_assoc_change.sac_assoc_id);
             LOG_END
+            notifySession(rserpoolSocket,
+                          notification->sn_assoc_change.sac_assoc_id,
+                          SNT_COMM_LOST);
           break;
       }
    }
@@ -1478,9 +1789,11 @@ printf("ASSOC STATE=%d\n",notification->sn_assoc_change.sac_state);
             rserpoolSocket->Descriptor, rserpoolSocket->Socket,
             notification->sn_shutdown_event.sse_assoc_id);
       LOG_END
+      notifySession(rserpoolSocket,
+                    notification->sn_shutdown_event.sse_assoc_id,
+                    SNT_SHUTDOWN_EVENT);
    }
 printf("TYPE=%d  %d  %d\n",notification->sn_header.sn_type,notification->sn_header.sn_length,notification->sn_header.sn_flags);
-//exit(1);
 }
 
 
@@ -1547,7 +1860,7 @@ printf("flgs=%d   notif=%d\n",flags, (flags & MSG_NOTIFICATION) != 0);
 }
 
 
-static int setFDs(fd_set* fds, int sd, const char* description)
+static int setFDs(fd_set* fds, int sd)
 {
    struct RSerPoolSocket* rserpoolSocket;
    int                    n = 0;
@@ -1609,21 +1922,21 @@ int rsp_select(int                      rserpoolN,
    if(rserpoolReadFDs) {
       for(i = 0;i < rserpoolN;i++) {
          if(FD_ISSET(i, rserpoolReadFDs)) {
-            n = max(n, setFDs(readfds, i, "read"));
+            n = max(n, setFDs(readfds, i));
          }
       }
    }
    if(rserpoolWriteFDs) {
       for(i = 0;i < rserpoolN;i++) {
          if(FD_ISSET(i, rserpoolWriteFDs)) {
-            n = max(n, setFDs(writefds, i, "write"));
+            n = max(n, setFDs(writefds, i));
          }
       }
    }
    if(rserpoolExceptFDs) {
       for(i = 0;i < rserpoolN;i++) {
          if(FD_ISSET(i, rserpoolExceptFDs)) {
-            n = max(n, setFDs(exceptfds, i, "except"));
+            n = max(n, setFDs(exceptfds, i));
          }
       }
    }
@@ -1669,13 +1982,13 @@ puts("------------ EVENT");
                   if(FD_ISSET(rserpoolSocket->Socket, readfds)) {
                      LOG_VERBOSE4
                      fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Check, if it has to be handled by rsplib...\n",
-                              rserpoolSocket->Descriptor, session->Descriptor);
+                              rserpoolSocket->Descriptor, session->SessionID);
                      LOG_END
                      /* ?????????????
                      if(handleControlChannelAndNotifications(rserpoolSocket)) {
                         LOG_VERBOSE4
                         fprintf(stdlog, "RSerPool socket %d (socket %d) had <read> event for rsplib only. Clearing <read> flag\n",
-                                 rserpoolSocket->Descriptor, session->Descriptor);
+                                 rserpoolSocket->Descriptor, session->SessionID);
                         LOG_END
                         FD_CLR(i, rserpoolReadFDs);
                      }
@@ -1685,7 +1998,7 @@ puts("------------ EVENT");
                      FD_ISSET(rserpoolSocket->Socket, readfds)) {
                      LOG_VERBOSE4
                      fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Checking for ASAP message...\n",
-                              rserpoolSocket->Descriptor, session->Descriptor);
+                              rserpoolSocket->Descriptor, session->SessionID);
                      LOG_END
                   }
 
@@ -1799,7 +2112,7 @@ int main(int argc, char** argv)
             ssize_t rv = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer), &rserpoolFlags,
                                      &sessionID,&poolElementID,&sctpPPID,&sctpStreamID,
                                      0, NULL);
-            printf("===========>> rv=%d\n", rv);
+            printf("===========>> rv=%d  session=%u   ppid=%x\n", rv, sessionID, sctpPPID);
             if((rv > 0) && (!(rserpoolFlags & MSG_RSERPOOL_NOTIFICATION))) {
                rserpoolFlags = 0;
                ssize_t snd = rsp_sendmsg(sd, (char*)&buffer, sizeof(buffer), rserpoolFlags,

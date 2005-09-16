@@ -1,5 +1,5 @@
 /*
- *  $Id: tagitem.c,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -62,10 +62,13 @@ void tagListFree(struct TagItem* tagList)
 size_t tagListGetSize(struct TagItem* tagList)
 {
    size_t count = 0;
-   while(tagList[count].Tag != TAG_DONE) {
-      count++;
+   if(tagList != NULL) {
+      while(tagList[count].Tag != TAG_DONE) {
+         count++;
+      }
+      return(count + 1);
    }
-   return(count + 1);
+   return(0);
 }
 
 

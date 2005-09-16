@@ -5,147 +5,258 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
+#include <ext_socket.h>
 #include "randomizer.h"
 #include "statistics.h"
 #include "debug.h"
+#include "leaflinkedredblacktree.h"
 
 
-struct IdentifierBitmap
+typedef unsigned int rserpool_session_t;
+
+
+struct SessionStorage
 {
-   size_t Entries;
-   size_t Available;
-
-   size_t Slots;
-   size_t Bitmap[0];
+   struct LeafLinkedRedBlackTree AssocIDSet;
+   struct LeafLinkedRedBlackTree SessionIDSet;
 };
 
-#define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
+struct Session
+{
+   struct LeafLinkedRedBlackTreeNode SessionIDNode;
+   struct LeafLinkedRedBlackTreeNode AssocIDNode;
+
+   sctp_assoc_t                      AssocID;
+   rserpool_session_t                SessionID;
+};
+
+
+/* ###### Get session from assoc ID storage node ######################### */
+inline static struct Session* getSessionFromAssocIDStorageNode(void* node)
+{
+   return((struct Session*)((long)node -
+             ((long)&((struct Session *)node)->AssocIDNode - (long)node)));
+}
+
+
+/* ###### Get session from session ID storage node ####################### */
+inline static struct Session* getSessionFromSessionIDStorageNode(void* node)
+{
+   return((struct Session*)((long)node -
+             ((long)&((struct Session *)node)->SessionIDNode - (long)node)));
+}
+
+
+/* ###### Print assoc ID storage node #################################### */
+static void sessionAssocIDPrint(const void* node, FILE* fd)
+{
+   const struct Session* session = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node);
+
+   fprintf(fd, "A%u[S%u] ", session->AssocID, session->SessionID);
+}
+
+
+/* ###### Compare assoc ID storage nodes ################################# */
+static int sessionAssocIDComparison(const void* node1, const void* node2)
+{
+   const struct Session* session1 = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node1);
+   const struct Session* session2 = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node2);
+
+   if(session1->AssocID < session2->AssocID) {
+      return(-1);
+   }
+   else if(session1->AssocID > session2->AssocID) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### Print session ID storage node ################################## */
+static void sessionSessionIDPrint(const void* node, FILE* fd)
+{
+   const struct Session* session = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node);
+
+   fprintf(fd, "%u[A%u] ", session->SessionID, (unsigned int)session->AssocID);
+}
+
+
+/* ###### Compare session ID storage nodes ############################### */
+static int sessionSessionIDComparison(const void* node1, const void* node2)
+{
+   const struct Session* session1 = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node1);
+   const struct Session* session2 = (const struct Session*)getSessionFromSessionIDStorageNode((void*)node2);
+
+   if(session1->SessionID < session2->SessionID) {
+      return(-1);
+   }
+   else if(session1->SessionID > session2->SessionID) {
+      return(1);
+   }
+   return(0);
+}
 
 
 /* ###### Constructor #################################################### */
-struct IdentifierBitmap* identifierBitmapNew(const size_t entries)
+void sessionStorageNew(struct SessionStorage* sessionStorage)
 {
-   const size_t slots = (entries + (IdentifierBitmapSlotsize - (entries % IdentifierBitmapSlotsize))) /
-                           IdentifierBitmapSlotsize;
-   struct IdentifierBitmap* identifierBitmap = (struct IdentifierBitmap*)malloc(sizeof(IdentifierBitmap) + (slots + 1) * sizeof(size_t));
-   if(identifierBitmap) {
-      memset(&identifierBitmap->Bitmap, 0, (slots + 1) * sizeof(size_t));
-      identifierBitmap->Entries   = entries;
-      identifierBitmap->Available = entries;
-      identifierBitmap->Slots     = slots;
-   }
-   return(identifierBitmap);
+   leafLinkedRedBlackTreeNew(&sessionStorage->AssocIDSet, sessionAssocIDPrint, sessionAssocIDComparison);
+   leafLinkedRedBlackTreeNew(&sessionStorage->SessionIDSet, sessionSessionIDPrint, sessionSessionIDComparison);
 }
 
 
 /* ###### Destructor ##################################################### */
-void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap)
+void sessionStorageDelete(struct SessionStorage* sessionStorage)
 {
-   identifierBitmap->Entries = 0;
-   free(identifierBitmap);
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->AssocIDSet));
+   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+   leafLinkedRedBlackTreeDelete(&sessionStorage->AssocIDSet);
+   leafLinkedRedBlackTreeDelete(&sessionStorage->SessionIDSet);
 }
 
 
-/* ###### Allocate ID #################################################### */
-int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
+/* ###### Add session #################################################### */
+void sessionStorageAddSession(struct SessionStorage* sessionStorage,
+                              struct Session*        session)
 {
-   size_t i, j;
-   int    id = -1;
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
 
-   if(identifierBitmap->Available > 0) {
-      i = 0;
-      while(identifierBitmap->Bitmap[i] == ~((size_t)0)) {
-         i++;
-      }
-      id = i * IdentifierBitmapSlotsize;
 
-      j = 0;
-      while((j < IdentifierBitmapSlotsize) &&
-            (id < (int)identifierBitmap->Entries) &&
-            (identifierBitmap->Bitmap[i] & (1 << j))) {
-         j++;
-         id++;
-      }
-      CHECK(id < (int)identifierBitmap->Entries);
+/* ###### Delete session ################################################# */
+void sessionStorageDeleteSession(struct SessionStorage* sessionStorage,
+                                 struct Session*        session)
+{
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
 
-      identifierBitmap->Bitmap[i] |= (1 << j);
-      identifierBitmap->Available--;
+
+/* ###### Update session's assoc ID ###################################### */
+void sessionStorageUpdateSession(struct SessionStorage* sessionStorage,
+                                 struct Session*        session,
+                                 sctp_assoc_t           newAssocID)
+{
+   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   session->AssocID = newAssocID;
+   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+}
+
+
+/* ###### Is session storage empty? ###################################### */
+bool sessionStorageIsEmpty(struct SessionStorage* sessionStorage)
+{
+   return(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+}
+
+
+/* ###### Print session storage ########################################## */
+void sessionStoragePrint(struct SessionStorage* sessionStorage,
+                         FILE*                  fd)
+{
+   fputs("SessionStorage:\n", fd);
+   fputs(" by Session ID: ", fd);
+   leafLinkedRedBlackTreePrint(&sessionStorage->SessionIDSet, fd);
+   fputs(" by Assoc ID:   ", fd);
+   leafLinkedRedBlackTreePrint(&sessionStorage->AssocIDSet, fd);
+}
+
+
+/* ###### Find session by session ID ##################################### */
+struct Session* sessionStorageFindSessionBySessionID(struct SessionStorage* sessionStorage,
+                                                     rserpool_session_t     sessionID)
+{
+   struct Session                     cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   cmpNode.SessionID = sessionID;
+
+   node = leafLinkedRedBlackTreeFind(&sessionStorage->SessionIDSet, &cmpNode.SessionIDNode);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
    }
-
-   return(id);
+   return(NULL);
 }
 
 
-/* ###### Allocate specific ID ########################################### */
-int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
-                                       const int                id)
+/* ###### Find session by assoc ID ####################################### */
+struct Session* sessionStorageFindSessionByAssocID(struct SessionStorage* sessionStorage,
+                                                   sctp_assoc_t           assocID)
 {
-   size_t i, j;
+   struct Session                     cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
 
-   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
-   i = id / IdentifierBitmapSlotsize;
-   j = id % IdentifierBitmapSlotsize;
-   if(identifierBitmap->Bitmap[i] & (1 << j)) {
-      return(-1);
+   cmpNode.AssocID = assocID;
+
+   node = leafLinkedRedBlackTreeFind(&sessionStorage->AssocIDSet, &cmpNode.AssocIDNode);
+   if(node != NULL) {
+      return(getSessionFromAssocIDStorageNode(node));
    }
-   identifierBitmap->Bitmap[i] |= (1 << j);
-   identifierBitmap->Available--;
-   return(id);
+   return(NULL);
 }
 
 
-/* ###### Free ID ######################################################## */
-void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id)
+/* ###### Get first session ############################################## */
+struct Session* sessionStorageGetFirstSession(struct SessionStorage* sessionStorage)
 {
-   size_t i, j;
-
-   CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
-   i = id / IdentifierBitmapSlotsize;
-   j = id % IdentifierBitmapSlotsize;
-   CHECK(identifierBitmap->Bitmap[i] & (1 << j));
-   identifierBitmap->Bitmap[i] &= ~(1 << j);
-   identifierBitmap->Available++;
+   struct LeafLinkedRedBlackTreeNode* node;
+   node = leafLinkedRedBlackTreeGetFirst(&sessionStorage->SessionIDSet);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
+   }
+   return(NULL);
 }
 
+
+/* ###### Get next session ############################################### */
+struct Session* sessionStorageGetNextSession(struct SessionStorage* sessionStorage,
+                                             struct Session*        session)
+{
+   struct LeafLinkedRedBlackTreeNode* node;
+   node = leafLinkedRedBlackTreeGetNext(&sessionStorage->SessionIDSet, &session->SessionIDNode);
+   if(node != NULL) {
+      return(getSessionFromSessionIDStorageNode(node));
+   }
+   return(NULL);
+}
 
 
 
 int main(int argc, char** argv)
 {
-   IdentifierBitmap* ib = identifierBitmapNew(1024);
-   size_t i;
+   SessionStorage ss;
+   sessionStorageNew(&ss);
 
-   CHECK(identifierBitmapAllocateSpecificID(ib, 0) == 0);
-   for(i = 0;i < 17;i++) {
-      printf("#%d  ->  id=%d\n", i, identifierBitmapAllocateID(ib));
-   }
+   Session s1;
+   Session s2;
+   s1.SessionID = 1;
+   s1.AssocID = 0;
+   s2.SessionID = 2;
+   s2.AssocID = 1;
 
-   puts("----");
-   identifierBitmapFreeID(ib, 11);
-   identifierBitmapFreeID(ib, 13);
-   identifierBitmapFreeID(ib, 7);
-   identifierBitmapFreeID(ib, 3);
-   puts("----");
+   sessionStorageAddSession(&ss, &s1);
+   sessionStorageAddSession(&ss, &s2);
 
-   for(i = 0;i < 6;i++) {
-      printf("#%d  ->  id=%d\n", i, identifierBitmapAllocateID(ib));
-   }
+   sessionStoragePrint(&ss, stdout);
 
+   CHECK(sessionStorageFindSessionBySessionID(&ss, 1) == &s1);
+   CHECK(sessionStorageFindSessionBySessionID(&ss, 2) == &s2);
+   CHECK(sessionStorageFindSessionByAssocID(&ss, 0) == &s1);
+   CHECK(sessionStorageFindSessionByAssocID(&ss, 1) == &s2);
 
-   identifierBitmapDelete(ib);
+   sessionStorageUpdateSession(&ss, &s1, 9999);
 
-/*
-   Statistics stat;
+   CHECK(sessionStorageFindSessionBySessionID(&ss, 1) == &s1);
+   CHECK(sessionStorageFindSessionBySessionID(&ss, 2) == &s2);
+   CHECK(sessionStorageFindSessionByAssocID(&ss, 9999) == &s1);
+   CHECK(sessionStorageFindSessionByAssocID(&ss, 1) == &s2);
 
-   for(size_t i = 0;i < 1000000;i++) {
-      double d = 999.0 + (random() % 3); // randomExpDouble(1000.0);
+   sessionStoragePrint(&ss, stdout);
 
-      stat.collect(d);
+   sessionStorageDeleteSession(&ss, &s1);
+   sessionStorageDeleteSession(&ss, &s2);
 
-      // printf("%u %1.5f\n",i,d);
-   }
-
-   printf("mean=%f min=%f max=%f stddev=%f\n", stat.mean(), stat.minimum(),stat.maximum(),stat.stddev());
-*/
+   sessionStorageDelete(&ss);
    return 0;
 }
