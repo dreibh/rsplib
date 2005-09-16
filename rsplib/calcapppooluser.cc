@@ -121,7 +121,7 @@ void JobQueue::enqueue(Job* job)
       job->QueuingTimeStamp = getMicroTime();
       job->StartupTimeStamp = 0ULL;
 
-      
+
    if (FirstJob == NULL && LastJob == NULL)
    {
       FirstJob = job;
@@ -162,7 +162,7 @@ unsigned long long JobInterval                   = 15000000;
 FILE*        VectorFH   = NULL;
 FILE*        ScalarFH   = NULL;
 unsigned int VectorLine = 0;
-double       JobSizeDeclaration			 = 5000000; 
+double       JobSizeDeclaration			 = 5000000;
 unsigned long long runtime;
 double TotalHandlingDelay            = 0.0;
 double AverageHandlingDelay          = 0.0;
@@ -289,7 +289,7 @@ void handleCalcAppAccept(struct Process* process,
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-   
+
    process->TotalCalcAppAccepted++;
 }
 
@@ -310,7 +310,12 @@ void handleCalcAppReject(struct Process* process,
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    rspSessionFailover(process->Session);
-   
+
+   if(!rspSessionHasCookie(process->Session)) {
+      process->Status = PS_Init;
+      sendCalcAppRequest(process);
+   }
+
    process->TotalCalcAppRejected++;
 }
 
@@ -380,7 +385,7 @@ void handleCalcAppCompleted(struct Process* process,
    TotalJobSizeCompleted+= process->CurrentJob->JobSize;
    TotalJobInterval+= JobInterval;
    TotalHandlingSpeed+=HandlingSpeed;
-   
+
    stat1.collect(StartupTime/1000000.0);
    stat2.collect(QueueingTime/1000000.0);
    stat3.collect(ProcessingTime/1000000.0);
@@ -393,14 +398,14 @@ void handleCalcAppCompleted(struct Process* process,
    stat10.collect(ProcessingTime/1000000.0);
    stat11.collect(HandlingDelay);
    stat12.collect(HandlingSpeed/1000000.0);
-   
+
    cout << "JobSize:     " << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
    cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
 
    fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++VectorLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
-   process->TotalCalcAppCompleted++;   
-     
+   process->TotalCalcAppCompleted++;
+
 }
 
 
@@ -582,9 +587,9 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
 	       if (getMicroTime()-StartTimer >= runtime)
    	       {
       			goto finished;
-   
-   	       }   
-	    
+
+   	       }
+
 
             /* ====== Handle results of ext_select() =========================== */
             if((result > 0) && (sessionStatusArray[0] & RspSelect_Read)) {
@@ -653,9 +658,9 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingSpeed \" %1.6f\n", objectName, AverageHandlingSpeed);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageJobSize       \" %1.6f\n", objectName, AverageJobSize);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %llu\n", objectName, AverageJobInterval); */
-   
+
    /*fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"mean=%f min=%f max=%f stddev=%f\n", objectName, stat1.mean(), stat1.minimum(), stat1.maximum(), stat1.stddev()); */
-   
+
    fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, stat1.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, stat2.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, stat3.mean());
@@ -663,7 +668,7 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, stat5.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, stat6.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, stat7.mean());
-   
+
    fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"stddev=%f \n", objectName, stat8.stddev());
    fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"stddev=%f \n", objectName, stat9.stddev());
    fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"stddev=%f \n", objectName, stat10.stddev());
@@ -673,14 +678,14 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests     \"%u \n", objectName, process.TotalCalcAppRequests);
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppAccepts      \"%u \n", objectName, process.TotalCalcAppAccepted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRejects      \"%u \n", objectName, process.TotalCalcAppRejected);
-   
+
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Queued\" %u \n", objectName, TotalJobsQueued);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Started\" %u \n", objectName, TotalJobsStarted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Completed \" %u \n", objectName, process.TotalCalcAppCompleted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Queued\" %1.6f \n", objectName, TotalJobSizeQueued);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Started\" %1.6f \n", objectName, TotalJobSizeStarted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Completed\" %1.6f \n", objectName, TotalJobSizeCompleted);
-   
+
    return;
 }
 
@@ -765,7 +770,7 @@ int main(int argc, char** argv)
       cout << " Unable to open output file " << vectorFileName << endl;
       finishLogging();
    }
-   
+
    fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n");
 
    ScalarFH = fopen(scalarFileName, "w");
