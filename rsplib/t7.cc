@@ -493,6 +493,7 @@ struct Session
    unsigned long long                ConnectionTimeStamp;
 
    unsigned int                      PendingNotifications;
+   unsigned int                      EventMask;
 
    void*                             Cookie;
    size_t                            CookieSize;
@@ -768,6 +769,7 @@ static struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
          session->Handle.Size = 0;
       }
       session->PendingNotifications       = 0;
+      session->EventMask                  = (rserpoolSocket->SocketType == SOCK_STREAM) ? 0 : SNT_NOTIFICATION_MASK;
       session->Cookie                     = NULL;
       session->CookieSize                 = 0;
       session->CookieEcho                 = NULL;
@@ -1862,8 +1864,6 @@ ssize_t rsp_sendmsg(int                  sd,
          session->IsFailed              = true;
 
          return(-1);
-         /*      rspSessionFailover(session);
-         return(RspRead_Failover);*/
       }
    }
 
@@ -1876,6 +1876,91 @@ ssize_t rsp_sendmsg(int                  sd,
 #define MSG_RSERPOOL_COOKIE_ECHO  (1 << 1)
 
 
+static ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
+                                           void*                  buffer,
+                                           size_t                 bufferLength,
+                                           int*                   msg_flags)
+{
+   struct Session*              session;
+   union rserpool_notification* notification;
+   unsigned int                 pendingNotifications;
+   ssize_t                      received = 0;
+
+   threadSafetyLock(&rserpoolSocket->Mutex);
+
+   /* ====== Check every session if there is something to do ============= */
+   session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+   while(session != NULL) {
+      /* ====== Give back Cookie Echo ==================================== */
+      if((session->CookieEcho) && (bufferLength > 0)) {
+         /* A cookie echo has been stored (during rspSessionSelect()). Now,
+            the application calls this function. We now return the cookie
+            and free its storage space. */
+         LOG_ACTION
+         fputs("There is a cookie echo. Giving it back first\n", stdlog);
+         LOG_END
+         *msg_flags |= MSG_RSERPOOL_COOKIE_ECHO;
+         received = min(bufferLength, session->CookieEchoSize);
+         memcpy(buffer, session->CookieEcho, received);
+         free(session->CookieEcho);
+         session->CookieEcho     = NULL;
+         session->CookieEchoSize = 0;
+         received = session->CookieEchoSize;
+         break;
+      }
+
+      /* ====== Give back notification =================================== */
+      pendingNotifications = session->PendingNotifications & session->EventMask;
+      if(pendingNotifications) {
+         notification = (union rserpool_notification*)buffer;
+         if(bufferLength < sizeof(rserpool_notification)) {
+            LOG_ERROR
+            fputs("Buffer size is to small for a notification\n", stdlog);
+            LOG_END
+            errno = EINVAL;
+            received = sizeof(notification);
+            break;
+         }
+         if(pendingNotifications & SNT_SESSION_ADD) {
+            session->PendingNotifications &= ~SNT_SESSION_ADD;
+            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
+            notification->rn_session_change.rsc_type    = RSERPOOL_SESSION_CHANGE;
+            notification->rn_session_change.rsc_flags   = 0x00;
+            notification->rn_session_change.rsc_length  = sizeof(notification);
+            notification->rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
+            notification->rn_session_change.rsc_session = session->SessionID;
+            return(sizeof(notification));
+         }
+         if(pendingNotifications & SNT_FAILOVER_NECESSARY) {
+            session->PendingNotifications &= ~SNT_FAILOVER_NECESSARY;
+            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
+            notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
+            notification->rn_failover.rf_flags   = 0x00;
+            notification->rn_failover.rf_length  = sizeof(notification);
+            notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_NECESSARY;
+            notification->rn_failover.rf_session = session->SessionID;
+            received = sizeof(notification);
+            break;
+         }
+         if(pendingNotifications & SNT_FAILOVER_COMPLETE) {
+            session->PendingNotifications &= ~SNT_FAILOVER_COMPLETE;
+            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
+            notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
+            notification->rn_failover.rf_flags   = 0x00;
+            notification->rn_failover.rf_length  = sizeof(notification);
+            notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_COMPLETE;
+            notification->rn_failover.rf_session = session->SessionID;
+            received = sizeof(notification);
+            break;
+         }
+      }
+      session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+   }
+
+   threadSafetyUnlock(&rserpoolSocket->Mutex);
+   return(received);
+}
+
 /* ###### RSerPool socket recvmsg() implementation ####################### */
 ssize_t rsp_recvmsg(int                         sd,
                     void*                       buffer,
@@ -1884,22 +1969,23 @@ ssize_t rsp_recvmsg(int                         sd,
                     int*                        msg_flags,
                     unsigned long long          timeout)
 {
-   struct RSerPoolSocket*       rserpoolSocket;
-   struct Session*              session;
-   struct rserpool_sndrcvinfo   rinfoDummy;
-   union rserpool_notification* notification;
-   sctp_assoc_t                 assocID;
-   int                          flags;
-   ssize_t                      received;
+   struct RSerPoolSocket*     rserpoolSocket;
+   struct Session*            session;
+   struct rserpool_sndrcvinfo rinfoDummy;
+   sctp_assoc_t               assocID;
+   int                        flags;
+   ssize_t                    received;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    if(rinfo == NULL) {
       // User is not interested in values.
       rinfo = &rinfoDummy;
+      rinfo->rinfo_session = 0;
    }
    else {
       memset(rinfo, 0, sizeof(struct rserpool_sndrcvinfo));
    }
+
 
    LOG_VERBOSE3
    fprintf(stdlog, "Trying to read message from RSerPool socket %d, socket %d\n",
@@ -1909,76 +1995,7 @@ ssize_t rsp_recvmsg(int                         sd,
 
    /* ====== Give back Cookie Echo and notifications ===================== */
    if(buffer != NULL) {
-      received = 0;
-
-      threadSafetyLock(&rserpoolSocket->Mutex);
-      session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
-      while(session != NULL) {
-         if((session->CookieEcho) && (bufferLength > 0)) {
-            /* A cookie echo has been stored (during rspSessionSelect()). Now,
-               the application calls this function. We now return the cookie
-               and free its storage space. */
-            LOG_ACTION
-            fputs("There is a cookie echo. Giving it back first\n", stdlog);
-            LOG_END
-            *msg_flags |= MSG_RSERPOOL_COOKIE_ECHO;
-            received = min(bufferLength, session->CookieEchoSize);
-            memcpy(buffer, session->CookieEcho, received);
-            free(session->CookieEcho);
-            session->CookieEcho     = NULL;
-            session->CookieEchoSize = 0;
-            received = session->CookieEchoSize;
-            break;
-         }
-
-         if(session->PendingNotifications & SNT_NOTIFICATION_MASK) {
-            notification = (union rserpool_notification*)buffer;
-            if(bufferLength < sizeof(rserpool_notification)) {
-               LOG_ERROR
-               fputs("Buffer size is to small for a notification\n", stdlog);
-               LOG_END
-               errno = EINVAL;
-               received = sizeof(notification);
-               break;
-            }
-            if(session->PendingNotifications & SNT_SESSION_ADD) {
-               session->PendingNotifications &= ~SNT_SESSION_ADD;
-               *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-               notification->rn_session_change.rsc_type    = RSERPOOL_SESSION_CHANGE;
-               notification->rn_session_change.rsc_flags   = 0x00;
-               notification->rn_session_change.rsc_length  = sizeof(notification);
-               notification->rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
-               notification->rn_session_change.rsc_session = session->SessionID;
-               return(sizeof(notification));
-            }
-            if(session->PendingNotifications & SNT_FAILOVER_NECESSARY) {
-               session->PendingNotifications &= ~SNT_FAILOVER_NECESSARY;
-               *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-               notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
-               notification->rn_failover.rf_flags   = 0x00;
-               notification->rn_failover.rf_length  = sizeof(notification);
-               notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_NECESSARY;
-               notification->rn_failover.rf_session = session->SessionID;
-               received = sizeof(notification);
-               break;
-            }
-            if(session->PendingNotifications & SNT_FAILOVER_COMPLETE) {
-               session->PendingNotifications &= ~SNT_FAILOVER_COMPLETE;
-               *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-               notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
-               notification->rn_failover.rf_flags   = 0x00;
-               notification->rn_failover.rf_length  = sizeof(notification);
-               notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_COMPLETE;
-               notification->rn_failover.rf_session = session->SessionID;
-               received = sizeof(notification);
-               break;
-            }
-         }
-         session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
-      }
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
-
-
+      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
       if(received > 0) {
          return(received);
       }
@@ -2049,6 +2066,18 @@ ssize_t rsp_recvmsg(int                         sd,
       }
 
       threadSafetyUnlock(&rserpoolSocket->Mutex);
+   }
+
+
+   /* ====== Nothing read from socket, but there may be a notification === */
+   else {
+      /* ====== Give back Cookie Echo and notifications ================== */
+      if(buffer != NULL) {
+         received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
+         if(received > 0) {
+            return(received);
+         }
+      }
    }
 
    return(received);
@@ -2291,7 +2320,7 @@ static int setFDs(fd_set* fds, int sd, int* notifications)
       if(notifications) {
          session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
          while(session != NULL) {
-            *notifications |= session->PendingNotifications;
+            *notifications |= (session->PendingNotifications & session->EventMask);
             session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
          }
          *notifications &= SNT_NOTIFICATION_MASK;
@@ -2429,7 +2458,7 @@ int rsp_select(int                      rserpoolN,
                if(rserpoolReadFDs) {
                   session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
                   while(session != NULL) {
-                     if((session->PendingNotifications & SNT_NOTIFICATION_MASK) != 0) {
+                     if((session->PendingNotifications & session->EventMask) != 0) {
                         FD_SET(i, rserpoolReadFDs);
                         break;
                      }
