@@ -1,5 +1,5 @@
 /*
- *  $Id: netdouble.h,v 1.1 2005/07/28 14:15:15 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -46,18 +46,7 @@ extern "C" {
 #endif
 
 
-#define NDF_NEGATIVE ((uint16_t)1 << 15)
-#define EXPONENT_BITS 16
-#define MANTISSA_BITS 64
-
-
-typedef struct
-{
-   uint16_t Flags;
-   int16_t  Exponent;
-   uint32_t MantissaHigh;
-   uint32_t MantissaLow;
-} network_double_t;
+typedef unsigned long long network_double_t;
 
 
 network_double_t doubleToNetwork(double value);

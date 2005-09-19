@@ -1,5 +1,5 @@
 /*
- *  $Id: netdouble.c,v 1.2 2005/08/01 10:01:18 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -40,58 +40,126 @@
 #include <netinet/in.h>
 
 #include "netdouble.h"
+#include "netutilities.h"
+#include "debug.h"
+
+
+#define DBL_EXP_BITS  11
+#define DBL_EXP_BIAS  1023
+#define DBL_EXP_MAX   ((1L << DBL_EXP_BITS) - 1 - DBL_EXP_BIAS)
+#define DBL_EXP_MIN   (1 - DBL_EXP_BIAS)
+#define DBL_FRC1_BITS 20
+#define DBL_FRC2_BITS 32
+#define DBL_FRC_BITS  (DBL_FRC1_BITS + DBL_FRC2_BITS)
+
+
+struct IeeeDouble {
+#if __BYTE_ORDER == __BIG_ENDIAN
+   unsigned int s : 1;
+   unsigned int e : 11;
+   unsigned int f1 : 20;
+   unsigned int f2 : 32;
+#elif  __BYTE_ORDER == __LITTLE_ENDIAN
+   unsigned int f2 : 32;
+   unsigned int f1 : 20;
+   unsigned int e : 11;
+   unsigned int s : 1;
+#else
+#error Unknown byteorder settings!
+#endif
+};
 
 
 /* ###### Convert double to machine-independent form ##################### */
-network_double_t doubleToNetwork(double value)
+network_double_t doubleToNetwork(const double d)
 {
-   const double     absoluteValue = fabs(value);
-   network_double_t result;
-   uint16_t         flags;
-   int16_t          exponent;
-   uint64_t         mantissa;
+   struct IeeeDouble ieee;
 
-   flags = 0;
-   if(value < 0.0) {
-      flags |= NDF_NEGATIVE;
+   if(isnan(d)) {
+      // NaN
+      ieee.s = 0;
+      ieee.e = DBL_EXP_MAX + DBL_EXP_BIAS;
+      ieee.f1 = 1;
+      ieee.f2 = 1;
+   } else if(isinf(d)) {
+      // +/- infinity
+      ieee.s = (d < 0);
+      ieee.e = DBL_EXP_MAX + DBL_EXP_BIAS;
+      ieee.f1 = 0;
+      ieee.f2 = 0;
+   } else if(d == 0.0) {
+      // zero
+      ieee.s = 0;
+      ieee.e = 0;
+      ieee.f1 = 0;
+      ieee.f2 = 0;
+   } else {
+      // finite number
+      int exp;
+      double frac = frexp (fabs (d), &exp);
+
+      while (frac < 1.0 && exp >= DBL_EXP_MIN) {
+         frac = ldexp (frac, 1);
+         --exp;
+      }
+      if (exp < DBL_EXP_MIN) {
+          // denormalized number (or zero)
+          frac = ldexp (frac, exp - DBL_EXP_MIN);
+          exp = 0;
+      } else {
+         // normalized number
+         CHECK((1.0 <= frac) && (frac < 2.0));
+         CHECK((DBL_EXP_MIN <= exp) && (exp <= DBL_EXP_MAX));
+
+         exp += DBL_EXP_BIAS;
+         frac -= 1.0;
+      }
+      ieee.s = (d < 0);
+      ieee.e = exp;
+      ieee.f1 = (unsigned long)ldexp (frac, DBL_FRC1_BITS);
+      ieee.f2 = (unsigned long)ldexp (frac, DBL_FRC_BITS);
    }
-   exponent = -(int16_t)ceil(log(absoluteValue) / log(2.0));
-   mantissa = (uint64_t)rint(absoluteValue *
-                             pow(2.0, (MANTISSA_BITS - 1) + exponent));
-
-   result.Flags        = htons(flags);
-   result.Exponent     = htons(exponent);
-   result.MantissaHigh = htonl((uint32_t)((mantissa >> 32) & 0xffffffffUL));
-   result.MantissaLow  = htonl((uint32_t)(mantissa & 0xffffffffUL));
-
-/*
-   double p = networkToDouble(result);
-   printf("   v=%1.12f => s=%d; m=%Lu; e=%d   p=%1.12f",
-          value,
-          ((result.Flags & NDF_NEGATIVE) ? -1 : 1), mantissa, exponent,
-          p);
-*/
-
-#ifdef VERIFY
-   CHECK(fabs(networkToDouble(result) - value) < 0.000000001);
-#endif
-   return(result);
+   return(hton64(*((network_double_t*)&ieee)));
 }
 
 
 /* ###### Convert machine-independent form to double ##################### */
-double networkToDouble(const network_double_t value)
+double networkToDouble(network_double_t value)
 {
-   uint16_t  flags;
-   int16_t   exponent;
-   uint64_t  mantissa;
+   network_double_t   hValue;
+   struct IeeeDouble* ieee;
+   double             d;
 
-   flags    = ntohs(value.Flags);
-   exponent = (int16_t)ntohs(value.Exponent);
-   mantissa = ((uint64_t)ntohl(value.MantissaHigh) << 32) | (uint64_t)ntohl(value.MantissaLow);
-
-   double result = ((flags & NDF_NEGATIVE) ? -1.0 : 1.0) *
-                      (double)mantissa /
-                         pow(2.0, (MANTISSA_BITS - 1) + exponent);
-   return(result);
+   hValue = ntoh64(value);
+   ieee = (struct IeeeDouble*)&hValue;
+   if(ieee->e == 0) {
+      if((ieee->f1 == 0) && (ieee->f2 == 0)) {
+         // zero
+         d = 0.0;
+      } else {
+         // denormalized number
+         d  = ldexp((double)ieee->f1, -DBL_FRC1_BITS + DBL_EXP_MIN);
+         d += ldexp((double)ieee->f2, -DBL_FRC_BITS  + DBL_EXP_MIN);
+         if (ieee->s) {
+            d = -d;
+         }
+      }
+   } else if(ieee->e == DBL_EXP_MAX + DBL_EXP_BIAS) {
+      if((ieee->f1 == 0) && (ieee->f2 == 0)) {
+         // +/- infinity
+         d = (ieee->s) ? -INFINITY : INFINITY;
+      } else {
+         // not a number
+         d = NAN;
+      }
+   } else {
+      // normalized number
+      d = ldexp(ldexp((double)ieee->f1, -DBL_FRC1_BITS) +
+                ldexp((double)ieee->f2, -DBL_FRC_BITS) + 1.0,
+                      ieee->e - DBL_EXP_BIAS);
+      if(ieee->s) {
+         d = -d;
+      }
+   }
+   return(d);
 }

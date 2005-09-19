@@ -19,6 +19,24 @@ Rückgabewerte für rsp_write() / rsp_read():
 
 ------
 
+PingPong Protocol:
+
+Ping {
+   MessageNo;
+   Data[];
+}
+
+Pong {
+   MessageNo;
+   ReplyNo
+   Data[];
+}
+
+
+
+
+------
+
 Notifications treten auf bei:
  read oder write
  -> nicht innerhalb Wartefunktion mit rsp_select()!

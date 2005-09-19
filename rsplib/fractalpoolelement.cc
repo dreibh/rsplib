@@ -58,12 +58,12 @@ class ServiceThread : public TDThread
 
    private:
    void run();
-   bool handleParameter(const FractalGeneratorParameter* parameter,
-                        const size_t                     length);
-   bool handleCookieEcho(const FractalGeneratorCookie* cookie,
-                         const size_t                  length);
+   bool handleParameter(const FGPParameter* parameter,
+                        const size_t        length);
+   bool handleCookieEcho(const FGPCookie* cookie,
+                         const size_t     length);
    bool sendCookie();
-   bool sendData(FractalGeneratorData* data);
+   bool sendData(FGPData* data);
 
    unsigned int           ID;
    bool                   IsNewSession;
@@ -79,6 +79,7 @@ class ServiceThread : public TDThread
 };
 
 
+// ###### Constructor #######################################################
 ServiceThread::ServiceThread(const size_t failureAfter, const bool testMode)
 {
    static unsigned int IDCounter = 0;
@@ -93,6 +94,8 @@ ServiceThread::ServiceThread(const size_t failureAfter, const bool testMode)
    cout << "Created thread " << ID << "..." << endl;
 }
 
+
+// ###### Destructor ########################################################
 ServiceThread::~ServiceThread()
 {
    cout << "Stopping thread " << ID << "..." << endl;
@@ -106,10 +109,11 @@ ServiceThread::~ServiceThread()
 }
 
 
-bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
-                                    const size_t                     size)
+// ###### Handle parameter message ##########################################
+bool ServiceThread::handleParameter(const FGPParameter* parameter,
+                                    const size_t        size)
 {
-   if(size < sizeof(struct FractalGeneratorParameter)) {
+   if(size < sizeof(struct FGPParameter)) {
       return(false);
    }
    Status.Parameter.Width         = ntohl(parameter->Width);
@@ -140,18 +144,19 @@ bool ServiceThread::handleParameter(const FractalGeneratorParameter* parameter,
 }
 
 
-bool ServiceThread::handleCookieEcho(const FractalGeneratorCookie* cookie,
-                                     const size_t                  size)
+// ###### Handle cookie echo ################################################
+bool ServiceThread::handleCookieEcho(const FGPCookie* cookie,
+                                     const size_t     size)
 {
    if(IsNewSession == false) {
       cerr << "Bad cookie: session is not new!" << endl;
       return(false);
    }
-   if(size != sizeof(struct FractalGeneratorCookie)) {
+   if(size != sizeof(struct FGPCookie)) {
       cerr << "Bad cookie: invalid size!" << endl;
       return(false);
    }
-   if(strncmp(cookie->ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID))) {
+   if(strncmp(cookie->ID, FGP_COOKIE_ID, sizeof(cookie->ID))) {
       cerr << "Bad cookie: invalid ID!" << endl;
       return(false);
    }
@@ -168,10 +173,14 @@ bool ServiceThread::handleCookieEcho(const FractalGeneratorCookie* cookie,
 }
 
 
+// ###### Send cookie #######################################################
 bool ServiceThread::sendCookie()
 {
-   FractalGeneratorCookie cookie;
-   strncpy((char*)&cookie.ID, FG_COOKIE_ID, sizeof(FG_COOKIE_ID));
+   FGPCookie cookie;
+   strncpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
+   cookie.Parameter.Header.Type   = FGPT_PARAMETER;
+   cookie.Parameter.Header.Flags  = 0x00;
+   cookie.Parameter.Header.Length = htons(sizeof(cookie.Parameter.Header));
    cookie.Parameter.Width         = htonl(Status.Parameter.Width);
    cookie.Parameter.Height        = htonl(Status.Parameter.Height);
    cookie.Parameter.MaxIterations = htonl(Status.Parameter.MaxIterations);
@@ -194,20 +203,28 @@ bool ServiceThread::sendCookie()
 }
 
 
-bool ServiceThread::sendData(FractalGeneratorData* data)
+// ###### Send data #########################################################
+bool ServiceThread::sendData(FGPData* data)
 {
-   const size_t dataSize = getFractalGeneratorDataSize(data->Points);
+   const size_t dataSize = getFGPDataSize(data->Points);
    for(size_t i = 0;i < data->Points;i++) {
       data->Buffer[i] = htonl(data->Buffer[i]);
    }
+   data->Header.Type   = FGPT_DATA;
+   data->Header.Flags  = 0x00;
+   data->Header.Length = htons(dataSize);
    data->Points = htonl(data->Points);
    data->StartX = htonl(data->StartX);
    data->StartY = htonl(data->StartY);
 
+   struct TagItem tags[16];
+   tags[0].Tag  = TAG_RspIO_SCTP_PPID;
+   tags[0].Data = PPID_FGP;
+   tags[1].Tag  = TAG_DONE;
    if(rspSessionWrite(Session,
                       data,
                       dataSize,
-                      NULL) < 0) {
+                      (TagItem*)&tags) < 0) {
       cerr << "Writing data failed!" << endl;
       return(false);
    }
@@ -219,17 +236,18 @@ bool ServiceThread::sendData(FractalGeneratorData* data)
 }
 
 
+// ###### Service thread main loop ##########################################
 void ServiceThread::run()
 {
-   char                        buffer[4096];
-   struct TagItem              tags[16];
-   struct FractalGeneratorData data;
-   ssize_t                     received;
-   double                      stepX;
-   double                      stepY;
-   complex<double>             z;
-   size_t                      i;
-   size_t                      dataPackets = 0;
+   char            buffer[4096];
+   struct TagItem  tags[16];
+   struct FGPData  data;
+   ssize_t         received;
+   double          stepX;
+   double          stepY;
+   complex<double> z;
+   size_t          i;
+   size_t          dataPackets = 0;
 
    while(!Shutdown) {
       tags[0].Tag  = TAG_RspIO_MsgIsCookieEcho;
@@ -240,12 +258,14 @@ void ServiceThread::run()
       received = rspSessionRead(Session, (char*)&buffer, sizeof(buffer), (struct TagItem*)&tags);
       if(received > 0) {
          if(tags[0].Data != 0) {
-            if(!handleCookieEcho((struct FractalGeneratorCookie*)&buffer, received)) {
+            if(!handleCookieEcho((struct FGPCookie*)&buffer, received)) {
                goto finish;
             }
          }
          else {
-            if(!handleParameter((struct FractalGeneratorParameter*)&buffer, received)) {
+            if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
+               (((FGPCommonHeader*)&buffer)->Type == FGPT_PARAMETER) &&
+               (!handleParameter((struct FGPParameter*)&buffer, received))) {
                Status.CurrentX = 0;
                Status.CurrentY = 0;
                goto finish;
@@ -390,16 +410,22 @@ class ServiceThreadList
    ThreadListEntry* ThreadList;
 };
 
+
+// ###### Constructor #######################################################
 ServiceThreadList::ServiceThreadList()
 {
    ThreadList = NULL;
 }
 
+
+// ###### Destructor ########################################################
 ServiceThreadList::~ServiceThreadList()
 {
    removeAll();
 }
 
+
+// ###### Remove finished sessions ##########################################
 void ServiceThreadList::removeFinished()
 {
    ThreadListEntry* entry = ThreadList;
@@ -412,6 +438,8 @@ void ServiceThreadList::removeFinished()
    }
 }
 
+
+// ###### Remove all sessions ###############################################
 void ServiceThreadList::removeAll()
 {
    ThreadListEntry* entry = ThreadList;
@@ -421,6 +449,8 @@ void ServiceThreadList::removeAll()
    }
 }
 
+
+// ###### Add session #######################################################
 void ServiceThreadList::add(ServiceThread* thread)
 {
    ThreadListEntry* entry = new ThreadListEntry;
@@ -429,6 +459,8 @@ void ServiceThreadList::add(ServiceThread* thread)
    ThreadList    = entry;
 }
 
+
+// ###### Remove session ####################################################
 void ServiceThreadList::remove(ServiceThread* thread)
 {
    ThreadListEntry* entry = ThreadList;
@@ -454,7 +486,7 @@ void ServiceThreadList::remove(ServiceThread* thread)
 
 
 
-/* ###### rsplib main loop thread ########################################### */
+// ###### rsplib main loop thread ###########################################
 static bool RsplibThreadStop = false;
 static void* rsplibMainLoop(void* args)
 {
@@ -468,6 +500,8 @@ static void* rsplibMainLoop(void* args)
 }
 
 
+
+// ###### Main program ######################################################
 int main(int argc, char** argv)
 {
    uint32_t                      identifier        = 0;

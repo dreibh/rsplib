@@ -69,8 +69,8 @@ class FractalPU : public QMainWindow,
       Finalizer = 1,
       Invalid   = 2
    };
-   DataStatus handleData(const FractalGeneratorData* data,
-                         const size_t                size);
+   DataStatus handleData(const FGPData* data,
+                         const size_t   size);
 
    bool                      Running;
    QImage*                   Image;
@@ -79,7 +79,7 @@ class FractalPU : public QMainWindow,
    size_t                    PoolHandleSize;
    SessionDescriptor*        Session;
    uint32_t                  LastPoolElementID;
-   FractalGeneratorParameter Parameter;
+   FGPParameter Parameter;
    size_t                    Run;
    size_t                    PoolElementUsages;
 
@@ -186,9 +186,12 @@ void FractalPU::closeEvent(QCloseEvent* closeEvent)
 /* ###### Send Parameter message ######################################### */
 bool FractalPU::sendParameter()
 {
-   FractalGeneratorParameter parameter;
-   TagItem                   tags[16];
+   FGPParameter parameter;
+   TagItem      tags[16];
 
+   parameter.Header.Type   = FGPT_PARAMETER;
+   parameter.Header.Flags  = 0x00;
+   parameter.Header.Length = htons(sizeof(parameter.Header));
    parameter.Width         = htonl(Parameter.Width);
    parameter.Height        = htonl(Parameter.Height);
    parameter.AlgorithmID   = htonl(Parameter.AlgorithmID);
@@ -201,7 +204,9 @@ bool FractalPU::sendParameter()
 
    tags[0].Tag  = TAG_RspIO_Timeout;
    tags[0].Data = (tagdata_t)2000000;
-   tags[1].Tag  = TAG_DONE;
+   tags[1].Tag  = TAG_RspIO_SCTP_PPID;
+   tags[1].Data = PPID_FGP;
+   tags[2].Tag  = TAG_DONE;
    if(rspSessionWrite(Session, &parameter, sizeof(parameter),
                       (TagItem*)&tags) <= 0) {
       cerr << "ERROR: SessionWrite failed!" << endl;
@@ -212,10 +217,10 @@ bool FractalPU::sendParameter()
 
 
 /* ###### Handle Data message ############################################ */
-FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
-                                            const size_t                size)
+FractalPU::DataStatus FractalPU::handleData(const FGPData* data,
+                                            const size_t   size)
 {
-   if(size < getFractalGeneratorDataSize(0)) {
+   if(size < getFGPDataSize(0)) {
       return(Invalid);
    }
    size_t p      = 0;
@@ -226,7 +231,7 @@ FractalPU::DataStatus FractalPU::handleData(const FractalGeneratorData* data,
       update();
       return(Finalizer);
    }
-   if(size < getFractalGeneratorDataSize(points)) {
+   if(size < getFGPDataSize(points)) {
       return(Invalid);
    }
    if(x >= (size_t)Image->width()) {
@@ -402,7 +407,7 @@ void FractalPU::run()
          if(sendParameter()) {
 
             // ====== Handle received result chunks =========================
-            FractalGeneratorData data;
+            FGPData data;
             tags[0].Tag  = TAG_RspIO_PE_ID;
             tags[0].Data = 0;
             tags[1].Tag  = TAG_RspIO_Timeout;
@@ -411,7 +416,8 @@ void FractalPU::run()
             size_t packets = 0;
             ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
             while(received != 0) {
-               if(received > 0) {
+               if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
+                  (data.Header.Type == FGPT_DATA)) {
                   if(LastPoolElementID != tags[0].Data) {
                      LastPoolElementID = tags[0].Data;
                      PoolElementUsages++;
@@ -512,6 +518,8 @@ static void* rsplibMainLoop(void* args)
 }
 
 
+
+// ###### Main program ######################################################
 int main(int argc, char** argv)
 {
    const char*          poolHandle    = "FractalGeneratorPool";

@@ -1,5 +1,5 @@
 /*
- *  $Id: fractalgeneratorpackets.h,v 1.1 2005/07/28 14:15:15 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -42,11 +42,26 @@
 #include "netdouble.h"
 
 
-#define FGPA_MANDELBROT 1
+#define PPID_FGP 0x29097601
+
+#define FGPT_PARAMETER 0x01
+#define FGPT_DATA      0x02
+
+struct FGPCommonHeader
+{
+   uint8_t  Type;
+   uint8_t  Flags;
+   uint16_t Length;
+};
+
+
+
+#define FGPA_MANDELBROT  1
 #define FGPA_MANDELBROTN 2
 
-struct FractalGeneratorParameter
+struct FGPParameter
 {
+   FGPCommonHeader  Header;
    uint32_t         Width;
    uint32_t         Height;
    uint32_t         MaxIterations;
@@ -61,38 +76,45 @@ struct FractalGeneratorParameter
 
 #define FGD_MAX_POINTS 1024
 
-struct FractalGeneratorData
+struct FGPData
 {
-   uint32_t StartX;
-   uint32_t StartY;
-   uint32_t Points;
-   uint32_t Buffer[FGD_MAX_POINTS];
+   FGPCommonHeader Header;
+   uint32_t        StartX;
+   uint32_t        StartY;
+   uint32_t        Points;
+   uint32_t        Buffer[FGD_MAX_POINTS];
 };
 
 
-inline size_t getFractalGeneratorDataSize(const size_t points)
+/**
+  * Calculate size of FGP data message for given amount of points.
+  *
+  * @param points Number of points.
+  * @return Message size.
+  */
+inline size_t getFGPDataSize(const size_t points)
 {
-   struct FractalGeneratorData fgd;
-   return(((long)&fgd.Buffer - (long)&fgd) + sizeof(uint32_t) * points);
+   struct FGPData fgpData;
+   return(((long)&fgpData.Buffer - (long)&fgpData) + sizeof(uint32_t) * points);
 }
 
 
 
-#define FG_COOKIE_ID "<FG-001>"
+#define FGP_COOKIE_ID "<FG-TD1>"
 
-struct FractalGeneratorCookie
+struct FGPCookie
 {
-   char                      ID[8];
-   FractalGeneratorParameter Parameter;
-   uint32_t                  CurrentX;
-   uint32_t                  CurrentY;
+   char         ID[8];
+   FGPParameter Parameter;
+   uint32_t     CurrentX;
+   uint32_t     CurrentY;
 };
 
 
 struct FractalGeneratorStatus {
-   struct FractalGeneratorParameter Parameter;
-   uint32_t                         CurrentX;
-   uint32_t                         CurrentY;
+   struct FGPParameter Parameter;
+   uint32_t            CurrentX;
+   uint32_t            CurrentY;
 };
 
 

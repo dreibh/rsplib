@@ -151,6 +151,13 @@ bool sessionStorageIsEmpty(struct SessionStorage* sessionStorage)
 }
 
 
+/* ###### Get number of sessions ######################################### */
+size_t sessionStorageGetElements(struct SessionStorage* sessionStorage)
+{
+   return(leafLinkedRedBlackTreeGetElements(&sessionStorage->SessionIDSet));
+}
+
+
 /* ###### Print session storage ########################################## */
 void sessionStoragePrint(struct SessionStorage* sessionStorage,
                          FILE*                  fd)
