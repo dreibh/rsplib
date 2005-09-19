@@ -51,7 +51,7 @@
 
 
 struct Dispatcher           gDispatcher;
-static struct ASAPInstance* gAsapInstance = NULL;
+struct ASAPInstance*        gAsapInstance = NULL;
 static struct ThreadSafety  gThreadSafety;
 
 
