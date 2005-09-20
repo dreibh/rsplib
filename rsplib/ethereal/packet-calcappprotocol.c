@@ -121,7 +121,6 @@ proto_register_calcappprotocol(void)
   /* Required function calls to register the header fields and subtrees used */
   proto_register_field_array(proto_calcappprotocol, hf, array_length(hf));
   proto_register_subtree_array(ett, array_length(ett));
-
 }
 
 void
