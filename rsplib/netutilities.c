@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -2026,7 +2026,9 @@ size_t getladdrsplus(const int              fd,
    uint16_t port;
 #endif
 #endif
-   size_t i;
+   size_t addrs2;
+   size_t j;
+   int    i;
 
    if(addrs > 0) {
 #ifdef LINUX
@@ -2040,11 +2042,11 @@ size_t getladdrsplus(const int              fd,
          port = getPort((struct sockaddr*)packedAddresses);
          sctp_freeladdrs(packedAddresses);
 
-         if(obtainLocalAddresses(addressArray, &addrs, ASF_HideMulticast) == true) {
-            for(i = 0;i < addrs;i++) {
-               setPort(&((*addressArray)[i].sa), port);
+         if(obtainLocalAddresses(addressArray, &addrs2, ASF_HideMulticast) == true) {
+            for(j = 0;j < addrs2;j++) {
+               setPort(&((*addressArray)[j].sa), port);
             }
-            return(addrs);
+            return(addrs2);
          }
          return(0);
       }

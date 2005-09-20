@@ -1008,4 +1008,3 @@ static void handleRegistrarConnectionEvent(
 
    dispatcherUnlock(asapInstance->StateMachine);
 }
-

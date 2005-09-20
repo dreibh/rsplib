@@ -50,9 +50,9 @@
 #define MAX_ADDRESSES_PER_ENDPOINT 128
 
 
-struct Dispatcher           gDispatcher;
-struct ASAPInstance*        gAsapInstance = NULL;
-static struct ThreadSafety  gThreadSafety;
+struct Dispatcher    gDispatcher;
+struct ASAPInstance* gAsapInstance = NULL;
+struct ThreadSafety  gThreadSafety;
 
 
 size_t rspSessionCreateComponentStatus(

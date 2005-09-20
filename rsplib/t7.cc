@@ -47,6 +47,7 @@
 
 #include "asapinstance.h"
 extern struct ASAPInstance* gAsapInstance;
+extern struct ThreadSafety  gThreadSafety;
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -375,7 +376,7 @@ struct rserpool_sndrcvinfo
 
 
 // ????????????
-int rsp_mapsocket(int sd);
+int rsp_mapsocket(int sd, int toSD);
 int rsp_unmapsocket(int sd);
 int rsp_deregister(int sd);
 int rsp_close(int sd);
@@ -434,6 +435,7 @@ static bool configureSCTPSocket(int sd, sctp_assoc_t assocID, struct TagItem* ta
 
 extern struct Dispatcher      gDispatcher;
 struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
+struct ThreadSafety           gRSerPoolSocketSetMutex;
 struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 
@@ -1154,16 +1156,6 @@ static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
    struct Session* session;
 
    if(rserpoolSocket->ConnectedSession) {
-      if(sessionID != 0) {
-         LOG_WARNING
-         fputs("Session ID given for connected RSerPool socket (there is only one session)\n", stdlog);
-         LOG_END
-      }
-      if((assocID != 0) && (assocID != rserpoolSocket->ConnectedSession->AssocID)) {
-         LOG_ERROR
-         fputs("Assoc ID given for connected RSerPool socket (there is only one session, with different assoc ID!)\n", stdlog);
-         LOG_END
-      }
       return(rserpoolSocket->ConnectedSession);
    }
    else if(sessionID != 0) {
@@ -1336,58 +1328,174 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
 
 
 
+/* ###### Lock mutex ###################################################### */
+static void lock(struct Dispatcher* dispatcher, void* userData)
+{
+   threadSafetyLock(&gThreadSafety);
+}
+
+
+/* ###### Unlock mutex #################################################### */
+static void unlock(struct Dispatcher* dispatcher, void* userData)
+{
+   threadSafetyUnlock(&gThreadSafety);
+}
+
+
+/* ###### rsplib main loop thread ######################################## */
+static bool      RsplibThreadStop     = false;
+static pthread_t RsplibMainLoopThread = 0;
+static void* rsplibMainLoop(void* args)
+{
+   struct timeval     timeout;
+   unsigned long long testTimeStamp;
+   fd_set             testfds;
+   fd_set             readfds;
+   fd_set             writefds;
+   fd_set             exceptfds;
+   int                result;
+   int                n;
+
+   while(!RsplibThreadStop) {
+      /* ====== Schedule ================================================= */
+      /* pthreads seem to have the property that scheduling is quite
+         unfair -> If the main loop only invokes rspSelect(), this
+         may block other threads forever => explicitly let other threads
+         do their work now, then lock! */
+      sched_yield();
+
+      /* ====== Collect data for ext_select() call ======================= */
+      timeout.tv_sec  = 0;
+      timeout.tv_usec = 100000;
+      lock(&gDispatcher, NULL);
+      dispatcherGetSelectParameters(&gDispatcher,
+                                    &n, &readfds, &writefds, &exceptfds,
+                                    &testfds, &testTimeStamp,
+                                    &timeout);
+
+      /* ====== Do ext_select() call ===================================== */
+      result = ext_select(n + 1, &readfds, &writefds, &exceptfds, &timeout);
+
+      /* ====== Handle results =========================================== */
+      dispatcherHandleSelectResult(&gDispatcher, result,
+                                   &readfds, &writefds, &exceptfds,
+                                   &testfds, testTimeStamp);
+      unlock(&gDispatcher, NULL);
+   }
+   return(NULL);
+}
+
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize(struct rsp_info* info)
+int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
 {
-   rspInitialize(NULL);  // ???????????
+   static const char* buildDate = __DATE__;
+   static const char* buildTime = __TIME__;
 
-   /* ====== Initialize session storage ================================== */
-   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-
-   /* ====== Initialize RSerPool Socket descriptor storage =============== */
-   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-   leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-   gRSerPoolSocketAllocationBitmap = identifierBitmapNew(FD_SETSIZE);
-   if(gRSerPoolSocketAllocationBitmap == NULL) {
-      errno = ENOMEM;
-      return(-1);
+   /* ====== Check for problems ========================================== */
+   if(gAsapInstance != NULL) {
+      LOG_WARNING
+      fputs("rsplib is already initialized\n", stdlog);
+      LOG_END
+      return(0);
    }
-   CHECK(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, 0) == 0);
 
-   return(0);
+   /* ====== Initialize ASAP instance ==================================== */
+   threadSafetyInit(&gThreadSafety, "RsplibInstance");
+   threadSafetyInit(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
+   dispatcherNew(&gDispatcher, lock, unlock, NULL);
+   gAsapInstance = asapInstanceNew(&gDispatcher, tags);
+   if(gAsapInstance) {
+      tagListSetData(tags, TAG_RspLib_GetVersion,   (tagdata_t)RSPLIB_VERSION);
+      tagListSetData(tags, TAG_RspLib_GetRevision,  (tagdata_t)RSPLIB_REVISION);
+      tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
+      tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
+      tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
+
+      /* ====== Initialize session storage =============================== */
+      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+
+      /* ====== Initialize RSerPool Socket descriptor storage ============ */
+      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+      gRSerPoolSocketAllocationBitmap = identifierBitmapNew(FD_SETSIZE);
+      if(gRSerPoolSocketAllocationBitmap != NULL) {
+         /* ====== Map stdin, stdout, stderr file descriptors ============ */
+         CHECK(rsp_mapsocket(STDOUT_FILENO, STDOUT_FILENO) == STDOUT_FILENO);
+         CHECK(rsp_mapsocket(STDIN_FILENO, STDIN_FILENO) == STDIN_FILENO);
+         CHECK(rsp_mapsocket(STDERR_FILENO, STDERR_FILENO) == STDERR_FILENO);
+
+         /* ====== Create thread for main loop =========================== */
+         RsplibThreadStop = false;
+         if(pthread_create(&RsplibMainLoopThread, NULL, &rsplibMainLoop, NULL) == 0) {
+            LOG_NOTE
+            fputs("rsplib is ready\n", stdlog);
+            LOG_END
+            return(0);
+         }
+         else {
+            LOG_ERROR
+            fputs("Unable to create rsplib main loop thread\n", stdlog);
+            LOG_END
+         }
+
+         identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
+         gRSerPoolSocketAllocationBitmap = NULL;
+      }
+      asapInstanceDelete(gAsapInstance);
+      gAsapInstance = NULL;
+      dispatcherDelete(&gDispatcher);
+   }
+   return(-1);
 }
 
 
 /* ###### Clean-up RSerPool API Library ################################## */
 void rsp_cleanup()
 {
-   leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
+   if(gAsapInstance) {
+      /* ====== Stopping main loop thread ================================ */
+      puts("JOIN...");
+      RsplibThreadStop = true;
+      pthread_join(RsplibMainLoopThread, NULL);
+      puts("JOIN OK");
 
-
-   /* ====== Clean-up RSerPool Socket descriptor storage ================= */
-   leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
-   for(int i = 1;i < FD_SETSIZE;i++) {
-      if(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, i) < 0) {
-         LOG_WARNING
-         fprintf(stdlog, "RSerPool socket %d is still registered -> closing it\n", i);
-         LOG_END
-         rsp_close(i);
+      /* ====== Clean-up RSerPool Socket descriptor storage ============== */
+      CHECK(rsp_unmapsocket(STDOUT_FILENO) == 0);
+      CHECK(rsp_unmapsocket(STDIN_FILENO) == 0);
+      CHECK(rsp_unmapsocket(STDERR_FILENO) == 0);
+      for(int i = 1;i < FD_SETSIZE;i++) {
+         if(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, i) < 0) {
+            LOG_WARNING
+            fprintf(stdlog, "RSerPool socket %d is still registered -> closing it\n", i);
+            LOG_END
+            rsp_close(i);
+         }
       }
-   }
-   identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
-   gRSerPoolSocketAllocationBitmap = NULL;
+      leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
+      identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
+      gRSerPoolSocketAllocationBitmap = NULL;
 
-   rspCleanUp();
+      /* ====== Clean-up ASAP instance and Dispatcher ==================== */
+      asapInstanceDelete(gAsapInstance);
+      gAsapInstance = NULL;
+      dispatcherDelete(&gDispatcher);
+      threadSafetyDestroy(&gRSerPoolSocketSetMutex);
+      threadSafetyDestroy(&gThreadSafety);
+#ifndef HAVE_KERNEL_SCTP
+      /* Finally, give sctplib some time to cleanly shut down associations */
+      usleep(250000);
+#endif
+   }
 }
 
 
-int rsp_mapsocket(int sd)
+int rsp_mapsocket(int sd, int toSD)
 {
    struct RSerPoolSocket* rserpoolSocket;
 
    /* ====== Check for problems ========================================== */
-   if((sd < 0) || (sd < FD_SETSIZE)) {
+   if((sd < 0) || (sd >= FD_SETSIZE)) {
       errno = EINVAL;
       return(-1);
    }
@@ -1402,13 +1510,18 @@ int rsp_mapsocket(int sd)
    rserpoolSocket->Socket = sd;
 
    /* ====== Find available RSerPool socket descriptor =================== */
-   dispatcherLock(&gDispatcher);
-   rserpoolSocket->Descriptor = identifierBitmapAllocateID(gRSerPoolSocketAllocationBitmap);
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
+   if(toSD >= 0) {
+      rserpoolSocket->Descriptor = identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, toSD);
+   }
+   else {
+      rserpoolSocket->Descriptor = identifierBitmapAllocateID(gRSerPoolSocketAllocationBitmap);
+   }
    if(rserpoolSocket->Descriptor >= 0) {
       /* ====== Add RSerPool socket entry ================================ */
       CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    }
-   dispatcherUnlock(&gDispatcher);
+   threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
@@ -1423,15 +1536,15 @@ int rsp_mapsocket(int sd)
 int rsp_unmapsocket(int sd)
 {
    struct RSerPoolSocket* rserpoolSocket;
-   int                    result = -1;
+   int                    result = 0;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd)
 
    if(rserpoolSocket->MessageBuffer == NULL) {
-      dispatcherLock(&gDispatcher);
+      threadSafetyLock(&gRSerPoolSocketSetMutex);
       CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
       identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
       rserpoolSocket->Descriptor = -1;
-      dispatcherUnlock(&gDispatcher);
+      threadSafetyUnlock(&gRSerPoolSocketSetMutex);
       free(rserpoolSocket);
    }
    else {
@@ -1515,7 +1628,6 @@ printf("=> fd=%d    type=%d STREAM=%d\n",fd,type,SOCK_STREAM);
    threadSafetyInit(&rserpoolSocket->Mutex, "RSerPoolSocket");
    leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
    rserpoolSocket->Socket           = fd;
-printf("SO=%d\n",fd);
    rserpoolSocket->SocketDomain     = domain;
    rserpoolSocket->SocketType       = type;
    rserpoolSocket->SocketProtocol   = protocol;
@@ -1525,13 +1637,13 @@ printf("SO=%d\n",fd);
    sessionStorageNew(&rserpoolSocket->SessionSet);
 
    /* ====== Find available RSerPool socket descriptor =================== */
-   dispatcherLock(&gDispatcher);
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
    rserpoolSocket->Descriptor = identifierBitmapAllocateID(gRSerPoolSocketAllocationBitmap);
    if(rserpoolSocket->Descriptor >= 0) {
       /* ====== Add RSerPool socket entry ================================ */
       CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    }
-   dispatcherUnlock(&gDispatcher);
+   threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
@@ -1603,17 +1715,25 @@ int rsp_close(int sd)
    }
 
    /* ====== Delete RSerPool socket entry ================================ */
-   dispatcherLock(&gDispatcher);
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
    CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
    rserpoolSocket->Descriptor = -1;
-   dispatcherUnlock(&gDispatcher);
+   threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
    sessionStorageDelete(&rserpoolSocket->SessionSet);
-   identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
+
    if(rserpoolSocket->Socket >= 0) {
       ext_close(rserpoolSocket->Socket);
       rserpoolSocket->Socket = -1;
+   }
+   if(rserpoolSocket->SessionAllocationBitmap) {
+      identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
+      rserpoolSocket->SessionAllocationBitmap = NULL;
+   }
+   if(rserpoolSocket->MessageBuffer) {
+      free(rserpoolSocket->MessageBuffer);
+      rserpoolSocket->MessageBuffer = NULL;
    }
    threadSafetyDestroy(&rserpoolSocket->Mutex);
    free(rserpoolSocket);
@@ -1625,8 +1745,8 @@ int rsp_forcefailover(int             sd,
                       struct TagItem* tags)
 {
    RSerPoolSocket*             rserpoolSocket;
-   struct rserpool_addrinfo*        rspAddrInfo;
-   struct rserpool_addrinfo*        rspAddrInfo2;  // ??????
+   struct rserpool_addrinfo*   rspAddrInfo;
+   struct rserpool_addrinfo*   rspAddrInfo2;
    union sctp_notification     notification;
    struct timeval              timeout;
    ssize_t                     received;
@@ -2132,36 +2252,37 @@ ssize_t rsp_sendmsg(int                  sd,
 
    session = sessionFind(rserpoolSocket, sessionID, 0);
    if(session != NULL) {
-      if(session->IsFailed) {
+      if(!session->IsFailed) {
+         LOG_VERBOSE1
+         fprintf(stdlog, "Trying to send message via session %u of RSerPool socket %d, socket %d\n",
+                 session->SessionID,
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         LOG_END
+         result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
+                             MSG_NOSIGNAL,
+                             NULL, 0,
+                             sctpPPID, session->AssocID, sctpStreamID, sctpTimeToLive,
+                             timeout);
+         if((result < 0) && (errno != EAGAIN)) {
+            LOG_ACTION
+            fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
+                    rserpoolSocket->Descriptor, session->SessionID);
+            LOG_END
+
+            session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
+            session->IsFailed              = true;
+            result                         = -1;
+         }
+      }
+      else {
          LOG_WARNING
          fprintf(stdlog, "Session %u of RSerPool socket %d, socket %d requires failover\n",
                  session->SessionID,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
          session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
-         return(-1);
-      }
-
-      LOG_VERBOSE1
-      fprintf(stdlog, "Trying to send message via session %u of RSerPool socket %d, socket %d\n",
-              session->SessionID,
-              rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-      LOG_END
-      result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
-                          MSG_NOSIGNAL,
-                          NULL, 0,
-                          sctpPPID, session->AssocID, sctpStreamID, sctpTimeToLive,
-                          timeout);
-      if((result < 0) && (errno != EAGAIN)) {
-         LOG_ACTION
-         fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
-                 rserpoolSocket->Descriptor, session->SessionID);
-         LOG_END
-
-         session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
-         session->IsFailed              = true;
-
-         return(-1);
+         result = -1;
+         errno = EIO;
       }
    }
 
@@ -2273,6 +2394,7 @@ ssize_t rsp_recvmsg(int                         sd,
    sctp_assoc_t               assocID;
    int                        flags;
    ssize_t                    received;
+   ssize_t                    received2;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    if(rinfo == NULL) {
@@ -2377,10 +2499,9 @@ ssize_t rsp_recvmsg(int                         sd,
    else {
       /* ====== Give back Cookie Echo and notifications ================== */
       if(buffer != NULL) {
-         received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
-         if(received == 0) {
-            errno = EAGAIN;
-            received = -1;
+         received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
+         if(received2 > 0) {
+            received = received2;
          }
       }
    }
@@ -2478,7 +2599,7 @@ static void handleNotification(struct RSerPoolSocket* rserpoolSocket,
                                     true, NULL, 0, NULL);
                if(session == NULL) {
                   LOG_WARNING
-                  fprintf(stderr, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
+                  fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
                         notification->sn_assoc_change.sac_assoc_id,
                         rserpoolSocket->Descriptor, rserpoolSocket->Socket);
                   LOG_END
@@ -2820,21 +2941,6 @@ struct Pong
 
 
 
-
-/* ###### rsplib main loop thread ######################################## */
-static bool RsplibThreadStop = false;
-static void* rsplibMainLoop(void* args)
-{
-   struct timeval timeout;
-   while(!RsplibThreadStop) {
-      timeout.tv_sec  = 0;
-      timeout.tv_usec = 250000;
-      rspSelect(0, NULL, NULL, NULL, &timeout);
-   }
-   return(NULL);
-}
-
-
 #include "t10.cc"
 
 int main(int argc, char** argv)
@@ -2848,7 +2954,6 @@ int main(int argc, char** argv)
    struct rserpool_sndrcvinfo rinfo;
    bool   server = true;
    bool   thread = false;
-   pthread_t rsplibThread;
 
    for(n = 1;n < argc;n++) {
       if(!(strncmp(argv[n], "-log" ,4))) {
@@ -2868,11 +2973,12 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-   rsp_initialize(&info);
+   memset(&info, 0, sizeof(info));
+   rsp_initialize(&info, NULL);
 
-   if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
-      puts("ERROR: Unable to create rsplib main loop thread!");
-   }
+//    if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
+//       puts("ERROR: Unable to create rsplib main loop thread!");
+//    }
 
 
    if(!server) {
@@ -3041,6 +3147,13 @@ printf("READ EVENT FOR %d\n",sd);
          rsp_deregister(sd);
       }
       else {
+
+         poolElement("Ping Pong Server - Version 1.0",
+                     "PingPongPool", NULL,
+                     PingPongServer::pingPongServerFactory);
+         return 0;
+
+#if 0
          sd = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
          CHECK(sd > 0);
 
@@ -3086,14 +3199,15 @@ printf("READ EVENT FOR %d\n",sd);
          puts("Removing Pool Element...\n");
          puts("DEREG...");
          rsp_deregister(sd);
+#endif
       }
    }
 
 puts("CLOSE...");
    rsp_close(sd);
-puts("JOIN");
+/*puts("JOIN");
    RsplibThreadStop = true;
-   pthread_join(rsplibThread, NULL);
+   pthread_join(rsplibThread, NULL);*/
 puts("CLEANUP...");
    rsp_cleanup();
    finishLogging();

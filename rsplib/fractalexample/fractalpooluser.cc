@@ -191,7 +191,7 @@ bool FractalPU::sendParameter()
 
    parameter.Header.Type   = FGPT_PARAMETER;
    parameter.Header.Flags  = 0x00;
-   parameter.Header.Length = htons(sizeof(parameter.Header));
+   parameter.Header.Length = htons(sizeof(parameter));
    parameter.Width         = htonl(Parameter.Width);
    parameter.Height        = htonl(Parameter.Height);
    parameter.AlgorithmID   = htonl(Parameter.AlgorithmID);

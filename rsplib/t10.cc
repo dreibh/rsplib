@@ -12,8 +12,9 @@ class ThreadedServer : public TDThread
    ~ThreadedServer();
 
    inline bool hasFinished() const {
-      return(RSerPoolSocketDescriptor < 0);
+      return(Finished);
    }
+   void shutdown();
 
    protected:
    int  RSerPoolSocketDescriptor;
@@ -28,6 +29,7 @@ class ThreadedServer : public TDThread
 
    bool IsNewSession;
    bool Shutdown;
+   bool Finished;
 };
 
 
@@ -37,6 +39,8 @@ ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
    RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
    IsNewSession = true;
    Shutdown     = false;
+   Finished     = false;
+   printTimeStamp(stdout);
    printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
 }
 
@@ -44,9 +48,7 @@ ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
 // ###### Destructor ########################################################
 ThreadedServer::~ThreadedServer()
 {
-   Shutdown = true;
-   waitForFinish();
-   printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
+   shutdown();
    if(RSerPoolSocketDescriptor >= 0) {
       rsp_close(RSerPoolSocketDescriptor);
       RSerPoolSocketDescriptor = -1;
@@ -54,9 +56,22 @@ ThreadedServer::~ThreadedServer()
 }
 
 
+// ###### Shutdown thread ###################################################
+void ThreadedServer::shutdown()
+{
+   if(!Finished) {
+      Shutdown = true;
+      waitForFinish();
+      printTimeStamp(stdout);
+      printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
+   }
+}
+
+
 // ###### Handle cookie #####################################################
 void ThreadedServer::handleCookieEcho(const char* buffer, size_t bufferSize)
 {
+   printTimeStamp(stdout);
    puts("COOKIE ECHO");
 }
 
@@ -64,6 +79,7 @@ void ThreadedServer::handleCookieEcho(const char* buffer, size_t bufferSize)
 // ###### Handle notification ###############################################
 void ThreadedServer::handleNotification(const union rserpool_notification* notification)
 {
+   printTimeStamp(stdout);
    printf("NOTIFICATION: ");
    rsp_print_notification(notification, stdout);
    puts("");
@@ -97,15 +113,12 @@ void ThreadedServer::run()
          }
       }
       else if(received == 0) {
-         puts("--- Abbruch ---");
-         Shutdown = true;
          break;
       }
    }
 
-   puts("Thread-Ende!\n");
+   Finished = true;
 }
-
 
 
 
@@ -190,6 +203,11 @@ void ThreadedServerList::remove(ThreadedServer* thread)
          else {
             prev->Next = entry->Next;
          }
+
+         // ====== Tell thread to shut down =================================
+         entry->Object->shutdown();
+
+         // ====== Remove thread ============================================
          delete entry->Object;
          entry->Object = NULL;
          delete entry;
@@ -209,6 +227,8 @@ class PingPongServer : public ThreadedServer
    PingPongServer(int rserpoolSocketDescriptor);
    ~PingPongServer();
 
+   static ThreadedServer* pingPongServerFactory(int sd);
+
    protected:
    void handleMessage(const char* buffer, size_t bufferSize, uint32_t ppid);
 
@@ -226,6 +246,12 @@ PingPongServer::PingPongServer(int rserpoolSocketDescriptor)
 
 PingPongServer::~PingPongServer()
 {
+}
+
+
+ThreadedServer* PingPongServer::pingPongServerFactory(int sd)
+{
+   return(new PingPongServer(sd));
 }
 
 
@@ -256,4 +282,76 @@ void PingPongServer::handleMessage(const char* buffer, size_t bufferSize, uint32
          }
       }
    }
+}
+
+
+void poolElement(const char*          programTitle,
+                 const char*          poolHandle,
+                 struct rsp_loadinfo* loadinfo,
+                 ThreadedServer*      (*threadFactory)(int sd))
+{
+   beginLogging();
+   if(rsp_initialize(NULL, 0) < 0) {
+      puts("ERROR: Unable to initialize rsplib Library!\n");
+      finishLogging();
+      return;
+   }
+
+   int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
+   if(rserpoolSocket >= 0) {
+      // ====== Initialize PE settings ======================================
+      struct rsp_loadinfo dummyLoadinfo;
+      if(loadinfo == NULL) {
+         memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
+         loadinfo = &dummyLoadinfo;
+         loadinfo->rli_policy = PPT_ROUNDROBIN;
+      }
+
+      // ====== Print program title =========================================
+      puts(programTitle);
+      for(size_t i = 0;i < strlen(programTitle);i++) {
+         printf("=");
+      }
+      puts("\n");
+
+      // ====== Register PE =================================================
+      if(rsp_register(rserpoolSocket,
+                      (const unsigned char*)poolHandle, strlen(poolHandle),
+                      loadinfo, NULL) < 0) {
+         printf("Failed to register PE to pool %s\n", poolHandle);
+      }
+
+      // ====== Main loop ===================================================
+      ThreadedServerList serverSet;
+      installBreakDetector();
+      while(!breakDetected()) {
+         // ====== Clean-up session list ====================================
+         serverSet.removeFinished();
+
+         // ====== Wait for incoming sessions ===============================
+         int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
+         if(newRSerPoolSocket >= 0) {
+            ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
+            if(serviceThread) {
+               serverSet.add(serviceThread);
+               serviceThread->start();
+            }
+            else {
+               rsp_close(newRSerPoolSocket);
+            }
+         }
+      }
+
+      // ====== Clean up ====================================================
+      serverSet.removeAll();
+      rsp_deregister(rserpoolSocket);
+      rsp_close(rserpoolSocket);
+   }
+   else {
+      logerror("Unable to create RSerPool socket");
+   }
+
+   rsp_cleanup();
+   finishLogging();
+   puts("\nTerminated!");
 }
