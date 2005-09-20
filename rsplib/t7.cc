@@ -365,7 +365,7 @@ void rsp_print_notification(const union rserpool_notification* notification, FIL
 }
 
 
-struct rserpool_sndrcvinfo
+struct rsp_sndrcvinfo
 {
    rserpool_session_t rinfo_session;
    uint32_t           rinfo_ppid;
@@ -449,10 +449,6 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 struct rsp_info
 {
 
-};
-
-struct rsp_sndrcvinfo
-{
 };
 
 struct rsp_loadinfo
@@ -2381,20 +2377,20 @@ static ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket
 }
 
 /* ###### RSerPool socket recvmsg() implementation ####################### */
-ssize_t rsp_recvmsg(int                         sd,
-                    void*                       buffer,
-                    size_t                      bufferLength,
-                    struct rserpool_sndrcvinfo* rinfo,
-                    int*                        msg_flags,
-                    unsigned long long          timeout)
+ssize_t rsp_recvmsg(int                    sd,
+                    void*                  buffer,
+                    size_t                 bufferLength,
+                    struct rsp_sndrcvinfo* rinfo,
+                    int*                   msg_flags,
+                    unsigned long long     timeout)
 {
-   struct RSerPoolSocket*     rserpoolSocket;
-   struct Session*            session;
-   struct rserpool_sndrcvinfo rinfoDummy;
-   sctp_assoc_t               assocID;
-   int                        flags;
-   ssize_t                    received;
-   ssize_t                    received2;
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   struct rsp_sndrcvinfo  rinfoDummy;
+   sctp_assoc_t           assocID;
+   int                    flags;
+   ssize_t                received;
+   ssize_t                received2;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    if(rinfo == NULL) {
@@ -2403,7 +2399,7 @@ ssize_t rsp_recvmsg(int                         sd,
       rinfo->rinfo_session = 0;
    }
    else {
-      memset(rinfo, 0, sizeof(struct rserpool_sndrcvinfo));
+      memset(rinfo, 0, sizeof(struct rsp_sndrcvinfo));
    }
 
 
@@ -2707,10 +2703,10 @@ static void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
 
 static bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket)
 {
-   char                     buffer[4];
-   struct sctp_sndrcvinfo   sinfo;
-   ssize_t                  result;
-   int                      flags;
+   char                   buffer[4];
+   struct sctp_sndrcvinfo sinfo;
+   ssize_t                result;
+   int                    flags;
 
    /* ====== Check, if message on socket is notification or ASAP ========= */
    flags = MSG_PEEK;
@@ -2951,7 +2947,7 @@ int main(int argc, char** argv)
    int n;
    struct rsp_loadinfo loadinfo;
    struct rsp_info info;
-   struct rserpool_sndrcvinfo rinfo;
+   struct rsp_sndrcvinfo rinfo;
    bool   server = true;
    bool   thread = false;
 
@@ -3147,59 +3143,10 @@ printf("READ EVENT FOR %d\n",sd);
          rsp_deregister(sd);
       }
       else {
-
-         poolElement("Ping Pong Server - Version 1.0",
-                     "PingPongPool", NULL,
-                     PingPongServer::pingPongServerFactory);
+         ThreadedServer::poolElement("Ping Pong Server - Version 1.0",
+                                     "PingPongPool", NULL,
+                                     PingPongServer::pingPongServerFactory);
          return 0;
-
-#if 0
-         sd = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
-         CHECK(sd > 0);
-
-         puts("=========== THREADED-SERVER =============");
-         memset(&loadinfo, 0, sizeof(loadinfo));
-         loadinfo.rli_policy = PPT_ROUNDROBIN;
-         rsp_register(sd, (const unsigned char*)"PingPongPool", 12, &loadinfo, NULL);
-
-         ThreadedServerList stl;
-
-         installBreakDetector();
-         while(!breakDetected()) {
-            /* ====== Clean-up session list ================================= */
-            stl.removeFinished();
-
-
-            FD_ZERO(&readfds);
-            FD_SET(sd, &readfds);
-            n = sd;
-
-            tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-            tags[0].Data = 0;
-            tags[1].Tag  = TAG_DONE;
-            int result = rsp_select(n + 1, &readfds, NULL, NULL, 1000000, (struct TagItem*)&tags);
-            if(result > 0) {
-               if(FD_ISSET(sd, &readfds)) {
-                  puts("READ EVENT!");
-
-                  int newSD = rsp_accept(sd, 0, NULL);
-                  if(newSD >= 0) {
-                     PingPongServer* serviceThread = new PingPongServer(newSD);
-                     if(serviceThread) {
-                        stl.add(serviceThread);
-                        serviceThread->start();
-                     }
-                  } else logerror("rsp_accept()");
-               }
-            }
-         }
-
-         puts("Closing sessions...\n");
-         stl.removeAll();
-         puts("Removing Pool Element...\n");
-         puts("DEREG...");
-         rsp_deregister(sd);
-#endif
       }
    }
 

@@ -16,6 +16,11 @@ class ThreadedServer : public TDThread
    }
    void shutdown();
 
+   static void poolElement(const char*          programTitle,
+                           const char*          poolHandle,
+                           struct rsp_loadinfo* loadinfo,
+                           ThreadedServer*      (*threadFactory)(int sd));
+
    protected:
    int  RSerPoolSocketDescriptor;
 
@@ -31,6 +36,27 @@ class ThreadedServer : public TDThread
    bool Shutdown;
    bool Finished;
 };
+
+
+
+class ThreadedServerList
+{
+   public:
+   ThreadedServerList();
+   ~ThreadedServerList();
+   void add(ThreadedServer* thread);
+   void remove(ThreadedServer* thread);
+   void removeFinished();
+   void removeAll();
+
+   private:
+   struct ThreadListEntry {
+      ThreadListEntry* Next;
+      ThreadedServer*  Object;
+   };
+   ThreadListEntry* ThreadList;
+};
+
 
 
 // ###### Constructor #######################################################
@@ -89,10 +115,10 @@ void ThreadedServer::handleNotification(const union rserpool_notification* notif
 // ###### Threaded server main loop #########################################
 void ThreadedServer::run()
 {
-   char                       buffer[65536];
-   struct rserpool_sndrcvinfo rinfo;
-   ssize_t                    received;
-   int                        flags;
+   char                  buffer[65536];
+   struct rsp_sndrcvinfo rinfo;
+   ssize_t               received;
+   int                   flags;
 
    while(!Shutdown) {
       flags     = 0;
@@ -121,24 +147,78 @@ void ThreadedServer::run()
 }
 
 
-
-class ThreadedServerList
+void ThreadedServer::poolElement(const char*          programTitle,
+                                 const char*          poolHandle,
+                                 struct rsp_loadinfo* loadinfo,
+                                 ThreadedServer*      (*threadFactory)(int sd))
 {
-   public:
-   ThreadedServerList();
-   ~ThreadedServerList();
-   void add(ThreadedServer* thread);
-   void remove(ThreadedServer* thread);
-   void removeFinished();
-   void removeAll();
+   beginLogging();
+   if(rsp_initialize(NULL, 0) < 0) {
+      puts("ERROR: Unable to initialize rsplib Library!\n");
+      finishLogging();
+      return;
+   }
 
-   private:
-   struct ThreadListEntry {
-      ThreadListEntry* Next;
-      ThreadedServer*  Object;
-   };
-   ThreadListEntry* ThreadList;
-};
+   int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
+   if(rserpoolSocket >= 0) {
+      // ====== Initialize PE settings ======================================
+      struct rsp_loadinfo dummyLoadinfo;
+      if(loadinfo == NULL) {
+         memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
+         loadinfo = &dummyLoadinfo;
+         loadinfo->rli_policy = PPT_ROUNDROBIN;
+      }
+
+      // ====== Print program title =========================================
+      puts(programTitle);
+      for(size_t i = 0;i < strlen(programTitle);i++) {
+         printf("=");
+      }
+      puts("\n");
+
+      // ====== Register PE =================================================
+      if(rsp_register(rserpoolSocket,
+                      (const unsigned char*)poolHandle, strlen(poolHandle),
+                      loadinfo, NULL) < 0) {
+         printf("Failed to register PE to pool %s\n", poolHandle);
+      }
+
+      // ====== Main loop ===================================================
+      ThreadedServerList serverSet;
+      installBreakDetector();
+      while(!breakDetected()) {
+         // ====== Clean-up session list ====================================
+         serverSet.removeFinished();
+
+         // ====== Wait for incoming sessions ===============================
+         int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
+         if(newRSerPoolSocket >= 0) {
+            ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
+            if(serviceThread) {
+               serverSet.add(serviceThread);
+               serviceThread->start();
+            }
+            else {
+               rsp_close(newRSerPoolSocket);
+            }
+         }
+      }
+
+      // ====== Clean up ====================================================
+      serverSet.removeAll();
+      rsp_deregister(rserpoolSocket);
+      rsp_close(rserpoolSocket);
+   }
+   else {
+      logerror("Unable to create RSerPool socket");
+   }
+
+   rsp_cleanup();
+   finishLogging();
+   puts("\nTerminated!");
+}
+
+
 
 
 // ###### Constructor #######################################################
@@ -233,7 +313,7 @@ class PingPongServer : public ThreadedServer
    void handleMessage(const char* buffer, size_t bufferSize, uint32_t ppid);
 
    private:
-   uint32_t ReplyNo;
+   uint64_t ReplyNo;
 };
 
 
@@ -285,10 +365,73 @@ void PingPongServer::handleMessage(const char* buffer, size_t bufferSize, uint32
 }
 
 
-void poolElement(const char*          programTitle,
-                 const char*          poolHandle,
-                 struct rsp_loadinfo* loadinfo,
-                 ThreadedServer*      (*threadFactory)(int sd))
+
+
+
+class UDPLikeServer
+{
+   public:
+   UDPLikeServer(int rserpoolSocketDescriptor);
+   virtual ~UDPLikeServer();
+
+   static void udpLikePoolElement(const char*          programTitle,
+                                  const char*          poolHandle,
+                                  struct rsp_loadinfo* loadinfo,
+                                  UDPLikeServer*       server);
+
+   protected:
+   virtual void handleMessage(rserpool_session_t sessionID,
+                              const char*        buffer,
+                              size_t             bufferSize,
+                              uint32_t           ppid) = 0;
+   virtual void handleCookieEcho(rserpool_session_t sessionID,
+                                 const char*        buffer,
+                                 size_t             bufferSize);
+   virtual void handleNotification(const union rserpool_notification* notification);
+
+   protected:
+   int RSerPoolSocketDescriptor;
+};
+
+
+// ###### Constructor #######################################################
+UDPLikeServer::UDPLikeServer(int rserpoolSocketDescriptor)
+{
+   RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
+}
+
+
+// ###### Destructor ########################################################
+UDPLikeServer::~UDPLikeServer()
+{
+}
+
+
+// ###### Handle cookie #####################################################
+void UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID,
+                                     const char*        buffer,
+                                     size_t             bufferSize)
+{
+   printTimeStamp(stdout);
+   printf("COOKIE ECHO for session %u\n", sessionID);
+}
+
+
+// ###### Handle notification ###############################################
+void UDPLikeServer::handleNotification(const union rserpool_notification* notification)
+{
+   printTimeStamp(stdout);
+   printf("NOTIFICATION: ");
+   rsp_print_notification(notification, stdout);
+   puts("");
+}
+
+
+// ###### Implementation of a simple UDP-like server ########################
+void UDPLikeServer::udpLikePoolElement(const char*          programTitle,
+                                       const char*          poolHandle,
+                                       struct rsp_loadinfo* loadinfo,
+                                       UDPLikeServer*       server)
 {
    beginLogging();
    if(rsp_initialize(NULL, 0) < 0) {
@@ -322,28 +465,33 @@ void poolElement(const char*          programTitle,
       }
 
       // ====== Main loop ===================================================
-      ThreadedServerList serverSet;
       installBreakDetector();
       while(!breakDetected()) {
-         // ====== Clean-up session list ====================================
-         serverSet.removeFinished();
+         // ====== Read from socket =========================================
+         char                  buffer[65536];
+         int                   flags = 0;
+         struct rsp_sndrcvinfo rinfo;
+         ssize_t received = rsp_recvmsg(rserpoolSocket, (char*)&buffer, sizeof(buffer),
+                                        &rinfo, &flags, 500000);
 
-         // ====== Wait for incoming sessions ===============================
-         int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
-         if(newRSerPoolSocket >= 0) {
-            ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
-            if(serviceThread) {
-               serverSet.add(serviceThread);
-               serviceThread->start();
+         // ====== Handle data ==============================================
+         if(received > 0) {
+            if(flags & MSG_RSERPOOL_NOTIFICATION) {
+               server->handleNotification((union rserpool_notification*)&buffer);
+            }
+            else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+               server->handleCookieEcho(rinfo.rinfo_session,
+                                        (char*)&buffer, received);
             }
             else {
-               rsp_close(newRSerPoolSocket);
+               server->handleMessage(rinfo.rinfo_session,
+                                     (char*)&buffer, received,
+                                     rinfo.rinfo_ppid);
             }
          }
       }
 
       // ====== Clean up ====================================================
-      serverSet.removeAll();
       rsp_deregister(rserpoolSocket);
       rsp_close(rserpoolSocket);
    }
@@ -354,4 +502,50 @@ void poolElement(const char*          programTitle,
    rsp_cleanup();
    finishLogging();
    puts("\nTerminated!");
+}
+
+
+
+
+
+
+class EchoServer : public UDPLikeServer
+{
+   public:
+   EchoServer(int rserpoolSocketDescriptor);
+   virtual ~EchoServer();
+
+   protected:
+   virtual void handleMessage(rserpool_session_t sessionID,
+                              const char*        buffer,
+                              size_t             bufferSize,
+                              uint32_t           ppid);
+};
+
+
+// ###### Constructor #######################################################
+EchoServer::EchoServer(int rserpoolSocketDescriptor)
+   : UDPLikeServer(rserpoolSocketDescriptor)
+{
+}
+
+
+// ###### Destructor ########################################################
+EchoServer::~EchoServer()
+{
+}
+
+
+// ###### Handle message ####################################################
+void EchoServer::handleMessage(rserpool_session_t sessionID,
+                               const char*        buffer,
+                               size_t             bufferSize,
+                               uint32_t           ppid)
+{
+   ssize_t sent;
+
+   sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                      buffer, bufferSize, 0,
+                      0, NULL, 0, ppid, 0, ~0, 0, NULL);
+   printf("snd=%d\n", sent);
 }
