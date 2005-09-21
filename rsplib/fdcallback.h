@@ -42,6 +42,8 @@
 #include "dispatcher.h"
 #include "leaflinkedredblacktree.h"
 
+#include <sys/poll.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,9 +52,9 @@ extern "C" {
 
 enum FDCallbackEvents
 {
-   FDCE_Read      = (1 << 0),
-   FDCE_Write     = (1 << 1),
-   FDCE_Exception = (1 << 2)
+   FDCE_Read      = POLLIN,
+   FDCE_Write     = POLLOUT,
+   FDCE_Exception = POLLPRI|POLLHUP
 };
 
 

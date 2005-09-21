@@ -3419,8 +3419,10 @@ int main(int argc, char** argv)
                }
             }
          }
+         printTimeStamp(stdout);
          puts("DEREG...");
          rsp_deregister(sd);
+exit(1);
       }
       else {
          ThreadedServer::poolElement("Ping Pong Server - Version 1.0",
@@ -3431,12 +3433,16 @@ int main(int argc, char** argv)
       }
    }
 
+ printTimeStamp(stdout);
 puts("CLOSE...");
    rsp_close(sd);
 /*puts("JOIN");
    RsplibThreadStop = true;
    pthread_join(rsplibThread, NULL);*/
+ printTimeStamp(stdout);
 puts("CLEANUP...");
    rsp_cleanup();
    finishLogging();
+printTimeStamp(stdout);
+puts("Ende!");
 }
