@@ -116,6 +116,9 @@ bool ServiceThread::handleParameter(const FGPParameter* parameter,
    if(size < sizeof(struct FGPParameter)) {
       return(false);
    }
+   if(parameter->Header.Type != FGPT_PARAMETER) {
+      return(false);
+   }
    Status.Parameter.Width         = ntohl(parameter->Width);
    Status.Parameter.Height        = ntohl(parameter->Height);
    Status.Parameter.C1Real        = parameter->C1Real;
@@ -128,7 +131,7 @@ bool ServiceThread::handleParameter(const FGPParameter* parameter,
    Status.CurrentX                = 0;
    Status.CurrentY                = 0;
    cout << "Parameters: w=" << Status.Parameter.Width
-        << " h=" << Status.Parameter.Width
+        << " h=" << Status.Parameter.Height
         << " c1=" << complex<double>(networkToDouble(Status.Parameter.C1Real), networkToDouble(Status.Parameter.C1Imag))
         << " c2=" << complex<double>(networkToDouble(Status.Parameter.C2Real), networkToDouble(Status.Parameter.C2Imag))
         << " n=" << networkToDouble(Status.Parameter.N)

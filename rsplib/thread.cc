@@ -1,6 +1,6 @@
 /*
  * thread.cc: PTDThread class
- * Copyright (C) 2003 by Thomas Dreibholz
+ * Copyright (C) 2003-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,21 @@
  *
  */
 
+#include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <iostream>
 
 #include "thread.h"
 
 
-using namespace std;
-
-
+// ###### Constructor #######################################################
 TDThread::TDThread()
 {
    MyThread = 0;
 }
 
+
+// ###### Destructor ########################################################
 TDThread::~TDThread()
 {
    if(MyThread != 0) {
@@ -40,6 +40,8 @@ TDThread::~TDThread()
    }
 }
 
+
+// ###### Start routine to lauch thread's run() function ####################
 void* TDThread::startRoutine(void* object)
 {
    TDThread* thread = (TDThread*)object;
@@ -47,19 +49,25 @@ void* TDThread::startRoutine(void* object)
    return(NULL);
 }
 
-void TDThread::start()
+
+// ###### Start thread ######################################################
+bool TDThread::start()
 {
    if(MyThread == 0) {
-      if(pthread_create(&MyThread, NULL, startRoutine, (void*)this) != 0) {
-         cerr << "ERROR: Unable to start new thread!" << endl;
-         exit(1);
+      if(pthread_create(&MyThread, NULL, startRoutine, (void*)this) == 0) {
+         return(true);
       }
+      MyThread = 0;
+      fputs("ERROR: Unable to start new thread!\n", stderr);
    }
    else {
-      cerr << "ERROR: TDThread already running!" << endl;
+      fputs("ERROR: TDThread already running!\n", stderr);
    }
+   return(false);
 }
 
+
+// ###### Wait until thread has been finished ###############################
 void TDThread::waitForFinish()
 {
    if(MyThread != 0) {
@@ -68,6 +76,8 @@ void TDThread::waitForFinish()
    }
 }
 
+
+// ###### Wait a given amount of microseconds ###############################
 void TDThread::delay(const unsigned int us)
 {
    usleep(us);

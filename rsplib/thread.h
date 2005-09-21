@@ -1,6 +1,6 @@
 /*
  * thread.h: PTDThread class
- * Copyright (C) 2003 by Thomas Dreibholz
+ * Copyright (C) 2003-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class TDThread : public TDMutex
    TDThread();
    virtual ~TDThread();
 
-   void start();
+   bool start();
    void waitForFinish();
    static void delay(const unsigned int us);
 

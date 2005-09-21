@@ -134,7 +134,7 @@ calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(th
 #t6_SOURCES = t6.cc statistics.cc
 #t6_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t7_SOURCES = t7.cc statistics.cc
+t7_SOURCES = t7.cc statistics.cc netdouble.c netdouble.h fractalgeneratorpackets.h
 t7_LDADD   = libcppthread.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 t8_SOURCES = t8.cc statistics.cc

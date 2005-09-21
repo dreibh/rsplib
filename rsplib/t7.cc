@@ -2231,8 +2231,6 @@ ssize_t rsp_sendmsg(int                  sd,
                     size_t               dataLength,
                     unsigned int         msg_flags,
                     rserpool_session_t   sessionID,
-                    const unsigned char* poolHandle,
-                    size_t               poolHandleSize,
                     uint32_t             sctpPPID,
                     uint16_t             sctpStreamID,
                     uint32_t             sctpTimeToLive,
@@ -2320,7 +2318,6 @@ static ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket
          free(session->CookieEcho);
          session->CookieEcho     = NULL;
          session->CookieEchoSize = 0;
-         received = session->CookieEchoSize;
          break;
       }
 
@@ -2902,6 +2899,107 @@ int rsp_select(int                      rserpoolN,
 
 
 
+/* ###### Set session's CSP status text ################################## */
+int rsp_setstatus(int                sd,
+                  rserpool_session_t sessionID,
+                  const char*        statusText)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   int                    result = 0;
+
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+
+   threadSafetyLock(&rserpoolSocket->Mutex);
+   session = sessionFind(rserpoolSocket, sessionID, 0);
+   if(session != NULL) {
+      safestrcpy((char*)&session->StatusText,
+                 statusText,
+                 sizeof(session->StatusText));
+   }
+   else {
+      errno  = EINVAL;
+      result = -1;
+   }
+   threadSafetyUnlock(&rserpoolSocket->Mutex);
+   return(result);
+}
+
+
+/* ###### Get CSP status ################################################# */
+size_t getComponentStatus(
+          struct ComponentAssociationEntry** caeArray,
+          char*                              statusText,
+          char*                              componentAddress,
+          const int                          registrarSocket,
+          const RegistrarIdentifierType      registrarID,
+          const int                          registrarSocketProtocol,
+          const unsigned long long           registrarConnectionTimeStamp)
+{
+#if 0
+   size_t                            caeArraySize;
+   GList*                            list;
+   struct SessionDescriptor*         session;
+   size_t                            sessions;
+
+   LOG_VERBOSE3
+   fputs("Getting Component Status...\n", stdlog);
+   LOG_END
+
+   dispatcherLock(&gDispatcher);
+
+   sessions     = g_list_length(gSessionList);
+   *caeArray    = componentAssociationEntryArrayNew(1 + sessions);
+   caeArraySize = 0;
+   if(*caeArray) {
+      statusText[0]       = 0x00;
+      componentAddress[0] = 0x00;
+      if(registrarSocket >= 0) {
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, registrarID);
+         (*caeArray)[caeArraySize].Duration   = getMicroTime() - registrarConnectionTimeStamp;
+         (*caeArray)[caeArraySize].Flags      = 0;
+         (*caeArray)[caeArraySize].ProtocolID = registrarSocketProtocol;
+         (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
+         caeArraySize++;
+      }
+      componentStatusGetComponentAddress(componentAddress, -1, 0);
+
+      list = g_list_first(gSessionList);
+      while(list != NULL) {
+         session = (struct SessionDescriptor*)list->data;
+         if(!session->Incoming) {
+            if(session->Socket >= 0) {
+               (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Identifier);
+               (*caeArray)[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
+               (*caeArray)[caeArraySize].Flags      = 0;
+               (*caeArray)[caeArraySize].ProtocolID = session->SocketProtocol;
+               (*caeArray)[caeArraySize].PPID       = 0;
+               caeArraySize++;
+               componentStatusGetComponentAddress(componentAddress, session->Socket, 0);
+            }
+            if(session->StatusTextText[0] != 0x00) {
+               safestrcpy(statusText,
+                          session->StatusTextText,
+                          CSPH_STATUS_TEXT_SIZE);
+            }
+         }
+
+         list = g_list_next(list);
+      }
+
+      if((statusText[0] == 0x00) || (sessions != 1)) {
+         snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
+                  "%u Session%s", (unsigned int)sessions, (sessions == 1) ? "" : "s");
+      }
+   }
+
+   dispatcherUnlock(&gDispatcher);
+
+   return(caeArraySize);
+#endif
+return(0);
+}
+
 
 
 #include "breakdetector.h"
@@ -2950,6 +3048,8 @@ int main(int argc, char** argv)
    struct rsp_sndrcvinfo rinfo;
    bool   server = true;
    bool   thread = false;
+   bool   echo   = false;
+   bool   fractal = false;
 
    for(n = 1;n < argc;n++) {
       if(!(strncmp(argv[n], "-log" ,4))) {
@@ -2966,6 +3066,12 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[n], "-thread"))) {
          thread = true;
       }
+      else if(!(strcmp(argv[n], "-echo"))) {
+         echo = true;
+      }
+      else if(!(strcmp(argv[n], "-fractal"))) {
+         fractal = true;
+      }
    }
    beginLogging();
 
@@ -2977,6 +3083,18 @@ int main(int argc, char** argv)
 //    }
 
 
+   if(echo) {
+      EchoServer echoServer;
+      echoServer.poolElement("Echo Server - Version 1.0",
+                             "EchoPool", NULL);
+      return 0;
+   }
+   if(fractal) {
+      ThreadedServer::poolElement("Fractal Generator Server - Version 1.0",
+                                  "FractalGeneratorPool", NULL,
+                                  FractalGeneratorServer::fractalGeneratorServerFactory);
+      return 0;
+   }
    if(!server) {
       sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
       CHECK(sd > 0);
@@ -3052,7 +3170,6 @@ printf("READ EVENT FOR %d\n",sd);
             int msg_flags = 0;
             ssize_t snd = rsp_sendmsg(sd, (char*)&ping, sizeof(ping), msg_flags,
                                       0,
-                                      NULL, 0,
                                       PPID_PPP,
                                       0,
                                       ~0, 0, NULL);
@@ -3120,7 +3237,6 @@ printf("READ EVENT FOR %d\n",sd);
                                  int msg_flags = 0;
                                  ssize_t snd = rsp_sendmsg(sd, (char*)&pong, sizeof(pong), msg_flags,
                                                          rinfo.rinfo_session,
-                                                         NULL, 0,
                                                          PPID_PPP,
                                                          0,
                                                          ~0, 0, NULL);

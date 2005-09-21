@@ -5,6 +5,14 @@
 #include "thread.h"
 
 
+enum EventHandlingResult
+{
+   EHR_Okay     = 0,
+   EHR_Shutdown = 1,
+   EHR_Abort    = 2
+};
+
+
 class ThreadedServer : public TDThread
 {
    public:
@@ -14,6 +22,9 @@ class ThreadedServer : public TDThread
    inline bool hasFinished() const {
       return(Finished);
    }
+   inline bool isShuttingDown() const {
+      return(Shutdown);
+   }
    void shutdown();
 
    static void poolElement(const char*          programTitle,
@@ -22,12 +33,15 @@ class ThreadedServer : public TDThread
                            ThreadedServer*      (*threadFactory)(int sd));
 
    protected:
-   int  RSerPoolSocketDescriptor;
+   int RSerPoolSocketDescriptor;
 
    protected:
-   virtual void handleMessage(const char* buffer, size_t bufferSize, uint32_t ppid) = 0;
-   virtual void handleCookieEcho(const char* buffer, size_t bufferSize);
-   virtual void handleNotification(const union rserpool_notification* notification);
+   virtual EventHandlingResult handleMessage(const char* buffer,
+                                             size_t      bufferSize,
+                                             uint32_t    ppid,
+                                             uint16_t    streamID) = 0;
+   virtual EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
+   virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
 
    private:
    void run();
@@ -74,7 +88,8 @@ ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
 // ###### Destructor ########################################################
 ThreadedServer::~ThreadedServer()
 {
-   shutdown();
+   printTimeStamp(stdout);
+   printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
    if(RSerPoolSocketDescriptor >= 0) {
       rsp_close(RSerPoolSocketDescriptor);
       RSerPoolSocketDescriptor = -1;
@@ -87,28 +102,27 @@ void ThreadedServer::shutdown()
 {
    if(!Finished) {
       Shutdown = true;
-      waitForFinish();
-      printTimeStamp(stdout);
-      printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
    }
 }
 
 
 // ###### Handle cookie #####################################################
-void ThreadedServer::handleCookieEcho(const char* buffer, size_t bufferSize)
+EventHandlingResult ThreadedServer::handleCookieEcho(const char* buffer, size_t bufferSize)
 {
    printTimeStamp(stdout);
    puts("COOKIE ECHO");
+   return(EHR_Okay);
 }
 
 
 // ###### Handle notification ###############################################
-void ThreadedServer::handleNotification(const union rserpool_notification* notification)
+EventHandlingResult ThreadedServer::handleNotification(const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
    rsp_print_notification(notification, stdout);
    puts("");
+   return(EHR_Okay);
 }
 
 
@@ -126,16 +140,36 @@ void ThreadedServer::run()
                              (char*)&buffer, sizeof(buffer),
                              &rinfo, &flags, 1000000);
       if(received > 0) {
+         // ====== Handle event =============================================
+         EventHandlingResult eventHandlingResult;
          if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-            handleCookieEcho((char*)&buffer, received);
+            if(IsNewSession) {
+               eventHandlingResult = handleCookieEcho((char*)&buffer, received);
+               IsNewSession = false;
+            }
+            else {
+               printTimeStamp(stdout);
+               puts("Dropped unexpected ASAP COOKIE_ECHO!");
+               eventHandlingResult = EHR_Abort;
+            }
          }
          else if(flags & MSG_RSERPOOL_NOTIFICATION) {
             if(received >= (ssize_t)sizeof(union rserpool_notification)) {
-               handleNotification((union rserpool_notification*)&buffer);
+               eventHandlingResult = handleNotification((const union rserpool_notification*)&buffer);
             }
          }
          else {
-            handleMessage((char*)&buffer, received, rinfo.rinfo_ppid);
+            IsNewSession = false;
+            eventHandlingResult = handleMessage((char*)&buffer, received,
+                                                rinfo.rinfo_ppid, rinfo.rinfo_stream);
+         }
+
+         // ====== Check for problems =======================================
+         if((eventHandlingResult == EHR_Abort) ||
+            (eventHandlingResult == EHR_Shutdown)) {
+            rsp_sendmsg(RSerPoolSocketDescriptor,
+                        NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
+                        0, 0, 0, ~0, 0, NULL);
          }
       }
       else if(received == 0) {
@@ -147,6 +181,7 @@ void ThreadedServer::run()
 }
 
 
+// ###### Implementation of a simple threaded server ########################
 void ThreadedServer::poolElement(const char*          programTitle,
                                  const char*          poolHandle,
                                  struct rsp_loadinfo* loadinfo,
@@ -179,34 +214,36 @@ void ThreadedServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register(rserpoolSocket,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, NULL) < 0) {
-         printf("Failed to register PE to pool %s\n", poolHandle);
-      }
+                      loadinfo, NULL) == 0) {
 
-      // ====== Main loop ===================================================
-      ThreadedServerList serverSet;
-      installBreakDetector();
-      while(!breakDetected()) {
-         // ====== Clean-up session list ====================================
-         serverSet.removeFinished();
+         // ====== Main loop ===================================================
+         ThreadedServerList serverSet;
+         installBreakDetector();
+         while(!breakDetected()) {
+            // ====== Clean-up session list ====================================
+            serverSet.removeFinished();
 
-         // ====== Wait for incoming sessions ===============================
-         int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
-         if(newRSerPoolSocket >= 0) {
-            ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
-            if(serviceThread) {
-               serverSet.add(serviceThread);
-               serviceThread->start();
-            }
-            else {
-               rsp_close(newRSerPoolSocket);
+            // ====== Wait for incoming sessions ===============================
+            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
+            if(newRSerPoolSocket >= 0) {
+               ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
+               if(serviceThread) {
+                  serverSet.add(serviceThread);
+                  serviceThread->start();
+               }
+               else {
+                  rsp_close(newRSerPoolSocket);
+               }
             }
          }
-      }
 
-      // ====== Clean up ====================================================
-      serverSet.removeAll();
-      rsp_deregister(rserpoolSocket);
+         // ====== Clean up ====================================================
+         serverSet.removeAll();
+         rsp_deregister(rserpoolSocket);
+      }
+      else {
+         printf("Failed to register PE to pool %s\n", poolHandle);
+      }
       rsp_close(rserpoolSocket);
    }
    else {
@@ -275,6 +312,7 @@ void ThreadedServerList::remove(ThreadedServer* thread)
 {
    ThreadListEntry* entry = ThreadList;
    ThreadListEntry* prev  = NULL;
+
    while(entry != NULL) {
       if(entry->Object == thread) {
          if(prev == NULL) {
@@ -286,6 +324,7 @@ void ThreadedServerList::remove(ThreadedServer* thread)
 
          // ====== Tell thread to shut down =================================
          entry->Object->shutdown();
+         entry->Object->waitForFinish();
 
          // ====== Remove thread ============================================
          delete entry->Object;
@@ -310,13 +349,17 @@ class PingPongServer : public ThreadedServer
    static ThreadedServer* pingPongServerFactory(int sd);
 
    protected:
-   void handleMessage(const char* buffer, size_t bufferSize, uint32_t ppid);
+   EventHandlingResult handleMessage(const char* buffer,
+                                     size_t      bufferSize,
+                                     uint32_t    ppid,
+                                     uint16_t    streamID);
 
    private:
    uint64_t ReplyNo;
 };
 
 
+// ###### Constructor #######################################################
 PingPongServer::PingPongServer(int rserpoolSocketDescriptor)
    : ThreadedServer(rserpoolSocketDescriptor)
 {
@@ -324,18 +367,24 @@ PingPongServer::PingPongServer(int rserpoolSocketDescriptor)
 }
 
 
+// ###### Destructor ########################################################
 PingPongServer::~PingPongServer()
 {
 }
 
 
+// ###### Create a PingServer thread ########################################
 ThreadedServer* PingPongServer::pingPongServerFactory(int sd)
 {
    return(new PingPongServer(sd));
 }
 
 
-void PingPongServer::handleMessage(const char* buffer, size_t bufferSize, uint32_t ppid)
+// ###### Handle message ####################################################
+EventHandlingResult PingPongServer::handleMessage(const char* buffer,
+                                                  size_t      bufferSize,
+                                                  uint32_t    ppid,
+                                                  uint16_t    streamID)
 {
    ssize_t sent;
 
@@ -351,17 +400,16 @@ void PingPongServer::handleMessage(const char* buffer, size_t bufferSize, uint32
             pong.ReplyNo       = hton64(ReplyNo);
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (char*)&pong, sizeof(pong), 0,
-                               0, NULL, 0, PPID_PPP, 0, ~0, 0, NULL);
+                               0, PPID_PPP, 0, ~0, 0, NULL);
             printf("snd=%d\n",sent);
             if(sent > 0) {
                ReplyNo++;
+               return(EHR_Okay);
             }
-/*???           ssize_t sc = rsp_send_cookie(sd, (unsigned char*)&pong, sizeof(pong),
-                                       rinfo.rinfo_session, 0, NULL);
-            printf("sc=%d\n",sc);*/
          }
       }
    }
+   return(EHR_Abort);
 }
 
 
@@ -371,23 +419,23 @@ void PingPongServer::handleMessage(const char* buffer, size_t bufferSize, uint32
 class UDPLikeServer
 {
    public:
-   UDPLikeServer(int rserpoolSocketDescriptor);
+   UDPLikeServer();
    virtual ~UDPLikeServer();
 
-   static void udpLikePoolElement(const char*          programTitle,
-                                  const char*          poolHandle,
-                                  struct rsp_loadinfo* loadinfo,
-                                  UDPLikeServer*       server);
+   virtual void poolElement(const char*          programTitle,
+                            const char*          poolHandle,
+                            struct rsp_loadinfo* loadinfo);
 
    protected:
-   virtual void handleMessage(rserpool_session_t sessionID,
-                              const char*        buffer,
-                              size_t             bufferSize,
-                              uint32_t           ppid) = 0;
-   virtual void handleCookieEcho(rserpool_session_t sessionID,
-                                 const char*        buffer,
-                                 size_t             bufferSize);
-   virtual void handleNotification(const union rserpool_notification* notification);
+   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
+                                             const char*        buffer,
+                                             size_t             bufferSize,
+                                             uint32_t           ppid,
+                                             uint16_t           streamID) = 0;
+   virtual EventHandlingResult handleCookieEcho(rserpool_session_t sessionID,
+                                                const char*        buffer,
+                                                size_t             bufferSize);
+   virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
 
    protected:
    int RSerPoolSocketDescriptor;
@@ -395,9 +443,9 @@ class UDPLikeServer
 
 
 // ###### Constructor #######################################################
-UDPLikeServer::UDPLikeServer(int rserpoolSocketDescriptor)
+UDPLikeServer::UDPLikeServer()
 {
-   RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
+   RSerPoolSocketDescriptor = -1;
 }
 
 
@@ -408,30 +456,31 @@ UDPLikeServer::~UDPLikeServer()
 
 
 // ###### Handle cookie #####################################################
-void UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID,
+EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID,
                                      const char*        buffer,
                                      size_t             bufferSize)
 {
    printTimeStamp(stdout);
    printf("COOKIE ECHO for session %u\n", sessionID);
+   return(EHR_Okay);
 }
 
 
 // ###### Handle notification ###############################################
-void UDPLikeServer::handleNotification(const union rserpool_notification* notification)
+EventHandlingResult UDPLikeServer::handleNotification(const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
    rsp_print_notification(notification, stdout);
    puts("");
+   return(EHR_Okay);
 }
 
 
 // ###### Implementation of a simple UDP-like server ########################
-void UDPLikeServer::udpLikePoolElement(const char*          programTitle,
-                                       const char*          poolHandle,
-                                       struct rsp_loadinfo* loadinfo,
-                                       UDPLikeServer*       server)
+void UDPLikeServer::poolElement(const char*          programTitle,
+                                const char*          poolHandle,
+                                struct rsp_loadinfo* loadinfo)
 {
    beginLogging();
    if(rsp_initialize(NULL, 0) < 0) {
@@ -440,8 +489,8 @@ void UDPLikeServer::udpLikePoolElement(const char*          programTitle,
       return;
    }
 
-   int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
-   if(rserpoolSocket >= 0) {
+   RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
+   if(RSerPoolSocketDescriptor >= 0) {
       // ====== Initialize PE settings ======================================
       struct rsp_loadinfo dummyLoadinfo;
       if(loadinfo == NULL) {
@@ -458,42 +507,61 @@ void UDPLikeServer::udpLikePoolElement(const char*          programTitle,
       puts("\n");
 
       // ====== Register PE =================================================
-      if(rsp_register(rserpoolSocket,
+      if(rsp_register(RSerPoolSocketDescriptor,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, NULL) < 0) {
-         printf("Failed to register PE to pool %s\n", poolHandle);
-      }
+                      loadinfo, NULL) == 0) {
 
-      // ====== Main loop ===================================================
-      installBreakDetector();
-      while(!breakDetected()) {
-         // ====== Read from socket =========================================
-         char                  buffer[65536];
-         int                   flags = 0;
-         struct rsp_sndrcvinfo rinfo;
-         ssize_t received = rsp_recvmsg(rserpoolSocket, (char*)&buffer, sizeof(buffer),
-                                        &rinfo, &flags, 500000);
+         // ====== Main loop ================================================
+         installBreakDetector();
+         while(!breakDetected()) {
+            // ====== Read from socket ======================================
+            char                  buffer[65536];
+            int                   flags = 0;
+            struct rsp_sndrcvinfo rinfo;
+            ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor, (char*)&buffer, sizeof(buffer),
+                                          &rinfo, &flags, 500000);
 
-         // ====== Handle data ==============================================
-         if(received > 0) {
-            if(flags & MSG_RSERPOOL_NOTIFICATION) {
-               server->handleNotification((union rserpool_notification*)&buffer);
-            }
-            else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-               server->handleCookieEcho(rinfo.rinfo_session,
-                                        (char*)&buffer, received);
-            }
-            else {
-               server->handleMessage(rinfo.rinfo_session,
-                                     (char*)&buffer, received,
-                                     rinfo.rinfo_ppid);
+            // ====== Handle data ===========================================
+            if(received > 0) {
+               // ====== Handle event =======================================
+               EventHandlingResult eventHandlingResult;
+               if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                  handleNotification((const union rserpool_notification*)&buffer);
+                  /*
+                     We cannot shutdown or abort, since the session ID is not
+                     inserted into rinfo!
+                     Should we dissect the notification for the ID here?
+                  */
+                  eventHandlingResult = EHR_Okay;
+               }
+               else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+                  eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
+                                                         (char*)&buffer, received);
+               }
+               else {
+                  eventHandlingResult = handleMessage(rinfo.rinfo_session,
+                                                      (char*)&buffer, received,
+                                                      rinfo.rinfo_ppid,
+                                                      rinfo.rinfo_stream);
+               }
+
+               // ====== Check for problems =================================
+               if((eventHandlingResult == EHR_Abort) ||
+                  (eventHandlingResult == EHR_Shutdown)) {
+                  rsp_sendmsg(RSerPoolSocketDescriptor,
+                              NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
+                              rinfo.rinfo_session, 0, 0, ~0, 0, NULL);
+               }
             }
          }
-      }
 
-      // ====== Clean up ====================================================
-      rsp_deregister(rserpoolSocket);
-      rsp_close(rserpoolSocket);
+         // ====== Clean up =================================================
+         rsp_deregister(RSerPoolSocketDescriptor);
+      }
+      else {
+         printf("Failed to register PE to pool %s\n", poolHandle);
+      }
+      rsp_close(RSerPoolSocketDescriptor);
    }
    else {
       logerror("Unable to create RSerPool socket");
@@ -509,23 +577,25 @@ void UDPLikeServer::udpLikePoolElement(const char*          programTitle,
 
 
 
+
+
 class EchoServer : public UDPLikeServer
 {
    public:
-   EchoServer(int rserpoolSocketDescriptor);
+   EchoServer();
    virtual ~EchoServer();
 
    protected:
-   virtual void handleMessage(rserpool_session_t sessionID,
-                              const char*        buffer,
-                              size_t             bufferSize,
-                              uint32_t           ppid);
+   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
+                                             const char*        buffer,
+                                             size_t             bufferSize,
+                                             uint32_t           ppid,
+                                             uint16_t           streamID);
 };
 
 
 // ###### Constructor #######################################################
-EchoServer::EchoServer(int rserpoolSocketDescriptor)
-   : UDPLikeServer(rserpoolSocketDescriptor)
+EchoServer::EchoServer()
 {
 }
 
@@ -537,15 +607,390 @@ EchoServer::~EchoServer()
 
 
 // ###### Handle message ####################################################
-void EchoServer::handleMessage(rserpool_session_t sessionID,
-                               const char*        buffer,
-                               size_t             bufferSize,
-                               uint32_t           ppid)
+EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
+                                              const char*        buffer,
+                                              size_t             bufferSize,
+                                              uint32_t           ppid,
+                                              uint16_t           streamID)
 {
    ssize_t sent;
-
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                       buffer, bufferSize, 0,
-                      0, NULL, 0, ppid, 0, ~0, 0, NULL);
+                      sessionID, ppid, streamID,
+                      ~0, 0, NULL);
    printf("snd=%d\n", sent);
+   return((sent == (ssize_t)bufferSize) ? EHR_Okay : EHR_Abort);
+}
+
+
+
+
+
+
+
+
+#include <complex>
+
+#include "fractalgeneratorpackets.h"
+
+
+using namespace std;
+
+
+class FractalGeneratorServer : public ThreadedServer
+{
+   public:
+   FractalGeneratorServer(int rserpoolSocketDescriptor);
+   ~FractalGeneratorServer();
+
+   void configure(const size_t failureAfter,
+                  const bool   testMode);
+
+   static ThreadedServer* fractalGeneratorServerFactory(int sd);
+
+   protected:
+   EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
+   EventHandlingResult handleMessage(const char* buffer,
+                                     size_t      bufferSize,
+                                     uint32_t    ppid,
+                                     uint16_t    streamID);
+
+   private:
+   bool sendCookie();
+   bool sendData(FGPData* data);
+   bool handleParameter(const FGPParameter* parameter,
+                        const size_t        size);
+   EventHandlingResult calculateImage();
+
+   FractalGeneratorStatus Status;
+   unsigned long long     LastCookieTimeStamp;
+   unsigned long long     LastSendTimeStamp;
+   size_t                 FailureAfter;
+   bool                   TestMode;
+};
+
+
+// ###### Constructor #######################################################
+FractalGeneratorServer::FractalGeneratorServer(int rserpoolSocketDescriptor)
+   : ThreadedServer(rserpoolSocketDescriptor)
+{
+   FailureAfter        = 0;
+   TestMode            = false;
+   LastSendTimeStamp   = 0;
+   LastCookieTimeStamp = 0;
+}
+
+
+// ###### Destructor ########################################################
+FractalGeneratorServer::~FractalGeneratorServer()
+{
+}
+
+
+// ###### Configure server ##################################################
+void FractalGeneratorServer::configure(const size_t failureAfter,
+                                       const bool   testMode)
+{
+   FailureAfter = failureAfter;
+   TestMode     = testMode;
+}
+
+
+// ###### Create a FractalGenerator thread ##################################
+ThreadedServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd)
+{
+   return(new FractalGeneratorServer(sd));
+}
+
+
+// ###### Send cookie #######################################################
+bool FractalGeneratorServer::sendCookie()
+{
+   FGPCookie cookie;
+   ssize_t   sent;
+
+   strncpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
+   cookie.Parameter.Header.Type   = FGPT_PARAMETER;
+   cookie.Parameter.Header.Flags  = 0x00;
+   cookie.Parameter.Header.Length = htons(sizeof(cookie.Parameter.Header));
+   cookie.Parameter.Width         = htonl(Status.Parameter.Width);
+   cookie.Parameter.Height        = htonl(Status.Parameter.Height);
+   cookie.Parameter.MaxIterations = htonl(Status.Parameter.MaxIterations);
+   cookie.Parameter.AlgorithmID   = htonl(Status.Parameter.AlgorithmID);
+   cookie.Parameter.C1Real        = Status.Parameter.C1Real;
+   cookie.Parameter.C2Real        = Status.Parameter.C2Real;
+   cookie.Parameter.C1Imag        = Status.Parameter.C1Imag;
+   cookie.Parameter.C2Imag        = Status.Parameter.C2Imag;
+   cookie.Parameter.N             = Status.Parameter.N;
+   cookie.CurrentX                = htonl(Status.CurrentX);
+   cookie.CurrentY                = htonl(Status.CurrentY);
+
+   sent = rsp_send_cookie(RSerPoolSocketDescriptor,
+                          (unsigned char*)&cookie, sizeof(cookie),
+                          0, 0, NULL);
+
+   LastCookieTimeStamp = getMicroTime();
+   return(sent == sizeof(cookie));
+}
+
+
+// ###### Send data #########################################################
+bool FractalGeneratorServer::sendData(FGPData* data)
+{
+   const size_t dataSize = getFGPDataSize(data->Points);
+   ssize_t      sent;
+
+   for(size_t i = 0;i < data->Points;i++) {
+      data->Buffer[i] = htonl(data->Buffer[i]);
+   }
+   data->Header.Type   = FGPT_DATA;
+   data->Header.Flags  = 0x00;
+   data->Header.Length = htons(dataSize);
+   data->Points = htonl(data->Points);
+   data->StartX = htonl(data->StartX);
+   data->StartY = htonl(data->StartY);
+
+   sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                        data, dataSize, 0,
+                        0, PPID_FGP, 0, ~0, 0, NULL);
+
+   data->Points = 0;
+   data->StartX = 0;
+   data->StartY = 0;
+   LastSendTimeStamp = getMicroTime();
+
+   return(sent == (ssize_t)dataSize);
+}
+
+
+// ###### Handle parameter message ##########################################
+bool FractalGeneratorServer::handleParameter(const FGPParameter* parameter,
+                                             const size_t        size)
+{
+   if(size < sizeof(struct FGPParameter)) {
+      printTimeStamp(stdout);
+      printf("Received too short message on RSerPool socket %u\n",
+             RSerPoolSocketDescriptor);
+      return(false);
+   }
+   if(parameter->Header.Type != FGPT_PARAMETER) {
+      printTimeStamp(stdout);
+      printf("Received unknown message type %u on RSerPool socket %u\n",
+             parameter->Header.Type,
+             RSerPoolSocketDescriptor);
+      return(false);
+   }
+   Status.Parameter.Width         = ntohl(parameter->Width);
+   Status.Parameter.Height        = ntohl(parameter->Height);
+   Status.Parameter.C1Real        = parameter->C1Real;
+   Status.Parameter.C2Real        = parameter->C2Real;
+   Status.Parameter.C1Imag        = parameter->C1Imag;
+   Status.Parameter.C2Imag        = parameter->C2Imag;
+   Status.Parameter.N             = parameter->N;
+   Status.Parameter.MaxIterations = ntohl(parameter->MaxIterations);
+   Status.Parameter.AlgorithmID   = ntohl(parameter->AlgorithmID);
+   Status.CurrentX                = 0;
+   Status.CurrentY                = 0;
+
+   printTimeStamp(stdout);
+   printf("Got Parameter on RSerPool socket %u:\nw=%u h=%u c1=(%lf,%lf) c2=(%lf,%lf), n=%f, maxIterations=%u, algorithmID=%u\n",
+          RSerPoolSocketDescriptor,
+          Status.Parameter.Width,
+          Status.Parameter.Height,
+          networkToDouble(Status.Parameter.C1Real),
+          networkToDouble(Status.Parameter.C1Imag),
+          networkToDouble(Status.Parameter.C2Real),
+          networkToDouble(Status.Parameter.C2Imag),
+          networkToDouble(Status.Parameter.N),
+          Status.Parameter.MaxIterations,
+          Status.Parameter.AlgorithmID);
+   if((Status.Parameter.Width > 65536)  ||
+      (Status.Parameter.Height > 65536) ||
+      (Status.Parameter.MaxIterations > 1000000)) {
+      puts("Bad parameters!");
+      return(false);
+   }
+   return(true);
+}
+
+
+// ###### Handle cookie echo ################################################
+EventHandlingResult FractalGeneratorServer::handleCookieEcho(const char* buffer,
+                                                             size_t      bufferSize)
+{
+   const struct FGPCookie* cookie = (const struct FGPCookie*)buffer;
+
+   if(bufferSize != sizeof(struct FGPCookie)) {
+      printTimeStamp(stdout);
+      printf("Invalid size of cookie on RSerPool socket %u\n",
+             RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+   if(strncmp(cookie->ID, FGP_COOKIE_ID, sizeof(cookie->ID))) {
+      printTimeStamp(stdout);
+      printf("Invalid cookie ID on RSerPool socket %u\n",
+             RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+   if(!handleParameter(&cookie->Parameter, sizeof(cookie->Parameter))) {
+      return(EHR_Abort);
+   }
+
+   Status.CurrentX = ntohl(cookie->CurrentX);
+   Status.CurrentY = ntohl(cookie->CurrentY);
+   printTimeStamp(stdout);
+   printf("Got CookieEcho on RSerPool socket %u:\nx=%u y=%u\n",
+          RSerPoolSocketDescriptor,
+          Status.CurrentX, Status.CurrentY);
+
+   return(calculateImage());
+}
+
+
+// ###### Handle message ####################################################
+EventHandlingResult FractalGeneratorServer::handleMessage(const char* buffer,
+                                                          size_t      bufferSize,
+                                                          uint32_t    ppid,
+                                                          uint16_t    streamID)
+{
+   if(!handleParameter((const FGPParameter*)buffer, bufferSize)) {
+      return(EHR_Abort);
+   }
+   return(calculateImage());
+}
+
+
+// ###### Calculate image ####################################################
+EventHandlingResult FractalGeneratorServer::calculateImage()
+{
+   // ====== Initialize =====================================================
+   struct FGPData  data;
+   double          stepX;
+   double          stepY;
+   complex<double> z;
+   size_t          i;
+   size_t          dataPackets = 0;
+
+   data.Points = 0;
+   const double c1real = networkToDouble(Status.Parameter.C1Real);
+   const double c1imag = networkToDouble(Status.Parameter.C1Imag);
+   const double c2real = networkToDouble(Status.Parameter.C2Real);
+   const double c2imag = networkToDouble(Status.Parameter.C2Imag);
+   const double n      = networkToDouble(Status.Parameter.N);
+   stepX = (c2real - c1real) / Status.Parameter.Width;
+   stepY = (c2imag - c1imag) / Status.Parameter.Height;
+   LastCookieTimeStamp = LastSendTimeStamp = getMicroTime();
+
+   if(!sendCookie()) {
+      printTimeStamp(stdout);
+      printf("Sending cookie (start) on RSerPool socket %u failed!\n",
+             RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+
+   // ====== Calculate image ================================================
+   while(Status.CurrentY < Status.Parameter.Height) {
+      while(Status.CurrentX < Status.Parameter.Width) {
+         // ====== Calculate pixel ==========================================
+         if(!TestMode) {
+            const complex<double> c =
+               complex<double>(c1real + ((double)Status.CurrentX * stepX),
+                               c1imag + ((double)Status.CurrentY * stepY));
+
+            // ====== Algorithms ============================================
+            switch(Status.Parameter.AlgorithmID) {
+               case FGPA_MANDELBROT:
+                  z = complex<double>(0.0, 0.0);
+                  for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                     z = z*z - c;
+                     if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                        break;
+                     }
+                  }
+                break;
+               case FGPA_MANDELBROTN:
+                  z = complex<double>(0.0, 0.0);
+                  for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                     z = pow(z, (int)rint(n)) - c;
+                     if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
+                        break;
+                     }
+                  }
+                break;
+               default:
+                  i = 0;
+                break;
+            }
+         }
+         else {
+            i = (Status.CurrentX * Status.CurrentY) % 256;
+         }
+         // =================================================================
+
+         if(data.Points == 0) {
+            data.StartX = Status.CurrentX;
+            data.StartY = Status.CurrentY;
+         }
+         data.Buffer[data.Points] = i;
+         data.Points++;
+
+         // ====== Send data ================================================
+         if( (data.Points >= FGD_MAX_POINTS) ||
+            (LastSendTimeStamp + 1000000 < getMicroTime()) ) {
+            if(!sendData(&data)) {
+               printTimeStamp(stdout);
+               printf("Sending data on RSerPool socket %u failed!\n",
+                      RSerPoolSocketDescriptor);
+               return(EHR_Abort);
+            }
+
+            dataPackets++;
+            if((FailureAfter > 0) && (dataPackets > FailureAfter)) {
+               sendCookie();
+               printTimeStamp(stdout);
+               printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
+                      RSerPoolSocketDescriptor,
+                      dataPackets);
+               return(EHR_Shutdown);
+            }
+         }
+
+         Status.CurrentX++;
+      }
+      Status.CurrentX = 0;
+      Status.CurrentY++;
+
+      // ====== Send cookie =================================================
+      if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
+         if(!sendCookie()) {
+            printTimeStamp(stdout);
+            printf("Sending cookie (start) on RSerPool socket %u failed!\n",
+                  RSerPoolSocketDescriptor);
+            return(EHR_Abort);
+         }
+      }
+      if(isShuttingDown()) {
+         printf("Aborting session on RSerPool socket %u due to server shutdown!\n",
+               RSerPoolSocketDescriptor);
+         return(EHR_Abort);
+      }
+   }
+
+   if(data.Points > 0) {
+      if(!sendData(&data)) {
+         printf("Sending data (last block) on RSerPool socket %u failed!\n",
+                  RSerPoolSocketDescriptor);
+         return(EHR_Abort);
+      }
+   }
+
+   data.StartX = 0xffffffff;
+   data.StartY = 0xffffffff;
+   if(!sendData(&data)) {
+      printf("Sending data (end of data) on RSerPool socket %u failed!\n",
+               RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+
+   return(EHR_Okay);
 }

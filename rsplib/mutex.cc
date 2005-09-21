@@ -1,6 +1,6 @@
 /*
  * mutex.cc: PThread mutex class
- * Copyright (C) 2003 by Thomas Dreibholz
+ * Copyright (C) 2003-2005 by Thomas Dreibholz
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "mutex.h"
 
 
+// ###### Constructor #######################################################
 TDMutex::TDMutex()
 {
    pthread_mutexattr_t attr;
@@ -36,6 +37,7 @@ TDMutex::TDMutex()
 }
 
 
+// ###### Destructor ########################################################
 TDMutex::~TDMutex()
 {
    pthread_mutex_destroy(&MyTDMutex);
