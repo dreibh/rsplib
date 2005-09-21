@@ -30,7 +30,8 @@ class ThreadedServer : public TDThread
    static void poolElement(const char*          programTitle,
                            const char*          poolHandle,
                            struct rsp_loadinfo* loadinfo,
-                           ThreadedServer*      (*threadFactory)(int sd));
+                           void*                userData,
+                           ThreadedServer*      (*threadFactory)(int sd, void* userData));
 
    protected:
    int RSerPoolSocketDescriptor;
@@ -185,7 +186,8 @@ void ThreadedServer::run()
 void ThreadedServer::poolElement(const char*          programTitle,
                                  const char*          poolHandle,
                                  struct rsp_loadinfo* loadinfo,
-                                 ThreadedServer*      (*threadFactory)(int sd))
+                                 void*                userData,
+                                 ThreadedServer*      (*threadFactory)(int sd, void* userData))
 {
    beginLogging();
    if(rsp_initialize(NULL, 0) < 0) {
@@ -226,7 +228,7 @@ void ThreadedServer::poolElement(const char*          programTitle,
             // ====== Wait for incoming sessions ===============================
             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
             if(newRSerPoolSocket >= 0) {
-               ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket);
+               ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if(serviceThread) {
                   serverSet.add(serviceThread);
                   serviceThread->start();
@@ -346,7 +348,7 @@ class PingPongServer : public ThreadedServer
    PingPongServer(int rserpoolSocketDescriptor);
    ~PingPongServer();
 
-   static ThreadedServer* pingPongServerFactory(int sd);
+   static ThreadedServer* pingPongServerFactory(int sd, void* userData);
 
    protected:
    EventHandlingResult handleMessage(const char* buffer,
@@ -374,7 +376,7 @@ PingPongServer::~PingPongServer()
 
 
 // ###### Create a PingServer thread ########################################
-ThreadedServer* PingPongServer::pingPongServerFactory(int sd)
+ThreadedServer* PingPongServer::pingPongServerFactory(int sd, void* userData)
 {
    return(new PingPongServer(sd));
 }
@@ -640,13 +642,17 @@ using namespace std;
 class FractalGeneratorServer : public ThreadedServer
 {
    public:
-   FractalGeneratorServer(int rserpoolSocketDescriptor);
+   struct FractalGeneratorServerSettings
+   {
+      size_t FailureAfter;
+      bool  TestMode;
+   };
+
+   FractalGeneratorServer(int                             rserpoolSocketDescriptor,
+                          FractalGeneratorServerSettings* settings);
    ~FractalGeneratorServer();
 
-   void configure(const size_t failureAfter,
-                  const bool   testMode);
-
-   static ThreadedServer* fractalGeneratorServerFactory(int sd);
+   static ThreadedServer* fractalGeneratorServerFactory(int sd, void* userData);
 
    protected:
    EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
@@ -662,20 +668,19 @@ class FractalGeneratorServer : public ThreadedServer
                         const size_t        size);
    EventHandlingResult calculateImage();
 
-   FractalGeneratorStatus Status;
-   unsigned long long     LastCookieTimeStamp;
-   unsigned long long     LastSendTimeStamp;
-   size_t                 FailureAfter;
-   bool                   TestMode;
+   FractalGeneratorStatus         Status;
+   unsigned long long             LastCookieTimeStamp;
+   unsigned long long             LastSendTimeStamp;
+   FractalGeneratorServerSettings Settings;
 };
 
 
 // ###### Constructor #######################################################
-FractalGeneratorServer::FractalGeneratorServer(int rserpoolSocketDescriptor)
+FractalGeneratorServer::FractalGeneratorServer(int rserpoolSocketDescriptor,
+                                               FractalGeneratorServer::FractalGeneratorServerSettings* settings)
    : ThreadedServer(rserpoolSocketDescriptor)
 {
-   FailureAfter        = 0;
-   TestMode            = false;
+   Settings            = *settings;
    LastSendTimeStamp   = 0;
    LastCookieTimeStamp = 0;
 }
@@ -687,19 +692,10 @@ FractalGeneratorServer::~FractalGeneratorServer()
 }
 
 
-// ###### Configure server ##################################################
-void FractalGeneratorServer::configure(const size_t failureAfter,
-                                       const bool   testMode)
-{
-   FailureAfter = failureAfter;
-   TestMode     = testMode;
-}
-
-
 // ###### Create a FractalGenerator thread ##################################
-ThreadedServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd)
+ThreadedServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, void* userData)
 {
-   return(new FractalGeneratorServer(sd));
+   return(new FractalGeneratorServer(sd, (FractalGeneratorServerSettings*)userData));
 }
 
 
@@ -892,7 +888,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
    while(Status.CurrentY < Status.Parameter.Height) {
       while(Status.CurrentX < Status.Parameter.Width) {
          // ====== Calculate pixel ==========================================
-         if(!TestMode) {
+         if(!Settings.TestMode) {
             const complex<double> c =
                complex<double>(c1real + ((double)Status.CurrentX * stepX),
                                c1imag + ((double)Status.CurrentY * stepY));
@@ -945,7 +941,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
             }
 
             dataPackets++;
-            if((FailureAfter > 0) && (dataPackets > FailureAfter)) {
+            if((Settings.FailureAfter > 0) && (dataPackets >= Settings.FailureAfter)) {
                sendCookie();
                printTimeStamp(stdout);
                printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",

@@ -380,12 +380,9 @@ int rsp_mapsocket(int sd, int toSD);
 int rsp_unmapsocket(int sd);
 int rsp_deregister(int sd);
 int rsp_close(int sd);
-int rsp_select(int                      rserpoolN,
-               fd_set*                  rserpoolReadFDs,
-               fd_set*                  rserpoolWriteFDs,
-               fd_set*                  rserpoolExceptFDs,
-               const unsigned long long timeout,
-               struct TagItem*          tags);
+int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout);
+int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
+               struct timeval* timeout);
 unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
                                  const size_t              poolHandleSize,
                                  struct rserpool_addrinfo* rserpoolAddrInfo,
@@ -876,6 +873,12 @@ static void reregistrationTimer(struct Dispatcher* dispatcher,
    LOG_END
 
    /* ====== Do reregistration =========================================== */
+   /* Thread-Safety Notes:
+      This function will only be called when the RSerPool socket is existing
+      and it has a PoolElement entry. Therefore, locking the
+      rseroolSocket->Mutex is not necessary here. It is only necessary to
+      ensure that the PE information is not altered by another thread while
+      being extracted by doRegistration(). */
    threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
    doRegistration(rserpoolSocket);
    timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
@@ -945,8 +948,6 @@ static bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
       LOG_END
       return(false);
    }
-
-   threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
 
    rspAddrInfo->ai_family   = rserpoolSocket->SocketDomain;
    rspAddrInfo->ai_socktype = rserpoolSocket->SocketType;
@@ -1082,8 +1083,6 @@ static bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
       fputs("\n", stdlog);
       LOG_END
    }
-
-   threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
 
    /* ====== Clean up ======================================================= */
    if(sctpLocalAddressArray) {
@@ -1535,7 +1534,7 @@ int rsp_unmapsocket(int sd)
    int                    result = 0;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd)
 
-   if(rserpoolSocket->MessageBuffer == NULL) {
+   if(rserpoolSocket->SessionAllocationBitmap == NULL) {
       threadSafetyLock(&gRSerPoolSocketSetMutex);
       CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
       identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
@@ -1918,15 +1917,12 @@ int rsp_forcefailover(int             sd,
 static bool waitForRead(struct RSerPoolSocket* rserpoolSocket,
                         unsigned long long     timeout)
 {
-   fd_set readfds;
-
-   FD_ZERO(&readfds);
-   FD_SET(rserpoolSocket->Descriptor, &readfds);
-
-   int result = rsp_select(rserpoolSocket->Descriptor + 1,
-                           &readfds, NULL, NULL, timeout, NULL);
-   if(result > 0) {
-      return(FD_ISSET(rserpoolSocket->Descriptor, &readfds));
+   struct pollfd ufds[1];
+   ufds[0].fd     = rserpoolSocket->Descriptor;
+   ufds[0].events = POLLIN;
+   int result = rsp_poll((struct pollfd*)&ufds, 1, (int)(timeout / 1000));
+   if((result > 0) && (ufds[0].revents & POLLIN)) {
+      return(true);
    }
    errno = EAGAIN;
    return(false);
@@ -2038,9 +2034,10 @@ int rsp_register(int                        sd,
                  const struct rsp_loadinfo* loadinfo,
                  struct TagItem*            tags)
 {
-   RSerPoolSocket*      rserpoolSocket;
-   union sockaddr_union socketName;
-   socklen_t            socketNameLen;
+   struct RSerPoolSocket* rserpoolSocket;
+   struct PoolHandle      cmpPoolHandle;
+   union sockaddr_union   socketName;
+   socklen_t              socketNameLen;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    threadSafetyLock(&rserpoolSocket->Mutex);
@@ -2057,14 +2054,6 @@ int rsp_register(int                        sd,
          return(-1);
       }
    }
-   if(rserpoolSocket->PoolElement != NULL) {
-      LOG_ERROR
-      fprintf(stdlog, "RSerPool socket %d already is a pool element\n", sd);
-      LOG_END
-      errno = EBADF;
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
-      return(-1);
-   }
    if(poolHandleSize > MAX_POOLHANDLESIZE) {
       LOG_ERROR
       fputs("Pool handle too long\n", stdlog);
@@ -2073,50 +2062,80 @@ int rsp_register(int                        sd,
       threadSafetyUnlock(&rserpoolSocket->Mutex);
       return(-1);
    }
-   if(ext_listen(rserpoolSocket->Socket, 10) < 0) {
-      LOG_ERROR
-      logerror("Unable to set socket for new pool element to listen mode");
-      LOG_END
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
-      return(-1);
+
+   /* ====== Reregistration ============================================== */
+   if(rserpoolSocket->PoolElement != NULL) {
+      /* ====== Check for incompatibilities ============================== */
+      poolHandleNew(&cmpPoolHandle, poolHandle, poolHandleSize);
+      if(poolHandleComparison(&cmpPoolHandle, &rserpoolSocket->PoolElement->Handle) != 0) {
+         LOG_ERROR
+         fprintf(stdlog, "RSerPool socket %d already has a pool element; use same PH for update\n", sd);
+         LOG_END
+         errno = EBADF;
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         return(-1);
+      }
+
+      /* ====== Update registration information ========================== */
+      threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
+      rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
+      rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
+                                                               rserpoolSocket->PoolElement->ReregistrationInterval);
+      rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
+                                                               rserpoolSocket->PoolElement->RegistrationLife);
+
+      /* ====== Schedule reregistration as soon as possible ============== */
+      timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer, 0);
+      threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
    }
 
-   /* ====== Create pool element ========================================= */
-   rserpoolSocket->PoolElement = (struct PoolElement*)malloc(sizeof(struct PoolElement));
-   if(rserpoolSocket->PoolElement == NULL) {
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
-      return(-1);
+   /* ====== Registration of a new pool element ========================== */
+   else {
+      if(ext_listen(rserpoolSocket->Socket, 10) < 0) {
+         LOG_ERROR
+         logerror("Unable to set socket for new pool element to listen mode");
+         LOG_END
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         return(-1);
+      }
+
+      /* ====== Create pool element ====================================== */
+      rserpoolSocket->PoolElement = (struct PoolElement*)malloc(sizeof(struct PoolElement));
+      if(rserpoolSocket->PoolElement == NULL) {
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         return(-1);
+      }
+      threadSafetyInit(&rserpoolSocket->PoolElement->Mutex, "RspPoolElement");
+      poolHandleNew(&rserpoolSocket->PoolElement->Handle, poolHandle, poolHandleSize);
+      timerNew(&rserpoolSocket->PoolElement->ReregistrationTimer,
+               &gDispatcher,
+               reregistrationTimer,
+               (void*)rserpoolSocket);
+
+      rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
+      rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
+                                                               0x00000000);
+      rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
+                                                               60000);
+      rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
+                                                               (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
+      rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
+
+      /* ====== Do registration ============================================= */
+      if(doRegistration(rserpoolSocket) == false) {
+         LOG_ERROR
+         fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
+         LOG_END
+         deletePoolElement(rserpoolSocket->PoolElement);
+         rserpoolSocket->PoolElement = NULL;
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         return(-1);
+      }
+
+      /* ====== start reregistration timer ================================== */
+      timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
+                  getMicroTime() + ((unsigned long long)1000 * (unsigned long long)rserpoolSocket->PoolElement->ReregistrationInterval));
    }
-   threadSafetyInit(&rserpoolSocket->PoolElement->Mutex, "RspPoolElement");
-   poolHandleNew(&rserpoolSocket->PoolElement->Handle, poolHandle, poolHandleSize);
-   timerNew(&rserpoolSocket->PoolElement->ReregistrationTimer,
-            &gDispatcher,
-            reregistrationTimer,
-            (void*)rserpoolSocket);
-
-   rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
-   rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
-                                                            0x00000000);
-   rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
-                                                            60000);
-   rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
-                                                            (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
-   rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
-
-   /* ====== Do registration ============================================= */
-   if(doRegistration(rserpoolSocket) == false) {
-      LOG_ERROR
-      fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
-      LOG_END
-      deletePoolElement(rserpoolSocket->PoolElement);
-      rserpoolSocket->PoolElement = NULL;
-      threadSafetyUnlock(&rserpoolSocket->Mutex);
-      return(-1);
-   }
-
-   /* ====== start reregistration timer ================================== */
-   timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
-               getMicroTime() + ((unsigned long long)1000 * (unsigned long long)rserpoolSocket->PoolElement->ReregistrationInterval));
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return(0);
@@ -2723,7 +2742,7 @@ static bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpool
    return(false);
 }
 
-
+#if 0
 static int setFDs(fd_set* fds, int sd, int* notifications)
 {
    struct RSerPoolSocket* rserpoolSocket;
@@ -2746,6 +2765,7 @@ static int setFDs(fd_set* fds, int sd, int* notifications)
          }
          *notifications &= SNT_NOTIFICATION_MASK;
       }
+      threadSafetyUnlock(&rserpoolSocket->Mutex);
    }
    return(n);
 }
@@ -2762,8 +2782,157 @@ inline static int transferFD(int inSD, const fd_set* inFD, int outSD, fd_set* ou
    }
    return(0);
 }
+#endif
 
 
+/* ###### RSerPool socket poll() implementation ########################## */
+int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   struct Session*        session;
+   int                    fdbackup[FD_SETSIZE];
+   int                    result;
+   unsigned int           i;
+
+   /* ====== Check for problems ========================================== */
+   if(nfds > FD_SETSIZE) {
+      errno = EINVAL;
+      return(-1);
+   }
+
+   /* ====== Collect data for poll() call ================================ */
+   result = 0;
+   for(i = 0;i < nfds;i++) {
+      fdbackup[i] = ufds[i].fd;
+      rserpoolSocket = getRSerPoolSocketForDescriptor(ufds[i].fd);
+      if(rserpoolSocket != NULL) {
+         threadSafetyLock(&rserpoolSocket->Mutex);
+         ufds[i].fd      = rserpoolSocket->Socket;
+         ufds[i].revents = 0;
+         if(ufds[i].events & POLLIN) {
+            session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+            while(session != NULL) {
+               if(session->PendingNotifications & session->EventMask) {
+                  result++;
+                  ufds[i].revents = POLLIN;
+               }
+               session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+            }
+         }
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+      }
+      else {
+         ufds[i].fd = -1;
+      }
+   }
+
+   // ====== Do poll() =================================================== */
+   if(result == 0) {
+      /* Only call poll() when there are no notifications */
+      result = ext_poll(ufds, nfds, timeout);
+   }
+
+   // ====== Handle results ============================================== */
+   for(i = 0;i < nfds;i++) {
+      rserpoolSocket = getRSerPoolSocketForDescriptor(fdbackup[i]);
+      if((rserpoolSocket != NULL) && (rserpoolSocket->SessionAllocationBitmap != NULL)) {
+         threadSafetyLock(&rserpoolSocket->Mutex);
+
+         /* ======= Check for control channel data ======================= */
+         if(ufds[i].revents & POLLIN) {
+            LOG_VERBOSE4
+            fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Check, if it has to be handled by rsplib...\n",
+                     rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+            LOG_END
+            if(handleControlChannelAndNotifications(rserpoolSocket)) {
+               LOG_VERBOSE4
+               fprintf(stdlog, "RSerPool socket %d (socket %d) had <read> event for rsplib only. Clearing <read> flag\n",
+                        rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+               LOG_END
+               ufds[i].revents &= ~POLLIN;
+            }
+         }
+
+         /* ====== Set <read> flag for RSerPool notifications? =========== */
+         if(ufds[i].events & POLLIN) {
+            session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+            while(session != NULL) {
+               if((session->PendingNotifications & session->EventMask) != 0) {
+                  ufds[i].revents |= POLLIN;
+                  break;
+               }
+               session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+            }
+         }
+
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+      }
+      ufds[i].fd = fdbackup[i];
+   }
+
+   return(result);
+}
+
+
+/* ###### RSerPool socket select() implementation ######################## */
+int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
+               struct timeval* timeout)
+{
+   struct pollfd ufds[FD_SETSIZE];
+   unsigned int  nfds;
+   int           waitingTime;
+   int           result;
+   int           i;
+
+   /* ====== Check for problems ========================================== */
+   if(nfds > FD_SETSIZE) {
+      errno = EINVAL;
+      return(-1);
+   }
+
+   /* ====== Prepare pollfd array ======================================== */
+   nfds = 0;
+   for(i = 0;i < n;i++) {
+      ufds[nfds].events = 0;
+      if((readfds) && (FD_ISSET(i, readfds))) {
+         ufds[nfds].fd = i;
+         ufds[nfds].events |= POLLIN;
+      }
+      if((writefds) && (FD_ISSET(i, writefds))) {
+         ufds[nfds].fd = i;
+         ufds[nfds].events |= POLLOUT;
+      }
+      if((exceptfds) && (FD_ISSET(i, exceptfds))) {
+         ufds[nfds].fd = i;
+         ufds[nfds].events |= ~(POLLIN|POLLOUT);
+      }
+      if(ufds[nfds].events) {
+         nfds++;
+      }
+   }
+
+   /* ====== Call poll() and propagate results to fdsets ================= */
+   waitingTime = (1000 * timeout->tv_sec) + (timeout->tv_usec / 1000);
+   result = rsp_poll((struct pollfd*)&ufds, nfds, waitingTime);
+   if(result > 0) {
+      for(i = 0;i < n;i++) {
+         if( (!(ufds[nfds].events & POLLIN)) && (readfds) ) {
+            FD_CLR(i, readfds);
+         }
+         if( (!(ufds[nfds].events & POLLOUT)) && (writefds) ) {
+            FD_CLR(i, writefds);
+         }
+         if( (!(ufds[nfds].events & (POLLIN|POLLHUP|POLLNVAL))) && (exceptfds) ) {
+            FD_CLR(i, exceptfds);
+         }
+      }
+   }
+
+   return(result);
+}
+
+
+#if 0
 /* ###### RSerPool socket select() implementation ######################## */
 int rsp_select(int                      rserpoolN,
                fd_set*                  rserpoolReadFDs,
@@ -2833,6 +3002,58 @@ int rsp_select(int                      rserpoolN,
       LOG_VERBOSE3
       fprintf(stdlog, "Select result=%d\n", result);
       LOG_END
+
+      /* ====== Handle results of select() call ========================== */
+      if(result > 0) {
+         result = 0;
+         for(i = 0;i < rserpoolN;i++) {
+            if( ((rserpoolReadFDs) && FD_ISSET(i, rserpoolReadFDs)) ||
+                ((rserpoolWriteFDs) && FD_ISSET(i, rserpoolWriteFDs)) ||
+                ((rserpoolExceptFDs) && FD_ISSET(i, rserpoolExceptFDs)) ) {
+               rserpoolSocket = getRSerPoolSocketForDescriptor(i);
+               if((rserpoolSocket != NULL) && (rserpoolSocket->SessionAllocationBitmap != NULL)) {
+                  threadSafetyLock(&rserpoolSocket->Mutex);
+
+                  /* ====== Transfer events ============================== */
+                  result +=
+                     ((transferFD(rserpoolSocket->Socket, readfds, i, rserpoolReadFDs) +
+                       transferFD(rserpoolSocket->Socket, writefds, i, rserpoolWriteFDs) +
+                       transferFD(rserpoolSocket->Socket, exceptfds, i, rserpoolExceptFDs)) > 0) ? 1 : 0;
+
+                  /* ======= Check for control channel data ============== */
+                  if(FD_ISSET(rserpoolSocket->Socket, readfds)) {
+                     LOG_VERBOSE4
+                     fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Check, if it has to be handled by rsplib...\n",
+                              rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+                     LOG_END
+                     if(handleControlChannelAndNotifications(rserpoolSocket)) {
+                        if(rserpoolReadFDs) {
+                           LOG_VERBOSE4
+                           fprintf(stdlog, "RSerPool socket %d (socket %d) had <read> event for rsplib only. Clearing <read> flag\n",
+                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+                           LOG_END
+                           FD_CLR(i, rserpoolReadFDs);
+                        }
+                     }
+                  }
+
+                  /* ====== Set <read> flag for RSerPool notifications? == */
+                  if(rserpoolReadFDs) {
+                     session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+                     while(session != NULL) {
+                        if((session->PendingNotifications & session->EventMask) != 0) {
+                           FD_SET(i, rserpoolReadFDs);
+                           break;
+                        }
+                        session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+                     }
+                  }
+
+                  threadSafetyUnlock(&rserpoolSocket->Mutex);
+               }
+            }
+         }
+       }
    }
    else {
       LOG_VERBOSE
@@ -2841,62 +3062,9 @@ int rsp_select(int                      rserpoolN,
       result = rserpoolN;
    }
 
-   /* ====== Handle results of select() call ============================= */
-   if(result > 0) {
-      result = 0;
-      for(i = 0;i < rserpoolN;i++) {
-         if( ((rserpoolReadFDs) && FD_ISSET(i, rserpoolReadFDs)) ||
-             ((rserpoolWriteFDs) && FD_ISSET(i, rserpoolWriteFDs)) ||
-             ((rserpoolExceptFDs) && FD_ISSET(i, rserpoolExceptFDs)) ) {
-            rserpoolSocket = getRSerPoolSocketForDescriptor(i);
-            if(rserpoolSocket != NULL) {
-               threadSafetyLock(&rserpoolSocket->Mutex);
-
-               /* ====== Transfer events ================================= */
-               result +=
-                  ((transferFD(rserpoolSocket->Socket, readfds, i, rserpoolReadFDs) +
-                    transferFD(rserpoolSocket->Socket, writefds, i, rserpoolWriteFDs) +
-                    transferFD(rserpoolSocket->Socket, exceptfds, i, rserpoolExceptFDs)) > 0) ? 1 : 0;
-
-               /* ======= Check for control channel data ================= */
-               if(FD_ISSET(rserpoolSocket->Socket, readfds)) {
-                  LOG_VERBOSE4
-                  fprintf(stdlog, "RSerPool socket %d (socket %d) has <read> flag set -> Check, if it has to be handled by rsplib...\n",
-                           rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-                  LOG_END
-                  if(handleControlChannelAndNotifications(rserpoolSocket)) {
-                     if(rserpoolReadFDs) {
-                        LOG_VERBOSE4
-                        fprintf(stdlog, "RSerPool socket %d (socket %d) had <read> event for rsplib only. Clearing <read> flag\n",
-                                 rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-                        LOG_END
-                        FD_CLR(i, rserpoolReadFDs);
-                     }
-                  }
-               }
-
-               /* ====== Set <read> flag for RSerPool notifications? ===== */
-               if(rserpoolReadFDs) {
-                  session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
-                  while(session != NULL) {
-                     if((session->PendingNotifications & session->EventMask) != 0) {
-                        FD_SET(i, rserpoolReadFDs);
-                        break;
-                     }
-                     session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
-                  }
-               }
-
-               threadSafetyUnlock(&rserpoolSocket->Mutex);
-            }
-         }
-      }
-   }
-
    return(result);
 }
-
-
+#endif
 
 
 /* ###### Set session's CSP status text ################################## */
@@ -3039,9 +3207,9 @@ struct Pong
 
 int main(int argc, char** argv)
 {
-   TagItem tags[16];
+//   TagItem tags[16];
    int sd;
-   fd_set readfds;
+//    fd_set readfds;
    int n;
    struct rsp_loadinfo loadinfo;
    struct rsp_info info;
@@ -3090,8 +3258,12 @@ int main(int argc, char** argv)
       return 0;
    }
    if(fractal) {
+      FractalGeneratorServer::FractalGeneratorServerSettings settings;
+      settings.TestMode     = false;
+      settings.FailureAfter = 20;
       ThreadedServer::poolElement("Fractal Generator Server - Version 1.0",
                                   "FractalGeneratorPool", NULL,
+                                  (void*)&settings,
                                   FractalGeneratorServer::fractalGeneratorServerFactory);
       return 0;
    }
@@ -3112,18 +3284,14 @@ int main(int argc, char** argv)
       unsigned long long s = getMicroTime();
       installBreakDetector();
       while(!breakDetected()) {
-         FD_ZERO(&readfds);
-         FD_SET(sd, &readfds);
-         n = sd;
-
-         tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-         tags[0].Data = 0;
-         tags[1].Tag  = TAG_DONE;
-         int result = rsp_select(n + 1, &readfds, NULL, NULL, 1000000, (struct TagItem*)&tags);
+         struct pollfd ufds[1];
+         ufds[0].fd     = sd;
+         ufds[0].events = POLLIN;
+         int result = rsp_poll((struct pollfd*)&ufds, 1, 1000);
 
          if(result > 0) {
-            if(FD_ISSET(sd, &readfds)) {
-printf("READ EVENT FOR %d\n",sd);
+            if(ufds[0].revents & POLLIN) {
+               printf("READ EVENT FOR %d\n",sd);
                char buffer[65536];
                int  msg_flags = 0;
                ssize_t rv = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
@@ -3195,17 +3363,13 @@ printf("READ EVENT FOR %d\n",sd);
 
          installBreakDetector();
          while(!breakDetected()) {
-            FD_ZERO(&readfds);
-            FD_SET(sd, &readfds);
-            n = sd;
-
-            tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-            tags[0].Data = 0;
-            tags[1].Tag  = TAG_DONE;
-            int result = rsp_select(n + 1, &readfds, NULL, NULL, 1000000, (struct TagItem*)&tags);
+            struct pollfd ufds[1];
+            ufds[0].fd     = sd;
+            ufds[0].events = POLLIN;
+            int result = rsp_poll((struct pollfd*)&ufds, 1, 1000);
 
             if(result > 0) {
-               if(FD_ISSET(sd, &readfds)) {
+               if(ufds[0].revents & POLLIN) {
                   puts("READ EVENT!");
 
                   char buffer[1024];
@@ -3261,6 +3425,7 @@ printf("READ EVENT FOR %d\n",sd);
       else {
          ThreadedServer::poolElement("Ping Pong Server - Version 1.0",
                                      "PingPongPool", NULL,
+                                     NULL,
                                      PingPongServer::pingPongServerFactory);
          return 0;
       }
