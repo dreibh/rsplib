@@ -1,5 +1,5 @@
 /*
- *  $Id: rserpoolmessagecreator.c,v 1.31 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -713,7 +713,7 @@ static bool createRegistrationResponseMessage(struct RSerPoolMessage* message)
    }
 
    if(beginMessage(message, AHT_REGISTRATION_RESPONSE,
-                   message->Flags & 0x00, PPID_ASAP) == NULL) {
+                   message->Flags & AHF_REGISTRATION_REJECT, PPID_ASAP) == NULL) {
       return(false);
    }
 

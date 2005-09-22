@@ -453,7 +453,8 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 
       result = asapInstanceDoIO(asapInstance, message, &response, &registrarResult);
       if(result == RSPERR_OKAY) {
-         if(registrarResult == RSPERR_OKAY) {
+         if( (registrarResult == RSPERR_OKAY) &&
+             (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
             handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                                       &asapInstance->OwnPoolElements,
                                       poolHandle,

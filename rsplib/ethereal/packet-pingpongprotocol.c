@@ -14,8 +14,10 @@ static int hf_message_type                = -1;
 static int hf_message_flags               = -1;
 static int hf_message_length              = -1;
 static int hf_ping_messageno              = -1;
+static int hf_ping_data                   = -1;
 static int hf_pong_messageno              = -1;
 static int hf_pong_replyno                = -1;
+static int hf_pong_data                   = -1;
 
 
 /* Initialize the subtree pointers */
@@ -34,24 +36,25 @@ dissect_pingpongprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 
 #define MESSAGE_TYPE_OFFSET    0
 #define MESSAGE_FLAGS_OFFSET   (MESSAGE_TYPE_OFFSET    + MESSAGE_TYPE_LENGTH)
-#define MESSAGE_LENGTH_OFFSET  (MESSAGE_FLAGS_OFFSET   + MESSAGE_FLAGS_OFFSET)
+#define MESSAGE_LENGTH_OFFSET  (MESSAGE_FLAGS_OFFSET   + MESSAGE_FLAGS_LENGTH)
 #define MESSAGE_VALUE_OFFSET   (MESSAGE_LENGTH_OFFSET  + MESSAGE_LENGTH_LENGTH)
 
 
 #define PING_MESSAGENO_LENGTH 8
 
 #define PING_MESSAGENO_OFFSET MESSAGE_VALUE_OFFSET
-
+#define PING_DATA_OFFSET (PING_MESSAGENO_OFFSET + PING_MESSAGENO_LENGTH)
 
 #define PONG_MESSAGENO_LENGTH      8
 #define PONG_REPLYNO_LENGTH        8
 
 #define PONG_MESSAGENO_OFFSET  MESSAGE_VALUE_OFFSET
 #define PONG_REPLYNO_OFFSET (PONG_MESSAGENO_OFFSET + PONG_MESSAGENO_LENGTH)
+#define PONG_DATA_OFFSET  (PONG_REPLYNO_OFFSET + PONG_REPLYNO_LENGTH)
 
 
-#define PINGPONG_PONG_MESSAGE_TYPE       0x01
-#define PINGPONG_PING_MESSAGE_TYPE       0x02
+#define PINGPONG_PING_MESSAGE_TYPE       0x01
+#define PINGPONG_PONG_MESSAGE_TYPE       0x02
 
 
 
@@ -63,19 +66,28 @@ static const value_string message_type_values[] = {
 
 
 static void
-dissect_pingpongprotocol_pong_message(tvbuff_t *message_tvb, proto_tree *message_tree)
-{
-  proto_tree_add_item(message_tree, hf_pong_messageno,  message_tvb, PONG_MESSAGENO_OFFSET,  PONG_MESSAGENO_LENGTH,  NETWORK_BYTE_ORDER);
-
-
-}
-
-
-static void
 dissect_pingpongprotocol_ping_message(tvbuff_t *message_tvb, proto_tree *message_tree)
 {
-  proto_tree_add_item(message_tree, hf_ping_messageno, message_tvb, PING_MESSAGENO_OFFSET, PING_MESSAGENO_LENGTH, NETWORK_BYTE_ORDER);
+  proto_tree_add_item(message_tree, hf_ping_messageno,  message_tvb, PING_MESSAGENO_OFFSET,  PING_MESSAGENO_LENGTH,  NETWORK_BYTE_ORDER);
+
+  guint16 ping_data_length;
+
+  ping_data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - PING_DATA_OFFSET;
+  if (ping_data_length > 0)
+    proto_tree_add_item(message_tree, hf_ping_data, message_tvb, PING_DATA_OFFSET, ping_data_length, NETWORK_BYTE_ORDER);
+}
+
+static void
+dissect_pingpongprotocol_pong_message(tvbuff_t *message_tvb, proto_tree *message_tree)
+{
+  proto_tree_add_item(message_tree, hf_pong_messageno, message_tvb, PONG_MESSAGENO_OFFSET, PONG_MESSAGENO_LENGTH, NETWORK_BYTE_ORDER);
   proto_tree_add_item(message_tree, hf_pong_replyno, message_tvb, PONG_REPLYNO_OFFSET, PONG_REPLYNO_LENGTH, NETWORK_BYTE_ORDER);
+
+  guint16 pong_data_length;
+
+  pong_data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - PONG_DATA_OFFSET;
+  if (pong_data_length > 0)
+    proto_tree_add_item(message_tree, hf_pong_data, message_tvb, PONG_DATA_OFFSET, pong_data_length, NETWORK_BYTE_ORDER);
 }
 
 
@@ -93,11 +105,11 @@ dissect_pingpongprotocol_message(tvbuff_t *message_tvb, packet_info *pinfo, prot
     proto_tree_add_item(pingpongprotocol_tree, hf_message_flags,  message_tvb, MESSAGE_FLAGS_OFFSET,  MESSAGE_FLAGS_LENGTH,  NETWORK_BYTE_ORDER);
     proto_tree_add_item(pingpongprotocol_tree, hf_message_length, message_tvb, MESSAGE_LENGTH_OFFSET, MESSAGE_LENGTH_LENGTH, NETWORK_BYTE_ORDER);
     switch (type) {
-      case PINGPONG_PONG_MESSAGE_TYPE:
-        dissect_pingpongprotocol_pong_message(message_tvb, pingpongprotocol_tree);
-        break;
       case PINGPONG_PING_MESSAGE_TYPE:
         dissect_pingpongprotocol_ping_message(message_tvb, pingpongprotocol_tree);
+        break;
+      case PINGPONG_PONG_MESSAGE_TYPE:
+        dissect_pingpongprotocol_pong_message(message_tvb, pingpongprotocol_tree);
         break;
     }
   }
@@ -137,8 +149,10 @@ proto_register_pingpongprotocol(void)
     { &hf_message_flags,    { "Flags",  "pingpongprotocol.message_flags",    FT_UINT8,  BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_message_length,   { "Length", "pingpongprotocol.message_length",   FT_UINT16, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_ping_messageno,     { "Messageno", "pingpongprotocol.ping_messageno",     FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
+    { &hf_ping_data,                 { "Ping_Data",                      "pingpongprotocol.ping_data",                                   FT_BYTES,   BASE_HEX,  NULL,  0x0,                       "", HFILL } },
     { &hf_pong_messageno,  { "Messageno",  "pingpongprotocol.pong_messageno",  FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_pong_replyno, { "Replyno", "pingpongpongprotocol.pong_replyno", FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
+    { &hf_pong_data,                 { "Pong_Data",                      "pingpongprotocol.pong_data",                                   FT_BYTES,   BASE_HEX,  NULL,  0x0,                       "", HFILL } },
   };
 
   /* Setup protocol subtree array */

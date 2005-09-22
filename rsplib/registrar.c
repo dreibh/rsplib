@@ -1664,6 +1664,9 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
          message->Error = RSPERR_NO_USABLE_USER_ADDRESSES;
       }
 
+      if(message->Error) {
+         message->Flags |= AHF_REGISTRATION_REJECT;
+      }
       if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
          LOG_WARNING
          logerror("Sending RegistrationResponse failed");

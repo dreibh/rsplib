@@ -342,6 +342,36 @@ void ThreadedServerList::remove(ThreadedServer* thread)
 
 
 
+
+
+#define PPID_PPP 0x29097602
+
+#define PPPT_PING 0x01
+#define PPPT_PONG 0x02
+
+struct PingPongCommonHeader
+{
+   uint8_t  Type;
+   uint8_t  Flags;
+   uint16_t Length;
+};
+
+struct Ping
+{
+   struct PingPongCommonHeader Header;
+   uint64_t                    MessageNo;
+   char                        Data[];
+};
+
+struct Pong
+{
+   struct PingPongCommonHeader Header;
+   uint64_t                    MessageNo;
+   uint64_t                    ReplyNo;
+   char                        Data[];
+};
+
+
 class PingPongServer : public ThreadedServer
 {
    public:
@@ -393,15 +423,21 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
    if(bufferSize >= (ssize_t)sizeof(PingPongCommonHeader)) {
       const Ping* ping = (const Ping*)buffer;
       if(ping->Header.Type == PPPT_PING) {
-         if(ntohs(ping->Header.Type) >= (ssize_t)sizeof(struct Ping)) {
-            Pong pong;
-            pong.Header.Type   = PPPT_PONG;
-            pong.Header.Flags  = 0x00;
-            pong.Header.Length = htons(sizeof(pong));
-            pong.MessageNo     = ping->MessageNo;
-            pong.ReplyNo       = hton64(ReplyNo);
+         if(ntohs(ping->Header.Length) >= (ssize_t)sizeof(struct Ping)) {
+            size_t dataLength = ntohs(ping->Header.Length) - sizeof(Ping);
+
+            char pongBuffer[sizeof(struct Pong) + dataLength];
+            Pong* pong = (Pong*)&pongBuffer;
+
+            pong->Header.Type   = PPPT_PONG;
+            pong->Header.Flags  = 0x00;
+            pong->Header.Length = htons(sizeof(Pong) + dataLength);
+            pong->MessageNo     = ping->MessageNo;
+            pong->ReplyNo       = hton64(ReplyNo);
+            memcpy(&pong->Data, &ping->Data, dataLength);
+
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                               (char*)&pong, sizeof(pong), 0,
+                               (char*)pong, sizeof(Pong) + dataLength, 0,
                                0, PPID_PPP, 0, ~0, 0, NULL);
             printf("snd=%d\n",sent);
             if(sent > 0) {

@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
+#include <sys/poll.h>
+#include "ext_socket.h"
 #include "randomizer.h"
 #include "statistics.h"
 #include "debug.h"
@@ -111,8 +113,55 @@ void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int
 
 
 
+
+
+
+
+
+
+int RsplibPipe[2];
+
+void* test(void* arg)
+{
+   char buffer[1];
+   ssize_t rd;
+
+   puts("---------------------");
+   rd = ext_read(RsplibPipe[0], (char*)&buffer, sizeof(buffer));
+   if(rd > 0) {
+      puts("HAS-DATA-0!");
+   } else printf("no-data-0   r=%d  e=%d\n",rd,errno);
+
+   rd = ext_recv(RsplibPipe[0], (char*)&buffer, sizeof(buffer), 0);
+   if(rd > 0) {
+      puts("HAS-DATA-1!");
+   } else printf("no-data-1   r=%d  e=%d <-- Sollte Fehler sein (kein Socket)\n",rd,errno);
+
+   puts("---------------------");
+   fd_set a;
+   FD_ZERO(&a);
+   FD_SET(RsplibPipe[0], &a);
+   timeval to;
+   to.tv_sec=0;
+   to.tv_usec=0;
+   int r = ext_select(RsplibPipe[0]+1,&a,NULL,NULL,&to);
+   if((r>0)&&(FD_ISSET(RsplibPipe[0],&a))) puts("HAS-DATA-2!"); else puts("no-data-2");
+
+   puts("---------------------");
+   struct pollfd u0;
+   u0.fd=RsplibPipe[0];
+   u0.events=POLLIN;
+   u0.revents=0;
+   int r2=ext_poll(&u0, 1, 0);
+   if((r2>0)&&(u0.revents & POLLIN)) puts("HAS-DATA-3!"); else printf("no-data-3   rev=%x\n",u0.revents);
+
+   return(NULL);
+}
+
+
 int main(int argc, char** argv)
 {
+#if 0
    IdentifierBitmap* ib = identifierBitmapNew(1024);
    size_t i;
 
@@ -134,7 +183,7 @@ int main(int argc, char** argv)
 
 
    identifierBitmapDelete(ib);
-
+#endif
 /*
    Statistics stat;
 
@@ -148,5 +197,17 @@ int main(int argc, char** argv)
 
    printf("mean=%f min=%f max=%f stddev=%f\n", stat.mean(), stat.minimum(),stat.maximum(),stat.stddev());
 */
+
+   ext_pipe((int*)&RsplibPipe);
+   ext_write(RsplibPipe[1], "xx", 2);
+
+   pthread_t thr;
+   pthread_create(&thr, NULL, test, NULL);
+
+
+   for(;;) {
+      usleep(1000000);
+   }
+
    return 0;
 }

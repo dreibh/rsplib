@@ -79,6 +79,8 @@ extern "C" {
 #define AHT_ERROR                      (0x0e | AHT_ASAP_MODIFIER)
 
 
+#define AHF_REGISTRATION_REJECT        (1 << 0)
+
 #define AHF_ENDPOINT_KEEP_ALIVE_HOME   (1 << 0)
 
 

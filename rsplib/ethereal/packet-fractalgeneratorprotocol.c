@@ -25,6 +25,7 @@ static int hf_parameter_c1imag            = -1;
 static int hf_parameter_c2real            = -1;
 static int hf_parameter_c2imag            = -1;
 static int hf_parameter_n                 = -1;
+static int hf_buffer                      = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_fractalgeneratorprotocol = -1;
@@ -49,6 +50,7 @@ dissect_fractalgeneratorprotocol_message(tvbuff_t *, packet_info *, proto_tree *
 #define DATA_STARTX_LENGTH 4
 #define DATA_STARTY_LENGTH 4
 #define DATA_POINTS_LENGTH 4
+#define DATA_BUFFER_LENGTH 4
 
 #define DATA_STARTX_OFFSET MESSAGE_VALUE_OFFSET
 #define DATA_STARTY_OFFSET (DATA_STARTX_OFFSET + DATA_STARTX_LENGTH)
@@ -109,7 +111,14 @@ dissect_fractalgeneratorprotocol_data_message(tvbuff_t *message_tvb, proto_tree 
   proto_tree_add_item(message_tree, hf_data_start_x, message_tvb, DATA_STARTX_OFFSET, DATA_STARTX_LENGTH, NETWORK_BYTE_ORDER);
   proto_tree_add_item(message_tree, hf_data_start_y, message_tvb, DATA_STARTY_OFFSET, DATA_STARTY_LENGTH, NETWORK_BYTE_ORDER);
   proto_tree_add_item(message_tree, hf_data_points,  message_tvb, DATA_POINTS_OFFSET, DATA_POINTS_LENGTH, NETWORK_BYTE_ORDER);
+
+guint16 buffer_length;
+buffer_length = tvb_get_ntohl(message_tvb, DATA_POINTS_OFFSET)*4;
+  if (buffer_length > 0)
+    proto_tree_add_item(message_tree, hf_buffer, message_tvb, DATA_BUFFER_OFFSET, buffer_length, NETWORK_BYTE_ORDER);
 }
+
+
 
 
 static void
@@ -181,6 +190,7 @@ proto_register_fractalgeneratorprotocol(void)
     { &hf_parameter_c2real, { "C2Real", "fractalgeneratorprotocol.parameter_c2real", FT_DOUBLE, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_parameter_c2imag, { "C2Imag", "fractalgeneratorprotocol.parameter_c2imag", FT_DOUBLE, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_parameter_n, { "N", "fractalgeneratorprotocol.parameter_n", FT_DOUBLE, BASE_DEC, NULL,                      0x0, "", HFILL } },
+    { &hf_buffer,                 { "Buffer",                      "fractalgeneratorprotocol.buffer",                                   FT_BYTES,   BASE_HEX,  NULL,                             0x0,                       "", HFILL } },
   };
 
   /* Setup protocol subtree array */
