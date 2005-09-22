@@ -1,5 +1,5 @@
 /*
- *  $Id: ext_socket.h,v 1.9 2005/08/08 09:25:46 dreibh Exp $
+ *  $Id$
  *
  * SocketAPI implementation for the sctplib.
  * Copyright (C) 1999-2003 by Thomas Dreibholz
@@ -57,7 +57,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  1
-#define SOCKETAPI_MINOR_VERSION  7000
+#define SOCKETAPI_MINOR_VERSION  8000
 
 
 #define MSG_UNORDERED    (1 << 31)
@@ -473,6 +473,7 @@ ssize_t sctp_recvmsg(int                     s,
                      socklen_t*              fromlen,
                      struct sctp_sndrcvinfo* sinfo,
                      int*                    msg_flags);
+int ext_pipe(int fds[2]);
 
 
 /**
@@ -531,6 +532,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_write(a,b,c) ::write(a,b,c)
 #define ext_select(a,b,c,d,e) ::select(a,b,c,d,e)
 #define ext_poll(a,b,c,d,e) ::poll(a,b,c,d,e)
+#define ext_pipe(a) ::pipe(a)
 #else
 #define ext_socket(a,b,c) socket(a,b,c)
 #define ext_bind(a,b,c) bind(a,b,c)
@@ -555,6 +557,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_write(a,b,c) write(a,b,c)
 #define ext_select(a,b,c,d,e) select(a,b,c,d,e)
 #define ext_poll(a,b,c,d,e) poll(a,b,c,d,e)
+#define ext_pipe(a) pipe(a)
 #endif
 
 #include <sys/types.h>

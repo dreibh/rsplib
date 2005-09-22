@@ -646,7 +646,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 
 /* ###### Do name lookup ################################################# */
 static unsigned int asapInstanceDoHandleResolution(struct ASAPInstance* asapInstance,
-                                                 struct PoolHandle*   poolHandle)
+                                                   struct PoolHandle*   poolHandle)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
