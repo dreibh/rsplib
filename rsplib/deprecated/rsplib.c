@@ -227,7 +227,7 @@ unsigned int rspRegister(const unsigned char*        poolHandle,
       fputs("...\n", stdlog);
       LOG_END
 
-      result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode);
+      result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode, true);
       if(result != RSPERR_OKAY) {
          endpointAddressInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
       }
@@ -254,7 +254,7 @@ unsigned int rspDeregister(const unsigned char* poolHandle,
 
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
-      result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier);
+      result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier, true);
    }
    else {
       result = RSPERR_NOT_INITIALIZED;
@@ -391,6 +391,9 @@ int rspSelect(int             n,
               fd_set*         exceptfds,
               struct timeval* timeout)
 {
+   return(ext_select(n, readfds, writefds, exceptfds, timeout));
+
+#if 0
    struct timeval     mytimeout;
    fd_set             myreadfds;
    fd_set             mywritefds;
@@ -525,6 +528,7 @@ int rspSelect(int             n,
    unlock(&gDispatcher, NULL);
 
    return(result);
+#endif
 }
 
 

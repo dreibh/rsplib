@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 
 #include "thread.h"
+#include "netutilities.h"
 
 
 enum EventHandlingResult
@@ -237,7 +238,7 @@ void ThreadedServer::poolElement(const char*          programTitle,
       return;
    }
 
-   int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP, NULL);
+   int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP);
    if(rserpoolSocket >= 0) {
       // ====== Initialize PE settings ======================================
       struct rsp_loadinfo dummyLoadinfo;
@@ -503,7 +504,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (char*)pong, sizeof(Pong) + dataLength, 0,
-                               0, PPID_PPP, 0, ~0, 0);
+                               0, PPID_PPP, 0, 0, 0);
             printf("snd=%d\n",sent);
             if(sent > 0) {
                ReplyNo++;
@@ -592,7 +593,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       return;
    }
 
-   RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
+   RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(RSerPoolSocketDescriptor >= 0) {
       // ====== Initialize PE settings ======================================
       struct rsp_loadinfo dummyLoadinfo;
@@ -720,7 +721,7 @@ EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                       buffer, bufferSize, 0,
                       sessionID, ppid, streamID,
-                      ~0, 0);
+                      0, 0);
    printf("snd=%d\n", sent);
    return((sent == (ssize_t)bufferSize) ? EHR_Okay : EHR_Abort);
 }
@@ -825,7 +826,7 @@ bool FractalGeneratorServer::sendCookie()
 
    sent = rsp_send_cookie(RSerPoolSocketDescriptor,
                           (unsigned char*)&cookie, sizeof(cookie),
-                          0, 0, NULL);
+                          0, 0);
 
    LastCookieTimeStamp = getMicroTime();
    return(sent == sizeof(cookie));
@@ -850,7 +851,7 @@ bool FractalGeneratorServer::sendData(FGPData* data)
 
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                         data, dataSize, 0,
-                        0, PPID_FGP, 0, ~0, 0);
+                        0, PPID_FGP, 0, 0, 0);
 
    data->Points = 0;
    data->StartX = 0;

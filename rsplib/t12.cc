@@ -655,8 +655,8 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
 
 
 /* ###### Do name lookup ################################################# */
-static unsigned int asapInstanceDoHandleResolution(struct ASAPInstance* asapInstance,
-                                                   struct PoolHandle*   poolHandle)
+static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance* asapInstance,
+                                                            struct PoolHandle*   poolHandle)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
@@ -828,7 +828,7 @@ unsigned int asapInstanceHandleResolution(
          Set it to its original value. */
       *poolElementNodes = originalPoolElementNodes;
 
-      result = asapInstanceDoHandleResolution(asapInstance, poolHandle);
+      result = asapInstanceHandleResolutionAtRegistrar(asapInstance, poolHandle);
       if(result == RSPERR_OKAY) {
          result = asapInstanceHandleResolutionFromCache(
                      asapInstance, poolHandle,

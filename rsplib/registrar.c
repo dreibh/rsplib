@@ -41,8 +41,6 @@
 #include "netutilities.h"
 #include "dispatcher.h"
 #include "timer.h"
-#include "messagebuffer.h"
-#include "rsplib-tags.h"
 
 #include "rserpoolmessage.h"
 #include "poolhandlespacemanagement.h"

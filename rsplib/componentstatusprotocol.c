@@ -1,8 +1,8 @@
 #include "componentstatusprotocol.h"
+#include "rserpool.h"
 #include "timeutilities.h"
 #include "netutilities.h"
 #include "loglevel.h"
-#include "rsplib-internals.h"
 #include "netutilities.h"
 #include "stringutilities.h"
 
@@ -213,7 +213,7 @@ static size_t rsplibGetReportFunction(
                  char*                              statusText,
                  char*                              componentAddress)
 {
-   return(rspGetComponentStatus(caeArray, statusText, componentAddress));
+   return(rsp_csp_getcomponentstatus(caeArray, statusText, componentAddress));
 }
 
 

@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,8 +23,10 @@
  *
  */
 
-#include "rsplib.h"
+#include "rserpool.h"
 #include "loglevel.h"
+
+#if 0
 #include "dispatcher.h"
 #include "netutilities.h"
 #include "threadsafety.h"
@@ -463,7 +465,7 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 
 
-struct rsp_info
+struct rserpool_info
 {
 
 };
@@ -488,17 +490,17 @@ struct rsp_loadinfo
 
 struct PoolElement
 {
-   struct PoolHandle                 Handle;
-   uint32_t                          Identifier;
-   struct ThreadSafety               Mutex;
+   struct PoolHandle   Handle;
+   uint32_t            Identifier;
+   struct ThreadSafety Mutex;
 
-   struct rsp_loadinfo               LoadInfo;
+   struct rsp_loadinfo LoadInfo;
 
-   struct Timer                      ReregistrationTimer;
-   unsigned int                      RegistrationLife;
-   unsigned int                      ReregistrationInterval;
+   struct Timer        ReregistrationTimer;
+   unsigned int        RegistrationLife;
+   unsigned int        ReregistrationInterval;
 
-   bool                              HasControlChannel;
+   bool                HasControlChannel;
 };
 
 
@@ -1166,49 +1168,6 @@ static int rserpoolSocketComparison(const void* node1, const void* node2)
 }
 
 
-
-
-/* ###### Find session for given assoc ID or session ID ################## */
-static struct Session* sessionFind(struct RSerPoolSocket* rserpoolSocket,
-                                   rserpool_session_t     sessionID,
-                                   sctp_assoc_t           assocID)
-{
-   struct Session* session;
-
-   if(rserpoolSocket->ConnectedSession) {
-      return(rserpoolSocket->ConnectedSession);
-   }
-   else if(sessionID != 0) {
-      session = sessionStorageFindSessionBySessionID(&rserpoolSocket->SessionSet, sessionID);
-      if(session) {
-         return(session);
-      }
-      LOG_WARNING
-      fprintf(stdlog, "There is no session %u on RSerPool socket %d\n",
-              sessionID, rserpoolSocket->Descriptor);
-      LOG_END
-      errno = EINVAL;
-   }
-   else if(assocID != 0) {
-      session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
-      if(session) {
-         return(session);
-      }
-      LOG_WARNING
-      fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d\n",
-              assocID, rserpoolSocket->Descriptor);
-      LOG_END
-      errno = EINVAL;
-   }
-   else {
-      LOG_ERROR
-      fputs("What session are you looking for?\n", stdlog);
-      LOG_END_FATAL
-   }
-   return(NULL);
-}
-
-
 /* ###### Get RSerPool socket for given descriptor ####################### */
 static struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
 {
@@ -1407,7 +1366,7 @@ static void* rsplibMainLoop(void* args)
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
+int rsp_initialize(struct rserpool_info* info, struct TagItem* tags)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
@@ -1509,6 +1468,7 @@ void rsp_cleanup()
 }
 
 
+/* ###### Map socket descriptor into RSerPool socket ##################### */
 int rsp_mapsocket(int sd, int toSD)
 {
    struct RSerPoolSocket* rserpoolSocket;
@@ -1552,6 +1512,7 @@ int rsp_mapsocket(int sd, int toSD)
 }
 
 
+/* ###### Unmap socket descriptor from RSerPool socket ################### */
 int rsp_unmapsocket(int sd)
 {
    struct RSerPoolSocket* rserpoolSocket;
@@ -1676,7 +1637,7 @@ int rsp_socket(int domain, int type, int protocol, struct TagItem* tags)
 
 
 /* ###### Bind RSerPool socket ########################################### */
-int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt, struct TagItem* tags)
+int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt)
 {
    RSerPoolSocket*      rserpoolSocket;
    union sockaddr_union localAddress;
@@ -1699,7 +1660,6 @@ int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt, struct TagItem* tags)
 
    return(0);
 }
-
 
 
 /* ###### Delete RSerPool socket ######################################### */
@@ -2203,8 +2163,7 @@ ssize_t rsp_send_cookie(int                  sd,
                         const unsigned char* cookie,
                         const size_t         cookieSize,
                         rserpool_session_t   sessionID,
-                        unsigned long long   timeout,
-                        struct TagItem*      tags)
+                        unsigned long long   timeout)
 {
    struct RSerPoolSocket*  rserpoolSocket;
    struct Session*         session;
@@ -2231,7 +2190,7 @@ ssize_t rsp_send_cookie(int                  sd,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
-                                      (unsigned int)tagListGetData(tags, TAG_RspIO_Flags, MSG_NOSIGNAL),
+                                      MSG_NOSIGNAL,
                                       timeout,
                                       message);
          threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -2419,6 +2378,7 @@ static ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return(received);
 }
+
 
 /* ###### RSerPool socket recvmsg() implementation ####################### */
 ssize_t rsp_recvmsg(int                    sd,
@@ -3302,7 +3262,7 @@ size_t rsp_getcspstatusarray(
 
    return(caeArraySize);
 }
-
+#endif
 
 
 #include "breakdetector.h"
@@ -3313,7 +3273,7 @@ int main(int argc, char** argv)
    int sd;
    int n;
    struct rsp_loadinfo loadinfo;
-   struct rsp_info info;
+   struct rserpool_info info;
    struct rsp_sndrcvinfo rinfo;
    bool   server = true;
    bool   thread = false;
@@ -3370,7 +3330,7 @@ int main(int argc, char** argv)
       memset(&info, 0, sizeof(info));
       rsp_initialize(&info, NULL);
 
-      sd = rsp_socket(AF_INET, SOCK_DGRAM, IPPROTO_SCTP, NULL);
+      sd = rsp_socket(AF_INET, SOCK_DGRAM, IPPROTO_SCTP);
       if(sd < 0) {
          logerror("Unable to create RSerPool socket");
          exit(1);
@@ -3451,7 +3411,7 @@ int main(int argc, char** argv)
       return 0;
    }
    if(!server) {
-      sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
+      sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       CHECK(sd > 0);
        puts("=========== CLIENT =============");
 
@@ -3527,7 +3487,7 @@ int main(int argc, char** argv)
             memcpy(&ping->Data, str, dataLength);
 
             ssize_t snd = rsp_sendmsg(sd, (char*)ping, sizeof(Ping) + dataLength, 0,
-                                      0, PPID_PPP, 0, ~0, 0);
+                                      0, PPID_PPP, 0, 0, 0);
             printf("snd=%d\n",snd);
             if(snd > 0) {
                printf("Out: %Ld\n", messageNo);
@@ -3539,7 +3499,7 @@ int main(int argc, char** argv)
    }
    else {
       if(!thread) {
-         sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP, NULL);
+         sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
          CHECK(sd > 0);
          puts("=========== SERVER =============");
          memset(&loadinfo, 0, sizeof(loadinfo));
@@ -3559,7 +3519,7 @@ int main(int argc, char** argv)
                if(ufds[0].revents & POLLIN) {
                   puts("READ EVENT!");
 
-                  char buffer[1024];
+                  char buffer[65536];
                   int  msg_flags = 0;
                   ssize_t rv = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
                                           &rinfo, &msg_flags, 0);
@@ -3590,13 +3550,13 @@ int main(int argc, char** argv)
                                                          rinfo.rinfo_session,
                                                          PPID_PPP,
                                                          0,
-                                                         ~0, 0);
+                                                         0, 0);
                                  printf("snd=%d\n",snd);
                                  if(snd > 0) {
                                     replyNo++;
                                  }
                                  ssize_t sc = rsp_send_cookie(sd, (unsigned char*)&pong, sizeof(pong),
-                                                            rinfo.rinfo_session, 0, NULL);
+                                                            rinfo.rinfo_session, 0);
                                  printf("sc=%d\n",sc);
                               }
                            }

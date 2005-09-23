@@ -1,7 +1,7 @@
 # without this order in this file, autoconf will not work!
 # the argument is a source file out of your sources. But
 # acinclude.m4 makes the job for all programs ;-)
-AC_INIT(rsplib/rsplib.c)
+AC_INIT(rsplib/rspbasicmode.c)
 
 # enable the following if you want to use autoconf/automake
 # framework from a certain directory (like kde-common)

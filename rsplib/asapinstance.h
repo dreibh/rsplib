@@ -1,7 +1,6 @@
 /*
- *  $Id$
- *
- * RSerPool implementation.
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * Realized in co-operation between Siemens AG
  * and University of Essen, Institute of Computer Networking Technology.
@@ -23,15 +22,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for any discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
  *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: ASAP Instance
  *
  */
 
@@ -44,6 +38,7 @@
 #include "rserpoolmessage.h"
 #include "poolhandlespacemanagement.h"
 #include "registrartable.h"
+#include "interthreadmessageport.h"
 
 
 #ifdef __cplusplus
@@ -51,9 +46,17 @@ extern "C" {
 #endif
 
 
+struct ASAPInterThreadMessage;
+
 struct ASAPInstance
 {
    struct Dispatcher*                         StateMachine;
+
+   struct InterThreadMessagePort              MainLoopPort;
+   int                                        MainLoopPipe[2];
+   pthread_t                                  MainLoopThread;
+   bool                                       MainLoopShutdown;
+   struct ASAPInterThreadMessage*             LastAITM;
 
    int                                        RegistrarHuntSocket;
    int                                        RegistrarSocket;
@@ -112,10 +115,10 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance);
   * @param poolElement Pool Element.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
-unsigned int asapInstanceRegister(
-                struct ASAPInstance*              asapInstance,
-                struct PoolHandle*                poolHandle,
-                struct ST_CLASS(PoolElementNode)* poolElement);
+unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance,
+                                  struct PoolHandle*                poolHandle,
+                                  struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                  const bool                        waitForResponse);
 
 /**
   * Deregister pool element.
@@ -128,7 +131,8 @@ unsigned int asapInstanceRegister(
 unsigned int asapInstanceDeregister(
                 struct ASAPInstance*            asapInstance,
                 struct PoolHandle*              poolHandle,
-                const PoolElementIdentifierType identifier);
+                const PoolElementIdentifierType identifier,
+                const bool                      waitForResponse);
 
 /**
   * Report failure of pool element.

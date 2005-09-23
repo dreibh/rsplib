@@ -40,10 +40,9 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "breakdetector.h"
-#include "rsplib.h"
+#include "rserpool.h"
 
 #include <ext_socket.h>
-#include <pthread.h>
 #include <glib.h>
 
 
@@ -78,20 +77,20 @@ static bool          RegistrationThreadStop         = false;
 /* ###### Registration/Reregistration ####################################### */
 static void doRegistration()
 {
-   struct TagItem              tags[16];
-   struct EndpointAddressInfo* eai;
-   struct EndpointAddressInfo* eai2;
-   struct EndpointAddressInfo* next;
-   union sockaddr_union*       sctpLocalAddressArray = NULL;
-   union sockaddr_union*       localAddressArray     = NULL;
-   union sockaddr_union        socketName;
-   size_t                      socketNameLen;
-   unsigned int                localAddresses;
-   unsigned int                result;
-   unsigned int                i;
+   struct TagItem            tags[16];
+   struct rserpool_addrinfo* eai;
+   struct rserpool_addrinfo* eai2;
+   struct rserpool_addrinfo* next;
+   struct sockaddr*          sctpLocalAddressArray = NULL;
+   union sockaddr_union*     localAddressArray     = NULL;
+   union sockaddr_union      socketName;
+   size_t                    socketNameLen;
+   unsigned int              localAddresses;
+   unsigned int              i;
+   int                       result;
 
-   /* ====== Create EndpointAddressInfo structure =========================== */
-   eai = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
+   /* ====== Create rserpool_addrinfo structure =========================== */
+   eai = (struct rserpool_addrinfo*)malloc(sizeof(struct rserpool_addrinfo));
    if(eai == NULL) {
       puts("ERROR: Out of memory!");
       return;
@@ -108,7 +107,7 @@ static void doRegistration()
 
    /* ====== Get local addresses for SCTP socket ============================ */
    if(ListenSocketProtocol == IPPROTO_SCTP) {
-      eai->ai_addrs = getladdrsplus(ListenSocket, 0, &eai->ai_addr);
+      eai->ai_addrs = sctp_getladdrs(ListenSocket, 0, &eai->ai_addr);
       if(eai->ai_addrs <= 0) {
          puts("ERROR: Unable to obtain socket's local addresses!");
       }
@@ -152,7 +151,7 @@ static void doRegistration()
          return;
       }
 
-      /* Add addresses to EndpointAddressInfo structure */
+      /* Add addresses to rserpool_addrinfo structure */
       if(ListenSocketProtocol == IPPROTO_SCTP) {
          /* SCTP endpoints are described by a list of their
             transport addresses. */
@@ -160,14 +159,14 @@ static void doRegistration()
          eai->ai_addr  = localAddressArray;
       }
       else {
-         /* TCP/UDP endpoints are described by an own EndpointAddressInfo
+         /* TCP/UDP endpoints are described by an own rserpool_addrinfo
             for each transport address. */
          eai2 = eai;
          for(i = 0;i < localAddresses;i++) {
             eai2->ai_addrs = 1;
             eai2->ai_addr  = &localAddressArray[i];
             if(i < localAddresses - 1) {
-               next = (struct EndpointAddressInfo*)malloc(sizeof(struct EndpointAddressInfo));
+               next = (struct rserpool_addrinfo*)malloc(sizeof(struct rserpool_addrinfo));
                if(next == NULL) {
                   puts("ERROR: Out of memory!");
                   free(localAddressArray);
@@ -201,21 +200,20 @@ static void doRegistration()
 
 
    /* ====== Do registration ================================================ */
-   result = rspRegister((unsigned char*)PoolName, strlen(PoolName),
-                        eai, (struct TagItem*)&tags);
-   if(result == RSPERR_OKAY) {
+   result = rsp_pe_registration((unsigned char*)PoolName, strlen(PoolName),
+                                eai, (struct TagItem*)&tags);
+   if(result == 0) {
       PoolElementID = eai->ai_pe_id;
       printf("(Re-)Registration successful, ID is $%08x\n", PoolElementID);
    }
    else {
-      printf("WARNING: (Re-)Registration failed: ");
-      puts(rspGetErrorDescription(result));
+      perror("(Re-)Registration failed");
    }
 
 
    /* ====== Clean up ======================================================= */
    if(sctpLocalAddressArray) {
-      free(sctpLocalAddressArray);
+      sctp_freeladdrs(sctpLocalAddressArray);
    }
    if(localAddressArray) {
       free(localAddressArray);
@@ -232,10 +230,9 @@ static void doRegistration()
 static void doDeregistration()
 {
    if(PoolElementID) {
-      rspDeregister((unsigned char*)PoolName, strlen(PoolName), PoolElementID, NULL);
+      rsp_pe_deregistration((unsigned char*)PoolName, strlen(PoolName), PoolElementID, NULL);
    }
 }
-
 
 /* ###### Registration/Reregistration thread ################################ */
 static void* registrationMainLoop(void* args)
@@ -244,26 +241,13 @@ static void* registrationMainLoop(void* args)
    unsigned long long         start;
    unsigned long long         now;
 
-   for(;;) {
+   while(!RegistrationThreadStop) {
       /* ====== Do registration/reregistration ============================== */
       doRegistration();
-
-      /* ====== Sleep and allow rsplib to handle internal events ============ */
-      start = getMicroTime();
-      do {
-         if(RegistrationThreadStop) {
-            goto finish;
-         }
-         pthread_testcancel();
-         timeout.tv_sec  = 0;
-         timeout.tv_usec = 1000000;
-         rspSelect(0, NULL, NULL, NULL, &timeout);
-         now = getMicroTime();
-      } while(now < start + RegistrationInterval);
+      usleep(1000000);
    }
 
    /* ====== Do deregistration ============================================== */
-finish:
    doDeregistration();
    return(NULL);
 }
@@ -299,7 +283,7 @@ static void cleanUp()
    }
 
 #ifndef NO_RSP
-   rspCleanUp();
+   rsp_cleanup();
 #endif
 }
 
@@ -343,8 +327,8 @@ static void initAll()
    }
 
 #ifndef NO_RSP
-   if(rspInitialize(NULL) != 0) {
-      puts("ERROR: Unable to initialize rsplib!");
+   if(rsp_initialize(NULL, NULL) < 0) {
+      logerror("Unable to initialize rsplib!");
       cleanUp();
       exit(1);
    }

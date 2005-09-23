@@ -5,16 +5,12 @@ libcppthreadinclude_HEADERS = mutex.h thread.h
 libcppthread_la_SOURCES     = mutex.cc thread.cc
 
 librsplibincludedir      = $(prefix)/include/rserpool
-librsplibinclude_HEADERS = rsplib.h rsplib-tags.h rsplib-internals.h
+librsplibinclude_HEADERS = rserpool.h rserpool-internals.h
 librsplib_la_SOURCES = \
-rserpoolmessagecreator.c \
-rserpoolmessagecreator.h \
 asapinstance.c \
 asapinstance.h \
-rserpoolmessage.c \
-rserpoolmessage.h \
-rserpoolmessageparser.c \
-rserpoolmessageparser.h \
+asapinterthreadmessage.c \
+asapinterthreadmessage.h \
 breakdetector.c \
 breakdetector.h \
 componentstatusprotocol.h \
@@ -37,8 +33,6 @@ leaflinkedredblacktree.c \
 leaflinkedredblacktree.h \
 loglevel.c \
 loglevel.h \
-messagebuffer.c \
-messagebuffer.h \
 netutilities.c \
 netutilities.h \
 peerlistmanagement-template.h \
@@ -69,12 +63,24 @@ randomizer.c \
 randomizer.h \
 registrartable.c \
 registrartable.h \
+rserpool.h \
+rserpoolsocket.c \
+rserpoolsocket.h \
 rserpoolerror.c \
 rserpoolerror.h \
-rsplib.c \
-rsplib.h \
-rsplib-tags.h \
-rspsession.c \
+rserpoolmessage.c \
+rserpoolmessage.h \
+rserpoolmessagecreator.c \
+rserpoolmessagecreator.h \
+rserpoolmessageparser.c \
+rserpoolmessageparser.h \
+rspbasicmode.c \
+rspenhancedmode.c \
+session.h \
+sessionstorage.c \
+sessionstorage.h \
+sessioncontrol.c \
+sessioncontrol.h \
 stringutilities.c \
 stringutilities.h \
 sockaddrunion.h \
