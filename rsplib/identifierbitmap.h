@@ -23,12 +23,10 @@
  *
  */
 
-#ifndef THREADSIGNAL_H
-#define THREADSIGNAL_H
+#ifndef IDENTIFIERBITMAP_H
+#define IDENTIFIERBITMAP_H
 
 #include "tdtypes.h"
-
-#include <pthread.h>
 
 
 #ifdef __cplusplus
@@ -36,54 +34,24 @@ extern "C" {
 #endif
 
 
-struct ThreadSignal
+struct IdentifierBitmap
 {
-   pthread_mutex_t Mutex;       /* Non-recursive mutex! */
-   pthread_cond_t  Condition;
+   size_t Entries;
+   size_t Available;
+
+   size_t Slots;
+   size_t Bitmap[0];
 };
 
+#define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
 
-/**
-  * Create new mutex.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalNew(struct ThreadSignal* threadSignal);
 
-/**
-  * Delete mutex.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalDelete(struct ThreadSignal* threadSignal);
-
-/**
-  * Lock mutex.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalLock(struct ThreadSignal* threadSignal);
-
-/**
-  * Unlock mutex.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalUnlock(struct ThreadSignal* threadSignal);
-
-/**
-  * Fire signal.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalFire(struct ThreadSignal* threadSignal);
-
-/**
-  * Wait for signal.
-  *
-  * @param threadSignal ThreadSignal.
-  */
-void threadSignalWait(struct ThreadSignal* threadSignal);
+struct IdentifierBitmap* identifierBitmapNew(const size_t entries);
+void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap);
+int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap);
+int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
+                                       const int                id);
+void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id);
 
 
 #ifdef __cplusplus

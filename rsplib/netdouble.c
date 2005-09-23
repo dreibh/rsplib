@@ -23,6 +23,7 @@
  *
  */
 
+#define _ISOC99_SOURCE
 #include <math.h>
 #include <sys/types.h>
 #include <netinet/in.h>

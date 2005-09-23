@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 {
    struct InterThreadMessagePort myitmp;
 
-   threadSafetyInit(&gThreadSafety, "gRSerPoolSocketSet");
+   threadSafetyNew(&gThreadSafety, "gRSerPoolSocketSet");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
    interThreadMessagePortNew(&myitmp);
    interThreadMessagePortNew(&RsplibITMPort);

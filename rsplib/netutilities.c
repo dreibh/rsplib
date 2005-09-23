@@ -41,16 +41,18 @@
 #include "stringutilities.h"
 #include "randomizer.h"
 
-#include <stdio.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
 #include <net/if.h>
-#include <fcntl.h>
 #include <ext_socket.h>
-#include <sys/uio.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <netdb.h>
 #ifdef SOLARIS
 #include <sys/sockio.h>
 #endif
