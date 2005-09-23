@@ -451,9 +451,9 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
                                   struct ST_CLASS(PeerList)* peerList)
 {
-   LeafLinkedTreapNodeValueType       value;
-   const LeafLinkedTreapNodeValueType maxValue = ST_METHOD(GetValueSum)(
-                                                    &peerList->PeerListIndexStorage);
+   unsigned long long       value;
+   const unsigned long long maxValue = ST_METHOD(GetValueSum)(
+                                          &peerList->PeerListIndexStorage);
    if(maxValue < 1) {
       return(NULL);
    }

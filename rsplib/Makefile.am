@@ -15,8 +15,6 @@ rserpoolmessage.c \
 rserpoolmessage.h \
 rserpoolmessageparser.c \
 rserpoolmessageparser.h \
-binarytree.c \
-binarytree.h \
 breakdetector.c \
 breakdetector.h \
 componentstatusprotocol.h \
@@ -31,16 +29,12 @@ fdcallback.c \
 fdcallback.h \
 identifierbitmap.c \
 identifierbitmap.h \
+interthreadmessageport.c \
+interthreadmessageport.h \
 poolhandlespacechecksum.c \
 poolhandlespacechecksum.h \
-leaflinkedbinarytree.c \
-leaflinkedbinarytree.h \
 leaflinkedredblacktree.c \
 leaflinkedredblacktree.h \
-leaflinkedtreap.c \
-leaflinkedtreap.h \
-linearlist.c \
-linearlist.h \
 loglevel.c \
 loglevel.h \
 messagebuffer.c \

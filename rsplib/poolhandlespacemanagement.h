@@ -33,11 +33,21 @@
 #include "transportaddressblock.h"
 #include "stringutilities.h"
 
+#ifdef INCLUDE_LINEARLIST
 #include "linearlist.h"
+#endif
+#ifdef INCLUDE_BINARYTREE
 #include "binarytree.h"
+#endif
+#ifdef INCLUDE_LEAFLINKEDBINARYTREE
 #include "leaflinkedbinarytree.h"
+#endif
+#ifdef INCLUDE_LEAFLINKEDTREAP
 #include "leaflinkedtreap.h"
+#endif
+#ifdef INCLUDE_LEAFLINKEDREDBLACKTREE
 #include "leaflinkedredblacktree.h"
+#endif
 
 
 #define INTERNAL_POOLTEMPLATE

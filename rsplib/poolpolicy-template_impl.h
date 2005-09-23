@@ -47,11 +47,11 @@ static unsigned int ST_CLASS(getSum)(const unsigned int v1,
 
 
 /* ###### Get fraction of base for difference ############################ */
-static LeafLinkedTreapNodeValueType ST_CLASS(getValueFraction)(
-                                       const unsigned int base,
-                                       const unsigned int v1,
-                                       const unsigned int v2,
-                                       const unsigned int v3)
+static unsigned long long ST_CLASS(getValueFraction)(
+                             const unsigned int base,
+                             const unsigned int v1,
+                             const unsigned int v2,
+                             const unsigned int v3)
 {
    const long long base_64 = (long long)base;
    const long long v1_64   = (long long)v1;
@@ -65,10 +65,8 @@ static LeafLinkedTreapNodeValueType ST_CLASS(getValueFraction)(
    else if(v > (long long)0xffffffff) {
       v = (long long)0xffffffff;
    }
-   return((LeafLinkedTreapNodeValueType)v);
+   return((unsigned long long)v);
 }
-
-
 
 
 /*
@@ -143,11 +141,11 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
           const size_t                       maxPoolElementNodes,
           const size_t                       maxIncrement)
 {
-   LeafLinkedTreapNodeValueType maxValue;
-   LeafLinkedTreapNodeValueType value;
-   const size_t                 poolElements       = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
-   size_t                       poolElementNodes   = 0;
-   size_t                       i;
+   unsigned long long maxValue;
+   unsigned long long value;
+   const size_t       poolElements       = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
+   size_t             poolElementNodes   = 0;
+   size_t             i;
 
 
    /* Check, if resequencing is necessary. However, using 64 bit counters,
