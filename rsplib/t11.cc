@@ -16,6 +16,7 @@
 #include "rserpoolmessage.h"
 #include "poolhandlespacemanagement.h"
 #include "registrartable.h"
+#include "threadsignal.h"
 
 
 
@@ -23,7 +24,7 @@
 
 
 
-
+#if 0
 struct ThreadSignal
 {
    pthread_mutex_t Mutex;       /* Non-recursive mutex! */
@@ -62,7 +63,7 @@ void threadSignalWait(struct ThreadSignal* threadSignal)
 {
    pthread_cond_wait(&threadSignal->Condition, &threadSignal->Mutex);
 }
-
+#endif
 
 
 

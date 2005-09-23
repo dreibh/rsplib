@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -153,7 +153,7 @@ FILE*        VectorFH   = NULL;
 FILE*        ScalarFH   = NULL;
 unsigned int VectorLine = 0;
 double       JobSizeDeclaration			 = 5000000;
-unsigned long long runtime;
+unsigned long long runtime                       = 24*60*60*1000000ULL;
 double TotalHandlingDelay            = 0.0;
 double AverageHandlingDelay          = 0.0;
 double TotalHandlingSpeed            = 0.0;
@@ -210,12 +210,13 @@ struct Process {
 // ###### Send CalcAppRequest message #######################################
 void sendCalcAppRequest(struct Process* process)
 {
+   cout << "New Job "<< endl;
    CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type    = htonl(CALCAPP_REQUEST);
-   message.JobID   = process->CurrentJob->JobID;
-   message.JobSize = process->CurrentJob->JobSize;
-
+   message.JobID   = htonl(process->CurrentJob->JobID);
+   message.JobSize = hton64((unsigned long long)rint(process->CurrentJob->JobSize));
+   cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
    ssize_t result = rspSessionWrite(process->Session,
                                     (void*)&message, sizeof(message), NULL);
    if(result <= 0) {
@@ -301,9 +302,13 @@ void handleCalcAppReject(struct Process* process,
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    rspSessionFailover(process->Session);
 
+   /* No cookie for failover is available, therefore it is necessary
+      to restart! */
    if(!rspSessionHasCookie(process->Session)) {
       process->Status = PS_Init;
+      usleep(1000000);
       sendCalcAppRequest(process);
+
    }
 
    process->TotalCalcAppRejected++;
@@ -465,6 +470,7 @@ void handleEvents(Process*           process,
 
       if(received >= (ssize_t)sizeof(CalcAppMessage)) {
          CalcAppMessage* response = (CalcAppMessage*)&buffer;
+printf("TYPE=%d\n",ntohl(response->Type));
          switch(ntohl(response->Type)) {
             case CALCAPP_ACCEPT:
                handleCalcAppAccept(process, response, sizeof(response));

@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -101,7 +101,7 @@ class SessionSet
    SessionSetEntry* find(SessionDescriptor* session);
 
    void sendCalcAppAccept(SessionSetEntry* sessionSetEntry);
-   void sendCalcAppReject(SessionSetEntry* sessionSetEntry);
+   void sendCalcAppReject(SessionSetEntry* sessionSetEntry, unsigned int jobID);
    void Cookie(SessionSetEntry* sessionSetEntry);
    void sendCalcAppComplete(SessionSetEntry* sessionSetEntry);
    void sendCalcAppKeepAlive(SessionSetEntry* sessionSetEntry);
@@ -147,6 +147,7 @@ double       TotalPossibleCalculations   = 0.0;
 double       TotalWastedCapacity    = 0.0;
 unsigned int AcceptedJobs      = 0;
 unsigned int RejectedJobs      = 0;
+unsigned int sessionlimit      = 2;
 
 // ###### Constructor #######################################################
 SessionSet::SessionSet()
@@ -273,6 +274,8 @@ void SessionSet::removeSession(SessionDescriptor* session)
          delete sessionSetEntry;
          CHECK(Sessions > 0);
          Sessions--;
+         cout << " Session removed "<< endl;
+         cout << "Sessions after removing: " << Sessions << endl;
          break;
       }
       prev  = sessionSetEntry;
@@ -340,10 +343,19 @@ void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionSetEntry,
       sessionSetEntry->Closing = true;
       return;
    }
+   if (Sessions > sessionlimit)
+   {
+	cerr << "ERROR: Too many sessions" << endl;
+        cout << "Sessions: " << Sessions << endl;
+	//Sessions--;
+        sendCalcAppReject(sessionSetEntry,ntohl(message->JobID));
+        sessionSetEntry->Closing = true;
+        return;
+   }
 
    sessionSetEntry->HasJob     = true;
-   sessionSetEntry->JobID      = message->JobID;
-   sessionSetEntry->JobSize    = message->JobSize;
+   sessionSetEntry->JobID      = ntohl(message->JobID);
+   sessionSetEntry->JobSize    = ntoh64(message->JobSize);
    sessionSetEntry->Completed  = 0;
    sessionSetEntry->LastUpdateAt = getMicroTime();
 
@@ -352,6 +364,7 @@ void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionSetEntry,
 
    sessionSetEntry->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
    sessionSetEntry->KeepAliveTimeoutTimeStamp      = ~0ULL;
+
 
    updateCalculations();
    scheduleJobs();
@@ -370,11 +383,20 @@ void SessionSet::handleCookieEcho(SessionSetEntry* sessionSetEntry,
       sessionSetEntry->Closing = true;
       return;
    }
+   if (Sessions > sessionlimit)
+   {
+	cerr << "ERROR: Too many sessions" << endl;
+        cout << "Sessions: " << Sessions << endl;
+	//Sessions--;
+        sendCalcAppReject(sessionSetEntry,cookie->JobID);
+        sessionSetEntry->Closing = true;
+        return;
+   }
 
    sessionSetEntry->HasJob       = true;
    sessionSetEntry->JobID        = ntohl(cookie->JobID);
-   sessionSetEntry->JobSize      = cookie->JobSize;
-   sessionSetEntry->Completed    = cookie->Completed;
+   sessionSetEntry->JobSize      = ntoh64(cookie->JobSize);
+   sessionSetEntry->Completed    = ntoh64(cookie->Completed);
    sessionSetEntry->LastUpdateAt = getMicroTime();
 
    cout << "Job " << sessionSetEntry->JobID << " with size "
@@ -411,12 +433,14 @@ void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
 
 
 // ###### Handle incoming CalcAppReject #####################################
-void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
+void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry, unsigned int jobID)
 {
+
    RejectedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type = htonl(CALCAPP_REJECT);
+   message.JobID = htonl(jobID);
    if(rspSessionWrite(sessionSetEntry->Session,
                       (void*)&message,
                       sizeof(message),
@@ -436,8 +460,8 @@ void SessionSet::handleCookieTransmissionTimer(SessionSetEntry* sessionSetEntry)
    struct CalcAppCookie cookie;
    memset(&cookie, 0, sizeof(cookie));
    cookie.JobID     = htonl(sessionSetEntry->JobID);
-   cookie.JobSize   = sessionSetEntry->JobSize;
-   cookie.Completed = sessionSetEntry->Completed;
+   cookie.JobSize   = hton64((unsigned long long)rint(sessionSetEntry->JobSize));
+   cookie.Completed = hton64((unsigned long long)rint(sessionSetEntry->Completed));
    if(rspSessionSendCookie(sessionSetEntry->Session,
                            (unsigned char*)&cookie,
                            sizeof(cookie),
@@ -561,12 +585,13 @@ void SessionSet::handleCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry,
 // ###### Send CalcAppComplete ##############################################
 void SessionSet::sendCalcAppComplete(SessionSetEntry* sessionSetEntry)
 {
+   cout << "CalcAppCompleted" << endl;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type      = htonl(CALCAPP_COMPLETE);
    message.JobID     = htonl(sessionSetEntry->JobID);
-   message.JobSize   = sessionSetEntry->JobSize;
-   message.Completed = sessionSetEntry->Completed;
+   message.JobSize   = hton64((unsigned long long)rint(sessionSetEntry->JobSize));
+   message.Completed = hton64((unsigned long long)rint(sessionSetEntry->Completed));
    if(rspSessionWrite(sessionSetEntry->Session,
                       (void*)&message,
                       sizeof(message),
@@ -794,7 +819,7 @@ int main(int argc, char** argv)
    unsigned int                  pedStatusArray[FD_SETSIZE];
    int                           i;
    int                           result;
-   unsigned long long            runtime;
+   unsigned long long            runtime = 180000000;
 
    unsigned long long 		 StartupTimeStamp		= getMicroTime();
 
@@ -839,6 +864,9 @@ int main(int argc, char** argv)
 	 }
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
       runtime = atol((char*)&argv[i][9]);
+	 }
+      else if(!(strncmp(argv[i], "-sessionlimit=" ,14))) {
+      sessionlimit = atol((char*)&argv[i][14]);
 	 }
 
       else {
