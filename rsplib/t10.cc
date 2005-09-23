@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -210,7 +210,7 @@ void ThreadedServer::run()
          if((eventHandlingResult == EHR_Abort) ||
             (eventHandlingResult == EHR_Shutdown)) {
             rsp_sendmsg(RSerPoolSocketDescriptor,
-                        NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
+                        NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                         0, 0, 0, 0, 0);
          }
       }
@@ -652,7 +652,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                if((eventHandlingResult == EHR_Abort) ||
                   (eventHandlingResult == EHR_Shutdown)) {
                   rsp_sendmsg(RSerPoolSocketDescriptor,
-                              NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
+                              NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                               rinfo.rinfo_session, 0, 0, 0, 0);
                }
             }
