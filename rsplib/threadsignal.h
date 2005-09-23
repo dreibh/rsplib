@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id$
+ * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,11 +23,12 @@
  *
  */
 
-#ifndef BREAKDETECTOR_H
-#define BREAKDETECTOR_H
-
+#ifndef THREADSIGNAL_H
+#define THREADSIGNAL_H
 
 #include "tdtypes.h"
+
+#include <pthread.h>
 
 
 #ifdef __cplusplus
@@ -35,32 +36,59 @@ extern "C" {
 #endif
 
 
-/**
-  * Install break handler.
-  */
-void installBreakDetector();
+struct ThreadSignal
+{
+   pthread_mutex_t Mutex;       /* Non-recursive mutex! */
+   pthread_cond_t  Condition;
+};
+
 
 /**
-  * Uninstall break handler.
-  */
-void uninstallBreakDetector();
-
-/**
-  * Check, if break has been detected.
-  */
-bool breakDetected();
-
-/**
-  * Send break to main thread.
+  * Create new mutex.
   *
-  * @param quiet true to print no break message in breakDetected(), false otherwise (default).
+  * @param threadSignal ThreadSignal.
   */
-void sendBreak(const bool quiet);
+void threadSignalNew(struct ThreadSignal* threadSignal,
+                     const char*          name);
+
+/**
+  * Delete mutex.
+  *
+  * @param threadSignal ThreadSignal.
+  */
+void threadSignalDelete(struct ThreadSignal* threadSignal);
+
+/**
+  * Lock mutex.
+  *
+  * @param threadSignal ThreadSignal.
+  */
+void threadSignalLock(struct ThreadSignal* threadSignal);
+
+/**
+  * Unlock mutex.
+  *
+  * @param threadSignal ThreadSignal.
+  */
+void threadSignalUnlock(struct ThreadSignal* threadSignal);
+
+/**
+  * Fire signal.
+  *
+  * @param threadSignal ThreadSignal.
+  */
+void threadSignalFire(struct ThreadSignal* threadSignal);
+
+/**
+  * Wait for signal.
+  *
+  * @param threadSignal ThreadSignal.
+  */
+void threadSignalWait(struct ThreadSignal* threadSignal);
 
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

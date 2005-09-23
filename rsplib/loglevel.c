@@ -122,7 +122,7 @@ bool initLogging(const char* parameter)
 /* ###### Begin logging ################################################## */
 void beginLogging()
 {
-   threadSafetyInit(&gLogMutex, "_LogPrinter_");
+   threadSafetyNew(&gLogMutex, "_LogPrinter_");
    if((gCloseStdLog) && (ftell(*gStdLog) > 0)) {
       fputs("\n#########################################################################################\n\n",*gStdLog);
    }
@@ -143,7 +143,7 @@ void finishLogging()
       gCloseStdLog = false;
       *gStdLog     = stderr;
    }
-   threadSafetyDestroy(&gLogMutex);
+   threadSafetyDelete(&gLogMutex);
 }
 
 

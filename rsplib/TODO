@@ -33,7 +33,16 @@ Pong {
 }
 
 
+------
 
+Last für ThreadedServer:
+  Je Thread: weight, load e(0%,100%)
+     => Gesamt-Last: gewichtete Load-Summe / Gewicht-Summe
+
+   Threaded-Server (PE-sd, Session-ID)
+     => setLoad() -> Berechnung über List -> Update???
+   oder ext. Fkt.  updateLoad()
+      static FractalGenerator::updateLoad()
 
 ------
 

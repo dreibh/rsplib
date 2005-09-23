@@ -18,27 +18,18 @@
  *
  */
 
-#include <unistd.h>
-#include <pthread.h>
-
 #include "mutex.h"
 
 
 // ###### Constructor #######################################################
 TDMutex::TDMutex()
 {
-   pthread_mutexattr_t attr;
-   pthread_mutexattr_init(&attr);
-   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-
-   pthread_mutex_init(&MyTDMutex, &attr);
-
-   pthread_mutexattr_destroy(&attr);
+   threadSafetyNew(&MyMutex, "TDMutex");
 }
 
 
 // ###### Destructor ########################################################
 TDMutex::~TDMutex()
 {
-   pthread_mutex_destroy(&MyTDMutex);
+   threadSafetyDelete(&MyMutex);
 }

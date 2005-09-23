@@ -252,9 +252,7 @@ static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstanc
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
       if(sendAbort) {
          /* Abort association to current registrar */
-         sendtoplus(asapInstance->RegistrarSocket, NULL, 0, SCTP_ABORT,
-                    NULL, 0,
-                    0, 0, 0, 0xffffffff, 0);
+         sendabort(asapInstance->RegistrarSocket, 0);
       }
       ext_close(asapInstance->RegistrarSocket);
       asapInstance->RegistrarSocket              = -1;

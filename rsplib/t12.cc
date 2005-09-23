@@ -551,10 +551,7 @@ static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstanc
    if(asapInstance->RegistrarSocket >= 0) {
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
       if(sendAbort) {
-         /* Abort association to current registrar */
-         sendtoplus(asapInstance->RegistrarSocket, NULL, 0, SCTP_ABORT,
-                    NULL, 0,
-                    0, 0, 0, 0xffffffff, 0);
+         sendabort(asapInstance->RegistrarSocket, 0);
       }
       ext_close(asapInstance->RegistrarSocket);
       asapInstance->RegistrarSocket              = -1;
@@ -1099,7 +1096,7 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 
 
 
-
+#if 0
 /* ###### Get poll() parameters ########################################## */
 void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
                                  struct pollfd*      ufds,
@@ -1153,8 +1150,8 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
 
 
 /* ###### Find FDCallback for given file descriptor ###################### */
-struct FDCallback* dispatcherFindFDCallbackForDescriptor(struct Dispatcher* dispatcher,
-                                                         int                fd)
+static struct FDCallback* dispatcherFindFDCallbackForDescriptor(struct Dispatcher* dispatcher,
+                                                                int                fd)
 {
    struct FDCallback                  cmpNode;
    struct LeafLinkedRedBlackTreeNode* node;
@@ -1261,7 +1258,7 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
       dispatcherUnlock(dispatcher);
    }
 }
-
+#endif
 
 
 
@@ -1639,7 +1636,7 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-   threadSafetyInit(&gThreadSafety, "gRSerPoolSocketSet");
+   threadSafetyNew(&gThreadSafety, "gRSerPoolSocketSet");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
    ASAPInstance* gAsapInstance = asapInstanceNew(&gDispatcher,NULL);
    CHECK(gAsapInstance);

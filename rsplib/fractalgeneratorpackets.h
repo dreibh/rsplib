@@ -1,15 +1,8 @@
 /*
- *  $Id$
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * RSerPool implementation.
- *
- * Realized in co-operation between Siemens AG
- * and University of Essen, Institute of Computer Networking Technology.
- *
- * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
- * The authors alone are responsible for the contents.
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,15 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for any discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
- *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: ASAP Instance
+ *          dreibh@iem.uni-due.de
  *
  */
 

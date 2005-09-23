@@ -85,7 +85,7 @@ unsigned int rspInitialize(struct TagItem* tags)
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
 
-   threadSafetyInit(&gThreadSafety, "RsplibInstance");
+   threadSafetyNew(&gThreadSafety, "RsplibInstance");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
    gAsapInstance = asapInstanceNew(&gDispatcher, tags);
    if(gAsapInstance) {
@@ -93,7 +93,6 @@ unsigned int rspInitialize(struct TagItem* tags)
       tagListSetData(tags, TAG_RspLib_GetRevision,  (tagdata_t)RSPLIB_REVISION);
       tagListSetData(tags, TAG_RspLib_GetBuildDate, (tagdata_t)buildDate);
       tagListSetData(tags, TAG_RspLib_GetBuildTime, (tagdata_t)buildTime);
-      tagListSetData(tags, TAG_RspLib_IsThreadSafe, (tagdata_t)threadSafetyIsAvailable());
       return(RSPERR_OKAY);
    }
    else {
@@ -110,7 +109,7 @@ void rspCleanUp()
    if(gAsapInstance) {
       asapInstanceDelete(gAsapInstance);
       dispatcherDelete(&gDispatcher);
-      threadSafetyDestroy(&gThreadSafety);
+      threadSafetyDelete(&gThreadSafety);
       gAsapInstance = NULL;
 
       /* Give sctplib some time to cleanly shut down all associations */

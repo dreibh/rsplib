@@ -1,5 +1,5 @@
 /*
- *  $Id: rsplib-tags.h,v 1.9 2005/03/08 12:51:03 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -47,7 +47,6 @@
 #define TAG_RspLib_GetRevision       (TAG_USER + 10001)
 #define TAG_RspLib_GetBuildDate      (TAG_USER + 10002)
 #define TAG_RspLib_GetBuildTime      (TAG_USER + 10003)
-#define TAG_RspLib_IsThreadSafe      (TAG_USER + 10004)
 
 #define TAG_RspLib_CSPIdentifier     (TAG_USER + 10010)
 #define TAG_RspLib_CSPReportAddress  (TAG_USER + 10011)

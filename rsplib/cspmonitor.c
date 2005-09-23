@@ -1,20 +1,13 @@
 /*
- *  $Id: cspmonitor.c,v 1.11 2005/03/02 13:34:16 dreibh Exp $
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * RSerPool implementation.
- *
- * Realized in co-operation between Siemens AG
- * and University of Essen, Institute of Computer Networking Technology.
- *
- * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germlocal (Förderkennzeichen 01AK045).
- * The authors alone are responsible for the contents.
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) local later version.
+ * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,15 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for local discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
- *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: Example Pool Element
+ *          dreibh@iem.uni-due.de
  *
  */
 
@@ -42,6 +30,7 @@
 #include "componentstatusprotocol.h"
 #include "leaflinkedredblacktree.h"
 
+#include <sys/poll.h>
 #include <ext_socket.h>
 
 
@@ -245,14 +234,13 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   union sockaddr_union          localAddress;
-   int                           n;
-   int                           result;
-   int                           sd;
-   fd_set                        readfdset;
    struct LeafLinkedRedBlackTree objectStorage;
-   struct timeval                timeout;
+   union sockaddr_union          localAddress;
+   struct pollfd                 ufds;
+   int                           result;
    int                           reuse;
+   int                           sd;
+   int                           n;
 
    if(checkIPv6()) {
       string2address("[::]:0", &localAddress);
@@ -280,9 +268,7 @@ int main(int argc, char** argv)
       }
    }
 
-   sd = ext_socket(localAddress.sa.sa_family,
-                   SOCK_DGRAM,
-                   IPPROTO_UDP);
+   sd = ext_socket(localAddress.sa.sa_family, SOCK_DGRAM, IPPROTO_UDP);
    if(sd < 0) {
       perror("Unable to create socket");
       exit(1);
@@ -302,23 +288,17 @@ int main(int argc, char** argv)
 
 
    puts("Component Status Monitor - Version 1.0");
-   puts("--------------------------------------\n");
+   puts("======================================\n");
 
    installBreakDetector();
    beginLogging();
 
    while(!breakDetected()) {
-      FD_ZERO(&readfdset);
-      FD_SET(sd, &readfdset);
-
-      timeout.tv_sec  = 0;
-      timeout.tv_usec = 500000;
-      result = ext_select(sd + 1, &readfdset, NULL, NULL, &timeout);
-
-      if(result > 0) {
-         if(FD_ISSET(sd, &readfdset)) {
-            handleMessage(sd, &objectStorage);
-         }
+      ufds.fd     = sd;
+      ufds.events = POLLIN;
+      result = ext_poll(&ufds, 1, 500);
+      if((result > 0) && (ufds.revents & POLLIN)) {
+         handleMessage(sd, &objectStorage);
       }
       purgeCSPObjects(&objectStorage);
 

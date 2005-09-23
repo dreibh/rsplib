@@ -1,21 +1,25 @@
 /*
- * calcapppoolelement.cc
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * Copyright (C) 2005 by Thomas Dreibholz
+ * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
-
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * Contact: rsplib-discussion@sctp.de
+ *          dreibh@iem.uni-due.de
  *
  */
 
@@ -60,11 +64,11 @@ class SessionSet
    void handleTimers();
    void handleEvents(SessionDescriptor* session,
                      const unsigned int sessionEvents);
-		     
+
    inline double getTotalUsedCalculations() const
    {
     return TotalUsedCalculations;
-   } 		     
+   }
    private:
    unsigned long long StartupTimeStamp;
    double             TotalUsedCalculations;
@@ -401,7 +405,7 @@ void SessionSet::sendCalcAppAccept(SessionSetEntry* sessionSetEntry)
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppAccept" << endl;
       sessionSetEntry->Closing = true;
-      
+
    }
 }
 
@@ -419,7 +423,7 @@ void SessionSet::sendCalcAppReject(SessionSetEntry* sessionSetEntry)
                       NULL) <= 0) {
       cerr << "ERROR: Unable to send CalcAppReject" << endl;
       sessionSetEntry->Closing = true;
-      
+
    }
 }
 
@@ -723,7 +727,7 @@ void SessionSet::updateCalculations()
                sessionSetEntry->Completed = sessionSetEntry->JobSize;
             }
          }
-	 
+
          sessionSetEntry->LastUpdateAt = now;
          sessionSetEntry = sessionSetEntry->Next;
       }
@@ -791,9 +795,9 @@ int main(int argc, char** argv)
    int                           i;
    int                           result;
    unsigned long long            runtime;
-   
+
    unsigned long long 		 StartupTimeStamp		= getMicroTime();
-   
+
 
    start = getMicroTime();
    stop  = 0;
@@ -836,7 +840,7 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
       runtime = atol((char*)&argv[i][9]);
 	 }
-	 
+
       else {
          cerr << "Bad argument \"" << argv[i] << "\"!"  << endl;
          cerr << "Usage: " << argv[0]
@@ -944,25 +948,25 @@ int main(int argc, char** argv)
                                    timeout,
                                    (struct TagItem*)&tags);
          sessionList.handleTimers();
-	 
+
 	 double	 		 Capacity                      = 1000000.0;
    	 unsigned long long 		 shutdownTimeStamp             = getMicroTime();
    	 const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
    	 const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
    	 const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
-	 
+
 	 static unsigned long long lastOutput = 0;
 	 if(getMicroTime() - lastOutput >= 500000ULL) {
 	    lastOutput = getMicroTime();
   	    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
 
-	 }		
-	 
+	 }
+
 	 if (getMicroTime()-StartupTimeStamp >= runtime)
    	  {
       			goto finished;
-          }   
-	 
+          }
+
          /* ====== Handle results of ext_select() =========================== */
          if(result > 0) {
             if(pedStatusArray[0] & RspSelect_Read) {
@@ -1022,9 +1026,9 @@ int main(int argc, char** argv)
       sessionList.removeAll();
       cout << "Removing Pool Element..." << endl;
       rspDeletePoolElement(poolElement, NULL);
-      
-    
-   
+
+
+
    double	 		 Capacity                      = 1000000.0;
    unsigned long long 		 shutdownTimeStamp             = getMicroTime();
    const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
@@ -1032,7 +1036,7 @@ int main(int argc, char** argv)
    const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
    TotalUsedCapacity = sessionList.getTotalUsedCalculations();
    TotalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
-   TotalWastedCapacity = serverRuntime-TotalUsedCapacity; 
+   TotalWastedCapacity = serverRuntime-TotalUsedCapacity;
    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity   \" %1.6f \n", objectName, TotalUsedCapacity);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \" %1.6f \n", objectName, TotalPossibleCalculations);
@@ -1045,11 +1049,11 @@ int main(int argc, char** argv)
       cerr << "ERROR: Unable to create pool element!" << endl;
       exit(1);
    }
-   
+
 
    fclose(ScalarFH);
    fclose(VectorFH);
-      
+
    rspCleanUp();
    finishLogging();
    cout << endl << "Terminated!" << endl;

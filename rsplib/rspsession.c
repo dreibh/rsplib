@@ -361,7 +361,7 @@ void rspDeletePoolElement(struct PoolElementDescriptor* ped,
             ext_close(ped->Socket);
             ped->Socket = -1;
          }
-         threadSafetyDestroy(&ped->Mutex);
+         threadSafetyDelete(&ped->Mutex);
          free(ped);
       }
       else {
@@ -394,7 +394,7 @@ struct PoolElementDescriptor* rspCreatePoolElement(const unsigned char* poolHand
       }
       poolHandleNew(&ped->Handle, poolHandle, poolHandleSize);
 
-      threadSafetyInit(&ped->Mutex, "RspPoolElement");
+      threadSafetyNew(&ped->Mutex, "RspPoolElement");
       timerNew(&ped->ReregistrationTimer,
                &gDispatcher,
                reregistrationTimer,
@@ -495,7 +495,7 @@ static struct SessionDescriptor* rspSessionNew(
 {
    struct SessionDescriptor* session = (struct SessionDescriptor*)malloc(sizeof(struct SessionDescriptor));
    if(session != NULL) {
-      threadSafetyInit(&session->Mutex, "RspSession");
+      threadSafetyNew(&session->Mutex, "RspSession");
       session->MessageBuffer = messageBufferNew(65536);
       if(session->MessageBuffer == NULL) {
          free(session);
@@ -581,7 +581,7 @@ static void rspSessionDelete(struct SessionDescriptor* session)
          free(session->CookieEcho);
          session->CookieEcho = NULL;
       }
-      threadSafetyDestroy(&session->Mutex);
+      threadSafetyDelete(&session->Mutex);
       free(session);
    }
 }
@@ -1137,7 +1137,7 @@ ssize_t rspSessionWrite(struct SessionDescriptor* session,
                                tagListGetData(tags, TAG_RspIO_SCTP_PPID, 0x55555555),
                                0,
                                (const uint16_t)tagListGetData(tags, TAG_RspIO_SCTP_StreamID, 0),
-                               tagListGetData(tags, TAG_RspIO_SCTP_TimeToLive, 0xffffffff),
+                               tagListGetData(tags, TAG_RspIO_SCTP_TimeToLive, 0),
                                tagListGetData(tags, TAG_RspIO_Timeout, (tagdata_t)~0));
    if((result < 0) && (errno != EAGAIN)) {
       LOG_ACTION

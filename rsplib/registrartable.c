@@ -286,9 +286,7 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
       LOG_END
    }
    else {
-      /* Abort association to current registrar (if existing) */
-      sendtoplus(registrarFD, NULL, 0, SCTP_ABORT, NULL, 0,
-                 0, assocID, 0, 0xffffffff, 0);
+      sendabort(registrarFD, assocID);
    }
 }
 

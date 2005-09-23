@@ -89,6 +89,8 @@ tagitem.h \
 tdtypes.h \
 threadsafety.c \
 threadsafety.h \
+threadsignal.c \
+threadsignal.h \
 timer.c \
 timer.h \
 transportaddressblock.c \

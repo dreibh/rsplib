@@ -1,3 +1,28 @@
+/*
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ *
+ * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * Contact: rsplib-discussion@sctp.de
+ *          dreibh@iem.uni-due.de
+ *
+ */
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,6 +38,31 @@ enum EventHandlingResult
 };
 
 
+class ThreadedServer;
+
+class ThreadedServerList : public TDMutex
+{
+   public:
+   ThreadedServerList();
+   ~ThreadedServerList();
+   void add(ThreadedServer* thread);
+   void remove(ThreadedServer* thread);
+   void removeFinished();
+   void removeAll();
+
+   size_t getThreads();
+
+   private:
+   struct ThreadListEntry {
+      ThreadListEntry* Next;
+      ThreadedServer*  Object;
+   };
+   ThreadListEntry* ThreadList;
+   size_t           Threads;
+};
+
+
+
 class ThreadedServer : public TDThread
 {
    public:
@@ -24,6 +74,12 @@ class ThreadedServer : public TDThread
    }
    inline bool isShuttingDown() const {
       return(Shutdown);
+   }
+   inline ThreadedServerList* getServerList() const {
+      return(ServerList);
+   }
+   inline void setServerList(ThreadedServerList* serverList) {
+      ServerList = serverList;
    }
    void shutdown();
 
@@ -47,30 +103,13 @@ class ThreadedServer : public TDThread
    private:
    void run();
 
-   bool IsNewSession;
-   bool Shutdown;
-   bool Finished;
+   ThreadedServerList* ServerList;
+   bool                IsNewSession;
+   bool                Shutdown;
+   bool                Finished;
 };
 
 
-
-class ThreadedServerList
-{
-   public:
-   ThreadedServerList();
-   ~ThreadedServerList();
-   void add(ThreadedServer* thread);
-   void remove(ThreadedServer* thread);
-   void removeFinished();
-   void removeAll();
-
-   private:
-   struct ThreadListEntry {
-      ThreadListEntry* Next;
-      ThreadedServer*  Object;
-   };
-   ThreadListEntry* ThreadList;
-};
 
 
 
@@ -78,6 +117,7 @@ class ThreadedServerList
 ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
 {
    RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
+   ServerList   = NULL;
    IsNewSession = true;
    Shutdown     = false;
    Finished     = false;
@@ -89,6 +129,7 @@ ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
 // ###### Destructor ########################################################
 ThreadedServer::~ThreadedServer()
 {
+   CHECK(ServerList == NULL);
    printTimeStamp(stdout);
    printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
    if(RSerPoolSocketDescriptor >= 0) {
@@ -170,7 +211,7 @@ void ThreadedServer::run()
             (eventHandlingResult == EHR_Shutdown)) {
             rsp_sendmsg(RSerPoolSocketDescriptor,
                         NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
-                        0, 0, 0, ~0, 0, NULL);
+                        0, 0, 0, 0, 0);
          }
       }
       else if(received == 0) {
@@ -274,9 +315,21 @@ ThreadedServerList::~ThreadedServerList()
 }
 
 
+// ###### Get number of threads #############################################
+size_t ThreadedServerList::getThreads()
+{
+   size_t count;
+   lock();
+   count = Threads;
+   unlock();
+   return(count);
+}
+
+
 // ###### Remove finished sessions ##########################################
 void ThreadedServerList::removeFinished()
 {
+   lock();
    ThreadListEntry* entry = ThreadList;
    while(entry != NULL) {
       ThreadListEntry* next = entry->Next;
@@ -285,6 +338,7 @@ void ThreadedServerList::removeFinished()
       }
       entry = next;
    }
+   unlock();
 }
 
 
@@ -303,18 +357,30 @@ void ThreadedServerList::removeAll()
 void ThreadedServerList::add(ThreadedServer* thread)
 {
    ThreadListEntry* entry = new ThreadListEntry;
-   entry->Next   = ThreadList;
-   entry->Object = thread;
-   ThreadList    = entry;
+   if(entry) {
+      lock();
+      entry->Next   = ThreadList;
+      entry->Object = thread;
+      ThreadList    = entry;
+
+      thread->setServerList(this);
+      Threads++;
+      unlock();
+   }
 }
 
 
 // ###### Remove session ####################################################
 void ThreadedServerList::remove(ThreadedServer* thread)
 {
+   // ====== Tell thread to shut down =======================================
+   thread->shutdown();
+   thread->waitForFinish();
+
+   // ====== Remove thread ==================================================
+   lock();
    ThreadListEntry* entry = ThreadList;
    ThreadListEntry* prev  = NULL;
-
    while(entry != NULL) {
       if(entry->Object == thread) {
          if(prev == NULL) {
@@ -324,11 +390,9 @@ void ThreadedServerList::remove(ThreadedServer* thread)
             prev->Next = entry->Next;
          }
 
-         // ====== Tell thread to shut down =================================
-         entry->Object->shutdown();
-         entry->Object->waitForFinish();
+         thread->setServerList(NULL);
+         Threads--;
 
-         // ====== Remove thread ============================================
          delete entry->Object;
          entry->Object = NULL;
          delete entry;
@@ -337,6 +401,7 @@ void ThreadedServerList::remove(ThreadedServer* thread)
       prev  = entry;
       entry = entry->Next;
    }
+   unlock();
 }
 
 
@@ -438,7 +503,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (char*)pong, sizeof(Pong) + dataLength, 0,
-                               0, PPID_PPP, 0, ~0, 0, NULL);
+                               0, PPID_PPP, 0, ~0, 0);
             printf("snd=%d\n",sent);
             if(sent > 0) {
                ReplyNo++;
@@ -588,7 +653,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                   (eventHandlingResult == EHR_Shutdown)) {
                   rsp_sendmsg(RSerPoolSocketDescriptor,
                               NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_SHUTDOWN,
-                              rinfo.rinfo_session, 0, 0, ~0, 0, NULL);
+                              rinfo.rinfo_session, 0, 0, 0, 0);
                }
             }
          }
@@ -655,7 +720,7 @@ EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                       buffer, bufferSize, 0,
                       sessionID, ppid, streamID,
-                      ~0, 0, NULL);
+                      ~0, 0);
    printf("snd=%d\n", sent);
    return((sent == (ssize_t)bufferSize) ? EHR_Okay : EHR_Abort);
 }
@@ -701,7 +766,8 @@ class FractalGeneratorServer : public ThreadedServer
    bool sendCookie();
    bool sendData(FGPData* data);
    bool handleParameter(const FGPParameter* parameter,
-                        const size_t        size);
+                        const size_t        size,
+                        const bool          insideCookie = false);
    EventHandlingResult calculateImage();
 
    FractalGeneratorStatus         Status;
@@ -784,7 +850,7 @@ bool FractalGeneratorServer::sendData(FGPData* data)
 
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                         data, dataSize, 0,
-                        0, PPID_FGP, 0, ~0, 0, NULL);
+                        0, PPID_FGP, 0, ~0, 0);
 
    data->Points = 0;
    data->StartX = 0;
@@ -797,7 +863,8 @@ bool FractalGeneratorServer::sendData(FGPData* data)
 
 // ###### Handle parameter message ##########################################
 bool FractalGeneratorServer::handleParameter(const FGPParameter* parameter,
-                                             const size_t        size)
+                                             const size_t        size,
+                                             const bool          insideCookie)
 {
    if(size < sizeof(struct FGPParameter)) {
       printTimeStamp(stdout);
@@ -824,18 +891,21 @@ bool FractalGeneratorServer::handleParameter(const FGPParameter* parameter,
    Status.CurrentX                = 0;
    Status.CurrentY                = 0;
 
-   printTimeStamp(stdout);
-   printf("Got Parameter on RSerPool socket %u:\nw=%u h=%u c1=(%lf,%lf) c2=(%lf,%lf), n=%f, maxIterations=%u, algorithmID=%u\n",
-          RSerPoolSocketDescriptor,
-          Status.Parameter.Width,
-          Status.Parameter.Height,
-          networkToDouble(Status.Parameter.C1Real),
-          networkToDouble(Status.Parameter.C1Imag),
-          networkToDouble(Status.Parameter.C2Real),
-          networkToDouble(Status.Parameter.C2Imag),
-          networkToDouble(Status.Parameter.N),
-          Status.Parameter.MaxIterations,
-          Status.Parameter.AlgorithmID);
+   if(!insideCookie) {
+      printTimeStamp(stdout);
+      printf("Got Parameter on RSerPool socket %u:\nw=%u h=%u c1=(%lf,%lf) c2=(%lf,%lf), n=%f, maxIterations=%u, algorithmID=%u\n",
+            RSerPoolSocketDescriptor,
+            Status.Parameter.Width,
+            Status.Parameter.Height,
+            networkToDouble(Status.Parameter.C1Real),
+            networkToDouble(Status.Parameter.C1Imag),
+            networkToDouble(Status.Parameter.C2Real),
+            networkToDouble(Status.Parameter.C2Imag),
+            networkToDouble(Status.Parameter.N),
+            Status.Parameter.MaxIterations,
+            Status.Parameter.AlgorithmID);
+   }
+
    if((Status.Parameter.Width > 65536)  ||
       (Status.Parameter.Height > 65536) ||
       (Status.Parameter.MaxIterations > 1000000)) {
@@ -864,7 +934,7 @@ EventHandlingResult FractalGeneratorServer::handleCookieEcho(const char* buffer,
              RSerPoolSocketDescriptor);
       return(EHR_Abort);
    }
-   if(!handleParameter(&cookie->Parameter, sizeof(cookie->Parameter))) {
+   if(!handleParameter(&cookie->Parameter, sizeof(cookie->Parameter), true)) {
       return(EHR_Abort);
    }
 

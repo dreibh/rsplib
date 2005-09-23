@@ -21,7 +21,7 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
-#include <pthread.h>
+#include "threadsafety.h"
 
 
 class TDMutex
@@ -31,14 +31,14 @@ class TDMutex
    virtual ~TDMutex();
 
    inline void lock() {
-      pthread_mutex_lock(&MyTDMutex);
+      threadSafetyLock(&MyMutex);
    }
    inline void unlock() {
-      pthread_mutex_unlock(&MyTDMutex);
+      threadSafetyUnlock(&MyMutex);
    }
 
    private:
-   pthread_mutex_t MyTDMutex;
+   struct ThreadSafety MyMutex;
 };
 
 
