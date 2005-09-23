@@ -719,16 +719,16 @@ int rsp_accept(int                sd,
 int rsp_forcefailover(int             sd,
                       struct TagItem* tags)
 {
-   struct RSerPoolSocket*    rserpoolSocket;
-   struct rserpool_addrinfo* rspAddrInfo;
-   struct rserpool_addrinfo* rspAddrInfo2;
-   union sctp_notification   notification;
-   struct timeval            timeout;
-   ssize_t                   received;
-   fd_set                    readfds;
-   int                       result;
-   int                       flags;
-   bool                      success = false;
+   struct RSerPoolSocket*  rserpoolSocket;
+   struct rsp_addrinfo*    rspAddrInfo;
+   struct rsp_addrinfo*    rspAddrInfo2;
+   union sctp_notification notification;
+   struct timeval          timeout;
+   ssize_t                 received;
+   fd_set                  readfds;
+   int                     result;
+   int                     flags;
+   bool                    success = false;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    threadSafetyLock(&rserpoolSocket->Mutex);

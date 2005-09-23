@@ -30,7 +30,10 @@
 #include "thread.h"
 #include "netutilities.h"
 
+#include "tcplikeserver.h"
+#include "udplikeserver.h"
 
+#if 0
 enum EventHandlingResult
 {
    EHR_Okay     = 0,
@@ -39,15 +42,15 @@ enum EventHandlingResult
 };
 
 
-class ThreadedServer;
+class TCPLikeServer;
 
-class ThreadedServerList : public TDMutex
+class TCPLikeServerList : public TDMutex
 {
    public:
-   ThreadedServerList();
-   ~ThreadedServerList();
-   void add(ThreadedServer* thread);
-   void remove(ThreadedServer* thread);
+   TCPLikeServerList();
+   ~TCPLikeServerList();
+   void add(TCPLikeServer* thread);
+   void remove(TCPLikeServer* thread);
    void removeFinished();
    void removeAll();
 
@@ -56,7 +59,7 @@ class ThreadedServerList : public TDMutex
    private:
    struct ThreadListEntry {
       ThreadListEntry* Next;
-      ThreadedServer*  Object;
+      TCPLikeServer*  Object;
    };
    ThreadListEntry* ThreadList;
    size_t           Threads;
@@ -64,11 +67,11 @@ class ThreadedServerList : public TDMutex
 
 
 
-class ThreadedServer : public TDThread
+class TCPLikeServer : public TDThread
 {
    public:
-   ThreadedServer(int rserpoolSocketDescriptor);
-   ~ThreadedServer();
+   TCPLikeServer(int rserpoolSocketDescriptor);
+   ~TCPLikeServer();
 
    inline bool hasFinished() const {
       return(Finished);
@@ -76,10 +79,10 @@ class ThreadedServer : public TDThread
    inline bool isShuttingDown() const {
       return(Shutdown);
    }
-   inline ThreadedServerList* getServerList() const {
+   inline TCPLikeServerList* getServerList() const {
       return(ServerList);
    }
-   inline void setServerList(ThreadedServerList* serverList) {
+   inline void setServerList(TCPLikeServerList* serverList) {
       ServerList = serverList;
    }
    void shutdown();
@@ -88,7 +91,7 @@ class ThreadedServer : public TDThread
                            const char*          poolHandle,
                            struct rsp_loadinfo* loadinfo,
                            void*                userData,
-                           ThreadedServer*      (*threadFactory)(int sd, void* userData));
+                           TCPLikeServer*      (*threadFactory)(int sd, void* userData));
 
    protected:
    int RSerPoolSocketDescriptor;
@@ -104,7 +107,7 @@ class ThreadedServer : public TDThread
    private:
    void run();
 
-   ThreadedServerList* ServerList;
+   TCPLikeServerList* ServerList;
    bool                IsNewSession;
    bool                Shutdown;
    bool                Finished;
@@ -115,7 +118,7 @@ class ThreadedServer : public TDThread
 
 
 // ###### Constructor #######################################################
-ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
+TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
 {
    RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
    ServerList   = NULL;
@@ -128,7 +131,7 @@ ThreadedServer::ThreadedServer(int rserpoolSocketDescriptor)
 
 
 // ###### Destructor ########################################################
-ThreadedServer::~ThreadedServer()
+TCPLikeServer::~TCPLikeServer()
 {
    CHECK(ServerList == NULL);
    printTimeStamp(stdout);
@@ -141,7 +144,7 @@ ThreadedServer::~ThreadedServer()
 
 
 // ###### Shutdown thread ###################################################
-void ThreadedServer::shutdown()
+void TCPLikeServer::shutdown()
 {
    if(!Finished) {
       Shutdown = true;
@@ -150,7 +153,7 @@ void ThreadedServer::shutdown()
 
 
 // ###### Handle cookie #####################################################
-EventHandlingResult ThreadedServer::handleCookieEcho(const char* buffer, size_t bufferSize)
+EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer, size_t bufferSize)
 {
    printTimeStamp(stdout);
    puts("COOKIE ECHO");
@@ -159,7 +162,7 @@ EventHandlingResult ThreadedServer::handleCookieEcho(const char* buffer, size_t 
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult ThreadedServer::handleNotification(const union rserpool_notification* notification)
+EventHandlingResult TCPLikeServer::handleNotification(const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
@@ -170,7 +173,7 @@ EventHandlingResult ThreadedServer::handleNotification(const union rserpool_noti
 
 
 // ###### Threaded server main loop #########################################
-void ThreadedServer::run()
+void TCPLikeServer::run()
 {
    char                  buffer[65536];
    struct rsp_sndrcvinfo rinfo;
@@ -225,11 +228,11 @@ void ThreadedServer::run()
 
 
 // ###### Implementation of a simple threaded server ########################
-void ThreadedServer::poolElement(const char*          programTitle,
+void TCPLikeServer::poolElement(const char*          programTitle,
                                  const char*          poolHandle,
                                  struct rsp_loadinfo* loadinfo,
                                  void*                userData,
-                                 ThreadedServer*      (*threadFactory)(int sd, void* userData))
+                                 TCPLikeServer*      (*threadFactory)(int sd, void* userData))
 {
    beginLogging();
    if(rsp_initialize(NULL, 0) < 0) {
@@ -261,7 +264,7 @@ void ThreadedServer::poolElement(const char*          programTitle,
                       loadinfo, NULL) == 0) {
 
          // ====== Main loop ===================================================
-         ThreadedServerList serverSet;
+         TCPLikeServerList serverSet;
          installBreakDetector();
          while(!breakDetected()) {
             // ====== Clean-up session list ====================================
@@ -270,7 +273,7 @@ void ThreadedServer::poolElement(const char*          programTitle,
             // ====== Wait for incoming sessions ===============================
             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
             if(newRSerPoolSocket >= 0) {
-               ThreadedServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
+               TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if(serviceThread) {
                   serverSet.add(serviceThread);
                   serviceThread->start();
@@ -303,21 +306,21 @@ void ThreadedServer::poolElement(const char*          programTitle,
 
 
 // ###### Constructor #######################################################
-ThreadedServerList::ThreadedServerList()
+TCPLikeServerList::TCPLikeServerList()
 {
    ThreadList = NULL;
 }
 
 
 // ###### Destructor ########################################################
-ThreadedServerList::~ThreadedServerList()
+TCPLikeServerList::~TCPLikeServerList()
 {
    removeAll();
 }
 
 
 // ###### Get number of threads #############################################
-size_t ThreadedServerList::getThreads()
+size_t TCPLikeServerList::getThreads()
 {
    size_t count;
    lock();
@@ -328,7 +331,7 @@ size_t ThreadedServerList::getThreads()
 
 
 // ###### Remove finished sessions ##########################################
-void ThreadedServerList::removeFinished()
+void TCPLikeServerList::removeFinished()
 {
    lock();
    ThreadListEntry* entry = ThreadList;
@@ -344,7 +347,7 @@ void ThreadedServerList::removeFinished()
 
 
 // ###### Remove all sessions ###############################################
-void ThreadedServerList::removeAll()
+void TCPLikeServerList::removeAll()
 {
    ThreadListEntry* entry = ThreadList;
    while(entry != NULL) {
@@ -355,7 +358,7 @@ void ThreadedServerList::removeAll()
 
 
 // ###### Add session #######################################################
-void ThreadedServerList::add(ThreadedServer* thread)
+void TCPLikeServerList::add(TCPLikeServer* thread)
 {
    ThreadListEntry* entry = new ThreadListEntry;
    if(entry) {
@@ -372,7 +375,7 @@ void ThreadedServerList::add(ThreadedServer* thread)
 
 
 // ###### Remove session ####################################################
-void ThreadedServerList::remove(ThreadedServer* thread)
+void TCPLikeServerList::remove(TCPLikeServer* thread)
 {
    // ====== Tell thread to shut down =======================================
    thread->shutdown();
@@ -404,7 +407,7 @@ void ThreadedServerList::remove(ThreadedServer* thread)
    }
    unlock();
 }
-
+#endif
 
 
 
@@ -438,13 +441,13 @@ struct Pong
 };
 
 
-class PingPongServer : public ThreadedServer
+class PingPongServer : public TCPLikeServer
 {
    public:
    PingPongServer(int rserpoolSocketDescriptor);
    ~PingPongServer();
 
-   static ThreadedServer* pingPongServerFactory(int sd, void* userData);
+   static TCPLikeServer* pingPongServerFactory(int sd, void* userData);
 
    protected:
    EventHandlingResult handleMessage(const char* buffer,
@@ -459,7 +462,7 @@ class PingPongServer : public ThreadedServer
 
 // ###### Constructor #######################################################
 PingPongServer::PingPongServer(int rserpoolSocketDescriptor)
-   : ThreadedServer(rserpoolSocketDescriptor)
+   : TCPLikeServer(rserpoolSocketDescriptor)
 {
    ReplyNo = 1;
 }
@@ -472,7 +475,7 @@ PingPongServer::~PingPongServer()
 
 
 // ###### Create a PingServer thread ########################################
-ThreadedServer* PingPongServer::pingPongServerFactory(int sd, void* userData)
+TCPLikeServer* PingPongServer::pingPongServerFactory(int sd, void* userData)
 {
    return(new PingPongServer(sd));
 }
@@ -519,7 +522,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
 
 
-
+#if 0
 class UDPLikeServer
 {
    public:
@@ -675,7 +678,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
    finishLogging();
    puts("\nTerminated!");
 }
-
+#endif
 
 
 
@@ -741,7 +744,7 @@ EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
 using namespace std;
 
 
-class FractalGeneratorServer : public ThreadedServer
+class FractalGeneratorServer : public TCPLikeServer
 {
    public:
    struct FractalGeneratorServerSettings
@@ -754,7 +757,7 @@ class FractalGeneratorServer : public ThreadedServer
                           FractalGeneratorServerSettings* settings);
    ~FractalGeneratorServer();
 
-   static ThreadedServer* fractalGeneratorServerFactory(int sd, void* userData);
+   static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData);
 
    protected:
    EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
@@ -781,7 +784,7 @@ class FractalGeneratorServer : public ThreadedServer
 // ###### Constructor #######################################################
 FractalGeneratorServer::FractalGeneratorServer(int rserpoolSocketDescriptor,
                                                FractalGeneratorServer::FractalGeneratorServerSettings* settings)
-   : ThreadedServer(rserpoolSocketDescriptor)
+   : TCPLikeServer(rserpoolSocketDescriptor)
 {
    Settings            = *settings;
    LastSendTimeStamp   = 0;
@@ -796,7 +799,7 @@ FractalGeneratorServer::~FractalGeneratorServer()
 
 
 // ###### Create a FractalGenerator thread ##################################
-ThreadedServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, void* userData)
+TCPLikeServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, void* userData)
 {
    return(new FractalGeneratorServer(sd, (FractalGeneratorServerSettings*)userData));
 }

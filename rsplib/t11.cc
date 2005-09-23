@@ -3,7 +3,7 @@
 #include "rserpoolmessage.h"
 #include "timeutilities.h"
 #include "netutilities.h"
-#include "rsplib-tags.h"
+#include "rserpool.h"
 #include "threadsafety.h"
 #include "breakdetector.h"
 

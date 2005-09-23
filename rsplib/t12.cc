@@ -3,11 +3,12 @@
 #include "rserpoolmessage.h"
 #include "timeutilities.h"
 #include "netutilities.h"
-#include "rsplib-tags.h"
 #include "threadsafety.h"
 #include "threadsignal.h"
 #include "interthreadmessageport.h"
 #include "breakdetector.h"
+#include "asapinstance.h"
+#include "rserpool.h"
 
 #include <ext_socket.h>
 
@@ -20,6 +21,9 @@
 #include "registrartable.h"
 #include "interthreadmessageport.h"
 
+extern struct ASAPInstance* gAsapInstance;
+
+#if 0
 static void asapInstanceHandleRegistrarConnectionEvent(struct Dispatcher* dispatcher,
                                            int                fd,
                                            unsigned int       eventMask,
@@ -1257,7 +1261,7 @@ static void* asapInstanceMainLoop(void* args)
    asapInstanceDisconnectFromRegistrar(asapInstance, false);
    return(NULL);
 }
-
+#endif
 
 
 int main(int argc, char** argv)
@@ -1271,11 +1275,7 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-   threadSafetyNew(&gThreadSafety, "gRSerPoolSocketSet");
-   dispatcherNew(&gDispatcher, lock, unlock, NULL);
-   ASAPInstance* gAsapInstance = asapInstanceNew(&gDispatcher,NULL);
-   CHECK(gAsapInstance);
-
+   if(rsp_initialize(NULL,NULL) < 0) exit(1);
 
    puts("START!");
 
@@ -1317,8 +1317,6 @@ int main(int argc, char** argv)
       printf("HRES.RESULT=%d\n",asapInstanceHandleResolution(gAsapInstance, &ph, &poolElementNodeArray, &s));
    }
 
-   asapInstanceDelete(gAsapInstance);
-   dispatcherDelete(&gDispatcher);
-   finishLogging();
+   rsp_cleanup();
    return(0);
 }

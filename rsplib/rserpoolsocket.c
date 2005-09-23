@@ -158,23 +158,23 @@ void reregistrationTimer(struct Dispatcher* dispatcher,
 /* ###### Reregistration ##################################################### */
 bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
 {
-   struct TagItem            tags[16];
-   struct rserpool_addrinfo* rspAddrInfo;
-   struct rserpool_addrinfo* rspAddrInfo2;
-   struct rserpool_addrinfo* next;
-   struct sockaddr*          sctpLocalAddressArray = NULL;
-   struct sockaddr*          packedAddressArray    = NULL;
-   union sockaddr_union*     localAddressArray     = NULL;
-   union sockaddr_union      socketName;
-   socklen_t                 socketNameLen;
-   unsigned int              localAddresses;
-   unsigned int              result;
-   unsigned int              i;
+   struct TagItem        tags[16];
+   struct rsp_addrinfo*  rspAddrInfo;
+   struct rsp_addrinfo*  rspAddrInfo2;
+   struct rsp_addrinfo*  next;
+   struct sockaddr*      sctpLocalAddressArray = NULL;
+   struct sockaddr*      packedAddressArray    = NULL;
+   union sockaddr_union* localAddressArray     = NULL;
+   union sockaddr_union  socketName;
+   socklen_t             socketNameLen;
+   unsigned int          localAddresses;
+   unsigned int          result;
+   unsigned int          i;
 
    CHECK(rserpoolSocket->PoolElement != NULL);
 
-   /* ====== Create rserpool_addrinfo structure ========================== */
-   rspAddrInfo = (struct rserpool_addrinfo*)malloc(sizeof(struct rserpool_addrinfo));
+   /* ====== Create rsp_addrinfo structure ========================== */
+   rspAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
    if(rspAddrInfo == NULL) {
       LOG_ERROR
       fputs("Out of memory\n", stdlog);
@@ -253,7 +253,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
          return(false);
       }
 
-      /* ====== SCTP: add addresses to rserpool_addrinfo structure ======= */
+      /* ====== SCTP: add addresses to rsp_addrinfo structure ======= */
       if(rserpoolSocket->SocketProtocol == IPPROTO_SCTP) {
          /* SCTP endpoints are described by a list of their
             transport addresses. */
@@ -262,14 +262,14 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
          packedAddressArray    = rspAddrInfo->ai_addr;
       }
 
-      /* ====== TCP/UDP: add own rserpool_addrinfo for each address ====== */
+      /* ====== TCP/UDP: add own rsp_addrinfo for each address ====== */
       else {
          rspAddrInfo2 = rspAddrInfo;
          for(i = 0;i < localAddresses;i++) {
             rspAddrInfo2->ai_addrs = 1;
             rspAddrInfo2->ai_addr  = (struct sockaddr*)&localAddressArray[i];
             if(i < localAddresses - 1) {
-               next = (struct rserpool_addrinfo*)malloc(sizeof(struct rserpool_addrinfo));
+               next = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
                if(next == NULL) {
                   break;
                }

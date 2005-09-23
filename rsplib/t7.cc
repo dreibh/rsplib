@@ -465,7 +465,7 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 
 
-struct rserpool_info
+struct rsp_info
 {
 
 };
@@ -1366,7 +1366,7 @@ static void* rsplibMainLoop(void* args)
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize(struct rserpool_info* info, struct TagItem* tags)
+int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
@@ -3273,7 +3273,7 @@ int main(int argc, char** argv)
    int sd;
    int n;
    struct rsp_loadinfo loadinfo;
-   struct rserpool_info info;
+   struct rsp_info info;
    struct rsp_sndrcvinfo rinfo;
    bool   server = true;
    bool   thread = false;
@@ -3404,7 +3404,7 @@ int main(int argc, char** argv)
       FractalGeneratorServer::FractalGeneratorServerSettings settings;
       settings.TestMode     = false;
       settings.FailureAfter = 20;
-      ThreadedServer::poolElement("Fractal Generator Server - Version 1.0",
+      TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
                                   "FractalGeneratorPool", NULL,
                                   (void*)&settings,
                                   FractalGeneratorServer::fractalGeneratorServerFactory);
@@ -3571,7 +3571,7 @@ int main(int argc, char** argv)
          rsp_deregister(sd);
       }
       else {
-         ThreadedServer::poolElement("Ping Pong Server - Version 1.0",
+         TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
                                      "PingPongPool", NULL,
                                      NULL,
                                      PingPongServer::pingPongServerFactory);

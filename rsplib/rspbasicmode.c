@@ -58,7 +58,7 @@ extern size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArr
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize(struct rserpool_info* info, struct TagItem* tags)
+int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
@@ -165,7 +165,7 @@ void rsp_cleanup()
 /* ###### Handle resolution ############################################## */
 int rsp_getaddrinfo(const unsigned char*       poolHandle,
                     const size_t               poolHandleSize,
-                    struct rserpool_addrinfo** rserpoolAddrInfo,
+                    struct rsp_addrinfo** rserpoolAddrInfo,
                     struct TagItem*            tags)
 {
    struct PoolHandle                 myPoolHandle;
@@ -186,7 +186,7 @@ int rsp_getaddrinfo(const unsigned char*       poolHandle,
                       (struct ST_CLASS(PoolElementNode)**)&poolElementNode,
                       &poolElementNodes);
       if(hresResult == RSPERR_OKAY) {
-         *rserpoolAddrInfo = (struct rserpool_addrinfo*)malloc(sizeof(struct rserpool_addrinfo));
+         *rserpoolAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
          if(rserpoolAddrInfo != NULL) {
             (*rserpoolAddrInfo)->ai_next     = NULL;
             (*rserpoolAddrInfo)->ai_pe_id    = poolElementNode->Identifier;
@@ -262,9 +262,9 @@ int rsp_getaddrinfo(const unsigned char*       poolHandle,
 
 
 /* ###### Free endpoint address array #################################### */
-void rsp_freeaddrinfo(struct rserpool_addrinfo* rserpoolAddrInfo)
+void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo)
 {
-   struct rserpool_addrinfo* next;
+   struct rsp_addrinfo* next;
 
    while(rserpoolAddrInfo != NULL) {
       next = rserpoolAddrInfo->ai_next;
@@ -283,7 +283,7 @@ void rsp_freeaddrinfo(struct rserpool_addrinfo* rserpoolAddrInfo)
 /* ###### Register pool element ########################################## */
 unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
                                  const size_t              poolHandleSize,
-                                 struct rserpool_addrinfo* rserpoolAddrInfo,
+                                 struct rsp_addrinfo* rserpoolAddrInfo,
                                  struct TagItem*           tags)
 {
    struct PoolHandle                myPoolHandle;

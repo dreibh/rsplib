@@ -49,7 +49,7 @@ extern "C" {
    ##########################################################################
 */
 
-struct rserpool_info
+struct rsp_info
 {
    unsigned int ri_version;
    unsigned int ri_revision;
@@ -57,24 +57,24 @@ struct rserpool_info
    const char*  ri_build_time;
 };
 
-int rsp_initialize(struct rserpool_info* info, struct TagItem* tags);
+int rsp_initialize(struct rsp_info* info, struct TagItem* tags);
 void rsp_cleanup();
 
 
-struct rserpool_addrinfo {
+struct rsp_addrinfo {
    int                       ai_family;
    int                       ai_socktype;
    int                       ai_protocol;
    size_t                    ai_addrlen;
    size_t                    ai_addrs;
    struct sockaddr*          ai_addr;
-   struct rserpool_addrinfo* ai_next;
+   struct rsp_addrinfo* ai_next;
    uint32_t                  ai_pe_id;
 };
 
 unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
                                  const size_t              poolHandleSize,
-                                 struct rserpool_addrinfo* rserpoolAddrInfo,
+                                 struct rsp_addrinfo* rserpoolAddrInfo,
                                  struct TagItem*           tags);
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
@@ -87,9 +87,9 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
 
 int rsp_getaddrinfo(const unsigned char*       poolHandle,
                     const size_t               poolHandleSize,
-                    struct rserpool_addrinfo** rserpoolAddrInfo,
+                    struct rsp_addrinfo** rserpoolAddrInfo,
                     struct TagItem*            tags);
-void rsp_freeaddrinfo(struct rserpool_addrinfo* rserpoolAddrInfo);
+void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
 
 
 
