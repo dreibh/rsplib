@@ -3073,7 +3073,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 
                      LOG_END
                      registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                              notification->sn_assoc_change.sac_assoc_id);
+                                                             notification->sn_assoc_change.sac_assoc_id);
                   }
                   else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
                      LOG_ACTION
@@ -3083,7 +3083,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 
                      LOG_END
                      registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                              notification->sn_assoc_change.sac_assoc_id);
+                                                             notification->sn_assoc_change.sac_assoc_id);
                   }
                 break;
                case SCTP_SHUTDOWN_EVENT:
@@ -3094,7 +3094,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 
                   LOG_END
                   registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                           notification->sn_shutdown_event.sse_assoc_id);
+                                                          notification->sn_shutdown_event.sse_assoc_id);
                 break;
             }
          }
@@ -3422,14 +3422,12 @@ int main(int argc, char** argv)
    unsigned long long            cspReportInterval = 0;
 #endif
 
+   unsigned long long            pollTimeStamp;
+   struct pollfd                 ufds[FD_SETSIZE];
+   unsigned int                  nfds;
+   int                           timeout;
    int                           result;
-   struct timeval                timeout;
-   fd_set                        readfdset;
-   fd_set                        writefdset;
-   fd_set                        exceptfdset;
-   fd_set                        testfdset;
-   unsigned long long            testTS;
-   int                           i, n;
+   int                           i;
 
 
    /* ====== Get arguments =============================================== */
@@ -3538,17 +3536,17 @@ int main(int argc, char** argv)
 
    /* ====== Initialize Registrar ======================================= */
    registrar = registrarNew(serverID,
-                              asapSocket,
-                              asapAnnounceSocket,
-                              enrpUnicastSocket,
-                              enrpMulticastInputSocket,
-                              enrpMulticastOutputSocket,
-                              asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
-                              enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0]
+                            asapSocket,
+                            asapAnnounceSocket,
+                            enrpUnicastSocket,
+                            enrpMulticastInputSocket,
+                            enrpMulticastOutputSocket,
+                            asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
+                            enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0]
 #ifdef ENABLE_CSP
-                              , cspReportInterval, &cspReportAddress
+                            , cspReportInterval, &cspReportAddress
 #endif
-                              );
+                            );
    if(registrar == NULL) {
       fprintf(stderr, "ERROR: Unable to initialize Registrar object!\n");
       exit(1);
@@ -3636,18 +3634,22 @@ int main(int argc, char** argv)
 
    /* ====== Main loop =================================================== */
    while(!breakDetected()) {
-      dispatcherGetSelectParameters(&registrar->StateMachine, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
-      timeout.tv_sec  = min(0, timeout.tv_sec);
-      timeout.tv_usec = min(250000, timeout.tv_usec);
-      result = ext_select(n, &readfdset, &writefdset, &exceptfdset, &timeout);
-      dispatcherHandleSelectResult(&registrar->StateMachine, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
-      if(errno == EINTR) {
-         break;
+      dispatcherGetPollParameters(&registrar->StateMachine,
+                                  (struct pollfd*)&ufds, &nfds, &timeout,
+                                  &pollTimeStamp);
+      if((timeout < 0) || (timeout > 250)) {
+         timeout = 500;
       }
+      result = ext_poll((struct pollfd*)&ufds, nfds, timeout);
       if(result < 0) {
-         perror("select() failed");
+         if(errno != EINTR) {
+            perror("poll() failed");
+         }
          break;
       }
+      dispatcherHandlePollResult(&registrar->StateMachine, result,
+                                 (struct pollfd*)&ufds, nfds, timeout,
+                                 pollTimeStamp);
    }
 
 

@@ -1378,6 +1378,7 @@ int sendtoplus(int                      sockfd,
       sri.sinfo_context    = 0;
       */
       sri.sinfo_timetolive = timeToLive;
+if(timeToLive>0) printf("TTL=$%08x ????? \n",timeToLive);
 
       if(toaddrs) {
          p = (char*)&addressArray[0];
@@ -2024,10 +2025,10 @@ size_t getladdrsplus(const int              fd,
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
    uint16_t port;
+   size_t   addrs2;
+   size_t   j;
 #endif
 #endif
-   size_t addrs2;
-   size_t j;
    int    i;
 
    if(addrs > 0) {
@@ -2087,6 +2088,24 @@ size_t getpaddrsplus(const int              fd,
       return((size_t)addrs);
    }
    return(0);
+}
+
+
+/* ###### Send SCTP ABORT ################################################ */
+int sendabort(int sockfd, sctp_assoc_t assocID)
+{
+   return(sendtoplus(sockfd, NULL, 0, SCTP_ABORT,
+                     NULL, 0,
+                     0, assocID, 0, 0, 0));
+}
+
+
+/* ###### Send SCTP SHUTDOWN ############################################# */
+int sendshutdown(int sockfd, sctp_assoc_t assocID)
+{
+   return(sendtoplus(sockfd, NULL, 0, SCTP_SHUTDOWN,
+                     NULL, 0,
+                     0, assocID, 0, 0, 0));
 }
 
 

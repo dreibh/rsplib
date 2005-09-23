@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.h,v 1.4 2004/08/26 09:12:16 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -108,41 +108,36 @@ void dispatcherLock(struct Dispatcher* dispatcher);
 void dispatcherUnlock(struct Dispatcher* dispatcher);
 
 /**
-  * Get select() parameters for user-controlled select() loop.
+  * Get poll() parameters for user-controlled poll() loop.
   *
   * @param dispatcher Dispatcher.
-  * @param n n.
-  * @param readfdset readfdset.
-  * @param writefdset writefdset.
-  * @param exceptfdset exceptfdset.
-  * @param timeout timeout.
+  * @param ufds pollfd array of at least FD_SETSIZE entries.
+  * @param nfds Reference to store number of pollfd entries.
+  * @param timeout Reference to store timeout.
+  * @param pollTimeStamp Reference to store time stamp of dispatcherGetPollParameters() call.
   */
-void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
-                                   int*                n,
-                                   fd_set*             readfdset,
-                                   fd_set*             writefdset,
-                                   fd_set*             exceptfdset,
-                                   fd_set*             testfdset,
-                                   unsigned long long* testTS,
-                                   struct timeval*     timeout);
+void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
+                                 struct pollfd*      ufds,
+                                 unsigned int*       nfds,
+                                 int*                timeout,
+                                 unsigned long long* pollTimeStamp);
 
 /**
-  * Handle results of select() call.
+  * Handle results of poll() call.
   *
   * @param dispatcher Dispatcher.
-  * @param result Result value returned by select().
-  * @param readfdset readfdset.
-  * @param writefdset writefdset.
-  * @param exceptfdset exceptfdset.
+  * @param result Result value returned by poll().
+  * @param ufds pollfd array.
+  * @param nfds Number of pollfd entries.
   * @param timeout timeout.
+  * @param pollTimeStamp Time stamp of dispatcherGetPollParameters() call.
   */
-void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
-                                  int                      result,
-                                  fd_set*                  readfdset,
-                                  fd_set*                  writefdset,
-                                  fd_set*                  exceptfdset,
-                                  fd_set*                  testfdset,
-                                  const unsigned long long testTS);
+void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
+                                int                result,
+                                struct pollfd*     ufds,
+                                unsigned int       nfds,
+                                int                timeout,
+                                unsigned long long pollTimeStamp);
 
 /**
   * Event loop calling dispatcherGetSelectParameters(), select() and dispatcherHandleSelectResult().
@@ -153,6 +148,26 @@ void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
   * @see dispatcherHandleSelectResult
   */
 void dispatcherEventLoop(struct Dispatcher* dispatcher);
+
+
+
+/* ??????????????????????????????????????????????????????????????????????? */
+void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
+                                   int*                n,
+                                   fd_set*             readfdset,
+                                   fd_set*             writefdset,
+                                   fd_set*             exceptfdset,
+                                   fd_set*             testfdset,
+                                   unsigned long long* testTS,
+                                   struct timeval*     timeout);
+void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
+                                  int                      result,
+                                  fd_set*                  readfdset,
+                                  fd_set*                  writefdset,
+                                  fd_set*                  exceptfdset,
+                                  fd_set*                  testfdset,
+                                  const unsigned long long testTS);
+/* ??????????????????????????????????????????????????????????????????????? */
 
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- *  $Id: dispatcher.c,v 1.9 2004/11/11 18:33:49 tuexen Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -145,6 +145,169 @@ static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 }
 
 
+/* ###### Get poll() parameters ########################################## */
+void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
+                                 struct pollfd*      ufds,
+                                 unsigned int*       nfds,
+                                 int*                timeout,
+                                 unsigned long long* pollTimeStamp)
+{
+   struct LeafLinkedRedBlackTreeNode* node;
+   struct FDCallback*                 fdCallback;
+   struct Timer*                      timer;
+   int64                              timeToNextEvent;
+
+   *nfds    = 0;
+   *timeout = -1;
+   if(dispatcher != NULL) {
+      dispatcherLock(dispatcher);
+
+      /*  ====== Create fdset for poll() ================================= */
+      *pollTimeStamp = getMicroTime();
+      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
+      while(node != NULL) {
+         fdCallback = (struct FDCallback*)node;
+         if(fdCallback->EventMask & (FDCE_Read|FDCE_Write|FDCE_Exception)) {
+            fdCallback->SelectTimeStamp = *pollTimeStamp;
+            ufds[*nfds].fd     = fdCallback->FD;
+            ufds[*nfds].events = fdCallback->EventMask & (FDCE_Read|FDCE_Write|FDCE_Exception);
+            (*nfds)++;
+         }
+         else {
+            LOG_WARNING
+            fputs("Empty event mask?!\n",stdlog);
+            LOG_END
+         }
+         node = leafLinkedRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
+      }
+
+      /*  ====== Get time to next timer event ============================ */
+      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      if(node != NULL) {
+         timer = (struct Timer*)node;
+         timeToNextEvent = max((int64)0,(int64)timer->TimeStamp - (int64)*pollTimeStamp);
+         *timeout = (int)(timeToNextEvent / 1000);
+      }
+      else {
+         *timeout = -1;
+      }
+
+      dispatcherUnlock(dispatcher);
+   }
+}
+
+
+/* ###### Find FDCallback for given file descriptor ###################### */
+static struct FDCallback* dispatcherFindFDCallbackForDescriptor(struct Dispatcher* dispatcher,
+                                                                int                fd)
+{
+   struct FDCallback                  cmpNode;
+   struct LeafLinkedRedBlackTreeNode* node;
+
+   cmpNode.FD = fd;
+   node = leafLinkedRedBlackTreeFind(&dispatcher->FDCallbackStorage, &cmpNode.Node);
+   if(node != NULL) {
+      return((struct FDCallback*)node);
+   }
+   return(NULL);
+}
+
+
+/* ###### Handle poll() result ########################################### */
+void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
+                                int                result,
+                                struct pollfd*     ufds,
+                                unsigned int       nfds,
+                                int                timeout,
+                                unsigned long long pollTimeStamp)
+{
+   struct FDCallback* fdCallback;
+   unsigned int       i;
+
+   if(dispatcher != NULL) {
+      dispatcherLock(dispatcher);
+
+      /* ====== Handle events ============================================ */
+      /* We handle the FD callbacks first, because their corresponding FD's
+         state has been returned by ext_poll(), since a timer callback
+         might modify them (e.g. writing to a socket and reading the
+         complete results).
+      */
+      if(result > 0) {
+         LOG_VERBOSE3
+         fputs("Handling FD events...\n", stdlog);
+         LOG_END
+         for(i = 0;i < nfds;i++) {
+            if(ufds[i].revents) {
+               fdCallback = dispatcherFindFDCallbackForDescriptor(dispatcher, ufds[i].fd);
+               if((fdCallback) &&
+                  (fdCallback->SelectTimeStamp <= pollTimeStamp) &&
+                  (ufds[i].revents & fdCallback->EventMask)) {
+                  LOG_VERBOSE3
+                  fprintf(stdlog,"Event $%04x (mask $%04x) for socket %d\n",
+                          ufds[i].revents, fdCallback->EventMask, fdCallback->FD);
+                  LOG_END
+
+                  if(fdCallback->Callback != NULL) {
+                     LOG_VERBOSE2
+                     fprintf(stdlog,"Executing callback for event $%04x of socket %d\n",
+                             ufds[i].revents, fdCallback->FD);
+                     LOG_END
+                     fdCallback->Callback(dispatcher,
+                                          fdCallback->FD, ufds[i].revents,
+                                          fdCallback->UserData);
+                  }
+               }
+            }
+            else {
+               LOG_VERBOSE4
+               fprintf(stdlog, "FD callback for FD %d is newer than begin of ext_select() -> Skipping.\n", fdCallback->FD);
+               LOG_END
+            }
+         }
+      }
+
+      /* Timers must be handled after the FD callbacks, since
+         they might modify the FDs' states (e.g. completely
+         reading their buffers, establishing new associations, ...)! */
+      LOG_VERBOSE3
+      fputs("Handling timer events...\n", stdlog);
+      LOG_END
+      dispatcherHandleTimerEvents(dispatcher);
+
+      dispatcherUnlock(dispatcher);
+   }
+}
+
+
+/* ###### Dispatcher event loop ########################################## */
+void dispatcherEventLoop(struct Dispatcher* dispatcher)
+{
+   unsigned long long   pollTimeStamp;
+   struct pollfd        ufds[FD_SETSIZE];
+   unsigned int         nfds;
+   int                  timeout;
+   int                  result;
+
+   if(dispatcher != NULL) {
+      dispatcherGetPollParameters(dispatcher,
+                                 (struct pollfd*)&ufds, &nfds, &timeout,
+                                 &pollTimeStamp);
+      result = ext_poll((struct pollfd*)&ufds, nfds, timeout);
+      if(result < 0) {
+         logerror("poll() failed");
+         exit(1);
+      }
+      dispatcherHandlePollResult(dispatcher, result,
+                                 (struct pollfd*)&ufds, nfds, timeout,
+                                 pollTimeStamp);
+   }
+}
+
+
+
+
+/* ??????????????????????????????????????????????????????????????????????? */
 /* ###### Get select() parameters ######################################## */
 void dispatcherGetSelectParameters(struct Dispatcher*  dispatcher,
                                    int*                n,
@@ -313,29 +476,4 @@ void dispatcherHandleSelectResult(struct Dispatcher*       dispatcher,
       dispatcherUnlock(dispatcher);
    }
 }
-
-
-/* ###### Dispatcher event loop ########################################## */
-void dispatcherEventLoop(struct Dispatcher* dispatcher)
-{
-   int                n;
-   int                result;
-   struct timeval     timeout;
-   fd_set             readfdset;
-   fd_set             writefdset;
-   fd_set             exceptfdset;
-   fd_set             testfdset;
-   unsigned long long testTS;
-
-   if(dispatcher != NULL) {
-      dispatcherGetSelectParameters(dispatcher, &n, &readfdset, &writefdset, &exceptfdset, &testfdset, &testTS, &timeout);
-
-      result = ext_select(n, &readfdset, &writefdset, &exceptfdset, &timeout);
-      if(result < 0) {
-         logerror("select() failed");
-         exit(1);
-      }
-
-      dispatcherHandleSelectResult(dispatcher, result, &readfdset, &writefdset, &exceptfdset, &testfdset, testTS);
-   }
-}
+/* ??????????????????????????????????????????????????????????????????????? */

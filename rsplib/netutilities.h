@@ -1,5 +1,5 @@
 /*
- *  $Id: netutilities.h,v 1.19 2005/08/03 10:40:27 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -375,6 +375,24 @@ int recvfromplus(int                      sockfd,
                  sctp_assoc_t*            assocID,
                  uint16_t*                streamID,
                  const unsigned long long timeout);
+
+/**
+  * Abort SCTP association.
+  *
+  * @param sockfd Socket descriptor.
+  * @param assocID Association ID.
+  * @return 0 in case of success, -1 otherwise.
+  */
+int sendabort(int sockfd, sctp_assoc_t assocID);
+
+/**
+  * Shutdown SCTP association.
+  *
+  * @param sockfd Socket descriptor.
+  * @param assocID Association ID.
+  * @return 0 in case of success, -1 otherwise.
+  */
+int sendshutdown(int sockfd, sctp_assoc_t assocID);
 
 /**
   * Join or leave a multicast group.
