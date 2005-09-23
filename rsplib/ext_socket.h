@@ -531,7 +531,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_read(a,b,c) ::read(a,b,c)
 #define ext_write(a,b,c) ::write(a,b,c)
 #define ext_select(a,b,c,d,e) ::select(a,b,c,d,e)
-#define ext_poll(a,b,c,d,e) ::poll(a,b,c,d,e)
+#define ext_poll(a,b,c) ::poll(a,b,c)
 #define ext_pipe(a) ::pipe(a)
 #else
 #define ext_socket(a,b,c) socket(a,b,c)
@@ -556,7 +556,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_read(a,b,c) read(a,b,c)
 #define ext_write(a,b,c) write(a,b,c)
 #define ext_select(a,b,c,d,e) select(a,b,c,d,e)
-#define ext_poll(a,b,c,d,e) poll(a,b,c,d,e)
+#define ext_poll(a,b,c) poll(a,b,c)
 #define ext_pipe(a) pipe(a)
 #endif
 

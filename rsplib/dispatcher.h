@@ -43,6 +43,8 @@
 #include "fdcallback.h"
 #include "leaflinkedredblacktree.h"
 
+#include <sys/poll.h>
+
 
 #ifdef __cplusplus
 extern "C" {
