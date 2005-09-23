@@ -1,5 +1,5 @@
 /*
- *  $Id: timer.h,v 1.3 2004/08/24 16:03:13 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

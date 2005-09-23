@@ -1,5 +1,5 @@
 /*
- *  $Id: loglevel.h,v 1.8 2005/08/04 11:19:38 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

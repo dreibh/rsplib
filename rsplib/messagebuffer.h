@@ -1,5 +1,5 @@
 /*
- *  $Id: messagebuffer.h,v 1.4 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

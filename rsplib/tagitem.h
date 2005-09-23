@@ -1,5 +1,5 @@
 /*
- *  $Id: tagitem.h,v 1.1 2004/07/13 09:12:09 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *

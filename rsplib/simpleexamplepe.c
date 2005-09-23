@@ -1,5 +1,5 @@
 /*
- *  $Id: simpleexamplepe.c,v 1.10 2005/08/04 15:11:57 dreibh Exp $
+ *  $Id$
  *
  * RSerPool implementation.
  *
