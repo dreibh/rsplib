@@ -1,15 +1,8 @@
 /*
- *  $Id: threadsafety.h,v 1.3 2004/11/09 13:54:17 tuexen Exp $
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * RSerPool implementation.
- *
- * Realized in co-operation between Siemens AG
- * and University of Essen, Institute of Computer Networking Technology.
- *
- * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
- * The authors alone are responsible for the contents.
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,15 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for any discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
- *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: Platform-Dependent Thread Safety
+ *          dreibh@iem.uni-due.de
  *
  */
 
@@ -40,15 +28,7 @@
 
 #include "tdtypes.h"
 
-
-#define USE_PTHREADS
-/*
-#define HAS_PTHREADS_RECURSIVE_MUTEX
-*/
-
-#ifdef USE_PTHREADS
 #include <pthread.h>
-#endif
 
 
 #ifdef __cplusplus
@@ -58,27 +38,44 @@ extern "C" {
 
 struct ThreadSafety
 {
-#ifdef USE_PTHREADS
    pthread_mutex_t Mutex;
-#ifndef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifdef __APPLE__
    pthread_t       MutexOwner;
    unsigned int    MutexRecursionLevel;
 #endif
    char            Name[32];
-#endif
 };
 
 
-void threadSafetyInit(struct ThreadSafety* threadSafety,
-                      const char*          name);
+/**
+  * Create new recursive mutex.
+  *
+  * @param threadSafety ThreadSafety.
+  * @param name Mutex name for debugging purposes or NULL.
+  */
+void threadSafetyNew(struct ThreadSafety* threadSafety,
+                     const char*          name);
 
-void threadSafetyDestroy(struct ThreadSafety* threadSafety);
+/**
+  * Delete recursive mutex.
+  *
+  * @param threadSafety ThreadSafety.
+  */
+void threadSafetyDelete(struct ThreadSafety* threadSafety);
 
+/**
+  * Lock mutex.
+  *
+  * @param threadSafety ThreadSafety.
+  */
 void threadSafetyLock(struct ThreadSafety* threadSafety);
 
+/**
+  * Unlock mutex.
+  *
+  * @param threadSafety ThreadSafety.
+  */
 void threadSafetyUnlock(struct ThreadSafety* threadSafety);
-
-bool threadSafetyIsAvailable();
 
 
 #ifdef __cplusplus

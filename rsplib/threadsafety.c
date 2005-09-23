@@ -1,15 +1,8 @@
 /*
- *  $Id: threadsafety.c,v 1.3 2005/08/04 15:11:57 dreibh Exp $
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * RSerPool implementation.
- *
- * Realized in co-operation between Siemens AG
- * and University of Essen, Institute of Computer Networking Technology.
- *
- * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
- * The authors alone are responsible for the contents.
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,18 +16,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for any discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
- *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: Platform-Dependent Thread Safety
+ *          dreibh@iem.uni-due.de
  *
  */
-
 
 #include "tdtypes.h"
 #include "loglevel.h"
@@ -44,11 +31,11 @@
 static unsigned long long gMutexCounter = 0;
 
 
-void threadSafetyInit(struct ThreadSafety* threadSafety,
-                      const char*          name)
+/* ###### Constructor #################################################### */
+void threadSafetyNew(struct ThreadSafety* threadSafety,
+                     const char*          name)
 {
-#ifdef USE_PTHREADS
-#ifdef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifndef __APPLE__
    pthread_mutexattr_t attr;
    pthread_mutexattr_init(&attr);
    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
@@ -57,7 +44,7 @@ void threadSafetyInit(struct ThreadSafety* threadSafety,
 #else
    threadSafety->MutexOwner          = 0;
    threadSafety->MutexRecursionLevel = 0;
-   pthread_mutex_init(&threadSafety->Mutex,NULL);
+   pthread_mutex_init(&threadSafety->Mutex, NULL);
 #endif
    snprintf((char*)&threadSafety->Name, sizeof(threadSafety->Name), "%llu-%s",
             gMutexCounter++, name);
@@ -66,13 +53,12 @@ void threadSafetyInit(struct ThreadSafety* threadSafety,
       fprintf(stdlog, "Created mutex \"%s\"\n", threadSafety->Name);
       LOG_END
    }
-#endif
 }
 
 
-void threadSafetyDestroy(struct ThreadSafety* threadSafety)
+/* ###### Destructor ##################################################### */
+void threadSafetyDelete(struct ThreadSafety* threadSafety)
 {
-#ifdef USE_PTHREADS
    if(threadSafety != &gLogMutex) {
       LOG_MUTEX
       fprintf(stdlog, "Destroying mutex \"%s\"...\n", threadSafety->Name);
@@ -84,19 +70,18 @@ void threadSafetyDestroy(struct ThreadSafety* threadSafety)
       fprintf(stdlog, "Destroyed mutex \"%s\"\n", threadSafety->Name);
       LOG_END
    }
-#endif
 }
 
 
+/* ###### Lock ########################################################### */
 void threadSafetyLock(struct ThreadSafety* threadSafety)
 {
-#ifdef USE_PTHREADS
    if(threadSafety != &gLogMutex) {
       LOG_MUTEX
       fprintf(stdlog, "Locking mutex \"%s\"...\n", threadSafety->Name);
       LOG_END
    }
-#ifdef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifndef __APPLE__
    pthread_mutex_lock(&threadSafety->Mutex);
 #else
    if(!pthread_equal(threadSafety->MutexOwner, pthread_self())) {
@@ -107,7 +92,7 @@ void threadSafetyLock(struct ThreadSafety* threadSafety)
 #endif
    if(threadSafety != &gLogMutex) {
       LOG_MUTEX
-#ifdef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifndef __APPLE__
       fprintf(stdlog, "Locked mutex \"%s\"\n", threadSafety->Name);
 #else
       fprintf(stdlog, "Locked mutex \"%s\", recursion level %d\n",
@@ -115,16 +100,15 @@ void threadSafetyLock(struct ThreadSafety* threadSafety)
 #endif
       LOG_END
    }
-#endif
 }
 
 
+/* ###### Unlock ######################################################### */
 void threadSafetyUnlock(struct ThreadSafety* threadSafety)
 {
-#ifdef USE_PTHREADS
    if(threadSafety != &gLogMutex) {
       LOG_MUTEX
-#ifdef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifndef __APPLE__
       fprintf(stdlog, "Unlocking mutex \"%s\"...\n", threadSafety->Name);
 #else
       fprintf(stdlog, "Unlocking mutex \"%s\", recursion level %d...\n",
@@ -132,7 +116,7 @@ void threadSafetyUnlock(struct ThreadSafety* threadSafety)
 #endif
       LOG_END
    }
-#ifdef HAS_PTHREADS_RECURSIVE_MUTEX
+#ifndef __APPLE__
    pthread_mutex_unlock(&threadSafety->Mutex);
 #else
    if(threadSafety->MutexRecursionLevel == 0) {
@@ -159,14 +143,4 @@ void threadSafetyUnlock(struct ThreadSafety* threadSafety)
       fprintf(stdlog, "Unlocked mutex \"%s\"\n", threadSafety->Name);
       LOG_END
    }
-#endif
-}
-
-
-bool threadSafetyIsAvailable()
-{
-#ifdef USE_PTHREADS
-   return(true);
-#endif
-   return(false);
 }
