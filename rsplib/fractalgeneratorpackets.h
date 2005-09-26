@@ -26,8 +26,9 @@
 #ifndef FRACTALGENERATORPACKETS_H
 #define FRACTALGENERATORPACKETS_H
 
-
 #include "netdouble.h"
+
+#include <stdint.h>
 
 
 #define PPID_FGP 0x29097601

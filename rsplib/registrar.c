@@ -47,7 +47,7 @@
 #include "randomizer.h"
 #include "breakdetector.h"
 #ifdef ENABLE_CSP
-#include "componentstatusprotocol.h"
+#include "componentstatusreporter.h"
 #endif
 
 #include <ext_socket.h>
@@ -450,7 +450,7 @@ struct Registrar
 
 #ifdef ENABLE_CSP
    struct CSPReporter                         CSPReporter;
-   unsigned long long                         CSPReportInterval;
+   unsigned int                               CSPReportInterval;
    union sockaddr_union                       CSPReportAddress;
 #endif
 };
@@ -460,10 +460,12 @@ void registrarDumpHandlespace(struct Registrar* registrar);
 void registrarDumpPeers(struct Registrar* registrar);
 #ifdef ENABLE_CSP
 static size_t registrarGetReportFunction(
-                 void*                              userData,
-                 struct ComponentAssociationEntry** caeArray,
-                 char*                              statusText,
-                 char*                              componentAddress);
+                 void*                         userData,
+                 unsigned long long*           identifier,
+                 struct ComponentAssociation** caeArray,
+                 char*                         statusText,
+                 char*                         componentLocation,
+                 double*                       workload);
 #endif
 
 
@@ -479,7 +481,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress
 #ifdef ENABLE_CSP
-                               , const unsigned long long     cspReportInterval,
+                               , const unsigned int           cspReportInterval,
                                const union sockaddr_union*    cspReportAddress
 #endif
                                );
@@ -548,7 +550,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress
 #ifdef ENABLE_CSP
-                               , const unsigned long long     cspReportInterval,
+                               , const unsigned int           cspReportInterval,
                                const union sockaddr_union*    cspReportAddress
 #endif
                                )
@@ -672,8 +674,8 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                 cspReportAddress,
                 sizeof(registrar->CSPReportAddress));
          cspReporterNew(&registrar->CSPReporter, &registrar->StateMachine,
-                        CID_COMPOUND(CID_GROUP_NAMESERVER, registrar->ServerID),
-                        &registrar->CSPReportAddress,
+                        CID_COMPOUND(CID_GROUP_REGISTRAR, registrar->ServerID),
+                        &registrar->CSPReportAddress.sa,
                         registrar->CSPReportInterval,
                         registrarGetReportFunction,
                         registrar);
@@ -1090,6 +1092,7 @@ static void sendEndpointKeepAlive(struct Registrar*                 registrar,
 
       message->Handle              = poolElementNode->OwnerPoolNode->Handle;
       message->RegistrarIdentifier = registrar->ServerID;
+      message->Identifier          = poolElementNode->Identifier;
       message->Type                = AHT_ENDPOINT_KEEP_ALIVE;
       message->Flags               = newHomeRegistrar ? AHF_ENDPOINT_KEEP_ALIVE_HOME : 0x00;
       if(poolElementNode->ConnectionSocketDescriptor >= 0) {
@@ -3112,10 +3115,12 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 #ifdef ENABLE_CSP
 /* ###### Get CSP report ################################################# */
 static size_t registrarGetReportFunction(
-                 void*                              userData,
-                 struct ComponentAssociationEntry** caeArray,
-                 char*                              statusText,
-                 char*                              componentAddress)
+                 void*                         userData,
+                 unsigned long long*           identifier,
+                 struct ComponentAssociation** caeArray,
+                 char*                         statusText,
+                 char*                         componentLocation,
+                 double*                       workload)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct Registrar*              registrar = (struct Registrar*)userData;
@@ -3130,14 +3135,15 @@ static size_t registrarGetReportFunction(
    peers        = ST_CLASS(peerListManagementGetPeers)(&registrar->Peers);
    pools        = ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace);
    poolElements = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
-   snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
+   snprintf(statusText, CSPR_STATUS_SIZE,
             "%u PEs in %u Pool%s, %u Peer%s",
             poolElements,
-	    pools, (pools == 1) ? "" : "s",
-	    peers, (peers == 1) ? "" : "s");
-   componentStatusGetComponentAddress(componentAddress, registrar->ASAPSocket, 0);
+            pools, (pools == 1) ? "" : "s",
+            peers, (peers == 1) ? "" : "s");
+   getComponentLocation(componentLocation, registrar->ASAPSocket, 0);
 
-   *caeArray    = componentAssociationEntryArrayNew(peers);
+   *workload    = -1.0;
+   *caeArray    = createComponentAssociationArray(peers);
    caeArraySize = 0;
    if(*caeArray) {
       peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers.List);
@@ -3146,7 +3152,7 @@ static size_t registrarGetReportFunction(
              (!(peerListNode->Flags & PLNF_MULTICAST)) ) {
          }
 
-         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, peerListNode->Identifier);
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_REGISTRAR, peerListNode->Identifier);
          (*caeArray)[caeArraySize].Duration   = ~0;
          (*caeArray)[caeArraySize].Flags      = 0;
          (*caeArray)[caeArraySize].ProtocolID = IPPROTO_SCTP;
@@ -3472,11 +3478,11 @@ int main(int argc, char** argv)
          }
       }
 #ifdef ENABLE_CSP
-      else if(!(strncmp(argv[i], "-cspreportinterval=", 19))) {
-         cspReportInterval = atol((char*)&argv[i][19]);
+      else if(!(strncmp(argv[i], "-cspinterval=", 13))) {
+         cspReportInterval = atol((char*)&argv[i][13]);
       }
-      else if(!(strncmp(argv[i], "-cspreportaddress=", 18))) {
-         if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
+      else if(!(strncmp(argv[i], "-cspserver=", 11))) {
+         if(!string2address((char*)&argv[i][11], &cspReportAddress)) {
             fprintf(stderr,
                     "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
                     (char*)&argv[i][18]);
@@ -3487,8 +3493,8 @@ int main(int argc, char** argv)
          }
       }
 #else
-      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
-              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
+      else if((!(strncmp(argv[i], "-cspinterval=", 13))) ||
+              (!(strncmp(argv[i], "-cspserver=", 11)))) {
          fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
          exit(1);
       }
@@ -3496,9 +3502,9 @@ int main(int argc, char** argv)
       else {
          printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
-          "{-cspreportaddress=Address} {-cspreportinterval=Microseconds}"
+          "{-cspserver=address} {-cspinterval=microseconds}"
 #endif
-          "{-identifier=PE Identifier}\n",argv[0]);
+          "{-identifier=registrar identifier}\n",argv[0]);
          exit(1);
       }
    }

@@ -266,7 +266,8 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
          }
       }
 
-      asapInstance->RegistrarSocket = sd;
+      asapInstance->RegistrarSocket              = sd;
+      asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
       fdCallbackNew(&asapInstance->RegistrarFDCallback,
                     asapInstance->StateMachine,
                     asapInstance->RegistrarSocket,
@@ -389,6 +390,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
    struct RSerPoolMessage*           response;
    struct ST_CLASS(PoolElementNode)* oldPoolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   struct TransportAddressBlock*     newUserTransport;
    unsigned int                      result;
    unsigned int                      handlespaceMgtResult;
 
@@ -483,12 +485,40 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
             rserpoolMessageDelete(message);
          }
          else {
-            result = asapInstanceSendRequest(asapInstance, message, true);
+            /* Important: message->PoolElementPtr must be a copy of the PE
+               data, since this thread may delete the supplied PE data when
+               this function returns. */
+            newPoolElementNode = (struct ST_CLASS(PoolElementNode)*)malloc(sizeof(struct ST_CLASS(PoolElementNode)));
+            if(newPoolElementNode != NULL) {
+               newUserTransport = transportAddressBlockDuplicate(message->PoolElementPtr->UserTransport);
+               if(newUserTransport != NULL) {
+                  ST_CLASS(poolElementNodeNew)(newPoolElementNode,
+                                             message->PoolElementPtr->Identifier,
+                                             message->PoolElementPtr->HomeRegistrarIdentifier,
+                                             message->PoolElementPtr->RegistrationLife,
+                                             &message->PoolElementPtr->PolicySettings,
+                                             newUserTransport,
+                                             NULL,
+                                             -1, 0);
+                  message->PoolElementPtr           = newPoolElementNode;
+                  message->PoolElementPtrAutoDelete = true;
+                  result = asapInstanceSendRequest(asapInstance, message, true);
+               }
+               else {
+                  free(newPoolElementNode);
+                  rserpoolMessageDelete(message);
+                  result = RSPERR_OUT_OF_MEMORY;
+               }
+            }
+            else {
+               rserpoolMessageDelete(message);
+               result = RSPERR_OUT_OF_MEMORY;
+            }
          }
       }
    }
    else {
-      result = RSPERR_NO_RESOURCES;
+      result = RSPERR_OUT_OF_MEMORY;
    }
 
    LOG_VERBOSE
@@ -559,7 +589,7 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
       }
    }
    else {
-      result = RSPERR_NO_RESOURCES;
+      result = RSPERR_OUT_OF_MEMORY;
    }
 
    LOG_VERBOSE
@@ -657,7 +687,7 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
       rserpoolMessageDelete(message);
    }
    else {
-      result = RSPERR_NO_RESOURCES;
+      result = RSPERR_OUT_OF_MEMORY;
    }
 
    return(result);
@@ -861,8 +891,7 @@ static void asapInstanceHandleEndpointKeepAlive(
             asapInstanceDisconnectFromRegistrar(asapInstance, true);
             if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
                /* The new registrar ID is already known */
-               asapInstance->RegistrarIdentifier          = message->RegistrarIdentifier;
-               asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
+               asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
             }
          }
          else {
@@ -887,12 +916,13 @@ static void asapInstanceHandleEndpointKeepAlive(
    }
 
 
-   /* ====== Send ENDPOINT_KEEP_ALIVE_ACK for each PE ==================== */
-   poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&asapInstance->OwnPoolElements.Handlespace);
-   while(poolNode != NULL) {
-      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
-      while(poolElementNode != NULL) {
-
+   /* ====== Send ENDPOINT_KEEP_ALIVE_ACK ================================ */
+   if(message->Identifier) {
+      poolElementNode = ST_CLASS(poolHandlespaceManagementFindPoolElement)(
+                           &asapInstance->OwnPoolElements,
+                           &message->Handle,
+                           message->Identifier);
+      if(poolElementNode) {
          message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
          message->Flags      = 0x00;
          message->Identifier = poolElementNode->Identifier;
@@ -901,16 +931,38 @@ static void asapInstanceHandleEndpointKeepAlive(
          fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
          LOG_END
          result = rserpoolMessageSend(IPPROTO_SCTP,
-                                      asapInstance->RegistrarSocket,
-                                      0,
-                                      MSG_NOSIGNAL,
-                                      0,
-                                      message);
-
-         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
+                                    asapInstance->RegistrarSocket,
+                                    0,
+                                    MSG_NOSIGNAL,
+                                    0,
+                                    message);
       }
+   }
+   else {
+      poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&asapInstance->OwnPoolElements.Handlespace);
+      while(poolNode != NULL) {
+         poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
+         while(poolElementNode != NULL) {
 
-      poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(&asapInstance->OwnPoolElements.Handlespace, poolNode);
+            message->Type       = AHT_ENDPOINT_KEEP_ALIVE_ACK;
+            message->Flags      = 0x00;
+            message->Identifier = poolElementNode->Identifier;
+
+            LOG_VERBOSE2
+            fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
+            LOG_END
+            result = rserpoolMessageSend(IPPROTO_SCTP,
+                                       asapInstance->RegistrarSocket,
+                                       0,
+                                       MSG_NOSIGNAL,
+                                       0,
+                                       message);
+
+            poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
+         }
+
+         poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(&asapInstance->OwnPoolElements.Handlespace, poolNode);
+      }
    }
 
    rserpoolMessageDelete(message);
@@ -1150,10 +1202,9 @@ static void* asapInstanceMainLoop(void* args)
       pipeIndex = nfds;
       ufds[pipeIndex].fd     = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events = POLLIN;
-      nfds++;
 
       /* ====== Call ext_poll ============================================ */
-      result = ext_poll((struct pollfd*)&ufds, nfds, timeout);
+      result = ext_poll((struct pollfd*)&ufds, nfds + 1, timeout);
 
       /* ====== Handle results =========================================== */
       dispatcherHandlePollResult(asapInstance->StateMachine, result,

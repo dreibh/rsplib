@@ -32,15 +32,20 @@
 #include "threadsafety.h"
 #include "rserpoolmessage.h"
 #include "asapinstance.h"
-#include "componentstatusprotocol.h"
 #include "leaflinkedredblacktree.h"
 #include "loglevel.h"
 #include "debug.h"
+#ifdef ENABLE_CSP
+#include "componentstatusreporter.h"
+#endif
 
 
 struct ASAPInstance*          gAsapInstance = NULL;
 struct Dispatcher             gDispatcher;
 static struct ThreadSafety    gThreadSafety;
+#ifdef ENABLE_CSP
+static struct CSPReporter*    gCSPReporter  = NULL;
+#endif
 
 struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
 struct ThreadSafety           gRSerPoolSocketSetMutex;
@@ -49,16 +54,26 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 static void lock(struct Dispatcher* dispatcher, void* userData);
 static void unlock(struct Dispatcher* dispatcher, void* userData);
-extern size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArray,
-                                       char*                              statusText,
-                                       char*                              componentAddress,
-                                       const int                          registrarSocket,
-                                       const RegistrarIdentifierType      registrarID,
-                                       const unsigned long long           registrarConnectionTimeStamp);
+#ifdef ENABLE_CSP
+static size_t getComponentStatus(void*                         userData,
+                                 unsigned long long*           identifier,
+                                 struct ComponentAssociation** caeArray,
+                                 char*                         statusText,
+                                 char*                         componentAddress,
+                                 double*                       workload);
+extern size_t getSessionStatus(struct ComponentAssociation** caeArray,
+                               unsigned long long*           identifier,
+                               char*                         statusText,
+                               char*                         componentAddress,
+                               double*                       workload,
+                               const int                     registrarSocket,
+                               const RegistrarIdentifierType registrarID,
+                               const unsigned long long      registrarConnectionTimeStamp);
+#endif
 
 
 /* ###### Initialize RSerPool API Library ################################ */
-int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
+int rsp_initialize(struct rsp_info* info)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
@@ -75,7 +90,7 @@ int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
    threadSafetyNew(&gThreadSafety, "RsplibInstance");
    threadSafetyNew(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
-   gAsapInstance = asapInstanceNew(&gDispatcher, tags);
+   gAsapInstance = asapInstanceNew(&gDispatcher, NULL);
    if(gAsapInstance) {
       if(info) {
          info->ri_version    = RSPLIB_VERSION;
@@ -83,6 +98,22 @@ int rsp_initialize(struct rsp_info* info, struct TagItem* tags)
          info->ri_build_date = buildDate;
          info->ri_build_time = buildTime;
       }
+
+#ifdef ENABLE_CSP
+      /* ====== Initialize Component Status Reporter ===================== */
+      if((info) &&
+         (info->ri_csp_interval > 0) && (info->ri_csp_server != NULL)) {
+         gCSPReporter = (struct CSPReporter*)malloc(sizeof(struct CSPReporter));
+         if(gCSPReporter) {
+            cspReporterNew(gCSPReporter, &gDispatcher,
+                           info->ri_csp_identifier,
+                           info->ri_csp_server,
+                           info->ri_csp_interval,
+                           getComponentStatus,
+                           NULL);
+         }
+      }
+#endif
 
       /* ====== Initialize session storage =============================== */
       leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet,
@@ -132,6 +163,14 @@ void rsp_cleanup()
    int i;
 
    if(gAsapInstance) {
+#ifdef ENABLE_CSP
+      /* ====== Remove Component Status Reporter ========================= */
+      if(gCSPReporter) {
+         cspReporterDelete(gCSPReporter);
+         gCSPReporter = NULL;
+      }
+#endif
+
       /* ====== Clean-up RSerPool Socket descriptor storage ============== */
       CHECK(rsp_unmapsocket(STDOUT_FILENO) == 0);
       CHECK(rsp_unmapsocket(STDIN_FILENO) == 0);
@@ -156,17 +195,17 @@ void rsp_cleanup()
       threadSafetyDelete(&gThreadSafety);
 #ifndef HAVE_KERNEL_SCTP
       /* Finally, give sctplib some time to cleanly shut down associations */
-      usleep(250000);
+      // ??? usleep(250000);
 #endif
    }
 }
 
 
 /* ###### Handle resolution ############################################## */
-int rsp_getaddrinfo(const unsigned char*       poolHandle,
-                    const size_t               poolHandleSize,
-                    struct rsp_addrinfo** rserpoolAddrInfo,
-                    struct TagItem*            tags)
+int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
+                         const size_t          poolHandleSize,
+                         struct rsp_addrinfo** rspAddrInfo,
+                         struct TagItem*       tags)
 {
    struct PoolHandle                 myPoolHandle;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -186,34 +225,34 @@ int rsp_getaddrinfo(const unsigned char*       poolHandle,
                       (struct ST_CLASS(PoolElementNode)**)&poolElementNode,
                       &poolElementNodes);
       if(hresResult == RSPERR_OKAY) {
-         *rserpoolAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
-         if(rserpoolAddrInfo != NULL) {
-            (*rserpoolAddrInfo)->ai_next     = NULL;
-            (*rserpoolAddrInfo)->ai_pe_id    = poolElementNode->Identifier;
-            (*rserpoolAddrInfo)->ai_family   = poolElementNode->UserTransport->AddressArray[0].sa.sa_family;
-            (*rserpoolAddrInfo)->ai_protocol = poolElementNode->UserTransport->Protocol;
+         *rspAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
+         if(rspAddrInfo != NULL) {
+            (*rspAddrInfo)->ai_next     = NULL;
+            (*rspAddrInfo)->ai_pe_id    = poolElementNode->Identifier;
+            (*rspAddrInfo)->ai_family   = poolElementNode->UserTransport->AddressArray[0].sa.sa_family;
+            (*rspAddrInfo)->ai_protocol = poolElementNode->UserTransport->Protocol;
             switch(poolElementNode->UserTransport->Protocol) {
                case IPPROTO_SCTP:
-                  (*rserpoolAddrInfo)->ai_socktype = SOCK_STREAM;
+                  (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
                 break;
                case IPPROTO_TCP:
-                  (*rserpoolAddrInfo)->ai_socktype = SOCK_STREAM;
+                  (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
                 break;
                default:
-                  (*rserpoolAddrInfo)->ai_socktype = SOCK_DGRAM;
+                  (*rspAddrInfo)->ai_socktype = SOCK_DGRAM;
                 break;
             }
-            (*rserpoolAddrInfo)->ai_addrlen = sizeof(union sockaddr_union);
-            (*rserpoolAddrInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
-            (*rserpoolAddrInfo)->ai_addr    = (struct sockaddr*)malloc((*rserpoolAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
-            if((*rserpoolAddrInfo)->ai_addr != NULL) {
+            (*rspAddrInfo)->ai_addrlen = sizeof(union sockaddr_union);
+            (*rspAddrInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
+            (*rspAddrInfo)->ai_addr    = (struct sockaddr*)malloc((*rspAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
+            if((*rspAddrInfo)->ai_addr != NULL) {
                result = 0;
-               ptr = (char*)(*rserpoolAddrInfo)->ai_addr;
+               ptr = (char*)(*rspAddrInfo)->ai_addr;
                for(i = 0;i < poolElementNode->UserTransport->Addresses;i++) {
                   memcpy((void*)ptr, (void*)&poolElementNode->UserTransport->AddressArray[i],
                          sizeof(union sockaddr_union));
                   if (poolElementNode->UserTransport->AddressArray[i].sa.sa_family == AF_INET6)
-                    (*rserpoolAddrInfo)->ai_family = AF_INET6;
+                    (*rspAddrInfo)->ai_family = AF_INET6;
                   switch(poolElementNode->UserTransport->AddressArray[i].sa.sa_family) {
                      case AF_INET:
                         ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_in));
@@ -232,8 +271,8 @@ int rsp_getaddrinfo(const unsigned char*       poolHandle,
                }
             }
             else {
-               free(*rserpoolAddrInfo);
-               *rserpoolAddrInfo = NULL;
+               free(*rspAddrInfo);
+               *rspAddrInfo = NULL;
                result = EAI_MEMORY;
             }
          }
@@ -261,30 +300,41 @@ int rsp_getaddrinfo(const unsigned char*       poolHandle,
 }
 
 
+/* ###### Handle resolution ############################################## */
+int rsp_getaddrinfo(const unsigned char*  poolHandle,
+                    const size_t          poolHandleSize,
+                    struct rsp_addrinfo** rspAddrInfo)
+{
+   return(rsp_getaddrinfo_tags(poolHandle, poolHandleSize, rspAddrInfo, NULL));
+}
+
+
 /* ###### Free endpoint address array #################################### */
-void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo)
+void rsp_freeaddrinfo(struct rsp_addrinfo* rspAddrInfo)
 {
    struct rsp_addrinfo* next;
 
-   while(rserpoolAddrInfo != NULL) {
-      next = rserpoolAddrInfo->ai_next;
+   while(rspAddrInfo != NULL) {
+      next = rspAddrInfo->ai_next;
 
-      if(rserpoolAddrInfo->ai_addr) {
-         free(rserpoolAddrInfo->ai_addr);
-         rserpoolAddrInfo->ai_addr = NULL;
+      if(rspAddrInfo->ai_addr) {
+         free(rspAddrInfo->ai_addr);
+         rspAddrInfo->ai_addr = NULL;
       }
-      free(rserpoolAddrInfo);
+      free(rspAddrInfo);
 
-      rserpoolAddrInfo = next;
+      rspAddrInfo = next;
    }
 }
 
 
 /* ###### Register pool element ########################################## */
-unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
-                                 const size_t              poolHandleSize,
-                                 struct rsp_addrinfo* rserpoolAddrInfo,
-                                 struct TagItem*           tags)
+unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
+                                      const size_t         poolHandleSize,
+                                      struct rsp_addrinfo* rspAddrInfo,
+                                      struct rsp_loadinfo* rspLoadInfo,
+                                      unsigned int         registrationLife,
+                                      struct TagItem*      tags)
 {
    struct PoolHandle                myPoolHandle;
    struct ST_CLASS(PoolElementNode) myPoolElementNode;
@@ -295,32 +345,32 @@ unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
    unsigned int                     result;
 
    if(gAsapInstance) {
-      if(rserpoolAddrInfo->ai_pe_id == UNDEFINED_POOL_ELEMENT_IDENTIFIER) {
-         rserpoolAddrInfo->ai_pe_id = getPoolElementIdentifier();
+      if(rspAddrInfo->ai_pe_id == UNDEFINED_POOL_ELEMENT_IDENTIFIER) {
+         rspAddrInfo->ai_pe_id = getPoolElementIdentifier();
       }
 
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
 
       poolPolicySettingsNew(&myPolicySettings);
-      myPolicySettings.PolicyType      = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Type, PPT_ROUNDROBIN);
-      myPolicySettings.Weight          = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Weight, 1);
-      myPolicySettings.Load            = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_Load, 0);
-      myPolicySettings.LoadDegradation = (unsigned int)tagListGetData(tags, TAG_PoolPolicy_Parameter_LoadDegradation, 0);
+      myPolicySettings.PolicyType      = rspLoadInfo->rli_policy;
+      myPolicySettings.Weight          = rspLoadInfo->rli_weight;
+      myPolicySettings.Load            = rspLoadInfo->rli_load;
+      myPolicySettings.LoadDegradation = rspLoadInfo->rli_load_degradation;
 
-      unpackedAddrs = unpack_sockaddr(rserpoolAddrInfo->ai_addr, rserpoolAddrInfo->ai_addrs);
+      unpackedAddrs = unpack_sockaddr(rspAddrInfo->ai_addr, rspAddrInfo->ai_addrs);
       if(unpackedAddrs != NULL) {
          transportAddressBlockNew(myTransportAddressBlock,
-                                 rserpoolAddrInfo->ai_protocol,
-                                 getPort((struct sockaddr*)rserpoolAddrInfo->ai_addr),
+                                 rspAddrInfo->ai_protocol,
+                                 getPort((struct sockaddr*)rspAddrInfo->ai_addr),
                                  (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
                                  unpackedAddrs,
-                                 rserpoolAddrInfo->ai_addrs);
+                                 rspAddrInfo->ai_addrs);
 
          ST_CLASS(poolElementNodeNew)(
             &myPoolElementNode,
-            rserpoolAddrInfo->ai_pe_id,
+            rspAddrInfo->ai_pe_id,
             0,
-            tagListGetData(tags, TAG_PoolElement_RegistrationLife, 300000000),
+            1000ULL * registrationLife,
             &myPolicySettings,
             myTransportAddressBlock,
             NULL,
@@ -334,9 +384,10 @@ unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
          fputs("...\n", stdlog);
          LOG_END
 
-         result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode, true);
+         result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode,
+                     (bool)tagListGetData(tags, TAG_RspPERegistration_WaitForResult, (tagdata_t)true));
          if(result != RSPERR_OKAY) {
-            rserpoolAddrInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
+            rspAddrInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
          }
          free(unpackedAddrs);
       }
@@ -354,18 +405,31 @@ unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
 }
 
 
+/* ###### Register pool element ########################################## */
+unsigned int rsp_pe_registration(const unsigned char* poolHandle,
+                                 const size_t         poolHandleSize,
+                                 struct rsp_addrinfo* rspAddrInfo,
+                                 struct rsp_loadinfo* rspLoadInfo,
+                                 unsigned int         registrationLife)
+{
+   return(rsp_pe_registration_tags(poolHandle, poolHandleSize,
+                                   rspAddrInfo, rspLoadInfo, registrationLife, NULL));
+}
+
+
 /* ###### Deregister pool element ######################################## */
-unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
-                                   const size_t         poolHandleSize,
-                                   const uint32_t       identifier,
-                                   struct TagItem*      tags)
+unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
+                                        const size_t         poolHandleSize,
+                                        const uint32_t       identifier,
+                                        struct TagItem*      tags)
 {
    struct PoolHandle myPoolHandle;
    unsigned int      result;
 
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
-      result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier, true);
+      result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier,
+                  (bool)tagListGetData(tags, TAG_RspPEDeregistration_WaitForResult, (tagdata_t)true));
    }
    else {
       result = RSPERR_NOT_INITIALIZED;
@@ -377,11 +441,20 @@ unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
 }
 
 
+/* ###### Deregister pool element ######################################## */
+unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
+                                   const size_t         poolHandleSize,
+                                   const uint32_t       identifier)
+{
+   return(rsp_pe_deregistration_tags(poolHandle, poolHandleSize, identifier, NULL));
+}
+
+
 /* ###### Report pool element failure #################################### */
-unsigned int rsp_pe_failure(const unsigned char* poolHandle,
-                            const size_t         poolHandleSize,
-                            const uint32_t       identifier,
-                            struct TagItem*      tags)
+unsigned int rsp_pe_failure_tags(const unsigned char* poolHandle,
+                                 const size_t         poolHandleSize,
+                                 const uint32_t       identifier,
+                                 struct TagItem*      tags)
 {
    struct PoolHandle myPoolHandle;
    unsigned int      result;
@@ -400,15 +473,31 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
 }
 
 
-/* ###### Get PE/PU status ############################################### */
-size_t rsp_csp_getcomponentstatus(struct ComponentAssociationEntry** caeArray,
-                                  char*                              statusText,
-                                  char*                              componentAddress)
+/* ###### Report pool element failure #################################### */
+unsigned int rsp_pe_failure(const unsigned char* poolHandle,
+                            const size_t         poolHandleSize,
+                            const uint32_t       identifier)
 {
-   return(rsp_csp_getsessionstatus(caeArray,
-                                   statusText,
-                                   componentAddress,
-                                   gAsapInstance->RegistrarSocket,
-                                   gAsapInstance->RegistrarIdentifier,
-                                   gAsapInstance->RegistrarConnectionTimeStamp));
+   return(rsp_pe_failure_tags(poolHandle, poolHandleSize, identifier, NULL));
 }
+
+
+#ifdef ENABLE_CSP
+/* ###### Get PE/PU status ############################################### */
+static size_t getComponentStatus(void*                         userData,
+                                 unsigned long long*           identifier,
+                                 struct ComponentAssociation** caeArray,
+                                 char*                         statusText,
+                                 char*                         componentAddress,
+                                 double*                       workload)
+{
+   return(getSessionStatus(caeArray,
+                           identifier,
+                           statusText,
+                           componentAddress,
+                           workload,
+                           gAsapInstance->RegistrarSocket,
+                           gAsapInstance->RegistrarIdentifier,
+                           gAsapInstance->RegistrarConnectionTimeStamp));
+}
+#endif

@@ -125,7 +125,8 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
                                  unsigned long long* pollTimeStamp);
 
 /**
-  * Handle results of poll() call.
+  * Handle results of poll() call. Important: nfds must be the
+  * value obtained from dispatcherGetPollParameters()!
   *
   * @param dispatcher Dispatcher.
   * @param result Result value returned by poll().

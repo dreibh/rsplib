@@ -51,7 +51,6 @@ extern "C" {
 #define RSPERR_NO_REGISTRAR                  0x1007
 
 /* Handlespace-management specific error causes */
-#define RSPERR_NO_RESOURCES                  0xf002
 #define RSPERR_NOT_FOUND                     0xf003
 #define RSPERR_INVALID_ID                    0xf004
 #define RSPERR_DUPLICATE_ID                  0xf005

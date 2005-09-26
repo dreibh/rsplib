@@ -44,8 +44,8 @@ UDPLikeServer::~UDPLikeServer()
 
 // ###### Handle cookie #####################################################
 EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID,
-                                     const char*        buffer,
-                                     size_t             bufferSize)
+                                                    const char*        buffer,
+                                                    size_t             bufferSize)
 {
    printTimeStamp(stdout);
    printf("COOKIE ECHO for session %u\n", sessionID);
@@ -54,7 +54,8 @@ EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult UDPLikeServer::handleNotification(const union rserpool_notification* notification)
+EventHandlingResult UDPLikeServer::handleNotification(
+                       const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
@@ -67,10 +68,11 @@ EventHandlingResult UDPLikeServer::handleNotification(const union rserpool_notif
 // ###### Implementation of a simple UDP-like server ########################
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
+                                struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo)
 {
    beginLogging();
-   if(rsp_initialize(NULL, 0) < 0) {
+   if(rsp_initialize(info) < 0) {
       puts("ERROR: Unable to initialize rsplib Library!\n");
       finishLogging();
       return;
@@ -91,12 +93,12 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       for(size_t i = 0;i < strlen(programTitle);i++) {
          printf("=");
       }
-      puts("\n");
+      printf("\n\nPool Handle = %s\n\n", poolHandle);
 
       // ====== Register PE =================================================
       if(rsp_register(RSerPoolSocketDescriptor,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, NULL) == 0) {
+                      loadinfo, 30000) == 0) {
 
          // ====== Main loop ================================================
          installBreakDetector();
@@ -106,7 +108,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
             int                   flags = 0;
             struct rsp_sndrcvinfo rinfo;
             ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor, (char*)&buffer, sizeof(buffer),
-                                          &rinfo, &flags, 500000);
+                                           &rinfo, &flags, 500000);
 
             // ====== Handle data ===========================================
             if(received > 0) {

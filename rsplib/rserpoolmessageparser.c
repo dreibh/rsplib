@@ -1171,6 +1171,13 @@ static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
+
+   /* ------ Custom parameter ------ */
+   if(scanPoolElementIdentifierParameter(message) == false) {
+      message->Identifier = 0;
+   }
+   /* ------------------------------ */
+
    return(true);
 }
 
@@ -2029,5 +2036,5 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       CHECK((*message)->Error != RSPERR_OKAY);
       return((*message)->Error);
    }
-   return(RSPERR_NO_RESOURCES);
+   return(RSPERR_OUT_OF_MEMORY);
 }

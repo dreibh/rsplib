@@ -77,9 +77,10 @@ class TCPLikeServer : public TDThread
 
    static void poolElement(const char*          programTitle,
                            const char*          poolHandle,
+                           struct rsp_info*     info,
                            struct rsp_loadinfo* loadinfo,
                            void*                userData,
-                           TCPLikeServer*      (*threadFactory)(int sd, void* userData));
+                           TCPLikeServer*       (*threadFactory)(int sd, void* userData));
 
    protected:
    int RSerPoolSocketDescriptor;

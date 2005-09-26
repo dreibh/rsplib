@@ -186,7 +186,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
    if(poolHandlespaceManagement->NewPoolNode == NULL) {
       poolHandlespaceManagement->NewPoolNode = (struct ST_CLASS(PoolNode)*)malloc(sizeof(struct ST_CLASS(PoolNode)));
       if(poolHandlespaceManagement->NewPoolNode == NULL) {
-         return(RSPERR_NO_RESOURCES);
+         return(RSPERR_OUT_OF_MEMORY);
       }
    }
    ST_CLASS(poolNodeNew)(poolHandlespaceManagement->NewPoolNode,
@@ -197,7 +197,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
    if(poolHandlespaceManagement->NewPoolElementNode == NULL) {
       poolHandlespaceManagement->NewPoolElementNode = (struct ST_CLASS(PoolElementNode)*)malloc(sizeof(struct ST_CLASS(PoolElementNode)));
       if(poolHandlespaceManagement->NewPoolElementNode == NULL) {
-         return(RSPERR_NO_RESOURCES);
+         return(RSPERR_OUT_OF_MEMORY);
       }
    }
 
@@ -259,7 +259,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
             poolHandle,
             poolElementIdentifier);
          *poolElementNode = NULL;
-         errorCode = RSPERR_NO_RESOURCES;
+         errorCode = RSPERR_OUT_OF_MEMORY;
       }
    }
 

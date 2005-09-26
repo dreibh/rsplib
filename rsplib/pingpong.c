@@ -26,6 +26,8 @@
 #include "rserpool.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "pingpongpackets.h"
+#include "netutilities.h"
 #ifdef ENABLE_CSP
 #include "componentstatusreporter.h"
 #include "randomizer.h"
@@ -35,11 +37,20 @@
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
+   const char*           poolHandle = "PingPongPool";
+   unsigned long long    pingInterval = 500;
+   struct Ping*          ping;
+   const struct Pong*    pong;
    struct rsp_info       info;
    struct rsp_sndrcvinfo rinfo;
    char                  buffer[65536 + 4];
-   char*                 poolHandle = "EchoPool";
-   struct pollfd         ufds[2];
+   char                  str[128];
+   struct pollfd         ufds;
+   unsigned long long    now;
+   unsigned long long    nextPing;
+   uint64_t              messageNo;
+   uint64_t              lastReplyNo;
+   unsigned long long    lastPing = 500000;
    ssize_t               received;
    ssize_t               sent;
    int                   result;
@@ -65,6 +76,9 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
+      else if(!(strncmp(argv[i], "-interval=" ,10))) {
+         pingInterval = 1000ULL * atol((const char*)&argv[i][10]);
+      }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
          exit(1);
@@ -75,9 +89,10 @@ int main(int argc, char** argv)
 #endif
 
 
-   puts("RSerPool Terminal - Version 1.0");
-   puts("===============================\n");
-   printf("Pool Handle = %s\n\n", poolHandle);
+   puts("Ping Pong Pool User - Version 1.0");
+   puts("=================================\n");
+   printf("Pool Handle   = %s\n", poolHandle);
+   printf("Ping Interval = %Lums\n\n", pingInterval);
 
 
    beginLogging();
@@ -97,28 +112,21 @@ int main(int argc, char** argv)
       exit(1);
    }
 
+   messageNo =   1;
+   lastReplyNo = 0;
+   lastPing    = 0;
    installBreakDetector();
    while(!breakDetected()) {
-      ufds[0].fd     = STDIN_FILENO;
-      ufds[0].events = POLLIN;
-      ufds[1].fd     = sd;
-      ufds[1].events = POLLIN;
-      result = rsp_poll((struct pollfd*)&ufds, 2, -1);
+      ufds.fd     = sd;
+      ufds.events = POLLIN;
+      nextPing = lastPing + pingInterval;
+      now      = getMicroTime();
+      result = rsp_poll(&ufds, 1,
+                        (nextPing <= now) ? 0 : (int)((nextPing - now) / 1000));
+
+      /* ###### Handle Pong message ###################################### */
       if(result > 0) {
-         if(ufds[0].revents & POLLIN) {
-            received = rsp_read(STDIN_FILENO, (char*)&buffer, sizeof(buffer));
-            if(received > 0) {
-               sent = rsp_write(sd, (char*)&buffer, received);
-               if(sent < received) {
-                  puts("Write Failure -> Failover!");
-                  rsp_forcefailover(sd);
-               }
-            }
-            else {
-               break;
-            }
-         }
-         if(ufds[1].revents & POLLIN) {
+         if(ufds.revents & POLLIN) {
             flags = 0;
             received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
                                    &rinfo, &flags, 0);
@@ -129,26 +137,54 @@ int main(int argc, char** argv)
                   puts("\x1b[0m");
                }
                else {
-                  for(i = 0;i < received;i++) {
-                     if((unsigned char)buffer[i] < 30) {
-                        buffer[i] = '.';
+                  pong = (const struct Pong*)&buffer;
+                  if((pong->Header.Type == PPPT_PONG) &&
+                     (ntohs(pong->Header.Length) >= (ssize_t)sizeof(struct Pong))) {
+                     uint64_t recvMessageNo = ntoh64(pong->MessageNo);
+                     uint64_t recvReplyNo   = ntoh64(pong->ReplyNo);
+
+                     printf("\x1b[34m");
+                     printTimeStamp(stdout);
+                     printf("Ack #%Lu from PE $%08x (reply #%Lu)\x1b[0m\n",
+                           recvMessageNo, rinfo.rinfo_pe_id, recvReplyNo);
+
+                     if(recvReplyNo - lastReplyNo != 1) {
+                        printTimeStamp(stdout);
+                        printf("*** Detected gap of %Ld! ***\n",
+                               (int64)recvReplyNo - (int64)lastReplyNo);
                      }
+                     lastReplyNo = recvReplyNo;
                   }
-                  buffer[i] = 0x00;
-                  printf("\x1b[34mfrom PE $%08x> %s\x1b[0m\n",
-                         rinfo.rinfo_pe_id, buffer);
-                  fflush(stdout);
                }
-            }
-            else {
-               puts("Read Failure -> Failover!");
-               rsp_forcefailover(sd);
             }
          }
       }
+
+      /* ###### Send Ping message ###################################### */
+      if(getMicroTime() - lastPing >= pingInterval) {
+         lastPing = getMicroTime();
+
+         snprintf((char*)&str,sizeof(str),"Zeitstempel: %llu", lastPing);
+         size_t dataLength = strlen(str);
+
+         ping = (struct Ping*)&buffer;
+         ping->Header.Type   = PPPT_PING;
+         ping->Header.Flags  = 0x00;
+         ping->Header.Length = htons(sizeof(struct Ping) + dataLength);
+         ping->MessageNo     = hton64(messageNo);
+         memcpy(&ping->Data, str, dataLength);
+
+         sent = rsp_sendmsg(sd, (char*)ping, sizeof(struct Ping) + dataLength, 0,
+                            0, PPID_PPP, 0, 0, 0);
+         if(sent > 0) {
+            printf("Message #%Ld sent\n", messageNo);
+            messageNo++;
+         }
+      }
+
    }
 
-   puts("\nTerminated!");
+   puts("\x1b[0m\nTerminated!");
    rsp_close(sd);
    rsp_cleanup();
    finishLogging();

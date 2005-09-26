@@ -197,7 +197,7 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
       }
       LOG_WARNING
       fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d\n",
-              assocID, rserpoolSocket->Descriptor);
+              (unsigned int)assocID, rserpoolSocket->Descriptor);
       LOG_END
       errno = EINVAL;
    }
@@ -315,14 +315,14 @@ static void notifySession(struct RSerPoolSocket* rserpoolSocket,
                fprintf(stdlog, "Removing session %u of RSerPool socket %d, socket %d after closure of assoc %u\n",
                        session->SessionID,
                        rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                       session->AssocID);
+                       (unsigned int)session->AssocID);
                LOG_END
                deleteSession(rserpoolSocket, session);
             }
             else {
                LOG_ACTION
                fprintf(stdlog, "Removing Assoc ID %u from session %u of RSerPool socket %d, socket %d\n",
-                     session->AssocID, session->SessionID,
+                     (unsigned int)session->AssocID, session->SessionID,
                      rserpoolSocket->Descriptor, rserpoolSocket->Socket);
 
                LOG_END
@@ -337,7 +337,7 @@ static void notifySession(struct RSerPoolSocket* rserpoolSocket,
    else {
       LOG_WARNING
       fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d, socket %d\n",
-               assocID, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+               (unsigned int)assocID, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
       LOG_END
    }
    threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -366,7 +366,7 @@ void handleNotification(struct RSerPoolSocket* rserpoolSocket,
                LOG_ACTION
                fprintf(stdlog, "SCTP_COMM_UP for RSerPool socket %d, socket %d, assoc %u\n",
                      rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                     notification->sn_assoc_change.sac_assoc_id);
+                     (unsigned int)notification->sn_assoc_change.sac_assoc_id);
                LOG_END
                session = addSession(rserpoolSocket,
                                     notification->sn_assoc_change.sac_assoc_id,
@@ -374,7 +374,7 @@ void handleNotification(struct RSerPoolSocket* rserpoolSocket,
                if(session == NULL) {
                   LOG_WARNING
                   fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
-                        notification->sn_assoc_change.sac_assoc_id,
+                        (unsigned int)notification->sn_assoc_change.sac_assoc_id,
                         rserpoolSocket->Descriptor, rserpoolSocket->Socket);
                   LOG_END
                   sendabort(rserpoolSocket->Socket, notification->sn_assoc_change.sac_assoc_id);
@@ -387,7 +387,7 @@ void handleNotification(struct RSerPoolSocket* rserpoolSocket,
                LOG_ACTION
                fprintf(stdlog, "SCTP_COMM_LOST for RSerPool socket %d, socket %d, assoc %u\n",
                      rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                     notification->sn_assoc_change.sac_assoc_id);
+                     (unsigned int)notification->sn_assoc_change.sac_assoc_id);
                LOG_END
                notifySession(rserpoolSocket,
                            notification->sn_assoc_change.sac_assoc_id,
@@ -399,7 +399,7 @@ void handleNotification(struct RSerPoolSocket* rserpoolSocket,
          LOG_ACTION
          fprintf(stdlog, "SCTP_SHUTDOWN_EVENT for RSerPool socket %d, socket %d, assoc %u\n",
                rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-               notification->sn_shutdown_event.sse_assoc_id);
+               (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
          LOG_END
          notifySession(rserpoolSocket,
                      notification->sn_shutdown_event.sse_assoc_id,
@@ -424,7 +424,7 @@ void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
       LOG_ACTION
       fprintf(stdlog, "ASAP control channel message for RSerPool socket %d, socket %d, session %u, assoc %u\n",
               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-              session->SessionID, assocID);
+              session->SessionID, (unsigned int)assocID);
       LOG_END
 
       result = rserpoolPacket2Message(buffer, NULL, 0, PPID_ASAP, bufferSize, bufferSize, &message);
@@ -482,17 +482,17 @@ void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
 /* ###### Handle control channel message or notification ################# */
 bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket)
 {
-   char                   buffer[4];
-   struct sctp_sndrcvinfo sinfo;
-   ssize_t                result;
-   int                    flags;
+   char     buffer[4];
+   ssize_t  result;
+   uint32_t ppid;
+   int      flags;
 
    /* ====== Check, if message on socket is notification or ASAP ========= */
-   flags = MSG_PEEK;
-   result = sctp_recvmsg(rserpoolSocket->Socket, (char*)&buffer, sizeof(buffer),
-                         NULL, NULL, &sinfo, &flags);
+   flags   = MSG_PEEK;
+   result  = recvfromplus(rserpoolSocket->Socket, (char*)&buffer, sizeof(buffer),
+                          &flags, NULL, NULL, &ppid, NULL, NULL, 0);
    if( (result > 0) &&
-       ( (ntohl(sinfo.sinfo_ppid) == PPID_ASAP) || (flags & MSG_NOTIFICATION) ) ) {
+       ( (ppid == PPID_ASAP) || (flags & MSG_NOTIFICATION) ) ) {
       /* Handle control channel data or notification */
       LOG_VERBOSE
       fprintf(stdlog, "Handling control channel data or notification of RSerPool socket %u, socket %u\n",

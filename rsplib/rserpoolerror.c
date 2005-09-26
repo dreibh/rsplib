@@ -53,7 +53,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_NO_REGISTRAR,                  "no registrar available" },
 
    /* Handlespace-management specific error causes */
-   { RSPERR_NO_RESOURCES,                  "no resources" },
+   { RSPERR_OUT_OF_MEMORY,                 "out of memory" },
    { RSPERR_NOT_FOUND,                     "object not found" },
    { RSPERR_INVALID_ID,                    "invalid ID" },
    { RSPERR_DUPLICATE_ID,                  "duplicate ID" },

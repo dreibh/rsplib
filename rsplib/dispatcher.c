@@ -240,29 +240,36 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
          for(i = 0;i < nfds;i++) {
             if(ufds[i].revents) {
                fdCallback = dispatcherFindFDCallbackForDescriptor(dispatcher, ufds[i].fd);
-               if((fdCallback) &&
-                  (fdCallback->SelectTimeStamp <= pollTimeStamp) &&
-                  (ufds[i].revents & fdCallback->EventMask)) {
-                  LOG_VERBOSE3
-                  fprintf(stdlog,"Event $%04x (mask $%04x) for socket %d\n",
-                          ufds[i].revents, fdCallback->EventMask, fdCallback->FD);
-                  LOG_END
+               if(fdCallback != NULL) {
+                  if(fdCallback->SelectTimeStamp <= pollTimeStamp) {
+                     if(ufds[i].revents & fdCallback->EventMask) {
+                        LOG_VERBOSE3
+                        fprintf(stdlog,"Event $%04x (mask $%04x) for socket %d\n",
+                              ufds[i].revents, fdCallback->EventMask, fdCallback->FD);
+                        LOG_END
 
-                  if(fdCallback->Callback != NULL) {
-                     LOG_VERBOSE2
-                     fprintf(stdlog,"Executing callback for event $%04x of socket %d\n",
-                             ufds[i].revents, fdCallback->FD);
+                        if(fdCallback->Callback != NULL) {
+                           LOG_VERBOSE2
+                           fprintf(stdlog,"Executing callback for event $%04x of socket %d\n",
+                                 ufds[i].revents, fdCallback->FD);
+                           LOG_END
+                           fdCallback->Callback(dispatcher,
+                                                fdCallback->FD, ufds[i].revents,
+                                                fdCallback->UserData);
+                        }
+                     }
+                  }
+                  else {
+                     LOG_WARNING
+                     fprintf(stdlog, "FD callback for FD %d is newer than begin of ext_poll() -> Skipping.\n", fdCallback->FD);
                      LOG_END
-                     fdCallback->Callback(dispatcher,
-                                          fdCallback->FD, ufds[i].revents,
-                                          fdCallback->UserData);
                   }
                }
-            }
-            else {
-               LOG_VERBOSE4
-               fprintf(stdlog, "FD callback for FD %d is newer than begin of ext_select() -> Skipping.\n", fdCallback->FD);
-               LOG_END
+               else {
+                  LOG_WARNING
+                  fprintf(stdlog,"FD callback for socket %d is gone. Something is going wrong! Have you set nfds correctly?\n", ufds[i].fd);
+                  LOG_END
+               }
             }
          }
       }

@@ -23,39 +23,38 @@
  *
  */
 
-#ifndef IDENTIFIERBITMAP_H
-#define IDENTIFIERBITMAP_H
+#ifndef PINGPONGPACKETS_H
+#define PINGPONGPACKETS_H
 
-#include "tdtypes.h"
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdint.h>
 
 
-struct IdentifierBitmap
+#define PPID_PPP 0x29097602
+
+#define PPPT_PING 0x01
+#define PPPT_PONG 0x02
+
+struct PingPongCommonHeader
 {
-   size_t Entries;
-   size_t Available;
-
-   size_t Slots;
-   size_t Bitmap[0];
+   uint8_t  Type;
+   uint8_t  Flags;
+   uint16_t Length;
 };
 
-#define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
+struct Ping
+{
+   struct PingPongCommonHeader Header;
+   uint64_t                    MessageNo;
+   char                        Data[];
+};
 
+struct Pong
+{
+   struct PingPongCommonHeader Header;
+   uint64_t                    MessageNo;
+   uint64_t                    ReplyNo;
+   char                        Data[];
+};
 
-struct IdentifierBitmap* identifierBitmapNew(const size_t entries);
-void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap);
-int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap);
-int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
-                                       const int                id);
-void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

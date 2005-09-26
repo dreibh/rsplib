@@ -141,13 +141,14 @@ void TCPLikeServer::run()
 
 // ###### Implementation of a simple threaded server ########################
 void TCPLikeServer::poolElement(const char*          programTitle,
-                                 const char*          poolHandle,
-                                 struct rsp_loadinfo* loadinfo,
-                                 void*                userData,
-                                 TCPLikeServer*      (*threadFactory)(int sd, void* userData))
+                                const char*          poolHandle,
+                                struct rsp_info*     info,
+                                struct rsp_loadinfo* loadinfo,
+                                void*                userData,
+                                TCPLikeServer*      (*threadFactory)(int sd, void* userData))
 {
    beginLogging();
-   if(rsp_initialize(NULL, 0) < 0) {
+   if(rsp_initialize(info) < 0) {
       puts("ERROR: Unable to initialize rsplib Library!\n");
       finishLogging();
       return;
@@ -173,7 +174,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register(rserpoolSocket,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, NULL) == 0) {
+                      loadinfo, 30000) == 0) {
 
          // ====== Main loop ===================================================
          TCPLikeServerList serverSet;
@@ -183,7 +184,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             serverSet.removeFinished();
 
             // ====== Wait for incoming sessions ===============================
-            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000, NULL);
+            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 100000);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if(serviceThread) {

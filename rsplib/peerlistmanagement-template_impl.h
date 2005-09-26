@@ -229,7 +229,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    if(peerListManagement->NewPeerListNode == NULL) {
       peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
       if(peerListManagement->NewPeerListNode == NULL) {
-         return(RSPERR_NO_RESOURCES);
+         return(RSPERR_OUT_OF_MEMORY);
       }
    }
 
@@ -265,7 +265,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
             peerListManagement,
             *peerListNode);
          *peerListNode = NULL;
-         errorCode = RSPERR_NO_RESOURCES;
+         errorCode = RSPERR_OUT_OF_MEMORY;
       }
    }
 

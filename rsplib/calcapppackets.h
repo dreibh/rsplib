@@ -26,6 +26,8 @@
 #ifndef CALCAPPPACKETS_H
 #define CALCAPPPACKETS_H
 
+#include "netdouble.h"
+
 
 #define CALCAPP_REQUEST       1
 #define CALCAPP_ACCEPT        2

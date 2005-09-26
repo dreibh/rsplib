@@ -636,6 +636,14 @@ static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
+   /* ------ Custom parameter ------ */
+   if(message->Identifier != 0) {
+      if(createPoolElementIdentifierParameter(message, message->Identifier) == false) {
+         return(false);
+      }
+   }
+   /* ------------------------------ */
+
    return(finishMessage(message));
 }
 

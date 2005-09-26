@@ -39,6 +39,10 @@
 #ifndef LOGLEVEL_H
 #define LOGLEVEL_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "tdtypes.h"
 #include "timeutilities.h"
 #include "threadsafety.h"

@@ -112,7 +112,7 @@ bool initLogging(const char* parameter)
       }
    }
    else {
-      printf("ERROR: Invalid logging parameter: %s\n",parameter);
+      fprintf(stderr, "ERROR: Invalid logging parameter %s\n", parameter);
       return(false);
    }
    return(true);

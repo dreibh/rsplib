@@ -1275,7 +1275,7 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-   if(rsp_initialize(NULL,NULL) < 0) exit(1);
+   if(rsp_initialize(NULL) < 0) exit(1);
 
    puts("START!");
 

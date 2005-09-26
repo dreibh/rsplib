@@ -88,11 +88,12 @@ int rserpoolSocketComparison(const void* node1, const void* node2);
 struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd);
 bool waitForRead(struct RSerPoolSocket* rserpoolSocket,
                  unsigned long long     timeout);
-void deletePoolElement(struct PoolElement* poolElement);
+void deletePoolElement(struct PoolElement* poolElement, struct TagItem* tags);
 void reregistrationTimer(struct Dispatcher* dispatcher,
                          struct Timer*      timer,
                          void*              userData);
-bool doRegistration(struct RSerPoolSocket* rserpoolSocket);
+bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
+                    bool                   waitForRegistrationResult);
 
 
 #ifdef __cplusplus

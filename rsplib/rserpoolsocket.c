@@ -98,7 +98,7 @@ bool waitForRead(struct RSerPoolSocket* rserpoolSocket,
 
 
 /* ###### Delete pool element ############################################ */
-void deletePoolElement(struct PoolElement* poolElement)
+void deletePoolElement(struct PoolElement* poolElement, struct TagItem* tags)
 {
    int result;
 
@@ -107,10 +107,10 @@ void deletePoolElement(struct PoolElement* poolElement)
    timerDelete(&poolElement->ReregistrationTimer);
 
    if(poolElement->Identifier != 0x00000000) {
-      result = rsp_pe_deregistration((unsigned char*)&poolElement->Handle.Handle,
-                                     poolElement->Handle.Size,
-                                     poolElement->Identifier,
-                                     NULL);
+      result = rsp_pe_deregistration_tags((unsigned char*)&poolElement->Handle.Handle,
+                                          poolElement->Handle.Size,
+                                          poolElement->Identifier,
+                                          tags);
       if(result != RSPERR_OKAY) {
          LOG_ERROR
          fprintf(stdlog, "Deregistration failed: ");
@@ -144,7 +144,9 @@ void reregistrationTimer(struct Dispatcher* dispatcher,
       ensure that the PE information is not altered by another thread while
       being extracted by doRegistration(). */
    threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
-   doRegistration(rserpoolSocket);
+   /* Do not wait for result here. This would deadlock, since
+      this timer callback is called withing the MainLoop thread! */
+   doRegistration(rserpoolSocket, false);
    timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer,
               getMicroTime() + ((unsigned long long)1000 * (unsigned long long)rserpoolSocket->PoolElement->ReregistrationInterval));
    threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
@@ -156,15 +158,17 @@ void reregistrationTimer(struct Dispatcher* dispatcher,
 
 
 /* ###### Reregistration ##################################################### */
-bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
+bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
+                    bool                   waitForRegistrationResult)
 {
    struct TagItem        tags[16];
    struct rsp_addrinfo*  rspAddrInfo;
    struct rsp_addrinfo*  rspAddrInfo2;
    struct rsp_addrinfo*  next;
-   struct sockaddr*      sctpLocalAddressArray = NULL;
-   struct sockaddr*      packedAddressArray    = NULL;
+   size_t                sctpLocalAddresses;
+   union sockaddr_union* sctpLocalAddressArray = NULL;
    union sockaddr_union* localAddressArray     = NULL;
+   struct sockaddr*      packedAddressArray    = NULL;
    union sockaddr_union  socketName;
    socklen_t             socketNameLen;
    unsigned int          localAddresses;
@@ -194,33 +198,35 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
    /* ====== Get local addresses by sctp_getladds() ====================== */
    rspAddrInfo->ai_addrs = 0;
    if(rserpoolSocket->SocketProtocol == IPPROTO_SCTP) {
-      rspAddrInfo->ai_addrs = sctp_getladdrs(rserpoolSocket->Socket, 0, &rspAddrInfo->ai_addr);
-      if(rspAddrInfo->ai_addrs <= 0) {
+      sctpLocalAddresses = getladdrsplus(rserpoolSocket->Socket, 0, &sctpLocalAddressArray);
+      if(sctpLocalAddresses <= 0) {
          LOG_WARNING
          fputs("Unable to obtain socket's local addresses using sctp_getladdrs\n", stdlog);
          LOG_END
       }
       else {
-         /* --- Check for buggy sctplib/socketapi ----- */
-         if( (getPort((struct sockaddr*)rspAddrInfo->ai_addr) == 0)                  ||
-             ( (((struct sockaddr*)rspAddrInfo->ai_addr)->sa_family == AF_INET) &&
-               (((struct sockaddr_in*)rspAddrInfo->ai_addr)->sin_addr.s_addr == 0) ) ||
-             ( (((struct sockaddr*)rspAddrInfo->ai_addr)->sa_family == AF_INET6) &&
-                (IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)rspAddrInfo->ai_addr)->sin6_addr))) ) {
+         /* --- Check for buggy SCTP implementation ----- */
+         if( (getPort(&sctpLocalAddressArray[0].sa) == 0)                  ||
+             ( ((sctpLocalAddressArray[0].sa.sa_family == AF_INET) &&
+                (sctpLocalAddressArray[0].in.sin_addr.s_addr == 0)) ||
+             ( ((sctpLocalAddressArray[0].sa.sa_family == AF_INET6) &&
+                (IN6_IS_ADDR_UNSPECIFIED(&sctpLocalAddressArray[0].in6.sin6_addr)))) ) ) {
             LOG_ERROR
-            fputs("sctp_getladdrs() replies INADDR_ANY or port 0\n", stdlog);
+            fputs("getladdrsplus() replied INADDR_ANY or port 0\n", stdlog);
             for(i = 0;i < rspAddrInfo->ai_addrs;i++) {
                fprintf(stdlog, "Address[%d] = ", i);
                fputaddress((struct sockaddr*)&rspAddrInfo->ai_addr[i], true, stdlog);
                fputs("\n", stdlog);
             }
             LOG_END_FATAL
-            rspAddrInfo->ai_addr   = NULL;
-            rspAddrInfo->ai_addrs  = 0;
          }
-         /* ------------------------------------------- */
+         /* --------------------------------------------- */
 
-        sctpLocalAddressArray = rspAddrInfo->ai_addr;
+         packedAddressArray = pack_sockaddr_union(sctpLocalAddressArray, sctpLocalAddresses);
+         if(packedAddressArray != NULL) {
+            rspAddrInfo->ai_addr  = packedAddressArray;
+            rspAddrInfo->ai_addrs = sctpLocalAddresses;
+         }
       }
    }
 
@@ -283,22 +289,20 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
    }
 
    /* ====== Set policy type and parameters ================================= */
-   tags[0].Tag  = TAG_PoolPolicy_Type;
-   tags[0].Data = rserpoolSocket->PoolElement->LoadInfo.rli_policy;
-   tags[1].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[1].Data = rserpoolSocket->PoolElement->LoadInfo.rli_weight;
-   tags[2].Tag  = TAG_PoolPolicy_Parameter_Load;
-   tags[2].Data = rserpoolSocket->PoolElement->LoadInfo.rli_load;
-   tags[3].Tag  = TAG_PoolPolicy_Parameter_LoadDegradation;
-   tags[3].Data = rserpoolSocket->PoolElement->LoadInfo.rli_load_degradation;
-   tags[4].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[4].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
-   tags[5].Tag  = TAG_END;
+   tags[0].Tag  = TAG_UserTransport_HasControlChannel;
+   tags[0].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
+   tags[1].Tag  = TAG_RspPERegistration_WaitForResult;
+   tags[1].Data = (tagdata_t)waitForRegistrationResult;
+   tags[2].Tag  = TAG_END;
 
    /* ====== Do registration ================================================ */
-   result = rsp_pe_registration((unsigned char*)&rserpoolSocket->PoolElement->Handle.Handle,
-                                rserpoolSocket->PoolElement->Handle.Size,
-                                rspAddrInfo, (struct TagItem*)&tags);
+   result = rsp_pe_registration_tags(
+               (unsigned char*)&rserpoolSocket->PoolElement->Handle.Handle,
+               rserpoolSocket->PoolElement->Handle.Size,
+               rspAddrInfo,
+               &rserpoolSocket->PoolElement->LoadInfo,
+               (unsigned int)(rserpoolSocket->PoolElement->RegistrationLife / 1000ULL),
+               (struct TagItem*)&tags);
    if(result == RSPERR_OKAY) {
       rserpoolSocket->PoolElement->Identifier = rspAddrInfo->ai_pe_id;
       LOG_VERBOSE2
@@ -319,7 +323,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket)
 
    /* ====== Clean up ======================================================= */
    if(sctpLocalAddressArray) {
-      sctp_freeladdrs(sctpLocalAddressArray);
+      free(sctpLocalAddressArray);
    }
    if(localAddressArray) {
       free(localAddressArray);

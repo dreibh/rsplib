@@ -26,8 +26,8 @@
 #ifndef RSERPOOL_H
 #define RSERPOOL_H
 
-#include "tagitem.h"
-
+#include <stdint.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <ext_socket.h>
@@ -51,13 +51,17 @@ extern "C" {
 
 struct rsp_info
 {
-   unsigned int ri_version;
-   unsigned int ri_revision;
-   const char*  ri_build_date;
-   const char*  ri_build_time;
+   unsigned int     ri_version;
+   unsigned int     ri_revision;
+   const char*      ri_build_date;
+   const char*      ri_build_time;
+
+   uint64_t         ri_csp_identifier;
+   struct sockaddr* ri_csp_server;
+   unsigned int     ri_csp_interval;
 };
 
-int rsp_initialize(struct rsp_info* info, struct TagItem* tags);
+int rsp_initialize(struct rsp_info* info);
 void rsp_cleanup();
 
 
@@ -72,23 +76,30 @@ struct rsp_addrinfo {
    uint32_t                  ai_pe_id;
 };
 
-unsigned int rsp_pe_registration(const unsigned char*      poolHandle,
-                                 const size_t              poolHandleSize,
-                                 struct rsp_addrinfo* rserpoolAddrInfo,
-                                 struct TagItem*           tags);
+struct rsp_loadinfo
+{
+   uint32_t rli_policy;
+   uint32_t rli_weight;
+   uint32_t rli_load;
+   uint32_t rli_load_degradation;
+};
+
+
+unsigned int rsp_pe_registration(const unsigned char* poolHandle,
+                                 const size_t         poolHandleSize,
+                                 struct rsp_addrinfo* rspAddrInfo,
+                                 struct rsp_loadinfo* rspLoadInfo,
+                                 unsigned int         registrationLife);
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
-                                   const uint32_t       identifier,
-                                   struct TagItem*      tags);
+                                   const uint32_t       identifier);
 unsigned int rsp_pe_failure(const unsigned char* poolHandle,
                             const size_t         poolHandleSize,
-                            const uint32_t       identifier,
-                            struct TagItem*      tags);
+                            const uint32_t       identifier);
 
-int rsp_getaddrinfo(const unsigned char*       poolHandle,
-                    const size_t               poolHandleSize,
-                    struct rsp_addrinfo** rserpoolAddrInfo,
-                    struct TagItem*            tags);
+int rsp_getaddrinfo(const unsigned char*  poolHandle,
+                    const size_t          poolHandleSize,
+                    struct rsp_addrinfo** rserpoolAddrInfo);
 void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
 
 
@@ -98,15 +109,6 @@ void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
    #### ENHANCED MODE                                                    ####
    ##########################################################################
 */
-
-struct rsp_loadinfo
-{
-   uint32_t rli_policy;
-   uint32_t rli_weight;
-   uint32_t rli_load;
-   uint32_t rli_load_degradation;
-};
-
 
 
 typedef unsigned int rserpool_session_t;
@@ -184,17 +186,14 @@ int rsp_register(int                        sd,
                  const unsigned char*       poolHandle,
                  const size_t               poolHandleSize,
                  const struct rsp_loadinfo* loadinfo,
-                 struct TagItem*            tags);
+                 unsigned int               reregistrationInterval);
 int rsp_deregister(int sd);
 int rsp_accept(int                sd,
-               unsigned long long timeout,
-               struct TagItem*    tags);
+               unsigned long long timeout);
 int rsp_connect(int                  sd,
                 const unsigned char* poolHandle,
-                const size_t         poolHandleSize,
-                struct TagItem*      tags);
-int rsp_forcefailover(int             sd,
-                      struct TagItem* tags);
+                const size_t         poolHandleSize);
+int rsp_forcefailover(int sd);
 
 
 ssize_t rsp_sendmsg(int                sd,

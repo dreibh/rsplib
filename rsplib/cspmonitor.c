@@ -27,7 +27,7 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "breakdetector.h"
-#include "componentstatusprotocol.h"
+#include "componentstatusreporter.h"
 #include "leaflinkedredblacktree.h"
 
 #include <sys/poll.h>
@@ -45,9 +45,9 @@ static void getDescriptionForID(const uint64_t id,
                                 const size_t   bufferSize)
 {
    switch(CID_GROUP(id)) {
-      case CID_GROUP_NAMESERVER:
+      case CID_GROUP_REGISTRAR:
          snprintf(buffer, bufferSize,
-                  "Registrar  $%08Lx",
+                  "Registrar    $%08Lx",
                   CID_OBJECT(id));
          break;
       case CID_GROUP_POOLELEMENT:
@@ -73,14 +73,15 @@ static void getDescriptionForID(const uint64_t id,
 struct CSPObject
 {
    struct LeafLinkedRedBlackTreeNode Node;
-   uint64_t                          ID;
+   uint64_t                          Identifier;
    uint64_t                          LastReportTimeStamp;
    uint64_t                          ReportInterval;
    char                              Description[128];
-   char                              StatusText[128];
-   char                              ComponentAddress[128];
+   char                              Status[128];
+   char                              Location[128];
+   double                            Workload;
    size_t                            Associations;
-   struct ComponentAssociationEntry* AssociationArray;
+   struct ComponentAssociation*      AssociationArray;
 };
 
 
@@ -90,22 +91,41 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
    char                    str[256];
    size_t                  i;
+   int                     color;
 
-   fprintf(fd,"\x1b[%um", 30 + (unsigned int)CID_GROUP(cspObject->ID) % 8);
-   fprintf(fd, "%s [%s]: lr=%5ums, int=%4Ldms, A=%u %s\n",
+   color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, L=%d%% A=%u\n   \"%s\"\n",
+           color,
            cspObject->Description,
-           cspObject->ComponentAddress,
+           cspObject->Location,
+           color,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
+           (int)rint(100.0 * cspObject->Workload),
            (unsigned int)cspObject->Associations,
-           cspObject->StatusText);
+           cspObject->Status);
    for(i = 0;i < cspObject->Associations;i++) {
       getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
                           (char*)&str, sizeof(str));
-      fprintf(fd,"   -> %s proto=%4u ppid=$%08x",
-              str,
-              cspObject->AssociationArray[i].ProtocolID,
-              cspObject->AssociationArray[i].PPID);
+      switch(cspObject->AssociationArray[i].ProtocolID) {
+         case IPPROTO_SCTP:
+            fprintf(fd,"   -> %s SCTP ppid=$%08x",
+                  str,
+                  cspObject->AssociationArray[i].PPID);
+          break;
+         case IPPROTO_TCP:
+            fprintf(fd,"   -> %s TCP", str);
+          break;
+         case IPPROTO_UDP:
+            fprintf(fd,"   -> %s UDP", str);
+          break;
+         default:
+            fprintf(fd,"   -> %s proto=%d ppid=$%08x",
+                  str,
+                  cspObject->AssociationArray[i].ProtocolID,
+                  cspObject->AssociationArray[i].PPID);
+          break;
+      }
       if(cspObject->AssociationArray[i].Duration != ~0ULL) {
          fprintf(fd, "  duration=%4llu.%03llus",
                  cspObject->AssociationArray[i].Duration / 1000000,
@@ -122,10 +142,10 @@ static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectP
 {
    const struct CSPObject* cspObject1 = (const struct CSPObject*)cspObjectPtr1;
    const struct CSPObject* cspObject2 = (const struct CSPObject*)cspObjectPtr2;
-   if(cspObject1->ID < cspObject2->ID) {
+   if(cspObject1->Identifier < cspObject2->Identifier) {
       return(-1);
    }
-   else if(cspObject1->ID > cspObject2->ID) {
+   else if(cspObject1->Identifier > cspObject2->Identifier) {
       return(1);
    }
    return(0);
@@ -137,7 +157,7 @@ struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
 {
    struct LeafLinkedRedBlackTreeNode* node;
    struct CSPObject                   cmpCSPObject;
-   cmpCSPObject.ID = id;
+   cmpCSPObject.Identifier = id;
    node = leafLinkedRedBlackTreeFind(objectStorage, &cmpCSPObject.Node);
    if(node) {
       return((struct CSPObject*)node);
@@ -166,62 +186,64 @@ void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
 
 static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
 {
-   struct ComponentStatusProtocolHeader* csph;
-   struct CSPObject*                     cspObject;
-   char                                  buffer[65536];
-   ssize_t                               received;
-   size_t                                i;
+   struct ComponentStatusReport* cspReport;
+   struct CSPObject*             cspObject;
+   char                          buffer[65536];
+   ssize_t                       received;
+   size_t                        i;
 
    received = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0);
    if(received) {
-      if(received >= (ssize_t)sizeof(struct ComponentStatusProtocolHeader)) {
-         csph = (struct ComponentStatusProtocolHeader*)&buffer;
-         csph->Type            = ntohs(csph->Type);
-         csph->Version         = ntohs(csph->Version);
-         csph->Length          = ntohl(csph->Length);
-         csph->SenderID        = ntoh64(csph->SenderID);
-         csph->ReportInterval  = ntoh64(csph->ReportInterval);
-         csph->SenderTimeStamp = ntoh64(csph->SenderTimeStamp);
-         csph->Associations    = ntohl(csph->Associations);
-         if(sizeof(struct ComponentStatusProtocolHeader) + (csph->Associations * sizeof(struct ComponentAssociationEntry)) == (size_t)received) {
-            for(i = 0;i < csph->Associations;i++) {
-               csph->AssociationArray[i].ReceiverID = ntoh64(csph->AssociationArray[i].ReceiverID);
-               csph->AssociationArray[i].Duration   = ntoh64(csph->AssociationArray[i].Duration);
-               csph->AssociationArray[i].Flags      = ntohs(csph->AssociationArray[i].Flags);
-               csph->AssociationArray[i].ProtocolID = ntohs(csph->AssociationArray[i].ProtocolID);
-               csph->AssociationArray[i].PPID       = ntohl(csph->AssociationArray[i].PPID);
+      cspReport = (struct ComponentStatusReport*)&buffer;
+      if( (received >= (ssize_t)sizeof(struct ComponentStatusReport)) &&
+          (cspReport->Header.Type == CSPT_REPORT) &&
+          (ntohl(cspReport->Header.Version) == CSP_VERSION) ) {
+         cspReport->Header.Version         = ntohl(cspReport->Header.Version);
+         cspReport->Header.Length          = ntohs(cspReport->Header.Length);
+         cspReport->Header.SenderID        = ntoh64(cspReport->Header.SenderID);
+         cspReport->Header.SenderTimeStamp = ntoh64(cspReport->Header.SenderTimeStamp);
+         cspReport->ReportInterval         = ntohl(cspReport->ReportInterval);
+         cspReport->Workload               = ntohs(cspReport->Workload);
+         cspReport->Associations           = ntohs(cspReport->Associations);
+         if(sizeof(struct ComponentStatusReport) + (cspReport->Associations * sizeof(struct ComponentAssociation)) == (size_t)received) {
+            for(i = 0;i < cspReport->Associations;i++) {
+               cspReport->AssociationArray[i].ReceiverID = ntoh64(cspReport->AssociationArray[i].ReceiverID);
+               cspReport->AssociationArray[i].Duration   = ntoh64(cspReport->AssociationArray[i].Duration);
+               cspReport->AssociationArray[i].Flags      = ntohs(cspReport->AssociationArray[i].Flags);
+               cspReport->AssociationArray[i].ProtocolID = ntohs(cspReport->AssociationArray[i].ProtocolID);
+               cspReport->AssociationArray[i].PPID       = ntohl(cspReport->AssociationArray[i].PPID);
             }
 
-            cspObject = findCSPObject(objectStorage, csph->SenderID);
+            cspObject = findCSPObject(objectStorage, cspReport->Header.SenderID);
             if(cspObject == NULL) {
                cspObject = (struct CSPObject*)malloc(sizeof(struct CSPObject));
                if(cspObject) {
                   leafLinkedRedBlackTreeNodeNew(&cspObject->Node);
-                  cspObject->ID               = csph->SenderID;
+                  cspObject->Identifier       = cspReport->Header.SenderID;
                   cspObject->AssociationArray = NULL;
                }
             }
             if(cspObject) {
                cspObject->LastReportTimeStamp = getMicroTime();
-               cspObject->ReportInterval      = csph->ReportInterval;
-               getDescriptionForID(cspObject->ID,
+               cspObject->ReportInterval      = cspReport->ReportInterval;
+               getDescriptionForID(cspObject->Identifier,
                                    (char*)&cspObject->Description,
                                    sizeof(cspObject->Description));
-               memcpy(&cspObject->StatusText,
-                        &csph->StatusText,
-                        sizeof(cspObject->StatusText));
-               cspObject->StatusText[sizeof(cspObject->StatusText) - 1] = 0x00;
-               memcpy(&cspObject->ComponentAddress,
-                        &csph->ComponentAddress,
-                        sizeof(cspObject->ComponentAddress));
-               cspObject->ComponentAddress[sizeof(cspObject->ComponentAddress) - 1] = 0x00;
+               memcpy(&cspObject->Status,
+                        &cspReport->Status,
+                        sizeof(cspObject->Status));
+               cspObject->Status[sizeof(cspObject->Status) - 1] = 0x00;
+               memcpy(&cspObject->Location,
+                        &cspReport->Location,
+                        sizeof(cspObject->Location));
+               cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
                if(cspObject->AssociationArray) {
-                  componentAssociationEntryArrayDelete(cspObject->AssociationArray);
+                  deleteComponentAssociationArray(cspObject->AssociationArray);
                }
-               cspObject->AssociationArray = componentAssociationEntryArrayNew(csph->Associations);
+               cspObject->AssociationArray = createComponentAssociationArray(cspReport->Associations);
                CHECK(cspObject->AssociationArray);
-               memcpy(cspObject->AssociationArray, &csph->AssociationArray, csph->Associations * sizeof(struct ComponentAssociationEntry));
-               cspObject->Associations = csph->Associations;
+               memcpy(cspObject->AssociationArray, &cspReport->AssociationArray, cspReport->Associations * sizeof(struct ComponentAssociation));
+               cspObject->Associations = cspReport->Associations;
                CHECK(leafLinkedRedBlackTreeInsert(objectStorage,
                                                   &cspObject->Node) == &cspObject->Node);
             }

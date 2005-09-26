@@ -38,6 +38,7 @@ class UDPLikeServer
 
    virtual void poolElement(const char*          programTitle,
                             const char*          poolHandle,
+                            struct rsp_info*     info,
                             struct rsp_loadinfo* loadinfo);
 
    protected:

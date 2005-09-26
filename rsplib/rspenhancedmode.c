@@ -32,10 +32,10 @@
 #include "threadsafety.h"
 #include "rserpoolmessage.h"
 #include "asapinstance.h"
-#include "componentstatusprotocol.h"
 #include "leaflinkedredblacktree.h"
 #include "loglevel.h"
 #include "sessioncontrol.h"
+#include "componentstatusreporter.h"
 
 
 extern struct ASAPInstance*          gAsapInstance;
@@ -483,11 +483,12 @@ int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt)
 
 
 /* ###### Register pool element ########################################## */
-int rsp_register(int                        sd,
-                 const unsigned char*       poolHandle,
-                 const size_t               poolHandleSize,
-                 const struct rsp_loadinfo* loadinfo,
-                 struct TagItem*            tags)
+int rsp_register_tags(int                        sd,
+                      const unsigned char*       poolHandle,
+                      const size_t               poolHandleSize,
+                      const struct rsp_loadinfo* loadinfo,
+                      unsigned int               reregistrationInterval,
+                      struct TagItem*            tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
    struct PoolHandle      cmpPoolHandle;
@@ -499,7 +500,8 @@ int rsp_register(int                        sd,
 
    /* ====== Check for problems ========================================== */
    socketNameLen = sizeof(socketName);
-   if(ext_getsockname(rserpoolSocket->Socket, (struct sockaddr*)&socketName, &socketNameLen) < 0) {
+   if((ext_getsockname(rserpoolSocket->Socket, (struct sockaddr*)&socketName, &socketNameLen) < 0) ||
+      (getPort(&socketName.sa) == 0)) {
       LOG_VERBOSE
       fprintf(stdlog, "RSerPool socket %d, socket %d is not bound -> trying to bind it to the ANY address\n",
               sd, rserpoolSocket->Socket);
@@ -508,7 +510,9 @@ int rsp_register(int                        sd,
          threadSafetyUnlock(&rserpoolSocket->Mutex);
          return(-1);
       }
+
    }
+
    if(poolHandleSize > MAX_POOLHANDLESIZE) {
       LOG_ERROR
       fputs("Pool handle too long\n", stdlog);
@@ -534,10 +538,8 @@ int rsp_register(int                        sd,
       /* ====== Update registration information ========================== */
       threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);
       rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
-      rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
-                                                               rserpoolSocket->PoolElement->ReregistrationInterval);
-      rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
-                                                               rserpoolSocket->PoolElement->RegistrationLife);
+      rserpoolSocket->PoolElement->ReregistrationInterval = reregistrationInterval;
+      rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
 
       /* ====== Schedule reregistration as soon as possible ============== */
       timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer, 0);
@@ -567,21 +569,19 @@ int rsp_register(int                        sd,
                reregistrationTimer,
                (void*)rserpoolSocket);
 
-      rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
       rserpoolSocket->PoolElement->Identifier             = tagListGetData(tags, TAG_PoolElement_Identifier,
                                                                0x00000000);
-      rserpoolSocket->PoolElement->ReregistrationInterval = tagListGetData(tags, TAG_PoolElement_ReregistrationInterval,
-                                                               60000);
-      rserpoolSocket->PoolElement->RegistrationLife       = tagListGetData(tags, TAG_PoolElement_RegistrationLife,
-                                                               (rserpoolSocket->PoolElement->ReregistrationInterval * 3) + 3000);
+      rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
+      rserpoolSocket->PoolElement->ReregistrationInterval = reregistrationInterval;
+      rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
       rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
 
       /* ====== Do registration ============================================= */
-      if(doRegistration(rserpoolSocket) == false) {
+      if(doRegistration(rserpoolSocket, true) == false) {
          LOG_ERROR
          fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
          LOG_END
-         deletePoolElement(rserpoolSocket->PoolElement);
+         deletePoolElement(rserpoolSocket->PoolElement, tags);
          rserpoolSocket->PoolElement = NULL;
          threadSafetyUnlock(&rserpoolSocket->Mutex);
          return(-1);
@@ -598,8 +598,20 @@ int rsp_register(int                        sd,
 }
 
 
+/* ###### Register pool element ########################################## */
+int rsp_register(int                        sd,
+                 const unsigned char*       poolHandle,
+                 const size_t               poolHandleSize,
+                 const struct rsp_loadinfo* loadinfo,
+                 unsigned int               reregistrationInterval)
+{
+   return(rsp_register_tags(sd, poolHandle, poolHandleSize, loadinfo,
+                            reregistrationInterval, NULL));
+}
+
+
 /* ###### Deregister pool element ######################################## */
-int rsp_deregister(int sd)
+int rsp_deregister_tags(int sd, struct TagItem* tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
    int                    result = 0;
@@ -608,7 +620,7 @@ int rsp_deregister(int sd)
    /* ====== Delete pool element ========================================= */
    threadSafetyLock(&rserpoolSocket->Mutex);
    if(rserpoolSocket->PoolElement != NULL) {
-      deletePoolElement(rserpoolSocket->PoolElement);
+      deletePoolElement(rserpoolSocket->PoolElement, tags);
       rserpoolSocket->PoolElement = NULL;
    }
    else {
@@ -621,11 +633,18 @@ int rsp_deregister(int sd)
 }
 
 
+/* ###### Deregister pool element ######################################## */
+int rsp_deregister(int sd)
+{
+   return(rsp_deregister_tags(sd, NULL));
+}
+
+
 /* ###### RSerPool socket connect() implementation ####################### */
-int rsp_connect(int                  sd,
-                const unsigned char* poolHandle,
-                const size_t         poolHandleSize,
-                struct TagItem*      tags)
+int rsp_connect_tags(int                  sd,
+                     const unsigned char* poolHandle,
+                     const size_t         poolHandleSize,
+                     struct TagItem*      tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
    struct Session*        session;
@@ -642,7 +661,7 @@ int rsp_connect(int                  sd,
          rserpoolSocket->ConnectedSession = session;
 
          /* ====== Connect to a PE ======================================= */
-         if(rsp_forcefailover(rserpoolSocket->Descriptor, NULL) == 0) {
+         if(rsp_forcefailover_tags(rserpoolSocket->Descriptor, tags) == 0) {
             result = 0;
          }
          else {
@@ -668,10 +687,19 @@ int rsp_connect(int                  sd,
 }
 
 
+/* ###### RSerPool socket connect() implementation ####################### */
+int rsp_connect(int                  sd,
+                const unsigned char* poolHandle,
+                const size_t         poolHandleSize)
+{
+   return(rsp_connect_tags(sd, poolHandle, poolHandleSize, NULL));
+}
+
+
 /* ###### RSerPool socket accept() implementation ######################## */
-int rsp_accept(int                sd,
-               unsigned long long timeout,
-               struct TagItem*    tags)
+int rsp_accept_tags(int                sd,
+                    unsigned long long timeout,
+                    struct TagItem*    tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
    struct RSerPoolSocket* newRSerPoolSocket;
@@ -715,9 +743,17 @@ int rsp_accept(int                sd,
 }
 
 
+/* ###### RSerPool socket accept() implementation ######################## */
+int rsp_accept(int                sd,
+               unsigned long long timeout)
+{
+   return(rsp_accept_tags(sd, timeout, NULL));
+}
+
+
 /* ###### Make failover ################################################## */
-int rsp_forcefailover(int             sd,
-                      struct TagItem* tags)
+int rsp_forcefailover_tags(int             sd,
+                           struct TagItem* tags)
 {
    struct RSerPoolSocket*  rserpoolSocket;
    struct rsp_addrinfo*    rspAddrInfo;
@@ -755,9 +791,10 @@ int rsp_forcefailover(int             sd,
               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
               rserpoolSocket->ConnectedSession->SessionID);
       LOG_END
-      rsp_pe_failure((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
-                     rserpoolSocket->ConnectedSession->Handle.Size,
-                     rserpoolSocket->ConnectedSession->ConnectedPE, NULL);
+      rsp_pe_failure_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
+                          rserpoolSocket->ConnectedSession->Handle.Size,
+                          rserpoolSocket->ConnectedSession->ConnectedPE,
+                          tags);
       rserpoolSocket->ConnectedSession->ConnectedPE = 0;
    }
 
@@ -770,9 +807,10 @@ int rsp_forcefailover(int             sd,
               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
               rserpoolSocket->ConnectedSession->SessionID);
       LOG_END
-      result = rsp_getaddrinfo((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
-                               rserpoolSocket->ConnectedSession->Handle.Size,
-                               &rspAddrInfo, NULL);
+      result = rsp_getaddrinfo_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
+                                    rserpoolSocket->ConnectedSession->Handle.Size,
+                                    &rspAddrInfo,
+                                    tags);
       if(result == 0) {
          if(rspAddrInfo->ai_protocol == rserpoolSocket->SocketProtocol) {
 
@@ -812,12 +850,13 @@ int rsp_forcefailover(int             sd,
                                    rspAddrInfo2->ai_pe_id,
                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
                                    rserpoolSocket->ConnectedSession->SessionID,
-                                   notification.sn_assoc_change.sac_assoc_id);
+                                   (unsigned int)notification.sn_assoc_change.sac_assoc_id);
                            LOG_END
                            success = true;
                            rserpoolSocket->ConnectedSession->IsFailed            = false;
                            rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                            rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
+
                            sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                                        rserpoolSocket->ConnectedSession,
                                                        notification.sn_assoc_change.sac_assoc_id);
@@ -831,7 +870,7 @@ int rsp_forcefailover(int             sd,
                                    rspAddrInfo2->ai_pe_id,
                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
                                    rserpoolSocket->ConnectedSession->SessionID,
-                                   notification.sn_assoc_change.sac_assoc_id);
+                                   (unsigned int)notification.sn_assoc_change.sac_assoc_id);
                            LOG_END
                            break;
                         }
@@ -844,6 +883,7 @@ int rsp_forcefailover(int             sd,
                      break;
                   }
                }
+               rspAddrInfo2 = rspAddrInfo2->ai_next;
             }
 
 
@@ -902,6 +942,13 @@ int rsp_forcefailover(int             sd,
 }
 
 
+/* ###### Make failover ################################################## */
+int rsp_forcefailover(int sd)
+{
+   return(rsp_forcefailover_tags(sd, NULL));
+}
+
+
 /* ###### RSerPool socket sendmsg() implementation ####################### */
 ssize_t rsp_sendmsg(int                sd,
                     const void*        data,
@@ -929,7 +976,7 @@ ssize_t rsp_sendmsg(int                sd,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
          result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
-                             MSG_NOSIGNAL,
+                             msg_flags|MSG_NOSIGNAL,
                              NULL, 0,
                              ntohl(sctpPPID), session->AssocID, sctpStreamID, sctpTimeToLive,
                              timeout);
@@ -1048,6 +1095,7 @@ ssize_t rsp_recvmsg(int                    sd,
          if(rserpoolSocket->ConnectedSession) {
             session              = rserpoolSocket->ConnectedSession;
             rinfo->rinfo_session = session->SessionID;
+            rinfo->rinfo_pe_id   = session->ConnectedPE;
          }
          else {
             session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
@@ -1057,7 +1105,8 @@ ssize_t rsp_recvmsg(int                    sd,
             else {
                LOG_ERROR
                fprintf(stdlog, "Received data on RSerPool socket %d, socket %d via unknown assoc %u\n",
-                     rserpoolSocket->Descriptor, rserpoolSocket->Socket, assocID);
+                     rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                     (unsigned int)assocID);
                LOG_END
             }
          }
@@ -1229,6 +1278,7 @@ int rsp_csp_setstatus(int                sd,
                       rserpool_session_t sessionID,
                       const char*        statusText)
 {
+#ifdef ENABLE_CSP
    struct RSerPoolSocket* rserpoolSocket;
    struct Session*        session;
    int                    result = 0;
@@ -1248,16 +1298,23 @@ int rsp_csp_setstatus(int                sd,
    }
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return(result);
+#else
+   errno = EPROTONOSUPPORT;
+   return(-1);
+#endif
 }
 
 
+#ifdef ENABLE_CSP
 /* ###### Get CSP status ################################################# */
-size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArray,
-                                char*                              statusText,
-                                char*                              componentAddress,
-                                const int                          registrarSocket,
-                                const RegistrarIdentifierType      registrarID,
-                                const unsigned long long           registrarConnectionTimeStamp)
+size_t getSessionStatus(struct ComponentAssociation** caeArray,
+                        unsigned long long*           identifier,
+                        char*                         statusText,
+                        char*                         componentLocation,
+                        double*                       workload,
+                        const int                     registrarSocket,
+                        const uint32_t                registrarID,
+                        const unsigned long long      registrarConnectionTimeStamp)
 {
    size_t                 caeArraySize;
    struct RSerPoolSocket* rserpoolSocket;
@@ -1270,21 +1327,28 @@ size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArray,
 
    threadSafetyLock(&gRSerPoolSocketSetMutex);
 
-   sessions     = leafLinkedRedBlackTreeGetElements(&gRSerPoolSocketSet);
-   *caeArray    = componentAssociationEntryArrayNew(1 + sessions);
+   sessions = 0;
+   rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetFirst(&gRSerPoolSocketSet);
+   while(rserpoolSocket != NULL) {
+      sessions += sessionStorageGetElements(&rserpoolSocket->SessionSet);
+      rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
+   }
+
+   *workload    = -1.0;
+   *caeArray    = createComponentAssociationArray(1 + sessions);
    caeArraySize = 0;
    if(*caeArray) {
-      statusText[0]       = 0x00;
-      componentAddress[0] = 0x00;
+      statusText[0]        = 0x00;
+      componentLocation[0] = 0x00;
       if(registrarSocket >= 0) {
-         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_NAMESERVER, registrarID);
+         (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_REGISTRAR, registrarID);
          (*caeArray)[caeArraySize].Duration   = getMicroTime() - registrarConnectionTimeStamp;
          (*caeArray)[caeArraySize].Flags      = 0;
          (*caeArray)[caeArraySize].ProtocolID = IPPROTO_SCTP;
          (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
          caeArraySize++;
       }
-      componentStatusGetComponentAddress(componentAddress, -1, 0);
+      getComponentLocation(componentLocation, -1, 0);
 
       rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetFirst(&gRSerPoolSocketSet);
       while(rserpoolSocket != NULL) {
@@ -1298,21 +1362,27 @@ size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArray,
                (*caeArray)[caeArraySize].ProtocolID = rserpoolSocket->SocketProtocol;
                (*caeArray)[caeArraySize].PPID       = 0;
                caeArraySize++;
-               componentStatusGetComponentAddress(componentAddress, rserpoolSocket->Socket, session->AssocID);
+               getComponentLocation(componentLocation, rserpoolSocket->Socket, session->AssocID);
             }
             if(session->StatusText[0] != 0x00) {
                safestrcpy(statusText,
                           session->StatusText,
-                          CSPH_STATUS_TEXT_SIZE);
+                          CSPR_STATUS_SIZE);
             }
             session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+         }
+         if((rserpoolSocket->PoolElement) &&
+            (CID_GROUP(*identifier) == CID_GROUP_POOLELEMENT) &&
+            (CID_OBJECT(*identifier) == 0)) {
+            *identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, rserpoolSocket->PoolElement->Identifier);
          }
          rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
       }
 
       if((statusText[0] == 0x00) || (sessions != 1)) {
-         snprintf(statusText, CSPH_STATUS_TEXT_SIZE,
-                  "%u Session%s", (unsigned int)sessions, (sessions == 1) ? "" : "s");
+         snprintf(statusText, CSPR_STATUS_SIZE,
+                  "%u Session%s", (unsigned int)sessions,
+                  (sessions == 1) ? "" : "s");
       }
    }
 
@@ -1320,6 +1390,7 @@ size_t rsp_csp_getsessionstatus(struct ComponentAssociationEntry** caeArray,
 
    return(caeArraySize);
 }
+#endif
 
 
 // ###### Print RSerPool notification #######################################

@@ -39,19 +39,17 @@
 
 #include <iostream>
 
-#include "rsplib.h"
-#include "randomizer.h"
-#ifdef ENABLE_CSP
-#include "componentstatusprotocol.h"
-#endif
+#include "rserpool.h"
 #include "loglevel.h"
 #include "netutilities.h"
-
+#include "randomizer.h"
 #include "fractalgeneratorpackets.h"
+#ifdef ENABLE_CSP
+#include "componentstatusreporter.h"
+#endif
 
 
 using namespace std;
-
 
 class FractalPU : public QMainWindow,
                   public QThread
@@ -102,7 +100,7 @@ class FractalPU : public QMainWindow,
 
    const unsigned char*      PoolHandle;
    size_t                    PoolHandleSize;
-   SessionDescriptor*        Session;
+   int                       Session;
    uint32_t                  LastPoolElementID;
    FGPParameter Parameter;
    size_t                    Run;
@@ -212,7 +210,7 @@ void FractalPU::closeEvent(QCloseEvent* closeEvent)
 bool FractalPU::sendParameter()
 {
    FGPParameter parameter;
-   TagItem      tags[16];
+   ssize_t      sent;
 
    parameter.Header.Type   = FGPT_PARAMETER;
    parameter.Header.Flags  = 0x00;
@@ -227,14 +225,10 @@ bool FractalPU::sendParameter()
    parameter.C2Imag        = Parameter.C2Imag;
    parameter.N             = Parameter.N;
 
-   tags[0].Tag  = TAG_RspIO_Timeout;
-   tags[0].Data = (tagdata_t)2000000;
-   tags[1].Tag  = TAG_RspIO_SCTP_PPID;
-   tags[1].Data = PPID_FGP;
-   tags[2].Tag  = TAG_DONE;
-   if(rspSessionWrite(Session, &parameter, sizeof(parameter),
-                      (TagItem*)&tags) <= 0) {
-      cerr << "ERROR: SessionWrite failed!" << endl;
+   sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
+                        0, PPID_FGP, 0, 0, 5000000);
+   if(sent < 0) {
+      logerror("rsp_sendmsg() failed");
       return(false);
    }
    return(true);
@@ -367,160 +361,160 @@ void FractalPU::getNextParameters()
 /* ###### Fractal PU thread ############################################## */
 void FractalPU::run()
 {
-   char    statusText[128];
-   TagItem tags[16];
+   char statusText[128];
 
    Running           = true;
    Run               = 0;
    PoolElementUsages = 0;
 
-   // cerr << "Creating session..." << endl;
    for(;;) {
       LastPoolElementID = 0;
 
-/*
-      tags[0].Tag  = TAG_TuneSCTP_MinRTO;
-      tags[0].Data = 200;
-      tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
-      tags[1].Data = 1000;
-      tags[2].Tag  = TAG_TuneSCTP_InitialRTO;
-      tags[2].Data = 250;
-      tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
-      tags[3].Data = 100;
-      tags[4].Tag  = TAG_TuneSCTP_PathMaxRXT;
-      tags[4].Data = 3;
-      tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
-      tags[5].Data = 12;
-      tags[6].Tag  = TAG_DONE;
-*/
-      tags[0].Tag  = TAG_DONE;
-
-      Session = rspCreateSession(PoolHandle, PoolHandleSize, NULL, (TagItem*)&tags);
-      if(Session) {
-         Run++;
-         PoolElementUsages = 0;
+      Session = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP);
+      if(Session >= 0) {
+         if(rsp_connect(Session, PoolHandle, PoolHandleSize) == 0) {
+            Run++;
+            PoolElementUsages = 0;
 
 
-         // ====== Initialize image object and timeout timer ================
-         qApp->lock();
-         Parameter.Width         = width();
-         Parameter.Height        = height();
-         Parameter.C1Real        = doubleToNetwork(-1.5);
-         Parameter.C1Imag        = doubleToNetwork(1.5);
-         Parameter.C2Real        = doubleToNetwork(1.5);
-         Parameter.C2Imag        = doubleToNetwork(-1.5);
-         Parameter.N             = doubleToNetwork(2.0);
-         Parameter.MaxIterations = 1024;
-         Parameter.AlgorithmID   = FGPA_MANDELBROT;
-         getNextParameters();
-         if(Image == NULL) {
-            Image = new QImage(Parameter.Width, Parameter.Height, 32);
-            Q_CHECK_PTR(Image);
-            Image->fill(qRgb(255, 255, 255));
-         }
-         qApp->unlock();
+            // ====== Initialize image object and timeout timer ================
+            qApp->lock();
+            Parameter.Width         = width();
+            Parameter.Height        = height();
+            Parameter.C1Real        = doubleToNetwork(-1.5);
+            Parameter.C1Imag        = doubleToNetwork(1.5);
+            Parameter.C2Real        = doubleToNetwork(1.5);
+            Parameter.C2Imag        = doubleToNetwork(-1.5);
+            Parameter.N             = doubleToNetwork(2.0);
+            Parameter.MaxIterations = 1024;
+            Parameter.AlgorithmID   = FGPA_MANDELBROT;
+            getNextParameters();
+            if(Image == NULL) {
+               Image = new QImage(Parameter.Width, Parameter.Height, 32);
+               Q_CHECK_PTR(Image);
+               Image->fill(qRgb(255, 255, 255));
+            }
+            qApp->unlock();
 
-         rspSessionSetStatusText(Session, "Sending parameter command...");
-         // cout << "Sending parameter command..." << endl;
-         qApp->lock();
-         statusBar()->message("Sending parameter command...");
-         qApp->unlock();
+            rsp_csp_setstatus(Session, 0, "Sending parameter command...");
+            // cout << "Sending parameter command..." << endl;
+            qApp->lock();
+            statusBar()->message("Sending parameter command...");
+            qApp->unlock();
 
 
-         // ====== Begin image calculation ==================================
-         bool success = false;
-         if(sendParameter()) {
+            // ====== Begin image calculation ==================================
+            bool success = false;
+            if(sendParameter()) {
 
-            // ====== Handle received result chunks =========================
-            FGPData data;
-            tags[0].Tag  = TAG_RspIO_PE_ID;
-            tags[0].Data = 0;
-            tags[1].Tag  = TAG_RspIO_Timeout;
-            tags[1].Data = (tagdata_t)2000000;
-            tags[2].Tag  = TAG_DONE;
-            size_t packets = 0;
-            ssize_t received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
-            while(received != 0) {
-               if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
-                  (data.Header.Type == FGPT_DATA)) {
-                  if(LastPoolElementID != tags[0].Data) {
-                     LastPoolElementID = tags[0].Data;
-                     PoolElementUsages++;
-                  }
+               // ====== Handle received result chunks =========================
+               size_t         packets = 0;
+               FGPData        data;
+               rsp_sndrcvinfo rinfo;
+               int            flags = 0;
+               ssize_t received;
 
-                  qApp->lock();
-                  const DataStatus status = handleData(&data, received);
-                  qApp->unlock();
-
-                  switch(status) {
-                     case Finalizer:
-                        success = true;
-                        goto finish;
-                      break;
-                     case Invalid:
-                        cerr << "ERROR: Invalid data block received!" << endl;
-                      break;
-                     default:
-                        packets++;
-                        snprintf((char*)&statusText, sizeof(statusText),
-                                 "Processed data packet #%u...", packets);
-                        rspSessionSetStatusText(Session, statusText);
-                        qApp->lock();
-                        statusBar()->message(statusText);
-                        qApp->unlock();
-                      break;
-                  }
-               }
-               else if(received == RspRead_Timeout) {
-                  if(rspSessionHasCookie(Session)) {
-                     puts("Timeout occurred -> forcing failover!");
-                     rspSessionFailover(Session);
+               received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
+                                      &rinfo, &flags, 2000000);
+               while(received != 0) {
+                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                     printf("Notification: ");
+                     rsp_print_notification((union rserpool_notification*)&data, stdout);
+                     puts("");
                   }
                   else {
-                     puts("No cookie -> restart necessary");
-                     goto finish;
+                     if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
+                        (data.Header.Type == FGPT_DATA)) {
+                        if(LastPoolElementID != rinfo.rinfo_pe_id) {
+                           LastPoolElementID = rinfo.rinfo_pe_id;
+                           PoolElementUsages++;
+                        }
+
+                        qApp->lock();
+                        const DataStatus status = handleData(&data, received);
+                        qApp->unlock();
+
+                        switch(status) {
+                           case Finalizer:
+                              success = true;
+                              goto finish;
+                           break;
+                           case Invalid:
+                              cerr << "ERROR: Invalid data block received!" << endl;
+                           break;
+                           default:
+                              packets++;
+                              snprintf((char*)&statusText, sizeof(statusText),
+                                       "Processed data packet #%u...", packets);
+                              rsp_csp_setstatus(Session, 0, statusText);
+                              qApp->lock();
+                              statusBar()->message(statusText);
+                              qApp->unlock();
+                           break;
+                        }
+                     }
+                     /* ????
+                     else if(received == RspRead_Timeout) {
+                        if(rspSessionHasCookie(Session)) {
+                           puts("Timeout occurred -> forcing failover!");
+                           rspSessionFailover(Session);
+                        }
+                        else {
+                           puts("No cookie -> restart necessary");
+                           goto finish;
+                        }
+                     }
+                     */
+
+                     if(!Running) {
+                        goto finish;
+                     }
                   }
-               }
 
-               if(!Running) {
-                  goto finish;
+                  flags = 0;
+                  received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
+                                       &rinfo, &flags, 2000000);
                }
-
-               received = rspSessionRead(Session, &data, sizeof(data), (TagItem*)&tags);
             }
-         }
 
 finish:
-         // ====== Image calculation completed ==============================
-         const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
-         rspSessionSetStatusText(Session, statusText);
-         // cout << statusText << endl;
-         qApp->lock();
-         statusBar()->message(statusText);
-         qApp->unlock();
+            // ====== Image calculation completed ==============================
+            const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
+            rsp_csp_setstatus(Session, 0, statusText);
+            // cout << statusText << endl;
+            qApp->lock();
+            statusBar()->message(statusText);
+            qApp->unlock();
 
-         rspDeleteSession(Session);
-         Session = NULL;
+            rsp_close(Session);
+            Session = -1;
 
-         if(Running) {
-            usleep(2000000);
+            if(Running) {
+               usleep(2000000);
+            }
+
+
+            // ====== Clean-up =================================================
+            qApp->lock();
+            if( (!Running) ||
+               (Image->width() != width()) ||
+               (Image->height() != height()) ) {
+               // Thread destruction or size change
+               delete Image;
+               Image = NULL;
+            }
+            qApp->unlock();
+
+            if(!Running) {
+               break;
+            }
          }
-
-
-         // ====== Clean-up =================================================
-         qApp->lock();
-         if( (!Running) ||
-             (Image->width() != width()) ||
-             (Image->height() != height()) ) {
-            // Thread destruction or size change
-            delete Image;
-            Image = NULL;
+         else {
+            logerror("rsp_connect() failed");
          }
-         qApp->unlock();
-
-         if(!Running) {
-            break;
-         }
+      }
+      else {
+         logerror("rsp_socket() failed");
       }
    }
 }
@@ -529,96 +523,61 @@ finish:
 #include "fractalpooluser.moc"
 
 
-/* ###### rsplib main loop thread ########################################### */
-static bool RsplibThreadStop = false;
-static void* rsplibMainLoop(void* args)
-{
-   struct timeval timeout;
-   while(!RsplibThreadStop) {
-      timeout.tv_sec  = 0;
-      timeout.tv_usec = 50000;
-      rspSelect(0, NULL, NULL, NULL, &timeout);
-   }
-   return(NULL);
-}
-
-
 
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   const char*          poolHandle    = "FractalGeneratorPool";
-   const char*          configDirName = NULL;
-#ifdef ENABLE_CSP
-   struct CSPReporter   cspReporter;
-   uint64_t             cspIdentifier     = 0;
-   unsigned int         cspReportInterval = 333333;
-   union sockaddr_union cspReportAddress;
-#endif
-   pthread_t            rsplibThread;
-   int                  i;
+   struct rsp_info info;
+   char*           poolHandle    = "FractalGeneratorPool";
+   const char*     configDirName = NULL;
+   int             i;
 
-   string2address("127.0.0.1:2960", &cspReportAddress);
+   memset(&info, 0, sizeof(info));
+
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i],"-ph=",4))) {
-         poolHandle = (char*)&argv[i][4];
-      }
-      else if(!(strncmp(argv[i],"-configdir=",11))) {
-         configDirName = (char*)&argv[i][11];
-      }
-#ifdef ENABLE_CSP
-      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
-         cspIdentifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
-      }
-      else if(!(strncasecmp(argv[i], "-cspreportinterval=", 19))) {
-         cspReportInterval = atol((char*)&argv[i][19]);
-      }
-      else if(!(strncasecmp(argv[i], "-cspreportaddress=", 18))) {
-         if(!string2address((char*)&argv[i][18], &cspReportAddress)) {
-            fprintf(stderr,
-                    "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
-                    (char*)&argv[i][18]);
-            exit(1);
-         }
-         if(cspReportInterval <= 0) {
-            cspReportInterval = 250000;
-         }
-      }
-#else
-      else if((!(strncmp(argv[i], "-cspreportinterval=", 19))) ||
-              (!(strncmp(argv[i], "-cspreportaddress=", 18)))) {
-         fprintf(stderr, "ERROR: CSP support not compiled in! Ignoring argument %s\n", argv[i]);
-         exit(1);
-      }
-#endif
-      else if(!(strncmp(argv[i],"-log",4))) {
+      if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
          }
       }
-   }
-
-   beginLogging();
-   if(rspInitialize(NULL) != 0) {
-      cerr << "ERROR: Unable to initialize rsplib!" << endl;
-      exit(1);
-   }
 #ifdef ENABLE_CSP
-   if((cspReportInterval > 0) && (cspIdentifier != 0)) {
-      cspReporterNewForRspLib(&cspReporter, cspIdentifier, &cspReportAddress, cspReportInterval);
-   }
-#endif
-   for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-registrar=" ,11))) {
-         if(rspAddStaticRegistrar((char*)&argv[i][11]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad registrar setting: %s\n", argv[i]);
+      else if(!(strncasecmp(argv[i], "-cspidentifier=", 12))) {
+         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
+      }
+      else if(!(strncmp(argv[i], "-csp" ,4))) {
+         if(initComponentStatusReporter(&info, argv[i]) == false) {
             exit(1);
          }
       }
+#endif
+      else if(!(strncmp(argv[i],"-configdir=",11))) {
+         configDirName = (char*)&argv[i][11];
+      }
+      else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
+         poolHandle = (char*)&argv[i][12];
+      }
+      else {
+         printf("ERROR: Bad argument %s\n", argv[i]);
+         exit(1);
+      }
    }
+#ifdef ENABLE_CSP
+   if(info.ri_csp_identifier == 0) {
+      info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
+   }
+#endif
 
-   if(pthread_create(&rsplibThread, NULL, &rsplibMainLoop, NULL) != 0) {
-      puts("ERROR: Unable to create rsplib main loop thread!");
+
+   puts("Fractal Pool User - Version 1.0");
+   puts("===============================\n");
+   printf("Pool Handle = %s\n\n", poolHandle);
+
+
+   beginLogging();
+
+   if(rsp_initialize(&info) < 0) {
+      logerror("Unable to initialize rsplib");
+      exit(1);
    }
 
 
@@ -629,16 +588,8 @@ int main(int argc, char** argv)
    const int result = application.exec();
 
 
-#ifdef ENABLE_CSP
-   if((cspReportInterval > 0) && (cspIdentifier != 0)) {
-      cspReporterDelete(&cspReporter);
-   }
-#endif
-
-   RsplibThreadStop = true;
-   pthread_join(rsplibThread, NULL);
-
-   rspCleanUp();
+   puts("\nTerminated!");
+   rsp_cleanup();
    finishLogging();
    return(result);
 }

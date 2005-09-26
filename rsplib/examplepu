@@ -1,0 +1,2 @@
+#!/bin/bash
+./terminal -poolhandle=EchoPool -loglevel=3 $@

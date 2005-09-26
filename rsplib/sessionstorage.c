@@ -51,7 +51,7 @@ static void sessionAssocIDPrint(const void* node, FILE* fd)
 {
    const struct Session* session = (const struct Session*)getSessionFromAssocIDStorageNode((void*)node);
 
-   fprintf(fd, "A%u[S%u] ", session->AssocID, session->SessionID);
+   fprintf(fd, "A%u[S%u] ", (unsigned int)session->AssocID, session->SessionID);
 }
 
 

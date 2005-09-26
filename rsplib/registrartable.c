@@ -182,7 +182,7 @@ static int registrarAssocIDNodeComparison(const void* node1, const void* node2)
 static void registrarAssocIDNodePrint(const void* node, FILE* fd)
 {
    const struct RegistrarAssocIDNode* assocIDNode = (const struct RegistrarAssocIDNode*)node;
-   fprintf(fd, "%u ", assocIDNode->AssocID);
+   fprintf(fd, "%u ", (unsigned int)assocIDNode->AssocID);
 }
 
 
@@ -279,7 +279,7 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
       CHECK(leafLinkedRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
 
       LOG_VERBOSE2
-      fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , assocID);
+      fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , (unsigned int)assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
       leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
       LOG_END
@@ -305,7 +305,7 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
    free(node);
 
    LOG_VERBOSE2
-   fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , assocID);
+   fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , (unsigned int)assocID);
    fputs("RegistrarAssocIDList: ", stdlog);
    leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
    LOG_END
@@ -347,7 +347,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
       n = getpaddrsplus(registrarFD, assocID, &peerAddressArray);
       if(n > 0) {
          LOG_VERBOSE2
-         fprintf(stdlog, "Assoc %u connected to registrar at ", assocID);
+         fprintf(stdlog, "Assoc %u connected to registrar at ", (unsigned int)assocID);
          fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
          fputs("\n", stdlog);
          LOG_END
@@ -388,7 +388,7 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
    int sd = sctp_peeloff(registrarFD, assocID);
    if(sd >= 0) {
       LOG_VERBOSE2
-      fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", assocID);
+      fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", (unsigned int)assocID);
       LOG_END
       removeRegistrarAssocID(registrarTable, registrarFD, assocID);
    }
@@ -413,7 +413,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
          if(n > 0) {
             LOG_VERBOSE2
             fprintf(stdlog, "Assoc %u connected to registrar at ",
-                    notification->sn_assoc_change.sac_assoc_id);
+                    (unsigned int)notification->sn_assoc_change.sac_assoc_id);
             fputaddress((struct sockaddr*)&peerAddressArray[0], true, stdlog);
             fputs("\n", stdlog);
             LOG_END
@@ -430,7 +430,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
            (notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT)) {
       LOG_VERBOSE2
       fprintf(stdlog, "Assoc %u disconnected from registrar\n",
-              notification->sn_assoc_change.sac_assoc_id);
+              (unsigned int)notification->sn_assoc_change.sac_assoc_id);
       LOG_END
       removeRegistrarAssocID(registrarTable,
                              registrarFD,
@@ -597,7 +597,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
    *registrarIdentifier = 0;
    if(registrarTable == NULL) {
-      return(0);
+      return(-1);
    }
    LOG_VERBOSE
    fputs("Looking for registrar...\n",  stdlog);
@@ -654,7 +654,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                   transportAddressBlockDelete(lastTransportAddressBlock);
                   free(lastTransportAddressBlock);
                }
-               return(0);
+               return(-1);
             }
 
             lastTrialTimeStamp = 0;
@@ -721,7 +721,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             transportAddressBlockDelete(lastTransportAddressBlock);
             free(lastTransportAddressBlock);
          }
-         return(0);
+         return(-1);
       }
 
       /* Handle events */

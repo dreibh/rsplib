@@ -3397,7 +3397,7 @@ int main(int argc, char** argv)
    if(echo) {
       EchoServer echoServer;
       echoServer.poolElement("Echo Server - Version 1.0",
-                             "EchoPool", NULL);
+                             "EchoPool", NULL, NULL);
       return 0;
    }
    if(fractal) {
@@ -3405,7 +3405,7 @@ int main(int argc, char** argv)
       settings.TestMode     = false;
       settings.FailureAfter = 20;
       TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
-                                  "FractalGeneratorPool", NULL,
+                                  "FractalGeneratorPool", NULL, NULL,
                                   (void*)&settings,
                                   FractalGeneratorServer::fractalGeneratorServerFactory);
       return 0;
@@ -3572,7 +3572,7 @@ int main(int argc, char** argv)
       }
       else {
          TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
-                                     "PingPongPool", NULL,
+                                     "PingPongPool", NULL, NULL,
                                      NULL,
                                      PingPongServer::pingPongServerFactory);
          return 0;

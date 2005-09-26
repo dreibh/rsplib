@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: fractalgeneratorpackets.h 790 2005-09-23 09:55:23Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -43,6 +43,95 @@ class EchoServer : public UDPLikeServer
                                              size_t             bufferSize,
                                              uint32_t           ppid,
                                              uint16_t           streamID);
+};
+
+
+class DiscardServer : public UDPLikeServer
+{
+   public:
+   DiscardServer();
+   virtual ~DiscardServer();
+
+   protected:
+   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
+                                             const char*        buffer,
+                                             size_t             bufferSize,
+                                             uint32_t           ppid,
+                                             uint16_t           streamID);
+};
+
+
+class DaytimeServer : public UDPLikeServer
+{
+   public:
+   DaytimeServer();
+   virtual ~DaytimeServer();
+
+   protected:
+   virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
+   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
+                                             const char*        buffer,
+                                             size_t             bufferSize,
+                                             uint32_t           ppid,
+                                             uint16_t           streamID);
+};
+
+
+class PingPongServer : public TCPLikeServer
+{
+   public:
+   PingPongServer(int rserpoolSocketDescriptor);
+   ~PingPongServer();
+
+   static TCPLikeServer* pingPongServerFactory(int sd, void* userData);
+
+   protected:
+   EventHandlingResult handleMessage(const char* buffer,
+                                     size_t      bufferSize,
+                                     uint32_t    ppid,
+                                     uint16_t    streamID);
+
+   private:
+   uint64_t ReplyNo;
+};
+
+
+#include "fractalgeneratorpackets.h"
+
+class FractalGeneratorServer : public TCPLikeServer
+{
+   public:
+   struct FractalGeneratorServerSettings
+   {
+      size_t FailureAfter;
+      bool  TestMode;
+   };
+
+   FractalGeneratorServer(int                             rserpoolSocketDescriptor,
+                          FractalGeneratorServerSettings* settings);
+   ~FractalGeneratorServer();
+
+   static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData);
+
+   protected:
+   EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
+   EventHandlingResult handleMessage(const char* buffer,
+                                     size_t      bufferSize,
+                                     uint32_t    ppid,
+                                     uint16_t    streamID);
+
+   private:
+   bool sendCookie();
+   bool sendData(FGPData* data);
+   bool handleParameter(const FGPParameter* parameter,
+                        const size_t        size,
+                        const bool          insideCookie = false);
+   EventHandlingResult calculateImage();
+
+   FractalGeneratorStatus         Status;
+   unsigned long long             LastCookieTimeStamp;
+   unsigned long long             LastSendTimeStamp;
+   FractalGeneratorServerSettings Settings;
 };
 
 

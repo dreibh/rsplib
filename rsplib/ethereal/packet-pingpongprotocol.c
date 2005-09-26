@@ -151,8 +151,8 @@ proto_register_pingpongprotocol(void)
     { &hf_ping_messageno,     { "Messageno", "pingpongprotocol.ping_messageno",     FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_ping_data,                 { "Ping_Data",                      "pingpongprotocol.ping_data",                                   FT_BYTES,   BASE_HEX,  NULL,  0x0,                       "", HFILL } },
     { &hf_pong_messageno,  { "Messageno",  "pingpongprotocol.pong_messageno",  FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
-    { &hf_pong_replyno, { "Replyno", "pingpongpongprotocol.pong_replyno", FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
-    { &hf_pong_data,                 { "Pong_Data",                      "pingpongprotocol.pong_data",                                   FT_BYTES,   BASE_HEX,  NULL,  0x0,                       "", HFILL } },
+    { &hf_pong_replyno, { "Replyno", "pingpongprotocol.pong_replyno", FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },
+    { &hf_pong_data,                 { "pingpongprotocol.pong_data",                      "pingpongprotocol.pong_data",                                   FT_BYTES,   BASE_HEX,  NULL,  0x0,                       "", HFILL } },
   };
 
   /* Setup protocol subtree array */
@@ -161,7 +161,7 @@ proto_register_pingpongprotocol(void)
   };
 
   /* Register the protocol name and description */
-  proto_pingpongprotocol = proto_register_protocol("Ping Pong Protocol", "PingPongProtocol",  "pingpongpongprotocol");
+  proto_pingpongprotocol = proto_register_protocol("Ping Pong Protocol", "PingPongProtocol",  "pingpongprotocol");
 
   /* Required function calls to register the header fields and subtrees used */
   proto_register_field_array(proto_pingpongprotocol, hf, array_length(hf));
