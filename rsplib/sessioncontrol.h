@@ -48,17 +48,14 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
                             sctp_assoc_t           assocID);
 
 
-#define NST_COMM_LOST      1
-#define NST_SHUTDOWN_EVENT 2
-
 ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     void*                  buffer,
                                     size_t                 bufferLength,
-                                    int*                   msg_flags);
+                                    int*                   msg_flags,
+                                    const bool             isPreRead);
 
-void handleNotification(struct RSerPoolSocket* rserpoolSocket,
-                        const char*            buffer,
-                        size_t                 bufferSize);
+void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
+                        const union sctp_notification* notification);
 void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
                                  const sctp_assoc_t     assocID,
                                  char*                  buffer,

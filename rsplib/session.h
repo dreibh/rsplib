@@ -54,9 +54,6 @@ struct Session
    bool                              IsFailed;
    unsigned long long                ConnectionTimeStamp;
 
-   unsigned int                      PendingNotifications;
-   unsigned int                      EventMask;
-
    void*                             Cookie;
    size_t                            CookieSize;
    void*                             CookieEcho;
@@ -69,13 +66,6 @@ struct Session
 
    char                              StatusText[128];
 };
-
-#define SNT_FAILOVER_NECESSARY ((unsigned int)1 << 0)
-#define SNT_FAILOVER_COMPLETE  ((unsigned int)1 << 1)
-#define SNT_SESSION_ADD        ((unsigned int)1 << 2)
-#define SNT_SESSION_REMOVE     ((unsigned int)1 << 3)
-
-#define SNT_NOTIFICATION_MASK (SNT_FAILOVER_NECESSARY|SNT_FAILOVER_COMPLETE|SNT_SESSION_ADD|SNT_SESSION_REMOVE)
 
 
 #ifdef __cplusplus

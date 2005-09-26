@@ -155,6 +155,15 @@ struct rserpool_session_change
 #define RSERPOOL_SESSION_REMOVE 2
 
 
+struct rserpool_shutdown_event
+{
+   uint16_t           rse_type;
+   uint16_t           rse_flags;
+   uint32_t           rse_length;
+   rserpool_session_t rse_session;
+};
+
+
 union rserpool_notification
 {
    struct {
@@ -164,10 +173,12 @@ union rserpool_notification
    }                              rn_header;
    struct rserpool_failover       rn_failover;
    struct rserpool_session_change rn_session_change;
+   struct rserpool_shutdown_event rn_shutdown_event;
 };
 
 #define RSERPOOL_SESSION_CHANGE 1
 #define RSERPOOL_FAILOVER       2
+#define RSERPOOL_SHUTDOWN_EVENT 3
 
 
 int rsp_socket(int domain, int type, int protocol);

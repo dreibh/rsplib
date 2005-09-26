@@ -32,6 +32,8 @@ loglevel.c \
 loglevel.h \
 netutilities.c \
 netutilities.h \
+notificationqueue.c \
+notificationqueue.h \
 peerlistmanagement-template.h \
 peerlistmanagement-template_impl.h \
 peerlistnode-template.h \
@@ -118,7 +120,7 @@ libcpprspserver_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t8 t9 t11 t12
+noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t6 t8 t9 t11 t12
 # examplepesimpleexamplepe simpleexamplepu fractalpoolelement calcapppoolelement calcapppooluser
 
 
@@ -158,8 +160,8 @@ server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIB
 #t5_SOURCES = t5.cc
 #t5_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-#t6_SOURCES = t6.cc statistics.cc
-#t6_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+t6_SOURCES = t6.cc statistics.cc
+t6_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 #t7_SOURCES = t7.cc statistics.cc fractalgeneratorpackets.h
 #t7_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

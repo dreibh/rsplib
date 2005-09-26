@@ -127,6 +127,7 @@ int main(int argc, char** argv)
                   printf("\x1b[39;47mNotification: ");
                   rsp_print_notification((union rserpool_notification*)&buffer, stdout);
                   puts("\x1b[0m");
+                  // rsp_forcefailover(sd);
                }
                else {
                   for(i = 0;i < received;i++) {
@@ -142,7 +143,7 @@ int main(int argc, char** argv)
             }
             else {
                puts("Read Failure -> Failover!");
-               rsp_forcefailover(sd);
+               // rsp_forcefailover(sd);
             }
          }
       }

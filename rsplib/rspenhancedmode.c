@@ -149,6 +149,8 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
 
    threadSafetyNew(&rserpoolSocket->Mutex, "RSerPoolSocket");
    leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
+   sessionStorageNew(&rserpoolSocket->SessionSet);
+   notificationQueueNew(&rserpoolSocket->Notifications);
    rserpoolSocket->Socket           = fd;
    rserpoolSocket->SocketDomain     = domain;
    rserpoolSocket->SocketType       = type;
@@ -156,7 +158,8 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    rserpoolSocket->Descriptor       = -1;
    rserpoolSocket->PoolElement      = NULL;
    rserpoolSocket->ConnectedSession = NULL;
-   sessionStorageNew(&rserpoolSocket->SessionSet);
+   rserpoolSocket->EventMask        = (rserpoolSocket->SocketType == SOCK_STREAM) ? 0 : NT_NOTIFICATION_MASK;
+
 
    /* ====== Find available RSerPool socket descriptor =================== */
    threadSafetyLock(&gRSerPoolSocketSetMutex);
@@ -222,6 +225,7 @@ int rsp_close(int sd)
    rserpoolSocket->Descriptor = -1;
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
+   notificationQueueDelete(&rserpoolSocket->Notifications);
    sessionStorageDelete(&rserpoolSocket->SessionSet);
 
    if(rserpoolSocket->Socket >= 0) {
@@ -313,7 +317,6 @@ int rsp_unmapsocket(int sd)
 int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout)
 {
    struct RSerPoolSocket* rserpoolSocket;
-   struct Session*        session;
    int                    fdbackup[FD_SETSIZE];
    int                    result;
    unsigned int           i;
@@ -333,15 +336,10 @@ int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout)
          threadSafetyLock(&rserpoolSocket->Mutex);
          ufds[i].fd      = rserpoolSocket->Socket;
          ufds[i].revents = 0;
-         if(ufds[i].events & POLLIN) {
-            session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
-            while(session != NULL) {
-               if(session->PendingNotifications & session->EventMask) {
-                  result++;
-                  ufds[i].revents = POLLIN;
-               }
-               session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
-            }
+         if((ufds[i].events & POLLIN) &&
+            (notificationQueueHasData(&rserpoolSocket->Notifications))) {
+            result++;
+            ufds[i].revents = POLLIN;
          }
          threadSafetyUnlock(&rserpoolSocket->Mutex);
       }
@@ -378,15 +376,9 @@ int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout)
          }
 
          /* ====== Set <read> flag for RSerPool notifications? =========== */
-         if(ufds[i].events & POLLIN) {
-            session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
-            while(session != NULL) {
-               if((session->PendingNotifications & session->EventMask) != 0) {
-                  ufds[i].revents |= POLLIN;
-                  break;
-               }
-               session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
-            }
+         if((ufds[i].events & POLLIN) &&
+            (notificationQueueHasData(&rserpoolSocket->Notifications))) {
+            ufds[i].revents |= POLLIN;
          }
 
          threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -960,9 +952,10 @@ ssize_t rsp_sendmsg(int                sd,
                     uint32_t           sctpTimeToLive,
                     unsigned long long timeout)
 {
-   struct RSerPoolSocket*  rserpoolSocket;
-   struct Session*         session;
-   ssize_t                 result;
+   struct RSerPoolSocket*   rserpoolSocket;
+   struct Session*          session;
+   struct NotificationNode* notificationNode;
+   ssize_t                  result;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    threadSafetyLock(&rserpoolSocket->Mutex);
@@ -986,9 +979,13 @@ ssize_t rsp_sendmsg(int                sd,
                     rserpoolSocket->Descriptor, session->SessionID);
             LOG_END
 
-            session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
-            session->IsFailed              = true;
-            result                         = -1;
+            notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                    false, RSERPOOL_FAILOVER);
+            if(notificationNode) {
+               notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_FAILOVER_NECESSARY;
+               notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+            }
+            result = -1;
          }
       }
       else {
@@ -997,7 +994,6 @@ ssize_t rsp_sendmsg(int                sd,
                  session->SessionID,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
-         session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
          result = -1;
          errno = EIO;
       }
@@ -1043,7 +1039,7 @@ ssize_t rsp_recvmsg(int                    sd,
 
    /* ====== Give back Cookie Echo and notifications ===================== */
    if(buffer != NULL) {
-      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
+      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags, true);
       if(received > 0) {
          return(received);
       }
@@ -1078,7 +1074,7 @@ ssize_t rsp_recvmsg(int                    sd,
       /* ====== Handle notification ====================================== */
       if(flags & MSG_NOTIFICATION) {
          handleNotification(rserpoolSocket,
-                            (const char*)rserpoolSocket->MessageBuffer, received);
+                            (const union sctp_notification*)rserpoolSocket->MessageBuffer);
          received = -1;
       }
 
@@ -1133,7 +1129,7 @@ ssize_t rsp_recvmsg(int                    sd,
    else {
       /* ====== Give back Cookie Echo and notifications ================== */
       if(buffer != NULL) {
-         received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags);
+         received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags, false);
          if(received2 > 0) {
             received = received2;
          }
@@ -1428,6 +1424,11 @@ void rsp_print_notification(const union rserpool_notification* notification, FIL
              break;
           }
         break;
+
+      case RSERPOOL_SHUTDOWN_EVENT:
+         fprintf(fd, "RSERPOOL_SHUTDOWN_EVENT for session %d",
+                 notification->rn_shutdown_event.rse_session);
+       break;
 
       default:
          fprintf(fd, "Unknown type %d!\n", notification->rn_header.rn_type);

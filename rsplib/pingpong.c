@@ -135,6 +135,7 @@ int main(int argc, char** argv)
                   printf("\x1b[39;47mNotification: ");
                   rsp_print_notification((union rserpool_notification*)&buffer, stdout);
                   puts("\x1b[0m");
+                  rsp_forcefailover(sd);
                }
                else {
                   pong = (const struct Pong*)&buffer;

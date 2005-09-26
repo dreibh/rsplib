@@ -31,6 +31,7 @@
 #include "poolhandle.h"
 #include "identifierbitmap.h"
 #include "sessionstorage.h"
+#include "notificationqueue.h"
 #include "leaflinkedredblacktree.h"
 #include "threadsafety.h"
 #include "timer.h"
@@ -74,6 +75,9 @@ struct RSerPoolSocket
    struct PoolElement*               PoolElement;        /* PE mode                      */
    struct SessionStorage             SessionSet;         /* UDP-like PU mode and PE mode */
    struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
+
+   unsigned int                      EventMask;
+   struct NotificationQueue          Notifications;
 
    struct IdentifierBitmap*          SessionAllocationBitmap;
    char*                             MessageBuffer;

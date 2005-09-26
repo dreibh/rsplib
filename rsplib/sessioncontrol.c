@@ -90,8 +90,6 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       else {
          session->Handle.Size = 0;
       }
-      session->PendingNotifications       = 0;
-      session->EventMask                  = (rserpoolSocket->SocketType == SOCK_STREAM) ? 0 : SNT_NOTIFICATION_MASK;
       session->Cookie                     = NULL;
       session->CookieSize                 = 0;
       session->CookieEcho                 = NULL;
@@ -214,81 +212,61 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
 ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     void*                  buffer,
                                     size_t                 bufferLength,
-                                    int*                   msg_flags)
+                                    int*                   msg_flags,
+                                    const bool             isPreRead)
 {
-   struct Session*              session;
-   union rserpool_notification* notification;
-   unsigned int                 pendingNotifications;
-   ssize_t                      received = -1;
+   struct Session*          session;
+   struct NotificationNode* notificationNode;
+   ssize_t                  received = -1;
 
    threadSafetyLock(&rserpoolSocket->Mutex);
 
-   /* ====== Check every session if there is something to do ============= */
-   session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
-   while(session != NULL) {
-      /* ====== Give back Cookie Echo ==================================== */
-      if((session->CookieEcho) && (bufferLength > 0)) {
-         /* A cookie echo has been stored (during rspSessionSelect()). Now,
-            the application calls this function. We now return the cookie
-            and free its storage space. */
-         LOG_ACTION
-         fputs("There is a cookie echo. Giving it back first\n", stdlog);
-         LOG_END
-         *msg_flags |= MSG_RSERPOOL_COOKIE_ECHO;
-         received = min(bufferLength, session->CookieEchoSize);
-         memcpy(buffer, session->CookieEcho, received);
-         free(session->CookieEcho);
-         session->CookieEcho     = NULL;
-         session->CookieEchoSize = 0;
-         break;
-      }
-
-      /* ====== Give back notification =================================== */
-      pendingNotifications = session->PendingNotifications & session->EventMask;
-      if(pendingNotifications) {
-         notification = (union rserpool_notification*)buffer;
-         if(bufferLength < sizeof(union rserpool_notification)) {
+   /* ====== Give back notification ====================================== */
+   notificationNode = notificationQueueDequeueNotification(&rserpoolSocket->Notifications, isPreRead);
+   while(notificationNode != NULL) {
+      if((1 << notificationNode->Content.rn_header.rn_type) &
+         rserpoolSocket->EventMask) {
+         if(bufferLength < sizeof(notificationNode->Content)) {
             LOG_ERROR
             fputs("Buffer size is to small for a notification\n", stdlog);
             LOG_END
             errno = EINVAL;
-            received = sizeof(notification);
+            received = -1;
+            notificationNodeDelete(notificationNode);
             break;
          }
-         if(pendingNotifications & SNT_SESSION_ADD) {
-            session->PendingNotifications &= ~SNT_SESSION_ADD;
-            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-            notification->rn_session_change.rsc_type    = RSERPOOL_SESSION_CHANGE;
-            notification->rn_session_change.rsc_flags   = 0x00;
-            notification->rn_session_change.rsc_length  = sizeof(notification);
-            notification->rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
-            notification->rn_session_change.rsc_session = session->SessionID;
-            return(sizeof(notification));
-         }
-         if(pendingNotifications & SNT_FAILOVER_NECESSARY) {
-            session->PendingNotifications &= ~SNT_FAILOVER_NECESSARY;
-            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-            notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
-            notification->rn_failover.rf_flags   = 0x00;
-            notification->rn_failover.rf_length  = sizeof(notification);
-            notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_NECESSARY;
-            notification->rn_failover.rf_session = session->SessionID;
-            received = sizeof(notification);
-            break;
-         }
-         if(pendingNotifications & SNT_FAILOVER_COMPLETE) {
-            session->PendingNotifications &= ~SNT_FAILOVER_COMPLETE;
-            *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
-            notification->rn_failover.rf_type    = RSERPOOL_FAILOVER;
-            notification->rn_failover.rf_flags   = 0x00;
-            notification->rn_failover.rf_length  = sizeof(notification);
-            notification->rn_failover.rf_state   = RSERPOOL_FAILOVER_COMPLETE;
-            notification->rn_failover.rf_session = session->SessionID;
-            received = sizeof(notification);
-            break;
-         }
+         *msg_flags |= MSG_RSERPOOL_NOTIFICATION;
+         memcpy(buffer, &notificationNode->Content, sizeof(notificationNode->Content));
+         received = sizeof(notificationNode->Content);
+         notificationNodeDelete(notificationNode);
+         break;
       }
-      session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+      notificationNodeDelete(notificationNode);
+      notificationNode = notificationQueueDequeueNotification(&rserpoolSocket->Notifications, isPreRead);
+   }
+
+   /* ====== Check every session if there is something to do ============= */
+   if(received < 0) {
+      session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
+      while(session != NULL) {
+         /* ====== Give back Cookie Echo ==================================== */
+         if((session->CookieEcho) && (bufferLength > 0)) {
+            /* A cookie echo has been stored (during rspSessionSelect()). Now,
+               the application calls this function. We now return the cookie
+               and free its storage space. */
+            LOG_ACTION
+            fputs("There is a cookie echo. Giving it back first\n", stdlog);
+            LOG_END
+            *msg_flags |= MSG_RSERPOOL_COOKIE_ECHO;
+            received = min(bufferLength, session->CookieEchoSize);
+            memcpy(buffer, session->CookieEcho, received);
+            free(session->CookieEcho);
+            session->CookieEcho     = NULL;
+            session->CookieEchoSize = 0;
+            break;
+         }
+         session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
+      }
    }
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -296,63 +274,128 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
 }
 
 
-/* ###### Notify session of an RSerPool event ############################ */
-static void notifySession(struct RSerPoolSocket* rserpoolSocket,
-                          sctp_assoc_t           assocID,
-                          unsigned int           notificationType)
+/* ###### Handle SCTP communication up notification ###################### */
+static void handleCommUp(struct RSerPoolSocket*          rserpoolSocket,
+                         const struct sctp_assoc_change* notification)
 {
-   struct Session* session;
+   struct Session*          session;
+   struct NotificationNode* notificationNode;
 
-   threadSafetyLock(&rserpoolSocket->Mutex);
-   session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet,
-                                                assocID);
-   if(session) {
-      switch(notificationType) {
-         case NST_COMM_LOST:
-         case NST_SHUTDOWN_EVENT:
-            if(rserpoolSocket->ConnectedSession != session) {
-               LOG_ACTION
-               fprintf(stdlog, "Removing session %u of RSerPool socket %d, socket %d after closure of assoc %u\n",
-                       session->SessionID,
-                       rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                       (unsigned int)session->AssocID);
-               LOG_END
-               deleteSession(rserpoolSocket, session);
-            }
-            else {
-               LOG_ACTION
-               fprintf(stdlog, "Removing Assoc ID %u from session %u of RSerPool socket %d, socket %d\n",
-                     (unsigned int)session->AssocID, session->SessionID,
-                     rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-
-               LOG_END
-               sendabort(rserpoolSocket->Socket, session->AssocID);
-               session->PendingNotifications |= SNT_FAILOVER_NECESSARY;
-               session->IsFailed = true;
-               sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
-            }
-          break;
+   LOG_ACTION
+   fprintf(stdlog, "SCTP_COMM_UP for RSerPool socket %d, socket %d, assoc %u\n",
+         rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+         (unsigned int)notification->sac_assoc_id);
+   LOG_END
+   session = addSession(rserpoolSocket,
+                        notification->sac_assoc_id,
+                        true, NULL, 0, NULL);
+   if(session != NULL) {
+      notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                              true, RSERPOOL_SESSION_CHANGE);
+      if(notificationNode) {
+         notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
+         notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
       }
    }
    else {
       LOG_WARNING
-      fprintf(stdlog, "There is no session for assoc %u on RSerPool socket %d, socket %d\n",
-               (unsigned int)assocID, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+      fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
+            (unsigned int)notification->sac_assoc_id,
+            rserpoolSocket->Descriptor, rserpoolSocket->Socket);
       LOG_END
+      sendabort(rserpoolSocket->Socket, notification->sac_assoc_id);
    }
-   threadSafetyUnlock(&rserpoolSocket->Mutex);
+}
+
+
+/* ###### Handle SCTP communication lost notification #################### */
+static void handleCommLost(struct RSerPoolSocket*          rserpoolSocket,
+                           const struct sctp_assoc_change* notification)
+{
+   struct Session*          session;
+   struct NotificationNode* notificationNode;
+
+   LOG_ACTION
+   fprintf(stdlog, "SCTP_COMM_LOST for RSerPool socket %d, socket %d, assoc %u\n",
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+           (unsigned int)notification->sac_assoc_id);
+   LOG_END
+   session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet,
+                                                notification->sac_assoc_id);
+   if(session) {
+      if(rserpoolSocket->ConnectedSession != session) {
+         LOG_ACTION
+         fprintf(stdlog, "Removing session %u of RSerPool socket %d, socket %d after closure of assoc %u\n",
+                 session->SessionID,
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                 (unsigned int)session->AssocID);
+         LOG_END
+
+         notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                 false, RSERPOOL_SESSION_CHANGE);
+         if(notificationNode) {
+            notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_SESSION_REMOVE;
+            notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+         }
+         deleteSession(rserpoolSocket, session);
+      }
+      else {
+         LOG_ACTION
+         fprintf(stdlog, "Removing Assoc ID %u from session %u of RSerPool socket %d, socket %d\n",
+               (unsigned int)session->AssocID, session->SessionID,
+               rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+
+         LOG_END
+         sendabort(rserpoolSocket->Socket, session->AssocID);
+         sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
+
+         notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                 false, RSERPOOL_FAILOVER);
+         if(notificationNode) {
+            notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_FAILOVER_NECESSARY;
+            notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+         }
+      }
+   }
+}
+
+
+/* ###### Handle SCTP shutdown event notification ######################## */
+static void handleShutdown(struct RSerPoolSocket*            rserpoolSocket,
+                           const struct sctp_shutdown_event* notification)
+{
+   struct Session*          session;
+   struct NotificationNode* notificationNode;
+
+   LOG_ACTION
+   fprintf(stdlog, "SHUTDOWN_EVENT for RSerPool socket %d, socket %d, assoc %u\n",
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+           (unsigned int)notification->sse_assoc_id);
+   LOG_END
+   session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet,
+                                                notification->sse_assoc_id);
+   if(session) {
+      LOG_ACTION
+      fprintf(stdlog, "Shutdown event for session %u of RSerPool socket %d, socket %d, assoc %u\n",
+              session->SessionID,
+              rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+              (unsigned int)session->AssocID);
+      LOG_END
+
+      notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                              false, RSERPOOL_SHUTDOWN_EVENT);
+      if(notificationNode) {
+         notificationNode->Content.rn_shutdown_event.rse_session = session->SessionID;
+      }
+   }
 }
 
 
 /* ###### Handle SCTP notification ####################################### */
-void handleNotification(struct RSerPoolSocket* rserpoolSocket,
-                        const char*            buffer,
-                        size_t                 bufferSize)
+void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
+                        const union sctp_notification* notification)
 {
-   union sctp_notification* notification;
-   struct Session*          session;
 
-   notification = (union sctp_notification*)buffer;
    LOG_VERBOSE1
    fprintf(stdlog, "SCTP notification %d for RSerPool socket %d, socket %d\n",
             notification->sn_header.sn_type,
@@ -363,47 +406,15 @@ void handleNotification(struct RSerPoolSocket* rserpoolSocket,
       if(notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) {
          switch(notification->sn_assoc_change.sac_state) {
             case SCTP_COMM_UP:
-               LOG_ACTION
-               fprintf(stdlog, "SCTP_COMM_UP for RSerPool socket %d, socket %d, assoc %u\n",
-                     rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                     (unsigned int)notification->sn_assoc_change.sac_assoc_id);
-               LOG_END
-               session = addSession(rserpoolSocket,
-                                    notification->sn_assoc_change.sac_assoc_id,
-                                    true, NULL, 0, NULL);
-               if(session == NULL) {
-                  LOG_WARNING
-                  fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
-                        (unsigned int)notification->sn_assoc_change.sac_assoc_id,
-                        rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-                  LOG_END
-                  sendabort(rserpoolSocket->Socket, notification->sn_assoc_change.sac_assoc_id);
-               }
-               else {
-                  session->PendingNotifications |= SNT_SESSION_ADD;
-               }
+               handleCommUp(rserpoolSocket, &notification->sn_assoc_change);
             break;
             case SCTP_COMM_LOST:
-               LOG_ACTION
-               fprintf(stdlog, "SCTP_COMM_LOST for RSerPool socket %d, socket %d, assoc %u\n",
-                     rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                     (unsigned int)notification->sn_assoc_change.sac_assoc_id);
-               LOG_END
-               notifySession(rserpoolSocket,
-                           notification->sn_assoc_change.sac_assoc_id,
-                           NST_COMM_LOST);
-            break;
+               handleCommLost(rserpoolSocket, &notification->sn_assoc_change);
+             break;
          }
       }
       if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
-         LOG_ACTION
-         fprintf(stdlog, "SCTP_SHUTDOWN_EVENT for RSerPool socket %d, socket %d, assoc %u\n",
-               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-               (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
-         LOG_END
-         notifySession(rserpoolSocket,
-                     notification->sn_shutdown_event.sse_assoc_id,
-                     NST_SHUTDOWN_EVENT);
+         handleShutdown(rserpoolSocket, &notification->sn_shutdown_event);
       }
    }
 }

@@ -1,36 +1,31 @@
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <signal.h>
-#include <ext_socket.h>
+/*
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ *
+ * $Id$
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * Contact: rsplib-discussion@sctp.de
+ *          dreibh@iem.uni-due.de
+ *
+ */
 
-#include "rserpool.h"
-#include "session.h"
+#include "tdtypes.h"
+#include "notificationqueue.h"
 #include "debug.h"
-
-
-#define NT_SESSION_CHANGE    (1 << RSERPOOL_SESSION_CHANGE)
-#define NT_FAILOVER          (1 << RSERPOOL_FAILOVER)
-#define NT_NOTIFICATION_MASK (NT_SESSION_CHANGE|NT_FAILOVER)
-
-
-struct NotificationNode
-{
-   struct NotificationNode*    Next;
-   union rserpool_notification Content;
-};
-
-struct NotificationQueue
-{
-   struct NotificationNode* PreReadQueue;
-   struct NotificationNode* PreReadLast;
-   struct NotificationNode* PostReadQueue;
-   struct NotificationNode* PostReadLast;
-   unsigned int             EventMask;
-};
 
 
 /* ###### Constructor #################################################### */
@@ -40,7 +35,6 @@ void notificationQueueNew(struct NotificationQueue* notificationQueue)
    notificationQueue->PreReadLast   = NULL;
    notificationQueue->PostReadQueue = NULL;
    notificationQueue->PostReadLast  = NULL;
-   notificationQueue->EventMask     = 0;
 }
 
 
@@ -65,6 +59,14 @@ void notificationQueueDelete(struct NotificationQueue* notificationQueue)
 }
 
 
+/* ###### Check, if there are notifications to read ###################### */
+bool notificationQueueHasData(struct NotificationQueue* notificationQueue)
+{
+   return((notificationQueue->PreReadQueue != NULL) ||
+          (notificationQueue->PostReadQueue != NULL));
+}
+
+
 /* ###### Enqueue notification ########################################### */
 struct NotificationNode* notificationQueueEnqueueNotification(
                             struct NotificationQueue* notificationQueue,
@@ -76,7 +78,9 @@ struct NotificationNode* notificationQueueEnqueueNotification(
    notificationNode = (struct NotificationNode*)malloc(sizeof(struct NotificationNode));
    if(notificationNode) {
       /* ====== Set pending events appropriately ========================= */
-      notificationNode->Content.rn_header.rn_type = type;
+      notificationNode->Content.rn_header.rn_type   = type;
+      notificationNode->Content.rn_header.rn_flags  = 0x00;
+      notificationNode->Content.rn_header.rn_length = sizeof(notificationNode->Content);
 
       /* ====== Add notification node ==================================== */
       notificationNode->Next = NULL;
@@ -136,49 +140,4 @@ struct NotificationNode* notificationQueueDequeueNotification(
 void notificationNodeDelete(struct NotificationNode* notificationNode)
 {
    free(notificationNode);
-}
-
-
-
-
-//             notification->rn_session_change.rsc_type    = RSERPOOL_SESSION_CHANGE;
-//             notification->rn_session_change.rsc_flags   = 0x00;
-//             notification->rn_session_change.rsc_length  = sizeof(notification);
-//             notification->rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
-//             notification->rn_session_change.rsc_session = session->SessionID;
-
-int main(int argc, char** argv)
-{
-   struct NotificationQueue nq;
-
-   notificationQueueNew(&nq);
-
-   bool pr=false;
-
-   struct NotificationNode* n1 = notificationQueueEnqueueNotification(&nq, pr, NT_SESSION_CHANGE);
-   struct NotificationNode* n2 = notificationQueueEnqueueNotification(&nq, pr, NT_SESSION_CHANGE);
-   struct NotificationNode* n3 = notificationQueueEnqueueNotification(&nq, pr, NT_FAILOVER);
-   struct NotificationNode* n4 = notificationQueueEnqueueNotification(&nq, pr, NT_SESSION_CHANGE);
-   struct NotificationNode* n5 = notificationQueueEnqueueNotification(&nq, pr, NT_SESSION_CHANGE);
-   n1->Content.rn_header.rn_flags=1;
-   n2->Content.rn_header.rn_flags=2;
-   n3->Content.rn_header.rn_flags=3;
-   n4->Content.rn_header.rn_flags=4;
-   n5->Content.rn_header.rn_flags=5;
-
-   struct NotificationNode* x = notificationQueueDequeueNotification(&nq, pr);
-   int i=0;
-   while(x) {
-      printf(" #%d\n", x->Content.rn_header.rn_flags);
-      free(x);
-      x = notificationQueueDequeueNotification(&nq, pr);
-      i++;
-      if(i == 3) {
-         struct NotificationNode* n6 = notificationQueueEnqueueNotification(&nq, pr, NT_SESSION_CHANGE);
-         n6->Content.rn_header.rn_flags=6;
-      }
-   }
-
-
-   notificationQueueDelete(&nq);
 }
