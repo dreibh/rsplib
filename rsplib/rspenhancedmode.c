@@ -889,6 +889,7 @@ int rsp_forcefailover_tags(int             sd,
                      else {
                         LOG_ERROR
                         fputs("Received data before COMM_UP notification?!\n", stdlog);
+                        LOG_END
                         break;
                      }
                   }
