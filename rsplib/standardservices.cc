@@ -26,6 +26,7 @@
 #include "standardservices.h"
 #include "netutilities.h"
 #include "timeutilities.h"
+#include "stringutilities.h"
 
 
 /*
@@ -122,15 +123,19 @@ EventHandlingResult DaytimeServer::handleNotification(
 {
    if((notification->rn_header.rn_type == RSERPOOL_SESSION_CHANGE) &&
       (notification->rn_session_change.rsc_state == RSERPOOL_SESSION_ADD)) {
-      char                     str[64];
+      char                     daytime[128];
+      char                     microseconds[64];
       const unsigned long long microTime = getMicroTime();
       const time_t             timeStamp = microTime / 1000000;
       const struct tm*         timeptr   = localtime(&timeStamp);
-      strftime((char*)&str, sizeof(str), "%c\n", timeptr);
+      strftime((char*)&daytime, sizeof(daytime), "%A, %d-%B-%Y %H:%M:%S", timeptr);
+      snprintf((char*)&microseconds, sizeof(microseconds), ".%06d\n",
+               (unsigned int)(microTime % 1000000));
+      safestrcat((char*)&daytime, microseconds, sizeof(daytime));
 
       ssize_t sent;
       sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                         (char*)&str, strlen(str), SCTP_EOF,
+                         (char*)&daytime, strlen(daytime), SCTP_ABORT,
                          notification->rn_session_change.rsc_session,
                          0x00000000, 0,
                          0, 0);
@@ -161,10 +166,13 @@ EventHandlingResult DaytimeServer::handleMessage(rserpool_session_t sessionID,
 
 
 // ###### Constructor #######################################################
-PingPongServer::PingPongServer(int rserpoolSocketDescriptor)
+PingPongServer::PingPongServer(int rserpoolSocketDescriptor,
+                               PingPongServer::PingPongServerSettings* settings)
    : TCPLikeServer(rserpoolSocketDescriptor)
 {
-   ReplyNo = 1;
+   Settings = *settings;
+   Replies  = 0;
+   ReplyNo  = 1;
 }
 
 
@@ -177,7 +185,22 @@ PingPongServer::~PingPongServer()
 // ###### Create a PingServer thread ########################################
 TCPLikeServer* PingPongServer::pingPongServerFactory(int sd, void* userData)
 {
-   return(new PingPongServer(sd));
+   return(new PingPongServer(sd, (PingPongServer::PingPongServerSettings*)userData));
+}
+
+
+// ###### Handle cookie echo ################################################
+EventHandlingResult PingPongServer::handleCookieEcho(const char* buffer,
+                                                     size_t      bufferSize)
+{
+   const struct PPPCookie* cookie = (const struct PPPCookie*)buffer;
+   if( (bufferSize != sizeof(PPPCookie)) ||
+       (strncmp((const char*)&cookie->ID, PPP_COOKIE_ID, sizeof(cookie->ID))) ) {
+      puts("Received bad cookie echo!");
+      return(EHR_Abort);
+   }
+   ReplyNo = ntoh64(cookie->ReplyNo);
+   return(EHR_Okay);
 }
 
 
@@ -193,8 +216,8 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
       const Ping* ping = (const Ping*)buffer;
       if(ping->Header.Type == PPPT_PING) {
          if(ntohs(ping->Header.Length) >= (ssize_t)sizeof(struct Ping)) {
+            /* ====== Answer Ping by Pong ================================ */
             size_t dataLength = ntohs(ping->Header.Length) - sizeof(Ping);
-
             char pongBuffer[sizeof(struct Pong) + dataLength];
             Pong* pong = (Pong*)&pongBuffer;
 
@@ -207,10 +230,29 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (char*)pong, sizeof(Pong) + dataLength, 0,
-                               0, PPID_PPP, 0, 0, 0);
+                               0, htonl(PPID_PPP), 0, 0, 0);
             if(sent > 0) {
                ReplyNo++;
-               return(EHR_Okay);
+               Replies++;
+
+               /* ====== Send cookie ===================================== */
+               struct PPPCookie cookie;
+               strncpy((char*)&cookie.ID, PPP_COOKIE_ID, sizeof(cookie.ID));
+               cookie.ReplyNo = hton64(ReplyNo);
+               sent = rsp_send_cookie(RSerPoolSocketDescriptor,
+                                      (unsigned char*)&cookie, sizeof(cookie),
+                                      0, 0);
+               if(sent > 0) {
+                  /* ====== Failure tester =============================== */
+                  if((Settings.FailureAfter > 0) && (Replies >= Settings.FailureAfter)) {
+                     printTimeStamp(stdout);
+                     printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u replies!\n",
+                           RSerPoolSocketDescriptor,
+                           Replies);
+                     return(EHR_Abort);
+                  }
+                  return(EHR_Okay);
+               }
             }
          }
       }
@@ -222,7 +264,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
 /*
    ##########################################################################
-   #### PING PONG                                                        ####
+   #### FRACTAL GENERATOR                                                ####
    ##########################################################################
 */
 
@@ -304,7 +346,7 @@ bool FractalGeneratorServer::sendData(FGPData* data)
 
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                         data, dataSize, 0,
-                        0, PPID_FGP, 0, 0, 0);
+                        0, htonl(PPID_FGP), 0, 0, 0);
 
    data->Points = 0;
    data->StartX = 0;
@@ -507,7 +549,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
                printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
                       RSerPoolSocketDescriptor,
                       dataPackets);
-               return(EHR_Shutdown);
+               return(EHR_Abort);
             }
          }
 

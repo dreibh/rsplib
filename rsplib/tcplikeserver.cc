@@ -128,6 +128,7 @@ void TCPLikeServer::run()
             rsp_sendmsg(RSerPoolSocketDescriptor,
                         NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                         0, 0, 0, 0, 0);
+            break;
          }
       }
       else if(received == 0) {

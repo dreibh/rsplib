@@ -37,26 +37,29 @@
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   const char*           poolHandle = "PingPongPool";
-   unsigned long long    pingInterval = 500;
-   struct Ping*          ping;
-   const struct Pong*    pong;
-   struct rsp_info       info;
-   struct rsp_sndrcvinfo rinfo;
-   char                  buffer[65536 + 4];
-   char                  str[128];
-   struct pollfd         ufds;
-   unsigned long long    now;
-   unsigned long long    nextPing;
-   uint64_t              messageNo;
-   uint64_t              lastReplyNo;
-   unsigned long long    lastPing = 500000;
-   ssize_t               received;
-   ssize_t               sent;
-   int                   result;
-   int                   flags;
-   int                   sd;
-   int                   i;
+   const char*                  poolHandle   = "PingPongPool";
+   unsigned long long           pingInterval = 500000;
+   union rserpool_notification* notification;
+   struct rsp_info              info;
+   struct rsp_sndrcvinfo        rinfo;
+   char                         buffer[65536 + 4];
+   char                         str[128];
+   struct pollfd                ufds;
+   struct Ping*                 ping;
+   const struct Pong*           pong;
+   unsigned long long           now;
+   unsigned long long           nextPing;
+   uint64_t                     messageNo;
+   uint64_t                     lastReplyNo;
+   uint64_t                     recvMessageNo;
+   uint64_t                     recvReplyNo;
+   unsigned long long           lastPing;
+   ssize_t                      received;
+   ssize_t                      sent;
+   int                          result;
+   int                          flags;
+   int                          sd;
+   int                          i;
 
    memset(&info, 0, sizeof(info));
 
@@ -132,17 +135,22 @@ int main(int argc, char** argv)
                                    &rinfo, &flags, 0);
             if(received > 0) {
                if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                  notification = (union rserpool_notification*)&buffer;
                   printf("\x1b[39;47mNotification: ");
-                  rsp_print_notification((union rserpool_notification*)&buffer, stdout);
+                  rsp_print_notification(notification, stdout);
                   puts("\x1b[0m");
-                  rsp_forcefailover(sd);
+                  if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                     (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                     puts("FAILOVER...");
+                     rsp_forcefailover(sd);
+                  }
                }
                else {
                   pong = (const struct Pong*)&buffer;
                   if((pong->Header.Type == PPPT_PONG) &&
                      (ntohs(pong->Header.Length) >= (ssize_t)sizeof(struct Pong))) {
-                     uint64_t recvMessageNo = ntoh64(pong->MessageNo);
-                     uint64_t recvReplyNo   = ntoh64(pong->ReplyNo);
+                     recvMessageNo = ntoh64(pong->MessageNo);
+                     recvReplyNo   = ntoh64(pong->ReplyNo);
 
                      printf("\x1b[34m");
                      printTimeStamp(stdout);
@@ -165,7 +173,9 @@ int main(int argc, char** argv)
       if(getMicroTime() - lastPing >= pingInterval) {
          lastPing = getMicroTime();
 
-         snprintf((char*)&str,sizeof(str),"Zeitstempel: %llu", lastPing);
+         snprintf((char*)&str,sizeof(str),
+                  "Nachricht: %Lu, Zeitstempel: %llu",
+                  messageNo, lastPing);
          size_t dataLength = strlen(str);
 
          ping = (struct Ping*)&buffer;
@@ -176,7 +186,7 @@ int main(int argc, char** argv)
          memcpy(&ping->Data, str, dataLength);
 
          sent = rsp_sendmsg(sd, (char*)ping, sizeof(struct Ping) + dataLength, 0,
-                            0, PPID_PPP, 0, 0, 0);
+                            0, htonl(PPID_PPP), 0, 0, 0);
          if(sent > 0) {
             printf("Message #%Ld sent\n", messageNo);
             messageNo++;

@@ -138,7 +138,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                if((eventHandlingResult == EHR_Abort) ||
                   (eventHandlingResult == EHR_Shutdown)) {
                   rsp_sendmsg(RSerPoolSocketDescriptor,
-                              NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
+                              NULL, 0, ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF),
                               rinfo.rinfo_session, 0, 0, 0, 0);
                }
             }

@@ -1,3 +1,20 @@
+result = rsp_recvmsg()
+
+result == 0: Session-Ende, kein FO möglich
+result == -1, errno = EAGAIN (o.ä.) -> FO möglich/kein Fehler, etc.
+result >0: Data/Notif./Cookie
+
+
+--------
+
+Msg-Queue:
+- Verhalten bei PR-Ausfall
+- Statische PRs
+
+
+--------
+
+
 RSerPool-API:
 
 
@@ -16,6 +33,11 @@ Rückgabewerte für rsp_write() / rsp_read():
      Fehler RSPERR_AUTO_FAILOVER
    ohne Cookie:
      Fehler RSPERR_MANUAL_FAILOVER
+
+
+NOSR
+NOPKG
+MSG_NOSIGNAL
 
 ------
 

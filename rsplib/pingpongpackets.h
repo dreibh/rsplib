@@ -57,4 +57,13 @@ struct Pong
 };
 
 
+#define PPP_COOKIE_ID "<PP-TD1>"
+
+struct PPPCookie
+{
+   char     ID[8];
+   uint64_t ReplyNo;
+};
+
+
 #endif

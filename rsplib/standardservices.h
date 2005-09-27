@@ -80,19 +80,28 @@ class DaytimeServer : public UDPLikeServer
 class PingPongServer : public TCPLikeServer
 {
    public:
-   PingPongServer(int rserpoolSocketDescriptor);
+   struct PingPongServerSettings
+   {
+      size_t FailureAfter;
+   };
+
+   PingPongServer(int rserpoolSocketDescriptor,
+                  PingPongServer::PingPongServerSettings* settings);
    ~PingPongServer();
 
    static TCPLikeServer* pingPongServerFactory(int sd, void* userData);
 
    protected:
+   EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
    EventHandlingResult handleMessage(const char* buffer,
                                      size_t      bufferSize,
                                      uint32_t    ppid,
                                      uint16_t    streamID);
 
    private:
-   uint64_t ReplyNo;
+   PingPongServerSettings Settings;
+   uint64_t               ReplyNo;
+   size_t                 Replies;
 };
 
 

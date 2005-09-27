@@ -35,17 +35,18 @@
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   struct rsp_info       info;
-   struct rsp_sndrcvinfo rinfo;
-   char                  buffer[65536 + 4];
-   char*                 poolHandle = "EchoPool";
-   struct pollfd         ufds[2];
-   ssize_t               received;
-   ssize_t               sent;
-   int                   result;
-   int                   flags;
-   int                   sd;
-   int                   i;
+   struct rsp_info              info;
+   struct rsp_sndrcvinfo        rinfo;
+   union rserpool_notification* notification;
+   char                         buffer[65536 + 4];
+   char*                        poolHandle = "EchoPool";
+   struct pollfd                ufds[2];
+   ssize_t                      received;
+   ssize_t                      sent;
+   int                          result;
+   int                          flags;
+   int                          sd;
+   int                          i;
 
    memset(&info, 0, sizeof(info));
 
@@ -110,8 +111,7 @@ int main(int argc, char** argv)
             if(received > 0) {
                sent = rsp_write(sd, (char*)&buffer, received);
                if(sent < received) {
-                  puts("Write Failure -> Failover!");
-                  rsp_forcefailover(sd);
+                  perror("rsp_write() failed");
                }
             }
             else {
@@ -124,10 +124,16 @@ int main(int argc, char** argv)
                                    &rinfo, &flags, 0);
             if(received > 0) {
                if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                  notification = (union rserpool_notification*)&buffer;
                   printf("\x1b[39;47mNotification: ");
-                  rsp_print_notification((union rserpool_notification*)&buffer, stdout);
+                  rsp_print_notification(notification, stdout);
                   puts("\x1b[0m");
-                  // rsp_forcefailover(sd);
+                  if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                     (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                     puts("FAILOVER...");
+                     usleep(200000);
+                     rsp_forcefailover(sd);
+                  }
                }
                else {
                   for(i = 0;i < received;i++) {
@@ -142,8 +148,7 @@ int main(int argc, char** argv)
                }
             }
             else {
-               puts("Read Failure -> Failover!");
-               // rsp_forcefailover(sd);
+               perror("rsp_read() failed");
             }
          }
       }

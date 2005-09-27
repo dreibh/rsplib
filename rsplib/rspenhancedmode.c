@@ -83,7 +83,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
       LOG_ERROR
       fputs("rsplib is not initialized\n", stdlog);
       LOG_END
-      errno = ENOPKG;
+      errno = EACCES;
       return(-1);
    }
    if(protocol != IPPROTO_SCTP) {
@@ -176,7 +176,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
       free(rserpoolSocket->MessageBuffer);
       free(rserpoolSocket);
       close(fd);
-      errno = ENOSR;
+      errno = EMFILE;
       return(-1);
    }
    return(rserpoolSocket->Descriptor);
@@ -283,7 +283,7 @@ int rsp_mapsocket(int sd, int toSD)
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
       free(rserpoolSocket);
-      errno = ENOSR;
+      errno = EMFILE;
       return(-1);
    }
    return(rserpoolSocket->Descriptor);
@@ -788,6 +788,9 @@ int rsp_forcefailover_tags(int             sd,
                           rserpoolSocket->ConnectedSession->ConnectedPE,
                           tags);
       rserpoolSocket->ConnectedSession->ConnectedPE = 0;
+      sendabort(rserpoolSocket->Descriptor,
+                rserpoolSocket->ConnectedSession->AssocID);
+      rserpoolSocket->ConnectedSession->AssocID = 0;
    }
 
    /* ====== Do handle resolution ======================================== */
@@ -832,40 +835,48 @@ int rsp_forcefailover_tags(int             sd,
                   received = recvfromplus(rserpoolSocket->Socket,
                                           (char*)&notification, sizeof(notification),
                                           &flags, NULL, 0, NULL, NULL, NULL,0);
-                  if((received > 0) && (flags & MSG_NOTIFICATION)) {
-                     if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
-                        if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
-                           LOG_VERBOSE
-                           fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
-                           poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
-                           fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
-                                   rspAddrInfo2->ai_pe_id,
-                                   rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                                   rserpoolSocket->ConnectedSession->SessionID,
-                                   (unsigned int)notification.sn_assoc_change.sac_assoc_id);
-                           LOG_END
-                           success = true;
-                           rserpoolSocket->ConnectedSession->IsFailed            = false;
-                           rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
-                           rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
+                  if(received > 0) {
+                     if(flags & MSG_NOTIFICATION) {
+                        if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
+                           if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
+                              LOG_VERBOSE
+                              fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
+                              poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
+                              fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
+                                    rspAddrInfo2->ai_pe_id,
+                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                                    rserpoolSocket->ConnectedSession->SessionID,
+                                    (unsigned int)notification.sn_assoc_change.sac_assoc_id);
+                              LOG_END
+                              success = true;
+                              rserpoolSocket->ConnectedSession->IsFailed            = false;
+                              rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
+                              rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
 
-                           sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
-                                                       rserpoolSocket->ConnectedSession,
-                                                       notification.sn_assoc_change.sac_assoc_id);
-                           break;
+                              sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
+                                                         rserpoolSocket->ConnectedSession,
+                                                         notification.sn_assoc_change.sac_assoc_id);
+                              break;
+                           }
+                           else if(notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) {
+                              LOG_VERBOSE
+                              fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
+                              poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
+                              fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
+                                    rspAddrInfo2->ai_pe_id,
+                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                                    rserpoolSocket->ConnectedSession->SessionID,
+                                    (unsigned int)notification.sn_assoc_change.sac_assoc_id);
+                              LOG_END
+                              break;
+                           }
                         }
-                        else if(notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) {
-                           LOG_VERBOSE
-                           fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
-                           poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
-                           fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
-                                   rspAddrInfo2->ai_pe_id,
-                                   rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                                   rserpoolSocket->ConnectedSession->SessionID,
-                                   (unsigned int)notification.sn_assoc_change.sac_assoc_id);
-                           LOG_END
-                           break;
-                        }
+                     }
+                     else {
+                        LOG_ERROR
+                        fputs("Received data before COMM_UP notification?!\n", stdlog);
+                        LOG_END_FATAL  // ?????
+                        break;
                      }
                   }
                   else {
@@ -916,17 +927,20 @@ int rsp_forcefailover_tags(int             sd,
                  rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
          LOG_END
          usleep((unsigned int)rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
+         errno = ENOENT;
       }
       else {
          LOG_WARNING
          fputs("Handle resolution failed\n", stdlog);
          LOG_END
+         errno = EIO;
       }
    }
    else {
       LOG_WARNING
       fputs("No pool handle for failover\n", stdlog);
       LOG_END
+      errno = EINVAL;
    }
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -1079,7 +1093,7 @@ ssize_t rsp_recvmsg(int                    sd,
       }
 
       /* ====== Handle ASAP control channel message ====================== */
-      else if(rinfo->rinfo_ppid == PPID_ASAP) {
+      else if(ntohl(rinfo->rinfo_ppid) == PPID_ASAP) {
          handleControlChannelMessage(rserpoolSocket, assocID,
                                      (char*)rserpoolSocket->MessageBuffer, received);
          received = -1;

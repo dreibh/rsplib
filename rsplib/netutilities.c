@@ -1370,17 +1370,16 @@ int sendtoplus(int                      sockfd,
    setNonBlocking(sockfd);
    if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
       memset(&sri, 0, sizeof(sri));
-      sri.sinfo_assoc_id   = assocID;
-      sri.sinfo_stream     = streamID;
-      sri.sinfo_ppid       = htonl(ppid);
+      sri.sinfo_assoc_id = assocID;
+      sri.sinfo_stream   = streamID;
+      sri.sinfo_ppid     = htonl(ppid);
       /* --- Already resetted to 0 ---
-      sri.sinfo_flags      = 0;
-      sri.sinfo_ssn        = 0;
-      sri.sinfo_tsn        = 0;
-      sri.sinfo_context    = 0;
+      sri.sinfo_flags    = 0;
+      sri.sinfo_ssn      = 0;
+      sri.sinfo_tsn      = 0;
+      sri.sinfo_context  = 0;
       */
       sri.sinfo_timetolive = timeToLive;
-if(timeToLive>0) printf("TTL=$%08x ????? \n",timeToLive);
 
       if(toaddrs) {
          p = (char*)&addressArray[0];

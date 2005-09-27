@@ -126,9 +126,17 @@ int main(int argc, char** argv)
       puts("Character Generator");
    }
    else if(service == SERVICE_PINGPONG) {
+      PingPongServer::PingPongServerSettings settings;
+      settings.FailureAfter = 0;
+      for(int i = 1;i < argc;i++) {
+         if(!(strncmp(argv[i], "-pppfailureafter=", 17))) {
+            settings.FailureAfter = atol((const char*)&argv[i][17]);
+         }
+      }
+
       TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
                                  "PingPongPool", &info, NULL,
-                                 NULL,
+                                 (void*)&settings,
                                  PingPongServer::pingPongServerFactory);
    }
    else if(service == SERVICE_FRACTAL) {
@@ -139,8 +147,8 @@ int main(int argc, char** argv)
          if(!(strcmp(argv[i], "-fgptestmode"))) {
             settings.TestMode = true;
          }
-         else if(!(strncmp(argv[i], "-fgpfailureafter=", 16))) {
-            settings.FailureAfter = atol((const char*)&argv[i][16]);
+         else if(!(strncmp(argv[i], "-fgpfailureafter=", 17))) {
+            settings.FailureAfter = atol((const char*)&argv[i][17]);
          }
       }
 

@@ -409,6 +409,7 @@ void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
                handleCommUp(rserpoolSocket, &notification->sn_assoc_change);
             break;
             case SCTP_COMM_LOST:
+            case SCTP_SHUTDOWN_COMP:
                handleCommLost(rserpoolSocket, &notification->sn_assoc_change);
              break;
          }

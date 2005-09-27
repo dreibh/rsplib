@@ -370,7 +370,7 @@ void FractalPU::run()
    for(;;) {
       LastPoolElementID = 0;
 
-      Session = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP);
+      Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(Session >= 0) {
          if(rsp_connect(Session, PoolHandle, PoolHandleSize) == 0) {
             Run++;
@@ -416,11 +416,19 @@ void FractalPU::run()
 
                received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
                                       &rinfo, &flags, 2000000);
+printf("recv=%d\n",received);
                while(received != 0) {
                   if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                     union rserpool_notification* notification =
+                        (union rserpool_notification*)&data;
                      printf("Notification: ");
                      rsp_print_notification((union rserpool_notification*)&data, stdout);
                      puts("");
+                     if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                        (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                        puts("FAILOVER...");
+                        rsp_forcefailover(Session);
+                     }
                   }
                   else {
                      if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
@@ -473,11 +481,13 @@ void FractalPU::run()
 
                   flags = 0;
                   received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                       &rinfo, &flags, 2000000);
+                                         &rinfo, &flags, 2000000);
+printf("recv2=%d\n",received);
                }
             }
 
 finish:
+puts("==========FIN");
             // ====== Image calculation completed ==============================
             const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
             rsp_csp_setstatus(Session, 0, statusText);

@@ -3556,7 +3556,7 @@ int main(int argc, char** argv)
                                     replyNo++;
                                  }
                                  ssize_t sc = rsp_send_cookie(sd, (unsigned char*)&pong, sizeof(pong),
-                                                            rinfo.rinfo_session, 0);
+                                                              rinfo.rinfo_session, 0);
                                  printf("sc=%d\n",sc);
                               }
                            }

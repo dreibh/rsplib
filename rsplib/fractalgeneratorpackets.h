@@ -63,7 +63,7 @@ struct FGPParameter
 };
 
 
-#define FGD_MAX_POINTS 1024
+#define FGD_MAX_POINTS 324
 
 struct FGPData
 {
