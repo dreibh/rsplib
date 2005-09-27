@@ -983,7 +983,11 @@ ssize_t rsp_sendmsg(int                sd,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
          result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
+#ifdef MSG_NOSIGNAL
                              msg_flags|MSG_NOSIGNAL,
+#else
+                             msg_flags,
+#endif
                              NULL, 0,
                              ntohl(sctpPPID), session->AssocID, sctpStreamID, sctpTimeToLive,
                              timeout);
@@ -1186,7 +1190,11 @@ ssize_t rsp_send_cookie(int                  sd,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
+#ifdef MSG_NOSIGNAL
                                       MSG_NOSIGNAL,
+#else
+                                      0,
+#endif
                                       timeout,
                                       message);
          threadSafetyUnlock(&rserpoolSocket->Mutex);

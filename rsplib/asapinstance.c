@@ -41,11 +41,6 @@
 #include <ext_socket.h>
 
 
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-
-
 static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
                                   struct TagItem*      tags);
 static void asapInstanceNotifyMainLoop(struct ASAPInstance* asapInstance);
@@ -933,7 +928,11 @@ static void asapInstanceHandleEndpointKeepAlive(
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                     asapInstance->RegistrarSocket,
                                     0,
+#ifdef MSG_NOSIGNAL
                                     MSG_NOSIGNAL,
+#else
+                                    0,
+#endif
                                     0,
                                     message);
       }
@@ -954,7 +953,11 @@ static void asapInstanceHandleEndpointKeepAlive(
             result = rserpoolMessageSend(IPPROTO_SCTP,
                                        asapInstance->RegistrarSocket,
                                        0,
+#ifdef MSG_NOSIGNAL
                                        MSG_NOSIGNAL,
+#else
+                                       0,
+#endif
                                        0,
                                        message);
 
@@ -1147,7 +1150,11 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       asapInstance->RegistrarSocket,
                                       0,
+#ifdef MSG_NOSIGNAL
                                       MSG_NOSIGNAL,
+#else
+                                      0,
+#endif
                                       asapInstance->RegistrarRequestTimeout,
                                       aitm->Request);
          if(result == false) {
