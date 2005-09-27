@@ -139,10 +139,25 @@ double networkToDouble(network_double_t value)
 }
 
 
+void print(void* x)
+{
+   unsigned char* y = (unsigned char*)x;
+   for(int i=0;i<8;i++) {
+      printf("%02x ", y[i]);
+   }
+   puts("");
+}
 
 
 int main(int argc, char** argv)
 {
+   network_double_t n1 = doubleToNetwork(3.141);
+
+   printf("n1 = ");
+   print((void*)&n1);
+
+
+#if 0
    network_double_t v[12];
    network_double_t w[sizeof(v) / sizeof(network_double_t)];
    FILE* fh;
@@ -203,6 +218,6 @@ int main(int argc, char** argv)
       network_double_t t3 = doubleToNetwork(-vx);
       network_double_t t4 = doubleToNetwork(-vy);
    }
-
+#endif
    return 0;
 }
