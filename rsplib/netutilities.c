@@ -2095,6 +2095,9 @@ size_t getpaddrsplus(const int              fd,
 /* ###### Send SCTP ABORT ################################################ */
 int sendabort(int sockfd, sctp_assoc_t assocID)
 {
+
+printf("\n######### SEND ABORT:  %d A%d\n\n",sockfd,assocID);
+
    return(sendtoplus(sockfd, NULL, 0, SCTP_ABORT,
                      NULL, 0,
                      0, assocID, 0, 0, 0));

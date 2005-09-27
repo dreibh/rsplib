@@ -763,6 +763,7 @@ int rsp_forcefailover_tags(int             sd,
    struct rsp_addrinfo*     rspAddrInfo2;
    struct NotificationNode* notificationNode;
    union sctp_notification  notification;
+   sctp_assoc_t             failedAssocID;
    struct timeval           timeout;
    ssize_t                  received;
    fd_set                   readfds;
@@ -784,6 +785,12 @@ int rsp_forcefailover_tags(int             sd,
       return(-1);
    }
 
+puts("\n\n#############################################################################\n");
+   LOG_NOTE
+   fprintf(stdlog, "Starting failover for RSerPool socket %u, socket %d, assoc %u\n",
+           sd, rserpoolSocket->Socket, rserpoolSocket->ConnectedSession->AssocID);
+   LOG_END
+
    /* When next rsp_sendmsg() fails, a new FAILOVER_NECESSARY notification
       has to be sent. */
    rserpoolSocket->ConnectedSession->IsFailed = false;
@@ -804,12 +811,21 @@ int rsp_forcefailover_tags(int             sd,
                           rserpoolSocket->ConnectedSession->ConnectedPE,
                           tags);
       rserpoolSocket->ConnectedSession->ConnectedPE = 0;
-      if(rserpoolSocket->ConnectedSession->AssocID != 0) {
-         sendabort(rserpoolSocket->Descriptor,
-                   rserpoolSocket->ConnectedSession->AssocID);
-      }
-      rserpoolSocket->ConnectedSession->AssocID = 0;
    }
+
+   /* ====== Abort association =========================================== */
+   if(rserpoolSocket->ConnectedSession->AssocID != 0) {
+      LOG_ACTION
+      fprintf(stdlog, "Aborting association %u...\n", rserpoolSocket->ConnectedSession->AssocID);
+      LOG_END
+      sendabort(rserpoolSocket->Socket,
+                rserpoolSocket->ConnectedSession->AssocID);
+      LOG_ACTION
+      fprintf(stdlog, "Aborted association %u!\n", rserpoolSocket->ConnectedSession->AssocID);
+      LOG_END
+   }
+   failedAssocID                             = rserpoolSocket->ConnectedSession->AssocID;
+   rserpoolSocket->ConnectedSession->AssocID = 0;
 
    /* ====== Do handle resolution ======================================== */
    if(rserpoolSocket->ConnectedSession->Handle.Size > 0) {
@@ -842,6 +858,7 @@ int rsp_forcefailover_tags(int             sd,
                result = sctp_connectx(rserpoolSocket->Socket,
                                       (struct sockaddr*)rspAddrInfo2->ai_addr,
                                       rspAddrInfo2->ai_addrs);
+printf("connect: r=%d  err=%d\n",result,errno);
                if((result == 0) || (errno == EINPROGRESS)) {
                   FD_ZERO(&readfds);
                   FD_SET(rserpoolSocket->Socket, &readfds);
@@ -853,7 +870,7 @@ int rsp_forcefailover_tags(int             sd,
                   received = recvfromplus(rserpoolSocket->Socket,
                                           (char*)&notification, sizeof(notification),
                                           &flags, NULL, 0, NULL, NULL, NULL,0);
-                  if(received > 0) {
+                  while(received > 0) {
                      if(flags & MSG_NOTIFICATION) {
                         if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
                            if(notification.sn_assoc_change.sac_state == SCTP_COMM_UP) {
@@ -871,37 +888,55 @@ int rsp_forcefailover_tags(int             sd,
                               rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
 
                               sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
-                                                         rserpoolSocket->ConnectedSession,
-                                                         notification.sn_assoc_change.sac_assoc_id);
+                                                          rserpoolSocket->ConnectedSession,
+                                                          notification.sn_assoc_change.sac_assoc_id);
                               break;
                            }
                            else if(notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) {
-                              LOG_VERBOSE
-                              fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
-                              poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
-                              fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
-                                    rspAddrInfo2->ai_pe_id,
-                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                                    rserpoolSocket->ConnectedSession->SessionID,
-                                    (unsigned int)notification.sn_assoc_change.sac_assoc_id);
-                              LOG_END
-                              break;
+printf("ASSOCs: %d %d\n",failedAssocID, notification.sn_assoc_change.sac_assoc_id);
+                              if(notification.sn_assoc_change.sac_assoc_id != failedAssocID) {
+                                 LOG_VERBOSE
+                                 fprintf(stdlog, "Failed to establish connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
+                                 poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
+                                 fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
+                                       rspAddrInfo2->ai_pe_id,
+                                       rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                                       rserpoolSocket->ConnectedSession->SessionID,
+                                       (unsigned int)notification.sn_assoc_change.sac_assoc_id);
+   printf("FAILED A=%d\n",failedAssocID);
+                                 LOG_END
+                                 break;
+                              }
+                              else {
+puts("SKIP COMM_LOST FOR ABORTED ASSOC!!!");
+                              }
                            }
                         }
                      }
                      else {
                         LOG_ERROR
                         fputs("Received data before COMM_UP notification?!\n", stdlog);
-                        LOG_END
+                        LOG_END_FATAL // ??????????????
                         break;
                      }
+
+                     flags = 0;
+                     received = recvfromplus(rserpoolSocket->Socket,
+                                             (char*)&notification, sizeof(notification),
+                                             &flags, NULL, 0, NULL, NULL, NULL, rserpoolSocket->ConnectedSession->ConnectTimeout);
                   }
-                  else {
+
+                  if(received < 0) {
                      LOG_ERROR
                      logerror("Error while trying to wait for COMM_UP notification");
-                     LOG_END
+                     LOG_END_FATAL // ??????????????
                      break;
                   }
+               }
+               else if((result < 0) && (errno=EISCONN)) {
+                  LOG_ERROR
+                  fputs("Association is still connected. Scheiße!\n", stdlog);
+                  LOG_END_FATAL // ???????????????
                }
                rspAddrInfo2 = rspAddrInfo2->ai_next;
             }
@@ -1033,7 +1068,7 @@ ssize_t rsp_sendmsg(int                sd,
 
             /* ====== Terminate association and notify application ======= */
             sendabort(rserpoolSocket->Socket, session->AssocID);
-            sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
+            // ???? sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
 
             notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
                                                                     false, RSERPOOL_FAILOVER);
@@ -1042,6 +1077,8 @@ ssize_t rsp_sendmsg(int                sd,
                notificationNode->Content.rn_failover.rf_session    = session->SessionID;
                notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
             }
+
+            session->IsFailed = true;
             /* =========================================================== */
 
 // ????            sendabort(rserpoolSocket->Socket, session->AssocID);
