@@ -784,6 +784,10 @@ int rsp_forcefailover_tags(int             sd,
       return(-1);
    }
 
+   /* When next rsp_sendmsg() fails, a new FAILOVER_NECESSARY notification
+      has to be sent. */
+   rserpoolSocket->ConnectedSession->IsFailed = false;
+
    /* ====== Report failure ============================================== */
    if((rserpoolSocket->ConnectedSession->ConnectedPE != 0) &&
       (rserpoolSocket->ConnectedSession->Handle.Size > 0)) {
@@ -863,7 +867,6 @@ int rsp_forcefailover_tags(int             sd,
                                       (unsigned int)notification.sn_assoc_change.sac_assoc_id);
                               LOG_END
                               success = true;
-                              rserpoolSocket->ConnectedSession->IsFailed            = false;
                               rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                               rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
 
@@ -999,6 +1002,7 @@ ssize_t rsp_sendmsg(int                sd,
 {
    struct RSerPoolSocket*   rserpoolSocket;
    struct Session*          session;
+   struct NotificationNode* notificationNode;
    ssize_t                  result;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
@@ -1026,7 +1030,21 @@ ssize_t rsp_sendmsg(int                sd,
             fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
                     rserpoolSocket->Descriptor, session->SessionID);
             LOG_END
+
+            /* ====== Terminate association and notify application ======= */
             sendabort(rserpoolSocket->Socket, session->AssocID);
+            sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
+
+            notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                    false, RSERPOOL_FAILOVER);
+            if(notificationNode) {
+               notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
+               notificationNode->Content.rn_failover.rf_session    = session->SessionID;
+               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
+            }
+            /* =========================================================== */
+
+// ????            sendabort(rserpoolSocket->Socket, session->AssocID);
             result = -1;
          }
       }

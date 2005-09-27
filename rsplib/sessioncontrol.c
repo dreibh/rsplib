@@ -356,15 +356,22 @@ static void handleCommLost(struct RSerPoolSocket*          rserpoolSocket,
                rserpoolSocket->Descriptor, rserpoolSocket->Socket);
 
          LOG_END
-         sendabort(rserpoolSocket->Socket, session->AssocID);
-         sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
+         if(!session->IsFailed) {
+            sendabort(rserpoolSocket->Socket, session->AssocID);
+            sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0);
 
-         notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
-                                                                 false, RSERPOOL_FAILOVER);
-         if(notificationNode) {
-            notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
-            notificationNode->Content.rn_failover.rf_session    = session->SessionID;
-            notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
+            notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                    false, RSERPOOL_FAILOVER);
+            if(notificationNode) {
+               notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
+               notificationNode->Content.rn_failover.rf_session    = session->SessionID;
+               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
+            }
+         }
+         else {
+            LOG_ACTION
+            fputs("Session has already been removed. Okay.\n", stdlog);
+            LOG_END
          }
       }
    }

@@ -48,6 +48,8 @@ int main(int argc, char** argv)
    unsigned int    service    = SERVICE_ECHO;
    const char*     poolHandle = "EchoPool";
 
+
+   /* ====== Read parameters ============================================= */
    memset(&info, 0, sizeof(info));
    for(int i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-log" ,4))) {
@@ -89,6 +91,7 @@ int main(int argc, char** argv)
 #endif
 
 
+   /* ====== Print startup message ======================================= */
    printf("Starting service ");
    if(service == SERVICE_ECHO) {
       printf("Echo");
@@ -105,8 +108,7 @@ int main(int argc, char** argv)
    puts("...");
 
 
-   beginLogging();
-
+   /* ====== Start requested service ===================================== */
    if(service == SERVICE_ECHO) {
       EchoServer echoServer;
       echoServer.poolElement("Echo Server - Version 1.0",
@@ -157,8 +159,6 @@ int main(int argc, char** argv)
                                  (void*)&settings,
                                  FractalGeneratorServer::fractalGeneratorServerFactory);
    }
-   puts("");
 
-   finishLogging();
    return(0);
 }
