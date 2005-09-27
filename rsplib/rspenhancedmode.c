@@ -801,7 +801,6 @@ int rsp_forcefailover_tags(int             sd,
                           tags);
       rserpoolSocket->ConnectedSession->ConnectedPE = 0;
       if(rserpoolSocket->ConnectedSession->AssocID != 0) {
-printf("abort to %d...\n", rserpoolSocket->ConnectedSession->AssocID);
          sendabort(rserpoolSocket->Descriptor,
                    rserpoolSocket->ConnectedSession->AssocID);
       }
@@ -847,10 +846,9 @@ printf("abort to %d...\n", rserpoolSocket->ConnectedSession->AssocID);
                   ext_select(rserpoolSocket->Socket + 1, &readfds, NULL, NULL, &timeout);
 
                   flags = 0;
-sctp_assoc_t a=999999;
                   received = recvfromplus(rserpoolSocket->Socket,
                                           (char*)&notification, sizeof(notification),
-                                          &flags, NULL, 0, NULL, &a, NULL,0);
+                                          &flags, NULL, 0, NULL, NULL, NULL,0);
                   if(received > 0) {
                      if(flags & MSG_NOTIFICATION) {
                         if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
@@ -891,14 +889,6 @@ sctp_assoc_t a=999999;
                      else {
                         LOG_ERROR
                         fputs("Received data before COMM_UP notification?!\n", stdlog);
-fprintf                        (stdlog,"ASSOC=%d\n",a);
-                        char*  d = (char*)&notification;
-                        size_t i;
-                        for(i = 0;i < received;i++) {
-                           fprintf(stdlog, "%c", (d[i] >= 30) ? d[i] : '.');
-                        }
-                        fputs("\n", stdlog);
-                        LOG_END_FATAL  // ?????
                         break;
                      }
                   }
