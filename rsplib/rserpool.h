@@ -134,8 +134,9 @@ struct rserpool_failover
    uint16_t           rf_type;
    uint16_t           rf_flags;
    uint32_t           rf_length;
-   int                rf_state;
+   unsigned int       rf_state;
    rserpool_session_t rf_session;
+   unsigned char      rf_has_cookie;
 };
 
 #define RSERPOOL_FAILOVER_NECESSARY 1
@@ -147,7 +148,7 @@ struct rserpool_session_change
    uint16_t           rsc_type;
    uint16_t           rsc_flags;
    uint32_t           rsc_length;
-   int                rsc_state;
+   unsigned int       rsc_state;
    rserpool_session_t rsc_session;
 };
 

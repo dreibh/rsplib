@@ -76,7 +76,6 @@ struct RSerPoolSocket
    struct SessionStorage             SessionSet;         /* UDP-like PU mode and PE mode */
    struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
 
-   unsigned int                      EventMask;
    struct NotificationQueue          Notifications;
 
    struct IdentifierBitmap*          SessionAllocationBitmap;

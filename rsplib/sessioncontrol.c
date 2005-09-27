@@ -229,7 +229,7 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
    notificationNode = notificationQueueDequeueNotification(&rserpoolSocket->Notifications, isPreRead);
    while(notificationNode != NULL) {
       if((1 << notificationNode->Content.rn_header.rn_type) &
-         rserpoolSocket->EventMask) {
+         rserpoolSocket->Notifications.EventMask) {
          if(bufferLength < sizeof(notificationNode->Content)) {
             LOG_ERROR
             fputs("Buffer size is to small for a notification\n", stdlog);
@@ -244,6 +244,12 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
          received = sizeof(notificationNode->Content);
          notificationNodeDelete(notificationNode);
          break;
+      }
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "Got unrequested notification type %u -> skipping\n",
+                 notificationNode->Content.rn_header.rn_type);
+         LOG_END
       }
       notificationNodeDelete(notificationNode);
       notificationNode = notificationQueueDequeueNotification(&rserpoolSocket->Notifications, isPreRead);
@@ -356,8 +362,9 @@ static void handleCommLost(struct RSerPoolSocket*          rserpoolSocket,
          notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
                                                                  false, RSERPOOL_FAILOVER);
          if(notificationNode) {
-            notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_FAILOVER_NECESSARY;
-            notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+            notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
+            notificationNode->Content.rn_failover.rf_session    = session->SessionID;
+            notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
          }
       }
    }

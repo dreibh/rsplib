@@ -35,6 +35,7 @@ void notificationQueueNew(struct NotificationQueue* notificationQueue)
    notificationQueue->PreReadLast   = NULL;
    notificationQueue->PostReadQueue = NULL;
    notificationQueue->PostReadLast  = NULL;
+   notificationQueue->EventMask     = 0;
 }
 
 
@@ -75,33 +76,40 @@ struct NotificationNode* notificationQueueEnqueueNotification(
 {
    struct NotificationNode* notificationNode;
 
-   notificationNode = (struct NotificationNode*)malloc(sizeof(struct NotificationNode));
-   if(notificationNode) {
-      /* ====== Set pending events appropriately ========================= */
-      notificationNode->Content.rn_header.rn_type   = type;
-      notificationNode->Content.rn_header.rn_flags  = 0x00;
-      notificationNode->Content.rn_header.rn_length = sizeof(notificationNode->Content);
+   /* ====== Only enqueue requested events =============================== */
+   if((1 << type) & notificationQueue->EventMask) {
+      notificationNode = (struct NotificationNode*)malloc(sizeof(struct NotificationNode));
+      if(notificationNode) {
+         /* ====== Set pending events appropriately ====================== */
+         notificationNode->Content.rn_header.rn_type   = type;
+         notificationNode->Content.rn_header.rn_flags  = 0x00;
+         notificationNode->Content.rn_header.rn_length = sizeof(notificationNode->Content);
 
-      /* ====== Add notification node ==================================== */
-      notificationNode->Next = NULL;
-      if(isPreReadNotification) {
-          if(notificationQueue->PreReadLast) {
-             notificationQueue->PreReadLast->Next = notificationNode;
-          }
-          else {
-             notificationQueue->PreReadQueue = notificationNode;
-          }
-          notificationQueue->PreReadLast = notificationNode;
+         /* ====== Add notification node ================================= */
+         notificationNode->Next = NULL;
+         if(isPreReadNotification) {
+             if(notificationQueue->PreReadLast) {
+                notificationQueue->PreReadLast->Next = notificationNode;
+             }
+             else {
+                notificationQueue->PreReadQueue = notificationNode;
+             }
+             notificationQueue->PreReadLast = notificationNode;
+         }
+         else {
+             if(notificationQueue->PostReadLast) {
+                notificationQueue->PostReadLast->Next = notificationNode;
+             }
+             else {
+                notificationQueue->PostReadQueue = notificationNode;
+             }
+             notificationQueue->PostReadLast = notificationNode;
+         }
       }
-      else {
-          if(notificationQueue->PostReadLast) {
-             notificationQueue->PostReadLast->Next = notificationNode;
-          }
-          else {
-             notificationQueue->PostReadQueue = notificationNode;
-          }
-          notificationQueue->PostReadLast = notificationNode;
-      }
+   }
+   else {
+      printf("SKIP: %d\n",type);
+      notificationNode = NULL;
    }
    return(notificationNode);
 }

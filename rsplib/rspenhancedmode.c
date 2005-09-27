@@ -150,7 +150,6 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    threadSafetyNew(&rserpoolSocket->Mutex, "RSerPoolSocket");
    leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
    sessionStorageNew(&rserpoolSocket->SessionSet);
-   notificationQueueNew(&rserpoolSocket->Notifications);
    rserpoolSocket->Socket           = fd;
    rserpoolSocket->SocketDomain     = domain;
    rserpoolSocket->SocketType       = type;
@@ -158,8 +157,14 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    rserpoolSocket->Descriptor       = -1;
    rserpoolSocket->PoolElement      = NULL;
    rserpoolSocket->ConnectedSession = NULL;
-   rserpoolSocket->EventMask        = (rserpoolSocket->SocketType == SOCK_STREAM) ? 0 : NT_NOTIFICATION_MASK;
 
+   notificationQueueNew(&rserpoolSocket->Notifications);
+   if(rserpoolSocket->SocketType == SOCK_STREAM) {
+      rserpoolSocket->Notifications.EventMask = 0;
+   }
+   else {
+      rserpoolSocket->Notifications.EventMask = NET_NOTIFICATION_MASK;
+   }
 
    /* ====== Find available RSerPool socket descriptor =================== */
    threadSafetyLock(&gRSerPoolSocketSetMutex);
@@ -401,7 +406,7 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
    int           i;
 
    /* ====== Check for problems ========================================== */
-   if(nfds > FD_SETSIZE) {
+   if(n > FD_SETSIZE) {
       errno = EINVAL;
       return(-1);
    }
@@ -640,6 +645,7 @@ int rsp_connect_tags(int                  sd,
 {
    struct RSerPoolSocket* rserpoolSocket;
    struct Session*        session;
+   unsigned int           oldEventMask;
    int                    result = -1;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
@@ -653,6 +659,10 @@ int rsp_connect_tags(int                  sd,
          rserpoolSocket->ConnectedSession = session;
 
          /* ====== Connect to a PE ======================================= */
+         /* Do not signalize successful failover, since this is the first
+            connection establishment */
+         oldEventMask = rserpoolSocket->Notifications.EventMask;
+         rserpoolSocket->Notifications.EventMask = 0;
          if(rsp_forcefailover_tags(rserpoolSocket->Descriptor, tags) == 0) {
             result = 0;
          }
@@ -660,6 +670,7 @@ int rsp_connect_tags(int                  sd,
             deleteSession(rserpoolSocket, session);
             errno = EIO;
          }
+         rserpoolSocket->Notifications.EventMask = oldEventMask;
 
       }
       else {
@@ -747,16 +758,17 @@ int rsp_accept(int                sd,
 int rsp_forcefailover_tags(int             sd,
                            struct TagItem* tags)
 {
-   struct RSerPoolSocket*  rserpoolSocket;
-   struct rsp_addrinfo*    rspAddrInfo;
-   struct rsp_addrinfo*    rspAddrInfo2;
-   union sctp_notification notification;
-   struct timeval          timeout;
-   ssize_t                 received;
-   fd_set                  readfds;
-   int                     result;
-   int                     flags;
-   bool                    success = false;
+   struct RSerPoolSocket*   rserpoolSocket;
+   struct rsp_addrinfo*     rspAddrInfo;
+   struct rsp_addrinfo*     rspAddrInfo2;
+   struct NotificationNode* notificationNode;
+   union sctp_notification  notification;
+   struct timeval           timeout;
+   ssize_t                  received;
+   fd_set                   readfds;
+   int                      result;
+   int                      flags;
+   bool                     success = false;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    threadSafetyLock(&rserpoolSocket->Mutex);
@@ -788,8 +800,11 @@ int rsp_forcefailover_tags(int             sd,
                           rserpoolSocket->ConnectedSession->ConnectedPE,
                           tags);
       rserpoolSocket->ConnectedSession->ConnectedPE = 0;
-      sendabort(rserpoolSocket->Descriptor,
-                rserpoolSocket->ConnectedSession->AssocID);
+      if(rserpoolSocket->ConnectedSession->AssocID != 0) {
+printf("abort to %d...\n", rserpoolSocket->ConnectedSession->AssocID);
+         sendabort(rserpoolSocket->Descriptor,
+                   rserpoolSocket->ConnectedSession->AssocID);
+      }
       rserpoolSocket->ConnectedSession->AssocID = 0;
    }
 
@@ -832,9 +847,10 @@ int rsp_forcefailover_tags(int             sd,
                   ext_select(rserpoolSocket->Socket + 1, &readfds, NULL, NULL, &timeout);
 
                   flags = 0;
+sctp_assoc_t a=999999;
                   received = recvfromplus(rserpoolSocket->Socket,
                                           (char*)&notification, sizeof(notification),
-                                          &flags, NULL, 0, NULL, NULL, NULL,0);
+                                          &flags, NULL, 0, NULL, &a, NULL,0);
                   if(received > 0) {
                      if(flags & MSG_NOTIFICATION) {
                         if(notification.sn_header.sn_type == SCTP_ASSOC_CHANGE) {
@@ -843,10 +859,10 @@ int rsp_forcefailover_tags(int             sd,
                               fprintf(stdlog, "Successfully established connection to pool element $%08x (", rspAddrInfo2->ai_pe_id);
                               poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
                               fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u, assoc %u)\n",
-                                    rspAddrInfo2->ai_pe_id,
-                                    rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                                    rserpoolSocket->ConnectedSession->SessionID,
-                                    (unsigned int)notification.sn_assoc_change.sac_assoc_id);
+                                      rspAddrInfo2->ai_pe_id,
+                                      rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                                      rserpoolSocket->ConnectedSession->SessionID,
+                                      (unsigned int)notification.sn_assoc_change.sac_assoc_id);
                               LOG_END
                               success = true;
                               rserpoolSocket->ConnectedSession->IsFailed            = false;
@@ -875,6 +891,13 @@ int rsp_forcefailover_tags(int             sd,
                      else {
                         LOG_ERROR
                         fputs("Received data before COMM_UP notification?!\n", stdlog);
+fprintf                        (stdlog,"ASSOC=%d\n",a);
+                        char*  d = (char*)&notification;
+                        size_t i;
+                        for(i = 0;i < received;i++) {
+                           fprintf(stdlog, "%c", (d[i] >= 30) ? d[i] : '.');
+                        }
+                        fputs("\n", stdlog);
                         LOG_END_FATAL  // ?????
                         break;
                      }
@@ -890,19 +913,36 @@ int rsp_forcefailover_tags(int             sd,
             }
 
 
-            /* ====== Free handle resolution result ========================= */
+            /* ====== Free handle resolution result ====================== */
             rsp_freeaddrinfo(rspAddrInfo);
 
+
+            /* ====== Failover procedue ================================== */
             if(success) {
+               /* ====== Do failover by client-based state sharing ======= */
                if(rserpoolSocket->ConnectedSession->Cookie) {
-                  sendCookieEcho(rserpoolSocket, rserpoolSocket->ConnectedSession);
+                  success = sendCookieEcho(rserpoolSocket, rserpoolSocket->ConnectedSession);
                }
-/*
+            }
+#if 0
+            if(success) {
+               /* ====== Send business card ============================== */
                if( (!rserpoolSocket->ConnectedSession->IsIncoming) &&
                    (rserpoolSocket->ConnectedSession->PoolElement)) {
                   sendBusinessCard(rserpoolSocket, rserpoolSocket->ConnectedSession);
                }
-*/
+            }
+#endif
+
+            /* ====== Notify application of successful failover ========== */
+            if(success) {
+               notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                       true, RSERPOOL_FAILOVER);
+               if(notificationNode) {
+                  notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_COMPLETE;
+                  notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
+                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+               }
             }
             else {
                LOG_ACTION
@@ -968,7 +1008,6 @@ ssize_t rsp_sendmsg(int                sd,
 {
    struct RSerPoolSocket*   rserpoolSocket;
    struct Session*          session;
-   struct NotificationNode* notificationNode;
    ssize_t                  result;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
@@ -996,13 +1035,7 @@ ssize_t rsp_sendmsg(int                sd,
             fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
                     rserpoolSocket->Descriptor, session->SessionID);
             LOG_END
-
-            notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
-                                                                    false, RSERPOOL_FAILOVER);
-            if(notificationNode) {
-               notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_FAILOVER_NECESSARY;
-               notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
-            }
+            sendabort(rserpoolSocket->Socket, session->AssocID);
             result = -1;
          }
       }
@@ -1015,6 +1048,10 @@ ssize_t rsp_sendmsg(int                sd,
          result = -1;
          errno = EIO;
       }
+   }
+   else {
+      result = -1;
+      errno  = EBADF;
    }
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);

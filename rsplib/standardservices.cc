@@ -55,7 +55,7 @@ EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
                                               uint16_t           streamID)
 {
    printTimeStamp(stdout);
-   printf("Echo %u bytes on session %u\n", bufferSize, sessionID);
+   printf("Echo %u bytes on session %u\n", (unsigned int)bufferSize, sessionID);
 
    ssize_t sent;
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
@@ -93,7 +93,7 @@ EventHandlingResult DiscardServer::handleMessage(rserpool_session_t sessionID,
                                                  uint16_t           streamID)
 {
    printTimeStamp(stdout);
-   printf("Discard %u bytes on session %u\n", bufferSize, sessionID);
+   printf("Discard %u bytes on session %u\n", (unsigned int)bufferSize, sessionID);
    return(EHR_Okay);
 }
 
@@ -135,7 +135,7 @@ EventHandlingResult DaytimeServer::handleNotification(
 
       ssize_t sent;
       sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                         (char*)&daytime, strlen(daytime), SCTP_ABORT,
+                         (char*)&daytime, strlen(daytime), SCTP_EOF,
                          notification->rn_session_change.rsc_session,
                          0x00000000, 0,
                          0, 0);
@@ -247,8 +247,8 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
                   if((Settings.FailureAfter > 0) && (Replies >= Settings.FailureAfter)) {
                      printTimeStamp(stdout);
                      printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u replies!\n",
-                           RSerPoolSocketDescriptor,
-                           Replies);
+                            RSerPoolSocketDescriptor,
+                            (unsigned int)Replies);
                      return(EHR_Abort);
                   }
                   return(EHR_Okay);
@@ -548,7 +548,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
                printTimeStamp(stdout);
                printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
                       RSerPoolSocketDescriptor,
-                      dataPackets);
+                      (unsigned int)dataPackets);
                return(EHR_Abort);
             }
          }

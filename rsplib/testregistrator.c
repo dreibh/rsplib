@@ -177,8 +177,8 @@ int main(int argc, char** argv)
    puts("==============================\n");
    printf("No Deregistration   = %s\n", (noDeregistration == true) ? "on" : "off");
    printf("Fast Break          = %s\n", (fastBreak == true) ? "on" : "off");
-   printf("Total Pool Elements = %u\n", elements);
-   printf("Pool Size           = %u PEs\n\n", poolSize);
+   printf("Total Pool Elements = %u\n", (unsigned int)elements);
+   printf("Pool Size           = %u PEs\n\n", (unsigned int)poolSize);
 
 
    for(i = 0;i < elements;i++) {

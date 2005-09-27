@@ -35,10 +35,11 @@ extern "C" {
 #endif
 
 
-#define NT_SESSION_CHANGE    (1 << RSERPOOL_SESSION_CHANGE)
-#define NT_FAILOVER          (1 << RSERPOOL_FAILOVER)
-#define NT_SHUTDOWN_EVENT    (1 << RSERPOOL_SHUTDOWN_EVENT)
-#define NT_NOTIFICATION_MASK (NT_SESSION_CHANGE|NT_FAILOVER|NT_SHUTDOWN_EVENT)
+/* Notification event types */
+#define NET_SESSION_CHANGE    (1 << RSERPOOL_SESSION_CHANGE)
+#define NET_FAILOVER          (1 << RSERPOOL_FAILOVER)
+#define NET_SHUTDOWN_EVENT    (1 << RSERPOOL_SHUTDOWN_EVENT)
+#define NET_NOTIFICATION_MASK (NET_SESSION_CHANGE|NET_FAILOVER|NET_SHUTDOWN_EVENT)
 
 
 struct NotificationNode
@@ -53,6 +54,7 @@ struct NotificationQueue
    struct NotificationNode* PreReadLast;
    struct NotificationNode* PostReadQueue;
    struct NotificationNode* PostReadLast;
+   unsigned int             EventMask;
 };
 
 

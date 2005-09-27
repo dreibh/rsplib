@@ -3137,9 +3137,9 @@ static size_t registrarGetReportFunction(
    poolElements = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
    snprintf(statusText, CSPR_STATUS_SIZE,
             "%u PEs in %u Pool%s, %u Peer%s",
-            poolElements,
-            pools, (pools == 1) ? "" : "s",
-            peers, (peers == 1) ? "" : "s");
+            (unsigned int)poolElements,
+            (unsigned int)pools, (pools == 1) ? "" : "s",
+            (unsigned int)peers, (peers == 1) ? "" : "s");
    getComponentLocation(componentLocation, registrar->ASAPSocket, 0);
 
    *workload    = -1.0;
