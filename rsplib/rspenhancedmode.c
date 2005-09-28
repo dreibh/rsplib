@@ -790,6 +790,7 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
             ufds.events = POLLIN;
             if(ext_poll(&ufds, 1, (int)(rserpoolSocket->ConnectedSession->ConnectTimeout / 1000)) > 0) {
                if(ufds.revents & POLLIN) {
+                  peerAddressLength = sizeof(peerAddress);
                   if(ext_getsockname(sd, &peerAddress.sa, &peerAddressLength) == 0) {
                      return(sd);
                   }

@@ -102,8 +102,8 @@ void TCPLikeServer::run()
          EventHandlingResult eventHandlingResult;
          if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
             if(IsNewSession) {
-               eventHandlingResult = handleCookieEcho((char*)&buffer, received);
                IsNewSession = false;
+               eventHandlingResult = handleCookieEcho((char*)&buffer, received);
             }
             else {
                printTimeStamp(stdout);
@@ -112,9 +112,7 @@ void TCPLikeServer::run()
             }
          }
          else if(flags & MSG_RSERPOOL_NOTIFICATION) {
-            if(received >= (ssize_t)sizeof(union rserpool_notification)) {
-               eventHandlingResult = handleNotification((const union rserpool_notification*)&buffer);
-            }
+            eventHandlingResult = handleNotification((const union rserpool_notification*)&buffer);
          }
          else {
             IsNewSession = false;
