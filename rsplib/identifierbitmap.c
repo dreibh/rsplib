@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: threadsafety.c 783 2005-09-23 07:59:25Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -76,6 +76,7 @@ int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
 
       identifierBitmap->Bitmap[i] |= (1 << j);
       identifierBitmap->Available--;
+printf("av=%d\n",      identifierBitmap->Available);
    }
 
    return(id);

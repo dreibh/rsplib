@@ -74,14 +74,14 @@ void rsp_cleanup();
 
 
 struct rsp_addrinfo {
-   int                       ai_family;
-   int                       ai_socktype;
-   int                       ai_protocol;
-   size_t                    ai_addrlen;
-   size_t                    ai_addrs;
-   struct sockaddr*          ai_addr;
+   int                  ai_family;
+   int                  ai_socktype;
+   int                  ai_protocol;
+   size_t               ai_addrlen;
+   size_t               ai_addrs;
+   struct sockaddr*     ai_addr;
    struct rsp_addrinfo* ai_next;
-   uint32_t                  ai_pe_id;
+   uint32_t             ai_pe_id;
 };
 
 struct rsp_loadinfo
@@ -119,9 +119,10 @@ void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
 */
 
 
-typedef unsigned int rserpool_session_t;
+typedef int rserpool_session_t;
 
 #define SESSION_SETSIZE 16384
+
 
 #define MSG_RSERPOOL_NOTIFICATION (1 << 0)
 #define MSG_RSERPOOL_COOKIE_ECHO  (1 << 1)
