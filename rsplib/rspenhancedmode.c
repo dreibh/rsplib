@@ -1039,9 +1039,9 @@ ssize_t rsp_sendmsg(int                sd,
             LOG_END
 
             /* ====== Terminate association and notify application ======= */
+/* ?????
             sendabort(rserpoolSocket->Socket, session->AssocID);
-            /* ???? sessionStorageUpdateSession(&rserpoolSocket->SessionSet, session, 0); */
-
+*/
             notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
                                                                     false, RSERPOOL_FAILOVER);
             if(notificationNode) {
@@ -1053,7 +1053,6 @@ ssize_t rsp_sendmsg(int                sd,
             session->IsFailed = true;
             /* =========================================================== */
 
-/* ????            sendabort(rserpoolSocket->Socket, session->AssocID); */
             result = -1;
          }
       }
@@ -1149,7 +1148,6 @@ ssize_t rsp_recvmsg(int                    sd,
                notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
                notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
             }
-
             rserpoolSocket->ConnectedSession->IsFailed = true;
          }
          threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -1173,7 +1171,6 @@ ssize_t rsp_recvmsg(int                    sd,
                notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
                notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
             }
-
             rserpoolSocket->ConnectedSession->IsFailed = true;
          }
       }
