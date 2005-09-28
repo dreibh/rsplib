@@ -88,8 +88,7 @@ int addStaticRegistrar(struct rsp_info* info,
 
 
 /* ###### Free static registrar entries of rsp_info ###################### */
-int freeStaticRegistrars(struct rsp_info* info,
-                         const char*      addressString)
+void freeStaticRegistrars(struct rsp_info* info)
 {
    struct rsp_registrar_info* registrarInfo;
    while(info->ri_registrars) {
