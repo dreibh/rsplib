@@ -133,7 +133,8 @@ int rsp_initialize(struct rsp_info* info)
          CHECK(rsp_mapsocket(STDERR_FILENO, STDERR_FILENO) == STDERR_FILENO);
 
          /* ====== Add static registrars ================================= */
-         if(addStaticRegistrars(gAsapInstance->RegistrarSet, info)) {
+         if( (info == NULL) ||
+	     (addStaticRegistrars(gAsapInstance->RegistrarSet, info)) ) {
             LOG_NOTE
             fputs("rsplib is ready\n", stdlog);
             LOG_END

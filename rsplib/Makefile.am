@@ -132,9 +132,9 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator t9 fractalpooluser
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator fractalpooluser t9 t12
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t9
+noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t9 t12
 endif
 
 
@@ -214,5 +214,5 @@ t9_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $
 #t11_SOURCES = t11.cc statistics.cc
 #t11_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-#t12_SOURCES = t12.cc statistics.cc
-#t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+t12_SOURCES = t12.cc statistics.cc rsputilities.c rsputilities.h
+t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
