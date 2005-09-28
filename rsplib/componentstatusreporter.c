@@ -119,12 +119,6 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
           getSocklen(cspReportAddress));
    cspReporter->CSPReportInterval            = cspReportInterval;
    cspReporter->CSPIdentifier                = cspIdentifier;
-#if 0
-   if(CID_OBJECT(cspReporter->CSPIdentifier) == 0ULL) {
-      /* 56-bit random should be unique enough. */
-      cspReporter->CSPIdentifier |= CID_OBJECT(random64());
-   }
-#endif // ???????????????
    cspReporter->CSPGetReportFunction         = cspGetReportFunction;
    cspReporter->CSPGetReportFunctionUserData = cspGetReportFunctionUserData;
    timerNew(&cspReporter->CSPReportTimer,
