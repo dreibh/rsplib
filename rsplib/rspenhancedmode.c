@@ -784,7 +784,7 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
                  rserpoolSocket->ConnectedSession->SessionID);
          LOG_END
 
-         result = sctp_connectx(sd, destinationAddressArray, destinationAddresses);
+         result = sctp_connectx(sd, (struct sockaddr*)destinationAddressArray, destinationAddresses);
          if((result == 0) || (errno == EINPROGRESS)) {
             ufds.fd     = sd;
             ufds.events = POLLIN;
@@ -839,7 +839,7 @@ int rsp_forcefailover_tags(int             sd,
 
    LOG_NOTE
    fprintf(stdlog, "Starting failover for RSerPool socket %u, socket %d, assoc %u\n",
-           sd, rserpoolSocket->Socket, rserpoolSocket->ConnectedSession->AssocID);
+           sd, rserpoolSocket->Socket, (unsigned int)rserpoolSocket->ConnectedSession->AssocID);
    LOG_END
 
    /* When next rsp_sendmsg() fails, a new FAILOVER_NECESSARY notification
@@ -869,7 +869,7 @@ int rsp_forcefailover_tags(int             sd,
       LOG_ACTION
       fprintf(stdlog, "Aborting association on RSerPool socket %u, socket %d, session %u\n",
               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-              rserpoolSocket->ConnectedSession->AssocID);
+              (unsigned int)rserpoolSocket->ConnectedSession->AssocID);
       LOG_END
       sendabort(rserpoolSocket->Socket,
                 rserpoolSocket->ConnectedSession->AssocID);
@@ -1384,6 +1384,9 @@ ssize_t rsp_recvmsg(int                    sd,
       LOG_VERBOSE
       fputs("No socket -> nothing to read from\n", stdlog);
       LOG_END
+
+      received = 0;
+
       threadSafetyLock(&rserpoolSocket->Mutex);
       if(rserpoolSocket->ConnectedSession) {
          if(!rserpoolSocket->ConnectedSession->IsFailed) {
