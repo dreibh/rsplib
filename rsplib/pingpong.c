@@ -167,7 +167,7 @@ int main(int argc, char** argv)
                      if(recvReplyNo - lastReplyNo != 1) {
                         printTimeStamp(stdout);
                         printf("*** Detected gap of %Ld! ***\n",
-                               (int64)recvReplyNo - (int64)lastReplyNo);
+                               (uint64_t)recvReplyNo - (uint64_t)lastReplyNo);
                      }
                      lastReplyNo = recvReplyNo;
                   }

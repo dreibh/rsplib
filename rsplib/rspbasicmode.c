@@ -206,7 +206,7 @@ void rsp_cleanup()
       threadSafetyDelete(&gThreadSafety);
 #ifndef HAVE_KERNEL_SCTP
       /* Finally, give sctplib some time to cleanly shut down associations */
-      // ??? usleep(250000);
+      /* ??? usleep(250000); */
 #endif
    }
 }

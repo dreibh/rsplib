@@ -31,7 +31,7 @@
 
 
 /* ###### Get session from assoc ID storage node ######################### */
-inline static struct Session* getSessionFromAssocIDStorageNode(void* node)
+static struct Session* getSessionFromAssocIDStorageNode(void* node)
 {
    return((struct Session*)((long)node -
              ((long)&((struct Session *)node)->AssocIDNode - (long)node)));
@@ -39,7 +39,7 @@ inline static struct Session* getSessionFromAssocIDStorageNode(void* node)
 
 
 /* ###### Get session from session ID storage node ####################### */
-inline static struct Session* getSessionFromSessionIDStorageNode(void* node)
+static struct Session* getSessionFromSessionIDStorageNode(void* node)
 {
    return((struct Session*)((long)node -
              ((long)&((struct Session *)node)->SessionIDNode - (long)node)));

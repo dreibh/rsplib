@@ -394,19 +394,6 @@ void FractalPU::run()
                            break;
                         }
                      }
-                     /* ????
-                     else if(received == RspRead_Timeout) {
-                        if(rspSessionHasCookie(Session)) {
-                           puts("Timeout occurred -> forcing failover!");
-                           rspSessionFailover(Session);
-                        }
-                        else {
-                           puts("No cookie -> restart necessary");
-                           goto finish;
-                        }
-                     }
-                     */
-
                      if(!Running) {
                         goto finish;
                      }
@@ -415,12 +402,10 @@ void FractalPU::run()
                   flags = 0;
                   received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
                                          &rinfo, &flags, 2000000);
-printf("recv2=%d\n",received);
                }
             }
 
 finish:
-puts("==========FIN");
             // ====== Image calculation completed ==============================
             const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
             rsp_csp_setstatus(Session, 0, statusText);
@@ -469,7 +454,7 @@ int main(int argc, char** argv)
 {
    struct rsp_info info;
    char*           poolHandle    = "FractalGeneratorPool";
-   const char*     configDirName = NULL;
+   const char*     configDirName = "fgpconfig";
    int             i;
 
    memset(&info, 0, sizeof(info));

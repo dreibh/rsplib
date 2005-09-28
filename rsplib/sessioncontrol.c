@@ -76,6 +76,7 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
 {
    struct Session* session = (struct Session*)malloc(sizeof(struct Session));
    if(session != NULL) {
+      CHECK(rserpoolSocket->ConnectedSession == NULL);
       session->Tags = tagListDuplicate(tags);
       if(session->Tags == NULL) {
          free(session);
@@ -296,24 +297,26 @@ static void handleCommUp(struct RSerPoolSocket*          rserpoolSocket,
          rserpoolSocket->Descriptor, rserpoolSocket->Socket,
          (unsigned int)notification->sac_assoc_id);
    LOG_END
-   session = addSession(rserpoolSocket,
-                        notification->sac_assoc_id,
-                        true, NULL, 0, NULL);
-   if(session != NULL) {
-      notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
-                                                              true, RSERPOOL_SESSION_CHANGE);
-      if(notificationNode) {
-         notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
-         notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+   if(rserpoolSocket->ConnectedSession == NULL) {
+      session = addSession(rserpoolSocket,
+                           notification->sac_assoc_id,
+                           true, NULL, 0, NULL);
+      if(session != NULL) {
+         notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
+                                                                 true, RSERPOOL_SESSION_CHANGE);
+         if(notificationNode) {
+            notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_SESSION_ADD;
+            notificationNode->Content.rn_session_change.rsc_session = session->SessionID;
+         }
       }
-   }
-   else {
-      LOG_WARNING
-      fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
-            (unsigned int)notification->sac_assoc_id,
-            rserpoolSocket->Descriptor, rserpoolSocket->Socket);
-      LOG_END
-      sendabort(rserpoolSocket->Socket, notification->sac_assoc_id);
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "Aborting association %u on RSerPool socket %d, socket %d, due to session creation failure\n",
+               (unsigned int)notification->sac_assoc_id,
+               rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         LOG_END
+         sendabort(rserpoolSocket->Socket, notification->sac_assoc_id);
+      }
    }
 }
 

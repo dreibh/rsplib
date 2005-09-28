@@ -291,7 +291,7 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
 
 /* ###### Scan address parameter ######################################### */
 static bool scanAddressParameter(struct RSerPoolMessage* message,
-                                 const card16            port,
+                                 const uint16_t          port,
                                  union sockaddr_union*   address)
 {
    struct sockaddr_in*  in;

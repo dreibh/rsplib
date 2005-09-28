@@ -76,7 +76,6 @@ int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
 
       identifierBitmap->Bitmap[i] |= (1 << j);
       identifierBitmap->Available--;
-printf("av=%d\n",      identifierBitmap->Available);
    }
 
    return(id);
