@@ -95,20 +95,20 @@ threadsignal.h \
 timer.c \
 timer.h \
 transportaddressblock.c \
-transportaddressblock.h
+transportaddressblock.h \
+netdouble.c \
+netdouble.h
 librsplib_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
    -release $(RSPLIB_RELEASE)
 
 
 libcpprspserverincludedir      = $(prefix)/include/rserpool
-libcpprspserverinclude_HEADERS = mutex.h thread.h cpprspserver.h udplikeserver.h tcplikeserver.h netdouble.h
+libcpprspserverinclude_HEADERS = mutex.h thread.h cpprspserver.h udplikeserver.h tcplikeserver.h
 libcpprspserver_la_SOURCES     = \
 cpprspserver.h \
 mutex.cc \
 mutex.h \
-netdouble.c \
-netdouble.h \
 tcplikeserver.cc \
 tcplikeserver.h \
 thread.cc \
@@ -120,8 +120,31 @@ libcpprspserver_la_LDFLAGS = \
    -release $(RSPLIB_RELEASE)
 
 
-noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t6 t8 t9 t11 t12
-# examplepesimpleexamplepe simpleexamplepu fractalpoolelement calcapppoolelement calcapppooluser
+if BUILD_QT_PROGRAMS
+%.moc.cc: %.h
+	$(MOC) -o $@ $<
+
+%.h: %.ui
+	$(UIC) -o $@ $<
+
+%.cc: %.ui
+	$(UIC) -o $@ -impl $*.h $<
+endif
+
+if BUILD_QT_PROGRAMS
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator t9 fractalpooluser
+else
+noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t9
+endif
+
+
+if BUILD_QT_PROGRAMS
+fractalpooluser_MOC      = fractalpooluser.moc.cc
+fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS)
+fractalpooluser_CXXADD   = $(QT_CXXFLAGS)
+fractalpooluser_SOURCES  = fractalpooluser.cc $(fractalpooluser_MOC)
+fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+endif
 
 
 registrar_SOURCES = registrar.c
@@ -157,39 +180,39 @@ server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIB
 #calcapppoolelement_SOURCES = calcapppoolelement.cc calcapppackets.h statistics.cc
 #calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
+fork_SOURCES = fork.c
+fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+cspmonitor_SOURCES = cspmonitor.c
+cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+
+EXTRA_DIST = registrar-example poolelement-example pooluser-example examplepe examplepu
+
+
+#t3_SOURCES = t3.cc
+#t3_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+
+#t4_SOURCES = t4.cc
+#t4_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
+
 #t5_SOURCES = t5.cc
 #t5_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t6_SOURCES = t6.cc statistics.cc
-t6_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+#t6_SOURCES = t6.cc statistics.cc
+#t6_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 #t7_SOURCES = t7.cc statistics.cc fractalgeneratorpackets.h
 #t7_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t8_SOURCES = t8.cc statistics.cc statistics.h
-t8_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+#t8_SOURCES = t8.cc statistics.cc statistics.h
+#t8_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 t9_SOURCES = t9.cc statistics.cc
 t9_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t11_SOURCES = t11.cc statistics.cc
-t11_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+#t11_SOURCES = t11.cc statistics.cc
+#t11_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t12_SOURCES = t12.cc statistics.cc
-t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
-
-fork_SOURCES = fork.c
-fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
-
-cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
-cspmonitor_LDFLAGS = -static $(all_libraries) -L.
-
-EXTRA_DIST = registrar-example poolelement-example pooluser-example
-
-#t3_SOURCES = t3.cc
-#t3_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-#t3_LDFLAGS = -static $(all_libraries) -L.
-
-#t4_SOURCES = t4.cc
-#t4_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS)
-#t4_LDFLAGS = -static $(all_libraries) -L.
+#t12_SOURCES = t12.cc statistics.cc
+#t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

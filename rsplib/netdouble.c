@@ -23,7 +23,6 @@
  *
  */
 
-#define _ISOC99_SOURCE
 #include <math.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -32,6 +31,9 @@
 #include "netutilities.h"
 #include "debug.h"
 
+
+#ifndef HAVE_IEEE_FP
+#warning Is this code really working correctly?
 
 #define DBL_EXP_BITS  11
 #define DBL_EXP_BIAS  1023
@@ -152,3 +154,21 @@ double networkToDouble(network_double_t value)
    }
    return(d);
 }
+
+#else
+
+/* ###### Convert double to machine-independent form ##################### */
+network_double_t doubleToNetwork(const double d)
+{
+   const unsigned long long* v = (const unsigned long long*)&d;
+   return(hton64(*v));
+}
+
+/* ###### Convert machine-independent form to double ##################### */
+double networkToDouble(network_double_t value)
+{
+   unsigned long long w = ntoh64(value);
+   return(*((double*)&w));
+}
+
+#endif

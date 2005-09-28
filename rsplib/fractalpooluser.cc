@@ -23,22 +23,17 @@
  *
  */
 
-#define QT_THREAD_SUPPORT
 #include <qapplication.h>
-#include <qwidget.h>
-#include <qmainwindow.h>
-#include <qimage.h>
-#include <qpainter.h>
 #include <qstatusbar.h>
 #include <qthread.h>
+#include <qpainter.h>
 #include <qfile.h>
-#include <complex>
 #include <qstringlist.h>
 #include <qdom.h>
-#include <qdir.h>
-
 #include <iostream>
+#include <complex>
 
+#include "fractalpooluser.h"
 #include "rserpool.h"
 #include "loglevel.h"
 #include "netutilities.h"
@@ -50,64 +45,6 @@
 
 
 using namespace std;
-
-class FractalPU : public QMainWindow,
-                  public QThread
-{
-   Q_OBJECT
-
-   public:
-   FractalPU(const size_t width,
-             const size_t height,
-             const char*  poolHandle,
-             const char*  configDirName,
-             QWidget*     parent = NULL,
-             const char*  name   = NULL);
-   ~FractalPU();
-
-   void restartCalculation();
-
-   inline unsigned int getPoint(const size_t x, const size_t y) {
-      return(Image->pixel(x, y));
-   }
-
-   inline void setPoint(const size_t x, const size_t y, const unsigned int value) {
-      Image->setPixel(x, y, value);
-   }
-
-
-   protected:
-   void paintEvent(QPaintEvent* paintEvent);
-   void closeEvent(QCloseEvent* closeEvent);
-
-
-   private:
-   virtual void run();
-   bool sendParameter();
-   void getNextParameters();
-   void paintImage(const size_t startY, const size_t endY);
-
-   enum DataStatus {
-      Okay      = 0,
-      Finalizer = 1,
-      Invalid   = 2
-   };
-   DataStatus handleData(const FGPData* data,
-                         const size_t   size);
-
-   bool                      Running;
-   QImage*                   Image;
-
-   const unsigned char*      PoolHandle;
-   size_t                    PoolHandleSize;
-   int                       Session;
-   FGPParameter              Parameter;
-   size_t                    Run;
-   size_t                    PoolElementUsages;
-
-   QStringList               ConfigList;
-   QDir                      ConfigDirectory;
-};
 
 
 /* ###### Constructor #################################################### */
@@ -524,9 +461,6 @@ puts("==========FIN");
       }
    }
 }
-
-
-#include "fractalpooluser.moc"
 
 
 

@@ -2113,14 +2113,14 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID)
 /* ###### Convert byte order of 64 bit value ############################# */
 static uint64_t byteswap64(const uint64_t value)
 {
-#if (__BYTE_ORDER == __LITTLE_ENDIAN)
+#if BYTE_ORDER == LITTLE_ENDIAN
    const uint32_t a = (uint32_t)(value >> 32);
    const uint32_t b = (uint32_t)(value & 0xffffffff);
    return( (int64_t)((a << 24) | ((a & 0x0000ff00) << 8) |
            ((a & 0x00ff0000) >> 8) | (a >> 24)) |
            ((int64_t)((b << 24) | ((b & 0x0000ff00) << 8) |
            ((b & 0x00ff0000) >> 8) | (b >> 24)) << 32) );
-#elif (__BYTE_ORDER == __BIG_ENDIAN)
+#elif BYTE_ORDER == BIG_ENDIAN
    return(value);
 #else
 #error Byte order undefined!
