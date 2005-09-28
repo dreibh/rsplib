@@ -459,7 +459,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags);
   * @return Point to block of sockaddrs.
   */
 struct sockaddr* pack_sockaddr_union(const union sockaddr_union* addrArray,
-                                     const size_t                   addrs);
+                                     const size_t                addrs);
 
 /**
   * Translate block of sockaddrs into sockaddr_union array.

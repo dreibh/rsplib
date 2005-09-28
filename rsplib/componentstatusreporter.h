@@ -84,10 +84,6 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
 void cspReporterDelete(struct CSPReporter* cspReporter);
 
 
-bool initComponentStatusReporter(struct rsp_info* info,
-                                 const char*      parameter);
-
-
 #ifdef __cplusplus
 }
 #endif

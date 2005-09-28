@@ -54,6 +54,8 @@ struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
 
 static void lock(struct Dispatcher* dispatcher, void* userData);
 static void unlock(struct Dispatcher* dispatcher, void* userData);
+static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
+                                struct rsp_info*       info);
 #ifdef ENABLE_CSP
 static size_t getComponentStatus(void*                         userData,
                                  unsigned long long*           identifier,
@@ -130,10 +132,19 @@ int rsp_initialize(struct rsp_info* info)
          CHECK(rsp_mapsocket(STDIN_FILENO, STDIN_FILENO) == STDIN_FILENO);
          CHECK(rsp_mapsocket(STDERR_FILENO, STDERR_FILENO) == STDERR_FILENO);
 
-         LOG_NOTE
-         fputs("rsplib is ready\n", stdlog);
-         LOG_END
-         return(0);
+         /* ====== Add static registrars ================================= */
+         if(addStaticRegistrars(gAsapInstance->RegistrarSet, info)) {
+            LOG_NOTE
+            fputs("rsplib is ready\n", stdlog);
+            LOG_END
+            return(0);
+         }
+         else {
+            LOG_ERROR
+            fputs("Failed to add static registrars\n", stdlog);
+            LOG_END
+            return(-1);
+         }
       }
       asapInstanceDelete(gAsapInstance);
       gAsapInstance = NULL;
@@ -199,6 +210,45 @@ void rsp_cleanup()
 #endif
    }
 }
+
+
+/* ###### Add list of static registrars ################################## */
+static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
+                                struct rsp_info*       info)
+{
+   char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
+   union sockaddr_union*         addressArray;
+   struct rsp_registrar_info*    registrarInfo;
+   int                           result;
+
+   registrarInfo = info->ri_registrars;
+   result        = true;
+   while((registrarInfo) && (result == true)) {
+
+      addressArray = unpack_sockaddr(registrarInfo->rri_addr, registrarInfo->rri_addrs);
+      if(addressArray) {
+         transportAddressBlockNew(transportAddressBlock,
+                                  IPPROTO_SCTP,
+                                  getPort((struct sockaddr*)&addressArray[0]),
+                                  0,
+                                  addressArray,
+                                  registrarInfo->rri_addrs);
+         result = (registrarTableAddStaticEntry(registrarTable, transportAddressBlock) == RSPERR_OKAY);
+         free(addressArray);
+      }
+      else {
+         LOG_ERROR
+         fputs("Unpacking sockaddr array failed\n", stdlog);
+         LOG_END
+         result = false;
+      }
+
+      registrarInfo = registrarInfo->rri_next;
+   }
+   return(result);
+}
+
 
 
 /* ###### Handle resolution ############################################## */

@@ -108,7 +108,6 @@ struct NotificationNode* notificationQueueEnqueueNotification(
       }
    }
    else {
-      printf("SKIP: %d\n",type);
       notificationNode = NULL;
    }
    return(notificationNode);

@@ -95,13 +95,12 @@ void registrarTableDelete(struct RegistrarTable* RegistrarTable);
   * Add static registrar entry.
   *
   * @param registrarTable RegistrarTable.
-  * @param addressArray Addresses.
-  * @param addresses Number of addresses.
+  * @param transportAddressBlock TransportAddressBlock.
   * @return Error code.
   */
-unsigned int registrarTableAddStaticEntry(struct RegistrarTable*   registrarTable,
-                                          union sockaddr_union* addressArray,
-                                          size_t                addresses);
+unsigned int registrarTableAddStaticEntry(
+                struct RegistrarTable*              registrarTable,
+                const struct TransportAddressBlock* transportAddressBlock);
 
 /**
   * Handle notification of registrar hunt socket.

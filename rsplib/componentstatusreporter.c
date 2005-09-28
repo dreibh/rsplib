@@ -243,29 +243,3 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
    fputs("Sending CSP report completed\n", stdlog);
    LOG_END
 }
-
-
-/* ###### Set logging parameter ########################################## */
-static union sockaddr_union cspServerAddress;
-bool initComponentStatusReporter(struct rsp_info* info,
-                                 const char*      parameter)
-{
-   if(!(strncmp(parameter, "-cspserver=", 11))) {
-      if(!string2address((const char*)&parameter[11], &cspServerAddress)) {
-         fprintf(stderr,
-                  "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
-                  (const char*)&parameter[11]);
-         return(false);
-      }
-      info->ri_csp_server = &cspServerAddress.sa;
-   }
-   else if(!(strncmp(parameter, "-cspinterval=", 13))) {
-      info->ri_csp_interval = atol((const char*)&parameter[13]);
-      return(true);
-   }
-   else {
-      fprintf(stderr, "ERROR: Invalid CSP parameter %s\n", parameter);
-      return(false);
-   }
-   return(true);
-}

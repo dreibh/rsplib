@@ -49,16 +49,24 @@ extern "C" {
    ##########################################################################
 */
 
+struct rsp_registrar_info
+{
+   struct rsp_registrar_info* rri_next;
+   struct sockaddr*           rri_addr;
+   size_t                     rri_addrs;
+};
+
 struct rsp_info
 {
-   unsigned int     ri_version;
-   unsigned int     ri_revision;
-   const char*      ri_build_date;
-   const char*      ri_build_time;
+   unsigned int               ri_version;
+   unsigned int               ri_revision;
+   const char*                ri_build_date;
+   const char*                ri_build_time;
+   struct rsp_registrar_info* ri_registrars;
 
-   uint64_t         ri_csp_identifier;
-   struct sockaddr* ri_csp_server;
-   unsigned int     ri_csp_interval;
+   uint64_t                   ri_csp_identifier;
+   struct sockaddr*           ri_csp_server;
+   unsigned int               ri_csp_interval;
 };
 
 int rsp_initialize(struct rsp_info* info);

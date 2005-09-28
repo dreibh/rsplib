@@ -26,6 +26,7 @@
 #include "rserpool.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "rsputilities.h"
 #ifdef ENABLE_CSP
 #include "componentstatusreporter.h"
 #include "randomizer.h"
@@ -70,6 +71,12 @@ int main(int argc, char** argv)
          }
       }
 #endif
+      else if(!(strncmp(argv[i], "-registrar=", 11))) {
+         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
+            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
+            exit(1);
+         }
+      }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
@@ -153,13 +160,13 @@ int main(int argc, char** argv)
             loadinfo.rli_policy = PPT_WEIGHTED_RANDOM;
          }
          else {
-            printf("ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[i][8]);
+            fprintf(stderr, "ERROR: Unknown policy type \"%s\"!\n" , (char*)&argv[i][8]);
             exit(1);
          }
       }
       else {
-         printf("Bad argument \"%s\"!\n" ,argv[i]);
-         printf("Usage: %s {-elements=total PEs} {-poolsize=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         fprintf(stderr, "Bad argument \"%s\"!\n" ,argv[i]);
+         fprintf(stderr, "Usage: %s {-elements=total PEs} {-poolsize=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }

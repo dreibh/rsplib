@@ -5,6 +5,16 @@
 #include <stdint.h>
 #include "netutilities.h"
 
+void print(void* x)
+{
+   unsigned char* y = (unsigned char*)x;
+   for(int i=0;i<8;i++) {
+      printf("%02x ", y[i]);
+   }
+   puts("");
+}
+
+
 
 
 #define VERIFY
@@ -88,6 +98,10 @@ network_double_t doubleToNetwork(const double d)
          exp += DBL_EXP_BIAS;
          frac -= 1.0;
       }
+printf("frac=%f\n",frac);
+printf("dbl=%d  %d\n",DBL_FRC1_BITS, DBL_FRC_BITS);
+printf("f2=%1.9f\n",(double)ldexp(frac, DBL_FRC_BITS));
+printf("f2=%u\n",(unsigned int)ldexp(frac, DBL_FRC_BITS));
       ieee.s = (d < 0);
       ieee.e = exp;
       ieee.f1 = (unsigned long)ldexp (frac, DBL_FRC1_BITS);
@@ -139,22 +153,17 @@ double networkToDouble(network_double_t value)
 }
 
 
-void print(void* x)
-{
-   unsigned char* y = (unsigned char*)x;
-   for(int i=0;i<8;i++) {
-      printf("%02x ", y[i]);
-   }
-   puts("");
-}
-
-
 int main(int argc, char** argv)
 {
-   network_double_t n1 = doubleToNetwork(3.141);
+   network_double_t n1 = doubleToNetwork(M_PI);
 
    printf("n1 = ");
    print((void*)&n1);
+
+   puts("---");
+   double w = networkToDouble(n1);
+   printf("w=%1.20f\n",w);
+   printf("o=%1.20f\n",M_PI);
 
 
 #if 0

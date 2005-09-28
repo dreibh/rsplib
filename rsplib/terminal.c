@@ -26,6 +26,7 @@
 #include "rserpool.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "rsputilities.h"
 #ifdef ENABLE_CSP
 #include "componentstatusreporter.h"
 #include "randomizer.h"
@@ -63,11 +64,17 @@ int main(int argc, char** argv)
          }
       }
 #endif
+      else if(!(strncmp(argv[i], "-registrar=", 11))) {
+         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
+            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
+            exit(1);
+         }
+      }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
       else {
-         printf("ERROR: Bad argument %s\n", argv[i]);
+         fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
          exit(1);
       }
    }

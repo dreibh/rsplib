@@ -457,21 +457,13 @@ void registrarTableDelete(struct RegistrarTable* registrarTable)
 
 
 /* ###### Add static registrar entry ################################### */
-unsigned int registrarTableAddStaticEntry(struct RegistrarTable* registrarTable,
-                                          union sockaddr_union*  addressArray,
-                                          size_t                 addresses)
+unsigned int registrarTableAddStaticEntry(
+                struct RegistrarTable*              registrarTable,
+                const struct TransportAddressBlock* transportAddressBlock)
 {
-   char                           transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock*  transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
    struct ST_CLASS(PeerListNode)* peerListNode;
-   int                            result;
+   unsigned int                   result;
 
-   transportAddressBlockNew(transportAddressBlock,
-                            IPPROTO_SCTP,
-                            getPort((struct sockaddr*)&addressArray[0]),
-                            0,
-                            addressArray,
-                            addresses);
    result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                &registrarTable->RegistrarList,
                0,

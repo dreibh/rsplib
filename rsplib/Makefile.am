@@ -136,16 +136,16 @@ registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS
 #examplepe_SOURCES = examplepe.c
 #examplepe_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-testregistrator_SOURCES = testregistrator.c
+testregistrator_SOURCES = testregistrator.c rsputilities.c rsputilities.h
 testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-terminal_SOURCES = terminal.c
+terminal_SOURCES = terminal.c rsputilities.c rsputilities.h
 terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-pingpong_SOURCES = pingpong.c
+pingpong_SOURCES = pingpong.c rsputilities.c rsputilities.h
 pingpong_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-server_SOURCES = server.cc standardservices.cc standardservices.h pingpongpackets.h fractalgeneratorpackets.h
+server_SOURCES = server.cc rsputilities.c rsputilities.h standardservices.cc standardservices.h pingpongpackets.h fractalgeneratorpackets.h
 server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 #fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c netdouble.h fractalgeneratorpackets.h

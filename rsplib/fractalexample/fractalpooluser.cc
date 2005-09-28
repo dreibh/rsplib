@@ -101,8 +101,7 @@ class FractalPU : public QMainWindow,
    const unsigned char*      PoolHandle;
    size_t                    PoolHandleSize;
    int                       Session;
-   uint32_t                  LastPoolElementID;
-   FGPParameter Parameter;
+   FGPParameter              Parameter;
    size_t                    Run;
    size_t                    PoolElementUsages;
 
@@ -368,8 +367,6 @@ void FractalPU::run()
    PoolElementUsages = 0;
 
    for(;;) {
-      LastPoolElementID = 0;
-
       Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(Session >= 0) {
          if(rsp_connect(Session, PoolHandle, PoolHandleSize) == 0) {
@@ -416,7 +413,6 @@ void FractalPU::run()
 
                received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
                                       &rinfo, &flags, 2000000);
-printf("recv=%d\n",received);
                while(received != 0) {
                   if(flags & MSG_RSERPOOL_NOTIFICATION) {
                      union rserpool_notification* notification =
@@ -424,20 +420,19 @@ printf("recv=%d\n",received);
                      printf("Notification: ");
                      rsp_print_notification((union rserpool_notification*)&data, stdout);
                      puts("");
-                     if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
-                        (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                        puts("FAILOVER...");
-                        rsp_forcefailover(Session);
+                     if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
+                        if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
+                           puts("FAILOVER...");
+                           rsp_forcefailover(Session);
+                        }
+                        else if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_COMPLETE) {
+                           PoolElementUsages++;
+                        }
                      }
                   }
                   else {
                      if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
                         (data.Header.Type == FGPT_DATA)) {
-                        if(LastPoolElementID != rinfo.rinfo_pe_id) {
-                           LastPoolElementID = rinfo.rinfo_pe_id;
-                           PoolElementUsages++;
-                        }
-
                         qApp->lock();
                         const DataStatus status = handleData(&data, received);
                         qApp->unlock();
@@ -453,7 +448,8 @@ printf("recv=%d\n",received);
                            default:
                               packets++;
                               snprintf((char*)&statusText, sizeof(statusText),
-                                       "Processed data packet #%u...", packets);
+                                       "Processed data packet #%u (from PE $%08x)...",
+                                       packets, rinfo.rinfo_pe_id);
                               rsp_csp_setstatus(Session, 0, statusText);
                               qApp->lock();
                               statusBar()->message(statusText);
