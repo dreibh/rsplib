@@ -144,7 +144,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
                                 void*                userData,
-                                TCPLikeServer*      (*threadFactory)(int sd, void* userData))
+                                TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                                struct TagItem*      tags)
 {
    beginLogging();
    if(rsp_initialize(info) < 0) {
@@ -171,9 +172,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       puts("\n");
 
       // ====== Register PE =================================================
-      if(rsp_register(rserpoolSocket,
-                      (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, 30000) == 0) {
+      if(rsp_register_tags(rserpoolSocket,
+                           (const unsigned char*)poolHandle, strlen(poolHandle),
+                           loadinfo, 30000, tags) == 0) {
 
          // ====== Main loop ===================================================
          TCPLikeServerList serverSet;

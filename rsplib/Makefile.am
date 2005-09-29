@@ -187,7 +187,7 @@ cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 
-EXTRA_DIST = registrar-example poolelement-example pooluser-example examplepe examplepu
+EXTRA_DIST = registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
 
 
 #t3_SOURCES = t3.cc

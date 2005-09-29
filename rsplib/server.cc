@@ -26,6 +26,7 @@
 #include "rserpool.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "tagitem.h"
 #include "rsputilities.h"
 #include "standardservices.h"
 
@@ -45,10 +46,16 @@ int main(int argc, char** argv)
    struct rsp_info info;
    unsigned int    service    = SERVICE_ECHO;
    const char*     poolHandle = "EchoPool";
-
+   struct TagItem  tags[8];
 
    /* ====== Read parameters ============================================= */
    memset(&info, 0, sizeof(info));
+   tags[0].Tag  = TAG_PoolElement_Identifier;
+   tags[0].Data = 0;
+   tags[1].Tag  = TAG_DONE;
+#ifdef ENABLE_CSP
+   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, 0);
+#endif
    for(int i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
@@ -62,6 +69,12 @@ int main(int argc, char** argv)
          }
       }
 #endif
+      else if(!(strncmp(argv[i], "-identifier=", 12))) {
+         tags[0].Data = atol((const char*)&argv[i][12]);
+#ifdef ENABLE_CSP
+         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
+#endif
+      }
       else if(!(strncmp(argv[i], "-registrar=", 11))) {
          if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
@@ -90,9 +103,6 @@ int main(int argc, char** argv)
          service = SERVICE_FRACTAL;
       }
    }
-#ifdef ENABLE_CSP
-   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, 0);
-#endif
 
 
    /* ====== Print startup message ======================================= */
@@ -116,17 +126,20 @@ int main(int argc, char** argv)
    if(service == SERVICE_ECHO) {
       EchoServer echoServer;
       echoServer.poolElement("Echo Server - Version 1.0",
-                             "EchoPool", &info, NULL);
+                             "EchoPool", &info, NULL,
+                             (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DISCARD) {
       DiscardServer discardServer;
       discardServer.poolElement("Discard Server - Version 1.0",
-                                "DiscardPool", &info, NULL);
+                                "DiscardPool", &info, NULL,
+                                (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
       DaytimeServer discardServer;
       discardServer.poolElement("Daytime Server - Version 1.0",
-                                "DaytimePool", &info, NULL);
+                                "DaytimePool", &info, NULL,
+                                (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
       puts("Character Generator");
@@ -143,7 +156,8 @@ int main(int argc, char** argv)
       TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
                                  "PingPongPool", &info, NULL,
                                  (void*)&settings,
-                                 PingPongServer::pingPongServerFactory);
+                                 PingPongServer::pingPongServerFactory,
+                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_FRACTAL) {
       FractalGeneratorServer::FractalGeneratorServerSettings settings;
@@ -161,7 +175,8 @@ int main(int argc, char** argv)
       TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
                                  "FractalGeneratorPool", &info, NULL,
                                  (void*)&settings,
-                                 FractalGeneratorServer::fractalGeneratorServerFactory);
+                                 FractalGeneratorServer::fractalGeneratorServerFactory,
+                                 (struct TagItem*)&tags);
    }
 
    return(0);

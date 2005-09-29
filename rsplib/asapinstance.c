@@ -184,7 +184,7 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
       if(asapInstance->MainLoopThread != 0) {
          asapInstance->MainLoopShutdown = true;
          asapInstanceNotifyMainLoop(asapInstance);
-         pthread_join(asapInstance->MainLoopThread, NULL);
+         CHECK(pthread_join(asapInstance->MainLoopThread, NULL) == 0);
          asapInstance->MainLoopThread = 0;
       }
       if(asapInstance->MainLoopPipe[0] >= 0) {
@@ -1186,7 +1186,7 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
             fputs("Maximum number of transmission trials reached -> no registrar\n", stdlog);
             LOG_END
             interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
-            if(aitm->ResponseExpected) {
+            if(aitm->Node.ReplyPort) {
                aitm->Error = RSPERR_NO_REGISTRAR;
                interThreadMessageReply(&aitm->Node);
             }

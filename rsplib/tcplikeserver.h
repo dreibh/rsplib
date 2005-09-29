@@ -31,6 +31,7 @@
 #include "thread.h"
 
 
+struct TagItem;
 class TCPLikeServer;
 
 class TCPLikeServerList : public TDMutex
@@ -80,7 +81,8 @@ class TCPLikeServer : public TDThread
                            struct rsp_info*     info,
                            struct rsp_loadinfo* loadinfo,
                            void*                userData,
-                           TCPLikeServer*       (*threadFactory)(int sd, void* userData));
+                           TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                           struct TagItem*      tags = NULL);
 
    protected:
    int RSerPoolSocketDescriptor;

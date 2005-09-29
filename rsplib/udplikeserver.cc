@@ -69,7 +69,8 @@ EventHandlingResult UDPLikeServer::handleNotification(
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
                                 struct rsp_info*     info,
-                                struct rsp_loadinfo* loadinfo)
+                                struct rsp_loadinfo* loadinfo,
+                                struct TagItem*      tags)
 {
    beginLogging();
    if(rsp_initialize(info) < 0) {

@@ -458,6 +458,9 @@ int main(int argc, char** argv)
 
    memset(&info, 0, sizeof(info));
 
+#ifdef ENABLE_CSP
+   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
@@ -465,7 +468,7 @@ int main(int argc, char** argv)
          }
       }
 #ifdef ENABLE_CSP
-      else if(!(strncasecmp(argv[i], "-cspidentifier=", 12))) {
+      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
          info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
       }
       else if(!(strncmp(argv[i], "-csp" ,4))) {
@@ -485,11 +488,6 @@ int main(int argc, char** argv)
          exit(1);
       }
    }
-#ifdef ENABLE_CSP
-   if(info.ri_csp_identifier == 0) {
-      info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
-   }
-#endif
 
 
    puts("Fractal Pool User - Version 1.0");

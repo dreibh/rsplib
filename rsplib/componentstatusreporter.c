@@ -160,6 +160,7 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
    cspReport   = (struct ComponentStatusReport*)malloc(length);
    if(cspReport) {
       cspReport->Header.Type            = CSPT_REPORT;
+      cspReport->Header.Flags           = 0;
       cspReport->Header.Version         = htonl(CSP_VERSION);
       cspReport->Header.Length          = htonl(length);
       cspReport->Header.SenderID        = hton64(senderID);

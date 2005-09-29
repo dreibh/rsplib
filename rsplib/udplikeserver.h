@@ -30,6 +30,8 @@
 #include "cpprspserver.h"
 
 
+struct TagItem;
+
 class UDPLikeServer
 {
    public:
@@ -39,7 +41,8 @@ class UDPLikeServer
    virtual void poolElement(const char*          programTitle,
                             const char*          poolHandle,
                             struct rsp_info*     info,
-                            struct rsp_loadinfo* loadinfo);
+                            struct rsp_loadinfo* loadinfo,
+                            struct TagItem*      tags = NULL);
 
    protected:
    virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
