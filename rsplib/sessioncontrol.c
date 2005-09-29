@@ -345,7 +345,7 @@ static void handleCommLost(struct RSerPoolSocket*          rserpoolSocket,
          LOG_END
 
          notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
-                                                                 false, RSERPOOL_SESSION_CHANGE);
+                                                                 true, RSERPOOL_SESSION_CHANGE);
          if(notificationNode) {
             notificationNode->Content.rn_session_change.rsc_state   = RSERPOOL_SESSION_REMOVE;
             notificationNode->Content.rn_session_change.rsc_session = session->SessionID;

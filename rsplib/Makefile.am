@@ -142,7 +142,7 @@ if BUILD_QT_PROGRAMS
 fractalpooluser_MOC      = fractalpooluser.moc.cc
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS)
 fractalpooluser_CXXADD   = $(QT_CXXFLAGS)
-fractalpooluser_SOURCES  = fractalpooluser.cc $(fractalpooluser_MOC)
+fractalpooluser_SOURCES  = fractalpooluser.cc $(fractalpooluser_MOC) rsputilities.c rsputilities.h
 fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 endif
 

@@ -85,10 +85,5 @@ typedef unsigned char bool;
 #define false 0
 #endif
 
-/*
-#ifdef __APPLE__
-typedef int socklen_t;
-#endif
-*/
 
 #endif

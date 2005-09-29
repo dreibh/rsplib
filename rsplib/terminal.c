@@ -27,10 +27,7 @@
 #include "loglevel.h"
 #include "breakdetector.h"
 #include "rsputilities.h"
-#ifdef ENABLE_CSP
-#include "componentstatusreporter.h"
 #include "randomizer.h"
-#endif
 
 
 /* ###### Main program ################################################### */

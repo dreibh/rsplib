@@ -33,15 +33,14 @@
 #include <iostream>
 #include <complex>
 
+#include "tdtypes.h"
 #include "fractalpooluser.h"
 #include "rserpool.h"
 #include "loglevel.h"
 #include "netutilities.h"
+#include "rsputilities.h"
 #include "randomizer.h"
 #include "fractalgeneratorpackets.h"
-#ifdef ENABLE_CSP
-#include "componentstatusreporter.h"
-#endif
 
 
 using namespace std;

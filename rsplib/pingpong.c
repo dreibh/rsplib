@@ -29,10 +29,7 @@
 #include "rsputilities.h"
 #include "pingpongpackets.h"
 #include "netutilities.h"
-#ifdef ENABLE_CSP
-#include "componentstatusreporter.h"
 #include "randomizer.h"
-#endif
 
 
 /* ###### Main program ################################################### */

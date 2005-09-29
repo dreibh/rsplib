@@ -1136,17 +1136,21 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
    unsigned int                   result;
 
    asapInstanceConnectToRegistrar(asapInstance, -1);
-   if(asapInstance->RegistrarSocket >= 0) {
-      interThreadMessagePortLock(&asapInstance->MainLoopPort);
-      if(asapInstance->LastAITM) {
-         aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(
-                                                   &asapInstance->MainLoopPort,
-                                                   &asapInstance->LastAITM->Node);
-      }
-      else {
-         aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort);
-      }
-      while(aitm != NULL) {
+   interThreadMessagePortLock(&asapInstance->MainLoopPort);
+   if(asapInstance->LastAITM) {
+      aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(
+                                                &asapInstance->MainLoopPort,
+                                                &asapInstance->LastAITM->Node);
+   }
+   else {
+      aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort);
+   }
+   while(aitm != NULL) {
+      nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
+      aitm->TransmissionTrials++;
+
+      /* ====== Send to registrar ======================================== */
+      if(asapInstance->RegistrarSocket >= 0) {
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       asapInstance->RegistrarSocket,
                                       0,
@@ -1165,7 +1169,6 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
             break;
          }
 
-         nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
          if(!aitm->ResponseExpected) {
             /* No response from registrar expected. */
             interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
@@ -1174,10 +1177,28 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
          else  {
             asapInstance->LastAITM = aitm;
          }
-         aitm = nextAITM;
       }
-      interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+
+      /* ====== No registrar => Reply error, when trials have exceeded === */
+      else {
+         if(aitm->TransmissionTrials >= asapInstance->RegistrarRequestMaxTrials) {
+            LOG_WARNING
+            fputs("Maximum number of transmission trials reached -> no registrar\n", stdlog);
+            LOG_END
+            interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
+            if(aitm->ResponseExpected) {
+               aitm->Error = RSPERR_NO_REGISTRAR;
+               interThreadMessageReply(&aitm->Node);
+            }
+            else {
+               asapInterThreadMessageDelete(aitm);
+            }
+         }
+      }
+
+      aitm = nextAITM;
    }
+   interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
 }
 
 

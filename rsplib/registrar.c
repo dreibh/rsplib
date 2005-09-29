@@ -3437,6 +3437,8 @@ int main(int argc, char** argv)
    /* ====== Get arguments =============================================== */
 #ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
+#else
+#error xxx
 #endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-tcp=",5))) {
@@ -3485,7 +3487,7 @@ int main(int argc, char** argv)
          if(!string2address((char*)&argv[i][11], &cspReportAddress)) {
             fprintf(stderr,
                     "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
-                    (char*)&argv[i][18]);
+                    (char*)&argv[i][11]);
             exit(1);
          }
          if(cspReportInterval <= 0) {

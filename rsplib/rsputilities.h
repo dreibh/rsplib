@@ -26,7 +26,11 @@
 #ifndef RSPUTILITIES_H
 #define RSPUTILITIES_H
 
+#include "tdtypes.h"
 #include "rserpool.h"
+#ifdef ENABLE_CSP
+#include "componentstatusreporter.h"
+#endif
 
 
 #ifdef __cplusplus

@@ -28,9 +28,6 @@
 #include "breakdetector.h"
 #include "rsputilities.h"
 #include "standardservices.h"
-#ifdef ENABLE_CSP
-#include "componentstatusreporter.h"
-#endif
 
 
 #define SERVICE_ECHO     1

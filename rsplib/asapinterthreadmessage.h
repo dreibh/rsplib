@@ -41,6 +41,7 @@ struct ASAPInterThreadMessage
    struct InterThreadMessageNode Node;
    struct RSerPoolMessage*       Request;
    struct RSerPoolMessage*       Response;
+   size_t                        TransmissionTrials;
    unsigned int                  Error;
    bool                          ResponseExpected;
 };

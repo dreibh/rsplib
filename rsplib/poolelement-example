@@ -1,2 +1,13 @@
 #!/bin/sh
-./examplepe -ph=EchoPool -logcolor=on -loglevel=3 $@
+
+CSPCONFIG=""
+if [ x$CSP_SERVER != "x" ] ; then
+   if [ x$CSP_INTERVAL != "x" ] ; then
+      if [ $CSP_INTERVAL -gt 0 ] ; then
+         echo "Using CSP server $CSP_SERVER with interval $CSP_INTERVAL ms..."
+         export CSPCONFIG="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL"
+      fi
+   fi
+fi
+
+./examplepe -logcolor=on -loglevel=3 $CSPCONFIG $@
