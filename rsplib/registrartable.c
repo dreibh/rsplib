@@ -746,7 +746,8 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                               registrarTable->OutstandingConnects--;
                            }
                            LOG_VERBOSE3
-                           fprintf(stdlog, "Failed to establish registrar connection, outstanding=%u\n", registrarTable->OutstandingConnects);
+                           fprintf(stdlog, "Failed to establish registrar connection, outstanding=%u\n",
+                                   (unsigned int)registrarTable->OutstandingConnects);
                            LOG_END
                         }
                   }

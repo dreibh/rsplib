@@ -208,11 +208,11 @@ EXTRA_DIST = registrar-example poolelement-example pooluser-example examplepe ex
 #t8_SOURCES = t8.cc statistics.cc statistics.h
 #t8_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t9_SOURCES = t9.cc statistics.cc
+t9_SOURCES = t9.cc statistics.cc statistics.h
 t9_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 #t11_SOURCES = t11.cc statistics.cc
 #t11_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-t12_SOURCES = t12.cc statistics.cc rsputilities.c rsputilities.h
+t12_SOURCES = t12.cc statistics.cc statistics.h rsputilities.c rsputilities.h
 t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
