@@ -57,6 +57,9 @@ static void asapInstanceHandleEndpointKeepAlive(
 static void asapInstanceDisconnectFromRegistrar(
                struct ASAPInstance* asapInstance,
                bool                 sendAbort);
+static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
+                                               struct Timer*      timer,
+                                               void*              userData);
 
 
 /* ###### Constructor #################################################### */
@@ -83,6 +86,10 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          asapInstance->RegistrarSocket              = -1;
          asapInstance->RegistrarIdentifier          = 0;
          asapInstanceConfigure(asapInstance, tags);
+         timerNew(&asapInstance->RegistrarTimeoutTimer,
+                  asapInstance->StateMachine,
+                  asapInstanceHandleRegistrarTimeout,
+                  asapInstance);
 
          /* ====== Initialize PU-side cache and ownership management ===== */
          ST_CLASS(poolHandlespaceManagementNew)(&asapInstance->Cache,
@@ -207,6 +214,7 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
          registrarTableDelete(asapInstance->RegistrarSet);
          asapInstance->RegistrarSet = NULL;
       }
+      timerDelete(&asapInstance->RegistrarTimeoutTimer);
       interThreadMessagePortDelete(&asapInstance->MainLoopPort);
       free(asapInstance);
    }
@@ -979,12 +987,16 @@ static void asapInstanceHandleResponseFromRegistrar(
                struct RSerPoolMessage* response)
 {
    struct ASAPInterThreadMessage* aitm;
+   struct ASAPInterThreadMessage* nextAITM;
 
    aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortDequeue(&asapInstance->MainLoopPort);
    if(aitm != NULL) {
       if( ((response->Type == AHT_REGISTRATION_RESPONSE)      && (aitm->Request->Type == AHT_REGISTRATION))   ||
           ((response->Type == AHT_DEREGISTRATION_RESPONSE)    && (aitm->Request->Type == AHT_DEREGISTRATION)) ||
           ((response->Type == AHT_HANDLE_RESOLUTION_RESPONSE) && (aitm->Request->Type == AHT_HANDLE_RESOLUTION)) ) {
+         /* No timeout occurred -> stop timeout timer */
+         timerStop(&asapInstance->RegistrarTimeoutTimer);
+
          LOG_ACTION
          fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar\n",
                  response->Type, aitm->Request->Type);
@@ -1002,6 +1014,17 @@ static void asapInstanceHandleResponseFromRegistrar(
             /* Sender is not interested in result, throw it away. */
             asapInterThreadMessageDelete(aitm);
          }
+
+         /* Schedule next response's timeout */
+         interThreadMessagePortLock(&asapInstance->MainLoopPort);
+         if(asapInstance->LastAITM != NULL) {
+            nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(
+                                                          &asapInstance->MainLoopPort);
+            CHECK(nextAITM != NULL);
+            timerStart(&asapInstance->RegistrarTimeoutTimer,
+                       nextAITM->ResponseTimeoutTimeStamp);
+         }
+         interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
       }
       else {
          LOG_ERROR
@@ -1103,6 +1126,7 @@ static void asapInstanceHandleRegistrarConnectionEvent(
                   asapInstanceHandleEndpointKeepAlive(asapInstance, message, fd);
                }
                else {
+                  /* Handle registrar's response */
                   asapInstanceHandleResponseFromRegistrar(asapInstance, message);
                }
             }
@@ -1129,6 +1153,22 @@ static void asapInstanceHandleRegistrarConnectionEvent(
 }
 
 
+/* ###### Handle registrar request timeout ############################### */
+static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
+                                               struct Timer*      timer,
+                                               void*              userData)
+{
+   struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
+
+   CHECK(asapInstance->LastAITM != NULL);
+   LOG_WARNING
+   fputs("Request(s) to registrar timed out!\n", stdlog);
+   LOG_END
+   asapInstance->LastAITM = NULL;
+   asapInstanceDisconnectFromRegistrar(asapInstance, true);
+}
+
+
 /* ###### Handle ASAP inter-thread message ############################### */
 static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
 {
@@ -1150,49 +1190,61 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
       nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
       aitm->TransmissionTrials++;
 
-      /* ====== Send to registrar ======================================== */
-      if(asapInstance->RegistrarSocket >= 0) {
-         result = rserpoolMessageSend(IPPROTO_SCTP,
-                                      asapInstance->RegistrarSocket,
-                                      0,
-#ifdef MSG_NOSIGNAL
-                                      MSG_NOSIGNAL,
-#else
-                                      0,
-#endif
-                                      asapInstance->RegistrarRequestTimeout,
-                                      aitm->Request);
-         if(result == false) {
-            LOG_WARNING
-            logerror("Failed to send message to registrar");
-            LOG_END
-            asapInstanceDisconnectFromRegistrar(asapInstance, true);
-            break;
+      /* ====== Reply error, when trials have exceeded =================== */
+      if(aitm->TransmissionTrials > asapInstance->RegistrarRequestMaxTrials) {
+         LOG_WARNING
+         fputs("Maximum number of transmission trials reached\n", stdlog);
+         LOG_END
+         interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
+         if(aitm->Node.ReplyPort) {
+            if(asapInstance->RegistrarSocket < 0) {
+               aitm->Error = RSPERR_NO_REGISTRAR;
+            }
+            else {
+               aitm->Error = RSPERR_TIMEOUT;
+            }
+            interThreadMessageReply(&aitm->Node);
          }
-
-         if(!aitm->ResponseExpected) {
-            /* No response from registrar expected. */
-            interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
+         else {
             asapInterThreadMessageDelete(aitm);
-         }
-         else  {
-            asapInstance->LastAITM = aitm;
          }
       }
 
-      /* ====== No registrar => Reply error, when trials have exceeded === */
+      /* ====== Send to registrar ======================================== */
       else {
-         if(aitm->TransmissionTrials >= asapInstance->RegistrarRequestMaxTrials) {
-            LOG_WARNING
-            fputs("Maximum number of transmission trials reached -> no registrar\n", stdlog);
-            LOG_END
-            interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
-            if(aitm->Node.ReplyPort) {
-               aitm->Error = RSPERR_NO_REGISTRAR;
-               interThreadMessageReply(&aitm->Node);
+         if(asapInstance->RegistrarSocket >= 0) {
+            result = rserpoolMessageSend(IPPROTO_SCTP,
+                                         asapInstance->RegistrarSocket,
+                                         0,
+#ifdef MSG_NOSIGNAL
+                                         MSG_NOSIGNAL,
+#else
+                                         0,
+#endif
+                                         asapInstance->RegistrarRequestTimeout,
+                                         aitm->Request);
+            if(result == false) {
+               LOG_WARNING
+               logerror("Failed to send message to registrar");
+               LOG_END
+               asapInstanceDisconnectFromRegistrar(asapInstance, true);
+               break;
             }
-            else {
+
+            if(!aitm->ResponseExpected) {
+               /* No response from registrar expected. */
+               interThreadMessagePortRemoveMessage(&asapInstance->MainLoopPort, &aitm->Node);
                asapInterThreadMessageDelete(aitm);
+            }
+            else  {
+               asapInstance->LastAITM = aitm;
+
+               /* Schedule timeout */
+               aitm->ResponseTimeoutTimeStamp = getMicroTime() + asapInstance->RegistrarResponseTimeout;
+               if(!timerIsRunning(&asapInstance->RegistrarTimeoutTimer)) {
+                  timerStart(&asapInstance->RegistrarTimeoutTimer,
+                             aitm->ResponseTimeoutTimeStamp);
+               }
             }
          }
       }

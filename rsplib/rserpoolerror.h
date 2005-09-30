@@ -49,6 +49,7 @@ extern "C" {
 #define RSPERR_CONNECTION_FAILURE_SOCKET     0x1005
 #define RSPERR_CONNECTION_FAILURE_CONNECT    0x1006
 #define RSPERR_NO_REGISTRAR                  0x1007
+#define RSPERR_TIMEOUT                       0x1008
 
 /* Handlespace-management specific error causes */
 #define RSPERR_NOT_FOUND                     0xf003

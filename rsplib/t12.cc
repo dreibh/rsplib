@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
    puts("START!");
 
-   installBreakDetector();
+   // installBreakDetector();
    int i = 0x1000000;
    while(!breakDetected()) {
       usleep(1000000);
@@ -58,20 +58,35 @@ int main(int argc, char** argv)
                                    tb, NULL, -1, 0);
 
 /*
-      printf("REPORT.RESULT=%d\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
-      printf("DEREG.RESULT=%d\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
-      printf("REPORT.RESULT=%d\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
-      printf("DEREG.RESULT=%d\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), true));
-      printf("REPORT.RESULT=%d\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
-      printf("DEREG.RESULT=%d\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
-      printf("REG.RESULT=%d\n",asapInstanceRegister(gAsapInstance, &ph, &pe, true));
-      printf("REPORT.RESULT=%d\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
-      printf("REPORT.RESULT=%d\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), true));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+      printf("REG.RESULT=$%x\n",asapInstanceRegister(gAsapInstance, &ph, &pe, true));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
       puts("HRES...");
 */
+
+//       printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+       printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+
       struct ST_CLASS(PoolElementNode)* poolElementNodeArray;
       size_t s;
-      printf("HRES.RESULT=%d\n",asapInstanceHandleResolution(gAsapInstance, &ph, &poolElementNodeArray, &s));
+      printf("HRES.RESULT=$%x\n",asapInstanceHandleResolution(gAsapInstance, &ph, &poolElementNodeArray, &s));
+
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+      printf("DEREG.RESULT=$%x\n",asapInstanceDeregister(gAsapInstance, &ph, 1 + (i++), false));
+
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+      printf("REPORT.RESULT=$%x\n",asapInstanceReportFailure(gAsapInstance, &ph, 0x12345678));
+
+      puts("---------------------------------------");
    }
 
    rsp_cleanup();

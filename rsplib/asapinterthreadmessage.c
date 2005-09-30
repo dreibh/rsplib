@@ -39,11 +39,12 @@ struct ASAPInterThreadMessage* asapInterThreadMessageNew(
       return(NULL);
    }
 
-   aitm->Request            = request;
-   aitm->Response           = NULL;
-   aitm->ResponseExpected   = responseExpected;   /* Response from registrar? */
-   aitm->Error              = RSPERR_OKAY;
-   aitm->TransmissionTrials = 0;
+   aitm->Request                  = request;
+   aitm->Response                 = NULL;
+   aitm->ResponseExpected         = responseExpected;   /* Response from registrar? */
+   aitm->Error                    = RSPERR_OKAY;
+   aitm->TransmissionTrials       = 0;
+   aitm->ResponseTimeoutTimeStamp = 0;
    return(aitm);
 }
 

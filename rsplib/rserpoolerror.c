@@ -51,6 +51,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_CONNECTION_FAILURE_SOCKET,     "socket() failure" },
    { RSPERR_CONNECTION_FAILURE_CONNECT,    "connect() failure" },
    { RSPERR_NO_REGISTRAR,                  "no registrar available" },
+   { RSPERR_TIMEOUT,                       "timeout" },
 
    /* Handlespace-management specific error causes */
    { RSPERR_OUT_OF_MEMORY,                 "out of memory" },

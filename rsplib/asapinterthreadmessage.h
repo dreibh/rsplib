@@ -44,6 +44,7 @@ struct ASAPInterThreadMessage
    size_t                        TransmissionTrials;
    unsigned int                  Error;
    bool                          ResponseExpected;
+   unsigned long long            ResponseTimeoutTimeStamp;
 };
 
 

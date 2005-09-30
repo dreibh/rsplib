@@ -112,6 +112,14 @@ void timerRestart(struct Timer*            timer,
 void timerStop(struct Timer* timer);
 
 /**
+  * Check, if timer is running.
+  *
+  * @param timer Timer.
+  * @return true if timer is running; false otherwise.
+  */
+bool timerIsRunning(struct Timer* timer);
+
+/**
   * Timer comparision function.
   *
   * @param timerPtr1 Pointer to timer 1.

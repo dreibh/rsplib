@@ -94,6 +94,13 @@ void timerRestart(struct Timer*            timer,
 }
 
 
+/* ###### Check, if timer is running ##################################### */
+bool timerIsRunning(struct Timer* timer)
+{
+   return(leafLinkedRedBlackTreeNodeIsLinked(&timer->Node));
+}
+
+
 /* ###### Stop timer ##################################################### */
 void timerStop(struct Timer* timer)
 {

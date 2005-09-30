@@ -71,6 +71,7 @@ struct ASAPInstance
 
    struct FDCallback                          RegistrarHuntFDCallback;
    struct FDCallback                          RegistrarFDCallback;
+   struct Timer                               RegistrarTimeoutTimer;
 
    size_t                                     RegistrarRequestMaxTrials;
    unsigned long long                         RegistrarRequestTimeout;
