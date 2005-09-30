@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 {
    struct rsp_info info;
    unsigned int    service    = SERVICE_ECHO;
-   const char*     poolHandle = "EchoPool";
+   const char*     poolHandle = NULL;
    struct TagItem  tags[8];
 
    /* ====== Read parameters ============================================= */
@@ -126,19 +126,22 @@ int main(int argc, char** argv)
    if(service == SERVICE_ECHO) {
       EchoServer echoServer;
       echoServer.poolElement("Echo Server - Version 1.0",
-                             "EchoPool", &info, NULL,
+                             (poolHandle != NULL) ? poolHandle : "EchoPool",
+                             &info, NULL,
                              (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DISCARD) {
       DiscardServer discardServer;
       discardServer.poolElement("Discard Server - Version 1.0",
-                                "DiscardPool", &info, NULL,
+                                (poolHandle != NULL) ? poolHandle : "DiscardPool",
+                                &info, NULL,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
       DaytimeServer discardServer;
       discardServer.poolElement("Daytime Server - Version 1.0",
-                                "DaytimePool", &info, NULL,
+                                (poolHandle != NULL) ? poolHandle : "DaytimePool",
+                                &info, NULL,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
@@ -154,7 +157,8 @@ int main(int argc, char** argv)
       }
 
       TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
-                                 "PingPongPool", &info, NULL,
+                                 (poolHandle != NULL) ? poolHandle : "PingPongPool",
+                                 &info, NULL,
                                  (void*)&settings,
                                  PingPongServer::pingPongServerFactory,
                                  (struct TagItem*)&tags);
@@ -173,7 +177,8 @@ int main(int argc, char** argv)
       }
 
       TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
-                                 "FractalGeneratorPool", &info, NULL,
+                                 (poolHandle != NULL) ? poolHandle : "FractalGeneratorPool",
+                                 &info, NULL,
                                  (void*)&settings,
                                  FractalGeneratorServer::fractalGeneratorServerFactory,
                                  (struct TagItem*)&tags);

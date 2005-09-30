@@ -77,6 +77,29 @@ class DaytimeServer : public UDPLikeServer
 };
 
 
+#if 0
+class CharGenServer : public TCPLikeServer
+{
+   public:
+   struct CharGenServerSettings
+   {
+      size_t FailureAfter;
+   };
+
+   CharGenServer(int rserpoolSocketDescriptor);
+   ~CharGenServer();
+
+   static TCPLikeServer* charGenServerFactory(int sd, void* userData);
+
+   protected:
+   EventHandlingResult handleMessage(const char* buffer,
+                                     size_t      bufferSize,
+                                     uint32_t    ppid,
+                                     uint16_t    streamID);
+};
+#endif
+
+
 class PingPongServer : public TCPLikeServer
 {
    public:

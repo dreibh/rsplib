@@ -469,14 +469,6 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                   rserpoolMessageDelete(response);
                }
             }
-            else {
-               LOG_ERROR
-               fputs("Incompatible pool element settings for reregistration!Old: \n", stderr);
-               ST_CLASS(poolElementNodePrint)(oldPoolElementNode, stdlog, PENPO_FULL);
-               fputs("New: \n", stderr);
-               ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
-               LOG_END
-            }
             rserpoolMessageDelete(message);
          }
          else {
@@ -510,6 +502,15 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                result = RSPERR_OUT_OF_MEMORY;
             }
          }
+      }
+      else {
+         LOG_ERROR
+         fputs("Incompatible pool element settings for reregistration!Old: \n", stderr);
+         ST_CLASS(poolElementNodePrint)(oldPoolElementNode, stdlog, PENPO_FULL);
+         fputs("New: \n", stderr);
+         ST_CLASS(poolElementNodePrint)(message->PoolElementPtr, stdlog, PENPO_FULL);
+         LOG_END
+         rserpoolMessageDelete(message);
       }
    }
    else {
