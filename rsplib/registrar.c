@@ -87,13 +87,13 @@ unsigned long long randomizeCycle(const unsigned long long interval)
 
 struct TakeoverProcess
 {
-   struct STN_CLASSNAME IndexStorageNode;
-   struct STN_CLASSNAME TimerStorageNode;
+   struct STN_CLASSNAME      IndexStorageNode;
+   struct STN_CLASSNAME      TimerStorageNode;
 
    RegistrarIdentifierType   TargetID;
-   unsigned long long   ExpiryTimeStamp;
+   unsigned long long        ExpiryTimeStamp;
 
-   size_t               OutstandingAcknowledgements;
+   size_t                    OutstandingAcknowledgements;
    RegistrarIdentifierType   PeerIDArray[0];
 };
 
@@ -1179,7 +1179,7 @@ static void handlespaceActionTimerCallback(struct Dispatcher* dispatcher,
          else {
             LOG_ACTION
             fprintf(stdlog, "Expiry timeout expired for pool element $%08x of pool ",
-                  poolElementNode->Identifier);
+                    poolElementNode->Identifier);
             poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
             fputs(" -> removing it\n", stdlog);
             LOG_END
@@ -2045,7 +2045,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                &registrar->Handlespace.Handlespace,
                newPoolElementNode,
                PENT_EXPIRY,
-               getMicroTime() + newPoolElementNode->RegistrationLife);
+               getMicroTime() + (1000ULL * newPoolElementNode->RegistrationLife));
             timerRestart(&registrar->HandlespaceActionTimer,
                          ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
                             &registrar->Handlespace));
@@ -2863,7 +2863,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
                         &registrar->Handlespace.Handlespace,
                         newPoolElementNode,
                         PENT_EXPIRY,
-                        getMicroTime() + newPoolElementNode->RegistrationLife);
+                        getMicroTime() + (1000ULL * newPoolElementNode->RegistrationLife));
                   }
                }
                else {
