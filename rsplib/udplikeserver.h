@@ -49,7 +49,7 @@ class UDPLikeServer
                                              const char*        buffer,
                                              size_t             bufferSize,
                                              uint32_t           ppid,
-                                             uint16_t           streamID) = 0;
+                                             uint16_t           streamID);
    virtual EventHandlingResult handleCookieEcho(rserpool_session_t sessionID,
                                                 const char*        buffer,
                                                 size_t             bufferSize);

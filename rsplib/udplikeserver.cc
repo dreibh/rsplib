@@ -65,6 +65,17 @@ EventHandlingResult UDPLikeServer::handleNotification(
 }
 
 
+// ###### Handle message ####################################################
+EventHandlingResult UDPLikeServer::handleMessage(rserpool_session_t sessionID,
+                                                 const char*        buffer,
+                                                 size_t             bufferSize,
+                                                 uint32_t           ppid,
+                                                 uint16_t           streamID)
+{
+   return(EHR_Abort);
+}
+
+
 // ###### Implementation of a simple UDP-like server ########################
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
