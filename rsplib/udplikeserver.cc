@@ -33,12 +33,28 @@
 UDPLikeServer::UDPLikeServer()
 {
    RSerPoolSocketDescriptor = -1;
+   NextTimerTimeStamp       = 0;
 }
 
 
 // ###### Destructor ########################################################
 UDPLikeServer::~UDPLikeServer()
 {
+}
+
+
+// ###### Start timer #######################################################
+void UDPLikeServer::startTimer(unsigned long long timeStamp)
+{
+   CHECK(timeStamp > 0);
+   NextTimerTimeStamp = timeStamp;
+}
+
+
+// ###### Stop timer ########################################################
+void UDPLikeServer::stopTimer()
+{
+   NextTimerTimeStamp = 0;
 }
 
 
@@ -54,14 +70,12 @@ EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult UDPLikeServer::handleNotification(
-                       const union rserpool_notification* notification)
+void UDPLikeServer::handleNotification(const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
    rsp_print_notification(notification, stdout);
    puts("");
-   return(EHR_Okay);
 }
 
 
@@ -76,11 +90,32 @@ EventHandlingResult UDPLikeServer::handleMessage(rserpool_session_t sessionID,
 }
 
 
+// ###### Handle timer ######################################################
+void UDPLikeServer::handleTimer()
+{
+}
+
+
+// ###### Startup ###########################################################
+EventHandlingResult UDPLikeServer::initialize()
+{
+   return(EHR_Okay);
+}
+
+
+// ###### Shutdown ##########################################################
+void UDPLikeServer::finish(EventHandlingResult result)
+{
+}
+
+
 // ###### Implementation of a simple UDP-like server ########################
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
+                                unsigned int         reregInterval,
+                                unsigned int         runtimeLimit,
                                 struct TagItem*      tags)
 {
    beginLogging();
@@ -110,51 +145,87 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register(RSerPoolSocketDescriptor,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, 30000) == 0) {
+                      loadinfo, reregInterval) == 0) {
 
-         // ====== Main loop ================================================
-         installBreakDetector();
-         while(!breakDetected()) {
-            // ====== Read from socket ======================================
-            char                  buffer[65536];
-            int                   flags = 0;
-            struct rsp_sndrcvinfo rinfo;
-            ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor, (char*)&buffer, sizeof(buffer),
-                                           &rinfo, &flags, 500000);
+         // ====== Startup ==================================================
+         const EventHandlingResult initializeResult = initialize();
+         if(initializeResult == EHR_Okay) {
 
-            // ====== Handle data ===========================================
-            if(received > 0) {
-               // ====== Handle event =======================================
-               EventHandlingResult eventHandlingResult;
-               if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                  handleNotification((const union rserpool_notification*)&buffer);
-                  /*
-                     We cannot shutdown or abort, since the session ID is not
-                     inserted into rinfo!
-                     Should we dissect the notification for the ID here?
-                  */
-                  eventHandlingResult = EHR_Okay;
+            // ====== Main loop =============================================
+            const unsigned long long autoStopTimeStamp =
+               (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
+            installBreakDetector();
+            while(!breakDetected()) {
+               // ====== Read from socket ===================================
+               char                     buffer[65536];
+               int                      flags = 0;
+               struct rsp_sndrcvinfo rinfo;
+               unsigned long long timeout = 5000000;
+               if(NextTimerTimeStamp > 0) {
+                  const unsigned long long now = getMicroTime();
+                  if(NextTimerTimeStamp >= now) {
+                     timeout = 0;
+                  }
+                  else {
+                     timeout = min(timeout, NextTimerTimeStamp - now);
+                  }
                }
-               else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-                  eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
-                                                         (char*)&buffer, received);
-               }
-               else {
-                  eventHandlingResult = handleMessage(rinfo.rinfo_session,
-                                                      (char*)&buffer, received,
-                                                      rinfo.rinfo_ppid,
-                                                      rinfo.rinfo_stream);
+printf("next=%Ld\n",timeout);
+               ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor,
+                                              (char*)&buffer, sizeof(buffer),
+                                              &rinfo, &flags, timeout);
+
+               // ====== Handle data ========================================
+               if(received > 0) {
+                  // ====== Handle event ====================================
+                  EventHandlingResult eventHandlingResult;
+                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                     handleNotification((const union rserpool_notification*)&buffer);
+                     /*
+                        We cannot shutdown or abort, since the session ID is not
+                        inserted into rinfo!
+                        Should we dissect the notification for the ID here?
+                     */
+                     eventHandlingResult = EHR_Okay;
+                  }
+                  else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+                     eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
+                                                            (char*)&buffer, received);
+                  }
+                  else {
+                     eventHandlingResult = handleMessage(rinfo.rinfo_session,
+                                                         (char*)&buffer, received,
+                                                         rinfo.rinfo_ppid,
+                                                         rinfo.rinfo_stream);
+                  }
+
+                  // ====== Check for problems ==============================
+                  if((eventHandlingResult == EHR_Abort) ||
+                     (eventHandlingResult == EHR_Shutdown)) {
+                     rsp_sendmsg(RSerPoolSocketDescriptor,
+                                 NULL, 0, ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF),
+                                 rinfo.rinfo_session, 0, 0, 0, 0);
+                  }
                }
 
-               // ====== Check for problems =================================
-               if((eventHandlingResult == EHR_Abort) ||
-                  (eventHandlingResult == EHR_Shutdown)) {
-                  rsp_sendmsg(RSerPoolSocketDescriptor,
-                              NULL, 0, ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF),
-                              rinfo.rinfo_session, 0, 0, 0, 0);
+               // ====== Handle timer =======================================
+               if((NextTimerTimeStamp > 0) &&
+                  (getMicroTime() > NextTimerTimeStamp)) {
+                  NextTimerTimeStamp = 0;
+                  handleTimer();
+               }
+
+               // ====== Auto-stop ==========================================
+               if((autoStopTimeStamp > 0) &&
+                  (getMicroTime() > autoStopTimeStamp)) {
+                  puts("Auto-stop reached!");
+                  break;
                }
             }
          }
+
+         // ====== Shutdown =================================================
+         finish(initializeResult);
 
          // ====== Clean up =================================================
          rsp_deregister(RSerPoolSocketDescriptor);

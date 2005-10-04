@@ -58,7 +58,7 @@ TCPLikeServer::~TCPLikeServer()
 
 
 // ###### Startup of thread #################################################
-EventHandlingResult TCPLikeServer::startup()
+EventHandlingResult TCPLikeServer::initialize()
 {
    return(EHR_Okay);
 }
@@ -146,7 +146,7 @@ void TCPLikeServer::run()
    int                   flags;
    EventHandlingResult   eventHandlingResult;
 
-   eventHandlingResult = startup();
+   eventHandlingResult = initialize();
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
          flags     = 0;
@@ -204,8 +204,10 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
-                                void*                userData,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                                void*                userData,
+                                unsigned int         reregInterval,
+                                unsigned int         runtimeLimit,
                                 struct TagItem*      tags)
 {
    beginLogging();
@@ -235,18 +237,20 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register_tags(rserpoolSocket,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, 30000, tags) == 0) {
+                           loadinfo, reregInterval, tags) == 0) {
 
          // ====== Main loop ================================================
-         TCPLikeServerList serverSet;
-         double            oldLoad = 0.0;
+         TCPLikeServerList        serverSet;
+         double                   oldLoad = 0.0;
+         const unsigned long long autoStopTimeStamp =
+            (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
          installBreakDetector();
          while(!breakDetected()) {
             // ====== Clean-up session list =================================
             serverSet.removeFinished();
 
             // ====== Wait for incoming sessions ============================
-            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 100000);
+            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if(serviceThread) {
@@ -281,9 +285,16 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                     loadinfo, 30000, (TagItem*)&mytags);
                }
             }
+
+            // ====== Auto-stop =============================================
+            if((autoStopTimeStamp > 0) &&
+               (getMicroTime() > autoStopTimeStamp)) {
+               puts("Auto-stop reached!");
+               break;
+            }
          }
 
-         // ====== Clean up ====================================================
+         // ====== Clean up =================================================
          serverSet.removeAll();
          rsp_deregister(rserpoolSocket);
       }

@@ -38,13 +38,21 @@ class UDPLikeServer
    UDPLikeServer();
    virtual ~UDPLikeServer();
 
+   virtual EventHandlingResult initialize();
+   virtual void finish(EventHandlingResult initializeResult);
+
    virtual void poolElement(const char*          programTitle,
                             const char*          poolHandle,
                             struct rsp_info*     info,
                             struct rsp_loadinfo* loadinfo,
-                            struct TagItem*      tags = NULL);
+                            unsigned int         reregInterval = 30000,
+                            unsigned int         runtimeLimit  = 0,
+                            struct TagItem*      tags          = NULL);
 
    protected:
+   void startTimer(unsigned long long timeStamp);
+   void stopTimer();
+
    virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
                                              const char*        buffer,
                                              size_t             bufferSize,
@@ -53,10 +61,14 @@ class UDPLikeServer
    virtual EventHandlingResult handleCookieEcho(rserpool_session_t sessionID,
                                                 const char*        buffer,
                                                 size_t             bufferSize);
-   virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
+   virtual void handleNotification(const union rserpool_notification* notification);
+   virtual void handleTimer();
 
    protected:
    int RSerPoolSocketDescriptor;
+
+   private:
+   unsigned long long NextTimerTimeStamp;
 };
 
 

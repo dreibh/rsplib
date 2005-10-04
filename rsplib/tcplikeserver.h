@@ -86,15 +86,17 @@ class TCPLikeServer : public TDThread
                            const char*          poolHandle,
                            struct rsp_info*     info,
                            struct rsp_loadinfo* loadinfo,
-                           void*                userData,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData),
-                           struct TagItem*      tags = NULL);
+                           void*                userData,
+                           unsigned int         reregInterval = 30000,
+                           unsigned int         runtimeLimit  = 0,
+                           struct TagItem*      tags          = NULL);
 
    protected:
    int RSerPoolSocketDescriptor;
 
    protected:
-   virtual EventHandlingResult startup();
+   virtual EventHandlingResult initialize();
    virtual void finish(EventHandlingResult result);
    virtual EventHandlingResult handleMessage(const char* buffer,
                                              size_t      bufferSize,

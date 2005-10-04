@@ -23,30 +23,23 @@
  *
  */
 
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <signal.h>
-#include <complex>
-
-#include "rsplib.h"
-#include "rsplib-tags.h"
+#include "rserpool.h"
 #include "loglevel.h"
+#include "udplikeserver.h"
 #include "timeutilities.h"
 #include "netutilities.h"
+#include "rsputilities.h"
 #include "breakdetector.h"
 #include "randomizer.h"
 #include "statistics.h"
-
 #include "calcapppackets.h"
+
+#include <iostream>
 
 
 using namespace std;
 
-
+#if 0
 class SessionSet
 {
    public:
@@ -79,7 +72,7 @@ class SessionSet
 
    struct SessionSetEntry {
       SessionSetEntry*   Next;
-      SessionDescriptor* Session;
+      rserpool_session_t SessionID;
 
       // ------ Variables ---------------------------------------------------
       bool               HasJob;
@@ -102,7 +95,6 @@ class SessionSet
 
    void sendCalcAppAccept(SessionSetEntry* sessionSetEntry);
    void sendCalcAppReject(SessionSetEntry* sessionSetEntry, unsigned int jobID);
-   void Cookie(SessionSetEntry* sessionSetEntry);
    void sendCalcAppComplete(SessionSetEntry* sessionSetEntry);
    void sendCalcAppKeepAlive(SessionSetEntry* sessionSetEntry);
    void sendCalcAppKeepAliveAck(SessionSetEntry* sessionSetEntry);
@@ -345,9 +337,9 @@ void SessionSet::handleCalcAppRequest(SessionSetEntry* sessionSetEntry,
    }
    if (Sessions > sessionlimit)
    {
-	cerr << "ERROR: Too many sessions" << endl;
+   cerr << "ERROR: Too many sessions" << endl;
         cout << "Sessions: " << Sessions << endl;
-	//Sessions--;
+   //Sessions--;
         sendCalcAppReject(sessionSetEntry,ntohl(message->JobID));
         sessionSetEntry->Closing = true;
         return;
@@ -385,9 +377,9 @@ void SessionSet::handleCookieEcho(SessionSetEntry* sessionSetEntry,
    }
    if (Sessions > sessionlimit)
    {
-	cerr << "ERROR: Too many sessions" << endl;
+   cerr << "ERROR: Too many sessions" << endl;
         cout << "Sessions: " << Sessions << endl;
-	//Sessions--;
+   //Sessions--;
         sendCalcAppReject(sessionSetEntry,cookie->JobID);
         sessionSetEntry->Closing = true;
         return;
@@ -655,14 +647,14 @@ void SessionSet::handleMessage(SessionSetEntry* sessionSetEntry,
             handleCalcAppRequest(sessionSetEntry, message, received);
           break;
          case CALCAPP_KEEPALIVE:
-           handleCalcAppKeepAlive(sessionSetEntry, message, received);
+            handleCalcAppKeepAlive(sessionSetEntry, message, received);
           break;
          case CALCAPP_KEEPALIVE_ACK:
-           handleCalcAppKeepAliveAck(sessionSetEntry, message, received);
+            handleCalcAppKeepAliveAck(sessionSetEntry, message, received);
           break;
          default:
-           cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
-           sessionSetEntry->Closing = true;
+            cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
+            sessionSetEntry->Closing = true;
           break;
       }
    }
@@ -792,276 +784,302 @@ void SessionSet::scheduleJobs()
       }
    }
 }
+#endif
 
 
 
-// ###### Main program ######################################################
-int main(int argc, char** argv)
+
+class CalcAppServer : public UDPLikeServer
 {
-   uint32_t                      identifier                     = 0;
-   unsigned int                  reregInterval                  = 5000;
-   card64                        start                          = getMicroTime();
-   card64                        stop                           = 0;
-   int                           type                           = SOCK_STREAM;
-   int                           protocol                       = IPPROTO_SCTP;
-   unsigned short                port                           = 0;
-   char*                         poolHandle                     = "CalcAppPool";
-   char* 			 objectName     		= "scenario.calcapppoolelement[0]";
-   char* 			 vectorFileName 		= "calcapppoolelement.vec";
-   char* 			 scalarFileName 		= "calcapppoolelement.sca";
-   unsigned int                  policyType                     = PPT_ROUNDROBIN;
-   unsigned int                  policyParameterWeight          = 1;
-   unsigned int                  policyParameterLoad            = 0;
-   unsigned int                  policyParameterLoadDegradation = 0;
-   struct PoolElementDescriptor* poolElement;
-   struct TagItem                tags[16];
-   struct PoolElementDescriptor* pedArray[1];
-   unsigned int                  pedStatusArray[FD_SETSIZE];
-   int                           i;
-   int                           result;
-   unsigned long long            runtime = 180000000;
+   public:
+   CalcAppServer(const size_t maxJobs,
+                 const char*  vectorFileName,
+                 const char*  scalarFileName);
+   virtual ~CalcAppServer();
 
-   unsigned long long 		 StartupTimeStamp		= getMicroTime();
+   protected:
+   virtual EventHandlingResult initialize();
+   virtual void finish(EventHandlingResult result);
+   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
+                                             const char*        buffer,
+                                             size_t             bufferSize,
+                                             uint32_t           ppid,
+                                             uint16_t           streamID);
+/*   virtual EventHandlingResult handleCookieEcho(rserpool_session_t sessionID,
+                                                const char*        buffer,
+                                                size_t             bufferSize);*/
+   virtual void handleTimer();
+
+   private:
+   struct CalcAppServerJob {
+      CalcAppServerJob*  Next;
+      rserpool_session_t SessionID;
+      uint32_t           JobID;
+
+      // ------ Variables ---------------------------------------------------
+      double             JobSize;
+      double             Completed;
+      unsigned long long LastUpdateAt;
+      unsigned long long LastCookieAt;
+      double             LastCookieCompleted;
+
+      // ------ Timers ------------------------------------------------------
+      unsigned long long KeepAliveTransmissionTimeStamp;
+      unsigned long long KeepAliveTimeoutTimeStamp;
+      unsigned long long JobCompleteTimeStamp;
+      unsigned long long CookieTransmissionTimeStamp;
+   };
+
+   CalcAppServerJob* addJob(rserpool_session_t sessionID,
+                            uint32_t           jobID,
+                            double             jobSize,
+                            double             completed);
+   CalcAppServerJob* findJob(rserpool_session_t sessionID,
+                             uint32_t           jobID);
+   void removeJob(CalcAppServerJob* job);
+   void updateCalculations();
+   void scheduleJobs();
+   void scheduleNextTimerEvent();
+
+   void handleCalcAppRequest(rserpool_session_t    sessionID,
+                             const CalcAppMessage* message,
+                             const size_t          received);
+   void sendCalcAppAccept(CalcAppServerJob* job);
+   void sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID);
+   void handleJobCompleteTimer(CalcAppServerJob* job);
+   void sendCalcAppComplete(CalcAppServerJob* job);
 
 
-   start = getMicroTime();
-   stop  = 0;
-   for(i = 1;i < argc;i++) {
-      if(!(strcmp(argv[i], "-sctp"))) {
-         protocol = IPPROTO_SCTP;
+   size_t             Jobs;
+   CalcAppServerJob*  FirstJob;
+   std::string        VectorFileName;
+   std::string        ScalarFileName;
+   FILE*              VectorFH;
+   FILE*              ScalarFH;
+
+   size_t             MaxJobs;
+   double             Capacity;
+   unsigned long long StartupTimeStamp;
+   double             TotalUsedCalculations;
+   unsigned long long KeepAliveTimeoutInterval;
+   unsigned long long KeepAliveTransmissionInterval;
+   unsigned long long CookieMaxTime;
+   double             CookieMaxCalculations;
+};
+
+
+// ###### Constructor #######################################################
+CalcAppServer::CalcAppServer(const size_t maxJobs,
+                             const char*  vectorFileName,
+                             const char*  scalarFileName)
+{
+   Jobs           = 0;
+   FirstJob       = NULL;
+   VectorFileName = vectorFileName;
+   ScalarFileName = scalarFileName;
+   VectorFH       = NULL;
+   ScalarFH       = NULL;
+
+   MaxJobs                       = maxJobs;
+   TotalUsedCalculations         = 0.0;
+   Capacity                      = 1000000.0;
+   KeepAliveTimeoutInterval      = 2000000;
+   KeepAliveTransmissionInterval = 2000000;
+   CookieMaxTime                 = 1000000;
+   CookieMaxCalculations         = 5000000.0;
+   StartupTimeStamp              = getMicroTime();
+}
+
+
+// ###### Destructor ########################################################
+CalcAppServer::~CalcAppServer()
+{
+}
+
+
+// ###### Add job ###########################################################
+CalcAppServer::CalcAppServerJob* CalcAppServer::addJob(rserpool_session_t sessionID,
+                                                       uint32_t           jobID,
+                                                       double             jobSize,
+                                                       double             completed)
+{
+   if(Jobs < MaxJobs) {
+      CalcAppServerJob* job = new CalcAppServerJob;
+      if(job) {
+         updateCalculations();
+         job->Next                           = FirstJob;
+         job->SessionID                      = sessionID;
+         job->JobID                          = jobID;
+         job->JobSize                        = jobSize;
+         job->Completed                      = completed;
+         job->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
+         job->KeepAliveTimeoutTimeStamp      = ~0ULL;
+         job->JobCompleteTimeStamp           = ~0ULL;
+         job->CookieTransmissionTimeStamp    = ~0ULL;
+         job->LastUpdateAt                   = getMicroTime();
+         job->LastCookieAt                   = 0;
+         job->LastCookieCompleted            = 0.0;
+         FirstJob = job;
+         Jobs++;
+
+         cout << " Job added (" << Jobs << " are running)" << endl;
+         scheduleJobs();
       }
-      else if(!(strncmp(argv[i], "-stop=" ,6))) {
-         stop = start + ((card64)1000000 * (card64)atol((char*)&argv[i][6]));
+      return(job);
+   }
+   return(NULL);
+}
+
+
+// ###### Find job ##########################################################
+CalcAppServer::CalcAppServerJob* CalcAppServer::findJob(rserpool_session_t sessionID,
+                                                        uint32_t           jobID)
+{
+   CalcAppServerJob* job = FirstJob;
+   while(job != NULL) {
+      if((job->SessionID == sessionID) && (job->JobID == jobID)) {
+         return(job);
       }
-      else if(!(strncmp(argv[i], "-port=" ,6))) {
-         port = atol((char*)&argv[i][6]);
-      }
-      else if(!(strncmp(argv[i], "-ph=" ,4))) {
-         poolHandle = (char*)&argv[i][4];
-      }
-      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
-         reregInterval = atol((char*)&argv[i][15]);
-         if(reregInterval < 250) {
-            reregInterval = 250;
+      job = job->Next;
+   }
+   return(NULL);
+}
+
+
+// ###### Remove job ########################################################
+void CalcAppServer::removeJob(CalcAppServer::CalcAppServerJob* removedJob)
+{
+   updateCalculations();
+   CalcAppServerJob* job  = FirstJob;
+   CalcAppServerJob* prev = NULL;
+   while(job != NULL) {
+      if(job == removedJob) {
+         if(prev == NULL) {
+            FirstJob = job->Next;
          }
-      }
-      else if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
+         else {
+            prev->Next = job->Next;
          }
+         delete removedJob;
+         CHECK(Jobs > 0);
+         Jobs--;
+         cout << " Job removed (" << Jobs << " still running)" << endl;
+         break;
       }
-      else if(!(strncmp(argv[i], "-registrar=" ,11))) {
-         /* Process this later */
-      }
-      else if(!(strncmp(argv[i], "-object=" ,8))) {
-         objectName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-vector=" ,8))) {
-         vectorFileName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-scalar=" ,8))) {
-         scalarFileName = (char*)&argv[i][8];
-	 }
-      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
-      runtime = atol((char*)&argv[i][9]);
-	 }
-      else if(!(strncmp(argv[i], "-sessionlimit=" ,14))) {
-      sessionlimit = atol((char*)&argv[i][14]);
-	 }
+      prev = job;
+      job = job->Next;
+   }
+   scheduleJobs();
+}
 
-      else {
-         cerr << "Bad argument \"" << argv[i] << "\"!"  << endl;
-         cerr << "Usage: " << argv[0]
-              << "Usage: %s {-object=object name} {-vector=vector file name} {-scalar=scalar file name} {-registrar=Registrar address(es)} {-ph=Pool Handle} {-sctp} {-port=local port} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
-              << endl;
-         exit(1);
+
+// ###### Update calculations until now for all sessions ####################
+void CalcAppServer::updateCalculations()
+{
+   const unsigned long long now = getMicroTime();
+   CalcAppServerJob*        job = FirstJob;
+
+   if(Jobs > 0) {
+      const double capacityPerJob = Capacity / ((double)Jobs * 1000000.0);
+
+      while(job != NULL) {
+         const unsigned long long elapsed   = now - job->LastUpdateAt;
+         const double completedCalculations = elapsed * capacityPerJob;
+         if(job->Completed + completedCalculations < job->JobSize) {
+            TotalUsedCalculations += completedCalculations;
+            job->Completed += completedCalculations;
+         }
+         else {
+            CHECK(job->JobSize - job->Completed >= 0.0);
+            TotalUsedCalculations += job->JobSize - job->Completed;
+            job->Completed = job->JobSize;
+         }
+         job->LastUpdateAt = now;
+
+         job = job->Next;
       }
    }
+}
 
-   beginLogging();
-   if(rspInitialize(NULL) != 0) {
-      cerr << "ERROR: Unable to initialize rsplib!" << endl;
-      finishLogging();
-      exit(1);
-   }
 
-   for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-registrar=" ,11))) {
-         if(rspAddStaticRegistrar((char*)&argv[i][11]) != RSPERR_OKAY) {
-            cerr << "ERROR: Bad registrar setting: "
-                 << argv[i] << "!" << endl;
-            exit(1);
-         }
+// ###### Schedule requests of all sessions #################################
+void CalcAppServer::scheduleJobs()
+{
+   const unsigned long long now = getMicroTime();
+   CalcAppServerJob*        job = FirstJob;
+
+   if(Jobs > 0) {
+      const double capacityPerJob = Capacity / ((double)Jobs * 1000000.0);
+      while(job != NULL) {
+         // When is the current session's job completed?
+         const double calculationsToGo         = job->JobSize - job->Completed;
+         const unsigned long long timeToGo     = (unsigned long long)ceil(calculationsToGo / capacityPerJob);
+
+         // job->JobCompleteTimeStamp = now + timeToGo;
+         job->JobCompleteTimeStamp = job->LastUpdateAt + timeToGo;
+
+         // When is the time to send the next cookie?
+         const double calculationsSinceLastCookie = job->Completed - job->LastCookieCompleted;
+         const double timeSinceLastCookie         = now - job->LastCookieAt;
+         const unsigned long long nextByCalculations =
+            (unsigned long long)rint(max(0.0, CookieMaxCalculations - calculationsSinceLastCookie) / capacityPerJob);
+         const unsigned long long nextByTime =
+            (unsigned long long)rint(max(0.0, CookieMaxTime - timeSinceLastCookie));
+         const unsigned long long nextCookie = min(nextByCalculations, nextByTime);
+         job->CookieTransmissionTimeStamp = now + nextCookie;
+
+         job = job->Next;
       }
    }
+}
 
 
-   tags[0].Tag  = TAG_PoolPolicy_Type;
-   tags[0].Data = policyType;
-   tags[1].Tag  = TAG_PoolPolicy_Parameter_Load;
-   tags[1].Data = policyParameterLoad;
-   tags[2].Tag  = TAG_PoolPolicy_Parameter_LoadDegradation;
-   tags[2].Data = policyParameterLoadDegradation;
-   tags[3].Tag  = TAG_PoolPolicy_Parameter_Weight;
-   tags[3].Data = policyParameterWeight;
-   tags[4].Tag  = TAG_PoolElement_SocketType;
-   tags[4].Data = type;
-   tags[5].Tag  = TAG_PoolElement_SocketProtocol;
-   tags[5].Data = protocol;
-   tags[6].Tag  = TAG_PoolElement_LocalPort;
-   tags[6].Data = port;
-   tags[7].Tag  = TAG_PoolElement_ReregistrationInterval;
-   tags[7].Data = reregInterval;
-   tags[8].Tag  = TAG_PoolElement_RegistrationLife;
-   tags[8].Data = (3 * 45000) + 5000;
-   tags[9].Tag  = TAG_PoolElement_Identifier;
-   tags[9].Data = identifier;
-   tags[10].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[10].Data = (tagdata_t)true;
-   tags[11].Tag  = TAG_END;
+// ###### Schedule next timer event #########################################
+void CalcAppServer::scheduleNextTimerEvent()
+{
+   unsigned long long nextTimerTimeStamp = ~0ULL;
+   CalcAppServerJob*  job                = FirstJob;
+   while(job != NULL) {
+      nextTimerTimeStamp = min(nextTimerTimeStamp, job->JobCompleteTimeStamp);
+      nextTimerTimeStamp = min(nextTimerTimeStamp, job->KeepAliveTransmissionTimeStamp);
+      nextTimerTimeStamp = min(nextTimerTimeStamp, job->KeepAliveTimeoutTimeStamp);
+      nextTimerTimeStamp = min(nextTimerTimeStamp, job->CookieTransmissionTimeStamp);
+      job = job->Next;
+   }
+printf("%Lx\n",nextTimerTimeStamp);
+   startTimer(nextTimerTimeStamp);
+}
 
-   poolElement = rspCreatePoolElement((unsigned char*)poolHandle, strlen(poolHandle), tags);
-   if(poolElement != NULL) {
-      cout << "CalcApp Pool Element - Version 1.0" << endl
-           << "----------------------------------" << endl << endl
-           << "Object      = " << objectName << endl
-           << "Vector File = " << vectorFileName << endl
-           << "Scalar File = " << scalarFileName << endl
-           << endl;
 
-   VectorFH = fopen(vectorFileName, "w");
+// ###### Initialize ########################################################
+EventHandlingResult CalcAppServer::initialize()
+{
+   VectorFH = fopen(VectorFileName.c_str(), "w");
    if(VectorFH == NULL) {
-      cout << " Unable to open output file " << vectorFileName << endl;
-      finishLogging();
+      cout << " Unable to open output file " << VectorFileName << endl;
+      return(EHR_Abort);
    }
    fprintf(VectorFH, "Runtime AvailableCalculations UsedCalculations Utilization\n");
 
-   ScalarFH = fopen(scalarFileName, "w");
+   ScalarFH = fopen(ScalarFileName.c_str(), "w");
    if(ScalarFH == NULL) {
-      cout << " Unable to open output file " << scalarFileName << endl;
-      finishLogging();
+      cout << " Unable to open output file " << ScalarFileName << endl;
+      return(EHR_Abort);
    }
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
+   return(EHR_Okay);
+}
 
 
-#ifndef FAST_BREAK
-      installBreakDetector();
-#endif
-
-      SessionSet sessionList;
-      while(!breakDetected()) {
-         /* ====== Call rspSessionSelect() =============================== */
-         tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-         tags[0].Data = 1;  // !!!!!!
-         tags[1].Tag  = TAG_DONE;
-         pedArray[0]       = poolElement;
-         pedStatusArray[0] = RspSelect_Read;
-         const size_t sessions = sessionList.getSessions();
-         struct SessionDescriptor* sessionDescriptorArray[sessions];
-         unsigned int              sessionStatusArray[sessions];
-         unsigned long long nextTimer = sessionList.initSelectArray(
-                                           (struct SessionDescriptor**)&sessionDescriptorArray,
-                                           (unsigned int*)&sessionStatusArray,
-                                           RspSelect_Read);
-         unsigned long long now       = getMicroTime();
-         nextTimer = min(now + 500000, nextTimer);
-         unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-//printf("NEXT: %Ld\n",timeout);
-         result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
-                                   (unsigned int*)&sessionStatusArray,
-                                   sessions,
-                                   (struct PoolElementDescriptor**)&pedArray,
-                                   (unsigned int*)&pedStatusArray,
-                                   1,
-                                   timeout,
-                                   (struct TagItem*)&tags);
-         sessionList.handleTimers();
-
-	 double	 		 Capacity                      = 1000000.0;
-   	 unsigned long long 		 shutdownTimeStamp             = getMicroTime();
-   	 const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
-   	 const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
-   	 const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
-
-	 static unsigned long long lastOutput = 0;
-	 if(getMicroTime() - lastOutput >= 500000ULL) {
-	    lastOutput = getMicroTime();
-  	    fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
-
-	 }
-
-	 if (getMicroTime()-StartupTimeStamp >= runtime)
-   	  {
-      			goto finished;
-          }
-
-         /* ====== Handle results of ext_select() =========================== */
-         if(result > 0) {
-            if(pedStatusArray[0] & RspSelect_Read) {
-               /*
-               tags[0].Tag  = TAG_TuneSCTP_MinRTO;
-               tags[0].Data = 200;
-               tags[1].Tag  = TAG_TuneSCTP_MaxRTO;
-               tags[1].Data = 500;
-               tags[2].Tag  = TAG_TuneSCTP_InitialRTO;
-               tags[2].Data = 250;
-               tags[3].Tag  = TAG_TuneSCTP_Heartbeat;
-               tags[3].Data = 100;
-               tags[4].Tag  = TAG_TuneSCTP_PathMaxRXT;
-               tags[4].Data = 3;
-               tags[5].Tag  = TAG_TuneSCTP_AssocMaxRXT;
-               tags[5].Data = 12;
-               tags[6].Tag  = TAG_UserTransport_HasControlChannel;
-               tags[6].Data = 1;
-               tags[7].Tag  = TAG_DONE;
-               */
-               tags[0].Tag  = TAG_DONE;
-               struct SessionDescriptor* session = rspAcceptSession(pedArray[0], (struct TagItem*)&tags);
-               if(session) {
-                  if(!sessionList.addSession(session)) {
-                     rspDeleteSession(session);
-                  }
-               }
-               else {
-                  cerr << "ERROR: Unable to accept new session!" << endl;
-               }
-            }
-            for(size_t i = 0;i < sessions;i++) {
-               if(sessionStatusArray[i] & RspSelect_Read) {
-                  sessionList.handleEvents(sessionDescriptorArray[i],
-                                           sessionStatusArray[i]);
-               }
-            }
-         }
-
-         if(result < 0) {
-            if(errno != EINTR) {
-               perror("rspSessionSelect() failed");
-            }
-            break;
-         }
-
-         sessionList.removeClosed();
-
-         /* ====== Check auto-stop timer ==================================== */
-         if((stop > 0) && (getMicroTime() >= stop)) {
-            cerr << "Auto-stop time reached -> exiting!" << endl;
-            break; //fprintf(VectorFH, "Line Runtime AvailableCalculations UsedCalculations Utilization\n");
-         }
-      }
-      finished:
-      cout << "Closing sessions..." << endl;
-      sessionList.removeAll();
-      cout << "Removing Pool Element..." << endl;
-      rspDeletePoolElement(poolElement, NULL);
-
-
-
-   double	 		 Capacity                      = 1000000.0;
-   unsigned long long 		 shutdownTimeStamp             = getMicroTime();
-   const unsigned long long 	 serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
-   const double 		 availableCalculations = serverRuntime * Capacity / 1000000.0;
-   const double 		 utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
+// ###### Shutdown ##########################################################
+void CalcAppServer::finish(EventHandlingResult initializeResult)
+{
+/*
+   double           Capacity                      = 1000000.0;
+   unsigned long long        shutdownTimeStamp             = getMicroTime();
+   const unsigned long long     serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
+   const double        availableCalculations = serverRuntime * Capacity / 1000000.0;
+   const double        utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
    TotalUsedCapacity = sessionList.getTotalUsedCalculations();
    TotalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
    TotalWastedCapacity = serverRuntime-TotalUsedCapacity;
@@ -1072,19 +1090,256 @@ int main(int argc, char** argv)
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted   \" %u    \n", objectName, AcceptedJobs);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected   \" %u    \n", objectName, RejectedJobs);
    fprintf(ScalarFH, "scalar \"%s\" \"Utilization           \" %1.6f \n", objectName, utilization);
+*/
+   if(VectorFH) {
+      fclose(VectorFH);
+      VectorFH = NULL;
    }
-   else {
-      cerr << "ERROR: Unable to create pool element!" << endl;
-      exit(1);
+   if(ScalarFH) {
+      fclose(ScalarFH);
+      ScalarFH = NULL;
    }
-
-
-   fclose(ScalarFH);
-   fclose(VectorFH);
-
-   rspCleanUp();
-   finishLogging();
-   cout << endl << "Terminated!" << endl;
-   return(0);
 }
 
+
+
+
+
+
+
+
+
+
+// ###### Handle incoming CalcAppRequest ####################################
+void CalcAppServer::handleCalcAppRequest(rserpool_session_t    sessionID,
+                                         const CalcAppMessage* message,
+                                         const size_t          received)
+{
+   CalcAppServerJob* job = addJob(sessionID, ntohl(message->JobID),
+                                  (double)ntoh64(message->JobSize), 0.0);
+   if(job) {
+      cout << "Job " << job->SessionID << "/" << job->JobID
+           << " of size " << job->JobSize << " accepted" << endl;
+      sendCalcAppAccept(job);
+   }
+   else {
+      cout << "Job " << job->SessionID << "/" << job->JobID << " rejected!" << endl;
+      sendCalcAppReject(sessionID, ntohl(message->JobID));
+   }
+}
+
+
+// ###### Send CalcAppAccept ################################################
+void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
+{
+//    AcceptedJobs++;
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type  = htonl(CALCAPP_ACCEPT);
+   message.JobID = htonl(job->JobID);
+   if(rsp_sendmsg(RSerPoolSocketDescriptor,
+                  (void*)&message, sizeof(message), 0,
+                  job->SessionID, PPID_CALCAPP, 0, 0, 0) < 0) {
+      logerror("Unable to send CalcAppAccept");
+      removeJob(job);
+   }
+}
+
+
+// ###### Send CalcAppReject ################################################
+void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID)
+{
+//    RejectedJobs++;
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type  = htonl(CALCAPP_ACCEPT);
+   message.JobID = htonl(jobID);
+   if(rsp_sendmsg(RSerPoolSocketDescriptor,
+                  (void*)&message, sizeof(message), 0,
+                  sessionID, PPID_CALCAPP, 0, 0, 0) < 0) {
+      logerror("Unable to send CalcAppReject");
+   }
+}
+
+
+// ###### Handle JobComplete timer ##########################################
+void CalcAppServer::handleJobCompleteTimer(CalcAppServer::CalcAppServerJob* job)
+{
+   cout << "Job " << job->SessionID << "/" << job->JobID << " is complete!" << endl;
+   sendCalcAppComplete(job);
+   removeJob(job);
+}
+
+
+// ###### Send CalcAppComplete ##############################################
+void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
+{
+   struct CalcAppMessage message;
+   memset(&message, 0, sizeof(message));
+   message.Type      = htonl(CALCAPP_COMPLETE);
+   message.JobID     = htonl(job->JobID);
+   message.JobSize   = hton64((unsigned long long)rint(job->JobSize));
+   message.Completed = hton64((unsigned long long)rint(job->Completed));
+   if(rsp_sendmsg(RSerPoolSocketDescriptor,
+                  (void*)&message, sizeof(message), 0,
+                  job->SessionID, PPID_CALCAPP, 0, 0, 0) < 0) {
+      logerror("Unable to send CalcAppAccept");
+   }
+}
+
+
+
+
+
+
+
+// ###### Handle message ####################################################
+EventHandlingResult CalcAppServer::handleMessage(rserpool_session_t sessionID,
+                                                 const char*        buffer,
+                                                 size_t             bufferSize,
+                                                 uint32_t           ppid,
+                                                 uint16_t           streamID)
+{
+   if(bufferSize >= sizeof(CalcAppMessage)) {
+      const CalcAppMessage* message = (const CalcAppMessage*)buffer;
+
+printf("Type=%d\n",   ntohl(message->Type));
+      switch(ntohl(message->Type)) {
+         case CALCAPP_REQUEST:
+            handleCalcAppRequest(sessionID, message, bufferSize);
+          break;
+         case CALCAPP_KEEPALIVE:
+            //handleCalcAppKeepAlive(message, bufferSize);
+          break;
+         case CALCAPP_KEEPALIVE_ACK:
+            //handleCalcAppKeepAliveAck(message, bufferSize);
+          break;
+         default:
+            cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
+            //sessionSetEntry->Closing = true;
+          break;
+      }
+   }
+
+   scheduleNextTimerEvent();
+   return(EHR_Okay);
+}
+
+
+// ###### Handle timer ######################################################
+void CalcAppServer::handleTimer()
+{
+   const unsigned long long now = getMicroTime();
+
+   CalcAppServerJob* job = FirstJob;
+   while(job != NULL) {
+      // ====== Handle timers ===============================================
+      if(job->JobCompleteTimeStamp <= now) {
+         job->JobCompleteTimeStamp = ~0ULL;
+         handleJobCompleteTimer(job);
+         break;
+      }
+      if(job->CookieTransmissionTimeStamp <= now) {
+         job->CookieTransmissionTimeStamp = ~0ULL;
+//          handleCookieTransmissionTimer(job);
+         break;
+      }
+      if(job->KeepAliveTransmissionTimeStamp <= now) {
+         job->KeepAliveTransmissionTimeStamp = ~0ULL;
+//          handleKeepAliveTransmissionTimer(job);
+      }
+      if(job->KeepAliveTimeoutTimeStamp <= now) {
+         job->KeepAliveTimeoutTimeStamp = ~0ULL;
+//                   handleKeepAliveTimeoutTimer(job);
+      }
+      job = job->Next;
+   }
+
+   scheduleNextTimerEvent();
+}
+
+
+
+// ###### Main program ######################################################
+int main(int argc, char** argv)
+{
+   struct rsp_info info;
+   struct TagItem  tags[8];
+   unsigned int    reregInterval  = 30000;
+   unsigned int    runtimeLimit   = 0;
+   const char*     poolHandle     = NULL;
+   size_t          maxJobs        = 2;
+   char*           objectName     = "scenario.calcapppoolelement[0]";
+   char*           vectorFileName = "calcapppoolelement.vec";
+   char*           scalarFileName = "calcapppoolelement.sca";
+
+   /* ====== Read parameters ============================================= */
+   memset(&info, 0, sizeof(info));
+   tags[0].Tag  = TAG_PoolElement_Identifier;
+   tags[0].Data = 0;
+   tags[1].Tag  = TAG_DONE;
+#ifdef ENABLE_CSP
+   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, 0);
+#endif
+   for(int i = 1;i < argc;i++) {
+      if(!(strncmp(argv[i], "-log" ,4))) {
+         if(initLogging(argv[i]) == false) {
+            exit(1);
+         }
+      }
+#ifdef ENABLE_CSP
+      if(!(strncmp(argv[i], "-csp" ,4))) {
+         if(initComponentStatusReporter(&info, argv[i]) == false) {
+            exit(1);
+         }
+      }
+#endif
+      else if(!(strncmp(argv[i], "-identifier=", 12))) {
+         tags[0].Data = atol((const char*)&argv[i][12]);
+#ifdef ENABLE_CSP
+         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
+#endif
+      }
+      else if(!(strncmp(argv[i], "-registrar=", 11))) {
+         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
+            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
+            exit(1);
+         }
+      }
+      else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
+         poolHandle = (char*)&argv[i][12];
+      }
+      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
+         reregInterval = atol((char*)&argv[i][15]);
+         if(reregInterval < 250) {
+            reregInterval = 250;
+         }
+      }
+      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
+         runtimeLimit = atol((const char*)&argv[i][9]);
+      }
+      else if(!(strncmp(argv[i], "-object=" ,8))) {
+         objectName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-vector=" ,8))) {
+         vectorFileName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-scalar=" ,8))) {
+         scalarFileName = (char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
+         runtimeLimit = atol((char*)&argv[i][9]);
+      }
+      else if(!(strncmp(argv[i], "-maxjobs=" ,9))) {
+         maxJobs = atol((char*)&argv[i][9]);
+      }
+   }
+
+
+   CalcAppServer calcAppServer(maxJobs, vectorFileName, scalarFileName);
+   calcAppServer.poolElement("CalcAppServer - Version 1.0",
+                             (poolHandle != NULL) ? poolHandle : "CalcAppPool",
+                             &info, NULL,
+                             reregInterval, runtimeLimit,
+                             (struct TagItem*)&tags);
+}

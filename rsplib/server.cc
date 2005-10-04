@@ -44,8 +44,10 @@
 int main(int argc, char** argv)
 {
    struct rsp_info info;
-   unsigned int    service    = SERVICE_ECHO;
-   const char*     poolHandle = NULL;
+   unsigned int    reregInterval = 30000;
+   unsigned int    runtimeLimit  = 0;
+   unsigned int    service       = SERVICE_ECHO;
+   const char*     poolHandle    = NULL;
    struct TagItem  tags[8];
 
    /* ====== Read parameters ============================================= */
@@ -83,6 +85,15 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
+      }
+      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
+         reregInterval = atol((char*)&argv[i][15]);
+         if(reregInterval < 250) {
+            reregInterval = 250;
+         }
+      }
+      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
+         runtimeLimit = atol((const char*)&argv[i][9]);
       }
       else if(!(strcmp(argv[i], "-echo"))) {
          service = SERVICE_ECHO;
@@ -128,6 +139,7 @@ int main(int argc, char** argv)
       echoServer.poolElement("Echo Server - Version 1.0",
                              (poolHandle != NULL) ? poolHandle : "EchoPool",
                              &info, NULL,
+                             reregInterval, runtimeLimit,
                              (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DISCARD) {
@@ -135,6 +147,7 @@ int main(int argc, char** argv)
       discardServer.poolElement("Discard Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DiscardPool",
                                 &info, NULL,
+                                reregInterval, runtimeLimit,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
@@ -142,14 +155,16 @@ int main(int argc, char** argv)
       daytimeServer.poolElement("Daytime Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DaytimePool",
                                 &info, NULL,
+                                reregInterval, runtimeLimit,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
       TCPLikeServer::poolElement("Character Generator Server - Version 1.0",
                                   (poolHandle != NULL) ? poolHandle : "CharGenPool",
                                   &info, NULL,
-                                  NULL,
                                   CharGenServer::charGenServerFactory,
+                                  NULL,
+                                  reregInterval, runtimeLimit,
                                   (struct TagItem*)&tags);
    }
    else if(service == SERVICE_PINGPONG) {
@@ -164,8 +179,9 @@ int main(int argc, char** argv)
       TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "PingPongPool",
                                  &info, NULL,
-                                 (void*)&settings,
                                  PingPongServer::pingPongServerFactory,
+                                 (void*)&settings,
+                                 reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_FRACTAL) {
@@ -184,8 +200,9 @@ int main(int argc, char** argv)
       TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "FractalGeneratorPool",
                                  &info, NULL,
-                                 (void*)&settings,
                                  FractalGeneratorServer::fractalGeneratorServerFactory,
+                                 (void*)&settings,
+                                 reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
    }
 

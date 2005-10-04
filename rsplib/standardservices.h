@@ -86,7 +86,7 @@ class CharGenServer : public TCPLikeServer
    static TCPLikeServer* charGenServerFactory(int sd, void* userData);
 
    protected:
-   EventHandlingResult startup();
+   EventHandlingResult initialize();
 };
 
 
