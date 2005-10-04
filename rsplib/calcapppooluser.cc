@@ -216,7 +216,7 @@ void sendCalcAppRequest(struct Process* process)
    cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, PPID_CALCAPP, 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0,
                                 0);
    if(result <= 0) {
       process->Status = PS_Failed;
@@ -236,7 +236,7 @@ void sendCalcAppKeepAlive(struct Process* process)
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, PPID_CALCAPP, 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0,
                                 0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAlive" << endl;
@@ -256,7 +256,7 @@ void sendCalcAppKeepAliveAck(struct Process* process)
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, PPID_CALCAPP, 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0,
                                 0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAliveAck" << endl;
@@ -482,7 +482,6 @@ void handleEvents(Process*    process,
       else {
          if(received >= (ssize_t)sizeof(CalcAppMessage)) {
             CalcAppMessage* response = (CalcAppMessage*)&buffer;
-   printf("TYPE=%d\n",ntohl(response->Type));
             switch(ntohl(response->Type)) {
                case CALCAPP_ACCEPT:
                   handleCalcAppAccept(process, response, sizeof(response));
@@ -557,7 +556,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
       process.Status = PS_Init;
 
       process.RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
-      if(process.RSerPoolSocketDescriptor < 0) {
+      if(process.RSerPoolSocketDescriptor >= 0) {
          if(rsp_connect(process.RSerPoolSocketDescriptor,
                         (unsigned char*)poolHandle, strlen(poolHandle)) == 0) {
             sendCalcAppRequest(&process);
@@ -606,9 +605,6 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
                }
             }
 
-            rsp_close(process.RSerPoolSocketDescriptor);
-            process.RSerPoolSocketDescriptor = -1;
-
             if(process.Status == PS_Completed) {
                delete process.CurrentJob;
                process.CurrentJob = process.Queue.dequeue();
@@ -617,9 +613,13 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
          else {
             perror("rsp_connect() failed");
          }
+
+         rsp_close(process.RSerPoolSocketDescriptor);
+         process.RSerPoolSocketDescriptor = -1;
       }
       else {
          perror("rsp_socket() failed");
+         return;
       }
 
       while(process.CurrentJob == NULL) {

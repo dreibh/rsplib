@@ -1054,9 +1054,6 @@ ssize_t rsp_sendmsg(int                sd,
             LOG_END
 
             /* ====== Terminate association and notify application ======= */
-/* ?????
-            sendabort(rserpoolSocket->Socket, session->AssocID);
-*/
             notificationNode = notificationQueueEnqueueNotification(&rserpoolSocket->Notifications,
                                                                     false, RSERPOOL_FAILOVER);
             if(notificationNode) {
