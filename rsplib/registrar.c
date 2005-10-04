@@ -3437,8 +3437,6 @@ int main(int argc, char** argv)
    /* ====== Get arguments =============================================== */
 #ifdef ENABLE_CSP
    string2address("127.0.0.1:2960", &cspReportAddress);
-#else
-#error xxx
 #endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-tcp=",5))) {
