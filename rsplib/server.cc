@@ -138,14 +138,19 @@ int main(int argc, char** argv)
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
-      DaytimeServer discardServer;
-      discardServer.poolElement("Daytime Server - Version 1.0",
+      DaytimeServer daytimeServer;
+      daytimeServer.poolElement("Daytime Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DaytimePool",
                                 &info, NULL,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
-      puts("Character Generator");
+      TCPLikeServer::poolElement("Character Generator Server - Version 1.0",
+                                  (poolHandle != NULL) ? poolHandle : "CharGenPool",
+                                  &info, NULL,
+                                  NULL,
+                                  CharGenServer::charGenServerFactory,
+                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_PINGPONG) {
       PingPongServer::PingPongServerSettings settings;

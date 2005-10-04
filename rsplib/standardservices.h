@@ -69,15 +69,9 @@ class DaytimeServer : public UDPLikeServer
 
    protected:
    virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
-   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
-                                             const char*        buffer,
-                                             size_t             bufferSize,
-                                             uint32_t           ppid,
-                                             uint16_t           streamID);
 };
 
 
-#if 0
 class CharGenServer : public TCPLikeServer
 {
    public:
@@ -92,12 +86,8 @@ class CharGenServer : public TCPLikeServer
    static TCPLikeServer* charGenServerFactory(int sd, void* userData);
 
    protected:
-   EventHandlingResult handleMessage(const char* buffer,
-                                     size_t      bufferSize,
-                                     uint32_t    ppid,
-                                     uint16_t    streamID);
+   EventHandlingResult startup();
 };
-#endif
 
 
 class PingPongServer : public TCPLikeServer

@@ -539,7 +539,7 @@ int rsp_register_tags(int                        sd,
       rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
 
       /* ====== Schedule reregistration as soon as possible ============== */
-      timerStart(&rserpoolSocket->PoolElement->ReregistrationTimer, 0);
+      timerRestart(&rserpoolSocket->PoolElement->ReregistrationTimer, 0);
       threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
    }
 

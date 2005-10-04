@@ -144,14 +144,49 @@ EventHandlingResult DaytimeServer::handleNotification(
 }
 
 
-// ###### Handle message ####################################################
-EventHandlingResult DaytimeServer::handleMessage(rserpool_session_t sessionID,
-                                                 const char*        buffer,
-                                                 size_t             bufferSize,
-                                                 uint32_t           ppid,
-                                                 uint16_t           streamID)
+
+/*
+   ##########################################################################
+   #### CHARACTER GENERATOR                                              ####
+   ##########################################################################
+*/
+
+// ###### Constructor #######################################################
+CharGenServer::CharGenServer(int rserpoolSocketDescriptor)
+   : TCPLikeServer(rserpoolSocketDescriptor)
 {
-   return(EHR_Abort);
+}
+
+
+// ###### Destructor ########################################################
+CharGenServer::~CharGenServer()
+{
+}
+
+
+// ###### Handle notification ###############################################
+EventHandlingResult CharGenServer::startup()
+{
+   unsigned char buffer[1024];
+   size_t        i;
+
+   for(i = 0;i < sizeof(buffer);i++) {
+      buffer[i] = (unsigned char)(30 + (i % (256 - 30)));
+   }
+   while(rsp_sendmsg(RSerPoolSocketDescriptor,
+                     (char*)&buffer, sizeof(buffer), 0,
+                     0, 0, 0, 0, 3600000000ULL) > 0) {
+      puts("sent data!");
+   }
+
+   return(EHR_Shutdown);
+}
+
+
+// ###### Create a CharGenServer thread #####################################
+TCPLikeServer* CharGenServer::charGenServerFactory(int sd, void* userData)
+{
+   return(new CharGenServer(sd));
 }
 
 
@@ -487,6 +522,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
    }
 
    // ====== Calculate image ================================================
+   setLoad(1.0);
    while(Status.CurrentY < Status.Parameter.Height) {
       while(Status.CurrentX < Status.Parameter.Width) {
          // ====== Calculate pixel ==========================================
@@ -590,5 +626,6 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
       return(EHR_Abort);
    }
 
+   setLoad(0.0);
    return(EHR_Okay);
 }
