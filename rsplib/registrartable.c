@@ -425,16 +425,24 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
                              registrarFD,
                              notification->sn_assoc_change.sac_assoc_id);
       }
+      else if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
+         LOG_VERBOSE2
+         fprintf(stdlog, "Assoc %u disconnected from registrar (communication lost)\n",
+                 (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+         LOG_END
+         removeRegistrarAssocID(registrarTable,
+                                registrarFD,
+                                notification->sn_assoc_change.sac_assoc_id);
+      }
    }
-   else if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
-           (notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT)) {
+   else if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
       LOG_VERBOSE2
-      fprintf(stdlog, "Assoc %u disconnected from registrar\n",
-              (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+      fprintf(stdlog, "Assoc %u disconnected from registrar (shutdown)\n",
+              (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
       LOG_END
       removeRegistrarAssocID(registrarTable,
                              registrarFD,
-                             notification->sn_assoc_change.sac_assoc_id);
+                             notification->sn_shutdown_event.sse_assoc_id);
    }
 }
 
