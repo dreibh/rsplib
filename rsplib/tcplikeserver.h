@@ -45,14 +45,17 @@ class TCPLikeServerList : public TDMutex
    void removeAll();
 
    size_t getThreads();
+   double getTotalLoad();
 
    private:
+   friend class TCPLikeServer;
    struct ThreadListEntry {
       ThreadListEntry* Next;
       TCPLikeServer*  Object;
    };
-   ThreadListEntry* ThreadList;
-   size_t           Threads;
+   ThreadListEntry*   ThreadList;
+   size_t             Threads;
+   unsigned long long LoadSum;
 };
 
 
@@ -76,6 +79,9 @@ class TCPLikeServer : public TDThread
    }
    void shutdown();
 
+   double getLoad() const;
+   void setLoad(double load);
+
    static void poolElement(const char*          programTitle,
                            const char*          poolHandle,
                            struct rsp_info*     info,
@@ -88,10 +94,12 @@ class TCPLikeServer : public TDThread
    int RSerPoolSocketDescriptor;
 
    protected:
+   virtual EventHandlingResult startup();
+   virtual void finish(EventHandlingResult result);
    virtual EventHandlingResult handleMessage(const char* buffer,
                                              size_t      bufferSize,
                                              uint32_t    ppid,
-                                             uint16_t    streamID) = 0;
+                                             uint16_t    streamID);
    virtual EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
    virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
 
@@ -99,9 +107,10 @@ class TCPLikeServer : public TDThread
    void run();
 
    TCPLikeServerList* ServerList;
-   bool                IsNewSession;
-   bool                Shutdown;
-   bool                Finished;
+   unsigned int       Load;
+   bool               IsNewSession;
+   bool               Shutdown;
+   bool               Finished;
 };
 
 

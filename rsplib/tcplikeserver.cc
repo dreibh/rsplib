@@ -27,6 +27,7 @@
 #include "timeutilities.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "tagitem.h"
 
 
 // ###### Constructor #######################################################
@@ -37,6 +38,7 @@ TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
    IsNewSession = true;
    Shutdown     = false;
    Finished     = false;
+   Load         = 0;
    printTimeStamp(stdout);
    printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
 }
@@ -55,6 +57,19 @@ TCPLikeServer::~TCPLikeServer()
 }
 
 
+// ###### Startup of thread #################################################
+EventHandlingResult TCPLikeServer::startup()
+{
+   return(EHR_Okay);
+}
+
+
+// ###### Finish of thread ##################################################
+void TCPLikeServer::finish(EventHandlingResult result)
+{
+}
+
+
 // ###### Shutdown thread ###################################################
 void TCPLikeServer::shutdown()
 {
@@ -64,8 +79,35 @@ void TCPLikeServer::shutdown()
 }
 
 
+// ##### Get load ###########################################################
+double TCPLikeServer::getLoad() const
+{
+   return((double)Load / (double)0xffffffff);
+}
+
+
+// ##### Set load ###########################################################
+void TCPLikeServer::setLoad(double load)
+{
+   if((load < 0.0) || (load > 1.0)) {
+      fputs("ERROR: Invalid load setting!\n", stderr);
+      return;
+   }
+
+   CHECK(ServerList != NULL);
+   CHECK(ServerList->LoadSum >= Load);
+
+   ServerList->lock();
+   ServerList->LoadSum -= Load;
+   Load = (unsigned int)rint(load * (double)0xffffffff);
+   ServerList->LoadSum += Load;
+   ServerList->unlock();
+}
+
+
 // ###### Handle cookie #####################################################
-EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer, size_t bufferSize)
+EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer,
+                                                    size_t      bufferSize)
 {
    printTimeStamp(stdout);
    puts("COOKIE ECHO");
@@ -74,13 +116,24 @@ EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer, size_t b
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult TCPLikeServer::handleNotification(const union rserpool_notification* notification)
+EventHandlingResult TCPLikeServer::handleNotification(
+                       const union rserpool_notification* notification)
 {
    printTimeStamp(stdout);
    printf("NOTIFICATION: ");
    rsp_print_notification(notification, stdout);
    puts("");
    return(EHR_Okay);
+}
+
+
+// ###### Handle message ####################################################
+EventHandlingResult TCPLikeServer::handleMessage(const char* buffer,
+                                                 size_t      bufferSize,
+                                                 uint32_t    ppid,
+                                                 uint16_t    streamID)
+{
+   return(EHR_Abort);
 }
 
 
@@ -91,48 +144,56 @@ void TCPLikeServer::run()
    struct rsp_sndrcvinfo rinfo;
    ssize_t               received;
    int                   flags;
+   EventHandlingResult   eventHandlingResult;
 
-   while(!Shutdown) {
-      flags     = 0;
-      received = rsp_recvmsg(RSerPoolSocketDescriptor,
-                             (char*)&buffer, sizeof(buffer),
-                             &rinfo, &flags, 1000000);
-      if(received > 0) {
-         // ====== Handle event =============================================
-         EventHandlingResult eventHandlingResult;
-         if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-            if(IsNewSession) {
-               IsNewSession = false;
-               eventHandlingResult = handleCookieEcho((char*)&buffer, received);
+   eventHandlingResult = startup();
+   if(eventHandlingResult == EHR_Okay) {
+      while(!Shutdown) {
+         flags     = 0;
+         received = rsp_recvmsg(RSerPoolSocketDescriptor,
+                              (char*)&buffer, sizeof(buffer),
+                              &rinfo, &flags, 1000000);
+         if(received > 0) {
+            // ====== Handle event ==========================================
+            if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+               if(IsNewSession) {
+                  IsNewSession = false;
+                  eventHandlingResult = handleCookieEcho((char*)&buffer, received);
+               }
+               else {
+                  printTimeStamp(stdout);
+                  puts("Dropped unexpected ASAP COOKIE_ECHO!");
+                  eventHandlingResult = EHR_Abort;
+               }
+            }
+            else if(flags & MSG_RSERPOOL_NOTIFICATION) {
+               eventHandlingResult = handleNotification((const union rserpool_notification*)&buffer);
             }
             else {
-               printTimeStamp(stdout);
-               puts("Dropped unexpected ASAP COOKIE_ECHO!");
-               eventHandlingResult = EHR_Abort;
+               IsNewSession = false;
+               eventHandlingResult = handleMessage((char*)&buffer, received,
+                                                   rinfo.rinfo_ppid, rinfo.rinfo_stream);
+            }
+
+            // ====== Check for problems ====================================
+            if(eventHandlingResult != EHR_Okay) {
+               break;
             }
          }
-         else if(flags & MSG_RSERPOOL_NOTIFICATION) {
-            eventHandlingResult = handleNotification((const union rserpool_notification*)&buffer);
-         }
-         else {
-            IsNewSession = false;
-            eventHandlingResult = handleMessage((char*)&buffer, received,
-                                                rinfo.rinfo_ppid, rinfo.rinfo_stream);
-         }
-
-         // ====== Check for problems =======================================
-         if((eventHandlingResult == EHR_Abort) ||
-            (eventHandlingResult == EHR_Shutdown)) {
-            rsp_sendmsg(RSerPoolSocketDescriptor,
-                        NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
-                        0, 0, 0, 0, 0);
+         else if(received == 0) {
             break;
          }
       }
-      else if(received == 0) {
-         break;
-      }
    }
+
+   if((eventHandlingResult == EHR_Abort) ||
+      (eventHandlingResult == EHR_Shutdown)) {
+      rsp_sendmsg(RSerPoolSocketDescriptor,
+                  NULL, 0, (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
+                  0, 0, 0, 0, 0);
+   }
+
+   finish(eventHandlingResult);
 
    Finished = true;
 }
@@ -161,7 +222,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       if(loadinfo == NULL) {
          memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
          loadinfo = &dummyLoadinfo;
-         loadinfo->rli_policy = PPT_ROUNDROBIN;
+         loadinfo->rli_policy = PPT_LEASTUSED; // ?????
       }
 
       // ====== Print program title =========================================
@@ -176,14 +237,15 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
                            loadinfo, 30000, tags) == 0) {
 
-         // ====== Main loop ===================================================
+         // ====== Main loop ================================================
          TCPLikeServerList serverSet;
+         double            oldLoad = 0.0;
          installBreakDetector();
          while(!breakDetected()) {
-            // ====== Clean-up session list ====================================
+            // ====== Clean-up session list =================================
             serverSet.removeFinished();
 
-            // ====== Wait for incoming sessions ===============================
+            // ====== Wait for incoming sessions ============================
             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 100000);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
@@ -193,6 +255,30 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                }
                else {
                   rsp_close(newRSerPoolSocket);
+               }
+            }
+
+            // ====== Do reregistration on load changes =====================
+            if((loadinfo->rli_policy == PPT_LEASTUSED) ||
+               (loadinfo->rli_policy == PPT_LEASTUSED_DEGRADATION) ||
+               (loadinfo->rli_policy == PPT_PRIORITY_LEASTUSED) ||
+               (loadinfo->rli_policy == PPT_PRIORITY_LEASTUSED_DEGRADATION) ||
+               (loadinfo->rli_policy == PPT_RANDOMIZED_LEASTUSED) ||
+               (loadinfo->rli_policy == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) ||
+               (loadinfo->rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED) ||
+               (loadinfo->rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION)) {
+               const double newLoad = serverSet.getTotalLoad();
+               if(fabs(newLoad - oldLoad) >= 0.01) {
+                  oldLoad = newLoad;
+                  struct TagItem mytags[4];
+                  loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
+                  mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
+                  mytags[0].Data = 0;
+                  mytags[1].Tag  = TAG_MORE;
+                  mytags[1].Data = (tagdata_t)tags;
+                  rsp_register_tags(rserpoolSocket,
+                                    (const unsigned char*)poolHandle, strlen(poolHandle),
+                                    loadinfo, 30000, (TagItem*)&mytags);
                }
             }
          }
@@ -222,6 +308,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
 TCPLikeServerList::TCPLikeServerList()
 {
    ThreadList = NULL;
+   Threads    = 0;
+   LoadSum    = 0;
 }
 
 
@@ -235,11 +323,11 @@ TCPLikeServerList::~TCPLikeServerList()
 // ###### Get number of threads #############################################
 size_t TCPLikeServerList::getThreads()
 {
-   size_t count;
+   size_t threads;
    lock();
-   count = Threads;
+   threads = Threads;
    unlock();
-   return(count);
+   return(threads);
 }
 
 
@@ -293,6 +381,7 @@ void TCPLikeServerList::remove(TCPLikeServer* thread)
    // ====== Tell thread to shut down =======================================
    thread->shutdown();
    thread->waitForFinish();
+   thread->setLoad(0.0);
 
    // ====== Remove thread ==================================================
    lock();
@@ -319,4 +408,22 @@ void TCPLikeServerList::remove(TCPLikeServer* thread)
       entry = entry->Next;
    }
    unlock();
+}
+
+
+// ###### Get total load ####################################################
+double TCPLikeServerList::getTotalLoad()
+{
+   size_t             threads;
+   unsigned long long loadSum;
+
+   lock();
+   threads = Threads;
+   loadSum = LoadSum;
+   unlock();
+
+   if(threads > 0) {
+      return(loadSum / (threads * (double)0xffffffff));
+   }
+   return(0.0);
 }
