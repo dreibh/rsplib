@@ -214,6 +214,7 @@ int rsp_accept(int                sd,
 int rsp_connect(int                  sd,
                 const unsigned char* poolHandle,
                 const size_t         poolHandleSize);
+int rsp_has_cookie(int sd);
 int rsp_forcefailover(int sd);
 
 

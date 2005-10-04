@@ -24,19 +24,16 @@
  */
 
 #include "tdtypes.h"
-#include "loglevel.h"
+#include "rserpool.h"
+#include "calcapppackets.h"
+#include "statistics.h"
+#include "rsputilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
-#include "rsplib.h"
-#include "calcapppackets.h"
-#include "stdlib.h"
 #include "randomizer.h"
-#include "statistics.h"
+#include "loglevel.h"
 
 #include <ext_socket.h>
-#include <signal.h>
-
-
 #include <iostream>
 
 
@@ -188,7 +185,7 @@ enum ProcessStatus {
 };
 
 struct Process {
-   SessionDescriptor* Session;
+   int                RSerPoolSocketDescriptor;
    ProcessStatus      Status;
    JobQueue           Queue;
    Job*               CurrentJob;
@@ -217,8 +214,10 @@ void sendCalcAppRequest(struct Process* process)
    message.JobID   = htonl(process->CurrentJob->JobID);
    message.JobSize = hton64((unsigned long long)rint(process->CurrentJob->JobSize));
    cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
-   ssize_t result = rspSessionWrite(process->Session,
-                                    (void*)&message, sizeof(message), NULL);
+   ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
+                                (void*)&message, sizeof(message), 0,
+                                0, PPID_CALCAPP, 0, 0,
+                                0);
    if(result <= 0) {
       process->Status = PS_Failed;
    }
@@ -235,8 +234,10 @@ void sendCalcAppKeepAlive(struct Process* process)
    message.Type  = htonl(CALCAPP_KEEPALIVE);
    message.JobID = htonl(process->CurrentJob->JobID);
 
-   ssize_t result = rspSessionWrite(process->Session,
-                                    (void*)&message, sizeof(message), NULL);
+   ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
+                                (void*)&message, sizeof(message), 0,
+                                0, PPID_CALCAPP, 0, 0,
+                                0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAlive" << endl;
       process->Status = PS_Failover;
@@ -253,8 +254,10 @@ void sendCalcAppKeepAliveAck(struct Process* process)
    message.Type  = htonl(CALCAPP_KEEPALIVE_ACK);
    message.JobID = htonl(process->CurrentJob->JobID);
 
-   ssize_t result = rspSessionWrite(process->Session,
-                                    (void*)&message, sizeof(message), NULL);
+   ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
+                                (void*)&message, sizeof(message), 0,
+                                0, PPID_CALCAPP, 0, 0,
+                                0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAliveAck" << endl;
       process->Status = PS_Failover;
@@ -300,15 +303,14 @@ void handleCalcAppReject(struct Process* process,
    process->Status                         = PS_Failover;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
-   rspSessionFailover(process->Session);
+   rsp_forcefailover(process->RSerPoolSocketDescriptor);
 
    /* No cookie for failover is available, therefore it is necessary
       to restart! */
-   if(!rspSessionHasCookie(process->Session)) {
+   if(!rsp_has_cookie(process->RSerPoolSocketDescriptor)) {
       process->Status = PS_Init;
       usleep(1000000);
       sendCalcAppRequest(process);
-
    }
 
    process->TotalCalcAppRejected++;
@@ -435,7 +437,7 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
 {
    cout << "Timeout -> Failover" << endl;
 
-   rspSessionFailover(process->Session);
+   rsp_forcefailover(process->RSerPoolSocketDescriptor);
 
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
@@ -454,42 +456,53 @@ void handleFailover(Process* process)
 
 
 // ###### Handle session events #############################################
-void handleEvents(Process*           process,
-                  const unsigned int sessionEvents)
+void handleEvents(Process*    process,
+                  const short sessionEvents)
 {
-   struct TagItem tags[16];
-   char           buffer[4096];
-   ssize_t        received;
+   struct rsp_sndrcvinfo        rinfo;
+   union rserpool_notification* notification;
+   char                         buffer[4096];
+   ssize_t                      received;
+   int                          flags;
 
-   tags[0].Tag  = TAG_RspIO_Timeout;
-   tags[0].Data = 0;
-   tags[1].Tag  = TAG_DONE;
-   received = rspSessionRead(process->Session, (char*)&buffer, sizeof(buffer),
-                             (struct TagItem*)&tags);
+   flags = 0;
+   received = rsp_recvmsg(process->RSerPoolSocketDescriptor,
+                          (char*)&buffer, sizeof(buffer),
+                          &rinfo, &flags,
+                          0);
    if(received > 0) {
-
-      if(received >= (ssize_t)sizeof(CalcAppMessage)) {
-         CalcAppMessage* response = (CalcAppMessage*)&buffer;
-printf("TYPE=%d\n",ntohl(response->Type));
-         switch(ntohl(response->Type)) {
-            case CALCAPP_ACCEPT:
-               handleCalcAppAccept(process, response, sizeof(response));
-             break;
-            case CALCAPP_REJECT:
-               handleCalcAppReject(process, response, sizeof(response));
-             break;
-            case CALCAPP_KEEPALIVE:
-               handleCalcAppKeepAlive(process, response, sizeof(response));
-             break;
-            case CALCAPP_KEEPALIVE_ACK:
-               handleCalcAppKeepAliveAck(process, response, sizeof(response));
-             break;
-            case CALCAPP_COMPLETE:
-               handleCalcAppCompleted(process, response, sizeof(response));
-             break;
-            default:
-               cerr << "ERROR: Unknown message type " << ntohl(response->Type) << endl;
-             break;
+      if(flags & MSG_RSERPOOL_NOTIFICATION) {
+         notification = (union rserpool_notification*)&buffer;
+         printf("Notification: ");
+         rsp_print_notification(notification, stdout);
+         puts("");
+      }
+      else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+      }
+      else {
+         if(received >= (ssize_t)sizeof(CalcAppMessage)) {
+            CalcAppMessage* response = (CalcAppMessage*)&buffer;
+   printf("TYPE=%d\n",ntohl(response->Type));
+            switch(ntohl(response->Type)) {
+               case CALCAPP_ACCEPT:
+                  handleCalcAppAccept(process, response, sizeof(response));
+                break;
+               case CALCAPP_REJECT:
+                  handleCalcAppReject(process, response, sizeof(response));
+                break;
+               case CALCAPP_KEEPALIVE:
+                  handleCalcAppKeepAlive(process, response, sizeof(response));
+                break;
+               case CALCAPP_KEEPALIVE_ACK:
+                  handleCalcAppKeepAliveAck(process, response, sizeof(response));
+                break;
+               case CALCAPP_COMPLETE:
+                  handleCalcAppCompleted(process, response, sizeof(response));
+                break;
+               default:
+                  cerr << "ERROR: Unknown message type " << ntohl(response->Type) << endl;
+                break;
+            }
          }
       }
    }
@@ -524,23 +537,17 @@ void handleTimer(Process* process)
 
 
 // ###### Run process #######################################################
-void runProcess(const char* poolHandle, const char* objectName, unsigned long long StartTimer)
+void runProcess(const char* poolHandle, const char* objectName, unsigned long long startupTimeStamp)
 {
-   struct TagItem tags[16];
-
-   tags[0].Tag  = TAG_RspIO_MakeFailover;
-   tags[0].Data = 1;
-   tags[1].Tag  = TAG_DONE;
-
    Process process;
+   process.RSerPoolSocketDescriptor       = -1;
    process.NextJobTimeStamp               = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
-   process.Session                        = NULL;
    process.TotalCalcAppRequests           = 0;
    process.TotalCalcAppRejected           = 0;
    process.TotalCalcAppAccepted           = 0;
-   process.TotalCalcAppCompleted           = 0;
+   process.TotalCalcAppCompleted          = 0;
    handleNextJobTimer(&process);
 
    process.CurrentJob = process.Queue.dequeue();
@@ -549,96 +556,82 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
       TotalJobSizeStarted+=process.CurrentJob->JobSize;
       process.Status = PS_Init;
 
-      process.Session = rspCreateSession((unsigned char*)poolHandle, strlen(poolHandle),
-                                         NULL, (struct TagItem*)&tags);
-      if(process.Session != NULL) {
+      process.RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
+      if(process.RSerPoolSocketDescriptor < 0) {
+         if(rsp_connect(process.RSerPoolSocketDescriptor,
+                        (unsigned char*)poolHandle, strlen(poolHandle)) == 0) {
+            sendCalcAppRequest(&process);
 
-         sendCalcAppRequest(&process);
+            while((process.Status != PS_Failed) &&
+                  (process.Status != PS_Completed)) {
 
-         while((process.Status != PS_Failed) &&
-               (process.Status != PS_Completed)) {
+               /* ====== Call rsp_poll() ================================= */
+               struct pollfd ufds;
+               ufds.fd     = process.RSerPoolSocketDescriptor;
+               ufds.events = POLLIN;
 
-            /* ====== Call rspSessionSelect() =============================== */
-            tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-            tags[0].Data = 1;
-            tags[1].Tag  = TAG_DONE;
-            struct SessionDescriptor* sessionDescriptorArray[1];
-            unsigned int              sessionStatusArray[1];
-            sessionDescriptorArray[0] = process.Session;
-            sessionStatusArray[0]     = RspSelect_Read;
-            unsigned long long now    = getMicroTime();
-            unsigned long long nextTimer = now + 500000;
-            nextTimer = min(nextTimer, process.NextJobTimeStamp);
-            nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
-            nextTimer = min(nextTimer, process.KeepAliveTimeoutTimeStamp);
-            unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-            int result = rspSessionSelect((struct SessionDescriptor**)&sessionDescriptorArray,
-                                          (unsigned int*)&sessionStatusArray,
-                                          1,
-                                          NULL, NULL, 0,
-                                          timeout,
-                                          (struct TagItem*)&tags);
-       // process.Queue.PrintStatistics();
-            handleTimer(&process);
-	       if (getMicroTime()-StartTimer >= runtime)
-   	       {
-      			goto finished;
+               unsigned long long now    = getMicroTime();
+               unsigned long long nextTimer = now + 500000;
+               nextTimer = min(nextTimer, process.NextJobTimeStamp);
+               nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
+               nextTimer = min(nextTimer, process.KeepAliveTimeoutTimeStamp);
+               unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
 
-   	       }
+               int result = rsp_poll(&ufds, 1, (int)(timeout / 1000ULL));
 
-
-            /* ====== Handle results of ext_select() =========================== */
-            if((result > 0) && (sessionStatusArray[0] & RspSelect_Read)) {
-               handleEvents(&process, sessionStatusArray[0]);
-            }
-
-            if(result < 0) {
-               if(errno != EINTR) {
-                  perror("rspSessionSelect() failed");
+               /* ====== Handle timers =================================== */
+               handleTimer(&process);
+               if(getMicroTime() - startupTimeStamp >= runtime) {
+                  goto finished;
                }
-               goto finished;
-            }
-            if(breakDetected()) {
-               rspDeleteSession(process.Session, NULL);
-               goto finished;
+
+               /* ====== Handle results of ext_select() ================== */
+               if((result > 0) && (ufds.revents & POLLIN)) {
+                  handleEvents(&process, ufds.revents);
+               }
+               if(result < 0) {
+                  if(errno != EINTR) {
+                     perror("rsp_poll() failed");
+                  }
+                  goto finished;
+               }
+               if(breakDetected()) {
+                  rsp_close(process.RSerPoolSocketDescriptor);
+                  process.RSerPoolSocketDescriptor = -1;
+                  goto finished;
+               }
+
+               if(process.Status == PS_Failover) {
+                  handleFailover(&process);
+               }
             }
 
-            if(process.Status == PS_Failover) {
-               handleFailover(&process);
+            rsp_close(process.RSerPoolSocketDescriptor);
+            process.RSerPoolSocketDescriptor = -1;
+
+            if(process.Status == PS_Completed) {
+               delete process.CurrentJob;
+               process.CurrentJob = process.Queue.dequeue();
             }
          }
-
-         rspDeleteSession(process.Session, NULL);
-         process.Session = NULL;
-
-         if(process.Status == PS_Completed) {
-            delete process.CurrentJob;
-            process.CurrentJob = process.Queue.dequeue();
+         else {
+            perror("rsp_connect() failed");
          }
+      }
+      else {
+         perror("rsp_socket() failed");
       }
 
       while(process.CurrentJob == NULL) {
-         tags[0].Tag  = TAG_RspSelect_RsplibEventLoop;
-         tags[0].Data = 1;
-         tags[1].Tag  = TAG_DONE;
          unsigned long long now       = getMicroTime();
          unsigned long long nextTimer = now + 500000;
          nextTimer = min(nextTimer, process.NextJobTimeStamp);
          unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-         int result = rspSessionSelect(NULL, NULL, 0,
-                                       NULL, NULL, 0,
-                                       timeout,
-                                       (struct TagItem*)&tags);
-         if(result < 0) {
-            if(errno != EINTR) {
-               perror("rspSessionSelect() failed");
-            }
-            goto finished;
-         }
+         usleep((unsigned int)(timeout / 1000ULL));
+         handleTimer(&process);
          if(breakDetected()) {
             goto finished;
          }
-         handleTimer(&process);
          process.CurrentJob = process.Queue.dequeue();
       }
 
@@ -689,14 +682,15 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
+   unsigned long long startupTimeStamp = getMicroTime();
+   struct             rsp_info info;
+   char*              poolHandle     = "CalcAppPool";
+   char*              objectName     = "scenario.calcapppooluser[0]";
+   char*              vectorFileName = "calcapppooluser.vec";
+   char*              scalarFileName = "calcapppooluser.sca";
+   int                i;
 
-   char* poolHandle     = "CalcAppPool";
-   char* objectName     = "scenario.calcapppooluser[0]";
-   char* vectorFileName = "calcapppooluser.vec";
-   char* scalarFileName = "calcapppooluser.sca";
-   int   i;
-   int   n;
-   unsigned long long StartTimer = getMicroTime();
+   memset(&info, 0, sizeof(info));
 
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
@@ -725,41 +719,39 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[i], "-registrar=" ,11))) {
-         /* Process this later */
-      }
-      else {
-         puts("Bad arguments!");
-         printf("Usage: %s {-object=object name} {-vector=vector file name} {-scalar=scalar file name} {-registrar=Registrar address(es)} {-ph=Pool handle} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off}\n", argv[0]);
-         exit(1);
-      }
-   }
-
-   beginLogging();
-   if(rspInitialize(NULL) != 0) {
-      puts("ERROR: Unable to initialize rsplib!");
-      exit(1);
-   }
-#ifndef FAST_BREAK
-   installBreakDetector();
-#endif
-
-   for(n = 1;n < argc;n++) {
-      if(!(strncmp(argv[n], "-registrar=" ,11))) {
-         if(rspAddStaticRegistrar((char*)&argv[n][11]) != RSPERR_OKAY) {
-            fprintf(stderr, "ERROR: Bad registrar setting: %s\n", argv[n]);
+#ifdef ENABLE_CSP
+      else if(!(strncmp(argv[i], "-csp" ,4))) {
+         if(initComponentStatusReporter(&info, argv[i]) == false) {
             exit(1);
          }
+      }
+#endif
+      else if(!(strncmp(argv[i], "-registrar=", 11))) {
+         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
+            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
+            exit(1);
+         }
+      }
+      else {
+         printf("ERROR: Bad arguments %s!\n", argv[i]);
+         exit(1);
       }
    }
 
 
    cout << "CalcApp Pool User - Version 1.0" << endl
-        << "-------------------------------" << endl << endl
+        << "===============================" << endl << endl
         << "Object      = " << objectName << endl
         << "Vector File = " << vectorFileName << endl
         << "Scalar File = " << scalarFileName << endl
         << endl;
+
+
+   beginLogging();
+   if(rsp_initialize(&info) < 0) {
+      logerror("Unable to initialize rsplib");
+      exit(1);
+   }
 
    VectorFH = fopen(vectorFileName, "w");
    if(VectorFH == NULL) {
@@ -776,16 +768,19 @@ int main(int argc, char** argv)
    }
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
 
+#ifndef FAST_BREAK
+   installBreakDetector();
+#endif
 
-   runProcess(poolHandle, objectName, StartTimer);
+
+   runProcess(poolHandle, objectName, startupTimeStamp);
 
 
    fclose(ScalarFH);
    fclose(VectorFH);
 
-
    finishLogging();
-   rspCleanUp();
+   rsp_cleanup();
    puts("\nTerminated!");
    return(0);
 }

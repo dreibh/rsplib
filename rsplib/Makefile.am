@@ -132,7 +132,7 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator fractalpooluser t9 t12
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator fractalpooluser calcapppooluser t9 t12
 else
 noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator t9 t12
 endif
@@ -174,8 +174,8 @@ server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIB
 #fractalpoolelement_SOURCES = fractalpoolelement.cc netdouble.c netdouble.h fractalgeneratorpackets.h
 #fractalpoolelement_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-#calcapppooluser_SOURCES = calcapppooluser.cc calcapppackets.h statistics.cc statistics.h
-#calcapppooluser_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+calcapppooluser_SOURCES = calcapppooluser.cc calcapppackets.h statistics.cc statistics.h rsputilities.c rsputilities.h
+calcapppooluser_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 #calcapppoolelement_SOURCES = calcapppoolelement.cc calcapppackets.h statistics.cc
 #calcapppoolelement_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

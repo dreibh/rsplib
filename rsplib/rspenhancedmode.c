@@ -813,6 +813,21 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
 }
 
 
+/* ###### Check if cookie is available ################################### */
+int rsp_has_cookie(int sd)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   int                    result;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+
+   threadSafetyLock(&rserpoolSocket->Mutex);
+   result = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+   threadSafetyUnlock(&rserpoolSocket->Mutex);
+
+   return(result);
+}
+
+
 /* ###### Make failover ################################################## */
 int rsp_forcefailover_tags(int             sd,
                            struct TagItem* tags)
