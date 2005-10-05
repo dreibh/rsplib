@@ -68,7 +68,7 @@ class DaytimeServer : public UDPLikeServer
    virtual ~DaytimeServer();
 
    protected:
-   virtual EventHandlingResult handleNotification(const union rserpool_notification* notification);
+   virtual void handleNotification(const union rserpool_notification* notification);
 };
 
 

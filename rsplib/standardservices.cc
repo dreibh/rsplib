@@ -118,8 +118,7 @@ DaytimeServer::~DaytimeServer()
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult DaytimeServer::handleNotification(
-                       const union rserpool_notification* notification)
+void DaytimeServer::handleNotification(const union rserpool_notification* notification)
 {
    if((notification->rn_header.rn_type == RSERPOOL_SESSION_CHANGE) &&
       (notification->rn_session_change.rsc_state == RSERPOOL_SESSION_ADD)) {
@@ -140,7 +139,6 @@ EventHandlingResult DaytimeServer::handleNotification(
                          0x00000000, 0,
                          0, 0);
    }
-   return(EHR_Okay);
 }
 
 

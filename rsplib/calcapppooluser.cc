@@ -476,6 +476,11 @@ void handleEvents(Process*    process,
          printf("Notification: ");
          rsp_print_notification(notification, stdout);
          puts("");
+         if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+            (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+            puts("--- FAILOVER ...");
+            rsp_forcefailover(process->RSerPoolSocketDescriptor);
+         }
       }
       else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
       }

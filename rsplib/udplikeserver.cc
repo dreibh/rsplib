@@ -160,17 +160,16 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                char                     buffer[65536];
                int                      flags = 0;
                struct rsp_sndrcvinfo rinfo;
-               unsigned long long timeout = 5000000;
+               unsigned long long timeout = 500000;
                if(NextTimerTimeStamp > 0) {
                   const unsigned long long now = getMicroTime();
-                  if(NextTimerTimeStamp >= now) {
+                  if(NextTimerTimeStamp <= now) {
                      timeout = 0;
                   }
                   else {
                      timeout = min(timeout, NextTimerTimeStamp - now);
                   }
                }
-printf("next=%Ld\n",timeout);
                ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor,
                                               (char*)&buffer, sizeof(buffer),
                                               &rinfo, &flags, timeout);

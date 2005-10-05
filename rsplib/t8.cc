@@ -1,113 +1,76 @@
-#include <iostream>
-#include <fstream>
+#include "tdtypes.h"
+#include "debug.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netdb.h>
-#include <signal.h>
-#include <sys/poll.h>
-
-#include "rserpool.h"
-#include "ext_socket.h"
-#include "registrartable.h"
-#include "netutilities.h"
-#include "timeutilities.h"
-#include "stringutilities.h"
-#include "randomizer.h"
-#include "statistics.h"
-#include "loglevel.h"
-#include "debug.h"
 
 
-#define MAX_PR_TRANSPORTADDRESSES 128
+size_t Sessions = 0;
+unsigned long long LoadSum = 0;
 
-/* ###### Create new static registrar entry in rsp_info ###### */
-int rspAddStaticRegistrar(struct rsp_info* info,
-                          const char*      addressString)
+class X
 {
-   union sockaddr_union       addressArray[MAX_PR_TRANSPORTADDRESSES];
-   struct sockaddr*           packedAddressArray;
-   struct rsp_registrar_info* registrarInfo;
-   char                       str[1024];
-   size_t                     addresses;
-   char*                      address;
-   char*                      idx;
+   public:
+   X();
+   double getLoad() const;
+   void setLoad(double load);
 
-   safestrcpy((char*)&str, addressString, sizeof(str));
-   addresses = 0;
-   address = str;
-   while(addresses < MAX_PR_TRANSPORTADDRESSES) {
-      idx = strindex(address, ',');
-      if(idx) {
-         *idx = 0x00;
-      }
-      if(!string2address(address, &addressArray[addresses])) {
-         return(-1);
-      }
-      addresses++;
-      if(idx) {
-         address = idx;
-         address++;
-      }
-      else {
-         break;
-      }
-   }
-   if(addresses < 1) {
-      return(-1);
-   }
+   private:
+   unsigned int Load;
+};
 
-   packedAddressArray = pack_sockaddr_union((union sockaddr_union*)&addressArray, addresses);
-   if(packedAddressArray == NULL) {
-      return(-1);
-   }
 
-   registrarInfo = (struct rsp_registrar_info*)malloc(sizeof(struct rsp_registrar_info));
-   if(registrarInfo == NULL) {
-      free(packedAddressArray);
-      return(-1);
-   }
+X::X() {
+   Load = 0;
+}
 
-   registrarInfo->rri_next  = info->ri_registrars;
-   registrarInfo->rri_addr  = packedAddressArray;
-   registrarInfo->rri_addrs = addresses;
-   info->ri_registrars = registrarInfo;
-   return(0);
+double X::getLoad() const
+{
+   return((double)Load / (double)0xffffffff);
 }
 
 
-/* ###### Free static registrar entries of rsp_info ###################### */
-void rspFreeStaticRegistrars(struct rsp_info* info)
+void X::setLoad(double load)
 {
-   rsp_registrar_info* registrarInfo;
-   while(info->ri_registrars) {
-      registrarInfo = info->ri_registrars;
-      info->ri_registrars = registrarInfo->rri_next;
-      free(registrarInfo->rri_addr);
-      free(registrarInfo);
+   if((load < 0.0) || (load > 1.0)) {
+      fputs("ERROR: Invalid load setting!\n", stderr);
+      return;
    }
+
+   CHECK(LoadSum >= Load);
+   LoadSum -= Load;
+   Load     = (unsigned int)rint(load * (double)0xffffffff);
+   LoadSum += Load;
+}
+
+
+double getTotalLoad()
+{
+   if(Sessions > 0) {
+      return(LoadSum / (Sessions * (double)0xffffffff));
+   }
+   return(0.0);
 }
 
 
 int main(int argc, char** argv)
 {
-   struct rsp_info info;
+   X x1;
+   X x2;
+   X x3;
+   Sessions = 3;
 
-   memset(&info, 0, sizeof(info));
+   x1.setLoad(1.0);
+   x3.setLoad(1.0);
+   x2.setLoad(.5);
 
-   for(int i=1;i<argc;i++) {
-      if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(rspAddStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         } else puts("ok!");
-      }
-   }
+   printf("Total Load = %1.3f\n", getTotalLoad());
 
-   initLogging("-loglevel=9");
-   rsp_initialize(&info);
-   rsp_cleanup();
 
-   rspFreeStaticRegistrars(&info);
-   return 0;
+   x2.setLoad(1.0);
+   printf("Total Load = %1.3f\n", getTotalLoad());
+
+   x2.setLoad(0.0);
+   printf("Total Load = %1.3f\n", getTotalLoad());
 }
