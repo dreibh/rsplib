@@ -441,7 +441,7 @@ void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t job
 //    RejectedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_ACCEPT);
+   message.Type  = htonl(CALCAPP_REJECT);
    message.JobID = htonl(jobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
@@ -535,7 +535,6 @@ void CalcAppServer::handleCalcAppKeepAliveAck(rserpool_session_t    sessionID,
 {
    CalcAppServerJob* job = findJob(sessionID, ntohl(message->JobID));
    if(job != NULL) {
-puts("x11 !!!!!!!!!!!!!!!!");
       job->KeepAliveTimeoutTimeStamp      = ~0ULL;
       job->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
    }
@@ -552,7 +551,6 @@ void CalcAppServer::handleKeepAliveTransmissionTimer(CalcAppServer::CalcAppServe
 {
    job->KeepAliveTransmissionTimeStamp = ~0ULL;
    job->KeepAliveTimeoutTimeStamp      = getMicroTime() + KeepAliveTimeoutInterval;
-puts("x11");
    sendCalcAppKeepAlive(job);
 }
 
