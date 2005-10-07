@@ -43,6 +43,7 @@ class CalcAppServer : public UDPLikeServer
 {
    public:
    CalcAppServer(const size_t maxJobs,
+                 const char*  objectName,
                  const char*  vectorFileName,
                  const char*  scalarFileName);
    virtual ~CalcAppServer();
@@ -113,6 +114,7 @@ class CalcAppServer : public UDPLikeServer
 
    size_t             Jobs;
    CalcAppServerJob*  FirstJob;
+   std::string        ObjectName;
    std::string        VectorFileName;
    std::string        ScalarFileName;
    FILE*              VectorFH;
@@ -126,16 +128,21 @@ class CalcAppServer : public UDPLikeServer
    unsigned long long KeepAliveTransmissionInterval;
    unsigned long long CookieMaxTime;
    double             CookieMaxCalculations;
+
+   unsigned int       AcceptedJobs;
+   unsigned int       RejectedJobs;
 };
 
 
 // ###### Constructor #######################################################
 CalcAppServer::CalcAppServer(const size_t maxJobs,
+                             const char*  objectName,
                              const char*  vectorFileName,
                              const char*  scalarFileName)
 {
    Jobs           = 0;
    FirstJob       = NULL;
+   ObjectName     = objectName;
    VectorFileName = vectorFileName;
    ScalarFileName = scalarFileName;
    VectorFH       = NULL;
@@ -149,6 +156,9 @@ CalcAppServer::CalcAppServer(const size_t maxJobs,
    CookieMaxTime                 = 1000000;
    CookieMaxCalculations         = 5000000.0;
    StartupTimeStamp              = getMicroTime();
+
+   AcceptedJobs                  = 0;
+   RejectedJobs                  = 0;
 }
 
 
@@ -334,23 +344,23 @@ EventHandlingResult CalcAppServer::initialize()
 // ###### Shutdown ##########################################################
 void CalcAppServer::finish(EventHandlingResult initializeResult)
 {
-/*
-   double           Capacity                      = 1000000.0;
-   unsigned long long        shutdownTimeStamp             = getMicroTime();
-   const unsigned long long     serverRuntime     = shutdownTimeStamp - StartupTimeStamp;
-   const double        availableCalculations = serverRuntime * Capacity / 1000000.0;
-   const double        utilization           = sessionList.getTotalUsedCalculations() / availableCalculations;
-   TotalUsedCapacity = sessionList.getTotalUsedCalculations();
-   TotalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
-   TotalWastedCapacity = serverRuntime-TotalUsedCapacity;
-   fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity   \" %1.6f \n", objectName, TotalUsedCapacity);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \" %1.6f \n", objectName, TotalPossibleCalculations);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity  \" %1.6f \n", objectName, TotalWastedCapacity);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted   \" %u    \n", objectName, AcceptedJobs);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected   \" %u    \n", objectName, RejectedJobs);
-   fprintf(ScalarFH, "scalar \"%s\" \"Utilization           \" %1.6f \n", objectName, utilization);
-*/
+   unsigned long long       shutdownTimeStamp     = getMicroTime();
+   const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
+   const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
+   const double             utilization           = TotalUsedCalculations / availableCalculations;
+
+   const double totalUsedCapacity         = TotalUsedCalculations;
+   const double totalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
+   const double totalWastedCapacity       = serverRuntime - totalUsedCapacity;
+
+//   fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity   \" %1.6f \n", ObjectName.c_str(), totalUsedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \" %1.6f \n", ObjectName.c_str(), totalPossibleCalculations);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity  \" %1.6f \n", ObjectName.c_str(), totalWastedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted   \" %u    \n", ObjectName.c_str(), AcceptedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected   \" %u    \n", ObjectName.c_str(), RejectedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Utilization           \" %1.6f \n", ObjectName.c_str(), utilization);
+
    if(VectorFH) {
       fclose(VectorFH);
       VectorFH = NULL;
@@ -360,14 +370,6 @@ void CalcAppServer::finish(EventHandlingResult initializeResult)
       ScalarFH = NULL;
    }
 }
-
-
-
-
-
-
-
-
 
 
 // ###### Handle incoming CalcAppRequest ####################################
@@ -422,7 +424,7 @@ printf("==> SID=%d\n",sessionID);
 // ###### Send CalcAppAccept ################################################
 void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 {
-//    AcceptedJobs++;
+   AcceptedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_ACCEPT);
@@ -439,7 +441,7 @@ void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 // ###### Send CalcAppReject ################################################
 void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID)
 {
-//    RejectedJobs++;
+   RejectedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type  = htonl(CALCAPP_REJECT);
@@ -508,6 +510,7 @@ void CalcAppServer::sendCalcAppKeepAliveAck(CalcAppServer::CalcAppServerJob* job
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
+      return;
    }
 }
 
@@ -525,6 +528,7 @@ void CalcAppServer::sendCalcAppKeepAlive(CalcAppServer::CalcAppServerJob* job)
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
+      return;
    }
 }
 
@@ -581,7 +585,9 @@ void CalcAppServer::handleCookieTransmissionTimer(CalcAppServer::CalcAppServerJo
                       job->SessionID, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
+      return;
    }
+
 puts("COOKIE!");
 
    job->LastCookieAt        = getMicroTime();
@@ -632,6 +638,8 @@ void CalcAppServer::handleTimer()
 
    CalcAppServerJob* job = FirstJob;
    while(job != NULL) {
+      CalcAppServerJob* next = job->Next;
+
       // ====== Handle timers ===============================================
       if(job->JobCompleteTimeStamp <= now) {
          job->JobCompleteTimeStamp = ~0ULL;
@@ -653,7 +661,8 @@ void CalcAppServer::handleTimer()
          handleKeepAliveTimeoutTimer(job);
          break;
       }
-      job = job->Next;
+
+      job = next;
    }
 
    scheduleNextTimerEvent();
@@ -737,7 +746,7 @@ int main(int argc, char** argv)
    }
 
 
-   CalcAppServer calcAppServer(maxJobs, vectorFileName, scalarFileName);
+   CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName);
    calcAppServer.poolElement("CalcAppServer - Version 1.0",
                              (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                              &info, NULL,
