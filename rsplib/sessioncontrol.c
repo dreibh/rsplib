@@ -217,6 +217,7 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
 ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     void*                  buffer,
                                     size_t                 bufferLength,
+                                    struct rsp_sndrcvinfo* rinfo,
                                     int*                   msg_flags,
                                     const bool             isPreRead)
 {
@@ -274,6 +275,8 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
             free(session->CookieEcho);
             session->CookieEcho     = NULL;
             session->CookieEchoSize = 0;
+            rinfo->rinfo_session    = session->SessionID;
+            rinfo->rinfo_ppid       = PPID_ASAP;
             break;
          }
          session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);

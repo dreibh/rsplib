@@ -508,6 +508,9 @@ void handleEvents(Process*    process,
                 break;
             }
          }
+         else {
+            cerr << "ERROR: Received too short CalcApp message (" << received << " bytes)" << endl;
+         }
       }
    }
 }

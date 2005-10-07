@@ -383,7 +383,7 @@ void CalcAppServer::handleCalcAppRequest(rserpool_session_t    sessionID,
       sendCalcAppAccept(job);
    }
    else {
-      cout << "Job " << job->SessionID << "/" << job->JobID << " rejected!" << endl;
+      cout << "Job " << sessionID << "/" << ntohl(message->JobID) << " rejected!" << endl;
       sendCalcAppReject(sessionID, ntohl(message->JobID));
    }
 }
@@ -396,17 +396,18 @@ EventHandlingResult CalcAppServer::handleCookieEcho(rserpool_session_t sessionID
 {
    if(bufferSize >= sizeof(CalcAppCookie)) {
       const CalcAppCookie* cookie = (const CalcAppCookie*)buffer;
+printf("==> SID=%d\n",sessionID);
       CalcAppServerJob* job = addJob(sessionID, ntohl(cookie->JobID),
-                                    (double)ntoh64(cookie->JobSize),
-                                    (double)ntoh64(cookie->Completed));
+                                     (double)ntoh64(cookie->JobSize),
+                                     (double)ntoh64(cookie->Completed));
       if(job) {
          cout << "Job " << job->SessionID << "/" << job->JobID
             << " of size " << job->JobSize << ", completed "
-            << job->Completed << " accepted from cookie" << endl;
+            << job->Completed << " accepted from cookie echo" << endl;
          sendCalcAppAccept(job);
       }
       else {
-         cout << "Job " << job->SessionID << "/" << job->JobID << " rejected!" << endl;
+         cout << "Job " << sessionID << "/" << ntohl(cookie->JobID) << " rejected from cookie echo!" << endl;
          sendCalcAppReject(sessionID, ntohl(cookie->JobID));
       }
       return(EHR_Okay);
@@ -575,9 +576,9 @@ void CalcAppServer::handleCookieTransmissionTimer(CalcAppServer::CalcAppServerJo
    cookie.JobID     = htonl(job->JobID);
    cookie.JobSize   = hton64((unsigned long long)rint(job->JobSize));
    cookie.Completed = hton64((unsigned long long)rint(job->Completed));
-   if(rsp_sendmsg(RSerPoolSocketDescriptor,
-                  (void*)&cookie, sizeof(cookie), 0,
-                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+   if(rsp_send_cookie(RSerPoolSocketDescriptor,
+                      (const unsigned char*)&cookie, sizeof(cookie),
+                      job->SessionID, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
    }

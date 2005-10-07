@@ -51,6 +51,7 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
 ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     void*                  buffer,
                                     size_t                 bufferLength,
+                                    struct rsp_sndrcvinfo* rinfo,
                                     int*                   msg_flags,
                                     const bool             isPreRead);
 

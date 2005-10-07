@@ -1123,7 +1123,7 @@ ssize_t rsp_recvmsg(int                    sd,
 
    /* ====== Give back Cookie Echo and notifications ===================== */
    if(buffer != NULL) {
-      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags, true);
+      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, true);
       if(received > 0) {
          return(received);
       }
@@ -1252,7 +1252,7 @@ ssize_t rsp_recvmsg(int                    sd,
    else {
       /* ====== Give back Cookie Echo and notifications ================== */
       if(buffer != NULL) {
-         received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, msg_flags, false);
+         received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, false);
          if(received2 > 0) {
             received = received2;
          }
