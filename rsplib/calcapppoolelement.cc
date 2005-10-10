@@ -88,6 +88,7 @@ class CalcAppServer : public UDPLikeServer
    CalcAppServerJob* findJob(rserpool_session_t sessionID,
                              uint32_t           jobID);
    void removeJob(CalcAppServerJob* job);
+   void removeAllJobs();
    void updateCalculations();
    void scheduleJobs();
    void scheduleNextTimerEvent();
@@ -109,6 +110,7 @@ class CalcAppServer : public UDPLikeServer
                                   const size_t          received);
    void handleKeepAliveTransmissionTimer(CalcAppServerJob* job);
    void handleKeepAliveTimeoutTimer(CalcAppServerJob* job);
+   void sendCookie(CalcAppServerJob* job);
    void handleCookieTransmissionTimer(CalcAppServerJob* job);
 
 
@@ -244,6 +246,22 @@ void CalcAppServer::removeJob(CalcAppServer::CalcAppServerJob* removedJob)
 }
 
 
+// ###### Remove all jobs ###################################################
+void CalcAppServer::removeAllJobs()
+{
+   CalcAppServerJob* job = FirstJob;
+   while(job != NULL) {
+      CalcAppServerJob* next = job->Next;
+      sendCookie(job);   // Note, this may all removeJob()!
+      job = next;
+   }
+
+   while(FirstJob) {
+      removeJob(FirstJob);
+   }
+}
+
+
 // ###### Update calculations until now for all sessions ####################
 void CalcAppServer::updateCalculations()
 {
@@ -344,6 +362,8 @@ EventHandlingResult CalcAppServer::initialize()
 // ###### Shutdown ##########################################################
 void CalcAppServer::finish(EventHandlingResult initializeResult)
 {
+   removeAllJobs();
+
    unsigned long long       shutdownTimeStamp     = getMicroTime();
    const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
    const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
@@ -570,11 +590,9 @@ void CalcAppServer::handleKeepAliveTimeoutTimer(CalcAppServer::CalcAppServerJob*
 }
 
 
-// ###### Handle Cookie Transmission timer ##################################
-void CalcAppServer::handleCookieTransmissionTimer(CalcAppServer::CalcAppServerJob* job)
+// ###### Send cookie #######################################################
+void CalcAppServer::sendCookie(CalcAppServer::CalcAppServerJob* job)
 {
-   updateCalculations();
-
    struct CalcAppCookie cookie;
    memset(&cookie, 0, sizeof(cookie));
    cookie.JobID     = htonl(job->JobID);
@@ -592,7 +610,14 @@ puts("COOKIE!");
 
    job->LastCookieAt        = getMicroTime();
    job->LastCookieCompleted = job->Completed;
+}
 
+
+// ###### Handle Cookie Transmission timer ##################################
+void CalcAppServer::handleCookieTransmissionTimer(CalcAppServer::CalcAppServerJob* job)
+{
+   updateCalculations();
+   sendCookie(job);
    scheduleJobs();
 }
 
