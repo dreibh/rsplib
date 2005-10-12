@@ -76,7 +76,9 @@ int main(int argc, char** argv)
       }
    }
 #ifdef ENABLE_CSP
-   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
+   if(CID_OBJECT(info.ri_csp_identifier) == 0ULL) {
+      info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
+   }
 #endif
 
 

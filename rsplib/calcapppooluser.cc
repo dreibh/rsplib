@@ -700,6 +700,9 @@ int main(int argc, char** argv)
 
    memset(&info, 0, sizeof(info));
 
+#ifdef ENABLE_CSP
+   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
@@ -745,6 +748,11 @@ int main(int argc, char** argv)
          exit(1);
       }
    }
+#ifdef ENABLE_CSP
+   if(CID_OBJECT(info.ri_csp_identifier) == 0ULL) {
+      info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
+   }
+#endif
 
 
    cout << "CalcApp Pool User - Version 1.0" << endl

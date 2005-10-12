@@ -488,6 +488,11 @@ int main(int argc, char** argv)
          exit(1);
       }
    }
+#ifdef ENABLE_CSP
+   if(CID_OBJECT(info.ri_csp_identifier) == 0ULL) {
+      info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
+   }
+#endif
 
 
    puts("Fractal Pool User - Version 1.0");

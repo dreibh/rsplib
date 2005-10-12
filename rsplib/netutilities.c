@@ -2095,7 +2095,13 @@ size_t getpaddrsplus(const int              fd,
 /* ###### Send SCTP ABORT ################################################ */
 int sendabort(int sockfd, sctp_assoc_t assocID)
 {
-   return(sendtoplus(sockfd, NULL, 0, SCTP_ABORT,
+   return(sendtoplus(sockfd, NULL, 0,
+#ifdef MSG_NOSIGNAL
+                     SCTP_ABORT|MSG_NOSIGNAL,
+#else
+                     SCTP_ABORT,
+#endif
+
                      NULL, 0,
                      0, assocID, 0, 0, 0));
 }
@@ -2104,7 +2110,12 @@ int sendabort(int sockfd, sctp_assoc_t assocID)
 /* ###### Send SCTP SHUTDOWN ############################################# */
 int sendshutdown(int sockfd, sctp_assoc_t assocID)
 {
-   return(sendtoplus(sockfd, NULL, 0, SCTP_EOF,
+   return(sendtoplus(sockfd, NULL, 0,
+#ifdef MSG_NOSIGNAL
+                     SCTP_EOF|MSG_NOSIGNAL,
+#else
+                     SCTP_EOF,
+#endif
                      NULL, 0,
                      0, assocID, 0, 0, 0));
 }
