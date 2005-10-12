@@ -413,7 +413,7 @@ void TCPLikeServerList::remove(TCPLikeServer* thread)
          delete entry->Object;
          entry->Object = NULL;
          delete entry;
-         return;
+         break;
       }
       prev  = entry;
       entry = entry->Next;
