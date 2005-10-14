@@ -1295,11 +1295,7 @@ ssize_t rsp_send_cookie(int                  sd,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
-#ifdef MSG_NOSIGNAL
-                                      MSG_NOSIGNAL,
-#else
                                       0,
-#endif
                                       timeout,
                                       message);
          threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -1357,6 +1353,9 @@ ssize_t rsp_send(int sd, const void* buffer, size_t bufferLength, int flags)
 {
    struct RSerPoolSocket* rserpoolSocket;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+#ifdef MSG_NOSIGNAL
+   flags |= MSG_NOSIGNAL;
+#endif
    if(rserpoolSocket->SessionAllocationBitmap != NULL) {
       return(rsp_sendmsg(sd, buffer, bufferLength, flags, 0, 0, 0, 0, ~0));
    }

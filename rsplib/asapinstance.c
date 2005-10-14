@@ -936,13 +936,7 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_END
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                     asapInstance->RegistrarSocket,
-                                    0,
-#ifdef MSG_NOSIGNAL
-                                    MSG_NOSIGNAL,
-#else
-                                    0,
-#endif
-                                    0,
+                                    0, 0, 0,
                                     message);
       }
    }
@@ -960,15 +954,9 @@ static void asapInstanceHandleEndpointKeepAlive(
             fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
             LOG_END
             result = rserpoolMessageSend(IPPROTO_SCTP,
-                                       asapInstance->RegistrarSocket,
-                                       0,
-#ifdef MSG_NOSIGNAL
-                                       MSG_NOSIGNAL,
-#else
-                                       0,
-#endif
-                                       0,
-                                       message);
+                                         asapInstance->RegistrarSocket,
+                                         0, 0, 0,
+                                         message);
 
             poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
          }
@@ -1215,12 +1203,7 @@ static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
          if(asapInstance->RegistrarSocket >= 0) {
             result = rserpoolMessageSend(IPPROTO_SCTP,
                                          asapInstance->RegistrarSocket,
-                                         0,
-#ifdef MSG_NOSIGNAL
-                                         MSG_NOSIGNAL,
-#else
-                                         0,
-#endif
+                                         0, 0,
                                          asapInstance->RegistrarRequestTimeout,
                                          aitm->Request);
             if(result == false) {

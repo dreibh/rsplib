@@ -225,7 +225,12 @@ bool rserpoolMessageSend(int                      protocol,
    if(messageLength > 0) {
       myPPID = (protocol == IPPROTO_SCTP) ? message->PPID : 0;
       sent = sendtoplus(fd,
-                        message->Buffer, messageLength, flags,
+                        message->Buffer, messageLength,
+#ifdef MSG_NOSIGNAL
+                        flags|MSG_NOSIGNAL,
+#else
+                        flags,
+#endif
                         message->AddressArray, message->Addresses,
                         myPPID,
                         assocID,
