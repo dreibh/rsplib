@@ -292,6 +292,7 @@ static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstanc
                                                 bool                 sendAbort)
 {
    if(asapInstance->RegistrarSocket >= 0) {
+      timerStop(&asapInstance->RegistrarTimeoutTimer);
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
       if(sendAbort) {
          sendabort(asapInstance->RegistrarSocket, 0);
