@@ -3308,7 +3308,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    *udpSocket  = -1;
 
    trials = 0;
-   while((configuredPort == 0) && (trials++ < 1024)) {
+   while(trials++ < 1024) {
       if(configuredPort == 0) {
          localPort = 10000 + (random16() % 50000);
          setPort((struct sockaddr*)&udpAddress, localPort);
