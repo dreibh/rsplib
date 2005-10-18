@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -106,35 +106,35 @@ unsigned int registrarTableAddStaticEntry(
   * Handle notification of registrar hunt socket.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarFD Descriptor of registrar hunt socket.
+  * @param registrarHuntFD Descriptor of registrar hunt socket.
   * @param notification Notification to be handled.
   */
 void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
-                                                           int                            registrarFD,
+                                                           int                            registrarHuntFD,
                                                            const union sctp_notification* notification);
 
 /**
   * Peel off registrar assoc ID from registrar hunt socket.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarFD Descriptor of registrar hunt socket.
+  * @param registrarHuntFD Descriptor of registrar hunt socket.
   * @param assocID Association ID to peel off.
   * @return Socket descriptor for peeled-off registrar association.
   */
 int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
-                                          int                    registrarFD,
+                                          int                    registrarHuntFD,
                                           sctp_assoc_t           assocID);
 
 /**
   * Do registrar hunt.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarFD Socket description for registrar connection.
+  * @param registrarHuntFD Socket description for registrar connection.
   * @param registrarIdentifier Reference to store new PR's identifier to.
   * @return Socket descriptor for peeled-off registrar association.
   */
 int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
-                               int                      registrarFD,
+                               int                      registrarHuntFD,
                                RegistrarIdentifierType* registrarIdentifier);
 
 

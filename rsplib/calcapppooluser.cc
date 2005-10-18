@@ -732,6 +732,7 @@ int main(int argc, char** argv)
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-csp" ,4))) {
+puts("CSP!");
          if(initComponentStatusReporter(&info, argv[i]) == false) {
             exit(1);
          }

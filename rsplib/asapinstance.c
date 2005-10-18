@@ -6,8 +6,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -1120,10 +1120,18 @@ static void asapInstanceHandleRegistrarConnectionEvent(
                }
             }
             else {
-               LOG_WARNING
-               fputs("Disconnecting from registrar due to failure\n", stdlog);
-               LOG_END
-               asapInstanceDisconnectFromRegistrar(asapInstance, true);
+               if(fd == asapInstance->RegistrarSocket) {
+                  LOG_WARNING
+                  fputs("Disconnecting from registrar due to failure\n", stdlog);
+                  LOG_END
+                  asapInstanceDisconnectFromRegistrar(asapInstance, true);
+               }
+               else {
+                  LOG_WARNING
+                  fputs("Got crap on registrar hunt socket -> sending abort\n", stdlog);
+                  LOG_END
+                  sendabort(fd, assocID);
+               }
             }
          }
       }

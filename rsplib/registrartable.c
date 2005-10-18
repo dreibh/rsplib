@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -220,12 +220,12 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       /* ====== Show results ================================================ */
       LOG_VERBOSE3
       fputs("New RegistrarTable's configuration:\n",  stdlog);
-      fprintf(stdlog, "registrar.announce.timeout  = %llu [us]\n",  registrarTable->RegistrarAnnounceTimeout);
+      fprintf(stdlog, "registrar.announce.timeout  = %llu [us]\n", registrarTable->RegistrarAnnounceTimeout);
       fputs("registrar.announce.address  = ",  stdlog);
       fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress, true, stdlog);
       fputs("\n",  stdlog);
       fprintf(stdlog, "registrar.connect.maxtrials = %u\n",        registrarTable->RegistrarConnectMaxTrials);
-      fprintf(stdlog, "registrar.connect.timeout   = %llu [us]\n",  registrarTable->RegistrarConnectTimeout);
+      fprintf(stdlog, "registrar.connect.timeout   = %llu [us]\n", registrarTable->RegistrarConnectTimeout);
       LOG_END
 
 
@@ -267,7 +267,7 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
 
 /* ###### Add registrar assoc ID to list ################################# */
 static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
-                                int                    registrarFD,
+                                int                    registrarHuntFD,
                                 sctp_assoc_t           assocID)
 {
    struct RegistrarAssocIDNode* node = (struct RegistrarAssocIDNode*)malloc(sizeof(struct RegistrarAssocIDNode));
@@ -285,14 +285,14 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
       LOG_END
    }
    else {
-      sendabort(registrarFD, assocID);
+      sendabort(registrarHuntFD, assocID);
    }
 }
 
 
 /* ###### Remove registrar assoc ID to list ############################## */
 static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
-                                   int                    registrarFD,
+                                   int                    registrarHuntFD,
                                    sctp_assoc_t           assocID)
 {
    struct RegistrarAssocIDNode        cmpNode;
@@ -315,11 +315,14 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
 /* ###### Get registrar assoc ID from list ############################### */
 static sctp_assoc_t selectRegistrarAssocID(struct RegistrarTable* registrarTable)
 {
-   size_t                             elements = leafLinkedRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
-   struct LeafLinkedRedBlackTreeNode* node;
+   size_t                              elements;
+   LeafLinkedRedBlackTreeNodeValueType value;
+   struct LeafLinkedRedBlackTreeNode*  node;
 
+   elements = leafLinkedRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
    if(elements > 0) {
-      node = leafLinkedRedBlackTreeGetNodeByValue(&registrarTable->RegistrarAssocIDList, random32() % elements);
+      value = random32() % elements;
+      node = leafLinkedRedBlackTreeGetNodeByValue(&registrarTable->RegistrarAssocIDList, value);
       CHECK(node);
       return(((struct RegistrarAssocIDNode*)node)->AssocID);
    }
@@ -329,7 +332,7 @@ static sctp_assoc_t selectRegistrarAssocID(struct RegistrarTable* registrarTable
 
 /* ###### Get registrar assoc ID from list ############################### */
 static int selectRegistrar(struct RegistrarTable*   registrarTable,
-                           int                      registrarFD,
+                           int                      registrarHuntFD,
                            RegistrarIdentifierType* registrarIdentifier)
 {
    sctp_assoc_t                   assocID;
@@ -344,7 +347,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
    assocID = selectRegistrarAssocID(registrarTable);
    if(assocID != 0) {
       /* ====== Registrar selected, get some information about it ======== */
-      n = getpaddrsplus(registrarFD, assocID, &peerAddressArray);
+      n = getpaddrsplus(registrarHuntFD, assocID, &peerAddressArray);
       if(n > 0) {
          LOG_VERBOSE2
          fprintf(stdlog, "Assoc %u connected to registrar at ", (unsigned int)assocID);
@@ -373,7 +376,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
       }
 
       sd = registrarTablePeelOffRegistrarAssocID(registrarTable,
-                                                 registrarFD,
+                                                 registrarHuntFD,
                                                  assocID);
    }
    return(sd);
@@ -382,15 +385,15 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
 
 /* ###### Peel off registrar assoc ####################################### */
 int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
-                                          int                    registrarFD,
+                                          int                    registrarHuntFD,
                                           sctp_assoc_t           assocID)
 {
-   int sd = sctp_peeloff(registrarFD, assocID);
+   int sd = sctp_peeloff(registrarHuntFD, assocID);
    if(sd >= 0) {
       LOG_VERBOSE2
       fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", (unsigned int)assocID);
       LOG_END
-      removeRegistrarAssocID(registrarTable, registrarFD, assocID);
+      removeRegistrarAssocID(registrarTable, registrarHuntFD, assocID);
    }
    return(sd);
 }
@@ -398,7 +401,7 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
 
 /* ###### Handle notification on registrar hunt socket ################### */
 void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
-                                                           int                            registrarFD,
+                                                           int                            registrarHuntFD,
                                                            const union sctp_notification* notification)
 {
    union sockaddr_union* peerAddressArray;
@@ -407,7 +410,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
    /* ====== Association change notification ============================= */
    if(notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) {
       if(notification->sn_assoc_change.sac_state == SCTP_COMM_UP) {
-         n = getpaddrsplus(registrarFD,
+         n = getpaddrsplus(registrarHuntFD,
                            notification->sn_assoc_change.sac_assoc_id,
                            &peerAddressArray);
          if(n > 0) {
@@ -422,7 +425,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
 
          /* ====== Add registrar assoc ID to list ======================== */
          addRegistrarAssocID(registrarTable,
-                             registrarFD,
+                             registrarHuntFD,
                              notification->sn_assoc_change.sac_assoc_id);
       }
       else if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
@@ -431,7 +434,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
                  (unsigned int)notification->sn_assoc_change.sac_assoc_id);
          LOG_END
          removeRegistrarAssocID(registrarTable,
-                                registrarFD,
+                                registrarHuntFD,
                                 notification->sn_assoc_change.sac_assoc_id);
       }
    }
@@ -441,7 +444,7 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
               (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
       LOG_END
       removeRegistrarAssocID(registrarTable,
-                             registrarFD,
+                             registrarHuntFD,
                              notification->sn_shutdown_event.sse_assoc_id);
    }
 }
@@ -499,7 +502,7 @@ unsigned int registrarTableAddStaticEntry(
 
 /* ###### Try more registrars ########################################### */
 static void tryNextBlock(struct RegistrarTable*         registrarTable,
-                         int                            registrarFD,
+                         int                            registrarHuntFD,
                          RegistrarIdentifierType*       lastRegistrarIdentifier,
                          struct TransportAddressBlock** lastTransportAddressBlock)
 {
@@ -544,7 +547,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
             fputs("...\n",  stdlog);
             LOG_END
 
-            result = connectplus(registrarFD,
+            result = connectplus(registrarHuntFD,
                                  transportAddressBlock->AddressArray,
                                  transportAddressBlock->Addresses);
             if((result < 0) &&
@@ -574,26 +577,26 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
 
 /* ###### Find registrar ################################################### */
 int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
-                               int                      registrarFD,
+                               int                      registrarHuntFD,
                                RegistrarIdentifierType* registrarIdentifier)
 {
-   struct timeval                 selectTimeout;
-   union sctp_notification        notification;
-   RegistrarIdentifierType        lastRegistrarIdentifier;
-   struct TransportAddressBlock*  lastTransportAddressBlock;
-   struct ST_CLASS(PeerListNode)* peerListNode;
-   sctp_assoc_t                   assocID;
-   ssize_t                        received;
-   unsigned long long             start;
-   unsigned long long             nextTimeout;
-   unsigned long long             lastTrialTimeStamp;
-   fd_set                         rfdset;
-   unsigned int                   trials;
-   int                            result;
-   int                            flags;
-   int                            sd;
-   int                            n;
-
+   char                            buffer[65536];
+   struct timeval                  selectTimeout;
+   const union sctp_notification*  notification;
+   RegistrarIdentifierType         lastRegistrarIdentifier;
+   struct TransportAddressBlock*   lastTransportAddressBlock;
+   struct ST_CLASS(PeerListNode)*  peerListNode;
+   sctp_assoc_t                    assocID;
+   ssize_t                         received;
+   unsigned long long              start;
+   unsigned long long              nextTimeout;
+   unsigned long long              lastTrialTimeStamp;
+   fd_set                          rfdset;
+   unsigned int                    trials;
+   int                             result;
+   int                             flags;
+   int                             sd;
+   int                             n;
 
    *registrarIdentifier = 0;
    if(registrarTable == NULL) {
@@ -605,7 +608,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
 
    /* ====== Is there already a connection to a registrar? =============== */
-   sd = selectRegistrar(registrarTable, registrarFD,
+   sd = selectRegistrar(registrarTable, registrarHuntFD,
                         registrarIdentifier);
    if(sd >= 0) {
       return(sd);
@@ -678,7 +681,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       if(lastTrialTimeStamp + registrarTable->RegistrarConnectTimeout < getMicroTime()) {
          /* Try next block of addresses */
          tryNextBlock(registrarTable,
-                      registrarFD,
+                      registrarHuntFD,
                       &lastRegistrarIdentifier,
                       &lastTransportAddressBlock);
          lastTrialTimeStamp = getMicroTime();
@@ -686,8 +689,8 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
       /* Wait for event */
       FD_ZERO(&rfdset);
-      FD_SET(registrarFD, &rfdset);
-      n = registrarFD;
+      FD_SET(registrarHuntFD, &rfdset);
+      n = registrarHuntFD;
       if(registrarTable->AnnounceSocket >= 0) {
          FD_SET(registrarTable->AnnounceSocket, &rfdset);
          n = max(n, registrarTable->AnnounceSocket);
@@ -729,39 +732,46 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          if(FD_ISSET(registrarTable->AnnounceSocket, &rfdset)) {
             handleRegistrarAnnounceCallback(registrarTable, registrarTable->AnnounceSocket);
          }
-         if(FD_ISSET(registrarFD, &rfdset)) {
+         if(FD_ISSET(registrarHuntFD, &rfdset)) {
             flags    = MSG_PEEK;
-            received = recvfromplus(registrarFD,
-                                    &notification, sizeof(notification), &flags,
+            received = recvfromplus(registrarHuntFD,
+                                    &buffer, sizeof(buffer), &flags,
                                     NULL, 0,
                                     NULL, &assocID, NULL, 0);
             if(received > 0) {
                if(flags & MSG_NOTIFICATION) {
+                  notification = (const union sctp_notification*)&buffer;
                   /* ====== Notification received ======================== */
                   flags = 0;
-                  if( (recvfromplus(registrarFD,
-                                    &notification, sizeof(notification), &flags,
+                  if( (recvfromplus(registrarHuntFD,
+                                    &buffer, sizeof(buffer), &flags,
                                     NULL, 0,
                                     NULL, NULL, NULL, 0) > 0) &&
                      (flags & MSG_NOTIFICATION) ) {
-                        registrarTableHandleNotificationOnRegistrarHuntSocket(registrarTable,
-                                                                              registrarFD,
-                                                                              &notification);
-                        if((notification.sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
-                           (notification.sn_assoc_change.sac_state == SCTP_CANT_STR_ASSOC) ||
-                           (notification.sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
-                           if(registrarTable->OutstandingConnects > 0) {
-                              registrarTable->OutstandingConnects--;
-                           }
-                           LOG_VERBOSE3
-                           fprintf(stdlog, "Failed to establish registrar connection, outstanding=%u\n",
-                                   (unsigned int)registrarTable->OutstandingConnects);
-                           LOG_END
+
+                     registrarTableHandleNotificationOnRegistrarHuntSocket(registrarTable,
+                                                                           registrarHuntFD,
+                                                                           notification);
+                     if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+                        (notification->sn_assoc_change.sac_state == SCTP_CANT_STR_ASSOC) ||
+                        (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) {
+                        if(registrarTable->OutstandingConnects > 0) {
+                           registrarTable->OutstandingConnects--;
                         }
+                        LOG_VERBOSE3
+                        fprintf(stdlog, "Failed to establish registrar connection, outstanding=%u\n",
+                                 (unsigned int)registrarTable->OutstandingConnects);
+                        LOG_END
+                     }
+                  }
+                  else {
+                     LOG_ERROR
+                     fputs("Peeked notification but failed to read it\n", stdlog);
+                     LOG_END_FATAL
                   }
 
                   /* ====== Is there a connection to a registrar? ======== */
-                  sd = selectRegistrar(registrarTable, registrarFD,
+                  sd = selectRegistrar(registrarTable, registrarHuntFD,
                                        registrarIdentifier);
                   if(sd >= 0) {
                      if(lastTransportAddressBlock) {
@@ -772,16 +782,30 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                   }
                }
                else {
-                  LOG_ERROR
-                  fputs("Peeked notification but failed to read it\n", stdlog);
-                  LOG_END_FATAL
+                  LOG_VERBOSE
+                  fprintf(stdlog, "Peeked data on assoc %u, but no association is listed\n",
+                          (unsigned int)assocID);
+                  LOG_END
+
+                  sd = registrarTablePeelOffRegistrarAssocID(registrarTable, registrarHuntFD,
+                                                             assocID);
+                  if(sd >= 0) {
+                     LOG_ACTION
+                     fprintf(stdlog, "Taking assoc %u as new registrar => socket %d\n", assocID, sd);
+                     LOG_END
+                     return(sd);
+                  }
+
+                  LOG_WARNING
+                  fprintf(stdlog, "Got crap via assoc %u -> aborting it\n", assocID);
+                  LOG_END
+                  flags = 0;
+                  recvfromplus(registrarHuntFD,
+                               &buffer, sizeof(buffer), &flags,
+                               NULL, 0,
+                               NULL, NULL, NULL, 0);
+                  sendabort(registrarHuntFD, assocID);
                }
-            }
-            else {
-               LOG_ERROR
-               fprintf(stdlog, "Received data on assoc %u, but no association is listed\n",
-                       (unsigned int)assocID);
-               LOG_END_FATAL
             }
          }
       }
