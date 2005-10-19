@@ -159,38 +159,55 @@ int main(int argc, char** argv)
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
+      size_t maxThreads = 4;
+      for(int i = 1;i < argc;i++) {
+         if(!(strncmp(argv[i], "-chargenmaxthreads=", 19))) {
+            maxThreads = atol((const char*)&argv[i][19]);
+         }
+      }
+
       TCPLikeServer::poolElement("Character Generator Server - Version 1.0",
                                   (poolHandle != NULL) ? poolHandle : "CharGenPool",
                                   &info, NULL,
+                                  maxThreads,
                                   CharGenServer::charGenServerFactory,
                                   NULL,
                                   reregInterval, runtimeLimit,
                                   (struct TagItem*)&tags);
    }
    else if(service == SERVICE_PINGPONG) {
+      size_t maxThreads = 4;
       PingPongServer::PingPongServerSettings settings;
       settings.FailureAfter = 0;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-pppfailureafter=", 17))) {
             settings.FailureAfter = atol((const char*)&argv[i][17]);
          }
+         else if(!(strncmp(argv[i], "-pppmaxthreads=", 15))) {
+            maxThreads = atol((const char*)&argv[i][15]);
+         }
       }
 
       TCPLikeServer::poolElement("Ping Pong Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "PingPongPool",
                                  &info, NULL,
+                                 maxThreads,
                                  PingPongServer::pingPongServerFactory,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_FRACTAL) {
+      size_t maxThreads = 4;
       FractalGeneratorServer::FractalGeneratorServerSettings settings;
       settings.TestMode     = false;
       settings.FailureAfter = 0;
       for(int i = 1;i < argc;i++) {
          if(!(strcmp(argv[i], "-fgptestmode"))) {
             settings.TestMode = true;
+         }
+         else if(!(strncmp(argv[i], "-fgpmaxthreads=", 15))) {
+            maxThreads = atol((const char*)&argv[i][15]);
          }
          else if(!(strncmp(argv[i], "-fgpfailureafter=", 17))) {
             settings.FailureAfter = atol((const char*)&argv[i][17]);
@@ -200,6 +217,7 @@ int main(int argc, char** argv)
       TCPLikeServer::poolElement("Fractal Generator Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "FractalGeneratorPool",
                                  &info, NULL,
+                                 maxThreads,
                                  FractalGeneratorServer::fractalGeneratorServerFactory,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,

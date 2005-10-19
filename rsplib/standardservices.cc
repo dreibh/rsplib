@@ -494,6 +494,9 @@ EventHandlingResult FractalGeneratorServer::handleMessage(const char* buffer,
 // ###### Calculate image ####################################################
 EventHandlingResult FractalGeneratorServer::calculateImage()
 {
+   // ====== Update load ====================================================
+   setLoad(1.0 / ServerList->getMaxThreads());
+
    // ====== Initialize =====================================================
    struct FGPData       data;
    double               stepX;
@@ -520,7 +523,6 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
    }
 
    // ====== Calculate image ================================================
-   setLoad(1.0);
    while(Status.CurrentY < Status.Parameter.Height) {
       while(Status.CurrentX < Status.Parameter.Width) {
          // ====== Calculate pixel ==========================================

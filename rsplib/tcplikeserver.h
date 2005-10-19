@@ -37,15 +37,18 @@ class TCPLikeServer;
 class TCPLikeServerList : public TDMutex
 {
    public:
-   TCPLikeServerList();
+   TCPLikeServerList(size_t maxThreads);
    ~TCPLikeServerList();
-   void add(TCPLikeServer* thread);
+   bool add(TCPLikeServer* thread);
    void remove(TCPLikeServer* thread);
    void removeFinished();
    void removeAll();
 
-   size_t getThreads();
    double getTotalLoad();
+   size_t getThreads();
+   inline size_t getMaxThreads() const {
+      return(MaxThreads);
+   }
 
    private:
    friend class TCPLikeServer;
@@ -53,9 +56,10 @@ class TCPLikeServerList : public TDMutex
       ThreadListEntry* Next;
       TCPLikeServer*  Object;
    };
-   ThreadListEntry*   ThreadList;
-   size_t             Threads;
-   unsigned long long LoadSum;
+   ThreadListEntry* ThreadList;
+   unsigned int     LoadSum;
+   size_t           Threads;
+   size_t           MaxThreads;
 };
 
 
@@ -86,6 +90,7 @@ class TCPLikeServer : public TDThread
                            const char*          poolHandle,
                            struct rsp_info*     info,
                            struct rsp_loadinfo* loadinfo,
+                           size_t               maxThreads,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                            void*                userData,
                            unsigned int         reregInterval = 30000,
@@ -93,7 +98,8 @@ class TCPLikeServer : public TDThread
                            struct TagItem*      tags          = NULL);
 
    protected:
-   int RSerPoolSocketDescriptor;
+   int                RSerPoolSocketDescriptor;
+   TCPLikeServerList* ServerList;
 
    protected:
    virtual EventHandlingResult initialize();
@@ -108,11 +114,10 @@ class TCPLikeServer : public TDThread
    private:
    void run();
 
-   TCPLikeServerList* ServerList;
-   unsigned int       Load;
-   bool               IsNewSession;
-   bool               Shutdown;
-   bool               Finished;
+   unsigned int Load;
+   bool         IsNewSession;
+   bool         Shutdown;
+   bool         Finished;
 };
 
 

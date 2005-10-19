@@ -1494,9 +1494,10 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
             session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
          }
          if((rserpoolSocket->PoolElement) &&
-            (CID_GROUP(*identifier) == CID_GROUP_POOLELEMENT) &&
-            (CID_OBJECT(*identifier) == 0)) {
-            *identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, rserpoolSocket->PoolElement->Identifier);
+            (CID_GROUP(*identifier) == CID_GROUP_POOLELEMENT)) {
+            if(CID_OBJECT(*identifier) == 0) {
+               *identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, rserpoolSocket->PoolElement->Identifier);
+            }
             if((rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_LEASTUSED) ||
                (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_LEASTUSED_DEGRADATION) ||
                (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_PRIORITY_LEASTUSED) ||
@@ -1506,7 +1507,6 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
                (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED) ||
                (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION)) {
                *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)0xffffff;
-               printf("WL=%1.4f\n",*workload);
             }
          }
          rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);

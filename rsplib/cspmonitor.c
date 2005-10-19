@@ -90,18 +90,27 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
    char                    str[256];
+   char                    workload[16];
    size_t                  i;
    int                     color;
 
+   if(cspObject->Workload >= 0.0) {
+      snprintf((char*)&workload, sizeof(workload), "L=%3u%%",
+               (unsigned int)rint(100.0 * cspObject->Workload));
+   }
+   else {
+      strcpy((char*)&workload, "L=n/a");
+   }
+
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, L=%d%% A=%u\n   \"%s\"\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, %s A=%u\n   \"%s\"\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
-           (int)rint(100.0 * cspObject->Workload),
+           workload,
            (unsigned int)cspObject->Associations,
            cspObject->Status);
    for(i = 0;i < cspObject->Associations;i++) {
@@ -152,6 +161,7 @@ static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectP
 }
 
 
+/* ###### Find CSPObject in storage ###################################### */
 struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
                                 const uint64_t                 id)
 {
@@ -166,6 +176,7 @@ struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
 }
 
 
+/* ###### Purge out-of-date CSPObject in storage ######################### */
 void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
 {
    struct CSPObject* cspObject;
@@ -184,6 +195,7 @@ void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
 }
 
 
+/* ###### Handle incoming CSP message #################################### */
 static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
 {
    struct ComponentStatusReport* cspReport;
@@ -226,6 +238,7 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
             if(cspObject) {
                cspObject->LastReportTimeStamp = getMicroTime();
                cspObject->ReportInterval      = cspReport->ReportInterval;
+               cspObject->Workload            = CSR_GET_WORKLOAD(cspReport->Workload);
                getDescriptionForID(cspObject->Identifier,
                                    (char*)&cspObject->Description,
                                    sizeof(cspObject->Description));

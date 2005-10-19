@@ -82,24 +82,32 @@ void TCPLikeServer::shutdown()
 // ##### Get load ###########################################################
 double TCPLikeServer::getLoad() const
 {
-   return((double)Load / (double)0xffffffff);
+   return((double)Load / (double)0xffffff);
 }
 
 
 // ##### Set load ###########################################################
 void TCPLikeServer::setLoad(double load)
 {
+   CHECK(ServerList != NULL);
+   CHECK(ServerList->LoadSum >= Load);
    if((load < 0.0) || (load > 1.0)) {
       fputs("ERROR: Invalid load setting!\n", stderr);
       return;
    }
-
-   CHECK(ServerList != NULL);
-   CHECK(ServerList->LoadSum >= Load);
+   const unsigned int newLoad = (unsigned int)rint(load * (double)0xffffff);
+   if((load < 0.0) || (load > 1.0)) {
+      fputs("ERROR: Invalid load setting!\n", stderr);
+      return;
+   }
+   if(ServerList->LoadSum - Load + newLoad > 0xffffff) {
+      fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%%!\n", stderr);
+      return;
+   }
 
    ServerList->lock();
    ServerList->LoadSum -= Load;
-   Load = (unsigned int)rint(load * (double)0xffffffff);
+   Load = newLoad;
    ServerList->LoadSum += Load;
    ServerList->unlock();
 }
@@ -204,6 +212,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
+                                size_t               maxThreads,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                                 void*                userData,
                                 unsigned int         reregInterval,
@@ -240,7 +249,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            loadinfo, reregInterval, tags) == 0) {
 
          // ====== Main loop ================================================
-         TCPLikeServerList        serverSet;
+         TCPLikeServerList        serverSet(maxThreads);
          double                   oldLoad = 0.0;
          const unsigned long long autoStopTimeStamp =
             (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
@@ -253,11 +262,11 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
-               if(serviceThread) {
-                  serverSet.add(serviceThread);
+               if((serviceThread) && (serverSet.add(serviceThread))) {
                   serviceThread->start();
                }
                else {
+                  puts("Rejected new session");
                   rsp_close(newRSerPoolSocket);
                }
             }
@@ -276,6 +285,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   oldLoad = newLoad;
                   struct TagItem mytags[4];
                   loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
+printf("NEW LOAD = %1.2f\n", newLoad);
                   mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
                   mytags[0].Data = 0;
                   mytags[1].Tag  = TAG_MORE;
@@ -316,11 +326,12 @@ void TCPLikeServer::poolElement(const char*          programTitle,
 
 
 // ###### Constructor #######################################################
-TCPLikeServerList::TCPLikeServerList()
+TCPLikeServerList::TCPLikeServerList(size_t maxThreads)
 {
    ThreadList = NULL;
-   Threads    = 0;
    LoadSum    = 0;
+   Threads    = 0;
+   MaxThreads = maxThreads;
 }
 
 
@@ -370,19 +381,23 @@ void TCPLikeServerList::removeAll()
 
 
 // ###### Add session #######################################################
-void TCPLikeServerList::add(TCPLikeServer* thread)
+bool TCPLikeServerList::add(TCPLikeServer* thread)
 {
-   ThreadListEntry* entry = new ThreadListEntry;
-   if(entry) {
-      lock();
-      entry->Next   = ThreadList;
-      entry->Object = thread;
-      ThreadList    = entry;
+   if(Threads < MaxThreads) {
+      ThreadListEntry* entry = new ThreadListEntry;
+      if(entry) {
+         lock();
+         entry->Next   = ThreadList;
+         entry->Object = thread;
+         ThreadList    = entry;
 
-      thread->setServerList(this);
-      Threads++;
-      unlock();
+         thread->setServerList(this);
+         Threads++;
+         unlock();
+         return(true);
+      }
    }
+   return(false);
 }
 
 
@@ -434,7 +449,7 @@ double TCPLikeServerList::getTotalLoad()
    unlock();
 
    if(threads > 0) {
-      return(loadSum / (threads * (double)0xffffffff));
+      return(LoadSum / (double)0xffffff);
    }
    return(0.0);
 }
