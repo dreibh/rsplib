@@ -374,12 +374,12 @@ void CalcAppServer::finish(EventHandlingResult initializeResult)
    const double totalWastedCapacity       = serverRuntime - totalUsedCapacity;
 
 //   fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity   \" %1.6f\n", ObjectName.c_str(), totalUsedCapacity);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \" %1.6f\n", ObjectName.c_str(), totalPossibleCalculations);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity  \" %1.6f\n", ObjectName.c_str(), totalWastedCapacity);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted   \" %u\n", ObjectName.c_str(), AcceptedJobs);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected   \" %u\n", ObjectName.c_str(), RejectedJobs);
-   fprintf(ScalarFH, "scalar \"%s\" \"Utilization           \" %1.6f\n", ObjectName.c_str(), utilization);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity \"%1.6\n", ObjectName.c_str(), totalUsedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \"%1.6f\n", ObjectName.c_str(), totalPossibleCalculations);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity \"%1.6f\n", ObjectName.c_str(), totalWastedCapacity);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted \"%u\n", ObjectName.c_str(), AcceptedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected \"%u\n", ObjectName.c_str(), RejectedJobs);
+   fprintf(ScalarFH, "scalar \"%s\" \"Utilization \"%1.6f\n", ObjectName.c_str(), utilization);
 
    if(VectorFH) {
       fclose(VectorFH);
@@ -761,9 +761,6 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-scalar=" ,8))) {
          scalarFileName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
-         runtimeLimit = atol((char*)&argv[i][9]);
       }
       else if(!(strncmp(argv[i], "-maxjobs=" ,9))) {
          maxJobs = atol((char*)&argv[i][9]);
