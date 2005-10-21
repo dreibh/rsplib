@@ -121,7 +121,8 @@ class CalcAppServer : public UDPLikeServer
    std::string        ScalarFileName;
    FILE*              VectorFH;
    FILE*              ScalarFH;
-
+   
+   unsigned int VectorLine;
    size_t             MaxJobs;
    double             Capacity;
    unsigned long long StartupTimeStamp;
@@ -149,7 +150,8 @@ CalcAppServer::CalcAppServer(const size_t maxJobs,
    ScalarFileName = scalarFileName;
    VectorFH       = NULL;
    ScalarFH       = NULL;
-
+  
+   VectorLine = 0;
    MaxJobs                       = maxJobs;
    TotalUsedCalculations         = 0.0;
    Capacity                      = 1000000.0;
@@ -343,11 +345,11 @@ void CalcAppServer::scheduleNextTimerEvent()
 EventHandlingResult CalcAppServer::initialize()
 {
    VectorFH = fopen(VectorFileName.c_str(), "w");
+   fprintf(VectorFH, "Runtime AvailableCalculations UsedCalculations Utilization\n");
    if(VectorFH == NULL) {
       cout << " Unable to open output file " << VectorFileName << endl;
       return(EHR_Abort);
    }
-   fprintf(VectorFH, "Runtime AvailableCalculations UsedCalculations Utilization\n");
 
    ScalarFH = fopen(ScalarFileName.c_str(), "w");
    if(ScalarFH == NULL) {
@@ -374,13 +376,15 @@ void CalcAppServer::finish(EventHandlingResult initializeResult)
    const double totalWastedCapacity       = serverRuntime - totalUsedCapacity;
 
 //   fprintf(VectorFH," %u %1.6llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, Capacity, utilization);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity \"%1.6\n", ObjectName.c_str(), totalUsedCapacity);
+   if(ScalarFH != 0)
+{
+   fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity \"%1.6f\n", ObjectName.c_str(), totalUsedCapacity);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \"%1.6f\n", ObjectName.c_str(), totalPossibleCalculations);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity \"%1.6f\n", ObjectName.c_str(), totalWastedCapacity);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted \"%u\n", ObjectName.c_str(), AcceptedJobs);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected \"%u\n", ObjectName.c_str(), RejectedJobs);
    fprintf(ScalarFH, "scalar \"%s\" \"Utilization \"%1.6f\n", ObjectName.c_str(), utilization);
-
+}
    if(VectorFH) {
       fclose(VectorFH);
       VectorFH = NULL;
@@ -497,6 +501,18 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppAccept");
    }
+	
+        
+	unsigned long long       shutdownTimeStamp     = getMicroTime();
+        const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
+        const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
+        const double             utilization           = TotalUsedCalculations / availableCalculations;
+        fprintf(VectorFH," %u %llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, TotalUsedCalculations, utilization);
+       
+
+
+
+
 }
 
 
