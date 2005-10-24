@@ -1,3 +1,14 @@
+Testsoftware:
+- Runs
+- RunDuration
+
+Synchronisation:
+- Start-TS
+
+getTimeStamp [offset]
+
+--------
+
 result = rsp_recvmsg()
 
 result == 0: Session-Ende, kein FO möglich

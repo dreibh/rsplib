@@ -300,15 +300,21 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
 
    cmpNode.AssocID = assocID;
    node = leafLinkedRedBlackTreeFind(&registrarTable->RegistrarAssocIDList, &cmpNode.Node);
-   CHECK(node != NULL);
-   CHECK(leafLinkedRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
-   free(node);
+   if(node != NULL) {
+      CHECK(leafLinkedRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
+      free(node);
 
-   LOG_VERBOSE2
-   fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , (unsigned int)assocID);
-   fputs("RegistrarAssocIDList: ", stdlog);
-   leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
-   LOG_END
+      LOG_VERBOSE2
+      fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , (unsigned int)assocID);
+      fputs("RegistrarAssocIDList: ", stdlog);
+      leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
+      LOG_END
+   }
+   else {
+      LOG_WARNING
+      fprintf(stderr, "Tried to remove not-existing assoc %u from registrar assoc ID list.\n", (unsigned int)assocID);
+      LOG_END
+   }
 }
 
 

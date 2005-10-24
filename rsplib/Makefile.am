@@ -132,9 +132,9 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork cspmonitor testregistrator calcapppoolelement calcapppooluser
+noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser
 endif
 
 
@@ -182,6 +182,9 @@ calcapppoolelement_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $
 
 fork_SOURCES = fork.c
 fork_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+gettimestamp_SOURCES = gettimestamp.c
+gettimestamp_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
