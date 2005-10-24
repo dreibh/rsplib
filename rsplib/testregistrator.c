@@ -198,7 +198,8 @@ int main(int argc, char** argv)
          perror("Unable to create RSerPool socket");
          exit(1);
       }
-      if(rsp_register(poolElementArray[i], poolHandle, strlen(poolHandle),
+      if(rsp_register(poolElementArray[i],
+                      (const unsigned char*)poolHandle, strlen(poolHandle),
                       &loadinfo, 60000) != 0) {
          perror("Unable to register pool element");
          exit(1);
