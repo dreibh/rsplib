@@ -121,7 +121,7 @@ class CalcAppServer : public UDPLikeServer
    std::string        ScalarFileName;
    FILE*              VectorFH;
    FILE*              ScalarFH;
-   
+
    unsigned int VectorLine;
    size_t             MaxJobs;
    double             Capacity;
@@ -150,7 +150,7 @@ CalcAppServer::CalcAppServer(const size_t maxJobs,
    ScalarFileName = scalarFileName;
    VectorFH       = NULL;
    ScalarFH       = NULL;
-  
+
    VectorLine = 0;
    MaxJobs                       = maxJobs;
    TotalUsedCalculations         = 0.0;
@@ -451,8 +451,10 @@ void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
    AcceptedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_ACCEPT);
-   message.JobID = htonl(job->JobID);
+   message.Type   = CALCAPP_ACCEPT;
+   message.Flags  = 0x00;
+   message.Length = ntohs(sizeof(message));
+   message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
@@ -468,8 +470,10 @@ void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t job
    RejectedJobs++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_REJECT);
-   message.JobID = htonl(jobID);
+   message.Type   = CALCAPP_REJECT;
+   message.Flags  = 0x00;
+   message.Length = ntohs(sizeof(message));
+   message.JobID  = htonl(jobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
                   sessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
@@ -492,7 +496,9 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type      = htonl(CALCAPP_COMPLETE);
+   message.Type      = CALCAPP_COMPLETE;
+   message.Flags     = 0x00;
+   message.Length    = ntohs(sizeof(message));
    message.JobID     = htonl(job->JobID);
    message.JobSize   = hton64((unsigned long long)rint(job->JobSize));
    message.Completed = hton64((unsigned long long)rint(job->Completed));
@@ -501,14 +507,14 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppAccept");
    }
-	
-        
+
+
 	unsigned long long       shutdownTimeStamp     = getMicroTime();
         const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
         const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
         const double             utilization           = TotalUsedCalculations / availableCalculations;
         fprintf(VectorFH," %u %llu %1.6f %1.6f %1.6f\n", ++VectorLine, serverRuntime, availableCalculations, TotalUsedCalculations, utilization);
-       
+
 
 
 
@@ -539,8 +545,10 @@ void CalcAppServer::sendCalcAppKeepAliveAck(CalcAppServer::CalcAppServerJob* job
 //    KeepAlives++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_KEEPALIVE_ACK);
-   message.JobID = htonl(job->JobID);
+   message.Type   = CALCAPP_KEEPALIVE_ACK;
+   message.Flags  = 0x00;
+   message.Length = ntohs(sizeof(message));
+   message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
@@ -557,8 +565,10 @@ void CalcAppServer::sendCalcAppKeepAlive(CalcAppServer::CalcAppServerJob* job)
 //    KeepAlives++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_KEEPALIVE);
-   message.JobID = htonl(job->JobID);
+   message.Type   = CALCAPP_KEEPALIVE;
+   message.Flags  = 0x00;
+   message.Length = ntohs(sizeof(message));
+   message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
                   job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
@@ -650,8 +660,8 @@ EventHandlingResult CalcAppServer::handleMessage(rserpool_session_t sessionID,
    if(bufferSize >= sizeof(CalcAppMessage)) {
       const CalcAppMessage* message = (const CalcAppMessage*)buffer;
 
-printf("Type=%d\n",   ntohl(message->Type));
-      switch(ntohl(message->Type)) {
+printf("Type=%d\n",   message->Type);
+      switch(message->Type) {
          case CALCAPP_REQUEST:
             handleCalcAppRequest(sessionID, message, bufferSize);
           break;
@@ -662,7 +672,7 @@ printf("Type=%d\n",   ntohl(message->Type));
             handleCalcAppKeepAliveAck(sessionID, message, bufferSize);
           break;
          default:
-            cerr << "ERROR: Unexpected message type " << ntohl(message->Type) << endl;
+            cerr << "ERROR: Unexpected message type " << message->Type << endl;
           break;
       }
    }

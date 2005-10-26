@@ -2,6 +2,8 @@
  * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004-2005 by Thomas Dreibholz
  *
+ * $Id$
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -36,18 +38,6 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
    const struct ST_CLASS(PeerListNode)* node2 = (struct ST_CLASS(PeerListNode)*)nodePtr2;
    int                                  result;
 
-   /* One of the nodes has an undefined ID, i.e. static entry.
-      => Only comparison by address overlap possible */
-   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
-      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
-      result = transportAddressBlockOverlapComparison(node1->AddressBlock,
-                                                      node2->AddressBlock);
-      if(result == 0) {
-         return(0);
-      }
-      /* No overlap -> continue comparison */
-   }
-
    /* Compare IDs */
    if(node1->Identifier < node2->Identifier) {
       return(-1);
@@ -65,6 +55,44 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
       return(result);
    }
 
+   return(0);
+}
+
+
+/* ###### Print ########################################################## */
+void ST_CLASS(peerListAddressStorageNodePrint)(const void *nodePtr, FILE* fd)
+{
+   const struct ST_CLASS(PeerListNode)* peerListNode = (struct ST_CLASS(PeerListNode)*)nodePtr;
+   ST_CLASS(peerListNodePrint)(peerListNode, fd, 0);
+}
+
+
+/* ###### Comparison ##################################################### */
+int ST_CLASS(peerListAddressStorageNodeComparison)(const void* nodePtr1,
+                                                   const void* nodePtr2)
+{
+   const struct ST_CLASS(PeerListNode)* node1 =
+      ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)((void*)nodePtr1);
+   const struct ST_CLASS(PeerListNode)* node2 =
+      ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)((void*)nodePtr2);
+   int result;
+
+   result = transportAddressBlockOverlapComparison(node1->AddressBlock,
+                                                   node2->AddressBlock);
+   if(result != 0) {
+      return(result);
+   }
+
+   /* Compare IDs, if both IDs are not undefined. */
+   if((node1->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) &&
+      (node2->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      if(node1->Identifier < node2->Identifier) {
+         return(-1);
+      }
+      else if(node1->Identifier > node2->Identifier) {
+         return(1);
+      }
+   }
    return(0);
 }
 
@@ -105,6 +133,7 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
                                struct TransportAddressBlock*  transportAddressBlock)
 {
    STN_METHOD(New)(&peerListNode->PeerListIndexStorageNode);
+   STN_METHOD(New)(&peerListNode->PeerListAddressStorageNode);
    STN_METHOD(New)(&peerListNode->PeerListTimerStorageNode);
 
    peerListNode->OwnerPeerList       = NULL;
@@ -126,6 +155,7 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
 void ST_CLASS(peerListNodeDelete)(struct ST_CLASS(PeerListNode)* peerListNode)
 {
    CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListIndexStorageNode));
+   CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListAddressStorageNode));
    CHECK(!STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode));
 
    peerListNode->Flags               = 0;
@@ -142,6 +172,15 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageN
 {
    const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
    long n = (long)node - ((long)&dummy->PeerListIndexStorageNode - (long)dummy);
+   return((struct ST_CLASS(PeerListNode)*)n);
+}
+
+
+/* ###### Get PeerListNode from given Address Node ####################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(void* node)
+{
+   const struct ST_CLASS(PeerListNode)* dummy = (struct ST_CLASS(PeerListNode)*)node;
+   long n = (long)node - ((long)&dummy->PeerListAddressStorageNode - (long)dummy);
    return((struct ST_CLASS(PeerListNode)*)n);
 }
 

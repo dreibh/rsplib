@@ -210,7 +210,9 @@ void sendCalcAppRequest(struct Process* process)
    cout << "New Job "<< endl;
    CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type    = htonl(CALCAPP_REQUEST);
+   message.Type    = CALCAPP_REQUEST;
+   message.Flags   = 0x00;
+   message.Length  = htons(sizeof(message));
    message.JobID   = htonl(process->CurrentJob->JobID);
    message.JobSize = hton64((unsigned long long)rint(process->CurrentJob->JobSize));
    cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
@@ -231,8 +233,10 @@ void sendCalcAppKeepAlive(struct Process* process)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_KEEPALIVE);
-   message.JobID = htonl(process->CurrentJob->JobID);
+   message.Type   = CALCAPP_KEEPALIVE;
+   message.Flags  = 0x00;
+   message.Length = htons(sizeof(message));
+   message.JobID  = htonl(process->CurrentJob->JobID);
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
@@ -251,8 +255,10 @@ void sendCalcAppKeepAliveAck(struct Process* process)
 {
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
-   message.Type  = htonl(CALCAPP_KEEPALIVE_ACK);
-   message.JobID = htonl(process->CurrentJob->JobID);
+   message.Type   = CALCAPP_KEEPALIVE_ACK;
+   message.Flags  = 0x00;
+   message.Length = htons(sizeof(message));
+   message.JobID  = htonl(process->CurrentJob->JobID);
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
@@ -487,7 +493,7 @@ void handleEvents(Process*    process,
       else {
          if(received >= (ssize_t)sizeof(CalcAppMessage)) {
             CalcAppMessage* response = (CalcAppMessage*)&buffer;
-            switch(ntohl(response->Type)) {
+            switch(response->Type) {
                case CALCAPP_ACCEPT:
                   handleCalcAppAccept(process, response, sizeof(response));
                 break;
@@ -504,7 +510,7 @@ void handleEvents(Process*    process,
                   handleCalcAppCompleted(process, response, sizeof(response));
                 break;
                default:
-                  cerr << "ERROR: Unknown message type " << ntohl(response->Type) << endl;
+                  cerr << "ERROR: Unknown message type " << response->Type << endl;
                 break;
             }
          }

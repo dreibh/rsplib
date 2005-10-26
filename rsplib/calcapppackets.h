@@ -41,7 +41,10 @@
 
 struct CalcAppMessage
 {
-   uint32_t           Type;
+   uint8_t            Type;
+   uint8_t            Flags;
+   uint16_t           Length;
+
    uint32_t           JobID;
    unsigned long long JobSize;
    unsigned long long Completed;
