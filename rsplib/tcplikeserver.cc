@@ -285,7 +285,6 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   oldLoad = newLoad;
                   struct TagItem mytags[4];
                   loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
-printf("NEW LOAD = %1.2f\n", newLoad);
                   mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
                   mytags[0].Data = 0;
                   mytags[1].Tag  = TAG_MORE;

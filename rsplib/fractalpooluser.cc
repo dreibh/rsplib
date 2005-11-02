@@ -336,74 +336,85 @@ void FractalPU::run()
             qApp->unlock();
 
 
-            // ====== Begin image calculation ==================================
+            // ====== Begin image calculation ===============================
             bool success = false;
-            if(sendParameter()) {
+            do {
+               if(sendParameter()) {
+                  do {
 
-               // ====== Handle received result chunks =========================
-               size_t         packets = 0;
-               FGPData        data;
-               rsp_sndrcvinfo rinfo;
-               int            flags = 0;
-               ssize_t received;
+                     // ====== Handle received result chunks ================
+                     size_t         packets = 0;
+                     FGPData        data;
+                     rsp_sndrcvinfo rinfo;
+                     int            flags = 0;
+                     ssize_t received;
 
-               received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                      &rinfo, &flags, 2000000);
-               while(received != 0) {
-printf("recv=%d   f=%08x\n",received, flags);
-                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                     union rserpool_notification* notification =
-                        (union rserpool_notification*)&data;
-                     printf("Notification: ");
-                     rsp_print_notification((union rserpool_notification*)&data, stdout);
-                     puts("");
-                     if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
-                        if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
-                           puts("FAILOVER...");
-                           rsp_forcefailover(Session);
+                     received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
+                                            &rinfo, &flags, 2000000);
+                     while(received > 0) {
+                        // ====== Handle notification =======================
+                        if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                           union rserpool_notification* notification =
+                              (union rserpool_notification*)&data;
+                           printf("Notification: ");
+                           rsp_print_notification((union rserpool_notification*)&data, stdout);
+                           puts("");
+                           if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
+                              if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
+                                 break;
+                              }
+                              else if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_COMPLETE) {
+                                 PoolElementUsages++;
+                              }
+                           }
                         }
-                        else if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_COMPLETE) {
-                           PoolElementUsages++;
-                        }
-                     }
-                  }
-                  else {
-                     if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
-                        (data.Header.Type == FGPT_DATA)) {
-                        qApp->lock();
-                        const DataStatus status = handleData(&data, received);
-                        qApp->unlock();
 
-                        switch(status) {
-                           case Finalizer:
-                              success = true;
-                              goto finish;
-                           break;
-                           case Invalid:
-                              cerr << "ERROR: Invalid data block received!" << endl;
-                           break;
-                           default:
-                              packets++;
-                              snprintf((char*)&statusText, sizeof(statusText),
-                                       "Processed data packet #%u (from PE $%08x)...",
-                                       packets, rinfo.rinfo_pe_id);
-                              rsp_csp_setstatus(Session, 0, statusText);
+                        // ====== Handle Data ===============================
+                        else {
+                           if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
+                              (data.Header.Type == FGPT_DATA)) {
                               qApp->lock();
-                              statusBar()->message(statusText);
+                              const DataStatus status = handleData(&data, received);
                               qApp->unlock();
-                           break;
-                        }
-                     }
-                     if(!Running) {
-                        goto finish;
-                     }
-                  }
 
-                  flags = 0;
-                  received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                         &rinfo, &flags, 2000000);
+                              switch(status) {
+                                 case Finalizer:
+                                    success = true;
+                                    goto finish;
+                                 break;
+                                 case Invalid:
+                                    cerr << "ERROR: Invalid data block received!" << endl;
+                                 break;
+                                 default:
+                                    packets++;
+                                    snprintf((char*)&statusText, sizeof(statusText),
+                                             "Processed data packet #%u (from PE $%08x)...",
+                                             packets, rinfo.rinfo_pe_id);
+                                    rsp_csp_setstatus(Session, 0, statusText);
+                                    qApp->lock();
+                                    statusBar()->message(statusText);
+                                    qApp->unlock();
+                                 break;
+                              }
+                           }
+                           if(!Running) {
+                              goto finish;
+                           }
+                        }
+
+                        flags = 0;
+                        received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
+                                               &rinfo, &flags, 2000000);
+                     }
+
+                     if(success == false) {
+                        puts("FAILOVER...");
+                        rsp_forcefailover(Session);
+                     }
+
+                  } while(!rsp_has_cookie(Session));
                }
-            }
+            } while(success == false);
 
 finish:
             // ====== Image calculation completed ==============================
