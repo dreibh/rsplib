@@ -350,6 +350,7 @@ void FractalPU::run()
                received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
                                       &rinfo, &flags, 2000000);
                while(received != 0) {
+printf("recv=%d   f=%08x\n",received, flags);
                   if(flags & MSG_RSERPOOL_NOTIFICATION) {
                      union rserpool_notification* notification =
                         (union rserpool_notification*)&data;

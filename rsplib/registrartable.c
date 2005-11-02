@@ -363,41 +363,19 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
 
          /* ====== Get registrar's entry ======================== */
          struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
-LOG_ACTION
-fputs("x1\n",stdlog);
-LOG_END
          if(registrarAddressBlock) {
-LOG_ACTION
-fputs("x2\n",stdlog);
-LOG_END
             transportAddressBlockNew(registrarAddressBlock,
                                      IPPROTO_SCTP,
                                      getPort(&peerAddressArray[0].sa),
                                      0,
                                      peerAddressArray, n);
-LOG_ACTION
-fputs("FIND: ",stdlog);
-transportAddressBlockPrint(registrarAddressBlock, stdlog);
-fputs("  -----\n",stdlog);
-ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList,stdlog,~0);
-LOG_END
-
             peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                               &registrarTable->RegistrarList,
                               0,
                               registrarAddressBlock);
             if(peerListNode) {
-LOG_ACTION
-fputs("FOUND\n",stdlog);
-fprintf(stdlog,"ID=%08x\n", *registrarIdentifier);
-LOG_END
                *registrarIdentifier = peerListNode->Identifier;
             }
-else {
-LOG_ACTION
- fputs("not found!!!!!!!!!!!!\n",stdlog);
-LOG_END
-}
             free(registrarAddressBlock);
          }
          free(peerAddressArray);
