@@ -408,11 +408,11 @@ void FractalPU::run()
                      }
 
                      if(success == false) {
-                        puts("FAILOVER...");
+                        printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
                         rsp_forcefailover(Session);
                      }
 
-                  } while(!rsp_has_cookie(Session));
+                  } while(rsp_has_cookie(Session));
                }
             } while(success == false);
 
