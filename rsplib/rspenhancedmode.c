@@ -821,7 +821,7 @@ int rsp_has_cookie(int sd)
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    threadSafetyLock(&rserpoolSocket->Mutex);
-   result = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+   result = (rserpoolSocket->ConnectedSession->CookieSize > 0);
    threadSafetyUnlock(&rserpoolSocket->Mutex);
 
    return(result);
@@ -957,7 +957,7 @@ int rsp_forcefailover_tags(int             sd,
                if(notificationNode) {
                   notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_COMPLETE;
                   notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
-                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieSize > 0);
                }
             }
             else {
@@ -1059,7 +1059,7 @@ ssize_t rsp_sendmsg(int                sd,
             if(notificationNode) {
                notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
                notificationNode->Content.rn_failover.rf_session    = session->SessionID;
-               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
+               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieSize > 0);
             }
 
             session->IsFailed = true;
@@ -1170,7 +1170,7 @@ ssize_t rsp_recvmsg(int                    sd,
                if(notificationNode) {
                   notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
                   notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
-                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieSize > 0);
                }
                rserpoolSocket->ConnectedSession->IsFailed = true;
             }
@@ -1193,7 +1193,7 @@ ssize_t rsp_recvmsg(int                    sd,
                if(notificationNode) {
                   notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
                   notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
-                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieEchoSize > 0);
+                  notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieSize > 0);
                }
                rserpoolSocket->ConnectedSession->IsFailed = true;
             }
@@ -1555,7 +1555,7 @@ void rsp_print_notification(const union rserpool_notification* notification, FIL
                fputs("RSERPOOL_SESSION_REMOVE", fd);
              break;
             default:
-               fprintf(fd, "Unknown state %d!\n", notification->rn_session_change.rsc_state);
+               fprintf(fd, "Unknown state %d!", notification->rn_session_change.rsc_state);
              break;
          }
        break;
@@ -1571,9 +1571,11 @@ void rsp_print_notification(const union rserpool_notification* notification, FIL
                fputs("RSERPOOL_FAILOVER_COMPLETE", fd);
              break;
             default:
-               fprintf(fd, "Unknown state %d!\n", notification->rn_failover.rf_state);
+               fprintf(fd, "Unknown state %d!", notification->rn_failover.rf_state);
              break;
           }
+          fprintf(fd, ", cookie=%s",
+                  (notification->rn_failover.rf_has_cookie) ? "yes" : "no");
         break;
 
       case RSERPOOL_SHUTDOWN_EVENT:
@@ -1582,7 +1584,7 @@ void rsp_print_notification(const union rserpool_notification* notification, FIL
        break;
 
       default:
-         fprintf(fd, "Unknown type %d!\n", notification->rn_header.rn_type);
+         fprintf(fd, "Unknown type %d!", notification->rn_header.rn_type);
        break;
    }
 }

@@ -366,7 +366,7 @@ static void handleCommLost(struct RSerPoolSocket*          rserpoolSocket,
             if(notificationNode) {
                notificationNode->Content.rn_failover.rf_state      = RSERPOOL_FAILOVER_NECESSARY;
                notificationNode->Content.rn_failover.rf_session    = session->SessionID;
-               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieEchoSize > 0);
+               notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieSize > 0);
             }
          }
          else {
