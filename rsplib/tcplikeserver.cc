@@ -233,7 +233,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       if(loadinfo == NULL) {
          memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
          loadinfo = &dummyLoadinfo;
-         loadinfo->rli_policy = PPT_LEASTUSED; // ?????
+         loadinfo->rli_policy = PPT_ROUNDROBIN;
       }
 
       // ====== Print program title =========================================

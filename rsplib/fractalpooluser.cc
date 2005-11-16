@@ -350,7 +350,7 @@ void FractalPU::run()
                      ssize_t received;
 
                      received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                            &rinfo, &flags, 2000000);
+                                            &rinfo, &flags, 3000000);
                      while(received > 0) {
                         // ====== Handle notification =======================
                         if(flags & MSG_RSERPOOL_NOTIFICATION) {
@@ -404,7 +404,7 @@ void FractalPU::run()
 
                         flags = 0;
                         received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                               &rinfo, &flags, 2000000);
+                                               &rinfo, &flags, 3000000);
                      }
 
                      if(success == false) {
@@ -433,7 +433,7 @@ finish:
             Session = -1;
 
             if(Running) {
-               usleep(2000000);
+               usleep(3000000);
             }
 
 
