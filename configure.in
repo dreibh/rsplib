@@ -271,8 +271,8 @@ hpux*)
     # LDFLAGS="$LDFLAGS `glib-config --libs`"
    ;;
 linux*)
-    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g -std=c99 -ansi"
-    CXXFLAGS="$CXXFLAGS -DLINUX -D_GNU_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g -std=c++98 -ansi"
+    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g -std=c99"
+    CXXFLAGS="$CXXFLAGS -DLINUX -D_GNU_SOURCE -D_REENTRANT -D_THREAD_SAFE -O0 -g -std=c++98"
     LDFLAGS="$LDFLAGS"
     thread_LIBS="-lpthread"
     ;;
