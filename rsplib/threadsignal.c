@@ -1,8 +1,8 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: cspmonitor.c 0 2005-03-02 13:34:16Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

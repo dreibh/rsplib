@@ -321,9 +321,9 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
 /* ###### Get registrar assoc ID from list ############################### */
 static sctp_assoc_t selectRegistrarAssocID(struct RegistrarTable* registrarTable)
 {
-   size_t                              elements;
-   LeafLinkedRedBlackTreeNodeValueType value;
-   struct LeafLinkedRedBlackTreeNode*  node;
+   size_t                             elements;
+   RedBlackTreeNodeValueType          value;
+   struct LeafLinkedRedBlackTreeNode* node;
 
    elements = leafLinkedRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
    if(elements > 0) {

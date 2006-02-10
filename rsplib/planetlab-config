@@ -1,0 +1,14 @@
+#PLANETLAB_KEY=~/.ssh/planetlab
+#PLANETLAB_USER=due_test
+#PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"
+
+PLANETLAB_KEY=~/.ssh/lupo
+PLANETLAB_USER=dreibh
+PLANETLAB_COMPILEHOST="localhost"
+
+
+DISTNAME="rsplib-1.9.0"
+DISTDIRNAME="rsplib"
+DISTCONFOPT="--enable-csp"
+DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser"
+DISTMISC="*.hosts filter-hosts pingpongclient pingpongclient fractalserver pingpongserver discardserver nameserver daytimeserver echoserver"

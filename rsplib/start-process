@@ -1,0 +1,44 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   echo "ERROR: No server name/IP given!"
+   exit 1
+fi
+
+if [ $PROGCHK = 1 ] ; then
+   cd bin
+   MD5_LOCAL="`md5sum $DISTPRGS`"
+   cd ..
+fi
+
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   shift
+
+   PIDFILE=$PROCNAME-$SERVER.pid
+
+   echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
+   if [ -e $PIDFILE ]; then
+      echo "ERROR: PID file $PIDFILE already exists!"
+      exit 1
+   fi
+
+   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
+      cd ~/bin && \
+      echo \"`date`: Login on $SERVER!\" && \
+      MD5_REMOTE=\"\`md5sum $DISTPRGS\`\" && \
+      if [ $PROGCHK = 1 ] ; then \
+         if [ \"x$MD5_LOCAL\" != \"x\$MD5_REMOTE\" ] ; then \
+            echo \"ERROR: Different program versions!\" ; \
+            echo \"local:  $MD5_LOCAL\" ; \
+            echo \"remote: \$MD5_REMOTE\" ; \
+            exit 1 ; \
+         fi \
+      fi && \
+      $PROGCALL" &
+   echo $! >$PIDFILE
+done

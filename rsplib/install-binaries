@@ -1,0 +1,44 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   echo "ERROR: No server name/IP given!"
+   exit 1
+fi
+
+
+if [ ! -e bin ]; then
+   echo "ERROR: bin-Verzeichnis existiert nicht!"
+   exit 1
+fi
+for prg in $DISTPRGS ; do
+   if [ ! -e bin/$prg ]; then
+      echo "ERROR: bin/$prg existiert nicht!"
+      exit 1
+   fi
+done
+cp -f $DISTMISC bin/
+tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2
+
+
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   shift
+
+   echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
+
+   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
+   cat > /tmp/$DISTNAME-bin.tar.bz2 && \
+   echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
+   if [ ! -e bin/ ] ; then mkdir bin ; fi && \
+   tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+   rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
+   date >bin/LastUpdate && \
+   echo \"\`date\`: $SERVER is ready!\"" &
+done
+
+wait

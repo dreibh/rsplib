@@ -1,0 +1,44 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   SERVER=$PLANETLAB_COMPILEHOST
+   echo "NOTE: Using compile host $SERVER."
+fi
+
+
+rm -rf $DISTNAME-bin.tar.bz2 bin/
+
+cd ..
+make dist
+cd $DISTDIRNAME
+
+
+echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
+cat ../$DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+echo \"\`date\`: Transfering archive to $SERVER ...\" && \
+cat > /tmp/$DISTNAME.tar.gz && \
+echo \"\`date\`: Unpacking archive on $SERVER ...\" && \
+rm -rf $DISTNAME && \
+tar xzf /tmp/$DISTNAME.tar.gz && \
+rm -f /tmp/$DISTNAME.tar.gz && \
+echo \"\`date\`: Configuring archive on $SERVER ...\" && \
+cd $DISTNAME && \
+./configure --disable-shared --enable-static $DISTCONFOPT && \
+echo \"\`date\`: Compiling archive on $SERVER ...\" && \
+make && \
+echo \"\`date\`: Packaging binaries on $SERVER ...\" && \
+cd $DISTDIRNAME && \
+mkdir bin && \
+cp -f $DISTPRGS  bin/ && \
+cd bin && \
+echo "$DISTPRGS" | xargs -n1 strip && \
+cd .. && \
+tar cvf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2"
+
+echo -e "\x1b[34m`date`: Downloadin binary archive from $SERVER ...\x1b[0m"
+scp -i $PLANETLAB_KEY $PLANETLAB_USER@$SERVER:$DISTNAME/$DISTDIRNAME/$DISTNAME-bin.tar.bz2 .
+tar xjvf $DISTNAME-bin.tar.bz2

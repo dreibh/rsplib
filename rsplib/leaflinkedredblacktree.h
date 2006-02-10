@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2005 by Thomas Dreibholz
+ * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
  * $Id$
  *
@@ -24,116 +24,6 @@
 
 #ifndef LEAFLINKEDREDBLACKTREE_H
 #define LEAFLINKEDREDBLACKTREE_H
-
-#include <stdio.h>
-#include <stdlib.h>
-#include "doublelinkedringlist.h"
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-typedef unsigned long long LeafLinkedRedBlackTreeNodeValueType;
-
-enum LeafLinkedRedBlackTreeNodeColorType
-{
-   Red   = 1,
-   Black = 2
-};
-
-
-struct LeafLinkedRedBlackTreeNode
-{
-   struct DoubleLinkedRingListNode ListNode;
-   struct LeafLinkedRedBlackTreeNode*       Parent;
-   struct LeafLinkedRedBlackTreeNode*       LeftSubtree;
-   struct LeafLinkedRedBlackTreeNode*       RightSubtree;
-   enum LeafLinkedRedBlackTreeNodeColorType Color;
-   LeafLinkedRedBlackTreeNodeValueType      Value;
-   LeafLinkedRedBlackTreeNodeValueType      ValueSum;  /* ValueSum := LeftSubtree->Value + Value + RightSubtree->Value */
-};
-
-struct LeafLinkedRedBlackTree
-{
-   struct LeafLinkedRedBlackTreeNode  NullNode;
-   struct DoubleLinkedRingList        List;
-   size_t                             Elements;
-   void                               (*PrintFunction)(const void* node, FILE* fd);
-   int                                (*ComparisonFunction)(const void* node1, const void* node2);
-};
-
-
-void leafLinkedRedBlackTreeNodeNew(struct LeafLinkedRedBlackTreeNode* node);
-void leafLinkedRedBlackTreeNodeDelete(struct LeafLinkedRedBlackTreeNode* node);
-int leafLinkedRedBlackTreeNodeIsLinked(struct LeafLinkedRedBlackTreeNode* node);
-
-
-void leafLinkedRedBlackTreeNew(struct LeafLinkedRedBlackTree* llrbt,
-                               void                    (*printFunction)(const void* node, FILE* fd),
-                               int                     (*comparisonFunction)(const void* node1, const void* node2));
-void leafLinkedRedBlackTreeDelete(struct LeafLinkedRedBlackTree* llrbt);
-void leafLinkedRedBlackTreeVerify(struct LeafLinkedRedBlackTree* llrbt);
-void leafLinkedRedBlackTreeInternalPrint(struct LeafLinkedRedBlackTree*     llrbt,
-                                         struct LeafLinkedRedBlackTreeNode* node,
-                                         FILE*                              fd);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalGetNearestPrev(
-                                      struct LeafLinkedRedBlackTree*      llrbt,
-                                      struct LeafLinkedRedBlackTreeNode** root,
-                                      struct LeafLinkedRedBlackTreeNode*  parent,
-                                      struct LeafLinkedRedBlackTreeNode*  node);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalGetNearestNext(
-                                      struct LeafLinkedRedBlackTree*      llrbt,
-                                      struct LeafLinkedRedBlackTreeNode** root,
-                                      struct LeafLinkedRedBlackTreeNode*  parent,
-                                      struct LeafLinkedRedBlackTreeNode*  node);
-int leafLinkedRedBlackTreeIsEmpty(struct LeafLinkedRedBlackTree* llrbt);
-void leafLinkedRedBlackTreePrint(struct LeafLinkedRedBlackTree* llrbt,
-                                 FILE*                          fd);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetFirst(
-                                      const struct LeafLinkedRedBlackTree* llrbt);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetLast(
-                                      const struct LeafLinkedRedBlackTree* llrbt);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetPrev(
-                                      const struct LeafLinkedRedBlackTree* llrbt,
-                                      struct LeafLinkedRedBlackTreeNode*   node);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNext(
-                                      const struct LeafLinkedRedBlackTree* llrbt,
-                                      struct LeafLinkedRedBlackTreeNode*   node);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNearestPrev(
-                                      struct LeafLinkedRedBlackTree*     llrbt,
-                                      struct LeafLinkedRedBlackTreeNode* cmpNode);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNearestNext(
-                                      struct LeafLinkedRedBlackTree*     llrbt,
-                                      struct LeafLinkedRedBlackTreeNode* cmpNode);
-size_t leafLinkedRedBlackTreeGetElements(const struct LeafLinkedRedBlackTree* llrbt);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalFindPrev(
-                                      const struct LeafLinkedRedBlackTree* llrbt,
-                                      struct LeafLinkedRedBlackTreeNode*   cmpNode);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInternalFindNext(
-                                      const struct LeafLinkedRedBlackTree* llrbt,
-                                      struct LeafLinkedRedBlackTreeNode*   cmpNode);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeInsert(
-                                      struct LeafLinkedRedBlackTree*     llrbt,
-                                      struct LeafLinkedRedBlackTreeNode* node);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeRemove(
-                                      struct LeafLinkedRedBlackTree*     llrbt,
-                                      struct LeafLinkedRedBlackTreeNode* node);
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeFind(
-                                      const struct LeafLinkedRedBlackTree*     llrbt,
-                                      const struct LeafLinkedRedBlackTreeNode* cmpNode);
-LeafLinkedRedBlackTreeNodeValueType leafLinkedRedBlackTreeGetValueSum(
-                                       const struct LeafLinkedRedBlackTree* llrbt);
-
-
-struct LeafLinkedRedBlackTreeNode* leafLinkedRedBlackTreeGetNodeByValue(
-                                      struct LeafLinkedRedBlackTree*      llrbt,
-                                      LeafLinkedRedBlackTreeNodeValueType value);
-
-
-#ifdef __cplusplus
-}
-#endif
-
+#define USE_LEAFLINKED
+#include "redblacktree.h"
 #endif

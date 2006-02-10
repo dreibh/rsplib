@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2005 by Thomas Dreibholz
+ * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
  * $Id$
  *
@@ -232,6 +232,9 @@ void ST_CLASS(poolHandlespaceNodeGetDescription)(
 void ST_CLASS(poolHandlespaceNodePrint)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                       FILE*                                   fd,
                                       const unsigned int                      fields);
+int ST_CLASS(poolHandlespaceNodeHasActiveTimer)(
+       const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+       const struct ST_CLASS(PoolElementNode)*     poolElementNode);
 void ST_CLASS(poolHandlespaceNodeActivateTimer)(
         struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
         struct ST_CLASS(PoolElementNode)*     poolElementNode,

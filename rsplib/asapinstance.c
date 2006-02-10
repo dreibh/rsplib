@@ -1,6 +1,6 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * Realized in co-operation between Siemens AG
  * and University of Essen, Institute of Computer Networking Technology.

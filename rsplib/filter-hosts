@@ -1,0 +1,40 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+if [ "x$1" = "x-showbad" ] ; then
+   shift
+   showbad=1
+else
+   showbad=0
+fi
+
+
+good=0
+bad=0
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   shift
+
+   isgood=0
+   if ./isalive $SERVER:22 >/dev/null 2>/dev/null ; then
+      if ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "echo \"$SERVER is ready!\"" 2>/dev/null 1>/dev/null ; then
+         isgood=1
+      fi
+   fi
+
+   if [ $isgood = 1 ] ; then
+      echo "$SERVER"
+      let "good+=1"
+   else
+      if [ $showbad = 1 ] ; then
+         echo "# --- $SERVER"
+      fi
+      let "bad+=1"
+   fi
+done
+
+if [ $showbad = 1 ] ; then
+   echo "# Good: $good   Bad: $bad"
+fi

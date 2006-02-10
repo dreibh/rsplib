@@ -1,0 +1,21 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+PROCNAME="responder"
+PROGNAME="perftool"
+PROGARGS="-sctp -$PROCNAME=4711 -quiet"
+
+
+PIDFILES=`ls $PROCNAME-*.pid`
+
+for PIDFILE in $PIDFILES; do
+   PID=`cat $PIDFILE`
+   if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
+      echo "Processing $PIDFILE: sending SIGINT to $PID ..."
+      kill $PID
+   else
+      echo "Processing $PIDFILE: process is already gone."
+   fi
+   rm $PIDFILE
+done

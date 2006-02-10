@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2005 by Thomas Dreibholz
+ * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
  * $Id$
  *
@@ -446,6 +446,15 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindPoolElementNod
       return(ST_CLASS(poolNodeFindPoolElementNode)(poolNode, poolElementIdentifier));
    }
    return(NULL);
+}
+
+
+/* ###### Check, if PoolElementNode has an active timer ################## */
+int ST_CLASS(poolHandlespaceNodeHasActiveTimer)(
+       const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+       const struct ST_CLASS(PoolElementNode)*     poolElementNode)
+{
+   return(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode));
 }
 
 

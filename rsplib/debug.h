@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2005 by Thomas Dreibholz
+ * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
  * $Id$
  *
