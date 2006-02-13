@@ -36,8 +36,8 @@ extern "C" {
 
 struct SessionStorage
 {
-   struct LeafLinkedRedBlackTree AssocIDSet;
-   struct LeafLinkedRedBlackTree SessionIDSet;
+   struct SimpleRedBlackTree AssocIDSet;
+   struct SimpleRedBlackTree SessionIDSet;
 };
 
 

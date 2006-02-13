@@ -61,7 +61,7 @@ struct RegistrarTable
    struct Dispatcher*                  Dispatcher;
 
    struct ST_CLASS(PeerListManagement) RegistrarList;
-   struct LeafLinkedRedBlackTree       RegistrarAssocIDList;
+   struct SimpleRedBlackTree           RegistrarAssocIDList;
    int                                 AnnounceSocket;
    union sockaddr_union                AnnounceAddress;
    struct FDCallback                   AnnounceSocketFDCallback;

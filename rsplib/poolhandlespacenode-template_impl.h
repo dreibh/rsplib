@@ -714,8 +714,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeAddPoolElementNode
                                     struct ST_CLASS(PoolElementNode)*     poolElementNode,
                                     unsigned int*                         errorCode)
 {
-   struct ST_CLASS(PoolElementNode)* result = ST_CLASS(poolNodeAddPoolElementNode)(poolNode, poolElementNode, errorCode);
+   struct ST_CLASS(PoolElementNode)* result;
    struct STN_CLASSNAME*             result2;
+
+   result = ST_CLASS(poolNodeAddPoolElementNode)(poolNode, poolElementNode, errorCode);
    if(result == poolElementNode) {
       CHECK(*errorCode == RSPERR_OKAY);
       poolHandlespaceNode->PoolElements++;
@@ -895,7 +897,17 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeAddOrUpdatePoolEle
       }
    }
    if(newPoolNode == *poolNode) {
-      *poolNode = NULL;
+      /* A new pool has been created. */
+      if(newPoolElementNode != NULL) {
+         /* Keep the new pool, since the new PE is its first element. */
+         *poolNode = NULL;
+      }
+      else {
+         /* A new pool has been created but a PE not been registered.
+            Remove the empty pool now! */
+         CHECK(ST_CLASS(poolHandlespaceNodeRemovePoolNode)(poolHandlespaceNode, *poolNode) ==
+                  *poolNode);
+      }
    }
 
    return(newPoolElementNode);

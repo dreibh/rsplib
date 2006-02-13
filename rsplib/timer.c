@@ -48,7 +48,7 @@ void timerNew(struct Timer*      timer,
                                              void*              userData),
               void*              userData)
 {
-   leafLinkedRedBlackTreeNodeNew(&timer->Node);
+   simpleRedBlackTreeNodeNew(&timer->Node);
    timer->Master    = dispatcher;
    timer->TimeStamp = 0;
    timer->Callback  = callback;
@@ -60,7 +60,7 @@ void timerNew(struct Timer*      timer,
 void timerDelete(struct Timer* timer)
 {
    timerStop(timer);
-   leafLinkedRedBlackTreeNodeDelete(&timer->Node);
+   simpleRedBlackTreeNodeDelete(&timer->Node);
    timer->Master    = NULL;
    timer->TimeStamp = 0;
    timer->Callback  = NULL;
@@ -72,14 +72,14 @@ void timerDelete(struct Timer* timer)
 void timerStart(struct Timer*            timer,
                 const unsigned long long timeStamp)
 {
-   struct LeafLinkedRedBlackTreeNode* result;
+   struct SimpleRedBlackTreeNode* result;
 
-   CHECK(!leafLinkedRedBlackTreeNodeIsLinked(&timer->Node));
+   CHECK(!simpleRedBlackTreeNodeIsLinked(&timer->Node));
    timer->TimeStamp = timeStamp;
 
    dispatcherLock(timer->Master);
-   result = leafLinkedRedBlackTreeInsert(&timer->Master->TimerStorage,
-                                         &timer->Node);
+   result = simpleRedBlackTreeInsert(&timer->Master->TimerStorage,
+                                     &timer->Node);
    CHECK(result == &timer->Node);
    dispatcherUnlock(timer->Master);
 }
@@ -97,18 +97,18 @@ void timerRestart(struct Timer*            timer,
 /* ###### Check, if timer is running ##################################### */
 bool timerIsRunning(struct Timer* timer)
 {
-   return(leafLinkedRedBlackTreeNodeIsLinked(&timer->Node));
+   return(simpleRedBlackTreeNodeIsLinked(&timer->Node));
 }
 
 
 /* ###### Stop timer ##################################################### */
 void timerStop(struct Timer* timer)
 {
-   struct LeafLinkedRedBlackTreeNode* result;
-   if(leafLinkedRedBlackTreeNodeIsLinked(&timer->Node)) {
+   struct SimpleRedBlackTreeNode* result;
+   if(simpleRedBlackTreeNodeIsLinked(&timer->Node)) {
       dispatcherLock(timer->Master);
-      result = leafLinkedRedBlackTreeRemove(&timer->Master->TimerStorage,
-                                            &timer->Node);
+      result = simpleRedBlackTreeRemove(&timer->Master->TimerStorage,
+                                        &timer->Node);
       CHECK(result == &timer->Node);
       dispatcherUnlock(timer->Master);
       timer->TimeStamp = 0;

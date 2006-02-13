@@ -41,7 +41,7 @@
 #include "tdtypes.h"
 #include "timer.h"
 #include "fdcallback.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 
 #include <sys/poll.h>
 
@@ -53,13 +53,13 @@ extern "C" {
 
 struct Dispatcher
 {
-   struct LeafLinkedRedBlackTree TimerStorage;
-   struct LeafLinkedRedBlackTree FDCallbackStorage;
-   bool                          AddRemove;
+   struct SimpleRedBlackTree TimerStorage;
+   struct SimpleRedBlackTree FDCallbackStorage;
+   bool                      AddRemove;
 
-   void                          (*Lock)(struct Dispatcher* dispatcher, void* userData);
-   void                          (*Unlock)(struct Dispatcher* dispatcher, void* userData);
-   void*                         LockUserData;
+   void                      (*Lock)(struct Dispatcher* dispatcher, void* userData);
+   void                      (*Unlock)(struct Dispatcher* dispatcher, void* userData);
+   void*                     LockUserData;
 };
 
 

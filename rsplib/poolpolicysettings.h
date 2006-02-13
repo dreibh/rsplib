@@ -51,6 +51,9 @@ extern "C" {
 #define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0x0b
 #define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0x0c
 
+#define PPT_WEIGHTED_RANDOM_DPF                       0xf0
+#define PPT_LEASTUSED_DPF                             0xf1
+
 
 struct PoolPolicySettings
 {
@@ -58,6 +61,9 @@ struct PoolPolicySettings
    unsigned int Weight;
    unsigned int Load;
    unsigned int LoadDegradation;
+   unsigned int LoadDPF;
+   unsigned int WeightDPF;
+   unsigned int Distance;
 };
 
 
@@ -67,6 +73,8 @@ struct PoolPolicySettings
 #define PEPS_MAX_LOAD              0xffffff
 #define PEPS_MIN_LOADDEGRADATION          0
 #define PEPS_MAX_LOADDEGRADATION   0xffffff
+#define PEPS_MIN_LOADDPF                  0
+#define PEPS_MAX_LOADDPF           0xffffff
 
 
 void poolPolicySettingsNew(struct PoolPolicySettings* pps);

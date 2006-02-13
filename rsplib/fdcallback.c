@@ -49,10 +49,10 @@ void fdCallbackNew(struct FDCallback* fdCallback,
                                                   void*              userData),
                    void*              userData)
 {
-   struct LeafLinkedRedBlackTreeNode* result;
+   struct SimpleRedBlackTreeNode* result;
    CHECK((fd >= 0) && (fd < FD_SETSIZE));
 
-   leafLinkedRedBlackTreeNodeNew(&fdCallback->Node);
+   simpleRedBlackTreeNodeNew(&fdCallback->Node);
    fdCallback->Master          = dispatcher;
    fdCallback->FD              = fd;
    fdCallback->EventMask       = eventMask;
@@ -61,7 +61,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
    fdCallback->SelectTimeStamp = getMicroTime();
 
    dispatcherLock(fdCallback->Master);
-   result = leafLinkedRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
+   result = simpleRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
                                          &fdCallback->Node);
    CHECK(result == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
@@ -72,17 +72,17 @@ void fdCallbackNew(struct FDCallback* fdCallback,
 /* ###### Destructor ##################################################### */
 void fdCallbackDelete(struct FDCallback* fdCallback)
 {
-   struct LeafLinkedRedBlackTreeNode* result;
-   CHECK(leafLinkedRedBlackTreeNodeIsLinked(&fdCallback->Node));
+   struct SimpleRedBlackTreeNode* result;
+   CHECK(simpleRedBlackTreeNodeIsLinked(&fdCallback->Node));
 
    dispatcherLock(fdCallback->Master);
-   result = leafLinkedRedBlackTreeRemove(&fdCallback->Master->FDCallbackStorage,
+   result = simpleRedBlackTreeRemove(&fdCallback->Master->FDCallbackStorage,
                                          &fdCallback->Node);
    CHECK(result == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
    dispatcherUnlock(fdCallback->Master);
 
-   leafLinkedRedBlackTreeNodeDelete(&fdCallback->Node);
+   simpleRedBlackTreeNodeDelete(&fdCallback->Node);
    fdCallback->Master          = NULL;
    fdCallback->FD              = -1;
    fdCallback->EventMask       = 0;

@@ -354,6 +354,40 @@ static void ST_CLASS(weightedRandomUpdatePoolElementNode)(
 
 /*
    #######################################################################
+   #### Weighted Random with Distance Penalty Factor Policy           ####
+   #######################################################################
+*/
+
+/* ###### Sorting Order ################################################## */
+static int ST_CLASS(weightedRandomDPFComparison)(
+   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
+   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
+{
+   COMPARE_KEY_ASCENDING(poolElementNode1->Identifier, poolElementNode2->Identifier);
+   return(0);
+}
+
+
+/* ###### Update ######################################################### */
+static void ST_CLASS(weightedRandomDPFUpdatePoolElementNode)(
+              struct ST_CLASS(PoolElementNode)* poolElementNode)
+{
+   long long value =
+      (long long)poolElementNode->PolicySettings.Weight -
+      ((long long)poolElementNode->PolicySettings.WeightDPF * (long long)poolElementNode->PolicySettings.Distance);
+   if(value < 0) {
+      value = 1;
+   }
+   else if(value > 0xffffffffLL) {
+      value = 0xffffffffLL;
+   }
+
+   poolElementNode->PoolElementSelectionStorageNode.Value = (unsigned int)value;
+}
+
+
+/*
+   #######################################################################
    #### Least Used Policy                                             ####
    #######################################################################
 */
@@ -364,6 +398,36 @@ static int ST_CLASS(leastUsedComparison)(
    const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
    COMPARE_KEY_ASCENDING(poolElementNode1->PolicySettings.Load, poolElementNode2->PolicySettings.Load);
+   COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
+   return(0);
+}
+
+
+/*
+   #######################################################################
+   #### Least Used with Distance Penalty Factor Policy                ####
+   #######################################################################
+*/
+
+/* ###### Sorting Order ################################################## */
+static int ST_CLASS(leastUsedDPFComparison)(
+   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
+   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
+{
+   unsigned long long v1 =
+      poolElementNode1->PolicySettings.Load +
+      (poolElementNode1->PolicySettings.LoadDPF * poolElementNode1->PolicySettings.Distance);
+   if(v1 > 0xffffffffULL) {
+      v1 = 0xffffffffULL;
+   }
+   unsigned long long v2 =
+      poolElementNode2->PolicySettings.Load +
+      (poolElementNode2->PolicySettings.LoadDPF * poolElementNode2->PolicySettings.Distance);
+   if(v2 > 0xffffffffULL) {
+      v2 = 0xffffffffULL;
+   }
+
+   COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
    return(0);
 }
@@ -600,10 +664,26 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
       &ST_CLASS(weightedRandomUpdatePoolElementNode),
       NULL
    },
+   {
+      PPT_WEIGHTED_RANDOM_DPF, "WeightedRandomDPF",
+      &ST_CLASS(weightedRandomDPFComparison),
+      &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
+      NULL,
+      &ST_CLASS(weightedRandomDPFUpdatePoolElementNode),
+      NULL
+   },
 
    {
       PPT_LEASTUSED, "LeastUsed",
       &ST_CLASS(leastUsedComparison),
+      &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
+      NULL,
+      NULL,
+      NULL
+   },
+   {
+      PPT_LEASTUSED_DPF, "LeastUsedDPF",
+      &ST_CLASS(leastUsedDPFComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
       NULL,

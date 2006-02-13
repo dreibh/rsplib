@@ -40,7 +40,7 @@
 
 #include "tdtypes.h"
 #include "dispatcher.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 
 #include <sys/poll.h>
 
@@ -60,17 +60,17 @@ enum FDCallbackEvents
 
 struct FDCallback
 {
-   struct LeafLinkedRedBlackTreeNode Node;
+   struct SimpleRedBlackTreeNode Node;
 
-   struct Dispatcher*                Master;
-   int                               FD;
-   unsigned int                      EventMask;
-   void                              (*Callback)(struct Dispatcher* dispatcher,
-                                                 int                fd,
-                                                 unsigned int       eventMask,
-                                                 void*              userData);
-   unsigned long long                SelectTimeStamp;
-   void*                             UserData;
+   struct Dispatcher*            Master;
+   int                           FD;
+   unsigned int                  EventMask;
+   void                          (*Callback)(struct Dispatcher* dispatcher,
+                                             int                fd,
+                                             unsigned int       eventMask,
+                                             void*              userData);
+   unsigned long long            SelectTimeStamp;
+   void*                         UserData;
 };
 
 

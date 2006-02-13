@@ -30,7 +30,7 @@
 #include "rserpool.h"
 #include "poolhandle.h"
 #include "tagitem.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 
 #include <ext_socket.h>
 
@@ -42,29 +42,29 @@ extern "C" {
 
 struct Session
 {
-   struct LeafLinkedRedBlackTreeNode SessionIDNode;
-   struct LeafLinkedRedBlackTreeNode AssocIDNode;
+   struct SimpleRedBlackTreeNode SessionIDNode;
+   struct SimpleRedBlackTreeNode AssocIDNode;
 
-   sctp_assoc_t                      AssocID;
-   rserpool_session_t                SessionID;
+   sctp_assoc_t                  AssocID;
+   rserpool_session_t            SessionID;
 
-   struct PoolHandle                 Handle;
-   uint32_t                          ConnectedPE;
-   bool                              IsIncoming;
-   bool                              IsFailed;
-   unsigned long long                ConnectionTimeStamp;
+   struct PoolHandle             Handle;
+   uint32_t                      ConnectedPE;
+   bool                          IsIncoming;
+   bool                          IsFailed;
+   unsigned long long            ConnectionTimeStamp;
 
-   void*                             Cookie;
-   size_t                            CookieSize;
-   void*                             CookieEcho;
-   size_t                            CookieEchoSize;
+   void*                         Cookie;
+   size_t                        CookieSize;
+   void*                         CookieEcho;
+   size_t                        CookieEchoSize;
 
-   unsigned long long                ConnectTimeout;
-   unsigned long long                HandleResolutionRetryDelay;
+   unsigned long long            ConnectTimeout;
+   unsigned long long            HandleResolutionRetryDelay;
 
-   struct TagItem*                   Tags;
+   struct TagItem*               Tags;
 
-   char                              StatusText[128];
+   char                          StatusText[128];
 };
 
 

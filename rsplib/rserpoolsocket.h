@@ -32,7 +32,7 @@
 #include "identifierbitmap.h"
 #include "sessionstorage.h"
 #include "notificationqueue.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 #include "threadsafety.h"
 #include "timer.h"
 #include "tagitem.h"
@@ -62,24 +62,24 @@ struct PoolElement
 
 struct RSerPoolSocket
 {
-   struct LeafLinkedRedBlackTreeNode Node;
+   struct SimpleRedBlackTreeNode Node;
 
-   int                               Descriptor;
-   struct ThreadSafety               Mutex;
+   int                           Descriptor;
+   struct ThreadSafety           Mutex;
 
-   int                               SocketDomain;
-   int                               SocketType;
-   int                               SocketProtocol;
-   int                               Socket;
+   int                           SocketDomain;
+   int                           SocketType;
+   int                           SocketProtocol;
+   int                           Socket;
 
-   struct PoolElement*               PoolElement;        /* PE mode                      */
-   struct SessionStorage             SessionSet;         /* UDP-like PU mode and PE mode */
-   struct Session*                   ConnectedSession;   /* TCP-like PU mode             */
+   struct PoolElement*           PoolElement;        /* PE mode                      */
+   struct SessionStorage         SessionSet;         /* UDP-like PU mode and PE mode */
+   struct Session*               ConnectedSession;   /* TCP-like PU mode             */
 
-   struct NotificationQueue          Notifications;
+   struct NotificationQueue      Notifications;
 
-   struct IdentifierBitmap*          SessionAllocationBitmap;
-   char*                             MessageBuffer;
+   struct IdentifierBitmap*      SessionAllocationBitmap;
+   char*                         MessageBuffer;
 };
 
 #define RSERPOOL_MESSAGE_BUFFER_SIZE 65536

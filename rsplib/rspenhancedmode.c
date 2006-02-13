@@ -38,11 +38,11 @@
 #include "componentstatusreporter.h"
 
 
-extern struct ASAPInstance*          gAsapInstance;
-extern struct Dispatcher             gDispatcher;
-extern struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
-extern struct ThreadSafety           gRSerPoolSocketSetMutex;
-extern struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
+extern struct ASAPInstance*      gAsapInstance;
+extern struct Dispatcher         gDispatcher;
+extern struct SimpleRedBlackTree gRSerPoolSocketSet;
+extern struct ThreadSafety       gRSerPoolSocketSetMutex;
+extern struct IdentifierBitmap*  gRSerPoolSocketAllocationBitmap;
 
 
 #define GET_RSERPOOL_SOCKET(rserpoolSocket, sd) \

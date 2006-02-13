@@ -32,6 +32,9 @@ void poolPolicySettingsNew(struct PoolPolicySettings* pps)
    pps->Weight          = 0;
    pps->Load            = 0;
    pps->LoadDegradation = 0;
+   pps->LoadDPF         = 0;
+   pps->WeightDPF       = 0;
+   pps->Distance        = 0;
 }
 
 
@@ -47,7 +50,7 @@ void poolPolicySettingsDelete(struct PoolPolicySettings* pps)
 
 /* ###### Comparison ##################################################### */
 int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
-                                        const struct PoolPolicySettings* pps2)
+                                 const struct PoolPolicySettings* pps2)
 {
    return((pps1->Weight          != pps2->Weight) ||
           (pps1->Load            != pps2->Load)   ||
@@ -63,7 +66,9 @@ int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps)
            (pps->Load >= PEPS_MIN_LOAD) &&
            (pps->Load <= PEPS_MAX_LOAD) &&
            (pps->LoadDegradation >= PEPS_MIN_LOADDEGRADATION) &&
-           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) );
+           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) &&
+           (pps->LoadDPF >= PEPS_MIN_LOADDPF) &&
+           (pps->LoadDPF <= PEPS_MAX_LOADDPF) );
 }
 
 
@@ -82,9 +87,12 @@ void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
                                       const size_t                     bufferSize)
 {
    snprintf(buffer, bufferSize,
-            "w=%u l=$%x ldeg=$%x", pps->Weight,
-                                   pps->Load,
-                                   pps->LoadDegradation);
+            "w=%u l=$%x ldeg=$%x ldpf=$%x wdpf=$%x",
+            pps->Weight,
+            pps->Load,
+            pps->LoadDegradation,
+            pps->LoadDPF,
+            pps->WeightDPF);
 }
 
 

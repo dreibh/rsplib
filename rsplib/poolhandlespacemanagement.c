@@ -30,9 +30,9 @@
 unsigned int poolPolicyGetPoolPolicyTypeByName(const char* policyName)
 {
    size_t i;
-   for(i = 0;i < TMPL_CLASS(PoolPolicies,LeafLinkedRedBlackTree);i++) {
-      if(strcmp(TMPL_CLASS(PoolPolicyArray,LeafLinkedRedBlackTree)[i].Name, policyName) == 0) {
-         return(TMPL_CLASS(PoolPolicyArray,LeafLinkedRedBlackTree)[i].Type);
+   for(i = 0;i < TMPL_CLASS(PoolPolicies,SimpleRedBlackTree);i++) {
+      if(strcmp(TMPL_CLASS(PoolPolicyArray,SimpleRedBlackTree)[i].Name, policyName) == 0) {
+         return(TMPL_CLASS(PoolPolicyArray,SimpleRedBlackTree)[i].Type);
       }
    }
    return(PPT_UNDEFINED);
@@ -43,9 +43,9 @@ unsigned int poolPolicyGetPoolPolicyTypeByName(const char* policyName)
 const char* poolPolicyGetPoolPolicyNameByType(const unsigned int policyType)
 {
    size_t i;
-   for(i = 0;i < TMPL_CLASS(PoolPolicies,LeafLinkedRedBlackTree);i++) {
-      if(TMPL_CLASS(PoolPolicyArray,LeafLinkedRedBlackTree)[i].Type == policyType) {
-         return(TMPL_CLASS(PoolPolicyArray,LeafLinkedRedBlackTree)[i].Name);
+   for(i = 0;i < TMPL_CLASS(PoolPolicies,SimpleRedBlackTree);i++) {
+      if(TMPL_CLASS(PoolPolicyArray,SimpleRedBlackTree)[i].Type == policyType) {
+         return(TMPL_CLASS(PoolPolicyArray,SimpleRedBlackTree)[i].Name);
       }
    }
    return(NULL);

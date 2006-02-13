@@ -42,7 +42,7 @@
 
 #include "tdtypes.h"
 #include "dispatcher.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 
 
 #ifdef __cplusplus
@@ -52,7 +52,7 @@ extern "C" {
 
 struct Timer
 {
-   struct LeafLinkedRedBlackTreeNode Node;
+   struct SimpleRedBlackTreeNode Node;
 
    struct Dispatcher*                Master;
    unsigned long long                TimeStamp;

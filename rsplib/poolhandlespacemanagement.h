@@ -27,6 +27,7 @@
 
 
 #include "config.h"
+#include "debug.h"
 #include "rserpoolerror.h"
 #include "poolhandlespacechecksum.h"
 #include "poolhandlespacemanagement-basics.h"

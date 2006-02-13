@@ -57,7 +57,7 @@
 
 struct RegistrarAssocIDNode
 {
-   struct LeafLinkedRedBlackTreeNode Node;
+   struct SimpleRedBlackTreeNode Node;
    sctp_assoc_t                      AssocID;
 };
 
@@ -200,7 +200,7 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       registrarTable->OutstandingConnects = 0;
       registrarTable->AnnounceSocket      = -1;
       ST_CLASS(peerListManagementNew)(&registrarTable->RegistrarList, NULL, 0, NULL, NULL);
-      leafLinkedRedBlackTreeNew(&registrarTable->RegistrarAssocIDList, registrarAssocIDNodePrint, registrarAssocIDNodeComparison);
+      simpleRedBlackTreeNew(&registrarTable->RegistrarAssocIDList, registrarAssocIDNodePrint, registrarAssocIDNodeComparison);
 
 
       /* ====== ASAP Instance settings ==================================== */
@@ -272,16 +272,16 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
 {
    struct RegistrarAssocIDNode* node = (struct RegistrarAssocIDNode*)malloc(sizeof(struct RegistrarAssocIDNode));
    if(node != NULL) {
-      leafLinkedRedBlackTreeNodeNew(&node->Node);
+      simpleRedBlackTreeNodeNew(&node->Node);
       node->Node.Value = 1;
       node->AssocID    = assocID;
 
-      CHECK(leafLinkedRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
+      CHECK(simpleRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
 
       LOG_VERBOSE2
       fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , (unsigned int)assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
-      leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
+      simpleRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
       LOG_END
    }
    else {
@@ -296,18 +296,18 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
                                    sctp_assoc_t           assocID)
 {
    struct RegistrarAssocIDNode        cmpNode;
-   struct LeafLinkedRedBlackTreeNode* node;
+   struct SimpleRedBlackTreeNode* node;
 
    cmpNode.AssocID = assocID;
-   node = leafLinkedRedBlackTreeFind(&registrarTable->RegistrarAssocIDList, &cmpNode.Node);
+   node = simpleRedBlackTreeFind(&registrarTable->RegistrarAssocIDList, &cmpNode.Node);
    if(node != NULL) {
-      CHECK(leafLinkedRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
+      CHECK(simpleRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
       free(node);
 
       LOG_VERBOSE2
       fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , (unsigned int)assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
-      leafLinkedRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
+      simpleRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
       LOG_END
    }
    else {
@@ -321,14 +321,14 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
 /* ###### Get registrar assoc ID from list ############################### */
 static sctp_assoc_t selectRegistrarAssocID(struct RegistrarTable* registrarTable)
 {
-   size_t                             elements;
-   RedBlackTreeNodeValueType          value;
-   struct LeafLinkedRedBlackTreeNode* node;
+   size_t                         elements;
+   RedBlackTreeNodeValueType      value;
+   struct SimpleRedBlackTreeNode* node;
 
-   elements = leafLinkedRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
+   elements = simpleRedBlackTreeGetElements(&registrarTable->RegistrarAssocIDList);
    if(elements > 0) {
       value = random32() % elements;
-      node = leafLinkedRedBlackTreeGetNodeByValue(&registrarTable->RegistrarAssocIDList, value);
+      node = simpleRedBlackTreeGetNodeByValue(&registrarTable->RegistrarAssocIDList, value);
       CHECK(node);
       return(((struct RegistrarAssocIDNode*)node)->AssocID);
    }
@@ -465,7 +465,7 @@ void registrarTableDelete(struct RegistrarTable* registrarTable)
          ext_close(registrarTable->AnnounceSocket);
          registrarTable->AnnounceSocket = -1;
       }
-      leafLinkedRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
+      simpleRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
       ST_CLASS(peerListManagementClear)(&registrarTable->RegistrarList);
       ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
       free(registrarTable);
@@ -586,23 +586,23 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                int                      registrarHuntFD,
                                RegistrarIdentifierType* registrarIdentifier)
 {
-   char                            buffer[65536];
-   struct timeval                  selectTimeout;
-   const union sctp_notification*  notification;
-   RegistrarIdentifierType         lastRegistrarIdentifier;
-   struct TransportAddressBlock*   lastTransportAddressBlock;
-   struct ST_CLASS(PeerListNode)*  peerListNode;
-   sctp_assoc_t                    assocID;
-   ssize_t                         received;
-   unsigned long long              start;
-   unsigned long long              nextTimeout;
-   unsigned long long              lastTrialTimeStamp;
-   fd_set                          rfdset;
-   unsigned int                    trials;
-   int                             result;
-   int                             flags;
-   int                             sd;
-   int                             n;
+   char                           buffer[65536];
+   struct timeval                 selectTimeout;
+   const union sctp_notification* notification;
+   RegistrarIdentifierType        lastRegistrarIdentifier;
+   struct TransportAddressBlock*  lastTransportAddressBlock;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   sctp_assoc_t                   assocID;
+   ssize_t                        received;
+   unsigned long long             start;
+   unsigned long long             nextTimeout;
+   unsigned long long             lastTrialTimeStamp;
+   fd_set                         rfdset;
+   unsigned int                   trials;
+   int                            result;
+   int                            flags;
+   int                            sd;
+   int                            n;
 
    *registrarIdentifier = 0;
    if(registrarTable == NULL) {

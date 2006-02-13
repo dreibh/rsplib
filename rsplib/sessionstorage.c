@@ -99,18 +99,18 @@ static int sessionSessionIDComparison(const void* node1, const void* node2)
 /* ###### Constructor #################################################### */
 void sessionStorageNew(struct SessionStorage* sessionStorage)
 {
-   leafLinkedRedBlackTreeNew(&sessionStorage->AssocIDSet, sessionAssocIDPrint, sessionAssocIDComparison);
-   leafLinkedRedBlackTreeNew(&sessionStorage->SessionIDSet, sessionSessionIDPrint, sessionSessionIDComparison);
+   simpleRedBlackTreeNew(&sessionStorage->AssocIDSet, sessionAssocIDPrint, sessionAssocIDComparison);
+   simpleRedBlackTreeNew(&sessionStorage->SessionIDSet, sessionSessionIDPrint, sessionSessionIDComparison);
 }
 
 
 /* ###### Destructor ##################################################### */
 void sessionStorageDelete(struct SessionStorage* sessionStorage)
 {
-   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->AssocIDSet));
-   CHECK(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
-   leafLinkedRedBlackTreeDelete(&sessionStorage->AssocIDSet);
-   leafLinkedRedBlackTreeDelete(&sessionStorage->SessionIDSet);
+   CHECK(simpleRedBlackTreeIsEmpty(&sessionStorage->AssocIDSet));
+   CHECK(simpleRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+   simpleRedBlackTreeDelete(&sessionStorage->AssocIDSet);
+   simpleRedBlackTreeDelete(&sessionStorage->SessionIDSet);
 }
 
 
@@ -118,8 +118,8 @@ void sessionStorageDelete(struct SessionStorage* sessionStorage)
 void sessionStorageAddSession(struct SessionStorage* sessionStorage,
                               struct Session*        session)
 {
-   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
-   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   CHECK(simpleRedBlackTreeInsert(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(simpleRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
 }
 
 
@@ -127,8 +127,8 @@ void sessionStorageAddSession(struct SessionStorage* sessionStorage,
 void sessionStorageDeleteSession(struct SessionStorage* sessionStorage,
                                  struct Session*        session)
 {
-   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
-   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   CHECK(simpleRedBlackTreeRemove(&sessionStorage->SessionIDSet, &session->SessionIDNode) == &session->SessionIDNode);
+   CHECK(simpleRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
 }
 
 
@@ -137,23 +137,23 @@ void sessionStorageUpdateSession(struct SessionStorage* sessionStorage,
                                  struct Session*        session,
                                  sctp_assoc_t           newAssocID)
 {
-   CHECK(leafLinkedRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   CHECK(simpleRedBlackTreeRemove(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
    session->AssocID = newAssocID;
-   CHECK(leafLinkedRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
+   CHECK(simpleRedBlackTreeInsert(&sessionStorage->AssocIDSet, &session->AssocIDNode) == &session->AssocIDNode);
 }
 
 
 /* ###### Is session storage empty? ###################################### */
 bool sessionStorageIsEmpty(struct SessionStorage* sessionStorage)
 {
-   return(leafLinkedRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
+   return(simpleRedBlackTreeIsEmpty(&sessionStorage->SessionIDSet));
 }
 
 
 /* ###### Get number of sessions ######################################### */
 size_t sessionStorageGetElements(struct SessionStorage* sessionStorage)
 {
-   return(leafLinkedRedBlackTreeGetElements(&sessionStorage->SessionIDSet));
+   return(simpleRedBlackTreeGetElements(&sessionStorage->SessionIDSet));
 }
 
 
@@ -163,9 +163,9 @@ void sessionStoragePrint(struct SessionStorage* sessionStorage,
 {
    fputs("SessionStorage:\n", fd);
    fputs(" by Session ID: ", fd);
-   leafLinkedRedBlackTreePrint(&sessionStorage->SessionIDSet, fd);
+   simpleRedBlackTreePrint(&sessionStorage->SessionIDSet, fd);
    fputs(" by Assoc ID:   ", fd);
-   leafLinkedRedBlackTreePrint(&sessionStorage->AssocIDSet, fd);
+   simpleRedBlackTreePrint(&sessionStorage->AssocIDSet, fd);
 }
 
 
@@ -174,11 +174,11 @@ struct Session* sessionStorageFindSessionBySessionID(struct SessionStorage* sess
                                                      rserpool_session_t     sessionID)
 {
    struct Session                     cmpNode;
-   struct LeafLinkedRedBlackTreeNode* node;
+   struct SimpleRedBlackTreeNode* node;
 
    cmpNode.SessionID = sessionID;
 
-   node = leafLinkedRedBlackTreeFind(&sessionStorage->SessionIDSet, &cmpNode.SessionIDNode);
+   node = simpleRedBlackTreeFind(&sessionStorage->SessionIDSet, &cmpNode.SessionIDNode);
    if(node != NULL) {
       return(getSessionFromSessionIDStorageNode(node));
    }
@@ -191,11 +191,11 @@ struct Session* sessionStorageFindSessionByAssocID(struct SessionStorage* sessio
                                                    sctp_assoc_t           assocID)
 {
    struct Session                     cmpNode;
-   struct LeafLinkedRedBlackTreeNode* node;
+   struct SimpleRedBlackTreeNode* node;
 
    cmpNode.AssocID = assocID;
 
-   node = leafLinkedRedBlackTreeFind(&sessionStorage->AssocIDSet, &cmpNode.AssocIDNode);
+   node = simpleRedBlackTreeFind(&sessionStorage->AssocIDSet, &cmpNode.AssocIDNode);
    if(node != NULL) {
       return(getSessionFromAssocIDStorageNode(node));
    }
@@ -206,8 +206,8 @@ struct Session* sessionStorageFindSessionByAssocID(struct SessionStorage* sessio
 /* ###### Get first session ############################################## */
 struct Session* sessionStorageGetFirstSession(struct SessionStorage* sessionStorage)
 {
-   struct LeafLinkedRedBlackTreeNode* node;
-   node = leafLinkedRedBlackTreeGetFirst(&sessionStorage->SessionIDSet);
+   struct SimpleRedBlackTreeNode* node;
+   node = simpleRedBlackTreeGetFirst(&sessionStorage->SessionIDSet);
    if(node != NULL) {
       return(getSessionFromSessionIDStorageNode(node));
    }
@@ -219,8 +219,8 @@ struct Session* sessionStorageGetFirstSession(struct SessionStorage* sessionStor
 struct Session* sessionStorageGetNextSession(struct SessionStorage* sessionStorage,
                                              struct Session*        session)
 {
-   struct LeafLinkedRedBlackTreeNode* node;
-   node = leafLinkedRedBlackTreeGetNext(&sessionStorage->SessionIDSet, &session->SessionIDNode);
+   struct SimpleRedBlackTreeNode* node;
+   node = simpleRedBlackTreeGetNext(&sessionStorage->SessionIDSet, &session->SessionIDNode);
    if(node != NULL) {
       return(getSessionFromSessionIDStorageNode(node));
    }

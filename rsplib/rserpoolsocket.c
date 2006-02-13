@@ -32,8 +32,8 @@
 #include "debug.h"
 
 
-extern struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
-extern struct ThreadSafety           gRSerPoolSocketSetMutex;
+extern struct SimpleRedBlackTree gRSerPoolSocketSet;
+extern struct ThreadSafety       gRSerPoolSocketSetMutex;
 
 
 /* ###### Print function ################################################# */

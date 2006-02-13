@@ -40,16 +40,16 @@
 #endif
 
 
-struct ASAPInstance*          gAsapInstance = NULL;
-struct Dispatcher             gDispatcher;
-static struct ThreadSafety    gThreadSafety;
+struct ASAPInstance*       gAsapInstance = NULL;
+struct Dispatcher          gDispatcher;
+static struct ThreadSafety gThreadSafety;
 #ifdef ENABLE_CSP
-static struct CSPReporter*    gCSPReporter  = NULL;
+static struct CSPReporter* gCSPReporter  = NULL;
 #endif
 
-struct LeafLinkedRedBlackTree gRSerPoolSocketSet;
-struct ThreadSafety           gRSerPoolSocketSetMutex;
-struct IdentifierBitmap*      gRSerPoolSocketAllocationBitmap;
+struct SimpleRedBlackTree  gRSerPoolSocketSet;
+struct ThreadSafety        gRSerPoolSocketSetMutex;
+struct IdentifierBitmap*   gRSerPoolSocketAllocationBitmap;
 
 
 static void lock(struct Dispatcher* dispatcher, void* userData);
@@ -118,13 +118,13 @@ int rsp_initialize(struct rsp_info* info)
 #endif
 
       /* ====== Initialize session storage =============================== */
-      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet,
+      simpleRedBlackTreeNew(&gRSerPoolSocketSet,
                                 rserpoolSocketPrint,
                                 rserpoolSocketComparison);
 
       /* ====== Initialize RSerPool Socket descriptor storage ============ */
-      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-      leafLinkedRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+      simpleRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
+      simpleRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
       gRSerPoolSocketAllocationBitmap = identifierBitmapNew(FD_SETSIZE);
       if(gRSerPoolSocketAllocationBitmap != NULL) {
          /* ====== Map stdin, stdout, stderr file descriptors ============ */
@@ -195,7 +195,7 @@ void rsp_cleanup()
             rsp_close(i);
          }
       }
-      leafLinkedRedBlackTreeDelete(&gRSerPoolSocketSet);
+      simpleRedBlackTreeDelete(&gRSerPoolSocketSet);
       identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
       gRSerPoolSocketAllocationBitmap = NULL;
 

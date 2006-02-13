@@ -87,14 +87,14 @@ unsigned long long randomizeCycle(const unsigned long long interval)
 
 struct TakeoverProcess
 {
-   struct STN_CLASSNAME      IndexStorageNode;
-   struct STN_CLASSNAME      TimerStorageNode;
+   struct STN_CLASSNAME    IndexStorageNode;
+   struct STN_CLASSNAME    TimerStorageNode;
 
-   RegistrarIdentifierType   TargetID;
-   unsigned long long        ExpiryTimeStamp;
+   RegistrarIdentifierType TargetID;
+   unsigned long long      ExpiryTimeStamp;
 
-   size_t                    OutstandingAcknowledgements;
-   RegistrarIdentifierType   PeerIDArray[0];
+   size_t                  OutstandingAcknowledgements;
+   RegistrarIdentifierType PeerIDArray[0];
 };
 
 
@@ -2221,7 +2221,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
          /* ====== Check if synchronization is necessary ================= */
          if(assocID != 0) {
             /* Attention: We only synchronize on SCTP-received Presence messages! */
-            checksum = TMPL_CLASS(peerListNodeGetOwnershipChecksum, LeafLinkedRedBlackTree)(
+            checksum = ST_CLASS(peerListNodeGetOwnershipChecksum)(
                           peerListNode);
             if(checksum != message->Checksum) {
                LOG_ACTION

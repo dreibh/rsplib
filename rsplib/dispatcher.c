@@ -49,8 +49,8 @@ void dispatcherNew(struct Dispatcher* dispatcher,
                    void               (*unlock)(struct Dispatcher* dispatcher, void* userData),
                    void*              lockUserData)
 {
-   leafLinkedRedBlackTreeNew(&dispatcher->TimerStorage, NULL, timerComparison);
-   leafLinkedRedBlackTreeNew(&dispatcher->FDCallbackStorage, NULL, fdCallbackComparison);
+   simpleRedBlackTreeNew(&dispatcher->TimerStorage, NULL, timerComparison);
+   simpleRedBlackTreeNew(&dispatcher->FDCallbackStorage, NULL, fdCallbackComparison);
 
    dispatcher->AddRemove    = false;
    dispatcher->LockUserData = lockUserData;
@@ -73,10 +73,10 @@ void dispatcherNew(struct Dispatcher* dispatcher,
 /* ###### Destructor ##################################################### */
 void dispatcherDelete(struct Dispatcher* dispatcher)
 {
-   CHECK(leafLinkedRedBlackTreeIsEmpty(&dispatcher->TimerStorage));
-   CHECK(leafLinkedRedBlackTreeIsEmpty(&dispatcher->FDCallbackStorage));
-   leafLinkedRedBlackTreeDelete(&dispatcher->TimerStorage);
-   leafLinkedRedBlackTreeDelete(&dispatcher->FDCallbackStorage);
+   CHECK(simpleRedBlackTreeIsEmpty(&dispatcher->TimerStorage));
+   CHECK(simpleRedBlackTreeIsEmpty(&dispatcher->FDCallbackStorage));
+   simpleRedBlackTreeDelete(&dispatcher->TimerStorage);
+   simpleRedBlackTreeDelete(&dispatcher->FDCallbackStorage);
    dispatcher->Lock         = NULL;
    dispatcher->Unlock       = NULL;
    dispatcher->LockUserData = NULL;
@@ -116,20 +116,20 @@ void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData)
 /* ###### Handle timer events ############################################ */
 static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
 {
-   struct LeafLinkedRedBlackTreeNode* node;
-   struct Timer*                      timer;
-   unsigned long long                 now;
+   struct SimpleRedBlackTreeNode* node;
+   struct Timer*                  timer;
+   unsigned long long             now;
 
    dispatcherLock(dispatcher);
 
-   node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+   node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
    while(node != NULL) {
       timer = (struct Timer*)node;
       now   = getMicroTime();
 
       if(now >= timer->TimeStamp) {
          timer->TimeStamp = 0;
-         leafLinkedRedBlackTreeRemove(&dispatcher->TimerStorage,
+         simpleRedBlackTreeRemove(&dispatcher->TimerStorage,
                                       &timer->Node);
          if(timer->Callback != NULL) {
             timer->Callback(dispatcher, timer, timer->UserData);
@@ -138,7 +138,7 @@ static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
       else {
          break;
       }
-      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
    }
 
    dispatcherUnlock(dispatcher);
@@ -152,10 +152,10 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
                                  int*                timeout,
                                  unsigned long long* pollTimeStamp)
 {
-   struct LeafLinkedRedBlackTreeNode* node;
-   struct FDCallback*                 fdCallback;
-   struct Timer*                      timer;
-   long long                          timeToNextEvent;
+   struct SimpleRedBlackTreeNode* node;
+   struct FDCallback*             fdCallback;
+   struct Timer*                  timer;
+   long long                      timeToNextEvent;
 
    *nfds    = 0;
    *timeout = -1;
@@ -164,7 +164,7 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
 
       /*  ====== Create fdset for poll() ================================= */
       *pollTimeStamp = getMicroTime();
-      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
+      node = simpleRedBlackTreeGetFirst(&dispatcher->FDCallbackStorage);
       while(node != NULL) {
          fdCallback = (struct FDCallback*)node;
          if(fdCallback->EventMask & (FDCE_Read|FDCE_Write|FDCE_Exception)) {
@@ -178,11 +178,11 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
             fputs("Empty event mask?!\n",stdlog);
             LOG_END
          }
-         node = leafLinkedRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
+         node = simpleRedBlackTreeGetNext(&dispatcher->FDCallbackStorage, node);
       }
 
       /*  ====== Get time to next timer event ============================ */
-      node = leafLinkedRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
       if(node != NULL) {
          timer = (struct Timer*)node;
          timeToNextEvent = max((long long)0, (long long)timer->TimeStamp - (long long)*pollTimeStamp);
@@ -202,10 +202,10 @@ static struct FDCallback* dispatcherFindFDCallbackForDescriptor(struct Dispatche
                                                                 int                fd)
 {
    struct FDCallback                  cmpNode;
-   struct LeafLinkedRedBlackTreeNode* node;
+   struct SimpleRedBlackTreeNode* node;
 
    cmpNode.FD = fd;
-   node = leafLinkedRedBlackTreeFind(&dispatcher->FDCallbackStorage, &cmpNode.Node);
+   node = simpleRedBlackTreeFind(&dispatcher->FDCallbackStorage, &cmpNode.Node);
    if(node != NULL) {
       return((struct FDCallback*)node);
    }
