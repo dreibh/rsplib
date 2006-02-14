@@ -78,8 +78,8 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
          return(NULL);
       }
 
-      leafLinkedRedBlackTreeNodeNew(&session->AssocIDNode);
-      leafLinkedRedBlackTreeNodeNew(&session->SessionIDNode);
+      simpleRedBlackTreeNodeNew(&session->AssocIDNode);
+      simpleRedBlackTreeNodeNew(&session->SessionIDNode);
       session->AssocID                    = assocID;
       session->IsIncoming                 = isIncoming;
       session->IsFailed                   = isIncoming ? false : true;
@@ -160,8 +160,8 @@ void deleteSession(struct RSerPoolSocket* rserpoolSocket,
          session->CookieEcho = NULL;
       }
 
-      leafLinkedRedBlackTreeNodeDelete(&session->AssocIDNode);
-      leafLinkedRedBlackTreeNodeDelete(&session->SessionIDNode);
+      simpleRedBlackTreeNodeDelete(&session->AssocIDNode);
+      simpleRedBlackTreeNodeDelete(&session->SessionIDNode);
       free(session);
    }
 }

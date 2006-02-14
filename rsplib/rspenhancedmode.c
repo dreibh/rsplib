@@ -148,7 +148,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    CHECK(identifierBitmapAllocateSpecificID(rserpoolSocket->SessionAllocationBitmap, 0) == 0);
 
    threadSafetyNew(&rserpoolSocket->Mutex, "RSerPoolSocket");
-   leafLinkedRedBlackTreeNodeNew(&rserpoolSocket->Node);
+   simpleRedBlackTreeNodeNew(&rserpoolSocket->Node);
    sessionStorageNew(&rserpoolSocket->SessionSet);
    rserpoolSocket->Socket           = fd;
    rserpoolSocket->SocketDomain     = domain;
@@ -171,7 +171,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    rserpoolSocket->Descriptor = identifierBitmapAllocateID(gRSerPoolSocketAllocationBitmap);
    if(rserpoolSocket->Descriptor >= 0) {
       /* ====== Add RSerPool socket entry ================================ */
-      CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
+      CHECK(simpleRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    }
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
@@ -225,7 +225,7 @@ int rsp_close(int sd)
 
    /* ====== Delete RSerPool socket entry ================================ */
    threadSafetyLock(&gRSerPoolSocketSetMutex);
-   CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
+   CHECK(simpleRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
    rserpoolSocket->Descriptor = -1;
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
@@ -270,6 +270,8 @@ int rsp_mapsocket(int sd, int toSD)
    }
    memset(rserpoolSocket, 0, sizeof(struct RSerPoolSocket));
    rserpoolSocket->Socket = sd;
+   sessionStorageNew(&rserpoolSocket->SessionSet);
+   notificationQueueNew(&rserpoolSocket->Notifications);
 
    /* ====== Find available RSerPool socket descriptor =================== */
    threadSafetyLock(&gRSerPoolSocketSetMutex);
@@ -281,7 +283,7 @@ int rsp_mapsocket(int sd, int toSD)
    }
    if(rserpoolSocket->Descriptor >= 0) {
       /* ====== Add RSerPool socket entry ================================ */
-      CHECK(leafLinkedRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
+      CHECK(simpleRedBlackTreeInsert(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
    }
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
@@ -304,10 +306,12 @@ int rsp_unmapsocket(int sd)
 
    if(rserpoolSocket->SessionAllocationBitmap == NULL) {
       threadSafetyLock(&gRSerPoolSocketSetMutex);
-      CHECK(leafLinkedRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
+      CHECK(simpleRedBlackTreeRemove(&gRSerPoolSocketSet, &rserpoolSocket->Node) == &rserpoolSocket->Node);
       identifierBitmapFreeID(gRSerPoolSocketAllocationBitmap, sd);
       rserpoolSocket->Descriptor = -1;
       threadSafetyUnlock(&gRSerPoolSocketSetMutex);
+      sessionStorageDelete(&rserpoolSocket->SessionSet);
+      notificationQueueDelete(&rserpoolSocket->Notifications);
       free(rserpoolSocket);
    }
    else {
@@ -1464,10 +1468,10 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
    threadSafetyLock(&gRSerPoolSocketSetMutex);
 
    sessions = 0;
-   rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetFirst(&gRSerPoolSocketSet);
+   rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetFirst(&gRSerPoolSocketSet);
    while(rserpoolSocket != NULL) {
       sessions += sessionStorageGetElements(&rserpoolSocket->SessionSet);
-      rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
+      rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
    }
 
    *workload    = -1.0;
@@ -1486,7 +1490,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
       }
       getComponentLocation(componentLocation, -1, 0);
 
-      rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetFirst(&gRSerPoolSocketSet);
+      rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetFirst(&gRSerPoolSocketSet);
       while(rserpoolSocket != NULL) {
          session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
          while(session != NULL) {
@@ -1523,7 +1527,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
                *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)0xffffff;
             }
          }
-         rserpoolSocket = (struct RSerPoolSocket*)leafLinkedRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
+         rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
       }
 
       if((statusText[0] == 0x00) || (sessions != 1)) {

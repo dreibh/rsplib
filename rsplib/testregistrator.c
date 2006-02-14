@@ -58,7 +58,7 @@ int main(int argc, char** argv)
    loadinfo.rli_weight           = 1;
    loadinfo.rli_load             = 0;
    loadinfo.rli_load_degradation = 0;
-   for(i = 1;i < argc;i++) {
+   for(i = 1;i < (size_t)argc;i++) {
       if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);

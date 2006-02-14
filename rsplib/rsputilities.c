@@ -28,6 +28,7 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "stringutilities.h"
+#include "rsputilities.h"
 #include "debug.h"
 
 

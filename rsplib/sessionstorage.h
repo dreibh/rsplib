@@ -28,6 +28,7 @@
 
 #include "tdtypes.h"
 #include "session.h"
+#include "simpleredblacktree.h"
 
 #ifdef __cplusplus
 extern "C" {

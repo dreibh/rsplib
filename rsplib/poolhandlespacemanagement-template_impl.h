@@ -266,6 +266,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
    }
 
 #ifdef VERIFY
+#warning VERIFY is on! The Handlespace Management will be very slow!
    ST_CLASS(poolHandlespaceNodeVerify)(&poolHandlespaceManagement->Handlespace);
 #endif
    return(errorCode);
@@ -398,6 +399,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
       ST_CLASS(poolHandlespaceManagementPoolNodeDisposer)(poolNode, poolHandlespaceManagement);
    }
 #ifdef VERIFY
+#warning VERIFY is on! The Handlespace Management will be very slow!
       ST_CLASS(poolHandlespaceNodeVerify)(&poolHandlespaceManagement->Handlespace);
 #endif
    return(RSPERR_OKAY);
@@ -440,6 +442,7 @@ unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
                           maxHandleResolutionItems, maxIncrement,
                           &errorCode);
 #ifdef VERIFY
+#warning VERIFY is on! The Handlespace Management will be very slow!
    ST_CLASS(poolHandlespaceNodeVerify)(&poolHandlespaceManagement->Handlespace);
 #endif
 

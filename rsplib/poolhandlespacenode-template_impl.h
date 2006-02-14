@@ -1126,11 +1126,14 @@ void ST_CLASS(poolHandlespaceNodeVerify)(struct ST_CLASS(PoolHandlespaceNode)* p
             (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode) ==
          ST_CLASS(poolHandlespaceNodeComputeHandlespaceChecksum)(
             (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode));
-   CHECK(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
-            (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode) ==
-         ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-            (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode,
-            poolHandlespaceNode->HomeRegistrarIdentifier));
+
+   if(poolHandlespaceNode->HomeRegistrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+      CHECK(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
+               (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode) ==
+            ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+               (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode,
+               poolHandlespaceNode->HomeRegistrarIdentifier));
+   }
 }
 
 
