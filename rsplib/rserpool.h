@@ -88,8 +88,10 @@ struct rsp_loadinfo
 {
    uint32_t rli_policy;
    uint32_t rli_weight;
+   uint32_t rli_weight_dpf;
    uint32_t rli_load;
    uint32_t rli_load_degradation;
+   uint32_t rli_load_dpf;
 };
 
 

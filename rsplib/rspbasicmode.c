@@ -405,17 +405,19 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
       poolPolicySettingsNew(&myPolicySettings);
       myPolicySettings.PolicyType      = rspLoadInfo->rli_policy;
       myPolicySettings.Weight          = rspLoadInfo->rli_weight;
+      myPolicySettings.WeightDPF       = rspLoadInfo->rli_weight_dpf;
       myPolicySettings.Load            = rspLoadInfo->rli_load;
       myPolicySettings.LoadDegradation = rspLoadInfo->rli_load_degradation;
+      myPolicySettings.LoadDPF         = rspLoadInfo->rli_load_dpf;
 
       unpackedAddrs = unpack_sockaddr(rspAddrInfo->ai_addr, rspAddrInfo->ai_addrs);
       if(unpackedAddrs != NULL) {
          transportAddressBlockNew(myTransportAddressBlock,
-                                 rspAddrInfo->ai_protocol,
-                                 getPort((struct sockaddr*)rspAddrInfo->ai_addr),
-                                 (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
-                                 unpackedAddrs,
-                                 rspAddrInfo->ai_addrs);
+                                  rspAddrInfo->ai_protocol,
+                                  getPort((struct sockaddr*)rspAddrInfo->ai_addr),
+                                  (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
+                                  unpackedAddrs,
+                                  rspAddrInfo->ai_addrs);
 
          ST_CLASS(poolElementNodeNew)(
             &myPoolElementNode,

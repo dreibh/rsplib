@@ -294,11 +294,13 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
    struct rserpool_policy_roundrobin*                                rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
    struct rserpool_policy_leastused*                                 lu;
+   struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
    struct rserpool_policy_priority_leastused*                        plu;
    struct rserpool_policy_priority_leastused_degradation*            plud;
    struct rserpool_policy_random*                                    rd;
    struct rserpool_policy_weighted_random*                           wrd;
+   struct rserpool_policy_weighted_random_dpf*                       wrddpf;
    struct rserpool_policy_randomized_leastused*                      rlu;
    struct rserpool_policy_randomized_leastused_degradation*          rlud;
    struct rserpool_policy_randomized_priority_leastused*             rplu;
@@ -332,6 +334,16 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           wrd->pp_wrd_policy = poolPolicySettings->PolicyType;
           wrd->pp_wrd_weight = hton24(poolPolicySettings->Weight);
        break;
+      case PPT_WEIGHTED_RANDOM_DPF:
+          wrddpf = (struct rserpool_policy_weighted_random_dpf*)getSpace(message, sizeof(struct rserpool_policy_weighted_random_dpf));
+          if(wrddpf == NULL) {
+             return(false);
+          }
+          wrddpf->pp_wrddpf_policy     = poolPolicySettings->PolicyType;
+          wrddpf->pp_wrddpf_weight     = hton24(poolPolicySettings->Weight);
+          wrddpf->pp_wrddpf_weight_dpf = htonl(poolPolicySettings->WeightDPF);
+          wrddpf->pp_wrddpf_distance   = htonl(poolPolicySettings->Distance);
+       break;
       case PPT_ROUNDROBIN:
           rr = (struct rserpool_policy_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_roundrobin));
           if(rr == NULL) {
@@ -355,6 +367,16 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           }
           lu->pp_lu_policy = poolPolicySettings->PolicyType;
           lu->pp_lu_load   = hton24(poolPolicySettings->Load);
+       break;
+      case PPT_LEASTUSED_DPF:
+          ludpf = (struct rserpool_policy_leastused_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_dpf));
+          if(ludpf == NULL) {
+             return(false);
+          }
+          ludpf->pp_ludpf_policy   = poolPolicySettings->PolicyType;
+          ludpf->pp_ludpf_load     = hton24(poolPolicySettings->Load);
+          ludpf->pp_ludpf_load_dpf = htonl(poolPolicySettings->LoadDPF);
+          ludpf->pp_ludpf_distance = htonl(poolPolicySettings->Distance);
        break;
       case PPT_LEASTUSED_DEGRADATION:
           lud = (struct rserpool_policy_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation));
@@ -1036,7 +1058,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
    struct rserpool_header*              header;
 
    header = beginMessage(message, EHT_HANDLE_TABLE_RESPONSE,
-                         message->Flags & (EHF_HANDLE_TABLE_RESPONSE_REJECT|EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND),
+                         message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT,
                          PPID_ENRP);
    if(header == NULL) {
       return(false);
@@ -1083,6 +1105,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
                      return(false);
                   }
                   message->Position = oldPosition;
+                  header->ah_flags |= EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
                   break;
                }
             }
@@ -1093,6 +1116,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
                   return(false);
                }
                message->Position = oldPosition;
+               header->ah_flags |= EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
                break;
             }
             oldPosition = message->Position;
@@ -1106,7 +1130,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
          }
       }
 
-      if(hte->PoolElementNodes < NTE_MAX_POOL_ELEMENT_NODES) {
+      if(!(header->ah_flags & EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND)) {
          free(message->PeerListNodePtr->UserData);
          message->PeerListNodePtr->UserData = NULL;
       }

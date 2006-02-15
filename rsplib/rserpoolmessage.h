@@ -169,6 +169,14 @@ struct rserpool_policy_leastused
    uint32_t pp_lu_load:24;
 };
 
+struct rserpool_policy_leastused_dpf
+{
+   uint8_t  pp_ludpf_policy:8;
+   uint32_t pp_ludpf_load:24;
+   uint32_t pp_ludpf_load_dpf;
+   uint32_t pp_ludpf_distance;
+};
+
 struct rserpool_policy_leastused_degradation
 {
    uint8_t  pp_lud_policy:8;
@@ -201,6 +209,14 @@ struct rserpool_policy_weighted_random
 {
    uint8_t  pp_wrd_policy:8;
    uint32_t pp_wrd_weight:24;
+};
+
+struct rserpool_policy_weighted_random_dpf
+{
+   uint8_t  pp_wrddpf_policy:8;
+   uint32_t pp_wrddpf_weight:24;
+   uint32_t pp_wrddpf_weight_dpf;
+   uint32_t pp_wrddpf_distance;
 };
 
 struct rserpool_policy_randomized_leastused

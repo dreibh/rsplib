@@ -103,7 +103,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
    if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE) {
       ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
-         LOG_VERBOSE3
+         LOG_VERBOSE
          fprintf(stdlog, "Silently skipping TLV type $%02x at position %u\n",
                  tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
@@ -113,7 +113,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE_AND_REPORT) {
       ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
-         LOG_VERBOSE3
+         LOG_VERBOSE
          fprintf(stdlog, "Skipping TLV type $%02x at position %u\n",
                  tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
@@ -127,7 +127,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       return(false);
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_STOP) {
-      LOG_VERBOSE3
+      LOG_VERBOSE
       fprintf(stdlog, "Silently stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END
@@ -136,7 +136,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       return(false);
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_STOP_AND_REPORT) {
-      LOG_VERBOSE3
+      LOG_VERBOSE
       fprintf(stdlog, "Stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END
@@ -504,11 +504,13 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
    struct rserpool_policy_roundrobin*                                rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
    struct rserpool_policy_leastused*                                 lu;
+   struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
    struct rserpool_policy_priority_leastused*                        plu;
    struct rserpool_policy_priority_leastused_degradation*            plud;
    struct rserpool_policy_random*                                    rd;
    struct rserpool_policy_weighted_random*                           wrd;
+   struct rserpool_policy_weighted_random_dpf*                       wrddpf;
    struct rserpool_policy_randomized_leastused*                      rlu;
    struct rserpool_policy_randomized_leastused_degradation*          rlud;
    struct rserpool_policy_randomized_priority_leastused*             rplu;
@@ -549,6 +551,31 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          else {
             LOG_WARNING
             fputs("LU TLV too short\n", stdlog);
+            LOG_END
+            message->Error = RSPERR_INVALID_VALUES;
+            return(false);
+         }
+       break;
+      case PPT_LEASTUSED_DPF:
+         if(tlvLength >= sizeof(struct rserpool_policy_leastused_dpf)) {
+            ludpf = (struct rserpool_policy_leastused_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_dpf));
+            if(ludpf == NULL) {
+               return(false);
+            }
+            poolPolicySettings->PolicyType = ludpf->pp_ludpf_policy;
+            poolPolicySettings->Weight     = 0;
+            poolPolicySettings->Load       = ntoh24(ludpf->pp_ludpf_load);
+            poolPolicySettings->LoadDPF    = ntohl(ludpf->pp_ludpf_load_dpf);
+            LOG_VERBOSE3
+            fprintf(stdlog, "Scanned policy LU-DPF, load=$%06x, ldpf=%1.3f%%, distance=%u\n",
+                    poolPolicySettings->Load,
+                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)0xffffffff),
+                    poolPolicySettings->Distance);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fputs("LU-DPF TLV too short\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
@@ -658,13 +685,41 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             poolPolicySettings->Load       = 0;
 
             LOG_VERBOSE3
-            fprintf(stdlog, "Scanned policy WRAND, weight=%d\n",
+            fprintf(stdlog, "Scanned policy WRAND, weight=%u\n",
                     poolPolicySettings->Weight);
             LOG_END
          }
          else {
             LOG_WARNING
             fputs("WRAND TLV too short\n", stdlog);
+            LOG_END
+            message->Error = RSPERR_INVALID_VALUES;
+            return(false);
+         }
+       break;
+      case PPT_WEIGHTED_RANDOM_DPF:
+         if(tlvLength >= sizeof(struct rserpool_policy_weighted_random_dpf)) {
+            wrddpf = (struct rserpool_policy_weighted_random_dpf*)getSpace(message, sizeof(struct rserpool_policy_weighted_random_dpf));
+            if(wrddpf == NULL) {
+               message->Error = RSPERR_INVALID_VALUES;
+               return(false);
+            }
+            poolPolicySettings->PolicyType = wrddpf->pp_wrddpf_policy;
+            poolPolicySettings->Weight     = ntoh24(wrddpf->pp_wrddpf_weight);
+            poolPolicySettings->Load       = 0;
+            poolPolicySettings->WeightDPF  = ntohl(wrddpf->pp_wrddpf_weight_dpf);
+            poolPolicySettings->Distance   = ntohl(wrddpf->pp_wrddpf_distance);
+
+            LOG_VERBOSE3
+            fprintf(stdlog, "Scanned policy WRAND-DPF, weight=%u, wdpf=%1.3f%%, distance=%u\n",
+                    poolPolicySettings->Weight,
+                    100.0 * ((double)poolPolicySettings->WeightDPF / (double)0xffffffff),
+                    poolPolicySettings->Distance);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fputs("WRAND-DPF TLV too short\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
@@ -703,7 +758,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             poolPolicySettings->Weight     = ntoh24(wrr->pp_wrr_weight);
             poolPolicySettings->Load       = 0;
             LOG_VERBOSE3
-            fprintf(stdlog, "Scanned policy WRR, weight=%d\n",poolPolicySettings->Weight);
+            fprintf(stdlog, "Scanned policy WRR, weight=%u\n",poolPolicySettings->Weight);
             LOG_END
          }
          else {

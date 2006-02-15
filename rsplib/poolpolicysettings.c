@@ -45,6 +45,9 @@ void poolPolicySettingsDelete(struct PoolPolicySettings* pps)
    pps->Weight          = 0;
    pps->Load            = 0;
    pps->LoadDegradation = 0;
+   pps->LoadDPF         = 0;
+   pps->WeightDPF       = 0;
+   pps->Distance        = 0;
 }
 
 
@@ -52,9 +55,12 @@ void poolPolicySettingsDelete(struct PoolPolicySettings* pps)
 int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
                                  const struct PoolPolicySettings* pps2)
 {
-   return((pps1->Weight          != pps2->Weight) ||
-          (pps1->Load            != pps2->Load)   ||
-          (pps1->LoadDegradation != pps2->LoadDegradation));
+   return((pps1->Weight          != pps2->Weight)          ||
+          (pps1->Load            != pps2->Load)            ||
+          (pps1->LoadDegradation != pps2->LoadDegradation) ||
+          (pps1->LoadDPF         != pps2->LoadDPF)         ||
+          (pps1->WeightDPF       != pps2->WeightDPF)       ||
+          (pps1->Distance        != pps2->Distance));
 }
 
 
@@ -66,9 +72,7 @@ int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps)
            (pps->Load >= PEPS_MIN_LOAD) &&
            (pps->Load <= PEPS_MAX_LOAD) &&
            (pps->LoadDegradation >= PEPS_MIN_LOADDEGRADATION) &&
-           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) &&
-           (pps->LoadDPF >= PEPS_MIN_LOADDPF) &&
-           (pps->LoadDPF <= PEPS_MAX_LOADDPF) );
+           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) );
 }
 
 
@@ -87,12 +91,14 @@ void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
                                       const size_t                     bufferSize)
 {
    snprintf(buffer, bufferSize,
-            "w=%u l=$%x ldeg=$%x ldpf=$%x wdpf=$%x",
+            "t=$%02x [l=%1.3f%% ldeg=%1.3f%% ldpf=%1.3f%% w=%u wdpf=%1.3f%% dist=%u]",
+            pps->PolicyType,
+            100.0 * (pps->Load / (double)PEPS_MAX_LOAD),
+            100.0 * (pps->LoadDegradation / (double)PEPS_MAX_LOAD),
+            100.0 * (pps->LoadDPF / (double)0xffffffff),
             pps->Weight,
-            pps->Load,
-            pps->LoadDegradation,
-            pps->LoadDPF,
-            pps->WeightDPF);
+            100.0 * (pps->WeightDPF / (double)0xffffffff),
+            pps->Distance);
 }
 
 

@@ -1492,6 +1492,49 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 }
 
 
+/* ###### Update distance for distance-sensitive policies ################ */
+static void updateDistance(int                               fd,
+                           sctp_assoc_t                      assocID,
+                           struct ST_CLASS(PoolElementNode)* poolElementNode,
+                           bool                              addDistance,
+                           unsigned int*                     distance)
+{
+   struct sctp_status assocStatus;
+   socklen_t          assocStatusLength;
+
+   /* ====== Set distance for distance-sensitive policies ======= */
+   if((poolElementNode->PolicySettings.PolicyType == PPT_LEASTUSED_DPF) ||
+       (poolElementNode->PolicySettings.PolicyType == PPT_WEIGHTED_RANDOM_DPF)) {
+      if(*distance == 0xffffffff) {
+         assocStatusLength = sizeof(assocStatus);
+         assocStatus.sstat_assoc_id = assocID;
+         if(ext_getsockopt(fd, IPPROTO_SCTP, SCTP_STATUS, (char*)&assocStatus, &assocStatusLength) == 0) {
+            printf("SRTT-HUPDT=%d\n", assocStatus.sstat_primary.spinfo_srtt);
+            *distance = assocStatus.sstat_primary.spinfo_srtt / 2;
+         }
+         else {
+            LOG_WARNING
+                  logerror("Unable to obtain SCTP_STATUS");
+            LOG_END
+            *distance = 0;
+         }
+      }
+      else printf("----REUSE!!!!!!!!!!!\n");
+
+      if(addDistance) {
+         poolElementNode->PolicySettings.Distance += *distance;
+      }
+      else {
+         poolElementNode->PolicySettings.Distance = *distance;
+      }
+      printf("DIST=%d meas=%d\n", poolElementNode->PolicySettings.Distance, *distance);
+   }
+   else {
+      *distance = 0;
+   }
+}
+
+
 /* ###### Handle registration request #################################### */
 static void handleRegistrationRequest(struct Registrar*       registrar,
                                       int                     fd,
@@ -1506,6 +1549,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    char                              userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     userTransportAddressBlock = (struct TransportAddressBlock*)&userTransportAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   unsigned int                      distance;
 
    LOG_VERBOSE
    fputs("Registration request for ", stdlog);
@@ -1549,6 +1593,10 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
             transportAddressBlockPrint(asapTransportAddressBlock, stdlog);
             fputs("\n", stdlog);
             LOG_END
+
+            /* ====== Set distance for distance-sensitive policies ======= */
+            distance = 0xffffffff;
+            updateDistance(fd, assocID, message->PoolElementPtr, false, &distance);
 
             message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                               &registrar->Handlespace,
@@ -1988,6 +2036,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                                struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   unsigned int                      distance;
    int                               result;
 
    if(message->SenderID == registrar->ServerID) {
@@ -2012,6 +2061,10 @@ static void handleHandleUpdate(struct Registrar*       registrar,
 
    if(message->Action == PNUP_ADD_PE) {
       if(message->PoolElementPtr->HomeRegistrarIdentifier != registrar->ServerID) {
+         /* ====== Set distance for distance-sensitive policies ======= */
+         distance = 0xffffffff;
+         updateDistance(fd, assocID, message->PoolElementPtr, true, &distance);
+
          result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                      &registrar->Handlespace,
                      &message->Handle,
@@ -2779,11 +2832,11 @@ static void handleHandleTableRequest(struct Registrar*       registrar,
 
       response->PeerListNodePtr           = peerListNode;
       response->PeerListNodePtrAutoDelete = false;
-      response->HandlespacePtr              = &registrar->Handlespace;
-      response->HandlespacePtrAutoDelete    = false;
+      response->HandlespacePtr            = &registrar->Handlespace;
+      response->HandlespacePtrAutoDelete  = false;
 
       if(peerListNode == NULL) {
-         message->Flags |= EHF_HANDLE_TABLE_RESPONSE_REJECT;
+         response->Flags |= EHF_HANDLE_TABLE_RESPONSE_REJECT;
          LOG_WARNING
          fprintf(stdlog, "HandleTableRequest from peer $%08x -> This peer is unknown, rejecting request!\n",
                  message->SenderID);
@@ -2814,6 +2867,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   unsigned int                      distance;
    unsigned int                      result;
 
    if(message->SenderID == registrar->ServerID) {
@@ -2831,8 +2885,12 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
 
    if(!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) {
       if(message->HandlespacePtr) {
+         distance = 0xffffffff;
          poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
          while(poolElementNode != NULL) {
+            /* ====== Set distance for distance-sensitive policies ======= */
+            updateDistance(fd, assocID, poolElementNode, true, &distance);
+
             if(poolElementNode->HomeRegistrarIdentifier != registrar->ServerID) {
                result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                            &registrar->Handlespace,
