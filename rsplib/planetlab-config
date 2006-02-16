@@ -1,10 +1,10 @@
-PLANETLAB_KEY=~/.ssh/planetlab
-PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"
+#PLANETLAB_KEY=~/.ssh/planetlab
+#PLANETLAB_USER=due_test
+#PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"
 
-#PLANETLAB_KEY=~/.ssh/lupo
-#PLANETLAB_USER=dreibh
-#PLANETLAB_COMPILEHOST="localhost"
+PLANETLAB_KEY=~/.ssh/lupo
+PLANETLAB_USER=dreibh
+PLANETLAB_COMPILEHOST="localhost"
 
 
 DISTNAME="rsplib-1.9.0"

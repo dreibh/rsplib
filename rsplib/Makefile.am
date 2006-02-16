@@ -82,6 +82,8 @@ sessionstorage.c \
 sessionstorage.h \
 sessioncontrol.c \
 sessioncontrol.h \
+simpleredblacktree.h \
+simpleredblacktree.c \
 stringutilities.c \
 stringutilities.h \
 sockaddrunion.h \
