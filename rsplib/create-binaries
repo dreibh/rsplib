@@ -33,9 +33,12 @@ make && \
 echo \"\`date\`: Packaging binaries on $SERVER ...\" && \
 cd $DISTDIRNAME && \
 mkdir bin && \
-cp -f $DISTPRGS  bin/ && \
+cp -f $DISTPRGS bin/ && \
 cd bin && \
-echo "$DISTPRGS" | xargs -n1 strip && \
+if [ $DISTSTRIP != 0 ] ; then \
+echo \"Stripping binaries ...\" ; \
+echo "$DISTPRGS" | xargs -n1 strip ; \
+fi && \
 cd .. && \
 tar cvf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2"
 

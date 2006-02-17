@@ -234,7 +234,7 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
          complete results).
       */
       if(result > 0) {
-         LOG_VERBOSE3
+         LOG_VERBOSE4
          fputs("Handling FD events...\n", stdlog);
          LOG_END
          for(i = 0;i < nfds;i++) {
@@ -243,13 +243,13 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
                if(fdCallback != NULL) {
                   if(fdCallback->SelectTimeStamp <= pollTimeStamp) {
                      if(ufds[i].revents & fdCallback->EventMask) {
-                        LOG_VERBOSE3
+                        LOG_VERBOSE4
                         fprintf(stdlog,"Event $%04x (mask $%04x) for socket %d\n",
                               ufds[i].revents, fdCallback->EventMask, fdCallback->FD);
                         LOG_END
 
                         if(fdCallback->Callback != NULL) {
-                           LOG_VERBOSE2
+                           LOG_VERBOSE4
                            fprintf(stdlog,"Executing callback for event $%04x of socket %d\n",
                                  ufds[i].revents, fdCallback->FD);
                            LOG_END
@@ -277,7 +277,7 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
       /* Timers must be handled after the FD callbacks, since
          they might modify the FDs' states (e.g. completely
          reading their buffers, establishing new associations, ...)! */
-      LOG_VERBOSE3
+      LOG_VERBOSE4
       fputs("Handling timer events...\n", stdlog);
       LOG_END
       dispatcherHandleTimerEvents(dispatcher);

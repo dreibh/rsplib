@@ -103,7 +103,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
    if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE) {
       ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
-         LOG_VERBOSE
+         LOG_VERBOSE3
          fprintf(stdlog, "Silently skipping TLV type $%02x at position %u\n",
                  tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
@@ -113,7 +113,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_CONTINUE_AND_REPORT) {
       ptr = getSpace(message, tlvLength - sizeof(struct rserpool_tlv_header));
       if(ptr != NULL) {
-         LOG_VERBOSE
+         LOG_VERBOSE3
          fprintf(stdlog, "Skipping TLV type $%02x at position %u\n",
                  tlvType, (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)));
          LOG_END
@@ -127,7 +127,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       return(false);
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_STOP) {
-      LOG_VERBOSE
+      LOG_VERBOSE1
       fprintf(stdlog, "Silently stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END
@@ -136,7 +136,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
       return(false);
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_STOP_AND_REPORT) {
-      LOG_VERBOSE
+      LOG_VERBOSE1
       fprintf(stdlog, "Stop processing for type $%02x at position %u\n",
               tlvType, (unsigned int)message->Position);
       LOG_END

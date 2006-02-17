@@ -313,7 +313,7 @@ struct TakeoverProcess* takeoverProcessListFindTakeoverProcess(
 /* ###### Create takeover process ######################################## */
 unsigned int takeoverProcessListCreateTakeoverProcess(
                 struct TakeoverProcessList*          takeoverProcessList,
-                const RegistrarIdentifierType             targetID,
+                const RegistrarIdentifierType        targetID,
                 struct ST_CLASS(PeerListManagement)* peerList,
                 const unsigned long long             expiryTimeStamp)
 {
@@ -755,7 +755,7 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct Registrar*      registrar = (struct Registrar*)userData;
+   struct Registrar*       registrar = (struct Registrar*)userData;
    struct RSerPoolMessage* message;
    size_t                  messageLength;
 
@@ -994,7 +994,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct Registrar*             registrar = (struct Registrar*)userData;
+   struct Registrar*              registrar = (struct Registrar*)userData;
    struct ST_CLASS(PeerListNode)* peerListNode;
 
    if(registrar->InInitializationPhase) {
@@ -1022,7 +1022,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers.List);
    while(peerListNode != NULL) {
       if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-         LOG_VERBOSE2
+         LOG_VERBOSE1
          fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
                   peerListNode->Identifier);
          LOG_END
@@ -1038,7 +1038,8 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                         peerListNode);
    }
 
-   timerStart(timer, getMicroTime() + randomizeCycle(registrar->PeerHeartbeatCycle));
+   unsigned long long n = getMicroTime() + randomizeCycle(registrar->PeerHeartbeatCycle);
+   timerStart(timer, n);
 }
 
 
@@ -1234,7 +1235,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
                                     struct Timer*      timer,
                                     void*              userData)
 {
-   struct Registrar*             registrar = (struct Registrar*)userData;
+   struct Registrar*              registrar = (struct Registrar*)userData;
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct ST_CLASS(PeerListNode)* nextPeerListNode;
    unsigned int                   result;
@@ -1252,15 +1253,15 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
          fprintf(stdlog, " not head since MaxTimeLastHeard=%lluus -> requesting immediate PeerPresence\n",
-                 registrar->PeerMaxTimeLastHeard);
+               registrar->PeerMaxTimeLastHeard);
          LOG_END
          sendPeerPresence(registrar,
-                          registrar->ENRPUnicastSocket,
-                          0, 0,
-                          peerListNode->AddressBlock->AddressArray,
-                          peerListNode->AddressBlock->Addresses,
-                          peerListNode->Identifier,
-                          true);
+                        registrar->ENRPUnicastSocket,
+                        0, 0,
+                        peerListNode->AddressBlock->AddressArray,
+                        peerListNode->AddressBlock->Addresses,
+                        peerListNode->Identifier,
+                        true);
          ST_CLASS(peerListDeactivateTimer)(
             &registrar->Peers.List,
             peerListNode);
@@ -1275,21 +1276,30 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
          fputs("Peer ", stdlog);
          ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
          fprintf(stdlog, " did not answer in MaxTimeNoResponse=%lluus -> removing it\n",
-                 registrar->PeerMaxTimeLastHeard);
+               registrar->PeerMaxTimeLastHeard);
          LOG_END
 
-         if(takeoverProcessListCreateTakeoverProcess(
-               &registrar->Takeovers,
-               peerListNode->Identifier,
-               &registrar->Peers,
-               getMicroTime() + registrar->TakeoverExpiryInterval) == RSPERR_OKAY) {
-            timerRestart(&registrar->TakeoverExpiryTimer,
-                         takeoverProcessListGetNextTimerTimeStamp(&registrar->Takeovers));
+         if(ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                     &registrar->Handlespace.Handlespace, peerListNode->Identifier) != NULL) {
+            if(takeoverProcessListCreateTakeoverProcess(
+                  &registrar->Takeovers,
+                  peerListNode->Identifier,
+                  &registrar->Peers,
+                  getMicroTime() + registrar->TakeoverExpiryInterval) == RSPERR_OKAY) {
+               timerRestart(&registrar->TakeoverExpiryTimer,
+                           takeoverProcessListGetNextTimerTimeStamp(&registrar->Takeovers));
+               LOG_ACTION
+               fprintf(stdlog, "Initiating takeover of dead peer $%08x\n",
+                       peerListNode->Identifier);
+               LOG_END
+               sendInitTakeover(registrar, peerListNode->Identifier);
+            }
+         }
+         else {
             LOG_ACTION
-            fprintf(stdlog, "Initiating takeover of dead peer $%08x\n",
+            fprintf(stdlog, "Dead peer $%08x has no PEs -> no takeover procedure necessary\n",
                     peerListNode->Identifier);
             LOG_END
-            sendInitTakeover(registrar, peerListNode->Identifier);
          }
 
          result = ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
@@ -2185,7 +2195,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
       return;
    }
 
-   LOG_VERBOSE2
+   LOG_VERBOSE1
    fprintf(stdlog, "Got PeerPresence from peer $%08x",
            message->PeerListNodePtr->Identifier);
    if(message->PeerListNodePtr) {
@@ -2743,30 +2753,38 @@ static void handleListResponse(struct Registrar*       registrar,
                            message->PeerListPtr);
          while(peerListNode) {
 
+            if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+               result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                           &registrar->Peers,
+                           peerListNode->Identifier,
+                           peerListNode->Flags,
+                           peerListNode->AddressBlock,
+                           getMicroTime(),
+                           &newPeerListNode);
+               if((result == RSPERR_OKAY) &&
+                  (!STN_METHOD(IsLinked)(&newPeerListNode->PeerListTimerStorageNode))) {
+                  /* ====== Activate keep alive timer ==================== */
+                  ST_CLASS(peerListActivateTimer)(
+                     &registrar->Peers.List,
+                     newPeerListNode,
+                     PLNT_MAX_TIME_LAST_HEARD,
+                     getMicroTime() + registrar->PeerMaxTimeLastHeard);
 
-            result = ST_CLASS(peerListManagementRegisterPeerListNode)(
-                        &registrar->Peers,
-                        peerListNode->Identifier,
-                        peerListNode->Flags,
-                        peerListNode->AddressBlock,
-                        getMicroTime(),
-                        &newPeerListNode);
-            if((result == RSPERR_OKAY) &&
-               (!STN_METHOD(IsLinked)(&newPeerListNode->PeerListTimerStorageNode))) {
-               /* ====== Activate keep alive timer ======================= */
-               ST_CLASS(peerListActivateTimer)(
-                  &registrar->Peers.List,
-                  newPeerListNode,
-                  PLNT_MAX_TIME_LAST_HEARD,
-                  getMicroTime() + registrar->PeerMaxTimeLastHeard);
-
-               /* ====== New peer -> Send Peer Presence ================== */
-               sendPeerPresence(registrar,
-                                registrar->ENRPUnicastSocket, 0, 0,
-                                newPeerListNode->AddressBlock->AddressArray,
-                                newPeerListNode->AddressBlock->Addresses,
-                                newPeerListNode->Identifier,
-                                false);
+                  /* ====== New peer -> Send Peer Presence =============== */
+                  sendPeerPresence(registrar,
+                                 registrar->ENRPUnicastSocket, 0, 0,
+                                 newPeerListNode->AddressBlock->AddressArray,
+                                 newPeerListNode->AddressBlock->Addresses,
+                                 newPeerListNode->Identifier,
+                                 false);
+               }
+            }
+            else {
+               LOG_ACTION
+               fputs("Skipping unknown peer (due to ID=0) from PeerListResponse: ", stdlog);
+               ST_CLASS(peerListNodePrint)(peerListNode, stdlog, ~0);
+               fputs("\n", stdlog);
+               LOG_END
             }
 
             peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
@@ -2787,7 +2805,7 @@ static void handleListResponse(struct Registrar*       registrar,
    else {
       LOG_ACTION
       fprintf(stdlog, "Rejected PeerListResponse from peer $%08x\n",
-            message->SenderID);
+              message->SenderID);
       LOG_END
    }
 }

@@ -23,4 +23,4 @@
  */
 
 #include "leaflinkedredblacktree.h"
-#include "redblacktree.c"
+#include "redblacktree-impl.h"

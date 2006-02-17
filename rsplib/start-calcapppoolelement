@@ -17,7 +17,7 @@ if [ ! -e "$REGISTRARS_FILE" ]; then
    echo "ERROR: No registrars file \"$REGISTRARS_FILE\" found!"
    exit 1
 fi
-OPT_REGISTRARS=`cat $REGISTRARS_FILE | xargs -i§ -n1 echo -n '-registrar=§ '`
+OPT_REGISTRARS=`cat $REGISTRARS_FILE | xargs -i§ -n1 echo -n '-registrar=§:3863 '`
 
 
 
