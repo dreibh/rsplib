@@ -34,10 +34,22 @@ while [ ! x$1 = "x" ] ; do
    echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
    cat > /tmp/$DISTNAME-bin.tar.bz2 && \
    echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
-   if [ ! -e bin/ ] ; then mkdir bin ; fi && \
-   tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
-   rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
-   date >bin/LastUpdate && \
+   echo X-1 && \
+   if [ ! -e bin/ ] ; then mkdir bin/ ; fi && \
+   echo X0 && \
+   sudo tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+   echo X1a && \
+   sudo rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
+   echo X1b && \
+   sudo date >bin/LastUpdate && \
+   cd bin/ && \
+   echo X1 && \
+   sudo chown -R root:root . && \
+   echo X2 && \
+   sudo chown root:root $SUIDPRGS && \
+   echo X3 && \
+   sudo chmod +s $SUIDPRGS && \
+   cd .. && \
    echo \"\`date\`: $SERVER is ready!\"" &
 done
 

@@ -8,5 +8,6 @@ if [ x$SERVER = "x" ]; then
    echo "ERROR: No server name/IP given!"
    exit 1
 fi
+shift
 
-ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER
+ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $@

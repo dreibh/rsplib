@@ -13,3 +13,4 @@ DISTCONFOPT="--enable-csp"
 DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump"
 DISTSTRIP=0
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver fractalserver discardserver nameserver daytimeserver echoserver"
+SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump"

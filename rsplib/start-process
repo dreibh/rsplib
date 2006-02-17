@@ -35,7 +35,6 @@ while [ ! x$1 = "x" ] ; do
 
    ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
       cd ~/bin && \
-      ulimit -c unlimited && \
       echo \"`date`: Login on $SERVER!\" && \
       MD5_REMOTE=\"\`md5sum $DISTPRGS\`\" && \
       if [ $PROGCHK = 1 ] ; then \
