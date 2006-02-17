@@ -9,6 +9,6 @@ PLANETLAB_COMPILEHOST="localhost"
 
 DISTNAME="rsplib-1.9.0"
 DISTDIRNAME="rsplib"
-DISTCONFOPT="--enable-csp"
+DISTCONFOPT="--enable-csp --enable-sctp-over-udp"
 DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump"
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver fractalserver discardserver nameserver daytimeserver echoserver"

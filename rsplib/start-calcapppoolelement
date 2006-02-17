@@ -1,0 +1,28 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+if [ $# -lt 3 ]; then
+   echo "Usage: start-calcapppoolelement [Registrars File] [Options] [Server 1] {Server 2} ..."
+   exit 1
+fi
+
+
+REGISTRARS_FILE=$1
+OPT_OTHER=$2
+shift
+shift
+
+if [ ! -e "$REGISTRARS_FILE" ]; then
+   echo "ERROR: No registrars file \"$REGISTRARS_FILE\" found!"
+   exit 1
+fi
+OPT_REGISTRARS=`cat $REGISTRARS_FILE | xargs -i§ -n1 echo -n '-registrar=§ '`
+
+
+
+PROCNAME="calcapppoolelement"
+PROGCALL="sudo ~/bin/calcapppoolelement $OPT_REGISTRARS $OPT_OTHER"
+PROGCHK=0
+
+. ./start-process $@

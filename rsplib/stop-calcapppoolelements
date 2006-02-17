@@ -1,0 +1,5 @@
+#!/bin/bash
+
+PROCNAME="calcapppoolelement"
+
+. ./stop-processes

@@ -81,22 +81,23 @@ void setLogColor(const unsigned int color);
 #define logerror(text) fprintf(stdlog,"%s: %s\n", text, strerror(errno))
 
 
-#define LOG_BEGIN(prefix,c1,c2)              \
-   {                                         \
-      loggingMutexLock();                    \
-      setLogColor(c1);                       \
-      printTimeStamp(stdlog);                \
-      setLogColor(c2);                       \
-      fprintf(stdlog,"P%u.%x %s:%u %s()\n",  \
-              (unsigned int)getpid(),        \
-              (unsigned int)pthread_self(),  \
-              __FILE__,                      \
-              __LINE__,                      \
-              __FUNCTION__                   \
-              );                             \
-      setLogColor(c1);                       \
-      printTimeStamp(stdlog);                \
-      setLogColor(c2);                       \
+#define LOG_BEGIN(prefix,c1,c2)                \
+   {                                           \
+      loggingMutexLock();                      \
+      setLogColor(c1);                         \
+      printTimeStamp(stdlog);                  \
+      setLogColor(c2);                         \
+      fprintf(stdlog,"P%u.%x@%s %s:%u %s()\n", \
+              (unsigned int)getpid(),          \
+              (unsigned int)pthread_self(),    \
+              getHostName(),                   \
+              __FILE__,                        \
+              __LINE__,                        \
+              __FUNCTION__                     \
+              );                               \
+      setLogColor(c1);                         \
+      printTimeStamp(stdlog);                  \
+      setLogColor(c2);                         \
       fputs(prefix,stdlog);
 
 #define LOG_END             \
@@ -203,6 +204,11 @@ void loggingMutexLock();
   * Release mutex for debug output.
   */
 void loggingMutexUnlock();
+
+/**
+  * Obtain host name.
+  */
+const char* getHostName();
 
 
 #ifdef __cplusplus

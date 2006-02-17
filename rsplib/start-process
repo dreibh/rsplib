@@ -3,6 +3,12 @@
 . ./planetlab-config
 
 
+if [ $# -lt 1 ]; then
+   echo "Usage: start-process [Server 1] {Server 2} ..."
+   exit 1
+fi
+
+
 SERVER=$1
 if [ x$SERVER = "x" ]; then
    echo "ERROR: No server name/IP given!"
@@ -39,6 +45,7 @@ while [ ! x$1 = "x" ] ; do
             exit 1 ; \
          fi \
       fi && \
+      echo \"$SERVER> $PROGCALL\" && \
       $PROGCALL" &
    echo $! >$PIDFILE
 done

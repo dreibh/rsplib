@@ -2,11 +2,6 @@
 
 . ./planetlab-config
 
-PROCNAME="responder"
-PROGNAME="perftool"
-PROGARGS="-sctp -$PROCNAME=4711 -quiet"
-
-
 PIDFILES=`ls $PROCNAME-*.pid`
 
 for PIDFILE in $PIDFILES; do

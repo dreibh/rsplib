@@ -41,21 +41,24 @@
 #include "threadsafety.h"
 #include "stringutilities.h"
 
+#include <sys/utsname.h>
+
 
 #ifdef HAVE_STDERR_FILEPTR
 /* stderr is of type FILE* */
 FILE** gStdLog = &stderr;
 #else
 /* stderr is a macro returning standard error FILE* */
-static FILE* _stderr = stderr;
-FILE**       gStdLog = &_stderr;
+static FILE* _stderr  = stderr;
+FILE**        gStdLog = &_stderr;
 #endif
 
 
-unsigned int        gLogLevel    = LOGLEVEL_ERROR;
-static bool         gColorMode   = true;
-static bool         gCloseStdLog = false;
-struct ThreadSafety gLogMutex;
+unsigned int          gLogLevel    = LOGLEVEL_ERROR;
+static bool           gColorMode   = true;
+static bool           gCloseStdLog = false;
+struct ThreadSafety   gLogMutex;
+static char           gHostName[128];
 
 
 /* ###### Set ASCII color ################################################ */
@@ -122,9 +125,18 @@ bool initLogging(const char* parameter)
 /* ###### Begin logging ################################################## */
 void beginLogging()
 {
+   struct utsname hostInfo;
+
    threadSafetyNew(&gLogMutex, "_LogPrinter_");
    if((gCloseStdLog) && (ftell(*gStdLog) > 0)) {
       fputs("\n#########################################################################################\n\n",*gStdLog);
+   }
+   if(uname(&hostInfo) != 0) {
+      strcpy((char*)&gHostName, "?");
+   }
+   else {
+      snprintf((char*)&gHostName, sizeof(gHostName), "%s",
+               hostInfo.nodename);
    }
    LOG_NOTE
    fprintf(stdlog,"Logging started, log level is %d.\n",gLogLevel);
@@ -158,4 +170,11 @@ void loggingMutexLock()
 void loggingMutexUnlock()
 {
    threadSafetyUnlock(&gLogMutex);
+}
+
+
+/* ###### Get host info string ########################################### */
+const char* getHostName()
+{
+   return((const char*)gHostName);
 }
