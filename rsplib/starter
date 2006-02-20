@@ -1,0 +1,4 @@
+#!/bin/bash
+ulimit -c unlimited
+echo "Core Dump limit: `ulimit -c`"
+$@

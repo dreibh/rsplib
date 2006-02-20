@@ -20,7 +20,7 @@ for prg in $DISTPRGS ; do
       exit 1
    fi
 done
-cp -f $DISTMISC bin/
+cp -f starter $DISTMISC bin/
 tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2
 
 
@@ -34,21 +34,20 @@ while [ ! x$1 = "x" ] ; do
    echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
    cat > /tmp/$DISTNAME-bin.tar.bz2 && \
    echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
-   echo X-1 && \
-   if [ ! -e bin/ ] ; then mkdir bin/ ; fi && \
-   echo X0 && \
-   sudo tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
-   echo X1a && \
-   sudo rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
-   echo X1b && \
-   sudo date >bin/LastUpdate && \
+   if [ ! -e bin/ ] ; then \
+      echo \"\`date\`: Creating new bin/ directory on $SERVER ...\" &&
+      mkdir bin/ ; \
+   else \
+      cd bin/ && \
+      rm -f $DISTPRGS $DISTMISC && \
+      cd .. ; \
+   fi && \
+   tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+   rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
    cd bin/ && \
-   echo X1 && \
-   sudo chown -R root:root . && \
-   echo X2 && \
-   sudo chown root:root $SUIDPRGS && \
-   echo X3 && \
-   sudo chmod +s $SUIDPRGS && \
+   date >LastUpdate && \
+   sudo /bin/chown root:root starter $SUIDPRGS && \
+   sudo /bin/chmod +s starter $SUIDPRGS && \
    cd .. && \
    echo \"\`date\`: $SERVER is ready!\"" &
 done

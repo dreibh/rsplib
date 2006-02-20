@@ -22,7 +22,7 @@ OPT_REGISTRARS=`cat $REGISTRARS_FILE | xargs -i§ -n1 echo -n '-peer=§:3864 '`
 
 
 PROCNAME="registrar"
-PROGCALL="./registrar $OPT_REGISTRARS $OPT_OTHER"
+PROGCALL="sudo ./starter ./registrar $OPT_REGISTRARS $OPT_OTHER"
 PROGCHK=0
 
 . ./start-process $@
