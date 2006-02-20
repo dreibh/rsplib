@@ -693,12 +693,12 @@ void registrarDelete(struct Registrar* registrar)
    if(registrar) {
       fdCallbackDelete(&registrar->ENRPUnicastSocketFDCallback);
       fdCallbackDelete(&registrar->ASAPSocketFDCallback);
-      ST_CLASS(peerListManagementClear)(&registrar->Peers);
       ST_CLASS(peerListManagementDelete)(&registrar->Peers);
-      ST_CLASS(poolHandlespaceManagementClear)(&registrar->Handlespace);
       ST_CLASS(poolHandlespaceManagementDelete)(&registrar->Handlespace);
 #ifdef ENABLE_CSP
-      cspReporterDelete(&registrar->CSPReporter);
+      if(registrar->CSPReportInterval > 0) {
+         cspReporterDelete(&registrar->CSPReporter);
+      }
 #endif
       timerDelete(&registrar->TakeoverExpiryTimer);
       timerDelete(&registrar->ASAPAnnounceTimer);
@@ -2705,7 +2705,7 @@ static void handleListRequest(struct Registrar*       registrar,
       response->SenderID   = registrar->ServerID;
       response->ReceiverID = message->SenderID;
 
-      response->PeerListPtr           = &registrar->Peers.List;
+      response->PeerListPtr           = &registrar->Peers;
       response->PeerListPtrAutoDelete = false;
 
       LOG_VERBOSE
@@ -2750,7 +2750,7 @@ static void handleListResponse(struct Registrar*       registrar,
    if(!(message->Flags & EHF_LIST_RESPONSE_REJECT)) {
       if(message->PeerListPtr) {
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                           message->PeerListPtr);
+                           &message->PeerListPtr->List);
          while(peerListNode) {
 
             if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
@@ -2788,7 +2788,7 @@ static void handleListResponse(struct Registrar*       registrar,
             }
 
             peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
-                              message->PeerListPtr, peerListNode);
+                              &message->PeerListPtr->List, peerListNode);
          }
       }
 

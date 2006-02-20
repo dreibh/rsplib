@@ -1,0 +1,44 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   echo "ERROR: No server name/IP given!"
+   exit 1
+fi
+
+
+
+if [ ! -e coredumps/ ]; then
+   mkdir coredumps/
+fi
+cd coredumps/
+
+
+SERVER_LIST=""
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   SERVER_LIST="$SERVER_LIST $SERVER"
+   shift
+
+   echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
+
+   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+      cd bin && \
+      sudo tar czf - core.*" >$SERVER.tar.gz >/dev/null 2>&1 &
+done
+
+wait
+
+echo "Servers: $SERVER_LIST"
+for s in $SERVER_LIST ; do
+echo "s=$s ..."
+   if [ ! -e $s ] ; then
+      mkdir $s
+   fi
+   cd $s
+   tar xzvf ../$s.tar.gz
+   cd ..
+done

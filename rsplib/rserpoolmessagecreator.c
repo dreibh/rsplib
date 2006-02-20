@@ -1004,7 +1004,7 @@ static bool createListResponseMessage(struct RSerPoolMessage* message)
    sp->sp_receiver_id = htonl(message->ReceiverID);
 
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                     message->PeerListPtr);
+                     &message->PeerListPtr->List);
    while(peerListNode != NULL) {
       /* The draft does not say what to do when the amount of peers exceeds the
          message size -> We fill as much entries as possible and reply this
@@ -1015,7 +1015,7 @@ static bool createListResponseMessage(struct RSerPoolMessage* message)
          break;
       }
       peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
-                        message->PeerListPtr,
+                        &message->PeerListPtr->List,
                         peerListNode);
    }
 

@@ -20,7 +20,7 @@ for prg in $DISTPRGS ; do
       exit 1
    fi
 done
-cp -f starter $DISTMISC bin/
+cp -f $DISTMISC bin/
 tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2
 
 
@@ -45,9 +45,10 @@ while [ ! x$1 = "x" ] ; do
    tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
    rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
    cd bin/ && \
+   sudo rm -f core.* && \
+   sudo /bin/chown root:root $SUIDPRGS && \
+   sudo /bin/chmod +s $SUIDPRGS && \
    date >LastUpdate && \
-   sudo /bin/chown root:root starter $SUIDPRGS && \
-   sudo /bin/chmod +s starter $SUIDPRGS && \
    cd .. && \
    echo \"\`date\`: $SERVER is ready!\"" &
 done

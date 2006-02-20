@@ -1510,6 +1510,7 @@ static bool scanListResponseMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
    struct ST_CLASS(PeerListNode)*   peerListNode;
+   struct ST_CLASS(PeerListNode)*   newPeerListNode;
    unsigned int                     errorCode;
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
@@ -1528,17 +1529,27 @@ static bool scanListResponseMessage(struct RSerPoolMessage* message)
          }
 
          if(message->PeerListPtr == NULL) {
-            message->PeerListPtr = (struct ST_CLASS(PeerList)*)malloc(sizeof(struct ST_CLASS(PeerList)));
+            message->PeerListPtr = (struct ST_CLASS(PeerListManagement)*)malloc(sizeof(struct ST_CLASS(PeerListManagement)));
             if(message->PeerListPtr == NULL) {
                message->Error = RSPERR_OUT_OF_MEMORY;
                free(peerListNode);
                return(false);
             }
-            ST_CLASS(peerListNew)(message->PeerListPtr, 0);
+            ST_CLASS(peerListManagementNew)(message->PeerListPtr, 0, 0, NULL, NULL);
          }
-         ST_CLASS(peerListAddPeerListNode)(message->PeerListPtr,
-                                           peerListNode,
-                                           &errorCode);
+
+         peerListNode->Flags |= PLNF_FROM_PEER;
+         if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+            peerListNode->Flags |= PLNF_DYNAMIC;
+         }
+
+         errorCode = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                        message->PeerListPtr,
+                        peerListNode->Identifier,
+                        peerListNode->Flags,
+                        peerListNode->AddressBlock,
+                        0,
+                        &newPeerListNode);
          if(errorCode != RSPERR_OKAY) {
             LOG_WARNING
             fputs("ListResponse contains bad peer ", stdlog);
@@ -1547,10 +1558,13 @@ static bool scanListResponseMessage(struct RSerPoolMessage* message)
             rserpoolErrorPrint(errorCode, stdlog);
             fputs("\n", stdlog);
             LOG_END
+            ST_CLASS(peerListNodeDelete)(peerListNode);
             free(peerListNode);
             message->Error = (uint16_t)errorCode;
             return(false);
          }
+         ST_CLASS(peerListNodeDelete)(peerListNode);
+         free(peerListNode);
       }
    }
 

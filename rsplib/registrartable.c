@@ -466,7 +466,6 @@ void registrarTableDelete(struct RegistrarTable* registrarTable)
          registrarTable->AnnounceSocket = -1;
       }
       simpleRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
-      ST_CLASS(peerListManagementClear)(&registrarTable->RegistrarList);
       ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
       free(registrarTable);
    }

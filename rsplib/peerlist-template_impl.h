@@ -366,8 +366,9 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
    result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                               &peerListNode->PeerListIndexStorageNode);
    if(result == &peerListNode->PeerListIndexStorageNode) {
-      CHECK(ST_METHOD(Insert)(&peerList->PeerListAddressStorage,
-                              &peerListNode->PeerListAddressStorageNode) == &peerListNode->PeerListAddressStorageNode);
+      result =  ST_METHOD(Insert)(&peerList->PeerListAddressStorage,
+                                  &peerListNode->PeerListAddressStorageNode);
+      CHECK(result == &peerListNode->PeerListAddressStorageNode);
       peerListNode->OwnerPeerList = peerList;
       *errorCode = RSPERR_OKAY;
       return(peerListNode);

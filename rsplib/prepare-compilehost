@@ -1,0 +1,25 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   echo "ERROR: No server name/IP given!"
+   exit 1
+fi
+
+
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   shift
+
+   echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
+
+   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   echo \"\`date\`: Installing packages on $SERVER ...\" && \
+   echo \"$PLANETLAB_COMPILEPKGS\" | xargs -n1 sudo yum -y install && \
+   echo \"\`date\`: $SERVER is ready!\"" &
+done
+
+wait

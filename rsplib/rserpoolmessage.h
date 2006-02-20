@@ -369,7 +369,7 @@ struct RSerPoolMessage
 
    struct ST_CLASS(PeerListNode)*              PeerListNodePtr;
    bool                                        PeerListNodePtrAutoDelete;
-   struct ST_CLASS(PeerList)*                  PeerListPtr;
+   struct ST_CLASS(PeerListManagement)*        PeerListPtr;
    bool                                        PeerListPtrAutoDelete;
 
    struct ST_CLASS(PoolHandlespaceManagement)* HandlespacePtr;

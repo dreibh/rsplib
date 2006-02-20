@@ -92,13 +92,12 @@ void rserpoolMessageDelete(struct RSerPoolMessage* message)
 /* ###### Clear RSerPoolMessage ########################################## */
 void rserpoolMessageClearAll(struct RSerPoolMessage* message)
 {
-   struct TransportAddressBlock*  transportAddressBlock;
-   struct TransportAddressBlock*  nextTransportAddressBlock;
-   struct ST_CLASS(PeerListNode)* peerListNode;
-   char*                          buffer;
-   size_t                         originalBufferSize;
-   bool                           bufferAutoDelete;
-   size_t                         i;
+   struct TransportAddressBlock* transportAddressBlock;
+   struct TransportAddressBlock* nextTransportAddressBlock;
+   char*                         buffer;
+   size_t                        originalBufferSize;
+   bool                          bufferAutoDelete;
+   size_t                        i;
 
    if(message != NULL) {
       if((message->PoolElementPtr) && (message->PoolElementPtrAutoDelete)) {
@@ -157,23 +156,10 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          message->PeerListNodePtr = NULL;
       }
       if((message->PeerListPtrAutoDelete) && (message->PeerListPtr)) {
-         peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                           message->PeerListPtr);
-         while(peerListNode != NULL) {
-            ST_CLASS(peerListRemovePeerListNode)(message->PeerListPtr, peerListNode);
-            ST_CLASS(peerListNodeDelete)(peerListNode);
-            transportAddressBlockDelete(peerListNode->AddressBlock);
-            free(peerListNode->AddressBlock);
-            peerListNode->AddressBlock = NULL;
-            free(peerListNode);
-            peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                              message->PeerListPtr);
-         }
-         free(message->PeerListPtr);
+         ST_CLASS(peerListManagementDelete)(message->PeerListPtr);
          message->PeerListPtr = NULL;
       }
       if((message->HandlespacePtrAutoDelete) && (message->HandlespacePtr)) {
-         ST_CLASS(poolHandlespaceManagementClear)(message->HandlespacePtr);
          ST_CLASS(poolHandlespaceManagementDelete)(message->HandlespacePtr);
          free(message->HandlespacePtr);
          message->HandlespacePtr = NULL;

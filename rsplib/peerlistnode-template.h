@@ -37,7 +37,8 @@ struct ST_CLASS(PeerList);
 
 #define PLNF_STATIC    0
 #define PLNF_DYNAMIC   (1 << 0)
-#define PLNF_MULTICAST (1 << 1)
+#define PLNF_FROM_PEER (1 << 1)
+#define PLNF_MULTICAST (1 << 2)
 
 #define PLNT_MAX_TIME_LAST_HEARD    3000
 #define PLNT_MAX_TIME_NO_RESPONSE   3001

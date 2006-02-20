@@ -206,9 +206,7 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
          fdCallbackDelete(&asapInstance->RegistrarHuntFDCallback);
          ext_close(asapInstance->RegistrarHuntSocket);
       }
-      ST_CLASS(poolHandlespaceManagementClear)(&asapInstance->OwnPoolElements);
       ST_CLASS(poolHandlespaceManagementDelete)(&asapInstance->OwnPoolElements);
-      ST_CLASS(poolHandlespaceManagementClear)(&asapInstance->Cache);
       ST_CLASS(poolHandlespaceManagementDelete)(&asapInstance->Cache);
       if(asapInstance->RegistrarSet) {
          registrarTableDelete(asapInstance->RegistrarSet);

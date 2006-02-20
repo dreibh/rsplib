@@ -231,6 +231,9 @@ void ST_CLASS(peerListNodeGetDescription)(
    else {
       safestrcat(buffer, "dynamic", bufferSize);
    }
+   if(peerListNode->Flags & PLNF_FROM_PEER) {
+      safestrcat(buffer, "+fromPeer", bufferSize);
+   }
    if(peerListNode->Flags & PLNF_MULTICAST) {
       safestrcat(buffer, "+multicast", bufferSize);
    }
