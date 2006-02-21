@@ -16,10 +16,20 @@ while [ ! x$1 = "x" ] ; do
 
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
-   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
-   echo \"\`date\`: Installing packages on $SERVER ...\" && \
-   echo \"$PLANETLAB_COMPILEPKGS\" | xargs -n1 sudo yum -y install && \
-   echo \"\`date\`: $SERVER is ready!\"" &
+   cmd="echo \"\`date\`: Installing packages on $SERVER ...\""
+   first=0
+   for i in $PLANETLAB_COMPILEPKGS ; do
+      if [ $first -eq 0 ] ; then
+         cmd="$cmd ; echo sudo yum -y install $i"
+      else
+         cmd="$cmd ; echo sudo yum -y -C install $i"
+      fi
+      first=1
+   done
+   cmd="$cmd ; echo \"\`date\`: $SERVER is ready!\""
+   #echo $cmd
+
+   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
 done
 
 wait

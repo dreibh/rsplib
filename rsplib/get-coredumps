@@ -1,4 +1,26 @@
 #!/bin/bash
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+#
+# $Id$
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+# Contact: dreibh@iem.uni-due.de
+#
 
 . ./planetlab-config
 
@@ -25,20 +47,15 @@ while [ ! x$1 = "x" ] ; do
 
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
+   (
    ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+      echo \"\`date\`: Packaging coredumps on $SERVER ...\" &&
       cd bin && \
-      sudo tar czf - core.*" >$SERVER.tar.gz >/dev/null 2>&1 &
+      ls  LastUpdate core.* | xargs sudo tar cjf coredumps-$SERVER.tar.bz2"
+   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/coredumps-$SERVER.tar.bz2 .
+   echo "Unpacking coredumps-$SERVER.tar.bz2 ..."
+   tar xjf coredumps-$SERVER.tar.bz2
+   ) &
 done
 
 wait
-
-echo "Servers: $SERVER_LIST"
-for s in $SERVER_LIST ; do
-echo "s=$s ..."
-   if [ ! -e $s ] ; then
-      mkdir $s
-   fi
-   cd $s
-   tar xzvf ../$s.tar.gz
-   cd ..
-done
