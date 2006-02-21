@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "loglevel.h"
+
 
 /*
 #define DEBUG
@@ -39,7 +41,7 @@
 
 
 #ifndef CHECK
-#define CHECK(cond) if(!(cond)) { fprintf(stderr, "INTERNAL ERROR in %s, line %u: condition %s is not satisfied!\n", __FILE__, __LINE__, #cond); abort(); }
+#define CHECK(cond) if(!(cond)) { fprintf(stderr, "INTERNAL ERROR in %s@%s, line %u: condition %s is not satisfied!\n", __FILE__, getHostName(), __LINE__, #cond); abort(); }
 #endif
 
 

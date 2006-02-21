@@ -996,6 +996,12 @@ static size_t RB_FUNCTION(RedBlackTreeInternalVerify)(
          CHECK(rbt->ComparisonFunction(node, node->LeftSubtree) > 0);
       }
       if(node->RightSubtree != &rbt->NullNode) {
+if(rbt->ComparisonFunction(node, node->RightSubtree)>=0){
+      printf("SCHEISSE!\n");
+      RB_FUNCTION(RedBlackTreePrintNode)(rbt, node, stdout);
+      puts("");
+}
+
          CHECK(rbt->ComparisonFunction(node, node->RightSubtree) < 0);
       }
 

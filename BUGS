@@ -1,11 +1,59 @@
-- Deregistration:
-The deregistration of a non-existing Pool Element fails: The
-nameserver closes the connection and prints an error.
-Reason: The current ASAP standard does not allow to return
-a DEREGISTRATION_RESPONSE message, since this would require
-the "Pool Element Parameter" of the non-existing pool element.
-This requires update of the ASAP draft.
+-----A-----
+PeerList of $08cc2115 (9 peers)
+ +-- Peers by Index:
+   - idx:#0001: $00000000 upd=1140530489171937 chsum=$0000ffff flags=static
+        addrs: {128.4.36.11} 3864/SCTP
+   - idx:#0002: $00000000 upd=1140530487646869 chsum=$0000ffff flags=static
+        addrs: {130.194.64.162} 3864/SCTP
+   - idx:#0003: $00000000 upd=1140530487646738 chsum=$0000ffff flags=static
+        addrs: {132.65.240.104} 3864/SCTP
+   - idx:#0004: $00000000 upd=1140530488697838 chsum=$0000ffff flags=static
+        addrs: {132.187.230.1} 3864/SCTP
+   - idx:#0005: $00000000 upd=1140530488931846 chsum=$0000ffff flags=static
+        addrs: {169.229.50.3} 3864/SCTP
+   - idx:#0006: $53085dcc upd=1140530529077521 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.193, 10.40.11.1} 3864/SCTP
+   - idx:#0007: $5a500dbb upd=1140530528083775 chsum=$0000ffff flags=dynamic
+        addrs: {132.187.230.1, 10.39.121.1} 3864/SCTP
+   - idx:#0008: $ddc3f834 upd=1140530526675034 chsum=$0000ffff flags=dynamic
+        addrs: {128.4.36.11, 10.40.15.1} 3864/SCTP
+   - idx:#0009: $e36033be upd=1140530526706772 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.194, 10.40.12.1} 3864/SCTP
+ +-- Peers by Address:
+   - idx:#0001: $00000000 upd=1140530489171937 chsum=$0000ffff flags=static
+        addrs: {128.4.36.11} 3864/SCTP
+   - idx:#0002: $00000000 upd=1140530487646869 chsum=$0000ffff flags=static
+        addrs: {130.194.64.162} 3864/SCTP
+   - idx:#0003: $00000000 upd=1140530487646738 chsum=$0000ffff flags=static
+        addrs: {132.65.240.104} 3864/SCTP
+   - idx:#0004: $00000000 upd=1140530488697838 chsum=$0000ffff flags=static
+        addrs: {132.187.230.1} 3864/SCTP
+   - idx:#0005: $53085dcc upd=1140530529077521 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.193, 10.40.11.1} 3864/SCTP
+   - idx:#0006: $00000000 upd=1140530488931846 chsum=$0000ffff flags=static
+        addrs: {169.229.50.3} 3864/SCTP
+   - idx:#0007: $ddc3f834 upd=1140530526675034 chsum=$0000ffff flags=dynamic
+        addrs: {128.4.36.11, 10.40.15.1} 3864/SCTP
+   - idx:#0008: $5a500dbb upd=1140530528083775 chsum=$0000ffff flags=dynamic
+        addrs: {132.187.230.1, 10.39.121.1} 3864/SCTP
+   - idx:#0009: $e36033be upd=1140530526706772 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.194, 10.40.12.1} 3864/SCTP                              ******** mit 10er-Addresse!
+ +-- Peers by Timer:
+   - idx:#0001: $ddc3f834 upd=1140530526675034 chsum=$0000ffff flags=dynamic
+        addrs: {128.4.36.11, 10.40.15.1} 3864/SCTP
+   - idx:#0002: $e36033be upd=1140530526706772 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.194, 10.40.12.1} 3864/SCTP
+   - idx:#0003: $5a500dbb upd=1140530528083775 chsum=$0000ffff flags=dynamic
+        addrs: {132.187.230.1, 10.39.121.1} 3864/SCTP
+   - idx:#0004: $53085dcc upd=1140530529077521 chsum=$0000ffff flags=dynamic
+        addrs: {132.252.152.193, 10.40.11.1} 3864/SCTP
+-----B-----
+$e36033be upd=1140530489530612 chsum=$0000ffff flags=static    ******** ohne 10er-Addresse!
+        addrs: {132.252.152.194} 3864/SCTP-----------
+21-Feb-2006 09:02:09.1306: P25741.b7f50080@planet-lab-1.csse.monash.edu.au registrar.c:2198 handlePeerPresence()
+21-Feb-2006 09:02:09.1307: Got PeerPresence from peer $e36033be at address {127.0.0.1, 132.252.152.194, 10.40.12.1} 3864/SCTP
+INTERNAL ERROR in peerlist-template_impl.h@planet-lab-1.csse.monash.edu.au, line 415: condition result == &peerListNode->PeerListIndexStorageNode is not satisfied!
 
-- Well-known port for nameserver is assumed to be 9999 for now.
-You must use this port number for the nameserver if you want to
-use multicast Server Hunt.
+
+Problem: Bei Index-Seit wird Überlappung nicht erkannt -> beim Address-Set geht Einfügen schief (da Überlappung -> Update)!
+ Update im Index-Set wäre notwendig gewesen.

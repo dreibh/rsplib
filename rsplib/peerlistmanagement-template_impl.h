@@ -295,6 +295,15 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                                 peerListNode->AddressBlock);
       ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, peerListNode,
                                            &updatedPeerListNode, &errorCode);
+if(errorCode != RSPERR_OKAY) {
+puts("-----D-----");
+ST_CLASS(peerListPrint)(&peerListManagement->List,stdout,~0);
+puts("-----E-----");
+ST_CLASS(peerListNodePrint)(peerListNode,stdout,~0);
+puts("-----E2-----");
+ST_CLASS(peerListNodePrint)(&updatedPeerListNode,stdout,~0);
+puts("-----------");
+}
       CHECK(errorCode == RSPERR_OKAY);
    }
    else {

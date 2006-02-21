@@ -2195,7 +2195,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
       return;
    }
 
-   LOG_VERBOSE1
+   LOG_ACTION
    fprintf(stdlog, "Got PeerPresence from peer $%08x",
            message->PeerListNodePtr->Identifier);
    if(message->PeerListNodePtr) {
@@ -2752,7 +2752,11 @@ static void handleListResponse(struct Registrar*       registrar,
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                            &message->PeerListPtr->List);
          while(peerListNode) {
-
+            LOG_ACTION
+            fputs("Trying to add peer ", stdlog);
+            ST_CLASS(peerListNodePrint)(peerListNode, stdlog, ~0);
+            fputs(" to peer list\n", stdlog);
+            LOG_END
             if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
                result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                            &registrar->Peers,
@@ -2772,11 +2776,11 @@ static void handleListResponse(struct Registrar*       registrar,
 
                   /* ====== New peer -> Send Peer Presence =============== */
                   sendPeerPresence(registrar,
-                                 registrar->ENRPUnicastSocket, 0, 0,
-                                 newPeerListNode->AddressBlock->AddressArray,
-                                 newPeerListNode->AddressBlock->Addresses,
-                                 newPeerListNode->Identifier,
-                                 false);
+                                   registrar->ENRPUnicastSocket, 0, 0,
+                                   newPeerListNode->AddressBlock->AddressArray,
+                                   newPeerListNode->AddressBlock->Addresses,
+                                   newPeerListNode->Identifier,
+                                   false);
                }
             }
             else {

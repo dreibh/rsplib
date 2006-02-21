@@ -20,9 +20,9 @@ while [ ! x$1 = "x" ] ; do
    first=0
    for i in $PLANETLAB_COMPILEPKGS ; do
       if [ $first -eq 0 ] ; then
-         cmd="$cmd ; echo sudo yum -y install $i"
+         cmd="$cmd ; sudo yum -y install $i"
       else
-         cmd="$cmd ; echo sudo yum -y -C install $i"
+         cmd="$cmd ; sudo yum -y -C install $i"
       fi
       first=1
    done

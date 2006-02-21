@@ -13,9 +13,9 @@ SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testre
 
 
 
-PLANETLAB_KEY=~/.ssh/lupo
-PLANETLAB_USER=dreibh
-PLANETLAB_COMPILEHOST="localhost"
+#PLANETLAB_KEY=~/.ssh/lupo
+#PLANETLAB_USER=dreibh
+#PLANETLAB_COMPILEHOST="localhost"
 
 #DISTPRGS="fork"
 #DISTSTRIP=1

@@ -386,6 +386,7 @@ void ST_CLASS(peerListUpdatePeerListNode)(
         unsigned int*                        errorCode)
 {
    struct STN_CLASSNAME* result;
+uint32_t oldID;
 
    *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
    if(*errorCode == RSPERR_OKAY) {
@@ -394,6 +395,10 @@ void ST_CLASS(peerListUpdatePeerListNode)(
          CHECK((peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
                (source->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER));
 
+puts("----- * A0 * -----");
+ST_CLASS(peerListPrint)(peerList,stdout,~0);
+puts("+++");
+
          result = ST_METHOD(Remove)(&peerList->PeerListIndexStorage,
                                     &peerListNode->PeerListIndexStorageNode);
          CHECK(result == &peerListNode->PeerListIndexStorageNode);
@@ -401,10 +406,21 @@ void ST_CLASS(peerListUpdatePeerListNode)(
                                     &peerListNode->PeerListAddressStorageNode);
          CHECK(result == &peerListNode->PeerListAddressStorageNode);
 
+oldID=peerListNode->Identifier;
          peerListNode->Identifier = source->Identifier;
 
          result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                                     &peerListNode->PeerListIndexStorageNode);
+if(result != &peerListNode->PeerListIndexStorageNode) {
+puts("-----A-----");
+ST_CLASS(peerListPrint)(peerList,stdout,~0);
+puts("-----B-----");
+ST_CLASS(peerListNodePrint)(peerListNode,stdout,~0);
+printf("\nOLD-ID=%x\n",oldID);
+puts("---src---");
+ST_CLASS(peerListNodePrint)(source,stdout,~0);
+puts("-----------");
+}
          CHECK(result == &peerListNode->PeerListIndexStorageNode);
          result = ST_METHOD(Insert)(&peerList->PeerListAddressStorage,
                                     &peerListNode->PeerListAddressStorageNode);

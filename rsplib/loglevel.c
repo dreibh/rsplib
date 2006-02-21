@@ -54,11 +54,11 @@ FILE**        gStdLog = &_stderr;
 #endif
 
 
-unsigned int          gLogLevel    = LOGLEVEL_ERROR;
-static bool           gColorMode   = true;
-static bool           gCloseStdLog = false;
+unsigned int          gLogLevel      = LOGLEVEL_ERROR;
+static bool           gColorMode     = true;
+static bool           gCloseStdLog   = false;
 struct ThreadSafety   gLogMutex;
-static char           gHostName[128];
+static char           gHostName[128] = { 0x00 };
 
 
 /* ###### Set ASCII color ################################################ */
