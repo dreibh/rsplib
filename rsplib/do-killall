@@ -3,7 +3,7 @@
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
-# $Id$
+# $Id: get-coredumps 951 2006-02-21 09:23:45Z dreibh $
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,50 +25,47 @@
 . ./planetlab-config
 
 
-if [ $# -lt 1 ]; then
-   echo "Usage: start-process [Server 1] {Server 2} ..."
-   exit 1
-fi
-
-
 SERVER=$1
 if [ x$SERVER = "x" ]; then
    echo "ERROR: No server name/IP given!"
    exit 1
 fi
 
-if [ $PROGCHK -ne 0 ] ; then
-   cd bin
-   MD5_LOCAL="`md5sum $DISTPRGS`"
-   cd ..
-fi
 
+
+if [ ! -e coredumps/ ]; then
+   mkdir coredumps/
+fi
+cd coredumps/
+
+
+SERVER_LIST=""
 while [ ! x$1 = "x" ] ; do
    SERVER=$1
+   SERVER_LIST="$SERVER_LIST $SERVER"
    shift
 
-   PIDFILE=$PROCNAME-$SERVER.pid
-
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-   if [ -e $PIDFILE ]; then
-      echo "ERROR: PID file $PIDFILE already exists!"
-      exit 1
-   fi
 
-   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
-      cd ~/bin && \
-      ulimit -c unlimited && \
-      echo \"`date`: Login on $SERVER!\" && \
-      if [ $PROGCHK -ne 0 ] ; then \
-         MD5_REMOTE=\"\`md5sum $DISTPRGS\`\" && \
-         if [ \"x$MD5_LOCAL\" != \"x\$MD5_REMOTE\" ] ; then \
-            echo \"ERROR: Different program versions!\" ; \
-            echo \"local:  $MD5_LOCAL\" ; \
-            echo \"remote: \$MD5_REMOTE\" ; \
-            exit 1 ; \
-         fi \
-      fi && \
-      echo \"$SERVER> $PROGCALL\" && \
-      $PROGCALL" &
-   echo $! >$PIDFILE
+   cmd=""
+   toBeKilled="$DISTPRGS $KILLALLMISC"
+   first=1
+   for i in $toBeKilled ; do
+      if [ $first -eq 0 ] ; then
+         cmd="$cmd ;"
+      fi
+      first=0
+      cmd="$cmd sudo killall $i 2>/dev/null >/dev/null"
+   done
+   cmd="$cmd ; ps"
+   # echo $cmd
+
+   (
+   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+      echo \"\`date\`: Executing killall on $SERVER ...\" && \
+      $cmd && \
+      echo \"\`date\`: $SERVER is ready!\""
+   ) &
 done
+
+wait

@@ -499,6 +499,12 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
+      else if(!(strncmp(argv[i], "-registrar=", 11))) {
+         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
+            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
+            exit(1);
+         }
+      }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
          exit(1);

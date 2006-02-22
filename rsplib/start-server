@@ -21,8 +21,8 @@ OPT_REGISTRARS=`cat $REGISTRARS_FILE | xargs -i§ -n1 echo -n '-registrar=§:3863 
 
 
 
-PROCNAME="calcapppoolelement"
-PROGCALL="sudo ~/bin/calcapppoolelement $OPT_CSP $OPT_REGISTRARS $OPT_OTHER"
+PROCNAME="server"
+PROGCALL="sudo ~/bin/server $OPT_CSP $OPT_REGISTRARS $OPT_OTHER"
 PROGCHK=0
 
 . ./start-process $@
