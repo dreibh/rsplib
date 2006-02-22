@@ -1,6 +1,8 @@
 /*
  * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004 by Thomas Dreibholz
+ * Copyright (C) 2004-2006 by Thomas Dreibholz
+ *
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,9 +56,10 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_TIMEOUT,                       "timeout" },
 
    /* Handlespace-management specific error causes */
-   { RSPERR_OUT_OF_MEMORY,                 "out of memory" },
+   { RSPERR_NO_RESOURCES,                  "no resources" },
    { RSPERR_NOT_FOUND,                     "object not found" },
    { RSPERR_INVALID_ID,                    "invalid ID" },
+   { RSPERR_OWN_ID,                        "own ID" },
    { RSPERR_DUPLICATE_ID,                  "duplicate ID" },
    { RSPERR_WRONG_PROTOCOL,                "wrong protocol" },
    { RSPERR_WRONG_CONTROLCHANNEL_HANDLING, "wrong control channel handling" },

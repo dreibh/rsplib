@@ -271,12 +271,14 @@ void ST_CLASS(peerListClear)(struct ST_CLASS(PeerList)* peerList,
 
 /* ###### Check, if node may be inserted into pool ####################### */
 unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
-                struct ST_CLASS(PeerList)*     peerList,
-                struct ST_CLASS(PeerListNode)* peerListNode)
+                const struct ST_CLASS(PeerList)*     peerList,
+                const struct ST_CLASS(PeerListNode)* peerListNode)
 {
+   /* It does not make sense to insert its one's own ID into the
+      peer list! */
    if((peerList->OwnIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) &&
       (peerListNode->Identifier == peerList->OwnIdentifier)) {
-      return(RSPERR_INVALID_ID);
+      return(RSPERR_OWN_ID);
    }
    return(RSPERR_OKAY);
 }
@@ -316,7 +318,7 @@ void ST_CLASS(peerListUpdatePeerListNode)(
 {
    struct STN_CLASSNAME* result;
 
-   *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
+   *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, source);
    if(*errorCode == RSPERR_OKAY) {
       /* Update ID */
       if(peerListNode->Identifier != source->Identifier) {

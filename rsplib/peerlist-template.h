@@ -98,6 +98,9 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
                                   struct ST_CLASS(PeerList)*        peerList,
                                   struct ST_CLASS(PeerListNode)* peerListNode);
+unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
+                const struct ST_CLASS(PeerList)*     peerList,
+                const struct ST_CLASS(PeerListNode)* peerListNode);
 void ST_CLASS(peerListGetDescription)(struct ST_CLASS(PeerList)* peerList,
                                       char*                      buffer,
                                       const size_t               bufferSize);

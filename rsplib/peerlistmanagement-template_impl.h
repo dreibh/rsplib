@@ -230,8 +230,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                       (*peerListNode)->AddressBlock);
             ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
                                                  &updatedPeerListNode, &errorCode);
-            CHECK(errorCode == RSPERR_OKAY);
-            return(RSPERR_OKAY);
+            return(errorCode);
          }
 
       }
@@ -244,8 +243,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                       (*peerListNode)->AddressBlock);
             ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
                                                  &updatedPeerListNode, &errorCode);
-            CHECK(errorCode == RSPERR_OKAY);
-            return(RSPERR_OKAY);
+            return(errorCode);
          }
       }
    }
