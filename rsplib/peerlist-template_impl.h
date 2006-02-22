@@ -30,9 +30,6 @@ void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)*    peerList,
    ST_METHOD(New)(&peerList->PeerListIndexStorage,
                   ST_CLASS(peerListIndexStorageNodePrint),
                   ST_CLASS(peerListIndexStorageNodeComparison));
-   ST_METHOD(New)(&peerList->PeerListAddressStorage,
-                  ST_CLASS(peerListAddressStorageNodePrint),
-                  ST_CLASS(peerListAddressStorageNodeComparison));
    ST_METHOD(New)(&peerList->PeerListTimerStorage,
                   ST_CLASS(peerListTimerStorageNodePrint),
                   ST_CLASS(peerListTimerStorageNodeComparison));
@@ -45,7 +42,6 @@ void ST_CLASS(peerListNew)(struct ST_CLASS(PeerList)*    peerList,
 void ST_CLASS(peerListDelete)(struct ST_CLASS(PeerList)* peerList)
 {
    ST_METHOD(Delete)(&peerList->PeerListIndexStorage);
-   ST_METHOD(Delete)(&peerList->PeerListAddressStorage);
    ST_METHOD(Delete)(&peerList->PeerListTimerStorage);
 
    peerList->OwnIdentifier = UNDEFINED_REGISTRAR_IDENTIFIER;
@@ -107,58 +103,6 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromIndexStor
                                                    &peerListNode->PeerListIndexStorageNode);
    if(node) {
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get first PeerListNode from Address ############################ */
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromAddressStorage)(
-                                  struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetFirst)(&peerList->PeerListAddressStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get last PeerListNode from Address ############################# */
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromAddressStorage)(
-                                  struct ST_CLASS(PeerList)* peerList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&peerList->PeerListAddressStorage);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(node));
-   }
-   return(NULL);
-};
-
-
-/* ###### Get next PeerListNode from Address ############################# */
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetNextPeerListNodeFromAddressStorage)(
-                                  struct ST_CLASS(PeerList)*     peerList,
-                                  struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&peerList->PeerListAddressStorage,
-                                                   &peerListNode->PeerListAddressStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PeerListNode from Address ######################### */
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetPrevPeerListNodeFromAddressStorage)(
-                                  struct ST_CLASS(PeerList)*     peerList,
-                                  struct ST_CLASS(PeerListNode)* peerListNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&peerList->PeerListAddressStorage,
-                                                   &peerListNode->PeerListAddressStorageNode);
-   if(node) {
-      return(ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(node));
    }
    return(NULL);
 }
@@ -295,18 +239,6 @@ void ST_CLASS(peerListPrint)(struct ST_CLASS(PeerList)* peerList,
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(peerList, peerListNode);
       }
    }
-   if(fields & PLPO_PEERS_ADDRESS) {
-      fputs(" +-- Peers by Address:\n", fd);
-      i = 1;
-      peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromAddressStorage)(peerList);
-      while(peerListNode != NULL) {
-         fprintf(fd, "   - idx:#%04u: ", i);
-         ST_CLASS(peerListNodePrint)(peerListNode, fd, fields);
-         fputs("\n", fd);
-         i++;
-         peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromAddressStorage)(peerList, peerListNode);
-      }
-   }
    if(fields & PLPO_PEERS_TIMER) {
       fputs(" +-- Peers by Timer:\n", fd);
       i = 1;
@@ -366,9 +298,6 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
    result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                               &peerListNode->PeerListIndexStorageNode);
    if(result == &peerListNode->PeerListIndexStorageNode) {
-      result =  ST_METHOD(Insert)(&peerList->PeerListAddressStorage,
-                                  &peerListNode->PeerListAddressStorageNode);
-      CHECK(result == &peerListNode->PeerListAddressStorageNode);
       peerListNode->OwnerPeerList = peerList;
       *errorCode = RSPERR_OKAY;
       return(peerListNode);
@@ -386,45 +315,20 @@ void ST_CLASS(peerListUpdatePeerListNode)(
         unsigned int*                        errorCode)
 {
    struct STN_CLASSNAME* result;
-uint32_t oldID;
 
    *errorCode = ST_CLASS(peerListCheckPeerListNodeCompatibility)(peerList, peerListNode);
    if(*errorCode == RSPERR_OKAY) {
-      /* Update ID: turn 0 -> ID or turn ID -> 0 */
+      /* Update ID */
       if(peerListNode->Identifier != source->Identifier) {
-         CHECK((peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
-               (source->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER));
-
-puts("----- * A0 * -----");
-ST_CLASS(peerListPrint)(peerList,stdout,~0);
-puts("+++");
-
          result = ST_METHOD(Remove)(&peerList->PeerListIndexStorage,
                                     &peerListNode->PeerListIndexStorageNode);
          CHECK(result == &peerListNode->PeerListIndexStorageNode);
-         result = ST_METHOD(Remove)(&peerList->PeerListAddressStorage,
-                                    &peerListNode->PeerListAddressStorageNode);
-         CHECK(result == &peerListNode->PeerListAddressStorageNode);
 
-oldID=peerListNode->Identifier;
          peerListNode->Identifier = source->Identifier;
 
          result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                                     &peerListNode->PeerListIndexStorageNode);
-if(result != &peerListNode->PeerListIndexStorageNode) {
-puts("-----A-----");
-ST_CLASS(peerListPrint)(peerList,stdout,~0);
-puts("-----B-----");
-ST_CLASS(peerListNodePrint)(peerListNode,stdout,~0);
-printf("\nOLD-ID=%x\n",oldID);
-puts("---src---");
-ST_CLASS(peerListNodePrint)(source,stdout,~0);
-puts("-----------");
-}
          CHECK(result == &peerListNode->PeerListIndexStorageNode);
-         result = ST_METHOD(Insert)(&peerList->PeerListAddressStorage,
-                                    &peerListNode->PeerListAddressStorageNode);
-         CHECK(result == &peerListNode->PeerListAddressStorageNode);
       }
       ST_CLASS(peerListNodeUpdate)(peerListNode, source);
    }
@@ -467,12 +371,13 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock)
 {
-   struct ST_CLASS(PeerListNode) cmpElement;
-   struct STN_CLASSNAME*         result;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   struct ST_CLASS(PeerListNode)  cmpElement;
+   struct STN_CLASSNAME*          result;
 
-   cmpElement.Identifier   = identifier;
-   cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
    if(identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+      cmpElement.Identifier   = identifier;
+      cmpElement.AddressBlock = (struct TransportAddressBlock*)transportAddressBlock;
       result = ST_METHOD(Find)(&peerList->PeerListIndexStorage,
                                &cmpElement.PeerListIndexStorageNode);
       if(result) {
@@ -480,10 +385,13 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
       }
    }
    else {
-      result = ST_METHOD(Find)(&peerList->PeerListAddressStorage,
-                               &cmpElement.PeerListAddressStorageNode);
-      if(result) {
-         return(ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(result));
+      peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(peerList);
+      while(peerListNode != NULL) {
+         if(transportAddressBlockOverlapComparison(peerListNode->AddressBlock,
+                                                   transportAddressBlock) == 0) {
+            return(peerListNode);
+         }
+         peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(peerList, peerListNode);
       }
    }
    return(NULL);
@@ -540,9 +448,6 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
    result = ST_METHOD(Remove)(&peerList->PeerListIndexStorage,
                               &peerListNode->PeerListIndexStorageNode);
    CHECK(result == &peerListNode->PeerListIndexStorageNode);
-   result = ST_METHOD(Remove)(&peerList->PeerListAddressStorage,
-                              &peerListNode->PeerListAddressStorageNode);
-   CHECK(result == &peerListNode->PeerListAddressStorageNode);
    if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
       result = ST_METHOD(Remove)(&peerList->PeerListTimerStorage,
                                  &peerListNode->PeerListTimerStorageNode);

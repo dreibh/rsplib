@@ -2,7 +2,7 @@
  * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
- * $Id: simpleredblacktree.h 620 2006-02-01 09:38:49Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

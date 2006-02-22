@@ -47,7 +47,6 @@ struct ST_CLASS(PeerList);
 struct ST_CLASS(PeerListNode)
 {
    struct STN_CLASSNAME               PeerListIndexStorageNode;
-   struct STN_CLASSNAME               PeerListAddressStorageNode;
    struct STN_CLASSNAME               PeerListTimerStorageNode;
    struct ST_CLASS(PeerList)*         OwnerPeerList;
 
@@ -68,14 +67,10 @@ struct ST_CLASS(PeerListNode)
 void ST_CLASS(peerListIndexStorageNodePrint)(const void *nodePtr, FILE* fd);
 int ST_CLASS(peerListIndexStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
 
-void ST_CLASS(peerListAddressStorageNodePrint)(const void *nodePtr, FILE* fd);
-int ST_CLASS(peerListAddressStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
-
 void ST_CLASS(peerListTimerStorageNodePrint)(const void *nodePtr, FILE* fd);
 int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
 
 struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(void* node);
-struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListAddressStorageNode)(void* node);
 struct ST_CLASS(PeerListNode)* ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(void* node);
 
 void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,

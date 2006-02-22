@@ -83,8 +83,7 @@ typedef uint32_t PoolElementSeqNumberType;
 #define PLNPO_TRANSPORT     (1 << 0)
 
 #define PLPO_PEERS_INDEX    (1 << 10)
-#define PLPO_PEERS_ADDRESS  (1 << 11)
-#define PLPO_PEERS_TIMER    (1 << 12)
+#define PLPO_PEERS_TIMER    (1 << 11)
 
 #define PLPO_FULL           (~0)
 #define PLPO_ONLY_INDEX     (PLPO_PEERS_INDEX)

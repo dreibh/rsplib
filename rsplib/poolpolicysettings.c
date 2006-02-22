@@ -91,13 +91,13 @@ void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
                                       const size_t                     bufferSize)
 {
    snprintf(buffer, bufferSize,
-            "t=$%02x [l=%1.3f%% ldeg=%1.3f%% ldpf=%1.3f%% w=%u wdpf=%1.3f%% dist=%u]",
+            "t=$%02x [w=%u l=$%x ldeg=$%x ldpf=$%x wdpf=$%x dist=%u]",
             pps->PolicyType,
-            100.0 * (pps->Load / (double)PEPS_MAX_LOAD),
-            100.0 * (pps->LoadDegradation / (double)PEPS_MAX_LOAD),
-            100.0 * (pps->LoadDPF / (double)0xffffffff),
             pps->Weight,
-            100.0 * (pps->WeightDPF / (double)0xffffffff),
+            pps->Load,
+            pps->LoadDegradation,
+            pps->LoadDPF,
+            pps->WeightDPF,
             pps->Distance);
 }
 

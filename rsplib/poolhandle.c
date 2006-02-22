@@ -84,16 +84,12 @@ void poolHandlePrint(const struct PoolHandle* poolHandle,
 int poolHandleComparison(const struct PoolHandle* poolHandle1,
                          const struct PoolHandle* poolHandle2)
 {
-   const int cmpResult = memcmp(poolHandle1->Handle, poolHandle2->Handle,
-                                (poolHandle1->Size < poolHandle2->Size) ? poolHandle1->Size : poolHandle2->Size);
-   if(cmpResult == 0) {
-      if(poolHandle1->Size < poolHandle2->Size) {
-         return(-1);
-      }
-      if(poolHandle1->Size > poolHandle2->Size) {
-         return(1);
-      }
-      return(0);
+   if(poolHandle1->Size < poolHandle2->Size) {
+      return(-1);
    }
-   return(cmpResult);
+   if(poolHandle1->Size > poolHandle2->Size) {
+      return(1);
+   }
+   return(memcmp(poolHandle1->Handle, poolHandle2->Handle,
+                 poolHandle1->Size));
 }

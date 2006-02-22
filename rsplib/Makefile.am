@@ -61,7 +61,7 @@ poolpolicy-template_impl.h \
 randomizer.c \
 randomizer.h \
 redblacktree.h \
-redblacktree-impl.h \
+redblacktree_impl.h \
 registrartable.c \
 registrartable.h \
 rserpool.h \
