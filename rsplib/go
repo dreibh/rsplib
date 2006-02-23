@@ -32,4 +32,7 @@ if [ x$SERVER = "x" ]; then
 fi
 shift
 
-ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $@
+
+# Achtung: -t sorgt dafür, daß Pseudo-Terminal erzeugt wird.
+# -> Lokaler ssh-Abbruch -> Abbruch der entfernten Prozesse.
+ssh -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $@

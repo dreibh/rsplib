@@ -55,7 +55,9 @@ while [ ! x$1 = "x" ] ; do
       exit 1
    fi
 
-   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
+   # Achtung: -t sorgt dafür, daß Pseudo-Terminal erzeugt wird.
+   # -> Lokaler ssh-Abbruch -> Abbruch der entfernten Prozesse.
+   ssh -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
       cd ~/bin && \
       ulimit -c unlimited && \
       echo \"`date`: Login on $SERVER!\" && \
