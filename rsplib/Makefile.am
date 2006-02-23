@@ -136,9 +136,9 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser hsdump crashtest rootshell
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser hsdump crashtest rootshell t13
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest rootshell
+noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest rootshell t13
 endif
 
 
@@ -232,3 +232,6 @@ EXTRA_DIST = registrar-example poolelement-example pooluser-example examplens ex
 
 #t12_SOURCES = t12.cc statistics.cc statistics.h rsputilities.c rsputilities.h
 #t12_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+t13_SOURCES = t13.cc
+t13_LDADD   =
