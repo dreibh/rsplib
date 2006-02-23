@@ -1165,7 +1165,7 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
 
 
 /* ###### Handle ASAP inter-thread message ############################### */
-static void asapInstanceHandleAITM(struct ASAPInstance* asapInstance)
+static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
 {
    struct ASAPInterThreadMessage* aitm;
    struct ASAPInterThreadMessage* nextAITM;
@@ -1273,6 +1273,11 @@ static void* asapInstanceMainLoop(void* args)
       pipeIndex = nfds;
       ufds[pipeIndex].fd     = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events = POLLIN;
+      if(interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort)) {
+         /* There are still AITM messages to be handled. Do not block if there
+            are no socket events! */
+         timeout = 0;
+      }
 
       /* ====== Call ext_poll ============================================ */
       result = ext_poll((struct pollfd*)&ufds, nfds + 1, timeout);
@@ -1285,7 +1290,7 @@ static void* asapInstanceMainLoop(void* args)
       }
 
       /* ====== Handle inter-thread messages ============================= */
-      asapInstanceHandleAITM(asapInstance);
+      asapInstanceHandleQueuedAITMs(asapInstance);
    }
 
    asapInstanceDisconnectFromRegistrar(asapInstance, false);

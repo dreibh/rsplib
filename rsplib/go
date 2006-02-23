@@ -33,6 +33,8 @@ fi
 shift
 
 
-# Achtung: -t sorgt dafür, daß Pseudo-Terminal erzeugt wird.
+# Achtung:
+# Option -t sorgt dafür, daß Pseudo-Terminal erzeugt wird.
+# Optionen -t -t erzwingen Erstellung von Pseudo-Terminal, auch wenn stdin keines ist!
 # -> Lokaler ssh-Abbruch -> Abbruch der entfernten Prozesse.
-ssh -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $@
+ssh -t -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $@

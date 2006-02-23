@@ -57,7 +57,7 @@ void interThreadMessagePortLock(struct InterThreadMessagePort* itmPort);
 void interThreadMessagePortUnlock(struct InterThreadMessagePort* itmPort);
 struct InterThreadMessageNode* interThreadMessagePortGetFirstMessage(struct InterThreadMessagePort* itmPort);
 struct InterThreadMessageNode* interThreadMessagePortGetNextMessage(struct InterThreadMessagePort* itmPort,
-                                                                    struct InterThreadMessageNode*     message);
+                                                                    struct InterThreadMessageNode* message);
 void interThreadMessagePortRemoveMessage(struct InterThreadMessagePort* itmPort,
                                          struct InterThreadMessageNode* message);
 void interThreadMessagePortEnqueue(struct InterThreadMessagePort* itmPort,
