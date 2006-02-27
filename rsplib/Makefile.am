@@ -136,9 +136,9 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser hsdump crashtest rootshell
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcapppoolelement calcapppooluser hsdump crashtest subnetcalc rootshell
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest rootshell
+noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest subnetcalc rootshell
 endif
 
 
@@ -156,6 +156,9 @@ registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS
 
 hsdump_SOURCES = hsdump.c
 hsdump_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+subnetcalc_SOURCES = subnetcalc.cc
+subnetcalc_LDADD   =
 
 crashtest_SOURCES = crashtest.c
 crashtest_LDADD   =

@@ -101,7 +101,7 @@ void TCPLikeServer::setLoad(double load)
       return;
    }
    if(ServerList->LoadSum - Load + newLoad > 0xffffff) {
-      fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%%!\n", stderr);
+      fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stderr);
       return;
    }
 
