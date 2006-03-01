@@ -1,4 +1,4 @@
-/*
+ /*
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
@@ -151,8 +151,8 @@ FILE*        ScalarFH   = NULL;
 unsigned int VectorLine = 0;
 double       JobSizeDeclaration			 = 5000000;
 unsigned long long runtime                       = 24*60*60*1000000ULL;
-double TotalHandlingDelay            = 0.0;
-double AverageHandlingDelay          = 0.0;
+double TotalHandlingTime            = 0.0;
+double AverageHandlingTime          = 0.0;
 double TotalHandlingSpeed            = 0.0;
 double AverageHandlingSpeed          = 0.0;
 double AverageJobSize    	     = 0.0;
@@ -359,7 +359,7 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
-   double HandlingDelay = 0.0;
+   double HandlingTime = 0.0;
    double HandlingSpeed = 0.0;
    double QueueingTime = 0.0;
    double StartupTime = 0.0;
@@ -382,9 +382,9 @@ void handleCalcAppCompleted(struct Process* process,
    StartupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
    ProcessingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
 
-   HandlingDelay = (QueueingTime + StartupTime + ProcessingTime)/ 1000000;
-   HandlingSpeed = process->CurrentJob->JobSize / HandlingDelay ;
-   TotalHandlingDelay+= HandlingDelay;
+   HandlingTime = (QueueingTime + StartupTime + ProcessingTime);
+   HandlingSpeed = process->CurrentJob->JobSize / HandlingTime ;
+   TotalHandlingTime+= HandlingTime;
    TotalJobSizeCompleted+= process->CurrentJob->JobSize;
    TotalJobInterval+= JobInterval;
    TotalHandlingSpeed+=HandlingSpeed;
@@ -392,21 +392,21 @@ void handleCalcAppCompleted(struct Process* process,
    stat1.collect(StartupTime/1000000.0);
    stat2.collect(QueueingTime/1000000.0);
    stat3.collect(ProcessingTime/1000000.0);
-   stat4.collect(HandlingDelay);
+   stat4.collect(HandlingTime/1000000.0);
    stat5.collect(HandlingSpeed/1000000.0);
    stat6.collect(process->CurrentJob->JobSize);
    stat7.collect(JobInterval/1000000.0);
    stat8.collect(StartupTime/1000000.0);
    stat9.collect(QueueingTime/1000000.0);
    stat10.collect(ProcessingTime/1000000.0);
-   stat11.collect(HandlingDelay);
+   stat11.collect(HandlingTime/1000000.0);
    stat12.collect(HandlingSpeed/1000000.0);
 
    cout << "JobSize:     " << process->CurrentJob->JobSize << endl;
    cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
-   cout << "Handling Delay: " << HandlingDelay << " Handling Speed: " << HandlingSpeed << endl;
+   cout << "Handling Delay: " << HandlingTime << " Handling Speed: " << HandlingSpeed << endl;
 
-   fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.0f\n", ++VectorLine, process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingDelay, HandlingSpeed);
+   fprintf(VectorFH," %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.6f %llu %llu %llu %llu\n", process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingTime, HandlingSpeed, process->CurrentJob->StartupTimeStamp, process->CurrentJob->AcceptTimeStamp, process->CurrentJob->QueuingTimeStamp, process->CurrentJob->CompleteTimeStamp);
    process->TotalCalcAppCompleted++;
 
 }
@@ -652,22 +652,22 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    }
 
 finished:
-    /* AverageHandlingDelay  = TotalHandlingDelay / process.TotalCalcAppCompleted;
+    /* AverageHandlingTime  = TotalHandlingTime / process.TotalCalcAppCompleted;
     AverageHandlingSpeed  = TotalHandlingSpeed / process.TotalCalcAppCompleted;
     AverageJobSize        = TotalJobSize       / process.TotalCalcAppCompleted;
     AverageJobInterval    = TotalJobInterval   / process.TotalCalcAppCompleted;
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests\" %u\n", objectName, process.TotalCalcAppRequests);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingDelay \" %1.6f\n", objectName, AverageHandlingDelay);
+   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingTime \" %1.6f\n", objectName, AverageHandlingTime);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingSpeed \" %1.6f\n", objectName, AverageHandlingSpeed);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageJobSize       \" %1.6f\n", objectName, AverageJobSize);
    fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %llu\n", objectName, AverageJobInterval); */
 
-   /*fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"mean=%f min=%f max=%f stddev=%f\n", objectName, stat1.mean(), stat1.minimum(), stat1.maximum(), stat1.stddev()); */
+   /*fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f min=%f max=%f stddev=%f\n", objectName, stat1.mean(), stat1.minimum(), stat1.maximum(), stat1.stddev()); */
 
    fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, stat1.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, stat2.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, stat3.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"mean=%f \n", objectName, stat4.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f \n", objectName, stat4.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, stat5.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, stat6.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, stat7.mean());
@@ -675,7 +675,7 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"stddev=%f \n", objectName, stat8.stddev());
    fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"stddev=%f \n", objectName, stat9.stddev());
    fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"stddev=%f \n", objectName, stat10.stddev());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingDelay   \"stddev=%f \n", objectName, stat11.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"stddev=%f \n", objectName, stat11.stddev());
    fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"stddev=%f \n", objectName, stat12.stddev());
 
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests     \"%u \n", objectName, process.TotalCalcAppRequests);
@@ -782,7 +782,7 @@ puts("CSP!");
       finishLogging();
    }
 
-   fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingDelay HandlingSpeed\n");
+   fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingTime HandlingSpeed StartupTimeStamp AcceptTimeStamp QueuingTimeStamp CompleteTimeStamp\n");
 
    ScalarFH = fopen(scalarFileName, "w");
    if(ScalarFH == NULL) {
