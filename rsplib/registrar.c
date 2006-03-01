@@ -470,7 +470,7 @@ static size_t registrarGetReportFunction(
 
 
 struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
-                               int                            asapSocket,
+                               int                            asapUnicastSocket,
                                int                            asapAnnounceSocket,
                                int                            enrpUnicastSocket,
                                int                            enrpMulticastOutputSocket,
@@ -539,7 +539,7 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 
 /* ###### Constructor #################################################### */
 struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
-                               int                            asapSocket,
+                               int                            asapUnicastSocket,
                                int                            asapAnnounceSocket,
                                int                            enrpUnicastSocket,
                                int                            enrpMulticastOutputSocket,
@@ -599,7 +599,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->InInitializationPhase     = true;
       registrar->MentorServerID            = 0;
 
-      registrar->ASAPSocket                = asapSocket;
+      registrar->ASAPSocket                = asapUnicastSocket;
       registrar->ASAPAnnounceSocket        = asapAnnounceSocket;
       registrar->ASAPSendAnnounces         = asapSendAnnounces;
 
@@ -707,11 +707,11 @@ void registrarDelete(struct Registrar* registrar)
       timerDelete(&registrar->PeerActionTimer);
       takeoverProcessListDelete(&registrar->Takeovers);
       if(registrar->ENRPMulticastOutputSocket >= 0) {
-         fdCallbackDelete(&registrar->ENRPMulticastInputSocketFDCallback);
          ext_close(registrar->ENRPMulticastOutputSocket >= 0);
          registrar->ENRPMulticastOutputSocket = -1;
       }
       if(registrar->ENRPMulticastInputSocket >= 0) {
+         fdCallbackDelete(&registrar->ENRPMulticastInputSocketFDCallback);
          ext_close(registrar->ENRPMulticastInputSocket >= 0);
          registrar->ENRPMulticastInputSocket = -1;
       }
@@ -3087,107 +3087,102 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
    ssize_t                  received;
    unsigned int             result;
 
-   if((fd == registrar->ASAPSocket) ||
-      (fd == registrar->ENRPUnicastSocket) ||
-      (((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) &&
-        (fd == registrar->ENRPMulticastInputSocket))) {
-      LOG_VERBOSE3
-      fprintf(stdlog, "Event on socket %d...\n", fd);
-      LOG_END
+   CHECK((fd == registrar->ASAPSocket) ||
+         (fd == registrar->ENRPUnicastSocket) ||
+         ((registrar->ENRPMulticastInputSocket >= 0) && (fd == registrar->ENRPMulticastInputSocket)));
+   LOG_VERBOSE3
+   fprintf(stdlog, "Event on socket %d...\n", fd);
+   LOG_END
 
-      flags               = 0;
-      remoteAddressLength = sizeof(remoteAddress);
-      received = recvfromplus(fd,
-                              (char*)&buffer, sizeof(buffer), &flags,
-                              (struct sockaddr*)&remoteAddress,
-                              &remoteAddressLength,
-                              &ppid, &assocID, &streamID,
-                              0);
-      if(received > 0) {
-         if(!(flags & MSG_NOTIFICATION)) {
-            if(fd == registrar->ENRPMulticastInputSocket) {
-               /* ENRP via UDP -> Set PPID so that rserpoolPacket2Message can
-                  correctly decode the packet */
-               ppid = PPID_ENRP;
-            }
-
-            result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
-                                            received, sizeof(buffer), &message);
-            if(message != NULL) {
-               if(result == RSPERR_OKAY) {
-                  message->BufferAutoDelete = false;
-                  LOG_VERBOSE3
-                  fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);
-                  fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
-                  fprintf(stdlog, ", assoc #%u, PPID $%x\n",
-                          (unsigned int)message->AssocID, message->PPID);
-                  LOG_END
-
-                  handleMessage(registrar, message, fd);
-               }
-               else {
-                  if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
-                     /* For ASAP or ENRP messages, we can reply
-                        error message */
-                     if(message->PPID == PPID_ASAP) {
-                        message->Type = AHT_ERROR;
-                     }
-                     else if(message->PPID == PPID_ENRP) {
-                        message->Type = EHT_ERROR;
-                     }
-                     rserpoolMessageSend(IPPROTO_SCTP,
-                                         fd, assocID, 0, 0, message);
-                  }
-               }
-               rserpoolMessageDelete(message);
-            }
+   flags               = 0;
+   remoteAddressLength = sizeof(remoteAddress);
+   received = recvfromplus(fd,
+                           (char*)&buffer, sizeof(buffer), &flags,
+                           (struct sockaddr*)&remoteAddress,
+                           &remoteAddressLength,
+                           &ppid, &assocID, &streamID,
+                           0);
+   if(received > 0) {
+      if(!(flags & MSG_NOTIFICATION)) {
+         if(fd == registrar->ENRPMulticastInputSocket) {
+            /* ENRP via UDP -> Set PPID so that rserpoolPacket2Message can
+               correctly decode the packet */
+            ppid = PPID_ENRP;
          }
-         else {
-            notification = (union sctp_notification*)&buffer;
-            switch(notification->sn_header.sn_type) {
-               case SCTP_ASSOC_CHANGE:
-                  if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
-                     LOG_ACTION
-                     fprintf(stdlog, "Association communication lost for socket %d, assoc %u\n",
-                             registrar->ASAPSocket,
-                             (unsigned int)notification->sn_assoc_change.sac_assoc_id);
 
-                     LOG_END
-                     registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                             notification->sn_assoc_change.sac_assoc_id);
-                  }
-                  else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
-                     LOG_ACTION
-                     fprintf(stdlog, "Association shutdown completed for socket %d, assoc %u\n",
-                             registrar->ASAPSocket,
-                             (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+         result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
+                                          received, sizeof(buffer), &message);
+         if(message != NULL) {
+            if(result == RSPERR_OKAY) {
+               message->BufferAutoDelete = false;
+               LOG_VERBOSE3
+               fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);
+               fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
+               fprintf(stdlog, ", assoc #%u, PPID $%x\n",
+                        (unsigned int)message->AssocID, message->PPID);
+               LOG_END
 
-                     LOG_END
-                     registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                             notification->sn_assoc_change.sac_assoc_id);
-                  }
-                break;
-               case SCTP_SHUTDOWN_EVENT:
-                  LOG_ACTION
-                  fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
-                          registrar->ASAPSocket,
-                          (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
-
-                  LOG_END
-                  registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                          notification->sn_shutdown_event.sse_assoc_id);
-                break;
+               handleMessage(registrar, message, fd);
             }
+            else {
+               if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
+                  /* For ASAP or ENRP messages, we can reply
+                     error message */
+                  if(message->PPID == PPID_ASAP) {
+                     message->Type = AHT_ERROR;
+                  }
+                  else if(message->PPID == PPID_ENRP) {
+                     message->Type = EHT_ERROR;
+                  }
+                  rserpoolMessageSend(IPPROTO_SCTP,
+                                       fd, assocID, 0, 0, message);
+               }
+            }
+            rserpoolMessageDelete(message);
          }
       }
       else {
-         LOG_WARNING
-         logerror("Unable to read from registrar socket");
-         LOG_END
+         notification = (union sctp_notification*)&buffer;
+         switch(notification->sn_header.sn_type) {
+            case SCTP_ASSOC_CHANGE:
+               if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
+                  LOG_ACTION
+                  fprintf(stdlog, "Association communication lost for socket %d, assoc %u\n",
+                           registrar->ASAPSocket,
+                           (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+
+                  LOG_END
+                  registrarRemovePoolElementsOfConnection(registrar, fd,
+                                                            notification->sn_assoc_change.sac_assoc_id);
+               }
+               else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
+                  LOG_ACTION
+                  fprintf(stdlog, "Association shutdown completed for socket %d, assoc %u\n",
+                           registrar->ASAPSocket,
+                           (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+
+                  LOG_END
+                  registrarRemovePoolElementsOfConnection(registrar, fd,
+                                                            notification->sn_assoc_change.sac_assoc_id);
+               }
+               break;
+            case SCTP_SHUTDOWN_EVENT:
+               LOG_ACTION
+               fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
+                        registrar->ASAPSocket,
+                        (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
+
+               LOG_END
+               registrarRemovePoolElementsOfConnection(registrar, fd,
+                                                         notification->sn_shutdown_event.sse_assoc_id);
+               break;
+         }
       }
    }
    else {
-      CHECK(false);
+      LOG_WARNING
+      logerror("Unable to read from registrar socket");
+      LOG_END
    }
 }
 
@@ -3323,6 +3318,7 @@ static void addPeer(struct Registrar* registrar, char* arg)
 static void getSocketPair(const char*                   sctpAddressParameter,
                           struct TransportAddressBlock* sctpTransportAddress,
                           int*                          sctpSocket,
+                          const bool                    requiresUDPSocket,
                           const char*                   udpGroupAddressParameter,
                           struct TransportAddressBlock* udpGroupTransportAddress,
                           int*                          udpSocket)
@@ -3408,6 +3404,10 @@ static void getSocketPair(const char*                   sctpAddressParameter,
          continue;
       }
 
+      if(!requiresUDPSocket) {
+         break;
+      }
+
       *udpSocket = ext_socket(udpAddress.sa.sa_family, SOCK_DGRAM, IPPROTO_UDP);
       if(*udpSocket < 0) {
          puts("ERROR: Unable to create UDP socket!");
@@ -3426,7 +3426,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
       *udpSocket = -1;
    }
 
-   if((*sctpSocket < 0) || (*udpSocket < 0)) {
+   if((*sctpSocket < 0) || (requiresUDPSocket && (*udpSocket < 0))) {
       perror("Unable to find suitable SCTP/UDP socket pair");
       exit(1);
    }
@@ -3477,29 +3477,29 @@ int main(int argc, char** argv)
    struct Registrar*             registrar;
    uint32_t                      serverID                      = 0;
 
-   int                           asapSocket                    = -1;
-   char                          asapAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   const char*                   asapAddressParameter          = "auto";
-   struct TransportAddressBlock* asapAddress                   = (struct TransportAddressBlock*)&asapAddressBuffer;
+   char                          asapUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock* asapUnicastAddress            = (struct TransportAddressBlock*)&asapUnicastAddressBuffer;
+   const char*                   asapUnicastAddressParameter   = "auto";
+   int                           asapUnicastSocket             = -1;
 
-   bool                          asapSendAnnounces             = false;
-   int                           asapAnnounceSocket            = -1;
    char                          asapAnnounceAddressBuffer[transportAddressBlockGetSize(1)];
-   const char*                   asapAnnounceAddressParameter  = "auto";
    struct TransportAddressBlock* asapAnnounceAddress           = (struct TransportAddressBlock*)&asapAnnounceAddressBuffer;
+   const char*                   asapAnnounceAddressParameter  = "0.0.0.0:0";
+   int                           asapAnnounceSocket            = -1;
+   bool                          asapSendAnnounces             = false;
 
-   int                           enrpUnicastSocket             = -1;
-   const char*                   enrpUnicastAddressParameter   = "auto";
    char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* enrpUnicastAddress            = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
+   const char*                   enrpUnicastAddressParameter   = "auto";
+   int                           enrpUnicastSocket             = -1;
 
-   bool                          enrpUseMulticast              = false;
-   bool                          enrpAnnounceViaMulticast      = false;
-   int                           enrpMulticastOutputSocket     = -1;
-   int                           enrpMulticastInputSocket      = -1;
-   const char*                   enrpMulticastAddressParameter = "auto";
    char                          enrpMulticastAddressBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* enrpMulticastAddress          = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
+   const char*                   enrpMulticastAddressParameter = "0.0.0.0:0";
+   int                           enrpMulticastOutputSocket     = -1;
+   int                           enrpMulticastInputSocket      = -1;
+   bool                          enrpAnnounceViaMulticast      = false;
+   bool                          enrpUseMulticast              = false;
 
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
@@ -3533,7 +3533,7 @@ int main(int argc, char** argv)
          /* to be handled later */
       }
       else if(!(strncmp(argv[i], "-asap=",6))) {
-         asapAddressParameter = (const char*)&argv[i][6];
+         asapUnicastAddressParameter = (const char*)&argv[i][6];
       }
       else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
          asapAnnounceAddressParameter = (const char*)&argv[i][14];
@@ -3580,7 +3580,7 @@ int main(int argc, char** argv)
       }
 #endif
       else {
-         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
+         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
           "{-cspserver=address} {-cspinterval=microseconds}"
 #endif
@@ -3590,37 +3590,43 @@ int main(int argc, char** argv)
    }
    beginLogging();
 
-
    if(!strcmp(asapAnnounceAddressParameter, "auto")) {
       asapAnnounceAddressParameter = "239.0.0.1:3863";
+      asapSendAnnounces = true;
    }
    if(!strcmp(enrpMulticastAddressParameter, "auto")) {
       enrpMulticastAddressParameter = "239.0.0.1:3864";
+      enrpAnnounceViaMulticast = true;
    }
-   getSocketPair(asapAddressParameter, asapAddress, &asapSocket,
+   getSocketPair(asapUnicastAddressParameter, asapUnicastAddress, &asapUnicastSocket,
+                 asapSendAnnounces,
                  asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket);
    getSocketPair(enrpUnicastAddressParameter, enrpUnicastAddress, &enrpUnicastSocket,
+                 enrpUseMulticast || enrpAnnounceViaMulticast,
                  enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket);
-   enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
-                                         SOCK_DGRAM, IPPROTO_UDP);
-   if(enrpMulticastInputSocket < 0) {
-      fputs("ERROR: Unable to create input UDP socket for ENRP!\n", stderr);
-      exit(1);
-   }
-   setReusable(enrpMulticastInputSocket, 1);
-   if(bindplus(enrpMulticastInputSocket,
-               (union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
-               1) == false) {
-      fputs("ERROR: Unable to bind input UDP socket for ENRP to address ", stderr);
-      fputaddress(&enrpMulticastAddress->AddressArray[0].sa, true, stderr);
-      fputs("\n", stderr);
-      exit(1);
+
+   if(enrpAnnounceViaMulticast || enrpUseMulticast) {
+      enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
+                                            SOCK_DGRAM, IPPROTO_UDP);
+      if(enrpMulticastInputSocket < 0) {
+         fputs("ERROR: Unable to create input UDP socket for ENRP!\n", stderr);
+         exit(1);
+      }
+      setReusable(enrpMulticastInputSocket, 1);
+      if(bindplus(enrpMulticastInputSocket,
+                  (union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
+                  1) == false) {
+         fputs("ERROR: Unable to bind input UDP socket for ENRP to address ", stderr);
+         fputaddress(&enrpMulticastAddress->AddressArray[0].sa, true, stderr);
+         fputs("\n", stderr);
+         exit(1);
+      }
    }
 
 
    /* ====== Initialize Registrar ======================================= */
    registrar = registrarNew(serverID,
-                            asapSocket,
+                            asapUnicastSocket,
                             asapAnnounceSocket,
                             enrpUnicastSocket,
                             enrpMulticastInputSocket,
@@ -3655,7 +3661,7 @@ int main(int argc, char** argv)
    puts("===================================\n");
    printf("Server ID:              $%08x\n", registrar->ServerID);
    printf("ASAP Address:           ");
-   transportAddressBlockPrint(asapAddress, stdout);
+   transportAddressBlockPrint(asapUnicastAddress, stdout);
    puts("");
    printf("ENRP Address:           ");
    transportAddressBlockPrint(enrpUnicastAddress, stdout);

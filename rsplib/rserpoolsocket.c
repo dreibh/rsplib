@@ -70,7 +70,7 @@ struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
    cmpSocket.Descriptor = sd;
    threadSafetyLock(&gRSerPoolSocketSetMutex);
    rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeFind(&gRSerPoolSocketSet,
-                                                                       &cmpSocket.Node);
+                                                                   &cmpSocket.Node);
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
    if(rserpoolSocket == NULL) {
       LOG_ERROR
