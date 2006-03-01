@@ -2,4 +2,4 @@
 
 PROCNAME="registrar"
 
-. ./stop-processes
+. ./stop-processes $PROCNAME

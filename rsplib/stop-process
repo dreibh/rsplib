@@ -3,7 +3,7 @@
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
-# $Id$
+# $Id: stop-processes 951 2006-02-21 09:23:45Z dreibh $
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,23 +24,30 @@
 
 . ./planetlab-config
 
-if [ $# -ne 1 ]; then
-   echo "Usage: start-processes [Process Name]"
+
+if [ $# -lt 2 ]; then
+   echo "Usage: start-process [Process Name] [Server 1] {Server 2} ..."
    exit 1
 fi
 PROCNAME=$1
 shift
 
 
-PIDFILES=`ls $PROCNAME-*.pid`
+while [ ! x$1 = "x" ] ; do
+   SERVER=$1
+   shift
 
-for PIDFILE in $PIDFILES; do
-   PID=`cat $PIDFILE`
-   if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
-      echo "Processing $PIDFILE: sending SIGINT to $PID ..."
-      kill $PID
-   else
-      echo "Processing $PIDFILE: process is already gone."
-   fi
-   rm $PIDFILE
+   PIDFILE=$PROCNAME-$SERVER.pid
+   PIDFILES=`ls $PROCNAME-*.pid`
+   for PIDFILE in $PIDFILES; do
+      PID=`cat $PIDFILE`
+      if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
+         echo "Processing $PIDFILE: sending SIGINT to $PID ..."
+         kill $PID
+      else
+         echo "Processing $PIDFILE: process is already gone."
+      fi
+      rm $PIDFILE
+   done
+
 done

@@ -25,4 +25,4 @@ PROCNAME="calcapppoolelement"
 PROGCALL="sudo ~/bin/calcapppoolelement $OPT_CSP $OPT_REGISTRARS $OPT_OTHER"
 PROGCHK=0
 
-. ./start-process $@
+. ./start-process "$PROCNAME" "$PROGCALL" $@

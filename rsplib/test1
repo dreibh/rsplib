@@ -1,0 +1,116 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+TESTID=messung1
+
+PR_AUSTRALIA=`cat pr-australia.hosts`
+PR_USA=`cat pr-usa.hosts`
+PR_EUROPE=`cat pr-europe.hosts`
+PR_ALL="$PR_AUSTRALIA $PR_USA $PR_EUROPE"
+
+PE_AUSTRALIA=`cat pe-australia.hosts`
+PE_USA=`cat pe-usa.hosts`
+PE_EUROPE=`cat pe-europe.hosts`
+PE_ALL="$PE_AUSTRALIA $PE_USA $PE_EUROPE"
+
+PU_AUSTRALIA=`cat pu-australia.hosts`
+PU_USA=`cat pu-usa.hosts`
+PU_EUROPU=`cat pu-europe.hosts`
+PU_ALL="$PU_AUSTRALIA $PU_USA $PU_EUROPU"
+
+
+
+resetAll ()
+{
+   ./stop-processes Registrar
+   ./stop-processes PoolElement
+   ./stop-processes PoolUser
+}
+
+startNetwork ()
+{
+   optPeers=""
+   for peer in $PR_ALL ; do
+      optPeers="$optPeers -peer=$peer:3864"
+   done
+   for pr in $localPRs ; do
+      echo "Starting PR on $pr ..."
+      ./start-process "Registrar" "./rootshell -c \"./registrar $optPeers $OPT_CSP -logfile=$TESTID-pr-$pr.log -loglevel=5\"" $pr &
+   done
+
+   optRegistrars=""
+   for pr in $localPRs ; do
+      optRegistrars="$optRegistrars -registrar=$peer:3863"
+   done
+   for pe in $localPEs ; do
+      echo "Starting PE on $pe ..."
+      ./start-process "PoolElement" "./rootshell -c \"./server -fractal $optRegistrars $OPT_CSP -logfile=$TESTID-pe-$pr.log -loglevel=5\"" $pe &
+   done
+}
+
+stopNetwork ()
+{
+   for pe in $localPEs ; do
+      ./stop-process "PoolElement" $pe
+   done
+   for pr in $localPRs ; do
+      ./stop-process "Registrar" $pr
+   done
+}
+
+
+
+startNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   startNetwork
+}
+
+startNetworkUSA ()
+{
+   localPRs=$PR_USA
+   localPEs=$PE_USA
+   startNetwork
+}
+
+startNetworkEurope ()
+{
+   localPRs=$PR_EUROPE
+   localPEs=$PE_EUROPE
+   startNetwork
+}
+
+stopNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   stopNetwork
+}
+
+stopNetworkUSA ()
+{
+   localPRs=$PR_USA
+   localPEs=$PE_USA
+   stopNetwork
+}
+
+stopNetworkEurope ()
+{
+   localPRs=$PR_EUROPE
+   localPEs=$PE_EUROPE
+   stopNetwork
+}
+
+
+
+resetAll
+echo "`date`: Starting scenario ..."
+startNetworkUSA
+
+echo "`date`: Sleeping ..."
+sleep 90
+
+echo "`date`: Removing scenario ..."
+stopNetworkUSA

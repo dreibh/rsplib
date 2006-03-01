@@ -2,4 +2,4 @@
 
 PROCNAME="calcapppoolelement"
 
-. ./stop-processes
+. ./stop-processes $PROCNAME

@@ -25,10 +25,14 @@
 . ./planetlab-config
 
 
-if [ $# -lt 1 ]; then
-   echo "Usage: start-process [Server 1] {Server 2} ..."
+if [ $# -lt 3 ]; then
+   echo "Usage: start-process [Process Name] [Process Call] [Server 1] {Server 2} ..."
    exit 1
 fi
+PROCNAME=$1
+PROGCALL=$2
+shift
+shift
 
 
 SERVER=$1
@@ -37,7 +41,7 @@ if [ x$SERVER = "x" ]; then
    exit 1
 fi
 
-if [ $PROGCHK -ne 0 ] ; then
+if [ "x$PROGCHK" = "x1" ] ; then
    cd bin
    MD5_LOCAL="`md5sum $DISTPRGS`"
    cd ..
@@ -63,7 +67,7 @@ while [ ! x$1 = "x" ] ; do
       cd ~/bin && \
       ulimit -c unlimited && \
       echo \"`date`: Login on $SERVER!\" && \
-      if [ $PROGCHK -ne 0 ] ; then \
+      if [ \"x$PROGCHK\" = \"x1\" ] ; then \
          MD5_REMOTE=\"\`md5sum $DISTPRGS\`\" && \
          if [ \"x$MD5_LOCAL\" != \"x\$MD5_REMOTE\" ] ; then \
             echo \"ERROR: Different program versions!\" ; \

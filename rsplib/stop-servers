@@ -2,4 +2,4 @@
 
 PROCNAME="server"
 
-. ./stop-processes
+. ./stop-processes $PROCNAME
