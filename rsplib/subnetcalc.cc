@@ -140,11 +140,11 @@ int main(int argc, char** argv)
    }
    wildcard  = ~netmask;
 
-   printf("Network       = "); putAddress(network); printf(" / %u\n", prefix);
+   printf("Network       = "); putAddress(network); printf(" / %u\n", (unsigned long)prefix);
    printf("Netmask       = "); putAddress(netmask); puts("");
    printf("Broadcast     = "); putAddress(broadcast); puts("");
    printf("Wildcard Mask = "); putAddress(wildcard); puts("");
-   printf("Max. Hosts    = %u\n", hosts);
+   printf("Max. Hosts    = %u\n", (unsigned long)hosts);
    printf("Host Range    = { ");
    putAddress(host1); printf(" ... "); putAddress(host2);
    puts(" }");
