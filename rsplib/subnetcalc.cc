@@ -2,7 +2,7 @@
  * IPv4 Subnet Calculator
  * Copyright (C) 2005-2006 by Thomas Dreibholz
  *
- * $Id$
+ * $Id: subnetcalc.cc 964 2006-02-27 10:31:57Z dreibh $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 
 

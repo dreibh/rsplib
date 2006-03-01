@@ -1,15 +1,8 @@
 /*
- *  $Id$
+ * The rsplib Prototype -- An RSerPool Implementation.
+ * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * RSerPool implementation.
- *
- * Realized in co-operation between Siemens AG
- * and University of Essen, Institute of Computer Networking Technology.
- *
- * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
- * The authors alone are responsible for the contents.
+ * $Id: fractalpooluser.cc 955 2006-02-22 16:12:05Z dreibh $
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,15 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * There are two mailinglists available at http://www.sctp.de/rserpool.html
- * which should be used for any discussion related to this implementation.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contact: rsplib-discussion@sctp.de
- *          dreibh@exp-math.uni-essen.de
- *
- * Purpose: Registrar
+ *          dreibh@iem.uni-due.de
  *
  */
 
@@ -55,29 +43,25 @@
 
 int main(int argc, char** argv)
 {
-   char                          localAddressArrayBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
-   struct TransportAddressBlock* localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
-      struct sctp_event_subscribe sctpEvents;
-
+   char                                       localAddressArrayBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   struct TransportAddressBlock*              localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
+   struct sctp_event_subscribe                sctpEvents;
    struct ST_CLASS(PoolHandlespaceManagement) handlespace;
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct ST_CLASS(PoolElementNode)* newPoolElementNode;
-   unsigned int result;
-
-/*   union sockaddr_union    localAddress;
-   socklen_t               localAddressLength;*/
-   union sockaddr_union    registrarAddress;
-   struct RSerPoolMessage* message;
-   uint32_t                registrarID;
-   int                     sd;
-   char                    buffer[65536];
-   int                     flags;
-   uint32_t                ppid;
-   sctp_assoc_t            assocID;
-   uint16_t                streamID;
-   ssize_t                 received;
-   struct ST_CLASS(PeerListNode) peerListNode;
-   bool moreData;
+   struct ST_CLASS(PoolElementNode)*          poolElementNode;
+   struct ST_CLASS(PoolElementNode)*          newPoolElementNode;
+   unsigned int                               result;
+   union sockaddr_union                       registrarAddress;
+   struct RSerPoolMessage*                    message;
+   uint32_t                                   registrarID;
+   int                                        sd;
+   char                                       buffer[65536];
+   int                                        flags;
+   uint32_t                                   ppid;
+   sctp_assoc_t                               assocID;
+   uint16_t                                   streamID;
+   ssize_t                                    received;
+   struct ST_CLASS(PeerListNode)              peerListNode;
+   bool                                       moreData;
 
    if(argc < 2) {
       fprintf(stderr, "Usage: %s [Registrar]\n", argv[0]);
@@ -114,12 +98,10 @@ int main(int argc, char** argv)
       exit(1);
    }
 
+   registrarID = random32();
    ST_CLASS(poolHandlespaceManagementNew)(&handlespace,
                                           registrarID,
                                           NULL, NULL, NULL);
-
-
-   registrarID = random32();  // ??????
 
    if(transportAddressBlockGetAddressesFromSCTPSocket(localAddressArray,
                                                       sd,
@@ -213,10 +195,10 @@ int main(int argc, char** argv)
 
                         moreData = (message->Flags & EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND);
                         printf("Got %u pools, %u PEs => now having %u pools, %u PEs\n",
-                           ST_CLASS(poolHandlespaceManagementGetPools)(message->HandlespacePtr),
-                           ST_CLASS(poolHandlespaceManagementGetPoolElements)(message->HandlespacePtr),
-                           ST_CLASS(poolHandlespaceManagementGetPools)(&handlespace),
-                           ST_CLASS(poolHandlespaceManagementGetPoolElements)(&handlespace));
+                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(message->HandlespacePtr),
+                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(message->HandlespacePtr),
+                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(&handlespace),
+                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(&handlespace));
                      }
                      break;
                   }
