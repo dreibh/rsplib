@@ -796,13 +796,13 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                                              assocID);
                   if(sd >= 0) {
                      LOG_ACTION
-                     fprintf(stdlog, "Taking assoc %u as new registrar => socket %d\n", assocID, sd);
+                     fprintf(stdlog, "Taking assoc %u as new registrar => socket %d\n", (unsigned int)assocID, sd);
                      LOG_END
                      return(sd);
                   }
 
                   LOG_WARNING
-                  fprintf(stdlog, "Got crap via assoc %u -> aborting it\n", assocID);
+                  fprintf(stdlog, "Got crap via assoc %u -> aborting it\n", (unsigned int)assocID);
                   LOG_END
                   flags = 0;
                   recvfromplus(registrarHuntFD,
