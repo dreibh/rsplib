@@ -56,7 +56,6 @@ struct Job
    unsigned long long AcceptTimeStamp;
 };
 
-
 class JobQueue
 {
    public:
@@ -69,112 +68,89 @@ class JobQueue
    private:
    Job* FirstJob;
    Job* LastJob;
-
-   public:
-   void PrintStatistics()
-   {
-        /*   Job* job = FirstJob;
-         while(job != NULL)
-         {
-
-         cout << job->QueuingTimeStamp << endl;
-
-         job = job->Next;
-         }
-   */
-   return;
-   }
-
 };
-JobQueue :: JobQueue()
+
+
+// ###### Constructor #######################################################
+JobQueue::JobQueue()
 {
    FirstJob = NULL;
    LastJob  = NULL;
 }
-JobQueue :: ~JobQueue()
+
+
+// ###### Destructor ########################################################
+JobQueue::~JobQueue()
 {
    FirstJob = NULL;
    LastJob  = NULL;
-
-
 }
 
 
-
-
+// ###### Enqueue job #######################################################
 void JobQueue::enqueue(Job* job)
 {
-   job->Next = NULL;
-      job->QueuingTimeStamp = getMicroTime();
-      job->StartupTimeStamp = 0ULL;
+   job->Next             = NULL;
+   job->QueuingTimeStamp = getMicroTime();
+   job->StartupTimeStamp = 0ULL;
 
-
-   if (FirstJob == NULL && LastJob == NULL)
-   {
+   if((FirstJob == NULL) && (LastJob == NULL)) {
       FirstJob = job;
       LastJob  = job;
    }
-   else
-   {
+   else {
       LastJob ->Next = job;
-      LastJob = job;
+      LastJob        = job;
    }
 }
 
+
+// ###### Dequeue job #######################################################
 Job* JobQueue::dequeue()
 {
-   Job* job;
-   job = FirstJob;
-   if (FirstJob == LastJob)
-   {
+   Job* job = FirstJob;
+   if(FirstJob == LastJob) {
       FirstJob = NULL;
       LastJob  = NULL;
    }
-   else
-   {
+   else {
       FirstJob = FirstJob -> Next;
    }
-
-   if (job != NULL)
-   {
+   if(job != NULL) {
      job->StartupTimeStamp = getMicroTime();
    }
-
    return(job);
 }
+
+
 
 unsigned long long KeepAliveTransmissionInterval = 5000000;
 unsigned long long KeepAliveTimeoutInterval      = 5000000;
 unsigned long long JobInterval                   = 15000000;
-FILE*        VectorFH   = NULL;
-FILE*        ScalarFH   = NULL;
-unsigned int VectorLine = 0;
-double       JobSizeDeclaration			 = 5000000;
+FILE*              VectorFH                      = NULL;
+FILE*              ScalarFH                      = NULL;
+unsigned int       VectorLine                    = 0;
+double             JobSizeDeclaration            = 5000000;
 unsigned long long runtime                       = 24*60*60*1000000ULL;
-double TotalHandlingTime            = 0.0;
-double AverageHandlingTime          = 0.0;
-double TotalHandlingSpeed            = 0.0;
-double AverageHandlingSpeed          = 0.0;
-double AverageJobSize    	     = 0.0;
-unsigned long long TotalJobInterval  = 0;
-unsigned long long AverageJobInterval= 0;
-unsigned int TotalJobsQueued         = 0;
-unsigned int TotalJobsStarted        = 0;
-double TotalJobSizeQueued            = 0.0;
-double TotalJobSizeStarted           = 0.0;
-double TotalJobSizeCompleted         = 0.0;
-Statistics stat1;
-Statistics stat2;
-Statistics stat3;
-Statistics stat4;
-Statistics stat5;
-Statistics stat6;
-Statistics stat7;
-Statistics stat8;
-Statistics stat9;
-Statistics stat10;
-Statistics stat11;
-Statistics stat12;
+double             TotalHandlingTime             = 0.0;
+double             AverageHandlingTime           = 0.0;
+double             TotalHandlingSpeed            = 0.0;
+double             AverageHandlingSpeed          = 0.0;
+double             AverageJobSize                = 0.0;
+unsigned long long TotalJobInterval              = 0;
+unsigned long long AverageJobInterval            = 0;
+unsigned int       TotalJobsQueued               = 0;
+unsigned int       TotalJobsStarted              = 0;
+double             TotalJobSizeQueued            = 0.0;
+double             TotalJobSizeStarted           = 0.0;
+double             TotalJobSizeCompleted         = 0.0;
+Statistics StartupTimeStat;
+Statistics QueuingTimeStat;
+Statistics ProcessingTimeStat;
+Statistics HandlingTimeStat;
+Statistics HandlingSpeedStat;
+Statistics JobSizeStat;
+Statistics JobIntervalStat;
 
 enum ProcessStatus {
    PS_Init       = 0,
@@ -197,7 +173,7 @@ struct Process {
    size_t             TotalCalcAppKeepAliveAcks;
    size_t             TotalCalcAppCompleted;
 
-   // ------ Timers ------------------------------------------------------
+   // ------ Timers ---------------------------------------------------------
    unsigned long long NextJobTimeStamp;
    unsigned long long KeepAliveTransmissionTimeStamp;
    unsigned long long KeepAliveTimeoutTimeStamp;
@@ -359,12 +335,11 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
-   double HandlingTime = 0.0;
-   double HandlingSpeed = 0.0;
-   double QueueingTime = 0.0;
-   double StartupTime = 0.0;
-   double ProcessingTime = 0.0;
-
+   double handlingTime   = 0.0;
+   double handlingSpeed  = 0.0;
+   double queueingTime   = 0.0;
+   double startupTime    = 0.0;
+   double processingTime = 0.0;
 
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
@@ -378,37 +353,41 @@ void handleCalcAppCompleted(struct Process* process,
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    process->CurrentJob->CompleteTimeStamp  = getMicroTime();
 
-   QueueingTime = process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp;
-   StartupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
-   ProcessingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
-
-   HandlingTime = (QueueingTime + StartupTime + ProcessingTime);
-   HandlingSpeed = process->CurrentJob->JobSize / HandlingTime ;
-   TotalHandlingTime+= HandlingTime;
-   TotalJobSizeCompleted+= process->CurrentJob->JobSize;
-   TotalJobInterval+= JobInterval;
-   TotalHandlingSpeed+=HandlingSpeed;
-
-   stat1.collect(StartupTime/1000000.0);
-   stat2.collect(QueueingTime/1000000.0);
-   stat3.collect(ProcessingTime/1000000.0);
-   stat4.collect(HandlingTime/1000000.0);
-   stat5.collect(HandlingSpeed/1000000.0);
-   stat6.collect(process->CurrentJob->JobSize);
-   stat7.collect(JobInterval/1000000.0);
-   stat8.collect(StartupTime/1000000.0);
-   stat9.collect(QueueingTime/1000000.0);
-   stat10.collect(ProcessingTime/1000000.0);
-   stat11.collect(HandlingTime/1000000.0);
-   stat12.collect(HandlingSpeed/1000000.0);
-
-   cout << "JobSize:     " << process->CurrentJob->JobSize << endl;
-   cout << "StartupTime: " << StartupTime << " QueueingTime: " << QueueingTime << " Processing Time: " << ProcessingTime << endl;
-   cout << "Handling Delay: " << HandlingTime << " Handling Speed: " << HandlingSpeed << endl;
-
-   fprintf(VectorFH," %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.6f %llu %llu %llu %llu\n", process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval, QueueingTime, StartupTime, ProcessingTime, HandlingTime, HandlingSpeed, process->CurrentJob->StartupTimeStamp, process->CurrentJob->AcceptTimeStamp, process->CurrentJob->QueuingTimeStamp, process->CurrentJob->CompleteTimeStamp);
    process->TotalCalcAppCompleted++;
 
+   queueingTime = process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp;
+   startupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
+   processingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
+
+   handlingTime          = (queueingTime + startupTime + processingTime);
+   handlingSpeed         = process->CurrentJob->JobSize / handlingTime ;
+   TotalHandlingTime     += handlingTime;
+   TotalJobSizeCompleted += process->CurrentJob->JobSize;
+   TotalJobInterval      += JobInterval;
+   TotalHandlingSpeed    += handlingSpeed;
+
+   StartupTimeStat.collect(startupTime / 1000000.0);
+   QueuingTimeStat.collect(queueingTime / 1000000.0);
+   ProcessingTimeStat.collect(processingTime / 1000000.0);
+   HandlingTimeStat.collect(handlingTime / 1000000.0);
+   HandlingSpeedStat.collect(handlingSpeed / 1000000.0);
+   JobSizeStat.collect(process->CurrentJob->JobSize);
+   JobIntervalStat.collect(JobInterval / 1000000.0);
+
+   cout << "JobSize:      " << process->CurrentJob->JobSize << endl;
+   cout << "StartupTime:  " << startupTime  << " QueueingTime: "  << queueingTime << " ProcessingTime: " << processingTime << endl;
+   cout << "HandlingTime: " << handlingTime << " HandlingSpeed: " << handlingSpeed << endl;
+
+   fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.6f %llu %llu %llu %llu\n",
+           ++VectorLine,
+           process->CurrentJob->JobID,
+           process->CurrentJob->JobSize, JobInterval,
+           queueingTime, startupTime, processingTime, handlingTime,
+           handlingSpeed,
+           process->CurrentJob->StartupTimeStamp,
+           process->CurrentJob->AcceptTimeStamp,
+           process->CurrentJob->QueuingTimeStamp,
+           process->CurrentJob->CompleteTimeStamp);
 }
 
 
@@ -525,24 +504,18 @@ void handleEvents(Process*    process,
 // ###### Handle timers #####################################################
 void handleTimer(Process* process)
 {
-   unsigned long long now = getMicroTime();
-
+   const unsigned long long now = getMicroTime();
    if(process->KeepAliveTransmissionTimeStamp <= now) {
       handleKeepAliveTransmissionTimer(process);
       process->KeepAliveTransmissionTimeStamp = ~0ULL;
    }
-
-//   if(!process->Closing) {
-      if(process->KeepAliveTimeoutTimeStamp <= now) {
-         handleKeepAliveTimeoutTimer(process);
-         process->KeepAliveTimeoutTimeStamp = ~0ULL;
-      }
-     if (process->NextJobTimeStamp <= now)
-     {
+   if(process->KeepAliveTimeoutTimeStamp <= now) {
+      handleKeepAliveTimeoutTimer(process);
+      process->KeepAliveTimeoutTimeStamp = ~0ULL;
+   }
+   if(process->NextJobTimeStamp <= now) {
       handleNextJobTimer(process);
-     }
-//   }
-
+   }
    if(process->NextJobTimeStamp <= now) {
       handleNextJobTimer(process);
    }
@@ -652,31 +625,13 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    }
 
 finished:
-    /* AverageHandlingTime  = TotalHandlingTime / process.TotalCalcAppCompleted;
-    AverageHandlingSpeed  = TotalHandlingSpeed / process.TotalCalcAppCompleted;
-    AverageJobSize        = TotalJobSize       / process.TotalCalcAppCompleted;
-    AverageJobInterval    = TotalJobInterval   / process.TotalCalcAppCompleted;
-   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests\" %u\n", objectName, process.TotalCalcAppRequests);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingTime \" %1.6f\n", objectName, AverageHandlingTime);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageHandlingSpeed \" %1.6f\n", objectName, AverageHandlingSpeed);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobSize       \" %1.6f\n", objectName, AverageJobSize);
-   fprintf(ScalarFH, "scalar \"%s\" \"AverageJobInterval   \" %llu\n", objectName, AverageJobInterval); */
-
-   /*fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f min=%f max=%f stddev=%f\n", objectName, stat1.mean(), stat1.minimum(), stat1.maximum(), stat1.stddev()); */
-
-   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, stat1.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, stat2.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, stat3.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f \n", objectName, stat4.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, stat5.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, stat6.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, stat7.mean());
-
-   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"stddev=%f \n", objectName, stat8.stddev());
-   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"stddev=%f \n", objectName, stat9.stddev());
-   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"stddev=%f \n", objectName, stat10.stddev());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"stddev=%f \n", objectName, stat11.stddev());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"stddev=%f \n", objectName, stat12.stddev());
+   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, StartupTimeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, QueuingTimeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, ProcessingTimeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f \n", objectName, HandlingTimeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, HandlingSpeedStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, JobSizeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, JobIntervalStat.mean());
 
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests     \"%u \n", objectName, process.TotalCalcAppRequests);
    fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppAccepts      \"%u \n", objectName, process.TotalCalcAppAccepted);
@@ -688,7 +643,6 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Queued\" %1.6f \n", objectName, TotalJobSizeQueued);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Started\" %1.6f \n", objectName, TotalJobSizeStarted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Completed\" %1.6f \n", objectName, TotalJobSizeCompleted);
-
    return;
 }
 
@@ -762,8 +716,8 @@ puts("CSP!");
 #endif
 
 
-   cout << "CalcApp Pool User - Version 1.0" << endl
-        << "===============================" << endl << endl
+   cout << "CalcApp Client - Version 1.0" << endl
+        << "============================" << endl << endl
         << "Object      = " << objectName << endl
         << "Vector File = " << vectorFileName << endl
         << "Scalar File = " << scalarFileName << endl

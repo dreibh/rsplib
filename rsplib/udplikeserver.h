@@ -50,6 +50,7 @@ class UDPLikeServer
                             struct TagItem*      tags          = NULL);
 
    protected:
+   virtual void printParameters();
    void startTimer(unsigned long long timeStamp);
    void stopTimer();
 

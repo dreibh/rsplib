@@ -102,6 +102,7 @@ class TCPLikeServer : public TDThread
    TCPLikeServerList* ServerList;
 
    protected:
+   virtual void printParameters();
    virtual EventHandlingResult initialize();
    virtual void finish(EventHandlingResult result);
    virtual EventHandlingResult handleMessage(const char* buffer,

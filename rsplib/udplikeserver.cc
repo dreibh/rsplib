@@ -109,6 +109,12 @@ void UDPLikeServer::finish(EventHandlingResult result)
 }
 
 
+// ###### Print parameters ##################################################
+void UDPLikeServer::printParameters()
+{
+}
+
+
 // ###### Implementation of a simple UDP-like server ########################
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
@@ -140,7 +146,9 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       for(size_t i = 0;i < strlen(programTitle);i++) {
          printf("=");
       }
-      printf("\n\nPool Handle = %s\n\n", poolHandle);
+      puts("\n\nGeneral Parameters:");
+      printf("   Pool Handle = %s\n\n", poolHandle);
+      printParameters();
 
       // ====== Register PE =================================================
       if(rsp_register(RSerPoolSocketDescriptor,

@@ -117,44 +117,4 @@ class PingPongServer : public TCPLikeServer
    size_t                 Replies;
 };
 
-
-#include "fractalgeneratorpackets.h"
-
-class FractalGeneratorServer : public TCPLikeServer
-{
-   public:
-   struct FractalGeneratorServerSettings
-   {
-      size_t FailureAfter;
-      bool  TestMode;
-   };
-
-   FractalGeneratorServer(int                             rserpoolSocketDescriptor,
-                          FractalGeneratorServerSettings* settings);
-   ~FractalGeneratorServer();
-
-   static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData);
-
-   protected:
-   EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
-   EventHandlingResult handleMessage(const char* buffer,
-                                     size_t      bufferSize,
-                                     uint32_t    ppid,
-                                     uint16_t    streamID);
-
-   private:
-   bool sendCookie();
-   bool sendData(FGPData* data);
-   bool handleParameter(const FGPParameter* parameter,
-                        const size_t        size,
-                        const bool          insideCookie = false);
-   EventHandlingResult calculateImage();
-
-   FractalGeneratorStatus         Status;
-   unsigned long long             LastCookieTimeStamp;
-   unsigned long long             LastSendTimeStamp;
-   FractalGeneratorServerSettings Settings;
-};
-
-
 #endif

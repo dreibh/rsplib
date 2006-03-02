@@ -79,6 +79,12 @@ void TCPLikeServer::shutdown()
 }
 
 
+// ###### Print parameters ##################################################
+void TCPLikeServer::printParameters()
+{
+}
+
+
 // ##### Get load ###########################################################
 double TCPLikeServer::getLoad() const
 {
@@ -241,7 +247,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       for(size_t i = 0;i < strlen(programTitle);i++) {
          printf("=");
       }
-      puts("\n");
+      puts("\n\nGeneral Parameters:");
+      printf("   Pool Handle = %s\n\n", poolHandle);
+      printParameters();
 
       // ====== Register PE =================================================
       if(rsp_register_tags(rserpoolSocket,

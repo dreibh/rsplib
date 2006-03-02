@@ -23,118 +23,16 @@
  *
  */
 
-#include "rserpool.h"
-#include "loglevel.h"
-#include "udplikeserver.h"
-#include "timeutilities.h"
-#include "netutilities.h"
-#include "rsputilities.h"
-#include "breakdetector.h"
-#include "randomizer.h"
-#include "statistics.h"
-#include "calcapppackets.h"
-
 #include <iostream>
 
+#include "calcappservice.h"
+#include "netutilities.h"
+#include "timeutilities.h"
+#include "stringutilities.h"
+#include "loglevel.h"
+
+
 using namespace std;
-
-
-class CalcAppServer : public UDPLikeServer
-{
-   public:
-   CalcAppServer(const size_t maxJobs,
-                 const char*  objectName,
-                 const char*  vectorFileName,
-                 const char*  scalarFileName);
-   virtual ~CalcAppServer();
-
-   protected:
-   virtual EventHandlingResult initialize();
-   virtual void finish(EventHandlingResult result);
-   virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
-                                             const char*        buffer,
-                                             size_t             bufferSize,
-                                             uint32_t           ppid,
-                                             uint16_t           streamID);
-   virtual EventHandlingResult handleCookieEcho(rserpool_session_t sessionID,
-                                                const char*        buffer,
-                                                size_t             bufferSize);
-   virtual void handleTimer();
-
-   private:
-   struct CalcAppServerJob {
-      CalcAppServerJob*  Next;
-      rserpool_session_t SessionID;
-      uint32_t           JobID;
-
-      // ------ Variables ---------------------------------------------------
-      double             JobSize;
-      double             Completed;
-      unsigned long long LastUpdateAt;
-      unsigned long long LastCookieAt;
-      double             LastCookieCompleted;
-
-      // ------ Timers ------------------------------------------------------
-      unsigned long long KeepAliveTransmissionTimeStamp;
-      unsigned long long KeepAliveTimeoutTimeStamp;
-      unsigned long long JobCompleteTimeStamp;
-      unsigned long long CookieTransmissionTimeStamp;
-   };
-
-   CalcAppServerJob* addJob(rserpool_session_t sessionID,
-                            uint32_t           jobID,
-                            double             jobSize,
-                            double             completed);
-   CalcAppServerJob* findJob(rserpool_session_t sessionID,
-                             uint32_t           jobID);
-   void removeJob(CalcAppServerJob* job);
-   void removeAllJobs();
-   void updateCalculations();
-   void scheduleJobs();
-   void scheduleNextTimerEvent();
-
-   void handleCalcAppRequest(rserpool_session_t    sessionID,
-                             const CalcAppMessage* message,
-                             const size_t          received);
-   void sendCalcAppAccept(CalcAppServerJob* job);
-   void sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID);
-   void handleJobCompleteTimer(CalcAppServerJob* job);
-   void sendCalcAppComplete(CalcAppServerJob* job);
-   void handleCalcAppKeepAlive(rserpool_session_t    sessionID,
-                               const CalcAppMessage* message,
-                               const size_t          received);
-   void sendCalcAppKeepAliveAck(CalcAppServerJob* job);
-   void sendCalcAppKeepAlive(CalcAppServerJob* job);
-   void handleCalcAppKeepAliveAck(rserpool_session_t    sessionID,
-                                  const CalcAppMessage* message,
-                                  const size_t          received);
-   void handleKeepAliveTransmissionTimer(CalcAppServerJob* job);
-   void handleKeepAliveTimeoutTimer(CalcAppServerJob* job);
-   void sendCookie(CalcAppServerJob* job);
-   void handleCookieTransmissionTimer(CalcAppServerJob* job);
-
-
-   size_t             Jobs;
-   CalcAppServerJob*  FirstJob;
-   std::string        ObjectName;
-   std::string        VectorFileName;
-   std::string        ScalarFileName;
-   FILE*              VectorFH;
-   FILE*              ScalarFH;
-
-   unsigned int VectorLine;
-   size_t             MaxJobs;
-   double             Capacity;
-   unsigned long long StartupTimeStamp;
-   double             TotalUsedCalculations;
-   unsigned long long KeepAliveTimeoutInterval;
-   unsigned long long KeepAliveTransmissionInterval;
-   unsigned long long CookieMaxTime;
-   double             CookieMaxCalculations;
-
-   unsigned int       AcceptedJobs;
-   unsigned int       RejectedJobs;
-};
 
 
 // ###### Constructor #######################################################
@@ -640,8 +538,6 @@ void CalcAppServer::handleCookieTransmissionTimer(CalcAppServer::CalcAppServerJo
 }
 
 
-
-
 // ###### Handle message ####################################################
 EventHandlingResult CalcAppServer::handleMessage(rserpool_session_t sessionID,
                                                  const char*        buffer,
@@ -708,86 +604,4 @@ void CalcAppServer::handleTimer()
    }
 
    scheduleNextTimerEvent();
-}
-
-
-
-// ###### Main program ######################################################
-int main(int argc, char** argv)
-{
-   struct rsp_info info;
-   struct TagItem  tags[8];
-   unsigned int    reregInterval  = 30000;
-   unsigned int    runtimeLimit   = 0;
-   const char*     poolHandle     = NULL;
-   size_t          maxJobs        = 2;
-   char*           objectName     = "scenario.calcapppoolelement[0]";
-   char*           vectorFileName = "calcapppoolelement.vec";
-   char*           scalarFileName = "calcapppoolelement.sca";
-
-   /* ====== Read parameters ============================================= */
-   memset(&info, 0, sizeof(info));
-   tags[0].Tag  = TAG_PoolElement_Identifier;
-   tags[0].Data = 0;
-   tags[1].Tag  = TAG_DONE;
-#ifdef ENABLE_CSP
-   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, 0);
-#endif
-   for(int i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
-      }
-#ifdef ENABLE_CSP
-      if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
-      }
-#endif
-      else if(!(strncmp(argv[i], "-identifier=", 12))) {
-         tags[0].Data = atol((const char*)&argv[i][12]);
-#ifdef ENABLE_CSP
-         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
-#endif
-      }
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
-      }
-      else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
-         poolHandle = (char*)&argv[i][12];
-      }
-      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
-         reregInterval = atol((char*)&argv[i][15]);
-         if(reregInterval < 250) {
-            reregInterval = 250;
-         }
-      }
-      else if(!(strncmp(argv[i], "-runtime=" ,9))) {
-         runtimeLimit = atol((const char*)&argv[i][9]);
-      }
-      else if(!(strncmp(argv[i], "-object=" ,8))) {
-         objectName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-vector=" ,8))) {
-         vectorFileName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-scalar=" ,8))) {
-         scalarFileName = (char*)&argv[i][8];
-      }
-      else if(!(strncmp(argv[i], "-maxjobs=" ,9))) {
-         maxJobs = atol((char*)&argv[i][9]);
-      }
-   }
-
-   CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName);
-   calcAppServer.poolElement("CalcAppServer - Version 1.0",
-                             (poolHandle != NULL) ? poolHandle : "CalcAppPool",
-                             &info, NULL,
-                             reregInterval, runtimeLimit,
-                             (struct TagItem*)&tags);
 }

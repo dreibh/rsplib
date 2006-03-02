@@ -29,15 +29,17 @@
 #include "tagitem.h"
 #include "rsputilities.h"
 #include "standardservices.h"
+#include "fractalgeneratorservice.h"
+#include "calcappservice.h"
 
 
 #define SERVICE_ECHO     1
 #define SERVICE_DISCARD  2
 #define SERVICE_DAYTIME  3
 #define SERVICE_CHARGEN  4
-
 #define SERVICE_PINGPONG 5
 #define SERVICE_FRACTAL  6
+#define SERVICE_CALCAPP  7
 
 
 /* ###### Main program ################################################### */
@@ -171,6 +173,9 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-fractal"))) {
          service = SERVICE_FRACTAL;
       }
+      else if(!(strcmp(argv[i], "-calcapp"))) {
+         service = SERVICE_CALCAPP;
+      }
    }
 
 
@@ -280,6 +285,36 @@ int main(int argc, char** argv)
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
+   }
+   else if(service == SERVICE_CALCAPP) {
+      const char* objectName     = "scenario.calcapppoolelement[0]";
+      const char* vectorFileName = "calcapppoolelement.vec";
+      const char* scalarFileName = "calcapppoolelement.sca";
+      size_t      maxJobs        = 2;
+      for(int i = 1;i < argc;i++) {
+         if(!(strncmp(argv[i], "-capobject=" ,11))) {
+            objectName = (const char*)&argv[i][11];
+         }
+         else if(!(strncmp(argv[i], "-capvector=" ,11))) {
+            vectorFileName = (const char*)&argv[i][11];
+         }
+         else if(!(strncmp(argv[i], "-capscalar=" ,11))) {
+            scalarFileName = (const char*)&argv[i][11];
+         }
+         else if(!(strncmp(argv[i], "-capmaxjobs=" ,12))) {
+            maxJobs = atol((char*)&argv[i][12]);
+            if(maxJobs < 1) {
+               maxJobs = 1;
+            }
+         }
+      }
+
+      CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName);
+      calcAppServer.poolElement("CalcApp Server - Version 1.0",
+                                (poolHandle != NULL) ? poolHandle : "DaytimePool",
+                                &info, &loadInfo,
+                                reregInterval, runtimeLimit,
+                                (struct TagItem*)&tags);
    }
 
    return(0);
