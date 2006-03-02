@@ -1516,14 +1516,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
             if(CID_OBJECT(*identifier) == 0) {
                *identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, rserpoolSocket->PoolElement->Identifier);
             }
-            if((rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_LEASTUSED) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_LEASTUSED_DEGRADATION) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_PRIORITY_LEASTUSED) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_PRIORITY_LEASTUSED_DEGRADATION) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_LEASTUSED) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED) ||
-               (rserpoolSocket->PoolElement->LoadInfo.rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION)) {
+            if(PPT_IS_ADAPTIVE(rserpoolSocket->PoolElement->LoadInfo.rli_policy)) {
                *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)0xffffff;
             }
          }
