@@ -79,12 +79,6 @@ void TCPLikeServer::shutdown()
 }
 
 
-// ###### Print parameters ##################################################
-void TCPLikeServer::printParameters()
-{
-}
-
-
 // ##### Get load ###########################################################
 double TCPLikeServer::getLoad() const
 {
@@ -102,10 +96,6 @@ void TCPLikeServer::setLoad(double load)
       return;
    }
    const unsigned int newLoad = (unsigned int)rint(load * (double)0xffffff);
-   if((load < 0.0) || (load > 1.0)) {
-      fputs("ERROR: Invalid load setting!\n", stderr);
-      return;
-   }
    if(ServerList->LoadSum - Load + newLoad > 0xffffff) {
       fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stderr);
       return;
@@ -220,6 +210,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 struct rsp_loadinfo* loadinfo,
                                 size_t               maxThreads,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                                void                 (*printParameters)(const void* userData),
                                 void*                userData,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
@@ -247,9 +238,27 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       for(size_t i = 0;i < strlen(programTitle);i++) {
          printf("=");
       }
+      const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
       puts("\n\nGeneral Parameters:");
-      printf("   Pool Handle = %s\n\n", poolHandle);
-      printParameters();
+      printf("   Pool Handle             = %s\n", poolHandle);
+      printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+      printf("   Runtime Limit           = ");
+      if(runtimeLimit > 0) {
+         printf("%u [s]\n", runtimeLimit);
+      }
+      else {
+         puts("off");
+      }
+      puts("   Policy Settings");
+      printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+      printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)0xffffff));
+      printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)0xffffffff));
+      printf("      Weight               = %u\n", loadinfo->rli_weight);
+      printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)0xffffffff));
+      if(printParameters) {
+         printParameters(userData);
+      }
+      puts("\n");
 
       // ====== Register PE =================================================
       if(rsp_register_tags(rserpoolSocket,
@@ -280,14 +289,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             }
 
             // ====== Do reregistration on load changes =====================
-            if((loadinfo->rli_policy == PPT_LEASTUSED) ||
-               (loadinfo->rli_policy == PPT_LEASTUSED_DEGRADATION) ||
-               (loadinfo->rli_policy == PPT_PRIORITY_LEASTUSED) ||
-               (loadinfo->rli_policy == PPT_PRIORITY_LEASTUSED_DEGRADATION) ||
-               (loadinfo->rli_policy == PPT_RANDOMIZED_LEASTUSED) ||
-               (loadinfo->rli_policy == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) ||
-               (loadinfo->rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED) ||
-               (loadinfo->rli_policy == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION)) {
+            if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
                const double newLoad = serverSet.getTotalLoad();
                if(fabs(newLoad - oldLoad) >= 0.01) {
                   oldLoad = newLoad;
@@ -316,7 +318,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
          rsp_deregister(rserpoolSocket);
       }
       else {
-         printf("Failed to register PE to pool %s\n", poolHandle);
+         printf("ERROR: Failed to register PE to pool %s\n", poolHandle);
       }
       rsp_close(rserpoolSocket);
    }

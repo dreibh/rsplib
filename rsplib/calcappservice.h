@@ -36,15 +36,21 @@
 class CalcAppServer : public UDPLikeServer
 {
    public:
-   CalcAppServer(const size_t maxJobs,
-                 const char*  objectName,
-                 const char*  vectorFileName,
-                 const char*  scalarFileName);
+   CalcAppServer(const size_t             maxJobs,
+                 const char*              objectName,
+                 const char*              vectorFileName,
+                 const char*              scalarFileName,
+                 const double             capacity,
+                 const unsigned long long keepAliveTransmissionInterval,
+                 const unsigned long long keepAliveTimeoutInterval,
+                 const unsigned long long cookieMaxTime,
+                 const double             cookieMaxCalculations);
    virtual ~CalcAppServer();
 
    protected:
    virtual EventHandlingResult initialize();
    virtual void finish(EventHandlingResult result);
+   virtual void printParameters();
    virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
                                              const char*        buffer,
                                              size_t             bufferSize,

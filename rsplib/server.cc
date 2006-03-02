@@ -234,7 +234,7 @@ int main(int argc, char** argv)
                                   &info, &loadInfo,
                                   maxThreads,
                                   CharGenServer::charGenServerFactory,
-                                  NULL,
+                                  NULL, NULL,
                                   reregInterval, runtimeLimit,
                                   (struct TagItem*)&tags);
    }
@@ -256,6 +256,7 @@ int main(int argc, char** argv)
                                  &info, &loadInfo,
                                  maxThreads,
                                  PingPongServer::pingPongServerFactory,
+                                 NULL,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
@@ -282,15 +283,21 @@ int main(int argc, char** argv)
                                  &info, &loadInfo,
                                  maxThreads,
                                  FractalGeneratorServer::fractalGeneratorServerFactory,
+                                 FractalGeneratorServer::fractalGeneratorPrintParameters,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CALCAPP) {
-      const char* objectName     = "scenario.calcapppoolelement[0]";
-      const char* vectorFileName = "calcapppoolelement.vec";
-      const char* scalarFileName = "calcapppoolelement.sca";
-      size_t      maxJobs        = 2;
+      const char*        objectName                    = "scenario.calcapppoolelement[0]";
+      const char*        vectorFileName                = "calcapppoolelement.vec";
+      const char*        scalarFileName                = "calcapppoolelement.sca";
+      double             capacity                      = 1000000.0;
+      unsigned long long keepAliveTransmissionInterval = 2500000;
+      unsigned long long keepAliveTimeoutInterval      = 2500000;
+      unsigned long long cookieMaxTime                 = 5000000;
+      double             cookieMaxCalculations         = 5000000.0;
+      size_t             maxJobs                       = 2;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-capobject=" ,11))) {
             objectName = (const char*)&argv[i][11];
@@ -307,11 +314,44 @@ int main(int argc, char** argv)
                maxJobs = 1;
             }
          }
+         else if(!(strncmp(argv[i], "-capkeepalivetransmissioninterval=" ,34))) {
+            keepAliveTransmissionInterval = atol((char*)&argv[i][34]);
+            if(keepAliveTransmissionInterval < 100000) {
+               keepAliveTransmissionInterval = 100000;
+            }
+         }
+         else if(!(strncmp(argv[i], "-capkeepalivetimeoutinterval=" ,29))) {
+            keepAliveTimeoutInterval = atol((char*)&argv[i][29]);
+            if(keepAliveTimeoutInterval < 100000) {
+               keepAliveTimeoutInterval = 100000;
+            }
+         }
+         else if(!(strncmp(argv[i], "-capcapacity=" ,13))) {
+            capacity = atof((char*)&argv[i][13]);
+            if(capacity < 1.0) {
+               capacity = 1.0;
+            }
+         }
+         else if(!(strncmp(argv[i], "-capcookiemaxcalculations=" ,26))) {
+            cookieMaxCalculations = atof((char*)&argv[i][26]);
+            if(cookieMaxCalculations < 1.0) {
+               cookieMaxCalculations = 1.0;
+            }
+         }
+         else if(!(strncmp(argv[i], "-capcookiemaxtime=" ,18))) {
+            cookieMaxTime = atol((char*)&argv[i][18]);
+            if(cookieMaxTime < 100000) {
+               cookieMaxTime = 100000;
+            }
+         }
       }
 
-      CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName);
+      CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName,
+                                  capacity,
+                                  keepAliveTransmissionInterval, keepAliveTimeoutInterval,
+                                  cookieMaxTime, cookieMaxCalculations);
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
-                                (poolHandle != NULL) ? poolHandle : "DaytimePool",
+                                (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                                 &info, &loadInfo,
                                 reregInterval, runtimeLimit,
                                 (struct TagItem*)&tags);

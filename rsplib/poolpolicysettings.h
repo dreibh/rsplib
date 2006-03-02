@@ -55,6 +55,18 @@ extern "C" {
 #define PPT_LEASTUSED_DPF                             0x21
 
 
+#define PPT_IS_ADAPTIVE(p) \
+   ( ((p) == PPT_LEASTUSED) || \
+     ((p) == PPT_LEASTUSED_DPF) || \
+     ((p) == PPT_LEASTUSED_DEGRADATION) || \
+     ((p) == PPT_PRIORITY_LEASTUSED) || \
+     ((p) == PPT_PRIORITY_LEASTUSED_DEGRADATION) || \
+     ((p) == PPT_RANDOMIZED_LEASTUSED) || \
+     ((p) == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) || \
+     ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED) || \
+     ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION) )
+
+
 struct PoolPolicySettings
 {
    unsigned int PolicyType;

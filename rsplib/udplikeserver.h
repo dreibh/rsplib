@@ -49,6 +49,9 @@ class UDPLikeServer
                             unsigned int         runtimeLimit  = 0,
                             struct TagItem*      tags          = NULL);
 
+   double getLoad() const;
+   void setLoad(double load);
+
    protected:
    virtual void printParameters();
    void startTimer(unsigned long long timeStamp);
@@ -70,6 +73,7 @@ class UDPLikeServer
 
    private:
    unsigned long long NextTimerTimeStamp;
+   unsigned int       Load;
 };
 
 

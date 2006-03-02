@@ -92,6 +92,7 @@ class TCPLikeServer : public TDThread
                            struct rsp_loadinfo* loadinfo,
                            size_t               maxThreads,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                           void                 (*printParameters)(const void* userData),
                            void*                userData,
                            unsigned int         reregInterval = 30000,
                            unsigned int         runtimeLimit  = 0,
@@ -102,7 +103,6 @@ class TCPLikeServer : public TDThread
    TCPLikeServerList* ServerList;
 
    protected:
-   virtual void printParameters();
    virtual EventHandlingResult initialize();
    virtual void finish(EventHandlingResult result);
    virtual EventHandlingResult handleMessage(const char* buffer,

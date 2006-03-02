@@ -36,37 +36,57 @@ using namespace std;
 
 
 // ###### Constructor #######################################################
-CalcAppServer::CalcAppServer(const size_t maxJobs,
-                             const char*  objectName,
-                             const char*  vectorFileName,
-                             const char*  scalarFileName)
+CalcAppServer::CalcAppServer(const size_t             maxJobs,
+                             const char*              objectName,
+                             const char*              vectorFileName,
+                             const char*              scalarFileName,
+                             const double             capacity,
+                             const unsigned long long keepAliveTransmissionInterval,
+                             const unsigned long long keepAliveTimeoutInterval,
+                             const unsigned long long cookieMaxTime,
+                             const double             cookieMaxCalculations)
 {
-   Jobs           = 0;
-   FirstJob       = NULL;
-   ObjectName     = objectName;
-   VectorFileName = vectorFileName;
-   ScalarFileName = scalarFileName;
-   VectorFH       = NULL;
-   ScalarFH       = NULL;
-
-   VectorLine = 0;
+   FirstJob                      = NULL;
+   ObjectName                    = objectName;
+   VectorFileName                = vectorFileName;
+   ScalarFileName                = scalarFileName;
+   VectorFH                      = NULL;
+   ScalarFH                      = NULL;
    MaxJobs                       = maxJobs;
    TotalUsedCalculations         = 0.0;
-   Capacity                      = 1000000.0;
-   KeepAliveTimeoutInterval      = 2000000;
-   KeepAliveTransmissionInterval = 2000000;
-   CookieMaxTime                 = 1000000;
-   CookieMaxCalculations         = 5000000.0;
+   Capacity                      = capacity;
+   KeepAliveTimeoutInterval      = keepAliveTimeoutInterval;
+   KeepAliveTransmissionInterval = keepAliveTransmissionInterval;
+   CookieMaxTime                 = cookieMaxTime;
+   CookieMaxCalculations         = cookieMaxCalculations;
    StartupTimeStamp              = getMicroTime();
 
+   VectorLine                    = 0;
    AcceptedJobs                  = 0;
    RejectedJobs                  = 0;
+   Jobs                          = 0;
 }
 
 
 // ###### Destructor ########################################################
 CalcAppServer::~CalcAppServer()
 {
+}
+
+
+// ###### Print parameters ##################################################
+void CalcAppServer::printParameters()
+{
+   puts("CalcApp Parameters:");
+   printf("   Object Name              = %s\n", ObjectName.c_str());
+   printf("   Vector File Name         = %s\n", VectorFileName.c_str());
+   printf("   Scalar File Name         = %s\n", ScalarFileName.c_str());
+   printf("   Max Jobs                 = %u\n", MaxJobs);
+   printf("   Capacity                 = %1.1f [Calculations/s]\n",Capacity);
+   printf("   KA Transmission Interval = %llu [us]\n", KeepAliveTransmissionInterval);
+   printf("   KA Timeout Interval      = %llu [us]\n", KeepAliveTimeoutInterval);
+   printf("   Cookie Max Time          = %llu [us]\n", CookieMaxTime);
+   printf("   Cookie Max Calculations  = %1.0f [Calculations]\n", CookieMaxCalculations);
 }
 
 
@@ -220,6 +240,8 @@ void CalcAppServer::scheduleJobs()
          job = job->Next;
       }
    }
+
+   setLoad((double)Jobs / (double)MaxJobs);
 }
 
 

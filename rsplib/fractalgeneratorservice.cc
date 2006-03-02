@@ -55,6 +55,17 @@ TCPLikeServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, voi
 }
 
 
+// ###### Print parameters ##################################################
+void FractalGeneratorServer::fractalGeneratorPrintParameters(const void* userData)
+{
+   const FractalGeneratorServerSettings* settings = (const FractalGeneratorServerSettings*)userData;
+
+   puts("Fractal Generator Parameters:");
+   printf("   Failure After = %u [Packets]\n", settings->FailureAfter);
+   printf("   Test Mode     = %s\n", (settings->TestMode == true) ? "on" : "off");
+}
+
+
 // ###### Send cookie #######################################################
 bool FractalGeneratorServer::sendCookie()
 {

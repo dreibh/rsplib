@@ -45,6 +45,7 @@ class FractalGeneratorServer : public TCPLikeServer
    ~FractalGeneratorServer();
 
    static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData);
+   static void fractalGeneratorPrintParameters(const void* userData);
 
    protected:
    EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);

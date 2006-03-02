@@ -34,12 +34,32 @@ UDPLikeServer::UDPLikeServer()
 {
    RSerPoolSocketDescriptor = -1;
    NextTimerTimeStamp       = 0;
+   Load                     = 0;
 }
 
 
 // ###### Destructor ########################################################
 UDPLikeServer::~UDPLikeServer()
 {
+   RSerPoolSocketDescriptor = -1;
+}
+
+
+// ##### Get load ###########################################################
+double UDPLikeServer::getLoad() const
+{
+   return((double)Load / (double)0xffffff);
+}
+
+
+// ##### Set load ###########################################################
+void UDPLikeServer::setLoad(double load)
+{
+   if((load < 0.0) || (load > 1.0)) {
+      fputs("ERROR: Invalid load setting!\n", stderr);
+      return;
+   }
+   Load = (unsigned int)rint(load * (double)0xffffff);
 }
 
 
@@ -140,20 +160,38 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          loadinfo = &dummyLoadinfo;
          loadinfo->rli_policy = PPT_ROUNDROBIN;
       }
+      Load = loadinfo->rli_load;
 
       // ====== Print program title =========================================
       puts(programTitle);
       for(size_t i = 0;i < strlen(programTitle);i++) {
          printf("=");
       }
+      const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
       puts("\n\nGeneral Parameters:");
-      printf("   Pool Handle = %s\n\n", poolHandle);
+      printf("   Pool Handle             = %s\n", poolHandle);
+      printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+      printf("   Runtime Limit           = ");
+      if(runtimeLimit > 0) {
+         printf("%u [s]\n", runtimeLimit);
+      }
+      else {
+         puts("off");
+      }
+      puts("   Policy Settings");
+      printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+      printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)0xffffff));
+      printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)0xffffffff));
+      printf("      Weight               = %u\n", loadinfo->rli_weight);
+      printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)0xffffffff));
       printParameters();
+      puts("\n");
 
       // ====== Register PE =================================================
       if(rsp_register(RSerPoolSocketDescriptor,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
                       loadinfo, reregInterval) == 0) {
+         double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)0xffffff);
 
          // ====== Startup ==================================================
          const EventHandlingResult initializeResult = initialize();
@@ -228,6 +266,21 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                   puts("Auto-stop reached!");
                   break;
                }
+
+               // ====== Do reregistration on load changes =====================
+               if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+                  const double newLoad = getLoad();
+                  if(fabs(newLoad - oldLoad) >= 0.01) {
+printf("%1.2f -> %1.2f load\n",oldLoad,newLoad);
+                     oldLoad = newLoad;
+                     loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
+                     if(rsp_register(RSerPoolSocketDescriptor,
+                        (const unsigned char*)poolHandle, strlen(poolHandle),
+                        loadinfo, reregInterval) != 0) {
+                        puts("ERROR: Failed to re-register PE with new load setting!");
+                     }
+                  }
+               }
             }
          }
 
@@ -238,7 +291,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          rsp_deregister(RSerPoolSocketDescriptor);
       }
       else {
-         printf("Failed to register PE to pool %s\n", poolHandle);
+         printf("ERROR: Failed to register PE to pool %s\n", poolHandle);
       }
       rsp_close(RSerPoolSocketDescriptor);
    }

@@ -535,6 +535,28 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
 }
 
 
+/* ###### Get policy name by type number ################################# */
+const char* rsp_getpolicybytype(unsigned int policyType)
+{
+   const struct ST_CLASS(PoolPolicy)* poolPolicy = ST_CLASS(poolPolicyGetPoolPolicyByType)(policyType);
+   if(poolPolicy) {
+      return(poolPolicy->Name);
+   }
+   return(NULL);
+}
+
+
+/* ###### Get policy type by name ######################################## */
+unsigned int rsp_getpolicybyname(const char* policyName)
+{
+   const struct ST_CLASS(PoolPolicy)* poolPolicy = ST_CLASS(poolPolicyGetPoolPolicyByName)(policyName);
+   if(poolPolicy) {
+      return(poolPolicy->Type);
+   }
+   return(PPT_UNDEFINED);
+}
+
+
 #ifdef ENABLE_CSP
 /* ###### Get PE/PU status ############################################### */
 static size_t getComponentStatus(void*                         userData,

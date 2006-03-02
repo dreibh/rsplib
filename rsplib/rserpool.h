@@ -249,6 +249,8 @@ int rsp_setsockopt(int sd, int level, int optname, const void* optval, socklen_t
 
 
 void rsp_print_notification(const union rserpool_notification* notification, FILE* fd);
+const char* rsp_getpolicybytype(unsigned int policyType);
+unsigned int rsp_getpolicybyname(const char* policyName);
 
 
 #ifdef __cplusplus
