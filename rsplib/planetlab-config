@@ -6,11 +6,11 @@ PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc
 DISTNAME="rsplib-1.9.0"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--enable-csp"
-DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest rootshell"
+DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump crashtest rootshell"
 KILLALLMISC="perftool"
 DISTSTRIP=0
-DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver fractalserver discardserver nameserver daytimeserver echoserver"
-SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcapppoolelement calcapppooluser hsdump crashtest rootshell"
+DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver calcappserver fractalserver discardserver nameserver daytimeserver echoserver"
+SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump crashtest rootshell"
 
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000000"
 
