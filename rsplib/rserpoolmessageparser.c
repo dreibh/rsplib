@@ -566,6 +566,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             poolPolicySettings->Weight     = 0;
             poolPolicySettings->Load       = ntoh24(ludpf->pp_ludpf_load);
             poolPolicySettings->LoadDPF    = ntohl(ludpf->pp_ludpf_load_dpf);
+            poolPolicySettings->Distance   = ntohl(ludpf->pp_ludpf_distance);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy LU-DPF, load=$%06x, ldpf=%1.3f%%, distance=%u\n",
                     poolPolicySettings->Load,

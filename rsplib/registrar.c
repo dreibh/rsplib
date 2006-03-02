@@ -1,5 +1,5 @@
 /*
- *  $Id: registrar.c 967 2006-03-01 13:49:46Z dreibh $
+ *  $Id$
  *
  * RSerPool implementation.
  *
@@ -1201,17 +1201,15 @@ static void updateDistance(int                               fd,
          assocStatusLength = sizeof(assocStatus);
          assocStatus.sstat_assoc_id = assocID;
          if(ext_getsockopt(fd, IPPROTO_SCTP, SCTP_STATUS, (char*)&assocStatus, &assocStatusLength) == 0) {
-            printf("SRTT-HUPDT=%d\n", assocStatus.sstat_primary.spinfo_srtt);
             *distance = assocStatus.sstat_primary.spinfo_srtt / 2;
          }
          else {
             LOG_WARNING
-                  logerror("Unable to obtain SCTP_STATUS");
+            logerror("Unable to obtain SCTP_STATUS");
             LOG_END
             *distance = 0;
          }
       }
-      else printf("----REUSE!!!!!!!!!!!\n");
 
       if(addDistance) {
          poolElementNode->PolicySettings.Distance += *distance;
@@ -1219,7 +1217,6 @@ static void updateDistance(int                               fd,
       else {
          poolElementNode->PolicySettings.Distance = *distance;
       }
-      printf("DIST=%d meas=%d\n", poolElementNode->PolicySettings.Distance, *distance);
    }
    else {
       *distance = 0;
