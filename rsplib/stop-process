@@ -38,8 +38,7 @@ while [ ! x$1 = "x" ] ; do
    shift
 
    PIDFILE=$PROCNAME-$SERVER.pid
-   PIDFILES=`ls $PROCNAME-*.pid`
-   for PIDFILE in $PIDFILES; do
+   if [ -e $PIDFILE ] ; then
       PID=`cat $PIDFILE`
       if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
          echo "Processing $PIDFILE: sending SIGINT to $PID ..."
@@ -48,6 +47,6 @@ while [ ! x$1 = "x" ] ; do
          echo "Processing $PIDFILE: process is already gone."
       fi
       rm $PIDFILE
-   done
+   fi
 
 done

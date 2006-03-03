@@ -67,7 +67,7 @@ while [ ! x$1 = "x" ] ; do
    tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
    rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
    cd bin/ && \
-   sudo rm -f core.* coredumps-$SERVER.tar.bz2 && \
+   sudo rm -f core.* *.gz *.bz2 *.log *.sca *.vec && \
    sudo /bin/chown root:root $SUIDPRGS && \
    sudo /bin/chmod +s $SUIDPRGS && \
    date >LastUpdate && \

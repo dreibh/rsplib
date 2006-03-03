@@ -335,12 +335,6 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
-   double handlingTime   = 0.0;
-   double handlingSpeed  = 0.0;
-   double queueingTime   = 0.0;
-   double startupTime    = 0.0;
-   double processingTime = 0.0;
-
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
       process->Status = PS_Failed;
@@ -355,39 +349,51 @@ void handleCalcAppCompleted(struct Process* process,
 
    process->TotalCalcAppCompleted++;
 
-   queueingTime = process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp;
-   startupTime = process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp;
-   processingTime = process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp;
+   const double queuingDelay    = (process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp) / 1000000.0;
+   const double startupDelay    = (process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp) / 1000000.0;
+   const double processingTime  = (process->CurrentJob->CompleteTimeStamp - process->CurrentJob->AcceptTimeStamp) / 1000000.0;
+   const double processingSpeed = process->CurrentJob->JobSize / processingTime;
+   const double handlingTime    = (queuingDelay + startupDelay + processingTime);
+   const double handlingSpeed   = process->CurrentJob->JobSize / handlingTime;
 
-   handlingTime          = (queueingTime + startupTime + processingTime);
-   handlingSpeed         = process->CurrentJob->JobSize / handlingTime ;
    TotalHandlingTime     += handlingTime;
    TotalJobSizeCompleted += process->CurrentJob->JobSize;
    TotalJobInterval      += JobInterval;
    TotalHandlingSpeed    += handlingSpeed;
 
-   StartupTimeStat.collect(startupTime / 1000000.0);
-   QueuingTimeStat.collect(queueingTime / 1000000.0);
-   ProcessingTimeStat.collect(processingTime / 1000000.0);
-   HandlingTimeStat.collect(handlingTime / 1000000.0);
-   HandlingSpeedStat.collect(handlingSpeed / 1000000.0);
+   StartupTimeStat.collect(startupDelay);
+   QueuingTimeStat.collect(queuingDelay);
+   ProcessingTimeStat.collect(processingTime);
+   HandlingTimeStat.collect(handlingTime);
+   HandlingSpeedStat.collect(handlingSpeed);
    JobSizeStat.collect(process->CurrentJob->JobSize);
    JobIntervalStat.collect(JobInterval / 1000000.0);
 
-   cout << "JobSize:      " << process->CurrentJob->JobSize << endl;
-   cout << "StartupTime:  " << startupTime  << " QueueingTime: "  << queueingTime << " ProcessingTime: " << processingTime << endl;
-   cout << "HandlingTime: " << handlingTime << " HandlingSpeed: " << handlingSpeed << endl;
+   cout << "Job #" << process->CurrentJob->JobID << ":" << endl
+        << "   JobSize        = " << process->CurrentJob->JobSize << endl
+        << "   StartupDelay   = " << startupDelay   << " [s]" << endl
+        << "   QueuingDelay   = " << queuingDelay   << " [s]" << endl
+        << "   ProcessingTime = " << processingTime << " [s]"
+        << " => ProcessingSpeed = " << processingSpeed << " [Calculations/s]" << endl
+        << "   HandlingTime   = " << handlingTime << " [s]"
+        << " => HandlingSpeed   = " << handlingSpeed << " [Calculations/s]" << endl;
 
+   if(VectorLine == 0) {
+      fprintf(VectorFH, "JobID JobSize JobInterval "
+                        "QueuingDelay StartupDelay ProcessingTime "
+                        "HandlingTime HandlingSpeed "
+                        "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n");
+   }
    fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.6f %llu %llu %llu %llu\n",
            ++VectorLine,
-           process->CurrentJob->JobID,
-           process->CurrentJob->JobSize, JobInterval,
-           queueingTime, startupTime, processingTime, handlingTime,
-           handlingSpeed,
+           process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval,
+           queuingDelay, startupDelay, processingTime,
+           handlingTime, handlingSpeed,
+           process->CurrentJob->QueuingTimeStamp,
            process->CurrentJob->StartupTimeStamp,
            process->CurrentJob->AcceptTimeStamp,
-           process->CurrentJob->QueuingTimeStamp,
            process->CurrentJob->CompleteTimeStamp);
+   fflush(VectorFH);
 }
 
 
@@ -523,7 +529,7 @@ void handleTimer(Process* process)
 
 
 // ###### Run process #######################################################
-void runProcess(const char* poolHandle, const char* objectName, unsigned long long startupTimeStamp)
+void runProcess(const char* poolHandle, const char* objectName, unsigned long long startupDelayStamp)
 {
    Process process;
    process.RSerPoolSocketDescriptor       = -1;
@@ -567,7 +573,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
 
                /* ====== Handle timers =================================== */
                handleTimer(&process);
-               if(getMicroTime() - startupTimeStamp >= runtime) {
+               if(getMicroTime() - startupDelayStamp >= runtime) {
                   goto finished;
                }
 
@@ -650,7 +656,7 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   unsigned long long startupTimeStamp = getMicroTime();
+   unsigned long long startupDelayStamp = getMicroTime();
    struct             rsp_info info;
    char*              poolHandle     = "CalcAppPool";
    char*              objectName     = "scenario.calcapppooluser[0]";
@@ -736,8 +742,6 @@ puts("CSP!");
       finishLogging();
    }
 
-   fprintf(VectorFH, "JobID JobSize JobInterval QueueDelay StartupDelay ProcessingDelay HandlingTime HandlingSpeed StartupTimeStamp AcceptTimeStamp QueuingTimeStamp CompleteTimeStamp\n");
-
    ScalarFH = fopen(scalarFileName, "w");
    if(ScalarFH == NULL) {
       cout << " Unable to open output file " << scalarFileName << endl;
@@ -750,7 +754,7 @@ puts("CSP!");
 #endif
 
 
-   runProcess(poolHandle, objectName, startupTimeStamp);
+   runProcess(poolHandle, objectName, startupDelayStamp);
 
 
    fclose(ScalarFH);

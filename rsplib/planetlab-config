@@ -1,4 +1,4 @@
-PLANETLAB_KEY=~/src/id_planetlab
+PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
 PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel make subversion libpcap bzip2-devel"

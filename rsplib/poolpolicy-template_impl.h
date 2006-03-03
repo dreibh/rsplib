@@ -372,9 +372,9 @@ static int ST_CLASS(weightedRandomDPFComparison)(
 static void ST_CLASS(weightedRandomDPFUpdatePoolElementNode)(
               struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   long long value =
-      (long long)poolElementNode->PolicySettings.Weight -
-      ((long long)poolElementNode->PolicySettings.WeightDPF * (long long)poolElementNode->PolicySettings.Distance);
+   const double dpf = (double)poolElementNode->PolicySettings.Distance * ((double)poolElementNode->PolicySettings.WeightDPF / (double)0xffffffff);
+   long long value  = (long long)poolElementNode->PolicySettings.Weight -
+                         (long long)rint((double)poolElementNode->PolicySettings.Weight * dpf);
    if(value < 0) {
       value = 1;
    }
@@ -414,15 +414,14 @@ static int ST_CLASS(leastUsedDPFComparison)(
    const struct ST_CLASS(PoolElementNode)* poolElementNode1,
    const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
-   unsigned long long v1 =
-      poolElementNode1->PolicySettings.Load +
-      (poolElementNode1->PolicySettings.LoadDPF * poolElementNode1->PolicySettings.Distance);
+   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff);
+   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff);
+
+   unsigned long long v1 = (unsigned long long)rint((double)poolElementNode1->PolicySettings.Load * (1.0 + dpf1));
    if(v1 > 0xffffffffULL) {
       v1 = 0xffffffffULL;
    }
-   unsigned long long v2 =
-      poolElementNode2->PolicySettings.Load +
-      (poolElementNode2->PolicySettings.LoadDPF * poolElementNode2->PolicySettings.Distance);
+   unsigned long long v2 = (unsigned long long)rint((double)poolElementNode2->PolicySettings.Load * (1.0 + dpf2));
    if(v2 > 0xffffffffULL) {
       v2 = 0xffffffffULL;
    }

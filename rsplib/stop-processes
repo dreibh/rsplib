@@ -32,8 +32,7 @@ PROCNAME=$1
 shift
 
 
-PIDFILES=`ls $PROCNAME-*.pid`
-
+PIDFILES=`find . -name \"$PROCNAME-*.pid\"`
 for PIDFILE in $PIDFILES; do
    PID=`cat $PIDFILE`
    if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
