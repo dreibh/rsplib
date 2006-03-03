@@ -301,7 +301,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   mytags[1].Data = (tagdata_t)tags;
                   rsp_register_tags(rserpoolSocket,
                                     (const unsigned char*)poolHandle, strlen(poolHandle),
-                                    loadinfo, 30000, (TagItem*)&mytags);
+                                    loadinfo, reregInterval, (TagItem*)&mytags);
                }
             }
 

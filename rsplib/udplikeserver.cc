@@ -27,6 +27,7 @@
 #include "timeutilities.h"
 #include "loglevel.h"
 #include "breakdetector.h"
+#include "tagitem.h"
 
 
 // ###### Constructor #######################################################
@@ -271,12 +272,16 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
                   const double newLoad = getLoad();
                   if(fabs(newLoad - oldLoad) >= 0.01) {
-printf("%1.2f -> %1.2f load\n",oldLoad,newLoad);
                      oldLoad = newLoad;
+                     struct TagItem mytags[4];
                      loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
-                     if(rsp_register(RSerPoolSocketDescriptor,
+                     mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
+                     mytags[0].Data = 0;
+                     mytags[1].Tag  = TAG_MORE;
+                     mytags[1].Data = (tagdata_t)tags;
+                     if(rsp_register_tags(RSerPoolSocketDescriptor,
                         (const unsigned char*)poolHandle, strlen(poolHandle),
-                        loadinfo, reregInterval) != 0) {
+                        loadinfo, reregInterval, (TagItem*)&mytags) != 0) {
                         puts("ERROR: Failed to re-register PE with new load setting!");
                      }
                   }
