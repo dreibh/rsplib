@@ -3,7 +3,7 @@
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
-# $Id$
+# $Id: get-coredumps 951 2006-02-21 09:23:45Z dreibh $
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,18 +25,18 @@
 . ./planetlab-config
 
 
-SERVER=$1
-if [ x$SERVER = "x" ]; then
-   echo "ERROR: No server name/IP given!"
+if [ $# -lt 2 ]; then
+   echo "Usage: get-results [Test ID] [Server 1] {Server 2} ..."
    exit 1
 fi
+TESTID=$1
+shift
 
 
-
-if [ ! -e coredumps/ ]; then
-   mkdir coredumps/
+if [ ! -e $TESTID/ ]; then
+   mkdir $TESTID/
 fi
-cd coredumps/
+cd $TESTID/
 
 
 SERVER_LIST=""
@@ -49,12 +49,21 @@ while [ ! x$1 = "x" ] ; do
 
    (
    ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
-      echo \"\`date\`: Packaging coredumps on $SERVER ...\" &&
+      echo \"\`date\`: Packaging results on $SERVER ...\" &&
       cd bin && \
-      find . -name LastUpdate -or -name \"core.*\" | xargs sudo tar cjf coredumps-$SERVER.tar.bz2"
-   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/coredumps-$SERVER.tar.bz2 .
-   echo "Unpacking coredumps-$SERVER.tar.bz2 ..."
-   tar xjf coredumps-$SERVER.tar.bz2
+ls && \
+echo \"find $TESTID-*\" && \
+      FILES=`find . -name 'LastUpdate*' -or -name '$TESTID-*'` && \
+echo \"found _ \$FILES _\" && \
+      if [ \"x\$FILES\" != \"x\" ]; then \
+         echo \"Compressing files \$FILES ...\" && \
+         bzip2 \$FILES ; \
+      fi && \
+      find . -name LastUpdate -or -name \"$TESTID-*\" | xargs tar czf $TESTID-results.tar.gz"
+   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/$TESTID-results.tar.gz .
+   echo "Unpacking $TESTID-results.tar.gz ..."
+   tar xzf $TESTID-results.tar.gz
+   rm -f $TESTID-results.tar.gz
    ) &
 done
 
