@@ -140,7 +140,7 @@ void reregistrationTimer(struct Dispatcher* dispatcher,
    /* Thread-Safety Notes:
       This function will only be called when the RSerPool socket is existing
       and it has a PoolElement entry. Therefore, locking the
-      rseroolSocket->Mutex is not necessary here. It is only necessary to
+      rserpoolSocket->Mutex is not necessary here. It is only necessary to
       ensure that the PE information is not altered by another thread while
       being extracted by doRegistration(). */
    threadSafetyLock(&rserpoolSocket->PoolElement->Mutex);

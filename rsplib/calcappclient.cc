@@ -130,7 +130,7 @@ unsigned long long JobInterval                   = 15000000;
 FILE*              VectorFH                      = NULL;
 FILE*              ScalarFH                      = NULL;
 unsigned int       VectorLine                    = 0;
-double             JobSizeDeclaration            = 5000000;
+double             JobSize                       = 5000000;
 unsigned long long runtime                       = 24*60*60*1000000ULL;
 double             TotalHandlingTime             = 0.0;
 double             AverageHandlingTime           = 0.0;
@@ -144,13 +144,13 @@ unsigned int       TotalJobsStarted              = 0;
 double             TotalJobSizeQueued            = 0.0;
 double             TotalJobSizeStarted           = 0.0;
 double             TotalJobSizeCompleted         = 0.0;
-Statistics StartupTimeStat;
-Statistics QueuingTimeStat;
-Statistics ProcessingTimeStat;
-Statistics HandlingTimeStat;
-Statistics HandlingSpeedStat;
-Statistics JobSizeStat;
-Statistics JobIntervalStat;
+Statistics         StartupTimeStat;
+Statistics         QueuingTimeStat;
+Statistics         ProcessingTimeStat;
+Statistics         HandlingTimeStat;
+Statistics         HandlingSpeedStat;
+Statistics         JobSizeStat;
+Statistics         JobIntervalStat;
 
 enum ProcessStatus {
    PS_Init       = 0,
@@ -165,6 +165,7 @@ struct Process {
    ProcessStatus      Status;
    JobQueue           Queue;
    Job*               CurrentJob;
+   const char*        ObjectName;
 
    size_t             TotalCalcAppRequests;
    size_t	      TotalCalcAppAccepted;
@@ -371,6 +372,7 @@ void handleCalcAppCompleted(struct Process* process,
 
    cout << "Job #" << process->CurrentJob->JobID << ":" << endl
         << "   JobSize        = " << process->CurrentJob->JobSize << endl
+        << "   JobInterval    = " << (JobInterval / 1000000.0) << " [s]" << endl
         << "   StartupDelay   = " << startupDelay   << " [s]" << endl
         << "   QueuingDelay   = " << queuingDelay   << " [s]" << endl
         << "   ProcessingTime = " << processingTime << " [s]"
@@ -379,21 +381,31 @@ void handleCalcAppCompleted(struct Process* process,
         << " => HandlingSpeed   = " << handlingSpeed << " [Calculations/s]" << endl;
 
    if(VectorLine == 0) {
-      fprintf(VectorFH, "JobID JobSize JobInterval "
+      fprintf(VectorFH, "ObjectName "
+                        "JobID JobSize JobInterval "
                         "QueuingDelay StartupDelay ProcessingTime "
                         "HandlingTime HandlingSpeed "
                         "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n");
    }
-   fprintf(VectorFH," %u %u %1.0f %llu %1.6f %1.6f %1.6f %1.6f %1.6f %llu %llu %llu %llu\n",
+   fprintf(VectorFH," %u %s %u %1.0f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
            ++VectorLine,
-           process->CurrentJob->JobID, process->CurrentJob->JobSize, JobInterval,
+           process->ObjectName,
+           process->CurrentJob->JobID, process->CurrentJob->JobSize,
+           JobInterval / 1000000.0,
            queuingDelay, startupDelay, processingTime,
            handlingTime, handlingSpeed,
-           process->CurrentJob->QueuingTimeStamp,
-           process->CurrentJob->StartupTimeStamp,
-           process->CurrentJob->AcceptTimeStamp,
-           process->CurrentJob->CompleteTimeStamp);
+           process->CurrentJob->QueuingTimeStamp / 1000000.0,
+           process->CurrentJob->StartupTimeStamp / 1000000.0,
+           process->CurrentJob->AcceptTimeStamp / 1000000.0,
+           process->CurrentJob->CompleteTimeStamp / 1000000.0);
    fflush(VectorFH);
+}
+
+
+// ###### Get time stamp for next job #######################################
+unsigned long long getNextJobTime()
+{
+   return((unsigned long long)randomExpDouble(JobInterval));
 }
 
 
@@ -405,12 +417,12 @@ void handleNextJobTimer(struct Process* process)
    Job* job = new Job;
    CHECK(job != NULL);
    job->JobID   = ++jobID;
-   job->JobSize = randomExpDouble(JobSizeDeclaration);
+   job->JobSize = randomExpDouble(JobSize);
 
    process->Queue.enqueue(job);
    TotalJobsQueued++;
-   TotalJobSizeQueued+=job->JobSize;
-   process->NextJobTimeStamp = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
+   TotalJobSizeQueued += job->JobSize;
+   process->NextJobTimeStamp = getMicroTime() + getNextJobTime();
 }
 
 
@@ -532,6 +544,7 @@ void handleTimer(Process* process)
 void runProcess(const char* poolHandle, const char* objectName, unsigned long long startupDelayStamp)
 {
    Process process;
+   process.ObjectName                     = objectName;
    process.RSerPoolSocketDescriptor       = -1;
    process.NextJobTimeStamp               = getMicroTime() + (unsigned long long)randomExpDouble(JobInterval);
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
@@ -540,6 +553,9 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    process.TotalCalcAppRejected           = 0;
    process.TotalCalcAppAccepted           = 0;
    process.TotalCalcAppCompleted          = 0;
+
+   // Wait for first job
+   usleep(getNextJobTime());
    handleNextJobTimer(&process);
 
    process.CurrentJob = process.Queue.dequeue();
@@ -634,7 +650,7 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, StartupTimeStat.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, QueuingTimeStat.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, ProcessingTimeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime   \"mean=%f \n", objectName, HandlingTimeStat.mean());
+   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime    \"mean=%f \n", objectName, HandlingTimeStat.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, HandlingSpeedStat.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, JobSizeStat.mean());
    fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, JobIntervalStat.mean());
@@ -683,10 +699,10 @@ int main(int argc, char** argv)
          scalarFileName = (char*)&argv[i][8];
       }
       else if(!(strncmp(argv[i], "-jobinterval=" ,13))) {
-         JobInterval 	= atol((char*)&argv[i][13]);
+         JobInterval = atol((char*)&argv[i][13]);
       }
       else if(!(strncmp(argv[i], "-jobsize=" ,9))) {
-         JobSizeDeclaration 	= atol((char*)&argv[i][9]);
+         JobSize = atol((char*)&argv[i][9]);
       }
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
          runtime 	= atol((char*)&argv[i][9]);
@@ -724,9 +740,11 @@ puts("CSP!");
 
    cout << "CalcApp Client - Version 1.0" << endl
         << "============================" << endl << endl
-        << "Object      = " << objectName << endl
-        << "Vector File = " << vectorFileName << endl
-        << "Scalar File = " << scalarFileName << endl
+        << "Object       = " << objectName << endl
+        << "Vector File  = " << vectorFileName << endl
+        << "Scalar File  = " << scalarFileName << endl
+        << "Job Interval = " << (JobInterval / 1000000.0) << " [s]" << endl
+        << "Job Size     = " << JobSize << " [Calculations]" << endl
         << endl;
 
 

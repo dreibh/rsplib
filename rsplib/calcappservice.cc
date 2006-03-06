@@ -265,7 +265,6 @@ void CalcAppServer::scheduleNextTimerEvent()
 EventHandlingResult CalcAppServer::initialize()
 {
    VectorFH = fopen(VectorFileName.c_str(), "w");
-   fprintf(VectorFH, "Runtime AvailableCalculations UsedCalculations Utilization\n");
    if(VectorFH == NULL) {
       cout << " Unable to open output file " << VectorFileName << endl;
       return(EHR_Abort);
@@ -429,9 +428,19 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
    const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
    const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
    const double             utilization           = TotalUsedCalculations / availableCalculations;
-   fprintf(VectorFH," %u %llu %1.6f %1.6f %1.6f\n",
-           ++VectorLine, serverRuntime, availableCalculations,
-           TotalUsedCalculations, utilization);
+   if(VectorFH) {
+      if(VectorLine == 0) {
+         fprintf(VectorFH, "ObjectName CurrentTimeStamp Runtime AvailableCalculations UsedCalculations Utilization CurrentJobs MaxJobs\n");
+      }
+      fprintf(VectorFH," %u %s %1.6f %1.6f %1.0f %1.0f %1.6f %u %u\n",
+            ++VectorLine,
+            ObjectName.c_str(),
+            getMicroTime() / 1000000.0,
+            serverRuntime / 1000000.0,
+            availableCalculations, TotalUsedCalculations, utilization,
+            Jobs, MaxJobs);
+      fflush(VectorFH);
+   }
 }
 
 
@@ -543,8 +552,6 @@ void CalcAppServer::sendCookie(CalcAppServer::CalcAppServerJob* job)
       removeJob(job);
       return;
    }
-
-puts("COOKIE!");
 
    job->LastCookieAt        = getMicroTime();
    job->LastCookieCompleted = job->Completed;

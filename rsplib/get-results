@@ -51,20 +51,35 @@ while [ ! x$1 = "x" ] ; do
    ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Packaging results on $SERVER ...\" &&
       cd bin && \
-ls && \
-echo \"find $TESTID-*\" && \
-      FILES=`find . -name 'LastUpdate*' -or -name '$TESTID-*'` && \
-echo \"found _ \$FILES _\" && \
+      sudo rm -f *.tar.bz2 *.log.bz2 *.vec.bz2 *.sca.bz2 *.tar.gz && \
+      FILES=\`find . -name \"$TESTID-*.log\" -or -name \"$TESTID-*.vec\" -or -name \"$TESTID-*.sca\"\` && \
       if [ \"x\$FILES\" != \"x\" ]; then \
          echo \"Compressing files \$FILES ...\" && \
-         bzip2 \$FILES ; \
+         sudo bzip2 \$FILES ; \
       fi && \
-      find . -name LastUpdate -or -name \"$TESTID-*\" | xargs tar czf $TESTID-results.tar.gz"
-   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/$TESTID-results.tar.gz .
-   echo "Unpacking $TESTID-results.tar.gz ..."
-   tar xzf $TESTID-results.tar.gz
-   rm -f $TESTID-results.tar.gz
+      find . -name LastUpdate -or -name \"$TESTID-*\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz"
    ) &
 done
 
 wait
+
+
+for SERVER in $SERVER_LIST; do
+   echo "Transfering $TESTID-$SERVER-results.tar.gz ..."
+   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/$TESTID-$SERVER-results.tar.gz . &
+done
+
+wait
+
+
+for SERVER in $SERVER_LIST; do
+   echo "Unpacking $TESTID-$SERVER-results.tar.gz ..."
+   tar xzf $TESTID-$SERVER-results.tar.gz
+done
+
+wait
+
+
+for SERVER in $SERVER_LIST; do
+   rm -f $TESTID-$SERVER-results.tar.gz
+done

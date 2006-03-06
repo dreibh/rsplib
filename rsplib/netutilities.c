@@ -627,7 +627,7 @@ size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
    LOG_VERBOSE4
    fprintf(stdlog, "Obtained addresses: %u\n", addresses);
    for(i = 0;i < addresses;i++) {
-      fputaddress((const struct sockaddr*)&addressArray[i], true, stdlog);
+      fputaddress(&(*addressArray)[i].sa, true, stdlog);
       fputs("\n", stdlog);
    }
    LOG_END

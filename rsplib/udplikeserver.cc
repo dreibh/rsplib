@@ -279,9 +279,10 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                      mytags[0].Data = 0;
                      mytags[1].Tag  = TAG_MORE;
                      mytags[1].Data = (tagdata_t)tags;
-                     if(rsp_register_tags(RSerPoolSocketDescriptor,
-                        (const unsigned char*)poolHandle, strlen(poolHandle),
-                        loadinfo, reregInterval, (TagItem*)&mytags) != 0) {
+                     if(rsp_register_tags(
+                           RSerPoolSocketDescriptor,
+                           (const unsigned char*)poolHandle, strlen(poolHandle),
+                           loadinfo, reregInterval, (TagItem*)&mytags) != 0) {
                         puts("ERROR: Failed to re-register PE with new load setting!");
                      }
                   }

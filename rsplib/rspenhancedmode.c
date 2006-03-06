@@ -541,10 +541,10 @@ int rsp_register_tags(int                        sd,
       rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
       rserpoolSocket->PoolElement->ReregistrationInterval = reregistrationInterval;
       rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
+      threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
 
       /* ====== Schedule reregistration as soon as possible ============== */
       timerRestart(&rserpoolSocket->PoolElement->ReregistrationTimer, 0);
-      threadSafetyUnlock(&rserpoolSocket->PoolElement->Mutex);
    }
 
    /* ====== Registration of a new pool element ========================== */

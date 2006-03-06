@@ -182,7 +182,7 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
       if(session) {
          return(session);
       }
-      LOG_WARNING
+      LOG_VERBOSE
       fprintf(stdlog, "There is no session %u on RSerPool socket %d\n",
               sessionID, rserpoolSocket->Descriptor);
       LOG_END
