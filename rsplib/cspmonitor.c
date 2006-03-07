@@ -28,7 +28,7 @@
 #include "netutilities.h"
 #include "breakdetector.h"
 #include "componentstatusreporter.h"
-#include "leaflinkedredblacktree.h"
+#include "simpleredblacktree.h"
 
 #include <sys/poll.h>
 #include <ext_socket.h>
@@ -72,16 +72,16 @@ static void getDescriptionForID(const uint64_t id,
 
 struct CSPObject
 {
-   struct LeafLinkedRedBlackTreeNode Node;
-   uint64_t                          Identifier;
-   uint64_t                          LastReportTimeStamp;
-   uint64_t                          ReportInterval;
-   char                              Description[128];
-   char                              Status[128];
-   char                              Location[128];
-   double                            Workload;
-   size_t                            Associations;
-   struct ComponentAssociation*      AssociationArray;
+   struct SimpleRedBlackTreeNode Node;
+   uint64_t                      Identifier;
+   uint64_t                      LastReportTimeStamp;
+   uint64_t                      ReportInterval;
+   char                          Description[128];
+   char                          Status[128];
+   char                          Location[128];
+   double                        Workload;
+   size_t                        Associations;
+   struct ComponentAssociation*  AssociationArray;
 };
 
 
@@ -95,23 +95,23 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    int                     color;
 
    if(cspObject->Workload >= 0.0) {
-      snprintf((char*)&workload, sizeof(workload), "L=%3u%%",
+      snprintf((char*)&workload, sizeof(workload), ", L=%u%%",
                (unsigned int)rint(100.0 * cspObject->Workload));
    }
    else {
-      strcpy((char*)&workload, "L=n/a");
+      workload[0] = 0x00;
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, %s A=%u, \"%s\"\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
            abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
            cspObject->ReportInterval / 1000,
-           workload,
            (unsigned int)cspObject->Associations,
+           workload,
            cspObject->Status);
    for(i = 0;i < cspObject->Associations;i++) {
       getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
@@ -140,9 +140,9 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
                  cspObject->AssociationArray[i].Duration / 1000000,
                  (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
       }
-      fputs("\n", fd);
+      fputs("\x1b[0K\n", fd);
    }
-   fputs("\x1b[0m", fd);
+   fputs("\x1b[0m\x1b[0K", fd);
 }
 
 
@@ -162,13 +162,13 @@ static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectP
 
 
 /* ###### Find CSPObject in storage ###################################### */
-struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
+struct CSPObject* findCSPObject(struct SimpleRedBlackTree* objectStorage,
                                 const uint64_t                 id)
 {
-   struct LeafLinkedRedBlackTreeNode* node;
-   struct CSPObject                   cmpCSPObject;
+   struct SimpleRedBlackTreeNode* node;
+   struct CSPObject               cmpCSPObject;
    cmpCSPObject.Identifier = id;
-   node = leafLinkedRedBlackTreeFind(objectStorage, &cmpCSPObject.Node);
+   node = simpleRedBlackTreeFind(objectStorage, &cmpCSPObject.Node);
    if(node) {
       return((struct CSPObject*)node);
    }
@@ -177,16 +177,16 @@ struct CSPObject* findCSPObject(struct LeafLinkedRedBlackTree* objectStorage,
 
 
 /* ###### Purge out-of-date CSPObject in storage ######################### */
-void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
+void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage)
 {
    struct CSPObject* cspObject;
    struct CSPObject* nextCSPObject;
 
-   cspObject = (struct CSPObject*)leafLinkedRedBlackTreeGetFirst(objectStorage);
+   cspObject = (struct CSPObject*)simpleRedBlackTreeGetFirst(objectStorage);
    while(cspObject != NULL) {
-      nextCSPObject = (struct CSPObject*)leafLinkedRedBlackTreeGetNext(objectStorage, &cspObject->Node);
+      nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->Node);
       if(cspObject->LastReportTimeStamp + (10 * cspObject->ReportInterval) < getMicroTime()) {
-         CHECK(leafLinkedRedBlackTreeRemove(objectStorage, &cspObject->Node) == &cspObject->Node);
+         CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->Node) == &cspObject->Node);
          free(cspObject->AssociationArray);
          free(cspObject);
       }
@@ -196,7 +196,7 @@ void purgeCSPObjects(struct LeafLinkedRedBlackTree* objectStorage)
 
 
 /* ###### Handle incoming CSP message #################################### */
-static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
+static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
 {
    struct ComponentStatusReport* cspReport;
    struct CSPObject*             cspObject;
@@ -230,7 +230,7 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
             if(cspObject == NULL) {
                cspObject = (struct CSPObject*)malloc(sizeof(struct CSPObject));
                if(cspObject) {
-                  leafLinkedRedBlackTreeNodeNew(&cspObject->Node);
+                  simpleRedBlackTreeNodeNew(&cspObject->Node);
                   cspObject->Identifier       = cspReport->Header.SenderID;
                   cspObject->AssociationArray = NULL;
                }
@@ -257,7 +257,7 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
                CHECK(cspObject->AssociationArray);
                memcpy(cspObject->AssociationArray, &cspReport->AssociationArray, cspReport->Associations * sizeof(struct ComponentAssociation));
                cspObject->Associations = cspReport->Associations;
-               CHECK(leafLinkedRedBlackTreeInsert(objectStorage,
+               CHECK(simpleRedBlackTreeInsert(objectStorage,
                                                   &cspObject->Node) == &cspObject->Node);
             }
          }
@@ -269,13 +269,14 @@ static void handleMessage(int sd, struct LeafLinkedRedBlackTree* objectStorage)
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   struct LeafLinkedRedBlackTree objectStorage;
-   union sockaddr_union          localAddress;
-   struct pollfd                 ufds;
-   int                           result;
-   int                           reuse;
-   int                           sd;
-   int                           n;
+   struct SimpleRedBlackTree objectStorage;
+   union sockaddr_union      localAddress;
+   struct pollfd             ufds;
+   unsigned long long        lastUpdate;
+   int                       result;
+   int                       reuse;
+   int                       sd;
+   int                       n;
 
    if(checkIPv6()) {
       string2address("[::]:0", &localAddress);
@@ -317,7 +318,7 @@ int main(int argc, char** argv)
       exit(1);
    }
 
-   leafLinkedRedBlackTreeNew(&objectStorage,
+   simpleRedBlackTreeNew(&objectStorage,
                              cspObjectPrint,
                              cspObjectComparison);
 
@@ -331,20 +332,26 @@ int main(int argc, char** argv)
    while(!breakDetected()) {
       ufds.fd     = sd;
       ufds.events = POLLIN;
-      result = ext_poll(&ufds, 1, 500);
-      if((result > 0) && (ufds.revents & POLLIN)) {
-         handleMessage(sd, &objectStorage);
+      lastUpdate = getMicroTime();
+      while(getMicroTime() - lastUpdate < 350000) {
+         result = ext_poll(&ufds, 1, 175);
+         if((result > 0) && (ufds.revents & POLLIN)) {
+            handleMessage(sd, &objectStorage);
+         }
       }
       purgeCSPObjects(&objectStorage);
 
-      printf("\x1b[;H\x1b[2J");
+      //printf("\x1b[;H\x1b[2J");
+      printf("\x1b[;H");
       printTimeStamp(stdout);
-      puts("Current Component Status\n");
-      leafLinkedRedBlackTreePrint(&objectStorage, stdout);
+      puts("Current Component Status\x1b[0K\n\x1b[0K");
+      simpleRedBlackTreePrint(&objectStorage, stdout);
+      printf("\x1b[0J");
+      fflush(stdout);
    }
 
    ext_close(sd);
-   leafLinkedRedBlackTreeDelete(&objectStorage);
+   simpleRedBlackTreeDelete(&objectStorage);
    finishLogging();
    puts("\nTerminated!");
    return(0);
