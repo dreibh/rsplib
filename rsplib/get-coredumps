@@ -48,7 +48,7 @@ while [ ! x$1 = "x" ] ; do
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
    (
-   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Packaging coredumps on $SERVER ...\" &&
       cd bin && \
       find . -name LastUpdate -or -name \"core.*\" | xargs sudo tar cjf coredumps-$SERVER.tar.bz2"

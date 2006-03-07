@@ -39,15 +39,19 @@ fi
 cd $TESTID/
 
 
-SERVER_LIST=""
-while [ x$1 != "x" ] ; do
-   SERVER_LIST="$1 $SERVER_LIST"
-   shift
-done
+SERVER_LIST=`\
+( \
+while [ x$1 != "x" ] ; do \
+   echo $1 && \
+   shift ; \
+done \
+) | sort -u`
+
+
 
 for SERVER in $SERVER_LIST; do
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Packaging results on $SERVER ...\" &&
       cd bin && \
       sudo rm -f *.tar.bz2 *.log.bz2 *.vec.bz2 *.sca.bz2 *.tar.gz && \
@@ -56,7 +60,7 @@ for SERVER in $SERVER_LIST; do
          echo \"Compressing files \$FILES ...\" && \
          sudo bzip2 \$FILES ; \
       fi && \
-      find . -name LastUpdate -or -name \"$TESTID-*\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" &
+      find . -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czvf $TESTID-$SERVER-results.tar.gz" &
 done
 
 wait

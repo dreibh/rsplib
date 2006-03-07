@@ -142,17 +142,17 @@ fi
 
 if [ "x$1" = "xstart" ] ; then
    echo "Starting scenario!"
-   startNetworkUSA
+   startNetworkEurope
 elif [ "x$1" = "xstop" ] ; then
    echo "Stopping scenario!"
-   stopNetworkUSA
+   stopNetworkEurope
 elif [ "x$1" = "xreset" ] ; then
    echo "Reseting everything!"
    resetAll
 elif [ "x$1" = "xresults" ] ; then
    echo "Fetching results!"
    # echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
-   echo $PU_USA | sort -u | xargs ./get-results $TESTID
+   echo $PU_EUROPE | sort -u | xargs ./get-results $TESTID
 else
    echo "ERROR: Bad parameter!"
 fi

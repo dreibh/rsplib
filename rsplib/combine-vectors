@@ -3,7 +3,7 @@
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
-# $Id: get-coredumps 951 2006-02-21 09:23:45Z dreibh $
+# $Id: go 959 2006-02-23 12:57:18Z dreibh $
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,47 +25,24 @@
 . ./planetlab-config
 
 
-SERVER=$1
-if [ x$SERVER = "x" ]; then
-   echo "ERROR: No server name/IP given!"
+if [ $# -ne 1 ]; then
+   echo "Usage: combine-vectors [Test ID]"
    exit 1
 fi
+TESTID=$1
+shift
 
 
-
-if [ ! -e coredumps/ ]; then
-   mkdir coredumps/
+if [ ! -e $TESTID/ ]; then
+   mkdir $TESTID/
 fi
-cd coredumps/
+cd $TESTID/
 
+PU_VECTORS=`ls $TESTID-pu*.vec.bz2`
 
-SERVER_LIST=""
-while [ ! x$1 = "x" ] ; do
-   SERVER=$1
-   SERVER_LIST="$SERVER_LIST $SERVER"
-   shift
-
-   echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-
-   cmd=""
-   toBeKilled="$DISTPRGS $KILLALLMISC"
-   first=1
-   for i in $toBeKilled ; do
-      if [ $first -eq 0 ] ; then
-         cmd="$cmd ;"
-      fi
-      first=0
-      cmd="$cmd sudo killall $i 2>/dev/null >/dev/null"
+(
+   for v in $PU_VECTORS ; do
+      echo "--values=$v"
+      echo "--input=$v"
    done
-   cmd="$cmd ; sudo ps ; sudo killall bash"
-   # echo $cmd
-
-   (
-   ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
-      echo \"\`date\`: Executing killall on $SERVER ...\" && \
-      $cmd && \
-      echo \"\`date\`: $SERVER is ready!\""
-   ) &
-done
-
-wait
+) | ../combinesummaries pu-vectors.vec.bz2 "Host"

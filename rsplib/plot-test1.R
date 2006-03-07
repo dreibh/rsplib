@@ -3,7 +3,7 @@ source("plotter.R")
 
 simulationDirectory <- "."
 simulationName      <- "Influence of the PU:PE Ratio"
-hideLegend          <- FALSE
+hideLegend          <- TRUE
 colorMode           <- cmColor
 pStart              <- 1
 legendPos           <- c(1,1)
@@ -12,7 +12,7 @@ legendPos           <- c(1,1)
 #pdf("test1.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
 
 
-data <- loadResults("v0.vec")
+data <- loadResults("messung1/pu-vectors.vec.bz2")
 
 xSet <- data$CompleteTimeStamp
 xTitle <- "Completion Time"
@@ -40,7 +40,7 @@ yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setti
 
 mainTitle <- "Titel"
 
-hbarSet <- data$StartupTimeStamp
+hbarSet <- data$QueuingTimeStamp
 plotstd6(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      pSet, aSet, bSet, xSet, ySet, zSet,
                      vSet, wSet, vTitle, wTitle,
