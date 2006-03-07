@@ -18,10 +18,8 @@ while [ ! x$1 = "x" ] ; do
    shift
 
    isgood=0
-   if ./isalive $SERVER:22 >/dev/null 2>/dev/null ; then
-      if ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "echo \"$SERVER is ready!\"" 2>/dev/null 1>/dev/null ; then
-         isgood=1
-      fi
+   if ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "echo \"$SERVER is ready!\"" 2>/dev/null 1>/dev/null ; then
+      isgood=1
    fi
 
    if [ $isgood = 1 ] ; then

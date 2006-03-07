@@ -258,7 +258,7 @@ plotstd3 <- function(mainTitle,
                   ySubset <- subset(ySet, (zSet == z) & (vSet == v) & (wSet == w))
                   hbarSubset <- subset(hbarSet, (zSet == z) & (vSet == v) & (wSet == w))
                   for(x in seq(1, length(xSubset))) {
-points(xSubset[x],ySubset[x], col=legendColor, cex=par("cex"), pch=legendDot)
+                     # points(xSubset[x],ySubset[x], col=legendColor, cex=par("cex"), pch=legendDot)
                      lines(c(hbarSubset[x], xSubset[x]),
                            c(ySubset[x], ySubset[x]),
                            col=legendColor, cex=par("cex"), pch=legendDot)

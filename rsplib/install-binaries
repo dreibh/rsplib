@@ -52,7 +52,7 @@ while [ ! x$1 = "x" ] ; do
 
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
-   cat $DISTNAME-bin.tar.bz2 | ssh -t -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
    echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
    cat > /tmp/$DISTNAME-bin.tar.bz2 && \
    echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \

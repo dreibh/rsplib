@@ -18,7 +18,7 @@ PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsedDPF:0.00001 -capmaxjob
 
 PU_AUSTRALASIA=`cat pu-australasia.hosts`
 PU_USA=`cat pu-usa.hosts`
-PU_EUROPU=`cat pu-europe.hosts`
+PU_EUROPE=`cat pu-europe.hosts`
 PU_ALL="$PU_AUSTRALASIA $PU_USA $PU_EUROPU"
 PU_MISCOPT="-jobinterval=5000000 -jobsize=1000000 -loglevel=5"
 
@@ -142,17 +142,20 @@ fi
 
 if [ "x$1" = "xstart" ] ; then
    echo "Starting scenario!"
+   startNetworkUSA
    startNetworkEurope
 elif [ "x$1" = "xstop" ] ; then
    echo "Stopping scenario!"
    stopNetworkEurope
+   stopNetworkUSA
 elif [ "x$1" = "xreset" ] ; then
    echo "Reseting everything!"
    resetAll
 elif [ "x$1" = "xresults" ] ; then
    echo "Fetching results!"
    # echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
-   echo $PU_EUROPE | sort -u | xargs ./get-results $TESTID
+   echo $PU_USA $PE_USA $PU_EUROPE $PE_EUROPE | sort -u | xargs ./get-results $TESTID
+   ./combine-vectors $TESTID
 else
    echo "ERROR: Bad parameter!"
 fi
