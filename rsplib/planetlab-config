@@ -1,4 +1,4 @@
-PLANETLAB_KEY=~/src/id_planetlab
+PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
 PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel make subversion libpcap bzip2-devel"
@@ -6,11 +6,11 @@ PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc
 DISTNAME="rsplib-1.9.0"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--enable-csp"
-DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump crashtest rootshell"
+DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
 KILLALLMISC="perftool bzip2 gzip tar"
 DISTSTRIP=0
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver calcappserver fractalserver discardserver nameserver daytimeserver echoserver"
-SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump crashtest rootshell"
+SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
 
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000000"
 

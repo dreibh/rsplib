@@ -328,6 +328,7 @@ int main(int argc, char** argv)
 
    installBreakDetector();
    beginLogging();
+   printf("\x1b[;H\x1b[2J");
 
    while(!breakDetected()) {
       ufds.fd     = sd;
@@ -341,7 +342,6 @@ int main(int argc, char** argv)
       }
       purgeCSPObjects(&objectStorage);
 
-      //printf("\x1b[;H\x1b[2J");
       printf("\x1b[;H");
       printTimeStamp(stdout);
       puts("Current Component Status\x1b[0K\n\x1b[0K");

@@ -46,10 +46,17 @@ cp -f $DISTMISC bin/
 tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2
 
 
-while [ ! x$1 = "x" ] ; do
-   SERVER=$1
-   shift
+SERVER_LIST=`\
+( \
+while [ x$1 != "x" ] ; do \
+   echo $1 && \
+   shift ; \
+done \
+) | sort -u`
 
+
+
+for SERVER in $SERVER_LIST; do
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
    cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\

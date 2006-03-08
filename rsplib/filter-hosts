@@ -10,13 +10,18 @@ else
    showbad=0
 fi
 
+SERVER_LIST=`\
+( \
+while [ x$1 != "x" ] ; do \
+   echo $1 && \
+   shift ; \
+done \
+) | sort -u`
+
 
 good=0
 bad=0
-while [ ! x$1 = "x" ] ; do
-   SERVER=$1
-   shift
-
+for SERVER in $SERVER_LIST; do
    isgood=0
    if ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "echo \"$SERVER is ready!\"" 2>/dev/null 1>/dev/null ; then
       isgood=1

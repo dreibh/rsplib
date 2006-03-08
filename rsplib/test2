@@ -2,7 +2,7 @@
 
 . ./planetlab-config
 
-TESTID=messung1
+TESTID=messung2
 
 PR_AUSTRALASIA=`cat pr-australasia.hosts`
 PR_USA=`cat pr-usa.hosts`
