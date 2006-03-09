@@ -4,22 +4,22 @@
 
 TESTID=messung2
 
-PR_AUSTRALASIA=`cat pr-australasia.hosts`
+PR_ASIA=`cat pr-asia.hosts`
 PR_USA=`cat pr-usa.hosts`
 PR_EUROPE=`cat pr-europe.hosts`
-PR_ALL="$PR_AUSTRALASIA $PR_USA $PR_EUROPE"
+PR_ALL="$PR_ASIA $PR_USA $PR_EUROPE"
 PR_MISCOPT="-loglevel=5"
 
-PE_AUSTRALASIA=`cat pe-australasia.hosts`
+PE_ASIA=`cat pe-asia.hosts`
 PE_USA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
-PE_ALL="$PE_AUSTRALASIA $PE_USA $PE_EUROPE"
-PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsed -capmaxjobs=10 -loglevel=9 "
+PE_ALL="$PE_ASIA $PE_USA $PE_EUROPE"
+PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsed -capmaxjobs=10 -loglevel=5 "
 
-PU_AUSTRALASIA=`cat pu-australasia.hosts`
+PU_ASIA=`cat pu-asia.hosts`
 PU_USA=`cat pu-usa.hosts`
 PU_EUROPE=`cat pu-europe.hosts`
-PU_ALL="$PU_AUSTRALASIA $PU_USA $PU_EUROPU"
+PU_ALL="$PU_ASIA $PU_USA $PU_EUROPU"
 PU_MISCOPT="-jobinterval=5000000 -jobsize=1000000 -loglevel=5"
 
 
@@ -86,11 +86,11 @@ stopNetwork ()
 
 
 
-startNetworkAustralia ()
+startNetworkAsia ()
 {
-   localPRs=$PR_AUSTRALASIA
-   localPEs=$PE_AUSTRALASIA
-   localPUs=$PU_AUSTRALASIA
+   localPRs=$PR_ASIA
+   localPEs=$PE_ASIA
+   localPUs=$PU_ASIA
    startNetwork
 }
 
@@ -111,11 +111,11 @@ startNetworkEurope ()
 }
 
 
-stopNetworkAustralia ()
+stopNetworkAsia ()
 {
-   localPRs=$PR_AUSTRALASIA
-   localPEs=$PE_AUSTRALASIA
-   localPUs=$PU_AUSTRALASIA
+   localPRs=$PR_ASIA
+   localPEs=$PE_ASIA
+   localPUs=$PU_ASIA
    stopNetwork
 }
 
@@ -142,12 +142,14 @@ fi
 
 if [ "x$1" = "xstart" ] ; then
    echo "Starting scenario!"
+   # startNetworkAsia
    startNetworkUSA
    startNetworkEurope
 elif [ "x$1" = "xstop" ] ; then
    echo "Stopping scenario!"
    stopNetworkEurope
    stopNetworkUSA
+   # stopNetworkAsia
 elif [ "x$1" = "xreset" ] ; then
    echo "Reseting everything!"
    resetAll
