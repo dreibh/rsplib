@@ -417,14 +417,29 @@ static int ST_CLASS(leastUsedDPFComparison)(
    const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff);
    const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff);
 
-   unsigned long long v1 = (unsigned long long)rint((double)poolElementNode1->PolicySettings.Load * (1.0 + dpf1));
+   unsigned long long v1 = (unsigned long long)rint((double)poolElementNode1->PolicySettings.Load + (dpf1 * (double)0xffffff));
    if(v1 > 0xffffffffULL) {
       v1 = 0xffffffffULL;
    }
-   unsigned long long v2 = (unsigned long long)rint((double)poolElementNode2->PolicySettings.Load * (1.0 + dpf2));
+   unsigned long long v2 = (unsigned long long)rint((double)poolElementNode2->PolicySettings.Load + (dpf2 * (double)0xffffff));
    if(v2 > 0xffffffffULL) {
       v2 = 0xffffffffULL;
    }
+
+/*
+   printf("dpf1=%1.6lf l1=$%x ldpf1=%1.8lf d1=%3u v1=$%x ; ",
+          dpf1,
+          poolElementNode1->PolicySettings.Load,
+          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff),
+          poolElementNode1->PolicySettings.Distance,
+          v1);
+   printf("dpf2=%1.6lf l2=$%x ldpf2=%1.8lf d2=%3u v2=$%x\n",
+          dpf2,
+          poolElementNode2->PolicySettings.Load,
+          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff),
+          poolElementNode2->PolicySettings.Distance,
+          v2);
+*/
 
    COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
