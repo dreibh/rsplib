@@ -1,2 +1,0 @@
-#!/bin/sh
-echo "libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel make subversion libpcap bzip2-devel" | xargs -n1 yum -y install
