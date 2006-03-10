@@ -161,7 +161,7 @@ bool FractalPU::sendParameter()
    parameter.N             = Parameter.N;
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                        0, PPID_FGP, 0, 0, 5000000);
+                      0, htonl(PPID_FGP), 0, 0, 5000000);
    if(sent < 0) {
       logerror("rsp_sendmsg() failed");
       return(false);

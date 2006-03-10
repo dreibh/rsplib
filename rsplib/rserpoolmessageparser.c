@@ -235,6 +235,7 @@ static size_t checkBeginTLV(struct RSerPoolMessage* message,
    uint16_t                    tlvType;
    size_t                      tlvLength;
 
+   tlvLength = 0;
    while(getNextTLV(message, tlvPosition, &header, &tlvType, &tlvLength)) {
       if((!checkType) || (PURE_ATT_TYPE(tlvType) == (expectedType))) {
          break;
