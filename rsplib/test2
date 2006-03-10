@@ -8,19 +8,19 @@ PR_ASIA=`cat pr-asia.hosts`
 PR_USA=`cat pr-usa.hosts`
 PR_EUROPE=`cat pr-europe.hosts`
 PR_ALL="$PR_ASIA $PR_USA $PR_EUROPE"
-PR_MISCOPT="-loglevel=5"
+PR_MISCOPT="-loglevel=3"
 
 PE_ASIA=`cat pe-asia.hosts`
 PE_USA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
 PE_ALL="$PE_ASIA $PE_USA $PE_EUROPE"
-PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsed -capmaxjobs=10 -loglevel=5 "
+PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsed -capmaxjobs=10 -loglevel=3 "
 
 PU_ASIA=`cat pu-asia.hosts`
 PU_USA=`cat pu-usa.hosts`
 PU_EUROPE=`cat pu-europe.hosts`
 PU_ALL="$PU_ASIA $PU_USA $PU_EUROPU"
-PU_MISCOPT="-jobinterval=5000000 -jobsize=1000000 -loglevel=5"
+PU_MISCOPT="-jobinterval=5000000 -jobsize=1000000 -loglevel=3"
 
 
 resetAll ()
@@ -56,6 +56,8 @@ startNetwork ()
       ./start-process "PoolElement-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
       let number=$number+1
    done
+
+   sleep 90
 
    number=1
    for pu in $localPUs ; do
