@@ -82,6 +82,12 @@ JobQueue::JobQueue()
 // ###### Destructor ########################################################
 JobQueue::~JobQueue()
 {
+   Job* currentJob = FirstJob;
+   while(currentJob) {
+      Job* nextJob =  currentJob->Next;
+      delete currentJob;
+      currentJob = nextJob;
+   }
    FirstJob = NULL;
    LastJob  = NULL;
 }
@@ -665,7 +671,11 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Queued\" %1.6f \n", objectName, TotalJobSizeQueued);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Started\" %1.6f \n", objectName, TotalJobSizeStarted);
    fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Completed\" %1.6f \n", objectName, TotalJobSizeCompleted);
-   return;
+
+   if(process.CurrentJob) {
+      delete process.CurrentJob;
+      process.CurrentJob = NULL;
+   }
 }
 
 

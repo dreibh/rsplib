@@ -14,7 +14,7 @@ PE_ASIA=`cat pe-asia.hosts`
 PE_USA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
 PE_ALL="$PE_ASIA $PE_USA $PE_EUROPE"
-PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsedDPF:0.00001 -capmaxjobs=10 -loglevel=5 "
+PE_MISCOPT="-calcapp -rereginterval=7500 -policy=LeastUsedDPF:0.0001 -capmaxjobs=10 -loglevel=5 "
 
 PU_ASIA=`cat pu-asia.hosts`
 PU_USA=`cat pu-usa.hosts`
