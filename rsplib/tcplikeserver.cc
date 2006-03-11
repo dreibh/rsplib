@@ -276,7 +276,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             serverSet.removeFinished();
 
             // ====== Wait for incoming sessions ============================
-            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 500000);
+            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25000);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if((serviceThread) && (serverSet.add(serviceThread))) {
