@@ -1185,14 +1185,17 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 
 
 /* ###### Update distance for distance-sensitive policies ################ */
-static void updateDistance(int                               fd,
-                           sctp_assoc_t                      assocID,
-                           struct ST_CLASS(PoolElementNode)* poolElementNode,
-                           bool                              addDistance,
-                           unsigned int*                     distance)
+static void updateDistance(int                                     fd,
+                           sctp_assoc_t                            assocID,
+                           const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                           struct PoolPolicySettings*              updatedPolicySettings,
+                           bool                                    addDistance,
+                           unsigned int*                           distance)
 {
    struct sctp_status assocStatus;
    socklen_t          assocStatusLength;
+
+   *updatedPolicySettings = poolElementNode->PolicySettings;
 
    /* ====== Set distance for distance-sensitive policies ======= */
    if((poolElementNode->PolicySettings.PolicyType == PPT_LEASTUSED_DPF) ||
@@ -1212,10 +1215,10 @@ static void updateDistance(int                               fd,
       }
 
       if(addDistance) {
-         poolElementNode->PolicySettings.Distance += *distance;
+         updatedPolicySettings->Distance += *distance;
       }
       else {
-         poolElementNode->PolicySettings.Distance = *distance;
+         updatedPolicySettings->Distance = *distance;
       }
    }
    else {
@@ -1238,6 +1241,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    char                              userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     userTransportAddressBlock = (struct TransportAddressBlock*)&userTransportAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
 
    LOG_VERBOSE
@@ -1285,7 +1289,8 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
 
             /* ====== Set distance for distance-sensitive policies ======= */
             distance = 0xffffffff;
-            updateDistance(fd, assocID, message->PoolElementPtr, false, &distance);
+            updateDistance(fd, assocID, message->PoolElementPtr,
+                           &updatedPolicySettings,false, &distance);
 
             message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                               &registrar->Handlespace,
@@ -1293,7 +1298,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
                               registrar->ServerID,
                               message->PoolElementPtr->Identifier,
                               message->PoolElementPtr->RegistrationLife,
-                              &message->PoolElementPtr->PolicySettings,
+                              &updatedPolicySettings,
                               userTransportAddressBlock,
                               asapTransportAddressBlock,
                               fd, assocID,
@@ -1725,6 +1730,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                                struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
    int                               result;
 
@@ -1752,7 +1758,8 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       if(message->PoolElementPtr->HomeRegistrarIdentifier != registrar->ServerID) {
          /* ====== Set distance for distance-sensitive policies ======= */
          distance = 0xffffffff;
-         updateDistance(fd, assocID, message->PoolElementPtr, true, &distance);
+         updateDistance(fd, assocID, message->PoolElementPtr,
+                        &updatedPolicySettings, true, &distance);
 
          result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                      &registrar->Handlespace,
@@ -1760,7 +1767,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                      message->PoolElementPtr->HomeRegistrarIdentifier,
                      message->PoolElementPtr->Identifier,
                      message->PoolElementPtr->RegistrationLife,
-                     &message->PoolElementPtr->PolicySettings,
+                     &updatedPolicySettings,
                      message->PoolElementPtr->UserTransport,
                      message->PoolElementPtr->RegistratorTransport,
                      -1, 0,
@@ -2568,6 +2575,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
    unsigned int                      result;
 
@@ -2590,7 +2598,8 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
          poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
          while(poolElementNode != NULL) {
             /* ====== Set distance for distance-sensitive policies ======= */
-            updateDistance(fd, assocID, poolElementNode, true, &distance);
+            updateDistance(fd, assocID, poolElementNode,
+                           &updatedPolicySettings, true, &distance);
 
             if(poolElementNode->HomeRegistrarIdentifier != registrar->ServerID) {
                result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
@@ -2599,7 +2608,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
                            poolElementNode->HomeRegistrarIdentifier,
                            poolElementNode->Identifier,
                            poolElementNode->RegistrationLife,
-                           &poolElementNode->PolicySettings,
+                           &updatedPolicySettings,
                            poolElementNode->UserTransport,
                            poolElementNode->RegistratorTransport,
                            -1, 0,
