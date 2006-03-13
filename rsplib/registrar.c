@@ -1817,8 +1817,8 @@ static void handleHandleUpdate(struct Registrar*       registrar,
          }
       }
       else {
-         LOG_ERROR
-         fprintf(stdlog, "PR $%08x sent me a HandleUpdate for a PE owned by myself!",
+         LOG_WARNING
+         fprintf(stdlog, "PR $%08x sent me a HandleUpdate for a PE owned by myself!\n",
                  message->SenderID);
          LOG_END
       }
@@ -2647,8 +2647,8 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
                }
             }
             else {
-               LOG_ERROR
-               fprintf(stdlog, "PR $%08x sent me a HandleTableResponse containing a PE owned by myself: ",
+               LOG_WARNING
+               fprintf(stdlog, "PR $%08x sent me a HandleTableResponse containing a PE owned by myself!\n",
                        message->SenderID);
                ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
                fputs("\n", stdlog);
@@ -2799,7 +2799,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
          }
 
          result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
-                                          received, sizeof(buffer), &message);
+                                         received, sizeof(buffer), &message);
          if(message != NULL) {
             if(result == RSPERR_OKAY) {
                message->BufferAutoDelete = false;
