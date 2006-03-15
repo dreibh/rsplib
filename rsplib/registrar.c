@@ -61,19 +61,19 @@
 /* #define FAST_BREAK */
 
 
-#define MAX_NS_TRANSPORTADDRESSES                                           16
-#define MIN_ENDPOINT_ADDRESS_SCOPE                                           4
-#define NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS                                3
-#define NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
-#define NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
-#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
-#define NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000
-#define NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE                        2444444
-#define NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
-#define NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   2000000
-#define NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
-#define NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
-
+#define MAX_NS_TRANSPORTADDRESSES                                          16
+#define MIN_ENDPOINT_ADDRESS_SCOPE                                          4
+#define REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS                                3
+#define REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
+#define REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
+#define REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
+#define REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000
+#define REGISTRAR_DEFAULT_PEER_HEARTBEAT_CYCLE                        2444444
+#define REGISTRAR_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
+#define REGISTRAR_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   5000000
+#define REGISTRAR_DEFAULT_MENTOR_HUNT_TIMEOUT                         5000000
+#define REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
+#define REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT                         300000000
 
 unsigned long long randomizeCycle(const unsigned long long interval)
 {
@@ -120,6 +120,7 @@ struct Registrar
    struct Timer                               TakeoverExpiryTimer;
 
    size_t                                     MaxBadPEReports;
+   unsigned long long                         AutoCloseTimeout;
    unsigned long long                         ServerAnnounceCycle;
    unsigned long long                         EndpointMonitoringHeartbeatInterval;
    unsigned long long                         EndpointKeepAliveTransmissionInterval;
@@ -237,7 +238,10 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 #endif
                                )
 {
-   struct Registrar* registrar = (struct Registrar*)malloc(sizeof(struct Registrar));
+   struct Registrar* registrar;
+   int               autoCloseTimeout;
+
+   registrar = (struct Registrar*)malloc(sizeof(struct Registrar));
    if(registrar != NULL) {
       registrar->ServerID = serverID;
       if(registrar->ServerID == 0) {
@@ -292,16 +296,29 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->ENRPAnnounceViaMulticast  = enrpAnnounceViaMulticast;
 
 
-      registrar->MaxBadPEReports                       = NAMESERVER_DEFAULT_MAX_BAD_PE_REPORTS;
-      registrar->ServerAnnounceCycle                   = NAMESERVER_DEFAULT_SERVER_ANNOUNCE_CYCLE;
-      registrar->EndpointMonitoringHeartbeatInterval   = NAMESERVER_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
-      registrar->EndpointKeepAliveTransmissionInterval = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
-      registrar->EndpointKeepAliveTimeoutInterval      = NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
-      registrar->PeerMaxTimeLastHeard                  = NAMESERVER_DEFAULT_PEER_MAX_TIME_LAST_HEARD;
-      registrar->PeerMaxTimeNoResponse                 = NAMESERVER_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
-      registrar->PeerHeartbeatCycle                    = NAMESERVER_DEFAULT_PEER_HEARTBEAT_CYCLE;
-      registrar->MentorHuntTimeout                     = NAMESERVER_DEFAULT_MENTOR_HUNT_TIMEOUT;
-      registrar->TakeoverExpiryInterval                = NAMESERVER_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
+      registrar->MaxBadPEReports                       = REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS;
+      registrar->ServerAnnounceCycle                   = REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE;
+      registrar->EndpointMonitoringHeartbeatInterval   = REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
+      registrar->EndpointKeepAliveTransmissionInterval = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
+      registrar->EndpointKeepAliveTimeoutInterval      = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
+      registrar->AutoCloseTimeout                      = REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT;
+      registrar->PeerMaxTimeLastHeard                  = REGISTRAR_DEFAULT_PEER_MAX_TIME_LAST_HEARD;
+      registrar->PeerMaxTimeNoResponse                 = REGISTRAR_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
+      registrar->PeerHeartbeatCycle                    = REGISTRAR_DEFAULT_PEER_HEARTBEAT_CYCLE;
+      registrar->MentorHuntTimeout                     = REGISTRAR_DEFAULT_MENTOR_HUNT_TIMEOUT;
+      registrar->TakeoverExpiryInterval                = REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
+
+      autoCloseTimeout = (registrar->AutoCloseTimeout / 1000000);
+      if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
+         LOG_ERROR
+         logerror("setsockopt() for SCTP_AUTOCLOSE failed");
+         LOG_END
+      }
+      if(ext_setsockopt(registrar->ENRPUnicastSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
+         LOG_ERROR
+         logerror("setsockopt() for SCTP_AUTOCLOSE failed");
+         LOG_END
+      }
 
       memcpy(&registrar->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(registrar->ASAPAnnounceAddress));
       if(registrar->ASAPAnnounceSocket >= 0) {
@@ -3034,7 +3051,6 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    char*                       idx;
    struct sctp_event_subscribe sctpEvents;
    size_t                      sctpAddresses;
-   int                         autoCloseTimeout;
    uint16_t                    configuredPort;
    size_t                      trials;
 
@@ -3150,11 +3166,6 @@ static void getSocketPair(const char*                   sctpAddressParameter,
       perror("setsockopt() for SCTP_EVENTS failed");
       exit(1);
    }
-   autoCloseTimeout = 5 + (2 * (NAMESERVER_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL / 1000000));
-   if(ext_setsockopt(*sctpSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
-      perror("setsockopt() for SCTP_AUTOCLOSE failed");
-      exit(1);
-   }
 
    transportAddressBlockNew(sctpTransportAddress,
                             IPPROTO_SCTP,
@@ -3230,7 +3241,16 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-peer=",6))) {
          /* to be handled later */
       }
-      else if(!(strncmp(argv[i], "-maxbadpereports=",17))) {
+      else if( (!(strncmp(argv[i], "-maxbadpereports=",17))) ||
+               (!(strncmp(argv[i], "-autoclosetimeout=",18))) ||
+               (!(strncmp(argv[i], "-serverannouncecycle=",21))) ||
+               (!(strncmp(argv[i], "-endpointkeepalivetransmissioninterval=",39))) ||
+               (!(strncmp(argv[i], "-endpointkeepalivetimeoutinterval=",34))) ||
+               (!(strncmp(argv[i], "-peerheartbeatcycle=",20))) ||
+               (!(strncmp(argv[i], "-peermaxtimelastheard=",22))) ||
+               (!(strncmp(argv[i], "-peermaxtimenoresponse=",23))) ||
+               (!(strncmp(argv[i], "-mentorhunttimeout=",19))) ||
+               (!(strncmp(argv[i], "-takeoverexpiryinterval=",24))) ) {
          /* to be handled later */
       }
       else if(!(strncmp(argv[i], "-asap=",6))) {
@@ -3281,11 +3301,17 @@ int main(int argc, char** argv)
       }
 #endif
       else {
+         printf("ERROR: Invalid argument <%s>!\n", argv[i]);
          printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
-          "{-cspserver=address} {-cspinterval=microseconds}"
+            "{-cspserver=address} {-cspinterval=microseconds}"
 #endif
-          "{-identifier=registrar identifier}\n",argv[0]);
+            "{-identifier=registrar identifier} "
+            "{-autoclosetimeout=seconds} {-serverannouncecycle=milliseconds} "
+            "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
+            "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
+            "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds}"
+            "\n",argv[0]);
          exit(1);
       }
    }
@@ -3352,6 +3378,84 @@ int main(int argc, char** argv)
             registrar->MaxBadPEReports = 1;
          }
       }
+      else if(!(strncmp(argv[i], "-autoclosetimeout=",18))) {
+         registrar->AutoCloseTimeout = 1000000 * atol((char*)&argv[i][18]);
+         if(registrar->AutoCloseTimeout < 5000000) {
+            registrar->AutoCloseTimeout = 5000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-serverannouncecycle=",21))) {
+         registrar->ServerAnnounceCycle = 1000 * atol((char*)&argv[i][21]);
+         if(registrar->ServerAnnounceCycle < 100000) {
+            registrar->ServerAnnounceCycle = 100000;
+         }
+         else if(registrar->ServerAnnounceCycle > 60000000) {
+            registrar->ServerAnnounceCycle = 60000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-endpointkeepalivetransmissioninterval=",39))) {
+         registrar->EndpointKeepAliveTransmissionInterval = 1000 * atol((char*)&argv[i][39]);
+         if(registrar->EndpointKeepAliveTransmissionInterval < 300000) {
+            registrar->EndpointKeepAliveTransmissionInterval = 300000;
+         }
+         else if(registrar->EndpointKeepAliveTransmissionInterval > 300000000) {
+            registrar->EndpointKeepAliveTransmissionInterval = 300000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-endpointkeepalivetimeoutinterval=",34))) {
+         registrar->EndpointKeepAliveTimeoutInterval = 1000 * atol((char*)&argv[i][34]);
+         if(registrar->EndpointKeepAliveTimeoutInterval < 100000) {
+            registrar->EndpointKeepAliveTimeoutInterval = 100000;
+         }
+         if(registrar->EndpointKeepAliveTimeoutInterval > 60000000) {
+            registrar->EndpointKeepAliveTimeoutInterval = 60000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-peerheartbeatcycle=",20))) {
+         registrar->PeerHeartbeatCycle = 1000 * atol((char*)&argv[i][20]);
+         if(registrar->PeerHeartbeatCycle < 1000000) {
+            registrar->PeerHeartbeatCycle = 1000000;
+         }
+         else if(registrar->PeerHeartbeatCycle > 300000000) {
+            registrar->PeerHeartbeatCycle = 300000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-peermaxtimelastheard=",22))) {
+         registrar->PeerMaxTimeLastHeard = 1000 * atol((char*)&argv[i][22]);
+         if(registrar->PeerMaxTimeLastHeard < 1000000) {
+            registrar->PeerMaxTimeLastHeard = 1000000;
+         }
+         else if(registrar->PeerMaxTimeLastHeard > 300000000) {
+            registrar->PeerMaxTimeLastHeard = 300000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-peermaxtimenoresponse=",23))) {
+         registrar->PeerMaxTimeNoResponse = 1000 * atol((char*)&argv[i][23]);
+         if(registrar->PeerMaxTimeNoResponse < 1000000) {
+            registrar->PeerMaxTimeNoResponse = 1000000;
+         }
+         else if(registrar->PeerMaxTimeNoResponse > 60000000) {
+            registrar->PeerMaxTimeNoResponse = 60000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-mentorhunttimeout=",19))) {
+         registrar->MentorHuntTimeout = 1000 * atol((char*)&argv[i][19]);
+         if(registrar->MentorHuntTimeout < 1000000) {
+            registrar->MentorHuntTimeout = 1000000;
+         }
+         else if(registrar->MentorHuntTimeout > 60000000) {
+            registrar->MentorHuntTimeout = 60000000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-takeoverexpiryinterval=",24))) {
+         registrar->TakeoverExpiryInterval = 1000 * atol((char*)&argv[i][24]);
+         if(registrar->TakeoverExpiryInterval < 1000000) {
+            registrar->TakeoverExpiryInterval = 1000000;
+         }
+         else if(registrar->TakeoverExpiryInterval > 60000000) {
+            registrar->TakeoverExpiryInterval = 60000000;
+         }
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -3401,19 +3505,20 @@ int main(int argc, char** argv)
       printf("CSP Report Interval:    %lldus\n", cspReportInterval);
    }
 #endif
+   printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
 
    puts("\nASAP Parameters:");
    printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)registrar->MaxBadPEReports);
-   printf("   Server Announce Cycle:                       %lldus\n", registrar->ServerAnnounceCycle);
-   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldus\n", registrar->EndpointMonitoringHeartbeatInterval);
-   printf("   Endpoint Keep Alive Transmission Interval:   %lldus\n", registrar->EndpointKeepAliveTransmissionInterval);
-   printf("   Endpoint Keep Alive Timeout Interval:        %lldus\n", registrar->EndpointKeepAliveTimeoutInterval);
+   printf("   Server Announce Cycle:                       %lldms\n", registrar->ServerAnnounceCycle / 1000);
+   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
+   printf("   Endpoint Keep Alive Transmission Interval:   %lldms\n", registrar->EndpointKeepAliveTransmissionInterval / 1000);
+   printf("   Endpoint Keep Alive Timeout Interval:        %lldms\n", registrar->EndpointKeepAliveTimeoutInterval / 1000);
    puts("ENRP Parameters:");
-   printf("   Peer Heartbeat Cylce:                        %lldus\n", registrar->PeerHeartbeatCycle);
-   printf("   Peer Max Time Last Heard:                    %lldus\n", registrar->PeerMaxTimeLastHeard);
-   printf("   Peer Max Time No Response:                   %lldus\n", registrar->PeerMaxTimeNoResponse);
-   printf("   Mentor Hunt Timeout:                         %lldus\n", registrar->MentorHuntTimeout);
-   printf("   Takeover Expiry Interval:                    %lldus\n", registrar->TakeoverExpiryInterval);
+   printf("   Peer Heartbeat Cylce:                        %lldms\n", registrar->PeerHeartbeatCycle / 1000);
+   printf("   Peer Max Time Last Heard:                    %lldms\n", registrar->PeerMaxTimeLastHeard / 1000);
+   printf("   Peer Max Time No Response:                   %lldms\n", registrar->PeerMaxTimeNoResponse / 1000);
+   printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorHuntTimeout / 1000);
+   printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
    puts("");
 
 

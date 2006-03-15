@@ -199,6 +199,10 @@ void sendCalcAppRequest(struct Process* process)
    message.JobID   = htonl(process->CurrentJob->JobID);
    message.JobSize = hton64((unsigned long long)rint(process->CurrentJob->JobSize));
    cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
+
+   // Set timeout for CalcAppAccept or CalcAppReject
+   process->KeepAliveTimeoutTimeStamp = getMicroTime() + KeepAliveTimeoutInterval;
+
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
                                 0, htonl(PPID_CALCAPP), 0, 0,
@@ -452,6 +456,13 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
 
+   /* No cookie for failover is available, therefore it is necessary
+      to restart! */
+   if(!rsp_has_cookie(process->RSerPoolSocketDescriptor)) {
+      process->Status = PS_Init;
+      sendCalcAppRequest(process);
+   }
+
    return(true);
 }
 
@@ -487,8 +498,14 @@ void handleEvents(Process*    process,
          puts("");
          if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
             (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-            puts("--- FAILOVER ...");
+            puts("--- FAILOVER ---");
             rsp_forcefailover(process->RSerPoolSocketDescriptor);
+            /* No cookie for failover is available, therefore it is necessary
+               to restart! */
+            if(!rsp_has_cookie(process->RSerPoolSocketDescriptor)) {
+               process->Status = PS_Init;
+               sendCalcAppRequest(process);
+            }
          }
       }
       else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
@@ -567,7 +584,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    process.CurrentJob = process.Queue.dequeue();
    while(process.CurrentJob != NULL) {
       TotalJobsStarted++;
-      TotalJobSizeStarted+=process.CurrentJob->JobSize;
+      TotalJobSizeStarted += process.CurrentJob->JobSize;
       process.Status = PS_Init;
 
       process.RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);

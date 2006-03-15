@@ -1,3 +1,10 @@
+MacOS-Tests:
+194.95.73.130
+sudo kextload /System/Library/Extensions/SCTP.kext
+sudo kextunload /System/Library/Extensions/SCTP.kext
+
+-----
+
 Testsoftware:
 - Runs
 - RunDuration

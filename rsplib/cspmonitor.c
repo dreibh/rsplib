@@ -103,12 +103,12 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%5ums, int=%4Ldms, A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, int=%4Ldms, A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
-           abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000),
+           (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
            cspObject->ReportInterval / 1000,
            (unsigned int)cspObject->Associations,
            workload,
