@@ -1,0 +1,2 @@
+#!/bin/bash
+./server -cspserver=127.0.0.1:2960 -cspinterval=333333 -fractal -rereginterval=20000 -registrar=127.0.0.1:3001 -identifier=256 $@
