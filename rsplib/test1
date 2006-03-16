@@ -14,7 +14,7 @@ PE_ASIA=`cat pe-asia.hosts`
 PE_USA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
 PE_ALL="$PE_ASIA $PE_USA $PE_EUROPE"
-PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsedDPF:0.001 -capmaxjobs=10 -loglevel=6 "
+PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsedDPF:0.0001 -capmaxjobs=10 -loglevel=6 "
 
 PU_ASIA=`cat pu-asia.hosts`
 PU_USA=`cat pu-usa.hosts`
@@ -144,14 +144,14 @@ fi
 
 if [ "x$1" = "xstart" ] ; then
    echo "Starting scenario!"
-   #startNetworkAsia
+   startNetworkAsia
    startNetworkUSA
    startNetworkEurope
 elif [ "x$1" = "xstop" ] ; then
    echo "Stopping scenario!"
    stopNetworkEurope
    stopNetworkUSA
-   #stopNetworkAsia
+   stopNetworkAsia
 elif [ "x$1" = "xreset" ] ; then
    echo "Reseting everything!"
    resetAll
