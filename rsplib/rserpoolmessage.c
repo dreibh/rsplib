@@ -157,6 +157,7 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
       }
       if((message->PeerListPtrAutoDelete) && (message->PeerListPtr)) {
          ST_CLASS(peerListManagementDelete)(message->PeerListPtr);
+         free(message->PeerListPtr);
          message->PeerListPtr = NULL;
       }
       if((message->HandlespacePtrAutoDelete) && (message->HandlespacePtr)) {

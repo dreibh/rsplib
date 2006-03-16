@@ -179,6 +179,7 @@ void rsp_cleanup()
       /* ====== Remove Component Status Reporter ========================= */
       if(gCSPReporter) {
          cspReporterDelete(gCSPReporter);
+         free(gCSPReporter);
          gCSPReporter = NULL;
       }
 #endif

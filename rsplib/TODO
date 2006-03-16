@@ -1,3 +1,17 @@
+==29760== 176 bytes in 4 blocks are definitely lost in loss record 9 of 15
+==29760==    at 0x1B8FF896: malloc (vg_replace_malloc.c:149)
+==29760==    by 0x8099DCF: transportAddressBlockDuplicate (transportaddressblock.c:227)
+==29760==    by 0x809279C: scanServerInformationParameter (rserpoolmessageparser.c:1188)
+==29760==    by 0x80934D9: scanListResponseMessage (rserpoolmessageparser.c:1528)
+==29760==    by 0x8095B05: scanMessage (rserpoolmessageparser.c:2009)
+==29760==    by 0x8096292: rserpoolPacket2Message (rserpoolmessageparser.c:2093)
+==29760==    by 0x8071E5C: registrarSocketCallback (registrar.c:2820)
+==29760==    by 0x8076ACF: dispatcherHandlePollResult (dispatcher.c:256)
+==29760==    by 0x8074F0F: main (registrar.c:3556)
+==29760==
+
+------
+
 Fehler:
 - Starten: r1, r2, r3, p1
   p1 <-> r3

@@ -1,2 +1,2 @@
 #!/bin/bash
- ./registrar -cspserver=127.0.0.1:2960 -cspinterval=333333 -asap=0.0.0.0:1001 -enrp=0.0.0.0:1002 -peer=127.0.0.1:2002 -peer=127.0.0.1:3002 -identifier=1 $@
+ ./registrar -cspserver=127.0.0.1:2960 -cspinterval=333333 -autoclosetimeout=30 -asap=0.0.0.0:1001 -enrp=0.0.0.0:1002 -peer=127.0.0.1:2002 -peer=127.0.0.1:3002 -identifier=1 $@

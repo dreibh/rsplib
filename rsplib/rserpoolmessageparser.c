@@ -1565,6 +1565,9 @@ static bool scanListResponseMessage(struct RSerPoolMessage* message)
             message->Error = (uint16_t)errorCode;
             return(false);
          }
+
+         free(peerListNode->AddressBlock);
+         peerListNode->AddressBlock = NULL;
          ST_CLASS(peerListNodeDelete)(peerListNode);
          free(peerListNode);
       }
