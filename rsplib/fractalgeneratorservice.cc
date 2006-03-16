@@ -61,7 +61,7 @@ void FractalGeneratorServer::fractalGeneratorPrintParameters(const void* userDat
    const FractalGeneratorServerSettings* settings = (const FractalGeneratorServerSettings*)userData;
 
    puts("Fractal Generator Parameters:");
-   printf("   Failure After = %u [Packets]\n", settings->FailureAfter);
+   printf("   Failure After = %u [Packets]\n", (unsigned int)settings->FailureAfter);
    printf("   Test Mode     = %s\n", (settings->TestMode == true) ? "on" : "off");
 }
 
