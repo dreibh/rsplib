@@ -115,12 +115,12 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeFindNearestNextPoolElementNod
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeRemovePoolElementNode)(
                                      struct ST_CLASS(PoolNode)*        poolNode,
                                      struct ST_CLASS(PoolElementNode)* poolElementNode);
-void ST_CLASS(poolNodeGetDescription)(struct ST_CLASS(PoolNode)* poolNode,
-                                      char*                      buffer,
-                                      const size_t               bufferSize);
-void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
-                             FILE*                      fd,
-                             const unsigned int         fields);
+void ST_CLASS(poolNodeGetDescription)(const struct ST_CLASS(PoolNode)* poolNode,
+                                      char*                            buffer,
+                                      const size_t                     bufferSize);
+void ST_CLASS(poolNodePrint)(const struct ST_CLASS(PoolNode)* poolNode,
+                             FILE*                            fd,
+                             const unsigned int               fields);
 void ST_CLASS(poolNodeClear)(struct ST_CLASS(PoolNode)* poolNode,
                              void                       (*poolElementNodeDisposer)(void* poolElementNode, void* userData),
                              void*                      userData);

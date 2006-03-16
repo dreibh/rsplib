@@ -65,11 +65,11 @@ void ST_CLASS(poolHandlespaceManagementNew)(
 void ST_CLASS(poolHandlespaceManagementDelete)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementPrint)(
-        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-        FILE*                                       fd,
-        const unsigned int                          fields);
+        const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        FILE*                                             fd,
+        const unsigned int                                fields);
 void ST_CLASS(poolHandlespaceManagementVerify)(
-               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementClear)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum)(

@@ -220,12 +220,12 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
                                                     &workload);
    if(CID_OBJECT(cspReporter->CSPIdentifier) != 0ULL) {
       componentStatusSend(&cspReporter->CSPReportAddress,
-                        cspReporter->CSPReportInterval,
-                        cspReporter->CSPIdentifier,
-                        statusText,
-                        componentLocation,
-                        workload,
-                        caeArray, caeArraySize);
+                          cspReporter->CSPReportInterval,
+                          cspReporter->CSPIdentifier,
+                          statusText,
+                          componentLocation,
+                          workload,
+                          caeArray, caeArraySize);
    }
    if(caeArray) {
       deleteComponentAssociationArray(caeArray);

@@ -91,14 +91,14 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
                                   const sctp_assoc_t                connectionAssocID);
 void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolElementNode);
 void ST_CLASS(poolElementNodeGetDescription)(
-        struct ST_CLASS(PoolElementNode)* poolElementNode,
-        char*                             buffer,
-        const size_t                      bufferSize,
-        const unsigned int                fields);
+        const struct ST_CLASS(PoolElementNode)* poolElementNode,
+        char*                                   buffer,
+        const size_t                            bufferSize,
+        const unsigned int                      fields);
 void ST_CLASS(poolElementNodePrint)(
-        struct ST_CLASS(PoolElementNode)* poolElementNode,
-        FILE*                             fd,
-        const unsigned int                fields);
+        const struct ST_CLASS(PoolElementNode)* poolElementNode,
+        FILE*                                   fd,
+        const unsigned int                      fields);
 HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
                                       const struct ST_CLASS(PoolElementNode)* poolElementNode);
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,

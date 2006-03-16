@@ -1,3 +1,15 @@
+Fehler:
+- Starten: r1, r2, r3, p1
+  p1 <-> r3
+- Stoppen: r3
+ Takeover r1/r2
+
+ PE nimmt r1 oder r2 als PR-H
+   -> handleRegistrationRequest ...
+   -> Update im HS, aber Ownership-Checksum stimmt nicht mehr. => Assertion.
+
+------
+
 MacOS-Tests:
 194.95.73.130
 sudo kextload /System/Library/Extensions/SCTP.kext

@@ -107,10 +107,10 @@ void ST_CLASS(poolElementNodeDelete)(struct ST_CLASS(PoolElementNode)* poolEleme
 
 /* ###### Get textual description ######################################## */
 void ST_CLASS(poolElementNodeGetDescription)(
-        struct ST_CLASS(PoolElementNode)* poolElementNode,
-        char*                             buffer,
-        const size_t                      bufferSize,
-        const unsigned int                fields)
+        const struct ST_CLASS(PoolElementNode)* poolElementNode,
+        char*                                   buffer,
+        const size_t                            bufferSize,
+        const unsigned int                      fields)
 {
    char tmp[512];
    char poolPolicySettingsDescription[512];
@@ -192,9 +192,9 @@ void ST_CLASS(poolElementNodeGetDescription)(
 
 /* ###### Print ########################################################## */
 void ST_CLASS(poolElementNodePrint)(
-        struct ST_CLASS(PoolElementNode)* poolElementNode,
-        FILE*                             fd,
-        const unsigned int                fields)
+        const struct ST_CLASS(PoolElementNode)* poolElementNode,
+        FILE*                                   fd,
+        const unsigned int                      fields)
 {
    char buffer[4096];
    ST_CLASS(poolElementNodeGetDescription)(poolElementNode,

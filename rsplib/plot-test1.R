@@ -61,6 +61,6 @@ generateOutput <- function(inFile)
 pdf("test1.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
 
 generateOutput("messung1/pu-vectors.vec.bz2")
-generateOutput("messung2/pu-vectors.vec.bz2")
+# generateOutput("messung2/pu-vectors.vec.bz2")
 
 dev.off()

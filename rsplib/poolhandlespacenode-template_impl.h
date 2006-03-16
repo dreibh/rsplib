@@ -131,7 +131,7 @@ HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeComputeOwnershipC
 
 /* ###### Get number of timers ########################################### */
 size_t ST_CLASS(poolHandlespaceNodeGetTimerNodes)(
-          struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
+          const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
 {
    return(ST_METHOD(GetElements)(&poolHandlespaceNode->PoolElementTimerStorage));
 }
@@ -287,7 +287,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
 
 /* ###### Get number of connection nodes ################################## */
 size_t ST_CLASS(poolHandlespaceNodeGetConnectionNodes)(
-          struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
+          const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
 {
    return(ST_METHOD(GetElements)(&poolHandlespaceNode->PoolElementConnectionStorage));
 }
@@ -743,8 +743,15 @@ void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
               struct ST_CLASS(PoolElementNode)*     poolElementNode,
               const RegistrarIdentifierType         newHomeRegistrarIdentifier)
 {
-   struct STN_CLASSNAME* result;
+   struct STN_CLASSNAME*              result;
+   HandlespaceChecksumAccumulatorType preUpdateChecksum;
+   RegistrarIdentifierType            preUpdateHomeRegistrar;
 
+   /* ====== Store old checksum and registrar for notification =========== */
+   preUpdateChecksum      = poolElementNode->Checksum;
+   preUpdateHomeRegistrar = poolElementNode->HomeRegistrarIdentifier;
+
+   /* ====== Change ownership ============================================ */
    if(newHomeRegistrarIdentifier != poolElementNode->HomeRegistrarIdentifier) {
       if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementOwnershipStorageNode)) {
          result = ST_METHOD(Remove)(&poolHandlespaceNode->PoolElementOwnershipStorage,
@@ -755,6 +762,35 @@ void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
       result = ST_METHOD(Insert)(&poolHandlespaceNode->PoolElementOwnershipStorage,
                                  &poolElementNode->PoolElementOwnershipStorageNode);
       CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
+   }
+
+   /* ====== Update handlespace checksum ================================= */
+   poolHandlespaceNode->HandlespaceChecksum = handlespaceChecksumSub(
+                                                   poolHandlespaceNode->HandlespaceChecksum,
+                                                   poolElementNode->Checksum);
+   if(preUpdateHomeRegistrar == poolHandlespaceNode->HomeRegistrarIdentifier) {
+      poolHandlespaceNode->OwnershipChecksum = handlespaceChecksumSub(
+                                                   poolHandlespaceNode->OwnershipChecksum,
+                                                   poolElementNode->Checksum);
+   }
+
+   poolElementNode->Checksum = ST_CLASS(poolElementNodeComputeChecksum)(poolElementNode);
+
+   poolHandlespaceNode->HandlespaceChecksum = handlespaceChecksumAdd(
+                                                   poolHandlespaceNode->HandlespaceChecksum,
+                                                   poolElementNode->Checksum);
+   if(poolElementNode->HomeRegistrarIdentifier == poolHandlespaceNode->HomeRegistrarIdentifier) {
+      poolHandlespaceNode->OwnershipChecksum = handlespaceChecksumAdd(
+                                                   poolHandlespaceNode->OwnershipChecksum,
+                                                   poolElementNode->Checksum);
+   }
+   if(poolHandlespaceNode->PoolNodeUpdateNotification) {
+      poolHandlespaceNode->PoolNodeUpdateNotification(poolHandlespaceNode,
+                                                      poolElementNode,
+                                                      PNUA_Update,
+                                                      preUpdateChecksum,
+                                                      preUpdateHomeRegistrar,
+                                                      poolHandlespaceNode->NotificationUserData);
    }
 }
 
@@ -793,20 +829,9 @@ void ST_CLASS(poolHandlespaceNodeUpdatePoolElementNode)(
         const struct ST_CLASS(PoolElementNode)*   source,
         unsigned int*                             errorCode)
 {
-   HandlespaceChecksumAccumulatorType preUpdateChecksum;
-   RegistrarIdentifierType            preUpdateHomeRegistrar;
-
    ST_CLASS(poolNodeUpdatePoolElementNode)(poolElementNode->OwnerPoolNode,
                                            poolElementNode, source, errorCode);
    if(*errorCode == RSPERR_OKAY) {
-      /* ====== Store old checksum and registrar for notification ======== */
-      preUpdateChecksum      = poolElementNode->Checksum;
-      preUpdateHomeRegistrar = poolElementNode->HomeRegistrarIdentifier;
-
-      /* ====== Change ownership ========================================= */
-      ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
-         poolHandlespaceNode, poolElementNode,
-         source->HomeRegistrarIdentifier);
 
       /* ====== Change connection ======================================== */
       ST_CLASS(poolHandlespaceNodeUpdateConnectionOfPoolElementNode)(
@@ -814,35 +839,18 @@ void ST_CLASS(poolHandlespaceNodeUpdatePoolElementNode)(
          source->ConnectionSocketDescriptor,
          source->ConnectionAssocID);
 
-      /* ====== Update handlespace checksum ============================== */
-      poolHandlespaceNode->HandlespaceChecksum = handlespaceChecksumSub(
-                                                    poolHandlespaceNode->HandlespaceChecksum,
-                                                    poolElementNode->Checksum);
-      if(preUpdateHomeRegistrar == poolHandlespaceNode->HomeRegistrarIdentifier) {
-         poolHandlespaceNode->OwnershipChecksum = handlespaceChecksumSub(
-                                                     poolHandlespaceNode->OwnershipChecksum,
-                                                     poolElementNode->Checksum);
-      }
+      /* ====== Change ownership ========================================= */
+      /* Important: This function also takes care for updating
+                    Handlespace Checksum and Ownership Checksum! */
+      ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
+         poolHandlespaceNode, poolElementNode,
+         source->HomeRegistrarIdentifier);
 
-      poolElementNode->Checksum = ST_CLASS(poolElementNodeComputeChecksum)(poolElementNode);
-
-      poolHandlespaceNode->HandlespaceChecksum = handlespaceChecksumAdd(
-                                                    poolHandlespaceNode->HandlespaceChecksum,
-                                                    poolElementNode->Checksum);
-      if(poolElementNode->HomeRegistrarIdentifier == poolHandlespaceNode->HomeRegistrarIdentifier) {
-         poolHandlespaceNode->OwnershipChecksum = handlespaceChecksumAdd(
-                                                     poolHandlespaceNode->OwnershipChecksum,
-                                                     poolElementNode->Checksum);
-      }
-      if(poolHandlespaceNode->PoolNodeUpdateNotification) {
-         poolHandlespaceNode->PoolNodeUpdateNotification(poolHandlespaceNode,
-                                                         poolElementNode,
-                                                         PNUA_Update,
-                                                         preUpdateChecksum,
-                                                         preUpdateHomeRegistrar,
-                                                         poolHandlespaceNode->NotificationUserData);
-      }
    }
+
+#ifdef VERIFY
+   ST_CLASS(poolHandlespaceNodeVerify)(poolHandlespaceNode);
+#endif
 }
 
 
@@ -968,9 +976,9 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeRemovePoolElementN
 
 /* ###### Get textual description ######################################## */
 void ST_CLASS(poolHandlespaceNodeGetDescription)(
-        struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-        char*                                 buffer,
-        const size_t                          bufferSize)
+        const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+        char*                                       buffer,
+        const size_t                                bufferSize)
 {
    snprintf(buffer, bufferSize,
             "Handlespace[home=$%08x]: (%u Pools, %u PoolElements)",
@@ -982,13 +990,13 @@ void ST_CLASS(poolHandlespaceNodeGetDescription)(
 
 /* ###### Print ########################################################## */
 void ST_CLASS(poolHandlespaceNodePrint)(
-        struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-        FILE*                                 fd,
-        const unsigned int                    fields)
+        const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+        FILE*                                       fd,
+        const unsigned int                          fields)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct ST_CLASS(PoolNode)*        poolNode;
-   char                              poolHandlespaceNodeDescription[256];
+   const struct ST_CLASS(PoolElementNode)* poolElementNode;
+   const struct ST_CLASS(PoolNode)*        poolNode;
+   char                                    poolHandlespaceNodeDescription[256];
 
    ST_CLASS(poolHandlespaceNodeGetDescription)(poolHandlespaceNode,
                                                (char*)&poolHandlespaceNodeDescription,
@@ -1002,27 +1010,27 @@ void ST_CLASS(poolHandlespaceNodePrint)(
 
    if(fields & PNNPO_POOLS_INDEX) {
       fputs("*-- Index:\n", fd);
-      poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(poolHandlespaceNode);
+      poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
       while(poolNode != NULL) {
          fprintf(fd, " +-- ");
          ST_CLASS(poolNodePrint)(poolNode, fd, (fields | PNPO_INDEX) & (~PNPO_SELECTION));
-         poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(poolHandlespaceNode, poolNode);
+         poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode, (struct ST_CLASS(PoolNode)*)poolNode);
       }
    }
 
    if(fields & PNNPO_POOLS_SELECTION) {
       fputs("*-- Selection:\n", fd);
-      poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(poolHandlespaceNode);
+      poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
       while(poolNode != NULL) {
          fprintf(fd, " +-- ");
          ST_CLASS(poolNodePrint)(poolNode, fd, (fields | PNPO_SELECTION) & (~PNPO_INDEX));
-         poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(poolHandlespaceNode, poolNode);
+         poolNode = ST_CLASS(poolHandlespaceNodeGetNextPoolNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode, (struct ST_CLASS(PoolNode)*)poolNode);
       }
    }
 
    if(fields & PNNPO_POOLS_OWNERSHIP) {
       fputs("*-- Ownership:\n", fd);
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(poolHandlespaceNode);
+      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - $%08x -> \"", poolElementNode->HomeRegistrarIdentifier);
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
@@ -1032,7 +1040,7 @@ void ST_CLASS(poolHandlespaceNodePrint)(
             fputs(" (property of local handlespace)", fd);
          }
          fputs("\n", fd);
-         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(poolHandlespaceNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode, (struct ST_CLASS(PoolElementNode)*)poolElementNode);
       }
    }
 
@@ -1040,14 +1048,14 @@ void ST_CLASS(poolHandlespaceNodePrint)(
       fprintf(fd,
               "*-- Connection: (%u nodes)\n",
               (unsigned int)ST_CLASS(poolHandlespaceNodeGetConnectionNodes)(poolHandlespaceNode));
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementConnectionNode)(poolHandlespaceNode);
+      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementConnectionNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
       while(poolElementNode != NULL) {
          fputs("   - \"", fd);
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_CONNECTION);
          fputs("\n", fd);
-         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNode)(poolHandlespaceNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode, (struct ST_CLASS(PoolElementNode)*)poolElementNode);
       }
    }
 
@@ -1055,14 +1063,14 @@ void ST_CLASS(poolHandlespaceNodePrint)(
       fprintf(fd,
               "*-- Timer: (%u nodes)\n",
               (unsigned int)ST_CLASS(poolHandlespaceNodeGetTimerNodes)(poolHandlespaceNode));
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(poolHandlespaceNode);
+      poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - \"");
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, fd);
          fprintf(fd, "\" / ");
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, PENPO_ONLY_ID);
          fprintf(fd, " code=%u ts=%llu\n", poolElementNode->TimerCode, poolElementNode->TimerTimeStamp);
-         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementTimerNode)(poolHandlespaceNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementTimerNode)((struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode, (struct ST_CLASS(PoolElementNode)*)poolElementNode);
       }
    }
 }

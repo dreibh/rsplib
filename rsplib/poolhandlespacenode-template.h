@@ -74,7 +74,7 @@ HandlespaceChecksumAccumulatorType ST_CLASS(poolHandlespaceNodeComputeOwnershipC
                                       const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                       const RegistrarIdentifierType               registrarIdentifier);
 size_t ST_CLASS(poolHandlespaceNodeGetTimerNodes)(
-          struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+          const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementTimerNode)(
@@ -121,7 +121,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode);
 size_t ST_CLASS(poolHandlespaceNodeGetConnectionNodes)(
-          struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+          const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 size_t ST_CLASS(poolHandlespaceNodeGetConnectionNodesForConnection)(
           struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
           const int                             connectionSocketDescriptor,
@@ -226,12 +226,12 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeRemovePoolElementN
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode);
 void ST_CLASS(poolHandlespaceNodeGetDescription)(
-        struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-        char*                                 buffer,
-        const size_t                          bufferSize);
-void ST_CLASS(poolHandlespaceNodePrint)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                      FILE*                                   fd,
-                                      const unsigned int                      fields);
+        const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+        char*                                       buffer,
+        const size_t                                bufferSize);
+void ST_CLASS(poolHandlespaceNodePrint)(const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+                                        FILE*                                       fd,
+                                        const unsigned int                          fields);
 int ST_CLASS(poolHandlespaceNodeHasActiveTimer)(
        const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
        const struct ST_CLASS(PoolElementNode)*     poolElementNode);

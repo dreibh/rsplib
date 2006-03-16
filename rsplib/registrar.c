@@ -1272,7 +1272,6 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    message->Error      = RSPERR_OKAY;
    message->Identifier = message->PoolElementPtr->Identifier;
 
-
    /* ====== Get peer addresses ========================================== */
    if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
                                                       fd, assocID,
@@ -2283,9 +2282,9 @@ static void doTakeover(struct Registrar*       registrar,
 
       /* Update handlespace */
       ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
-          &registrar->Handlespace.Handlespace,
-          poolElementNode,
-          registrar->ServerID);
+         &registrar->Handlespace.Handlespace,
+         poolElementNode,
+         registrar->ServerID);
 
       /* Tell node about new home PR */
       sendEndpointKeepAlive(registrar, poolElementNode, true);
@@ -2809,41 +2808,52 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                            0);
    if(received > 0) {
       if(!(flags & MSG_NOTIFICATION)) {
-         if(fd == registrar->ENRPMulticastInputSocket) {
-            /* ENRP via UDP -> Set PPID so that rserpoolPacket2Message can
-               correctly decode the packet */
-            ppid = PPID_ENRP;
-         }
+         if(!( (((ppid == PPID_ASAP) && (fd != registrar->ASAPSocket)) ||
+                ((ppid == PPID_ENRP) && (fd != registrar->ENRPUnicastSocket))) )) {
 
-         result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
-                                         received, sizeof(buffer), &message);
-         if(message != NULL) {
-            if(result == RSPERR_OKAY) {
-               message->BufferAutoDelete = false;
-               LOG_VERBOSE3
-               fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);
-               fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
-               fprintf(stdlog, ", assoc #%u, PPID $%x\n",
-                        (unsigned int)message->AssocID, message->PPID);
-               LOG_END
-
-               handleMessage(registrar, message, fd);
+            if(fd == registrar->ENRPMulticastInputSocket) {
+               /* ENRP via UDP -> Set PPID so that rserpoolPacket2Message can
+                  correctly decode the packet */
+               ppid = PPID_ENRP;
             }
-            else {
-               if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
-                  /* For ASAP or ENRP messages, we can reply
-                     error message */
-                  if(message->PPID == PPID_ASAP) {
-                     message->Type = AHT_ERROR;
-                  }
-                  else if(message->PPID == PPID_ENRP) {
-                     message->Type = EHT_ERROR;
-                  }
-                  rserpoolMessageSend(IPPROTO_SCTP,
-                                       fd, assocID, 0, 0, message);
+
+            result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
+                                          received, sizeof(buffer), &message);
+            if(message != NULL) {
+               if(result == RSPERR_OKAY) {
+                  message->BufferAutoDelete = false;
+                  LOG_VERBOSE3
+                  fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);
+                  fputaddress((struct sockaddr*)&remoteAddress, true, stdlog);
+                  fprintf(stdlog, ", assoc #%u, PPID $%x\n",
+                           (unsigned int)message->AssocID, message->PPID);
+                  LOG_END
+
+                  handleMessage(registrar, message, fd);
                }
+               else {
+                  if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
+                     /* For ASAP or ENRP messages, we can reply
+                        error message */
+                     if(message->PPID == PPID_ASAP) {
+                        message->Type = AHT_ERROR;
+                     }
+                     else if(message->PPID == PPID_ENRP) {
+                        message->Type = EHT_ERROR;
+                     }
+                     rserpoolMessageSend(IPPROTO_SCTP,
+                                          fd, assocID, 0, 0, message);
+                  }
+               }
+               rserpoolMessageDelete(message);
             }
-            rserpoolMessageDelete(message);
+         }
+         else {
+            LOG_WARNING
+            fprintf(stdlog, "Received PPID $%08x on wrong socket -> Sending ABORT to assoc %u!\n",
+                    ppid, assocID);
+            LOG_END
+            sendabort(fd, assocID);
          }
       }
       else {

@@ -275,9 +275,9 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
 
 /* ###### Print handlespace content ######################################## */
 void ST_CLASS(poolHandlespaceManagementPrint)(
-              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-              FILE*                                       fd,
-              const unsigned int                          fields)
+              const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+              FILE*                                             fd,
+              const unsigned int                                fields)
 {
    ST_CLASS(poolHandlespaceNodePrint)(&poolHandlespaceManagement->Handlespace, fd, fields);
 }

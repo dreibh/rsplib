@@ -2,7 +2,7 @@
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
- * $Id: fractalpooluser.cc 955 2006-02-22 16:12:05Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,8 +47,11 @@ int main(int argc, char** argv)
    struct TransportAddressBlock*              localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
    struct sctp_event_subscribe                sctpEvents;
    struct ST_CLASS(PoolHandlespaceManagement) handlespace;
+   struct ST_CLASS(PeerListManagement)        peerList;
    struct ST_CLASS(PoolElementNode)*          poolElementNode;
    struct ST_CLASS(PoolElementNode)*          newPoolElementNode;
+   struct ST_CLASS(PeerListNode)*             peerListNodePtr;
+   struct ST_CLASS(PeerListNode)*             newPeerListNode;
    unsigned int                               result;
    union sockaddr_union                       registrarAddress;
    struct RSerPoolMessage*                    message;
@@ -102,6 +105,7 @@ int main(int argc, char** argv)
    ST_CLASS(poolHandlespaceManagementNew)(&handlespace,
                                           registrarID,
                                           NULL, NULL, NULL);
+   ST_CLASS(peerListManagementNew)(&peerList, &handlespace, registrarID, NULL, NULL);
 
    if(transportAddressBlockGetAddressesFromSCTPSocket(localAddressArray,
                                                       sd,
@@ -136,6 +140,22 @@ int main(int argc, char** argv)
          exit(1);
       }
 
+      message->Type         = EHT_LIST_REQUEST;
+      message->PPID         = PPID_ENRP;
+      message->AssocID      = 0;
+      message->AddressArray = 0;
+      message->Addresses    = 0;
+      message->Flags        = 0x00;
+      message->SenderID     = registrarID;
+      message->ReceiverID   = UNDEFINED_REGISTRAR_IDENTIFIER;
+      if(rserpoolMessageSend(IPPROTO_SCTP,
+                              sd, 0, 0, 0, message) == false) {
+         fputs("ERROR: Sending ListRequest failed\n", stderr);
+         rserpoolMessageDelete(message);
+         ext_close(sd);
+         exit(1);
+      }
+
       message->Type         = EHT_HANDLE_TABLE_REQUEST;
       message->PPID         = PPID_ENRP;
       message->AssocID      = 0;
@@ -164,7 +184,32 @@ int main(int argc, char** argv)
             if(rserpoolPacket2Message(buffer, NULL, assocID, ppid,
                                       received, sizeof(buffer), &message) == RSPERR_OKAY) {
                if(message->PPID == PPID_ENRP) {
-                  if(message->Type == EHT_HANDLE_TABLE_RESPONSE) {
+                  if(message->Type == EHT_LIST_RESPONSE) {
+                     if( (!(message->Flags & EHF_LIST_RESPONSE_REJECT)) &&
+                         (message->PeerListPtr)) {
+                        peerListNodePtr = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                                          &message->PeerListPtr->List);
+                        while(peerListNodePtr) {
+                           if(peerListNodePtr->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+                              result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                                          &peerList,
+                                          peerListNodePtr->Identifier,
+                                          peerListNodePtr->Flags,
+                                          peerListNodePtr->AddressBlock,
+                                          getMicroTime(),
+                                          &newPeerListNode);
+                              if(result != RSPERR_OKAY) {
+                                 fputs("Failed to add peer ", stderr);
+                                 ST_CLASS(peerListNodePrint)(peerListNodePtr, stderr, ~0);
+                                 fputs(" to peer list\n", stderr);
+                              }
+                           }
+                           peerListNodePtr = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                                                &message->PeerListPtr->List, peerListNodePtr);
+                        }
+                     }
+                  }
+                  else if(message->Type == EHT_HANDLE_TABLE_RESPONSE) {
                      if( (!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) &&
                          (message->HandlespacePtr)) {
                         poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
@@ -225,9 +270,12 @@ int main(int argc, char** argv)
       }
    } while(moreData);
 
+   ST_CLASS(peerListManagementPrint)(&peerList, stdout, ~0);
    ST_CLASS(poolHandlespaceManagementPrint)(&handlespace, stdout, PNNPO_POOLS_INDEX|PNNPO_POOLS_SELECTION|PENPO_POLICYINFO|PENPO_POLICYSTATE|PENPO_HOME_PR|PENPO_REGLIFE|PENPO_UR_REPORTS|PENPO_USERTRANSPORT|PENPO_REGISTRATORTRANSPORT|PENPO_CHECKSUM);
-   ST_CLASS(poolHandlespaceManagementDelete)(&handlespace);
+
    rserpoolMessageDelete(message);
+   ST_CLASS(peerListManagementDelete)(&peerList);
+   ST_CLASS(poolHandlespaceManagementDelete)(&handlespace);
    ext_close(sd);
    return(0);
 }

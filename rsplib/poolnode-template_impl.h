@@ -77,9 +77,9 @@ void ST_CLASS(poolNodeDelete)(struct ST_CLASS(PoolNode)* poolNode)
 
 
 /* ###### Get textual description ######################################## */
-void ST_CLASS(poolNodeGetDescription)(struct ST_CLASS(PoolNode)* poolNode,
-                                      char*                      buffer,
-                                      const size_t               bufferSize)
+void ST_CLASS(poolNodeGetDescription)(const struct ST_CLASS(PoolNode)* poolNode,
+                                      char*                            buffer,
+                                      const size_t                     bufferSize)
 {
    char  poolHandleDescription[256];
    char  poolDescription[128];
@@ -113,13 +113,13 @@ void ST_CLASS(poolNodeGetDescription)(struct ST_CLASS(PoolNode)* poolNode,
 
 
 /* ###### Print by Index and Selection ################################### */
-void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
-                             FILE*                      fd,
-                             const unsigned int         fields)
+void ST_CLASS(poolNodePrint)(const struct ST_CLASS(PoolNode)* poolNode,
+                             FILE*                            fd,
+                             const unsigned int               fields)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   char                              poolNodeDescription[512];
-   size_t                            i;
+   const struct ST_CLASS(PoolElementNode)* poolElementNode;
+   char                                    poolNodeDescription[512];
+   size_t                                  i;
 
    ST_CLASS(poolNodeGetDescription)(poolNode,
                                     (char*)&poolNodeDescription,
@@ -130,23 +130,23 @@ void ST_CLASS(poolNodePrint)(struct ST_CLASS(PoolNode)* poolNode,
    if(fields & PNPO_INDEX) {
       fputs(" +-- Index:\n", fd);
       i               = 1;
-      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)(poolNode);
+      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromIndex)((struct ST_CLASS(PoolNode)*)poolNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - idx:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
          fputs("\n", fd);
-         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)((struct ST_CLASS(PoolNode)*)poolNode, (struct ST_CLASS(PoolElementNode)*)poolElementNode);
       }
    }
    if(fields & PNPO_SELECTION) {
       fputs(" +-- Selection:\n", fd);
       i               = 1;
-      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(poolNode);
+      poolElementNode = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)((struct ST_CLASS(PoolNode)*)poolNode);
       while(poolElementNode != NULL) {
          fprintf(fd, "   - sel:#%04u: ", (unsigned int)i++);
          ST_CLASS(poolElementNodePrint)(poolElementNode, fd, fields);
          fputs("\n", fd);
-         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
+         poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)((struct ST_CLASS(PoolNode)*)poolNode, (struct ST_CLASS(PoolElementNode)*)poolElementNode);
       }
    }
 }
