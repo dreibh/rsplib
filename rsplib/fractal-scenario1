@@ -1,0 +1,185 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+PR_AUSTRALIA=`cat pr-australia.hosts`
+PR_ASIA=`cat pr-asia.hosts`
+PR_AMERICA=`cat pr-usa.hosts`
+PR_EUROPE=`cat pr-europe.hosts`
+PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
+PR_MISCOPT="-loglevel=6"
+
+PE_AUSTRALIA=`cat pe-australia.hosts`
+PE_ASIA=`cat pe-asia.hosts`
+PE_AMERICA=`cat pe-usa.hosts && cat usa.hosts`
+PE_EUROPE=`cat pe-europe.hosts`
+PE_ALL="$PE_AUSTRALIA $PE_ASIA $PE_AMERICA $PE_EUROPE"
+PE_MISCOPT="-fractal -fgpfailureafter=17 -rereginterval=10000 -policy=LeastUsedDPF:0.01 -loglevel=6 "
+
+
+resetAll ()
+{
+   ./stop-processes Registrar
+   ./stop-processes PoolElement
+}
+
+startNetwork ()
+{
+   echo "PRs=$localPRs"
+   echo "PEs=$localPEs"
+
+   optPeers=""
+   for peer in $PR_ALL ; do
+      optPeers="$optPeers -peer=$peer:3864"
+   done
+   number=1
+   for pr in $localPRs ; do
+      echo "Starting PR on $pr ..."
+      ./start-process "Registrar-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
+      let number=$number+1
+   done
+
+   optRegistrars=""
+   for pr in $localPRs ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+   number=1
+   for pe in $localPEs ; do
+      echo "Starting PE on $pe ..."
+      ./start-process "PoolElement-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
+      let number=$number+1
+   done
+}
+
+stopNetwork ()
+{
+   number=1
+   for pe in $localPEs ; do
+      ./stop-process "PoolElement-$number" $pe
+      let number=$number+1
+   done
+   number=1
+   for pr in $localPRs ; do
+      ./stop-process "Registrar-$number" $pr
+      let number=$number+1
+   done
+}
+
+
+
+startNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   localPUs=$PU_AUSTRALIA
+   startNetwork
+}
+
+startNetworkAsia ()
+{
+   localPRs=$PR_ASIA
+   localPEs=$PE_ASIA
+   localPUs=$PU_ASIA
+   startNetwork
+}
+
+startNetworkAmerica ()
+{
+   localPRs=$PR_AMERICA
+   localPEs=$PE_AMERICA
+   localPUs=$PU_AMERICA
+   startNetwork
+}
+
+startNetworkEurope ()
+{
+   localPRs=$PR_EUROPE
+   localPEs=$PE_EUROPE
+   localPUs=$PU_EUROPE
+   startNetwork
+}
+
+
+stopNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   localPUs=$PU_AUSTRALIA
+   stopNetwork
+}
+
+stopNetworkAsia ()
+{
+   localPRs=$PR_ASIA
+   localPEs=$PE_ASIA
+   localPUs=$PU_ASIA
+   stopNetwork
+}
+
+stopNetworkAmerica ()
+{
+   localPRs=$PR_AMERICA
+   localPEs=$PE_AMERICA
+   localPUs=$PU_AMERICA
+   stopNetwork
+}
+
+stopNetworkEurope ()
+{
+   localPRs=$PR_EUROPE
+   localPEs=$PE_EUROPE
+   localPUs=$PU_EUROPE
+   stopNetwork
+}
+
+
+if [ $# -lt 1 ] ; then
+   echo "Usage: fractal-scenario1 [start|stop|reset] [all|europe|australia|asia|america]"
+fi
+
+if [ "x$1" = "xstart" ] ; then
+   if [ $# -eq 2 -a "x$2" = "xaustralia" ] ; then
+      echo "Starting components in Australia"
+      startNetworkAustralia
+   elif [ $# -eq 2 -a "x$2" = "xasia" ] ; then
+      echo "Starting components in Asia"
+      startNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xeurope" ] ; then
+      echo "Starting components in Europe"
+      startNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xamerica" ] ; then
+      echo "Starting components in America"
+      startNetworkAsia
+   else
+      echo "Starting components worldwide"
+      startNetworkAustralia
+      startNetworkAsia
+      startNetworkAmerica
+      startNetworkEurope
+   fi
+elif [ "x$1" = "xstop" ] ; then
+   if [ $# -eq 2 -a "x$2" = "xaustralia" ] ; then
+      echo "Stopping components in Australia"
+      stopNetworkAustralia
+   elif [ $# -eq 2 -a "x$2" = "xasia" ] ; then
+      echo "Stopping components in Asia"
+      stopNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xeurope" ] ; then
+      echo "Stopping components in Europe"
+      stopNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xamerica" ] ; then
+      echo "Stopping components in America"
+      stopNetworkAsia
+   else
+      echo "Stopping components worldwide"
+      stopNetworkAustralia
+      stopNetworkAsia
+      stopNetworkAmerica
+      stopNetworkEurope
+   fi
+elif [ "x$1" = "xreset" ] ; then
+   echo "Resetting everything!"
+   resetAll
+else
+   echo "ERROR: Bad parameter!"
+fi
