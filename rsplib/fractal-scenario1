@@ -168,7 +168,7 @@ elif [ "x$1" = "xstop" ] ; then
       stopNetworkAsia
    elif [ $# -eq 2 -a "x$2" = "xeurope" ] ; then
       echo "Stopping components in Europe"
-      stopNetworkEurpoe
+      stopNetworkEurope
    elif [ $# -eq 2 -a "x$2" = "xamerica" ] ; then
       echo "Stopping components in America"
       stopNetworkAmerica
