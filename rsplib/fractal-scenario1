@@ -14,7 +14,7 @@ PE_ASIA=`cat pe-asia.hosts`
 PE_AMERICA=`(cat pe-usa.hosts && cat usa.hosts) | sort -u`
 PE_EUROPE=`cat pe-europe.hosts`
 PE_ALL="$PE_AUSTRALIA $PE_ASIA $PE_AMERICA $PE_EUROPE"
-PE_MISCOPT="-fractal -fgpfailureafter=17 -rereginterval=10000 -policy=LeastUsed -loglevel=3 "
+PE_MISCOPT="-fractal -fgpfailureafter=0 -rereginterval=10000 -policy=LeastUsed -loglevel=3 "
 
 
 resetAll ()
