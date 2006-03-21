@@ -25,4 +25,4 @@ sleep 3600
 ./test2 stop
 ./test2 results
 
-#./test1 start
+./test1 start
