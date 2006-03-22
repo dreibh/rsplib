@@ -94,6 +94,8 @@ FractalPU::FractalPU(const size_t width,
 /* ###### Destructor ##################################################### */
 FractalPU::~FractalPU()
 {
+   Running = false;
+   wait();
    delete Image;
    Image = NULL;
 }
@@ -135,8 +137,6 @@ void FractalPU::paintEvent(QPaintEvent* paintEvent)
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
    Running = false;
-   // cout << "Good-bye!" << endl;
-   wait(TRUE);
    qApp->exit(0);
 }
 
@@ -535,6 +535,7 @@ int main(int argc, char** argv)
    Q_CHECK_PTR(fractalPU);
    fractalPU->show();
    const int result = application.exec();
+   delete fractalPU;
 
 
    puts("\nTerminated!");
