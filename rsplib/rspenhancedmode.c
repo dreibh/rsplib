@@ -148,6 +148,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    CHECK(identifierBitmapAllocateSpecificID(rserpoolSocket->SessionAllocationBitmap, 0) == 0);
 
    threadSafetyNew(&rserpoolSocket->Mutex, "RSerPoolSocket");
+   threadSafetyNew(&rserpoolSocket->SessionSetMutex, "SessionSet");
    simpleRedBlackTreeNodeNew(&rserpoolSocket->Node);
    sessionStorageNew(&rserpoolSocket->SessionSet);
    rserpoolSocket->Socket           = fd;
@@ -245,6 +246,7 @@ int rsp_close(int sd)
       free(rserpoolSocket->MessageBuffer);
       rserpoolSocket->MessageBuffer = NULL;
    }
+   threadSafetyDelete(&rserpoolSocket->SessionSetMutex);
    threadSafetyDelete(&rserpoolSocket->Mutex);
    free(rserpoolSocket);
    return(0);
@@ -1467,13 +1469,16 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
 
    threadSafetyLock(&gRSerPoolSocketSetMutex);
 
+   /* ====== Obtain locks ================================================ */
    sessions = 0;
    rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetFirst(&gRSerPoolSocketSet);
    while(rserpoolSocket != NULL) {
+      threadSafetyLock(&rserpoolSocket->SessionSetMutex);
       sessions += sessionStorageGetElements(&rserpoolSocket->SessionSet);
       rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
    }
 
+   /* ====== Get status ================================================== */
    *workload    = -1.0;
    *caeArray    = createComponentAssociationArray(1 + sessions);
    caeArraySize = 0;
@@ -1530,6 +1535,12 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
       }
    }
 
+   /* ====== Release locks ===============================================*/
+   rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetFirst(&gRSerPoolSocketSet);
+   while(rserpoolSocket != NULL) {
+      threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
+      rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
+   }
    threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 
    return(caeArraySize);

@@ -103,7 +103,9 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       threadSafetyLock(&rserpoolSocket->Mutex);
       session->SessionID = identifierBitmapAllocateID(rserpoolSocket->SessionAllocationBitmap);
       if(session->SessionID >= 0) {
+         threadSafetyLock(&rserpoolSocket->SessionSetMutex);
          sessionStorageAddSession(&rserpoolSocket->SessionSet, session);
+         threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
          LOG_ACTION
          fprintf(stdlog, "Added %s session %u on RSerPool socket %d, socket %d\n",
                  session->IsIncoming ? "incoming" : "outgoing", session->SessionID,
@@ -142,7 +144,11 @@ void deleteSession(struct RSerPoolSocket* rserpoolSocket,
       if(rserpoolSocket->ConnectedSession == session) {
          rserpoolSocket->ConnectedSession = NULL;
       }
+
+      threadSafetyLock(&rserpoolSocket->SessionSetMutex);
       sessionStorageDeleteSession(&rserpoolSocket->SessionSet, session);
+      threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
+
       identifierBitmapFreeID(rserpoolSocket->SessionAllocationBitmap, session->SessionID);
       session->SessionID = 0;
       threadSafetyUnlock(&rserpoolSocket->Mutex);

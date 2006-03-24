@@ -59,27 +59,29 @@ done \
 for SERVER in $SERVER_LIST; do
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
-   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
-   echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
-   cat > /tmp/$DISTNAME-bin.tar.bz2 && \
-   echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
-   if [ ! -e bin/ ] ; then \
-      echo \"\`date\`: Creating new bin/ directory on $SERVER ...\" &&
-      mkdir bin/ ; \
-   else \
+   cmd="\
+      echo \"\`date\`: Transfering binaries to $SERVER ...\" && \
+      cat > /tmp/$DISTNAME-bin.tar.bz2 && \
+      echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
+      if [ ! -e bin/ ] ; then \
+         echo \"\`date\`: Creating new bin/ directory on $SERVER ...\" &&
+         mkdir bin/ ; \
+      else \
+         cd bin/ && \
+         rm -f $DISTPRGS $DISTMISC && \
+         cd .. ; \
+      fi && \
+      tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+      rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
       cd bin/ && \
-      rm -f $DISTPRGS $DISTMISC && \
-      cd .. ; \
-   fi && \
-   tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
-   rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
-   cd bin/ && \
-   sudo rm -f core.* *.gz *.bz2 *.log *.sca *.vec && \
-   sudo /bin/chown root:root $SUIDPRGS && \
-   sudo /bin/chmod +s $SUIDPRGS && \
-   date >LastUpdate && \
-   cd .. && \
-   echo \"\`date\`: $SERVER is ready!\"" &
+      sudo rm -f core.* *.gz *.bz2 *.log *.sca *.vec && \
+      sudo /bin/chown root:root $SUIDPRGS && \
+      sudo /bin/chmod +s $SUIDPRGS && \
+      date >LastUpdate && \
+      cd .. && \
+      echo \"\`date\`: $SERVER is ready!\""
+
+   cat $DISTNAME-bin.tar.bz2 | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $cmd &
 done
 
 wait

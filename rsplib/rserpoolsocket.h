@@ -73,8 +73,9 @@ struct RSerPoolSocket
    int                           Socket;
 
    struct PoolElement*           PoolElement;        /* PE mode                      */
-   struct SessionStorage         SessionSet;         /* UDP-like PU mode and PE mode */
    struct Session*               ConnectedSession;   /* TCP-like PU mode             */
+   struct SessionStorage         SessionSet;         /* UDP-like PU mode and PE mode */
+   struct ThreadSafety           SessionSetMutex;
 
    struct NotificationQueue      Notifications;
 
