@@ -2,7 +2,7 @@
  *  $Id$
  *
  * SocketAPI implementation for the sctplib.
- * Copyright (C) 1999-2003 by Thomas Dreibholz
+ * Copyright (C) 1999-2006 by Thomas Dreibholz
  *
  * Realized in co-operation between
  * - Siemens AG
@@ -186,13 +186,13 @@ struct sctp_shutdown_event
 };
 
 
-#define SCTP_ADAPTION_INDICATION 6
-struct sctp_adaption_event
+#define SCTP_ADAPTATION_INDICATION 6
+struct sctp_adaptation_event
 {
    uint16_t     sai_type;
    uint16_t     sai_flags;
    uint32_t     sai_length;
-   uint32_t     sai_adaption_ind;
+   uint32_t     sai_adaptation_ind;
    sctp_assoc_t sai_assoc_id;
 };
 
@@ -237,7 +237,7 @@ union sctp_notification {
    struct sctp_remote_error    sn_remote_error;
    struct sctp_send_failed     sn_send_failed;
    struct sctp_shutdown_event  sn_shutdown_event;
-   struct sctp_adaption_event  sn_adaption_event;
+   struct sctp_adaptation_event  sn_adaptation_event;
    struct sctp_pdapi_event     sn_pdapi_event;
 
    struct sctp_data_arrive     sn_data_arrive;
@@ -345,7 +345,7 @@ struct sctp_event_subscribe
    uint8_t sctp_peer_error_event;
    uint8_t sctp_shutdown_event;
    uint8_t sctp_partial_delivery_event;
-   uint8_t sctp_adaption_layer_event;
+   uint8_t sctp_adaptation_layer_event;
 };
 
 

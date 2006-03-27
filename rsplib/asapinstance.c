@@ -150,7 +150,7 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          sctpEvents.sctp_peer_error_event       = 1;
          sctpEvents.sctp_shutdown_event         = 1;
          sctpEvents.sctp_partial_delivery_event = 1;
-         sctpEvents.sctp_adaption_layer_event   = 1;
+         sctpEvents.sctp_adaptation_layer_event = 1;
 
          if(ext_setsockopt(asapInstance->RegistrarHuntSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
             logerror("setsockopt() for SCTP_EVENTS on registrar hunt socket failed");
