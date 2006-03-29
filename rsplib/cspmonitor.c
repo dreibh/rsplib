@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 
       printf("\x1b[;H");
       printTimeStamp(stdout);
-      puts("Current Component Status\x1b[0K\n\x1b[0K");
+      puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
       simpleRedBlackTreePrint(&objectStorage, stdout);
       printf("\x1b[0J");
       fflush(stdout);
