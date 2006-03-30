@@ -702,7 +702,8 @@ static unsigned int asapInstanceHandleResolutionFromCache(
                        struct ASAPInstance*               asapInstance,
                        struct PoolHandle*                 poolHandle,
                        struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
-                       size_t*                            poolElementNodes)
+                       size_t*                            poolElementNodes,
+                       const bool                         purgeOutOfDateElements)
 {
    unsigned int result;
    size_t       i;
@@ -717,12 +718,14 @@ static unsigned int asapInstanceHandleResolutionFromCache(
                                             stdlog, PENPO_ONLY_POLICY);
    LOG_END
 
-   i = ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(
-          &asapInstance->Cache,
-          getMicroTime());
-   LOG_VERBOSE
-   fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
-   LOG_END
+   if(purgeOutOfDateElements) {
+      i = ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(
+            &asapInstance->Cache,
+            getMicroTime());
+      LOG_VERBOSE
+      fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
+      LOG_END
+   }
 
    if(ST_CLASS(poolHandlespaceManagementHandleResolution)(
          &asapInstance->Cache,
@@ -768,7 +771,8 @@ unsigned int asapInstanceHandleResolution(
    result = asapInstanceHandleResolutionFromCache(
                asapInstance, poolHandle,
                poolElementNodeArray,
-               poolElementNodes);
+               poolElementNodes,
+               true);
    if(result != RSPERR_OKAY) {
       LOG_VERBOSE
       fputs("No results in cache. Trying handle resolution at registrar...\n", stdlog);
@@ -783,7 +787,8 @@ unsigned int asapInstanceHandleResolution(
          result = asapInstanceHandleResolutionFromCache(
                      asapInstance, poolHandle,
                      poolElementNodeArray,
-                     poolElementNodes);
+                     poolElementNodes,
+                     false);
       }
       else {
          LOG_VERBOSE

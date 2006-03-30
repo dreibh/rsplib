@@ -61,9 +61,10 @@ CalcAppServer::CalcAppServer(const size_t             maxJobs,
    CookieMaxCalculations         = cookieMaxCalculations;
    StartupTimeStamp              = getMicroTime();
 
+   TotalJobsAccepted             = 0;
+   TotalJobsRejected             = 0;
+
    VectorLine                    = 0;
-   AcceptedJobs                  = 0;
-   RejectedJobs                  = 0;
    Jobs                          = 0;
 }
 
@@ -285,30 +286,33 @@ void CalcAppServer::finish(EventHandlingResult initializeResult)
 {
    removeAllJobs();
 
-   unsigned long long       shutdownTimeStamp     = getMicroTime();
-   const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
-   const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
-   const double             utilization           = TotalUsedCalculations / availableCalculations;
-
-   const double totalUsedCapacity         = TotalUsedCalculations;
-   const double totalPossibleCalculations = (serverRuntime/1000000.0)*Capacity;
-   const double totalWastedCapacity       = serverRuntime - totalUsedCapacity;
-
    if(ScalarFH) {
-      fprintf(ScalarFH, "scalar \"%s\" \"Total Used Capacity \"%1.6f\n", ObjectName.c_str(), totalUsedCapacity);
-      fprintf(ScalarFH, "scalar \"%s\" \"Total Possible Calculations \"%1.6f\n", ObjectName.c_str(), totalPossibleCalculations);
-      fprintf(ScalarFH, "scalar \"%s\" \"Total Wasted Capacity \"%1.6f\n", ObjectName.c_str(), totalWastedCapacity);
-      fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Accepted \"%u\n", ObjectName.c_str(), AcceptedJobs);
-      fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Rejected \"%u\n", ObjectName.c_str(), RejectedJobs);
-      fprintf(ScalarFH, "scalar \"%s\" \"Utilization \"%1.6f\n", ObjectName.c_str(), utilization);
+      unsigned long long       shutdownTimeStamp     = getMicroTime();
+      const unsigned long long serviceUptime         = shutdownTimeStamp - StartupTimeStamp;
+      const double             availableCalculations = serviceUptime * Capacity / 1000000.0;
+      const double             utilization           = TotalUsedCalculations / availableCalculations;
+
+      const double             totalUsedCapacity     = TotalUsedCalculations;
+      const double             totalWastedCapacity   = serviceUptime - totalUsedCapacity;
+
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Uptime\"        %1.6f\n", ObjectName.c_str(), serviceUptime / 1000000.0);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Capacity\"      %1.0f\n", ObjectName.c_str(), Capacity);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Max Jobs\"      %u\n",    ObjectName.c_str(), MaxJobs);
+
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Used Capacity\"   %1.0f\n", ObjectName.c_str(), totalUsedCapacity);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Wasted Capacity\" %1.0f\n", ObjectName.c_str(), totalWastedCapacity);
+
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Accepted\"   %llu\n",  ObjectName.c_str(), TotalJobsAccepted);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Rejected\"   %llu\n",  ObjectName.c_str(), TotalJobsRejected);
+
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Utilization\"           %1.6f\n", ObjectName.c_str(), utilization);
+
+      fclose(ScalarFH);
+      ScalarFH = NULL;
    }
    if(VectorFH) {
       fclose(VectorFH);
       VectorFH = NULL;
-   }
-   if(ScalarFH) {
-      fclose(ScalarFH);
-      ScalarFH = NULL;
    }
 }
 
@@ -364,7 +368,7 @@ EventHandlingResult CalcAppServer::handleCookieEcho(rserpool_session_t sessionID
 // ###### Send CalcAppAccept ################################################
 void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 {
-   AcceptedJobs++;
+   TotalJobsAccepted++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type   = CALCAPP_ACCEPT;
@@ -383,7 +387,7 @@ void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 // ###### Send CalcAppReject ################################################
 void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID)
 {
-   RejectedJobs++;
+   TotalJobsRejected++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type   = CALCAPP_REJECT;
@@ -425,8 +429,8 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
    }
 
    unsigned long long       shutdownTimeStamp     = getMicroTime();
-   const unsigned long long serverRuntime         = shutdownTimeStamp - StartupTimeStamp;
-   const double             availableCalculations = serverRuntime * Capacity / 1000000.0;
+   const unsigned long long serviceUptime         = shutdownTimeStamp - StartupTimeStamp;
+   const double             availableCalculations = serviceUptime * Capacity / 1000000.0;
    const double             utilization           = TotalUsedCalculations / availableCalculations;
    if(VectorFH) {
       if(VectorLine == 0) {
@@ -436,7 +440,7 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
             ++VectorLine,
             ObjectName.c_str(),
             getMicroTime() / 1000000.0,
-            serverRuntime / 1000000.0,
+            serviceUptime / 1000000.0,
             availableCalculations, TotalUsedCalculations, utilization,
             Jobs, MaxJobs);
       fflush(VectorFH);

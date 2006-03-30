@@ -130,26 +130,28 @@ Job* JobQueue::dequeue()
 
 
 
-unsigned long long KeepAliveTransmissionInterval = 5000000;
-unsigned long long KeepAliveTimeoutInterval      = 5000000;
-unsigned long long JobInterval                   = 15000000;
 FILE*              VectorFH                      = NULL;
 FILE*              ScalarFH                      = NULL;
 unsigned int       VectorLine                    = 0;
+
 double             JobSize                       = 5000000;
-unsigned long long runtime                       = 24*60*60*1000000ULL;
+unsigned long long JobInterval                   = 15000000;
+unsigned long long KeepAliveTransmissionInterval = 5000000;
+unsigned long long KeepAliveTimeoutInterval      = 5000000;
+unsigned long long Runtime                       = 24*60*60*1000000ULL;
+
+double             TotalQueuingTime              = 0.0;
+double             TotalStartupTime              = 0.0;
+double             TotalProcessingTime           = 0.0;
 double             TotalHandlingTime             = 0.0;
-double             AverageHandlingTime           = 0.0;
-double             TotalHandlingSpeed            = 0.0;
-double             AverageHandlingSpeed          = 0.0;
-double             AverageJobSize                = 0.0;
-unsigned long long TotalJobInterval              = 0;
-unsigned long long AverageJobInterval            = 0;
-unsigned int       TotalJobsQueued               = 0;
-unsigned int       TotalJobsStarted              = 0;
+
+unsigned long long TotalJobsQueued               = 0;
+unsigned long long TotalJobsStarted              = 0;
+unsigned long long TotalJobsCompleted            = 0;
 double             TotalJobSizeQueued            = 0.0;
 double             TotalJobSizeStarted           = 0.0;
 double             TotalJobSizeCompleted         = 0.0;
+
 Statistics         StartupTimeStat;
 Statistics         QueuingTimeStat;
 Statistics         ProcessingTimeStat;
@@ -157,6 +159,7 @@ Statistics         HandlingTimeStat;
 Statistics         HandlingSpeedStat;
 Statistics         JobSizeStat;
 Statistics         JobIntervalStat;
+
 
 enum ProcessStatus {
    PS_Init       = 0,
@@ -174,11 +177,11 @@ struct Process {
    const char*        ObjectName;
 
    size_t             TotalCalcAppRequests;
-   size_t	      TotalCalcAppAccepted;
-   size_t             TotalCalcAppRejected;
+   size_t	      TotalCalcAppAccepts;
+   size_t             TotalCalcAppRejects;
+   size_t             TotalCalcAppCompletes;
    size_t             TotalCalcAppKeepAlives;
    size_t             TotalCalcAppKeepAliveAcks;
-   size_t             TotalCalcAppCompleted;
 
    // ------ Timers ---------------------------------------------------------
    unsigned long long NextJobTimeStamp;
@@ -190,7 +193,9 @@ struct Process {
 // ###### Send CalcAppRequest message #######################################
 void sendCalcAppRequest(struct Process* process)
 {
-   cout << "New Job "<< endl;
+   cout << "Request for job #" << process->CurrentJob->JobID
+        << " (job size " << process->CurrentJob->JobSize << ")" << endl;
+
    CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type    = CALCAPP_REQUEST;
@@ -198,7 +203,6 @@ void sendCalcAppRequest(struct Process* process)
    message.Length  = htons(sizeof(message));
    message.JobID   = htonl(process->CurrentJob->JobID);
    message.JobSize = hton64((unsigned long long)rint(process->CurrentJob->JobSize));
-   cout << "JobSize= "<< process->CurrentJob->JobSize << endl;
 
    // Set timeout for CalcAppAccept or CalcAppReject
    process->KeepAliveTimeoutTimeStamp = getMicroTime() + KeepAliveTimeoutInterval;
@@ -270,14 +274,14 @@ void handleCalcAppAccept(struct Process* process,
       return;
    }
 
-   cout << "Job " << process->CurrentJob->JobID << " accepted" << endl;
+   cout << "Job #" << process->CurrentJob->JobID << " accepted" << endl;
    process->CurrentJob->AcceptTimeStamp = getMicroTime();
 
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
 
-   process->TotalCalcAppAccepted++;
+   process->TotalCalcAppAccepts++;
 }
 
 
@@ -292,7 +296,7 @@ void handleCalcAppReject(struct Process* process,
       return;
    }
 
-   cout << "Job " << process->CurrentJob->JobID << " rejected" << endl;
+   cout << "Job #" << process->CurrentJob->JobID << " rejected" << endl;
    process->Status                         = PS_Failover;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
@@ -306,7 +310,7 @@ void handleCalcAppReject(struct Process* process,
       sendCalcAppRequest(process);
    }
 
-   process->TotalCalcAppRejected++;
+   process->TotalCalcAppRejects++;
 }
 
 
@@ -352,13 +356,12 @@ void handleCalcAppCompleted(struct Process* process,
       return;
    }
 
-   cout << "Job " << process->CurrentJob->JobID << " completed" << endl;
    process->Status                         = PS_Completed;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
    process->CurrentJob->CompleteTimeStamp  = getMicroTime();
 
-   process->TotalCalcAppCompleted++;
+   process->TotalCalcAppCompletes++;
 
    const double queuingDelay    = (process->CurrentJob->StartupTimeStamp - process->CurrentJob->QueuingTimeStamp) / 1000000.0;
    const double startupDelay    = (process->CurrentJob->AcceptTimeStamp - process->CurrentJob->StartupTimeStamp) / 1000000.0;
@@ -367,10 +370,12 @@ void handleCalcAppCompleted(struct Process* process,
    const double handlingTime    = (queuingDelay + startupDelay + processingTime);
    const double handlingSpeed   = process->CurrentJob->JobSize / handlingTime;
 
+   TotalQueuingTime      += queuingDelay;
+   TotalStartupTime      += startupDelay;
+   TotalProcessingTime   += processingTime;
    TotalHandlingTime     += handlingTime;
+   TotalJobsCompleted++;
    TotalJobSizeCompleted += process->CurrentJob->JobSize;
-   TotalJobInterval      += JobInterval;
-   TotalHandlingSpeed    += handlingSpeed;
 
    StartupTimeStat.collect(startupDelay);
    QueuingTimeStat.collect(queuingDelay);
@@ -380,7 +385,7 @@ void handleCalcAppCompleted(struct Process* process,
    JobSizeStat.collect(process->CurrentJob->JobSize);
    JobIntervalStat.collect(JobInterval / 1000000.0);
 
-   cout << "Job #" << process->CurrentJob->JobID << ":" << endl
+   cout << "Job #" << process->CurrentJob->JobID << " completed:" << endl
         << "   JobSize        = " << process->CurrentJob->JobSize << endl
         << "   JobInterval    = " << (JobInterval / 1000000.0) << " [s]" << endl
         << "   StartupDelay   = " << startupDelay   << " [s]" << endl
@@ -427,7 +432,7 @@ void handleNextJobTimer(struct Process* process)
    Job* job = new Job;
    CHECK(job != NULL);
    job->JobID   = ++jobID;
-   job->JobSize = randomExpDouble(JobSize);
+   job->JobSize = rint(randomExpDouble(JobSize));
 
    process->Queue.enqueue(job);
    TotalJobsQueued++;
@@ -573,19 +578,24 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    process.KeepAliveTransmissionTimeStamp = ~0ULL;
    process.KeepAliveTimeoutTimeStamp      = ~0ULL;
    process.TotalCalcAppRequests           = 0;
-   process.TotalCalcAppRejected           = 0;
-   process.TotalCalcAppAccepted           = 0;
-   process.TotalCalcAppCompleted          = 0;
+   process.TotalCalcAppRejects            = 0;
+   process.TotalCalcAppAccepts            = 0;
+   process.TotalCalcAppCompletes          = 0;
+   process.TotalCalcAppKeepAlives         = 0;
+   process.TotalCalcAppKeepAliveAcks      = 0;
 
    // Wait for first job
    usleep(getNextJobTime());
    handleNextJobTimer(&process);
 
    process.CurrentJob = process.Queue.dequeue();
+   process.Status     = PS_Init;
    while(process.CurrentJob != NULL) {
-      TotalJobsStarted++;
-      TotalJobSizeStarted += process.CurrentJob->JobSize;
-      process.Status = PS_Init;
+      if(process.Status == PS_Init) {
+         TotalJobsStarted++;
+         TotalJobSizeStarted += process.CurrentJob->JobSize;
+         process.Status = PS_Init;
+      }
 
       process.RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(process.RSerPoolSocketDescriptor >= 0) {
@@ -601,7 +611,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
                ufds.fd     = process.RSerPoolSocketDescriptor;
                ufds.events = POLLIN;
 
-               unsigned long long now    = getMicroTime();
+               unsigned long long now       = getMicroTime();
                unsigned long long nextTimer = now + 500000;
                nextTimer = min(nextTimer, process.NextJobTimeStamp);
                nextTimer = min(nextTimer, process.KeepAliveTransmissionTimeStamp);
@@ -612,7 +622,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
 
                /* ====== Handle timers =================================== */
                handleTimer(&process);
-               if(getMicroTime() - startupDelayStamp >= runtime) {
+               if(getMicroTime() - startupDelayStamp >= Runtime) {
                   goto finished;
                }
 
@@ -640,10 +650,12 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
             if(process.Status == PS_Completed) {
                delete process.CurrentJob;
                process.CurrentJob = process.Queue.dequeue();
+               process.Status     = PS_Init;
             }
          }
          else {
             perror("rsp_connect() failed");
+            process.Status = PS_Failed;
          }
 
          rsp_close(process.RSerPoolSocketDescriptor);
@@ -651,6 +663,8 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
       }
       else {
          perror("rsp_socket() failed");
+         process.Status = PS_Failed;
+         // It is not useful to retry here.
          return;
       }
 
@@ -665,29 +679,38 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
             goto finished;
          }
          process.CurrentJob = process.Queue.dequeue();
+         process.Status     = PS_Init;
       }
 
    }
 
 finished:
-   fprintf(ScalarFH, "scalar \"%s\" \"StartupTime     \"mean=%f \n", objectName, StartupTimeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"QueueingTime    \"mean=%f \n", objectName, QueuingTimeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"ProcessingTime  \"mean=%f \n", objectName, ProcessingTimeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingTime    \"mean=%f \n", objectName, HandlingTimeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"HandlingSpeed   \"mean=%f \n", objectName, HandlingSpeedStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"JobSize         \"mean=%f \n", objectName, JobSizeStat.mean());
-   fprintf(ScalarFH, "scalar \"%s\" \"JobInterval     \"mean=%f \n", objectName, JobIntervalStat.mean());
+   // Close socket, if it is still open.
+   if(process.RSerPoolSocketDescriptor >= 0) {
+      rsp_close(process.RSerPoolSocketDescriptor);
+      process.RSerPoolSocketDescriptor = -1;
+   }
 
-   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRequests     \"%u \n", objectName, process.TotalCalcAppRequests);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppAccepts      \"%u \n", objectName, process.TotalCalcAppAccepted);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total CalcAppRejects      \"%u \n", objectName, process.TotalCalcAppRejected);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Queuing Time\"         %1.6f\n", objectName, TotalQueuingTime);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Startup Time\"         %1.6f\n", objectName, TotalStartupTime);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Processing Time\"      %1.6f\n", objectName, TotalProcessingTime);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Handling Time\"        %1.6f\n", objectName, TotalHandlingTime);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Processing Speed\"   %1.0f\n", objectName, TotalJobSizeCompleted / TotalProcessingTime);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Handling Speed\"     %1.0f\n", objectName, TotalJobSizeCompleted / TotalHandlingTime);
 
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Queued\" %u \n", objectName, TotalJobsQueued);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Started\" %u \n", objectName, TotalJobsStarted);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Jobs Completed \" %u \n", objectName, process.TotalCalcAppCompleted);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Queued\" %1.6f \n", objectName, TotalJobSizeQueued);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Started\" %1.6f \n", objectName, TotalJobSizeStarted);
-   fprintf(ScalarFH, "scalar \"%s\" \"Total Job Size Completed\" %1.6f \n", objectName, TotalJobSizeCompleted);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Jobs Queued\"          %llu\n",  objectName, TotalJobsQueued);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Jobs Started\"         %llu\n",  objectName, TotalJobsStarted);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Jobs Completed\"       %llu\n",  objectName, TotalJobsCompleted);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Job Size Queued\"      %1.0f\n", objectName, TotalJobSizeQueued);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Job Size Started\"     %1.0f\n", objectName, TotalJobSizeStarted);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Job Size Completed\"   %1.0f\n", objectName, TotalJobSizeCompleted);
+
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRequests\"      %u\n", objectName, process.TotalCalcAppRequests);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppAccepts\"       %u\n", objectName, process.TotalCalcAppAccepts);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRejects\"       %u\n", objectName, process.TotalCalcAppRejects);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppCompletes\"     %u\n", objectName, process.TotalCalcAppCompletes);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAlives\"    %u\n", objectName, process.TotalCalcAppKeepAlives);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAliveAcks\" %u\n", objectName, process.TotalCalcAppKeepAliveAcks);
 
    if(process.CurrentJob) {
       delete process.CurrentJob;
@@ -699,16 +722,15 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
+   struct rsp_info    info;
+   char*              poolHandle        = "CalcAppPool";
+   char*              vectorFileName    = "CalcAppPU.vec";
+   char*              scalarFileName    = "CalcAppPU.sca";
+   char*              objectName        = "scenario.calcapppooluser[0]";
    unsigned long long startupDelayStamp = getMicroTime();
-   struct             rsp_info info;
-   char*              poolHandle     = "CalcAppPool";
-   char*              objectName     = "scenario.calcapppooluser[0]";
-   char*              vectorFileName = "calcapppooluser.vec";
-   char*              scalarFileName = "calcapppooluser.sca";
    int                i;
 
    memset(&info, 0, sizeof(info));
-
 #ifdef ENABLE_CSP
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
 #endif
@@ -726,13 +748,25 @@ int main(int argc, char** argv)
          scalarFileName = (char*)&argv[i][8];
       }
       else if(!(strncmp(argv[i], "-jobinterval=" ,13))) {
-         JobInterval = atol((char*)&argv[i][13]);
+         JobInterval = (unsigned long long)rint(1000000.0 * atof((char*)&argv[i][13]));
       }
       else if(!(strncmp(argv[i], "-jobsize=" ,9))) {
-         JobSize = atol((char*)&argv[i][9]);
+         JobSize = atof((char*)&argv[i][9]);
+      }
+      else if(!(strncmp(argv[i], "-keepalivetransmissioninterval=" ,31))) {
+         KeepAliveTransmissionInterval = atol((char*)&argv[i][31]);
+         if(KeepAliveTransmissionInterval < 100000) {
+            KeepAliveTransmissionInterval = 100000;
+         }
+      }
+      else if(!(strncmp(argv[i], "-keepalivetimeoutinterval=" ,26))) {
+         KeepAliveTimeoutInterval = atol((char*)&argv[i][26]);
+         if(KeepAliveTimeoutInterval < 100000) {
+            KeepAliveTimeoutInterval = 100000;
+         }
       }
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
-         runtime 	= atol((char*)&argv[i][9]);
+         Runtime = (unsigned long long)rint(1000000.0 * atof((char*)&argv[i][9]));
       }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
@@ -741,7 +775,6 @@ int main(int argc, char** argv)
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-csp" ,4))) {
-puts("CSP!");
          if(initComponentStatusReporter(&info, argv[i]) == false) {
             exit(1);
          }
@@ -767,11 +800,14 @@ puts("CSP!");
 
    cout << "CalcApp Client - Version 1.0" << endl
         << "============================" << endl << endl
-        << "Object       = " << objectName << endl
-        << "Vector File  = " << vectorFileName << endl
-        << "Scalar File  = " << scalarFileName << endl
-        << "Job Interval = " << (JobInterval / 1000000.0) << " [s]" << endl
-        << "Job Size     = " << JobSize << " [Calculations]" << endl
+        << "Object                  = " << objectName << endl
+        << "Vector File             = " << vectorFileName << endl
+        << "Scalar File             = " << scalarFileName << endl
+        << "Job Interval            = " << (JobInterval / 1000000.0) << " [s]" << endl
+        << "Job Size                = " << JobSize << " [Calculations]" << endl
+        << "Keep-Alive Transm. Int. = " << (KeepAliveTransmissionInterval / 1000000.0) << " [s]" << endl
+        << "Keep-Alive Timeout Int. = " << (KeepAliveTimeoutInterval / 1000000.0) << " [s]" << endl
+        << "Runtime                 = " << (Runtime / 1000000.0) << " [s]" << endl
         << endl;
 
 

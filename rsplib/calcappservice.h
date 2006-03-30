@@ -114,26 +114,27 @@ class CalcAppServer : public UDPLikeServer
    void handleCookieTransmissionTimer(CalcAppServerJob* job);
 
 
-   size_t             Jobs;
-   CalcAppServerJob*  FirstJob;
    std::string        ObjectName;
    std::string        VectorFileName;
    std::string        ScalarFileName;
    FILE*              VectorFH;
    FILE*              ScalarFH;
-
    unsigned int       VectorLine;
+
    size_t             MaxJobs;
    double             Capacity;
-   unsigned long long StartupTimeStamp;
-   double             TotalUsedCalculations;
    unsigned long long KeepAliveTimeoutInterval;
    unsigned long long KeepAliveTransmissionInterval;
    unsigned long long CookieMaxTime;
    double             CookieMaxCalculations;
 
-   unsigned int       AcceptedJobs;
-   unsigned int       RejectedJobs;
+   double             TotalUsedCalculations;
+   unsigned long long TotalJobsAccepted;
+   unsigned long long TotalJobsRejected;
+
+   unsigned long long StartupTimeStamp;
+   size_t             Jobs;
+   CalcAppServerJob*  FirstJob;
 };
 
 #endif
