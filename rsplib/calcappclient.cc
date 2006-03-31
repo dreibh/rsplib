@@ -152,14 +152,6 @@ double             TotalJobSizeQueued            = 0.0;
 double             TotalJobSizeStarted           = 0.0;
 double             TotalJobSizeCompleted         = 0.0;
 
-Statistics         StartupTimeStat;
-Statistics         QueuingTimeStat;
-Statistics         ProcessingTimeStat;
-Statistics         HandlingTimeStat;
-Statistics         HandlingSpeedStat;
-Statistics         JobSizeStat;
-Statistics         JobIntervalStat;
-
 
 enum ProcessStatus {
    PS_Init       = 0,
@@ -212,6 +204,7 @@ void sendCalcAppRequest(struct Process* process)
                                 0, htonl(PPID_CALCAPP), 0, 0,
                                 0);
    if(result <= 0) {
+      cerr << "WARNING: Unable to send CalcAppRequest" << endl;
       process->Status = PS_Failed;
    }
 
@@ -376,14 +369,6 @@ void handleCalcAppCompleted(struct Process* process,
    TotalHandlingTime     += handlingTime;
    TotalJobsCompleted++;
    TotalJobSizeCompleted += process->CurrentJob->JobSize;
-
-   StartupTimeStat.collect(startupDelay);
-   QueuingTimeStat.collect(queuingDelay);
-   ProcessingTimeStat.collect(processingTime);
-   HandlingTimeStat.collect(handlingTime);
-   HandlingSpeedStat.collect(handlingSpeed);
-   JobSizeStat.collect(process->CurrentJob->JobSize);
-   JobIntervalStat.collect(JobInterval / 1000000.0);
 
    cout << "Job #" << process->CurrentJob->JobID << " completed:" << endl
         << "   JobSize        = " << process->CurrentJob->JobSize << endl
@@ -592,8 +577,12 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
    process.Status     = PS_Init;
    while(process.CurrentJob != NULL) {
       if(process.Status == PS_Init) {
+         /* The job has just been dequeued */
          TotalJobsStarted++;
          TotalJobSizeStarted += process.CurrentJob->JobSize;
+      }
+      else {
+         /* This is a retrial */
          process.Status = PS_Init;
       }
 

@@ -1261,7 +1261,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
 
-   LOG_VERBOSE
+   LOG_ACTION
    fputs("Registration request for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
    fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
@@ -1758,7 +1758,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       return;
    }
 
-   LOG_VERBOSE
+   LOG_ACTION
    fputs("Got HandleUpdate for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
    fprintf(stdlog, "/$%08x, action $%04x\n",
@@ -1897,7 +1897,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
       return;
    }
 
-   LOG_ACTION
+   LOG_VERBOSE2
    fprintf(stdlog, "Got PeerPresence from peer $%08x",
            message->PeerListNodePtr->Identifier);
    if(message->PeerListNodePtr) {
@@ -2534,7 +2534,7 @@ static void handleHandleTableRequest(struct Registrar*       registrar,
       return;
    }
 
-   LOG_VERBOSE
+   LOG_VERBOSE2
    fprintf(stdlog, "Got HandleTableRequest from peer $%08x\n",
            message->SenderID);
    LOG_END

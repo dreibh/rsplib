@@ -75,7 +75,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
    unsigned int                   result;
    size_t                         i;
 
-   LOG_VERBOSE4
+   LOG_VERBOSE
    fputs("Trying to receive registrar announce...\n",  stdlog);
    LOG_END
 
@@ -252,6 +252,16 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
             registrarTableDelete(registrarTable);
             return(false);
          }
+
+         if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
+                                       &registrarTable->AnnounceAddress,
+                                       true)) {
+            LOG_WARNING
+            fputs("Joining multicast group ",  stdlog);
+            fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
+            fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+            LOG_END
+         }
       }
       else {
          LOG_ERROR
@@ -278,7 +288,7 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
 
       CHECK(simpleRedBlackTreeInsert(&registrarTable->RegistrarAssocIDList, &node->Node) == &node->Node);
 
-      LOG_VERBOSE2
+      LOG_VERBOSE3
       fprintf(stdlog, "Added assoc %u to registrar assoc ID list.\n" , (unsigned int)assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
       simpleRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
@@ -304,7 +314,7 @@ static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
       CHECK(simpleRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
       free(node);
 
-      LOG_VERBOSE2
+      LOG_VERBOSE3
       fprintf(stdlog, "Removed assoc %u from registrar assoc ID list.\n" , (unsigned int)assocID);
       fputs("RegistrarAssocIDList: ", stdlog);
       simpleRedBlackTreePrint(&registrarTable->RegistrarAssocIDList, stdlog);
@@ -546,7 +556,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
             transportAddressBlock = transportAddressBlock->Next;
          }
          if(transportAddressBlock != NULL) {
-            LOG_VERBOSE2
+            LOG_VERBOSE1
             fputs("Trying registrar at ",  stdlog);
             transportAddressBlockPrint(transportAddressBlock, stdlog);
             fputs("...\n",  stdlog);
@@ -607,7 +617,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    if(registrarTable == NULL) {
       return(-1);
    }
-   LOG_VERBOSE
+   LOG_VERBOSE1
    fputs("Looking for registrar...\n",  stdlog);
    LOG_END
 
@@ -641,6 +651,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
    lastTrialTimeStamp = 0;
    for(;;) {
+      /* ====== Start new round ========================================== */
       if((lastRegistrarIdentifier == 0) && (lastTransportAddressBlock == NULL)) {
          /*
             Start new trial, when
@@ -683,6 +694,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          }
       }
 
+      /* ====== Try next block of addresses ================================= */
       if(lastTrialTimeStamp + registrarTable->RegistrarConnectTimeout < getMicroTime()) {
          /* Try next block of addresses */
          tryNextBlock(registrarTable,
@@ -692,7 +704,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          lastTrialTimeStamp = getMicroTime();
       }
 
-      /* Wait for event */
+      /* ====== Wait for event =========================================== */
       FD_ZERO(&rfdset);
       FD_SET(registrarHuntFD, &rfdset);
       n = registrarHuntFD;
@@ -707,13 +719,6 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       LOG_VERBOSE4
       fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
       LOG_END
-      /*
-         Important: rspSelect() may *not* be used here!
-         registrarTableFindRegistrar() may be called from within a
-         session timer + from within registrar socket callback
-         => Strange things will happen when these callbacks are
-            invoked recursively!
-      */
       result = ext_select(n + 1,
                           &rfdset, NULL, NULL,
                           &selectTimeout);
@@ -732,9 +737,10 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
          return(-1);
       }
 
-      /* Handle events */
+      /* ====== Handle events ============================================ */
       if(result != 0) {
-         if(FD_ISSET(registrarTable->AnnounceSocket, &rfdset)) {
+         if( (registrarTable->AnnounceSocket > 0) &&
+             (FD_ISSET(registrarTable->AnnounceSocket, &rfdset)) ) {
             handleRegistrarAnnounceCallback(registrarTable, registrarTable->AnnounceSocket);
          }
          if(FD_ISSET(registrarHuntFD, &rfdset)) {

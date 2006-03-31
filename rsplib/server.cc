@@ -297,7 +297,7 @@ int main(int argc, char** argv)
       unsigned long long keepAliveTimeoutInterval      = 2500000;
       unsigned long long cookieMaxTime                 = 5000000;
       double             cookieMaxCalculations         = 5000000.0;
-      size_t             maxJobs                       = 2;
+      size_t             maxJobs                       = 10;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-capobject=" ,11))) {
             objectName = (const char*)&argv[i][11];

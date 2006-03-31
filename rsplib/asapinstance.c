@@ -1077,7 +1077,7 @@ static void asapInstanceHandleRegistrarConnectionEvent(
 
    dispatcherLock(asapInstance->StateMachine);
 
-   LOG_VERBOSE2
+   LOG_VERBOSE
    fputs("Entering Connection Handler...\n", stdlog);
    LOG_END
 
@@ -1164,6 +1164,10 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
    LOG_WARNING
    fputs("Request(s) to registrar timed out!\n", stdlog);
    LOG_END
+
+puts("STOP!");
+exit(1);
+
    asapInstance->LastAITM = NULL;
    asapInstanceDisconnectFromRegistrar(asapInstance, true);
 }
@@ -1213,6 +1217,9 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
       /* ====== Send to registrar ======================================== */
       else {
          if(asapInstance->RegistrarSocket >= 0) {
+            LOG_VERBOSE
+            fputs("Sending message to registrar ...\n", stdlog);
+            LOG_END
             result = rserpoolMessageSend(IPPROTO_SCTP,
                                          asapInstance->RegistrarSocket,
                                          0, 0,
@@ -1278,9 +1285,10 @@ static void* asapInstanceMainLoop(void* args)
       pipeIndex = nfds;
       ufds[pipeIndex].fd     = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events = POLLIN;
-      if(interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort)) {
-         /* There are still AITM messages to be handled. Do not block if there
-            are no socket events! */
+      if((struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort) !=
+            asapInstance->LastAITM) {
+         /* There are new AITM messages to be handled.
+            Do not block if there are no socket events! */
          timeout = 0;
       }
 
