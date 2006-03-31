@@ -55,23 +55,12 @@ for SERVER in $SERVER_LIST; do
 
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
-   cmd=""
-   toBeKilled="$DISTPRGS $KILLALLMISC"
-   first=1
-   for i in $toBeKilled ; do
-      if [ $first -eq 0 ] ; then
-         cmd="$cmd ;"
-      fi
-      first=0
-      cmd="$cmd sudo killall $i 2>/dev/null >/dev/null"
-   done
-   cmd="$cmd ; sudo ps ; sudo killall bash"
-   # echo $cmd
+   cmd="if [ -e bin/ ] ; then sudo rm -rf bin/ ; fi"
 
    (
-   ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
-      echo \"\`date\`: Executing killall on $SERVER ...\" && \
-      $cmd && \
+   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+      echo \"\`date\`: Executing clearall on $SERVER ...\" && \
+      $cmd ; \
       echo \"\`date\`: $SERVER is ready!\""
    ) &
 done
