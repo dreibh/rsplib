@@ -16,13 +16,13 @@
 # ./test1c results
 
 ./test1 start
-sleep 3600
+sleep 360
 ./test1 stop
 ./test1 results
 
 ./test2 start
-sleep 3600
+sleep 360
 ./test2 stop
 ./test2 results
 
-./test1 start
+# ./test1 start

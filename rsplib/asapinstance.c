@@ -1165,9 +1165,6 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
    fputs("Request(s) to registrar timed out!\n", stdlog);
    LOG_END
 
-puts("STOP!");
-exit(1);
-
    asapInstance->LastAITM = NULL;
    asapInstanceDisconnectFromRegistrar(asapInstance, true);
 }
