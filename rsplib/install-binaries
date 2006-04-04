@@ -74,7 +74,7 @@ for SERVER in $SERVER_LIST; do
       tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
       rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
       cd bin/ && \
-      sudo rm -f core.* *.gz *.bz2 *.log *.sca *.vec && \
+      sudo rm -f core.* *.gz *.bz2 *.log* *.sca* *.vec* && \
       sudo /bin/chown root:root $SUIDPRGS && \
       sudo /bin/chmod +s $SUIDPRGS && \
       date >LastUpdate && \
