@@ -55,7 +55,7 @@ for SERVER in $SERVER_LIST; do
       echo \"\`date\`: Packaging results on $SERVER ...\" &&
       cd bin && \
       sudo rm -f *.tar.bz2 *.log.bz2 *.vec.bz2 *.sca.bz2 *.tar.gz && \
-      FILES=\`find . -name \"$TESTID-*.log\" -or -name \"$TESTID-*.vec\" -or -name \"$TESTID-*.sca\"\` && \
+      FILES=\`find . -name \"core.*\" -or -name \"$TESTID-*.log\" -or -name \"$TESTID-*.vec\" -or -name \"$TESTID-*.sca\"\` && \
       if [ \"x\$FILES\" != \"x\" ]; then \
          echo \"Compressing files \$FILES ...\" && \
          sudo bzip2 \$FILES ; \

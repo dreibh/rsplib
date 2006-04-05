@@ -49,10 +49,6 @@ done \
 
 
 for SERVER in $SERVER_LIST; do
-   SERVER=$1
-   SERVER_LIST="$SERVER_LIST $SERVER"
-   shift
-
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
    cmd="if [ -e bin/ ] ; then sudo rm -rf bin/ ; fi"
