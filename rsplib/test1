@@ -4,22 +4,25 @@
 
 TESTID=messung1
 
+PR_AUSTRALIA=`cat pr-australia.hosts`
 PR_ASIA=`cat pr-asia.hosts`
-PR_USA=`cat pr-usa.hosts`
+PR_AMERICA=`cat pr-usa.hosts`
 PR_EUROPE=`cat pr-europe.hosts`
-PR_ALL="$PR_ASIA $PR_USA $PR_EUROPE"
+PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
 PR_MISCOPT="-loglevel=3"
 
+PE_AUSTRALIA=`cat pe-australia.hosts`
 PE_ASIA=`cat pe-asia.hosts`
-PE_USA=`cat pe-usa.hosts`
+PE_AMERICA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
-PE_ALL="$PE_ASIA $PE_USA $PE_EUROPE"
-PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsedDPF:0.001 -capmaxjobs=10 -loglevel=3 "
+PE_ALL="$PE_ASIA $PE_AMERICA $PE_EUROPE"
+PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsedDPF:0.00001 -capmaxjobs=10 -loglevel=3 "
 
+PU_AUSTRALIA=`cat pu-australia.hosts`
 PU_ASIA=`cat pu-asia.hosts`
-PU_USA=`cat pu-usa.hosts`
+PU_AMERICA=`cat pu-usa.hosts`
 PU_EUROPE=`cat pu-europe.hosts`
-PU_ALL="$PU_ASIA $PU_USA $PU_EUROPU"
+PU_ALL="$PU_ASIA $PU_AMERICA $PU_EUROPU"
 PU_MISCOPT="-jobinterval=5.0 -jobsize=1000000 -loglevel=6"
 
 
@@ -88,6 +91,14 @@ stopNetwork ()
 
 
 
+startNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   localPUs=$PU_AUSTRALIA
+   startNetwork
+}
+
 startNetworkAsia ()
 {
    localPRs=$PR_ASIA
@@ -96,11 +107,11 @@ startNetworkAsia ()
    startNetwork
 }
 
-startNetworkUSA ()
+startNetworkAmerica ()
 {
-   localPRs=$PR_USA
-   localPEs=$PE_USA
-   localPUs=$PU_USA
+   localPRs=$PR_AMERICA
+   localPEs=$PE_AMERICA
+   localPUs=$PU_AMERICA
    startNetwork
 }
 
@@ -113,6 +124,14 @@ startNetworkEurope ()
 }
 
 
+stopNetworkAustralia ()
+{
+   localPRs=$PR_AUSTRALIA
+   localPEs=$PE_AUSTRALIA
+   localPUs=$PU_AUSTRALIA
+   stopNetwork
+}
+
 stopNetworkAsia ()
 {
    localPRs=$PR_ASIA
@@ -121,11 +140,11 @@ stopNetworkAsia ()
    stopNetwork
 }
 
-stopNetworkUSA ()
+stopNetworkAmerica ()
 {
-   localPRs=$PR_USA
-   localPEs=$PE_USA
-   localPUs=$PU_USA
+   localPRs=$PR_AMERICA
+   localPEs=$PE_AMERICA
+   localPUs=$PU_AMERICA
    stopNetwork
 }
 
@@ -139,26 +158,59 @@ stopNetworkEurope ()
 
 
 if [ $# -lt 1 ] ; then
-   echo "Usage: test1 [start|stop|reset|results]"
+   echo "Usage: fractal-scenario1 [start|stop|reset] {all|europe|australia|asia|america}"
 fi
 
 if [ "x$1" = "xstart" ] ; then
-   echo "Starting scenario!"
-   startNetworkAsia
-   startNetworkUSA
-   startNetworkEurope
+   if [ $# -eq 2 -a "x$2" = "xaustralia" ] ; then
+      echo "Starting components in Australia"
+      startNetworkAustralia
+   elif [ $# -eq 2 -a "x$2" = "xasia" ] ; then
+      echo "Starting components in Asia"
+      startNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xeurope" ] ; then
+      echo "Starting components in Europe"
+      startNetworkEurope
+   elif [ $# -eq 2 -a "x$2" = "xamerica" ] ; then
+      echo "Starting components in America"
+      startNetworkAmerica
+   elif [ $# -eq 2 -a "x$2" = "xall" ] ; then
+      echo "Starting components worldwide"
+      # startNetworkAustralia
+      startNetworkAsia
+      startNetworkAmerica
+      startNetworkEurope
+   else
+      echo "Usage: fractal-scenario1 start [all|europe|australia|asia|america]"
+   fi
 elif [ "x$1" = "xstop" ] ; then
-   echo "Stopping scenario!"
-   stopNetworkEurope
-   stopNetworkUSA
-   stopNetworkAsia
+   if [ $# -eq 2 -a "x$2" = "xaustralia" ] ; then
+      echo "Stopping components in Australia"
+      stopNetworkAustralia
+   elif [ $# -eq 2 -a "x$2" = "xasia" ] ; then
+      echo "Stopping components in Asia"
+      stopNetworkAsia
+   elif [ $# -eq 2 -a "x$2" = "xeurope" ] ; then
+      echo "Stopping components in Europe"
+      stopNetworkEurope
+   elif [ $# -eq 2 -a "x$2" = "xamerica" ] ; then
+      echo "Stopping components in America"
+      stopNetworkAmerica
+   elif [ $# -eq 2 -a "x$2" = "xall" ] ; then
+      echo "Stopping components worldwide"
+      # stopNetworkAustralia
+      stopNetworkAsia
+      stopNetworkAmerica
+      stopNetworkEurope
+   else
+      echo "Usage: fractal-scenario1 stop [all|europe|australia|asia|america]"
+   fi
 elif [ "x$1" = "xreset" ] ; then
-   echo "Reseting everything!"
+   echo "Resetting everything!"
    resetAll
 elif [ "x$1" = "xresults" ] ; then
    echo "Fetching results!"
-   # echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
-   echo $PU_USA $PE_USA $PU_EUROPE $PE_EUROPE | sort -u | xargs ./get-results $TESTID
+   echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
    ./combine-vectors $TESTID
 else
    echo "ERROR: Bad parameter!"
