@@ -8,22 +8,50 @@ PR_AUSTRALIA=`cat pr-australia.hosts`
 PR_ASIA=`cat pr-asia.hosts`
 PR_AMERICA=`cat pr-usa.hosts`
 PR_EUROPE=`cat pr-europe.hosts`
-PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
 PR_MISCOPT="-loglevel=3"
 
 PE_AUSTRALIA=`cat pe-australia.hosts`
 PE_ASIA=`cat pe-asia.hosts`
 PE_AMERICA=`cat pe-usa.hosts`
 PE_EUROPE=`cat pe-europe.hosts`
-PE_ALL="$PE_ASIA $PE_AMERICA $PE_EUROPE"
 PE_MISCOPT="-calcapp -rereginterval=10000 -policy=LeastUsedDPF:0.00001 -capmaxjobs=10 -loglevel=3 "
 
 PU_AUSTRALIA=`cat pu-australia.hosts`
 PU_ASIA=`cat pu-asia.hosts`
 PU_AMERICA=`cat pu-usa.hosts`
 PU_EUROPE=`cat pu-europe.hosts`
-PU_ALL="$PU_ASIA $PU_AMERICA $PU_EUROPU"
 PU_MISCOPT="-jobinterval=5.0 -jobsize=1000000 -loglevel=6"
+
+MULTIPLIKATOR=3
+
+
+# ---------------------------
+puAustralia=$PU_AUSTRALIA
+puAsia=$PU_ASIA
+puAmerica=$PU_AMERICA
+puEurope=$PU_EUROPE
+peAustralia=$PE_AUSTRALIA
+peAsia=$PE_ASIA
+peAmerica=$PE_AMERICA
+peEurope=$PE_EUROPE
+i=1 ; while [ $i -lt $MULTIPLIKATOR ] ; do
+   PU_AUSTRALIA="$PU_AUSTRALIA $puAustralia"
+   PU_ASIA="$PU_ASIA $puAsia"
+   PU_AMERICA="$PU_AMERICA $puAmerica"
+   PU_EUROPE="$PU_EUROPE $puEurope"
+   PE_AUSTRALIA="$PE_AUSTRALIA $peAustralia"
+   PE_ASIA="$PE_ASIA $peAsia"
+   PE_AMERICA="$PE_AMERICA $peAmerica"
+   PE_EUROPE="$PE_EUROPE $peEurope"
+   let i=$i+1
+done
+# ---------------------------
+
+
+PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
+PE_ALL="$PE_AUSTRALIA $PE_ASIA $PE_AMERICA $PE_EUROPE"
+PU_ALL="$PU_AUSTRALIA $PU_ASIA $PU_AMERICA $PU_EUROPU"
+
 
 
 resetAll ()

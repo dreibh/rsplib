@@ -1,13 +1,13 @@
 #!/bin/bash
 
-./test1 start
+./test1 start all
 sleep 3600
-./test1 stop
+./test1 stop all
 ./test1 results
 
-./test2 start
+./test2 start all
 sleep 3600
-./test2 stop
+./test2 stop all
 ./test2 results
 
 ./test1 start
