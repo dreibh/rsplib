@@ -1043,7 +1043,8 @@ static void handleNotificationOnRegistrarSocket(struct ASAPInstance*           a
                                                 const union sctp_notification* notification)
 {
    if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
-       (notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ) {
+       ((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+        (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) ) {
       LOG_WARNING
       fputs("Registrar connection lost\n", stdlog);
       LOG_END
@@ -1137,6 +1138,12 @@ static void asapInstanceHandleRegistrarConnectionEvent(
                }
             }
          }
+      }
+      else {
+         LOG_WARNING
+         fputs("Disconnecting from registrar due to disconnect\n", stdlog);
+         LOG_END
+         asapInstanceDisconnectFromRegistrar(asapInstance, true);
       }
    }
    else {
