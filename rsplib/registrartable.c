@@ -444,9 +444,10 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
                              registrarHuntFD,
                              notification->sn_assoc_change.sac_assoc_id);
       }
-      else if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
+      else if((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
+              (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) ) {
          LOG_VERBOSE2
-         fprintf(stdlog, "Assoc %u disconnected from registrar (communication lost)\n",
+         fprintf(stdlog, "Assoc %u disconnected from registrar (communication lost or shutdown complete)\n",
                  (unsigned int)notification->sn_assoc_change.sac_assoc_id);
          LOG_END
          removeRegistrarAssocID(registrarTable,
