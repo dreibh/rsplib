@@ -310,7 +310,6 @@ int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const 
 {
    const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromTimerStorageNode)((void*)nodePtr1);
    const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromTimerStorageNode)((void*)nodePtr2);
-   int cmpResult;
 
    if(node1->TimerTimeStamp < node2->TimerTimeStamp) {
       return(-1);
@@ -319,17 +318,14 @@ int ST_CLASS(poolElementTimerStorageNodeComparison)(const void* nodePtr1, const 
       return(1);
    }
 
-   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
-   if(cmpResult != 0) {
-      return(cmpResult);
-   }
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   return(0);
+
+   return(poolHandleComparison(&node1->OwnerPoolNode->Handle, &node2->OwnerPoolNode->Handle));
 }
 
 
@@ -346,7 +342,6 @@ int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, co
 {
    const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr1);
    const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)((void*)nodePtr2);
-   int                                     cmpResult;
 
    if(node1->HomeRegistrarIdentifier < node2->HomeRegistrarIdentifier) {
       return(-1);
@@ -354,17 +349,15 @@ int ST_CLASS(poolElementOwnershipStorageNodeComparison)(const void* nodePtr1, co
    else if(node1->HomeRegistrarIdentifier > node2->HomeRegistrarIdentifier) {
       return(1);
    }
-   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
-   if(cmpResult != 0) {
-      return(cmpResult);
-   }
+
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   return(0);
+
+   return(poolHandleComparison(&node1->OwnerPoolNode->Handle, &node2->OwnerPoolNode->Handle));
 }
 
 
@@ -384,7 +377,6 @@ int ST_CLASS(poolElementConnectionStorageNodeComparison)(const void* nodePtr1, c
 {
    const struct ST_CLASS(PoolElementNode)* node1 = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr1);
    const struct ST_CLASS(PoolElementNode)* node2 = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)((void*)nodePtr2);
-   int                                     cmpResult;
 
    if(node1->ConnectionSocketDescriptor < node2->ConnectionSocketDescriptor) {
       return(-1);
@@ -398,17 +390,15 @@ int ST_CLASS(poolElementConnectionStorageNodeComparison)(const void* nodePtr1, c
    else if(node1->ConnectionAssocID > node2->ConnectionAssocID) {
       return(1);
    }
-   cmpResult = ST_CLASS(poolIndexStorageNodeComparison)(node1->OwnerPoolNode, node2->OwnerPoolNode);
-   if(cmpResult != 0) {
-      return(cmpResult);
-   }
+
    if(node1->Identifier < node2->Identifier) {
       return(-1);
    }
    else if(node1->Identifier > node2->Identifier) {
       return(1);
    }
-   return(0);
+
+   return(poolHandleComparison(&node1->OwnerPoolNode->Handle, &node2->OwnerPoolNode->Handle));
 }
 
 
