@@ -137,7 +137,18 @@ unsigned int ST_CLASS(poolHandlespaceManagementHandleResolution)(
                 const size_t                                maxIncrement);
 
 
-#define NTE_MAX_POOL_ELEMENT_NODES 128
+/*
+   Maximum amount of Pool Element Parameters in ASAP/ENRP message:
+   Per PE Transport Parameter:
+   - 20 for Header + PE-ID + Home-PR-ID + Reg.Life
+   - 8+8 for User Transport Parameter with single IPv4 address
+   - 8+8 for ASAP Transport Parameter with single IPv4 address
+   - 8 for Policy Parameter
+   => 60 Bytes.
+   => About ~1090 PE Parameters per message
+      (depending on other overhead, e.g. PH Parameter)
+*/
+#define NTE_MAX_POOL_ELEMENT_NODES 1024
 #define HTEF_START                 (1 << 0)
 #define HTEF_OWNCHILDSONLY         (1 << 1)
 
@@ -154,7 +165,8 @@ int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
        struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
-       const unsigned int                          flags);
+       const unsigned int                          flags,
+       size_t                                      maxElements);
 
 
 #ifdef __cplusplus

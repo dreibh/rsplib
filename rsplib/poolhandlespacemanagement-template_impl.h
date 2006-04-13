@@ -469,9 +469,15 @@ static int ST_CLASS(getOwnershipHandleTable)(
               struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
               struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
               const RegistrarIdentifierType               homeRegistrarIdentifier,
-              const unsigned int                          flags)
+              const unsigned int                          flags,
+              size_t                                      maxElements)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+
+   maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
+   if(maxElements < 1) {
+      return(0);
+   }
    if(flags & HTEF_START) {
       poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                            &poolHandlespaceManagement->Handlespace,
@@ -488,7 +494,7 @@ static int ST_CLASS(getOwnershipHandleTable)(
    handleTableExtract->PoolElementNodes = 0;
    while(poolElementNode != NULL) {
       handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes++] = poolElementNode;
-      if(handleTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
+      if(handleTableExtract->PoolElementNodes >= maxElements) {
          break;
       }
       poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
@@ -519,11 +525,16 @@ static int ST_CLASS(getOwnershipHandleTable)(
 /* ###### Get name table from handlespace ################################## */
 static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
                                           struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
-                                          const unsigned int                          flags)
+                                          const unsigned int                          flags,
+                                          size_t                                      maxElements)
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
 
+   maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
+   if(maxElements < 1) {
+      return(0);
+   }
    handleTableExtract->PoolElementNodes = 0;
    if(flags & HTEF_START) {
       handleTableExtract->LastPoolElementIdentifier = 0;
@@ -559,7 +570,7 @@ static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagem
    for(;;) {
       while(poolElementNode != NULL) {
          handleTableExtract->PoolElementNodeArray[handleTableExtract->PoolElementNodes++] = poolElementNode;
-         if(handleTableExtract->PoolElementNodes >= NTE_MAX_POOL_ELEMENT_NODES) {
+         if(handleTableExtract->PoolElementNodes >= maxElements) {
             goto finish;
          }
          poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
@@ -604,16 +615,17 @@ int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
        const RegistrarIdentifierType               homeRegistrarIdentifier,
        struct ST_CLASS(HandleTableExtract)*        handleTableExtract,
-       const unsigned int                          flags)
+       const unsigned int                          flags,
+       size_t                                      maxElements)
 {
    if(flags & HTEF_OWNCHILDSONLY) {
       return(ST_CLASS(getOwnershipHandleTable)(
                 poolHandlespaceManagement, handleTableExtract,
                 homeRegistrarIdentifier,
-                flags));
+                flags, maxElements));
    }
    return(ST_CLASS(getGlobalHandleTable)(
-             poolHandlespaceManagement, handleTableExtract, flags));
+             poolHandlespaceManagement, handleTableExtract, flags, maxElements));
 }
 
 

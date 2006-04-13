@@ -1088,7 +1088,8 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
                   message->HandlespacePtr,
                   message->HandlespacePtr->Handlespace.HomeRegistrarIdentifier,
                   hte,
-                  flags);
+                  flags,
+                  128);
       if(result > 0) {
          lastPoolHandle = NULL;
          for(i = 0;i < hte->PoolElementNodes;i++) {
