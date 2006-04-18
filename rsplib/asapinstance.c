@@ -990,9 +990,12 @@ static void asapInstanceHandleResponseFromRegistrar(
          timerStop(&asapInstance->RegistrarTimeoutTimer);
 
          LOG_ACTION
-         fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar\n",
-                 response->Type, aitm->Request->Type);
+         fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar with RTT %lluus\n",
+                 response->Type, aitm->Request->Type,
+                 getMicroTime() - aitm->CreationTimeStamp);
          LOG_END
+printf("rtt=%llu\n", getMicroTime() - aitm->CreationTimeStamp);
+
          aitm->Response = response;
          if(asapInstance->LastAITM == aitm) {
             /* No more responses are expected. */

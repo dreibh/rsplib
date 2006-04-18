@@ -254,8 +254,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
          registrar->ServerID = random32();
       }
 
-      dispatcherNew(&registrar->StateMachine,
-                    dispatcherDefaultLock, dispatcherDefaultUnlock, NULL);
+      dispatcherNew(&registrar->StateMachine, NULL, NULL, NULL);
       ST_CLASS(poolHandlespaceManagementNew)(&registrar->Handlespace,
                                              registrar->ServerID,
                                              NULL,

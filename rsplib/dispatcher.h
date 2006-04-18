@@ -66,12 +66,9 @@ struct Dispatcher
 /**
   * Constructor.
   *
-  * @param lock Lock function (default: dispatcherDefaultLock).
-  * @param unlock Unlock function (default: dispatcherDefaultUnlock).
+  * @param lock Lock function (default: dummy function).
+  * @param unlock Unlock function (default: dummy function).
   * @param lockUserData User data for lock and unlock function.
-  *
-  * @see dispatcherDefaultLock
-  * @see dispatcherDefaultUnlock
   */
 void dispatcherNew(struct Dispatcher* dispatcher,
                    void               (*lock)(struct Dispatcher* dispatcher, void* userData),
@@ -84,16 +81,6 @@ void dispatcherNew(struct Dispatcher* dispatcher,
   * @param dispatcher Dispatcher.
   */
 void dispatcherDelete(struct Dispatcher* dispatcher);
-
-/**
-  * Default dispatcher lock function. This is a dummy function and does nothing!
-  */
-void dispatcherDefaultLock(struct Dispatcher* dispatcher, void* userData);
-
-/**
-  * Default dispatcher unlock function. This is a dummy function and does nothing!
-  */
-void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData);
 
 /**
   * Lock dispatcher.

@@ -45,6 +45,7 @@ struct ASAPInterThreadMessage
    unsigned int                  Error;
    bool                          ResponseExpected;
    unsigned long long            ResponseTimeoutTimeStamp;
+   unsigned long long            CreationTimeStamp;
 };
 
 

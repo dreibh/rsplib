@@ -43,6 +43,10 @@
 #include <ext_socket.h>
 
 
+static void dispatcherDefaultLock(struct Dispatcher* dispatcher, void* userData);
+static void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData);
+
+
 /* ###### Constructor #################################################### */
 void dispatcherNew(struct Dispatcher* dispatcher,
                    void               (*lock)(struct Dispatcher* dispatcher, void* userData),
@@ -86,29 +90,27 @@ void dispatcherDelete(struct Dispatcher* dispatcher)
 /* ###### Lock ########################################################### */
 void dispatcherLock(struct Dispatcher* dispatcher)
 {
-   if(dispatcher != NULL) {
-      dispatcher->Lock(dispatcher, dispatcher->LockUserData);
-   }
+   CHECK(dispatcher);
+   dispatcher->Lock(dispatcher, dispatcher->LockUserData);
 }
 
 
 /* ###### Unlock ######################################################### */
 void dispatcherUnlock(struct Dispatcher* dispatcher)
 {
-   if(dispatcher != NULL) {
-      dispatcher->Unlock(dispatcher, dispatcher->LockUserData);
-   }
+   CHECK(dispatcher);
+   dispatcher->Unlock(dispatcher, dispatcher->LockUserData);
 }
 
 
 /* ###### Default locking function ####################################### */
-void dispatcherDefaultLock(struct Dispatcher* dispatcher, void* userData)
+static void dispatcherDefaultLock(struct Dispatcher* dispatcher, void* userData)
 {
 }
 
 
 /* ###### Default unlocking function ##################################### */
-void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData)
+static void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userData)
 {
 }
 
@@ -130,7 +132,7 @@ static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
       if(now >= timer->TimeStamp) {
          timer->TimeStamp = 0;
          simpleRedBlackTreeRemove(&dispatcher->TimerStorage,
-                                      &timer->Node);
+                                  &timer->Node);
          if(timer->Callback != NULL) {
             timer->Callback(dispatcher, timer, timer->UserData);
          }

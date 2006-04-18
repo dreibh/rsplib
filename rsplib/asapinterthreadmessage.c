@@ -25,6 +25,7 @@
 
 #include "tdtypes.h"
 #include "asapinterthreadmessage.h"
+#include "timeutilities.h"
 
 
 /* ###### Constructor #################################################### */
@@ -45,6 +46,7 @@ struct ASAPInterThreadMessage* asapInterThreadMessageNew(
    aitm->Error                    = RSPERR_OKAY;
    aitm->TransmissionTrials       = 0;
    aitm->ResponseTimeoutTimeStamp = 0;
+   aitm->CreationTimeStamp        = getMicroTime();
    return(aitm);
 }
 
