@@ -1087,9 +1087,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
       result = ST_CLASS(poolHandlespaceManagementGetHandleTable)(
                   message->HandlespacePtr,
                   message->HandlespacePtr->Handlespace.HomeRegistrarIdentifier,
-                  hte,
-                  flags,
-                  128);
+                  hte,flags, message->MaxElementsPerHTRequest);
       if(result > 0) {
          lastPoolHandle = NULL;
          for(i = 0;i < hte->PoolElementNodes;i++) {
@@ -1125,7 +1123,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
             hte->LastPoolHandle            = hte->PoolElementNodeArray[i]->OwnerPoolNode->Handle;
             hte->LastPoolElementIdentifier = hte->PoolElementNodeArray[i]->Identifier;
          }
-         if((hte->PoolElementNodes == NTE_MAX_POOL_ELEMENT_NODES) ||
+         if((hte->PoolElementNodes == min(message->MaxElementsPerHTRequest, NTE_MAX_POOL_ELEMENT_NODES)) ||
             (i != hte->PoolElementNodes)) {
             header->ah_flags |= EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND;
          }

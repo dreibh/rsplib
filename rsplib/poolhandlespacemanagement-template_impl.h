@@ -26,9 +26,9 @@
 /*
 #define PRINT_SELECTION_RESULT
 */
-/*
+
 #define PRINT_GETNAMETABLE_RESULT
-*/
+
 
 
 /* ###### Helper function for update notification ######################## */
@@ -514,7 +514,7 @@ static int ST_CLASS(getOwnershipHandleTable)(
       poolElementNode = handleTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->HandleSize, poolElementNode->Identifier);
+      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle.Size, poolElementNode->Identifier);
       puts("");
    }
 #endif
@@ -601,7 +601,7 @@ finish:
       poolElementNode = handleTableExtract->PoolElementNodeArray[i];
       printf("#%3d: \"", i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle->Size,
+      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle.Size,
                              poolElementNode->Identifier);
       puts("");
    }

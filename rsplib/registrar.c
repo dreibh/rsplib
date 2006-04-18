@@ -68,6 +68,9 @@
 #define REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
 #define REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL   5000000
 #define REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL        5000000
+#define REGISTRAR_DEFAULT_MAX_ELEMENTS_PER_HANDLE_TABLE_REQUEST           128
+#define REGISTRAR_DEFAULT_MAX_INCREMENT                                     0
+#define REGISTRAR_DEFAULT_MAX_HANDLE_RESOLUTION_ITEMS                       3
 #define REGISTRAR_DEFAULT_PEER_HEARTBEAT_CYCLE                        2444444
 #define REGISTRAR_DEFAULT_PEER_MAX_TIME_LAST_HEARD                    5000000
 #define REGISTRAR_DEFAULT_PEER_MAX_TIME_NO_RESPONSE                   5000000
@@ -125,6 +128,9 @@ struct Registrar
    unsigned long long                         EndpointMonitoringHeartbeatInterval;
    unsigned long long                         EndpointKeepAliveTransmissionInterval;
    unsigned long long                         EndpointKeepAliveTimeoutInterval;
+   size_t                                     MaxElementsPerHTRequest;
+   size_t                                     MaxIncrement;
+   size_t                                     MaxHandleResolutionItems;
    unsigned long long                         PeerHeartbeatCycle;
    unsigned long long                         PeerMaxTimeLastHeard;
    unsigned long long                         PeerMaxTimeNoResponse;
@@ -302,6 +308,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->EndpointKeepAliveTransmissionInterval = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
       registrar->EndpointKeepAliveTimeoutInterval      = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
       registrar->AutoCloseTimeout                      = REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT;
+      registrar->MaxIncrement                          = REGISTRAR_DEFAULT_MAX_INCREMENT;
+      registrar->MaxHandleResolutionItems              = REGISTRAR_DEFAULT_MAX_HANDLE_RESOLUTION_ITEMS;
+      registrar->MaxElementsPerHTRequest               = REGISTRAR_DEFAULT_MAX_ELEMENTS_PER_HANDLE_TABLE_REQUEST;
       registrar->PeerMaxTimeLastHeard                  = REGISTRAR_DEFAULT_PEER_MAX_TIME_LAST_HEARD;
       registrar->PeerMaxTimeNoResponse                 = REGISTRAR_DEFAULT_PEER_MAX_TIME_NO_RESPONSE;
       registrar->PeerHeartbeatCycle                    = REGISTRAR_DEFAULT_PEER_HEARTBEAT_CYCLE;
@@ -1550,8 +1559,7 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
 
 
 /* ###### Handle handle resolution request ################################# */
-#define HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS 16
-#define HANDLERESOLUTION_MAX_INCREMENT              1
+#define HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS 1024
 static void handleHandleResolutionRequest(struct Registrar*       registrar,
                                           int                     fd,
                                           sctp_assoc_t            assocID,
@@ -1574,8 +1582,8 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
                        &message->Handle,
                        (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
                        &poolElementNodes,
-                       HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS,
-                       HANDLERESOLUTION_MAX_INCREMENT);
+                       min(HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS, registrar->MaxHandleResolutionItems),
+                       registrar->MaxIncrement);
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE1
       fprintf(stdlog, "Selected %u element%s\n", (unsigned int)poolElementNodes,
@@ -2558,6 +2566,7 @@ static void handleHandleTableRequest(struct Registrar*       registrar,
       response->PeerListNodePtrAutoDelete = false;
       response->HandlespacePtr            = &registrar->Handlespace;
       response->HandlespacePtrAutoDelete  = false;
+      response->MaxElementsPerHTRequest   = registrar->MaxElementsPerHTRequest;
 
       if(peerListNode == NULL) {
          response->Flags |= EHF_HANDLE_TABLE_RESPONSE_REJECT;
@@ -3260,7 +3269,10 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-peermaxtimelastheard=",22))) ||
                (!(strncmp(argv[i], "-peermaxtimenoresponse=",23))) ||
                (!(strncmp(argv[i], "-mentorhunttimeout=",19))) ||
-               (!(strncmp(argv[i], "-takeoverexpiryinterval=",24))) ) {
+               (!(strncmp(argv[i], "-takeoverexpiryinterval=",24))) ||
+               (!(strncmp(argv[i], "-maxincrement=",14))) ||
+               (!(strncmp(argv[i], "-maxhresitems=",14))) ||
+               (!(strncmp(argv[i], "-maxelementsperhtrequest=",25))) ) {
          /* to be handled later */
       }
       else if(!(strncmp(argv[i], "-asap=",6))) {
@@ -3386,6 +3398,21 @@ int main(int argc, char** argv)
          registrar->MaxBadPEReports = atol((char*)&argv[i][17]);
          if(registrar->MaxBadPEReports < 1) {
             registrar->MaxBadPEReports = 1;
+         }
+      }
+      else if(!(strncmp(argv[i], "-maxincrement=",14))) {
+         registrar->MaxIncrement = atol((char*)&argv[i][14]);
+      }
+      else if(!(strncmp(argv[i], "-maxhresitems=",14))) {
+         registrar->MaxHandleResolutionItems = atol((char*)&argv[i][14]);
+         if(registrar->MaxHandleResolutionItems < 1) {
+            registrar->MaxHandleResolutionItems = 1;
+         }
+      }
+      else if(!(strncmp(argv[i], "-maxelementsperhtrequest=",25))) {
+         registrar->MaxElementsPerHTRequest = atol((char*)&argv[i][25]);
+         if(registrar->MaxElementsPerHTRequest < 1) {
+            registrar->MaxElementsPerHTRequest = 1;
          }
       }
       else if(!(strncmp(argv[i], "-autoclosetimeout=",18))) {
@@ -3523,10 +3550,13 @@ int main(int argc, char** argv)
    printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
    printf("   Endpoint Keep Alive Transmission Interval:   %lldms\n", registrar->EndpointKeepAliveTransmissionInterval / 1000);
    printf("   Endpoint Keep Alive Timeout Interval:        %lldms\n", registrar->EndpointKeepAliveTimeoutInterval / 1000);
+   printf("   Max Increment:                               %u\n",     registrar->MaxIncrement);
+   printf("   Max Handle Resolution Items (MaxHResItems):  %u\n",     registrar->MaxHandleResolutionItems);
    puts("ENRP Parameters:");
    printf("   Peer Heartbeat Cylce:                        %lldms\n", registrar->PeerHeartbeatCycle / 1000);
    printf("   Peer Max Time Last Heard:                    %lldms\n", registrar->PeerMaxTimeLastHeard / 1000);
    printf("   Peer Max Time No Response:                   %lldms\n", registrar->PeerMaxTimeNoResponse / 1000);
+   printf("   Max Elements per Handle Table Request:       %u\n",     registrar->MaxElementsPerHTRequest);
    printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorHuntTimeout / 1000);
    printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
    puts("");

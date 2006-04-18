@@ -374,6 +374,7 @@ struct RSerPoolMessage
 
    struct ST_CLASS(PoolHandlespaceManagement)* HandlespacePtr;
    bool                                        HandlespacePtrAutoDelete;
+   size_t                                      MaxElementsPerHTRequest;
 
    struct ST_CLASS(HandleTableExtract)*        ExtractContinuation;
 
