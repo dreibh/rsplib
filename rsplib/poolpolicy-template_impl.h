@@ -83,13 +83,17 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder)(
           struct ST_CLASS(PoolNode)*         poolNode,
           struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
           const size_t                       maxPoolElementNodes,
-          const size_t                       maxIncrement)
+          size_t                             maxIncrement)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t                            poolElementNodes;
    size_t                            i;
    size_t                            elementsToUpdate;
 
+   /* Set maxIncrement to default, if maxIncrement == 0. */
+   if(maxIncrement == 0) {
+      maxIncrement = poolNode->Policy->DefaultMaxIncrement;
+   }
 
    /* Check, if resequencing is necessary. However, using 64 bit counters,
       this should (almost) never be necessary */
@@ -141,14 +145,18 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
           struct ST_CLASS(PoolNode)*         poolNode,
           struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
           const size_t                       maxPoolElementNodes,
-          const size_t                       maxIncrement)
+          size_t                             maxIncrement)
 {
    unsigned long long maxValue;
    unsigned long long value;
-   const size_t       poolElements       = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
-   size_t             poolElementNodes   = 0;
+   const size_t       poolElements     = ST_METHOD(GetElements)(&poolNode->PoolElementSelectionStorage);
+   size_t             poolElementNodes = 0;
    size_t             i;
 
+   /* Set maxIncrement to default, if maxIncrement == 0. */
+   if(maxIncrement == 0) {
+      maxIncrement = poolNode->Policy->DefaultMaxIncrement;
+   }
 
    /* Check, if resequencing is necessary. However, using 64 bit counters,
       this should (almost) never be necessary */
@@ -186,7 +194,9 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
             poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNodeArray[poolElementNodes]);
          }
 
-         ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(poolNode, poolElementNodeArray[poolElementNodes]);
+         if(poolElementNodes < maxIncrement) {
+            ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(poolNode, poolElementNodeArray[poolElementNodes]);
+         }
          poolElementNodes++;
       }
       else {
@@ -194,7 +204,7 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
       }
    }
 
-   for(i = 0;i < poolElementNodes;i++) {
+   for(i = 0;i < min(poolElementNodes, maxIncrement);i++) {
       ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(poolNode, poolElementNodeArray[i]);
    }
 
@@ -648,6 +658,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
 {
    {
       PPT_ROUNDROBIN, "RoundRobin",
+      1,
       &ST_CLASS(roundRobinComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -656,6 +667,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_WEIGHTED_ROUNDROBIN, "WeightedRoundRobin",
+      1,
       &ST_CLASS(weightedRoundRobinComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       &ST_CLASS(weightedRoundRobinInitializePoolElementNode),
@@ -664,6 +676,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_RANDOM, "Random",
+      0,
       &ST_CLASS(randomComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -672,6 +685,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_WEIGHTED_RANDOM, "WeightedRandom",
+      0,
       &ST_CLASS(weightedRandomComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -680,6 +694,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_WEIGHTED_RANDOM_DPF, "WeightedRandomDPF",
+      0,
       &ST_CLASS(weightedRandomDPFComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -689,6 +704,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
 
    {
       PPT_LEASTUSED, "LeastUsed",
+      1,
       &ST_CLASS(leastUsedComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -697,6 +713,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_LEASTUSED_DPF, "LeastUsedDPF",
+      1,
       &ST_CLASS(leastUsedDPFComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -705,6 +722,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_LEASTUSED_DEGRADATION, "LeastUsedDegradation",
+      1,
       &ST_CLASS(leastUsedDegradationComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -713,6 +731,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_PRIORITY_LEASTUSED, "PriorityLeastUsed",
+      1,
       &ST_CLASS(priorityLeastUsedComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -721,6 +740,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_PRIORITY_LEASTUSED_DEGRADATION, "PriorityLeastUsedDegradation",
+      1,
       &ST_CLASS(priorityLeastUsedDegradationComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
@@ -730,6 +750,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
 
    {
       PPT_RANDOMIZED_LEASTUSED, "RandomizedLeastUsed",
+      1,
       &ST_CLASS(randomizedLeastUsedComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -738,6 +759,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_RANDOMIZED_LEASTUSED_DEGRADATION, "RandomizedLeastUsedDegradation",
+      1,
       &ST_CLASS(randomizedLeastUsedDegradationComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -746,6 +768,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_RANDOMIZED_PRIORITY_LEASTUSED, "RandomizedPriorityLeastUsed",
+      1,
       &ST_CLASS(randomizedPriorityLeastUsedComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
@@ -754,6 +777,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
    },
    {
       PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION, "RandomizedPriorityLeastUsedDegradation",
+      1,
       &ST_CLASS(randomizedPriorityLeastUsedDegradationComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,

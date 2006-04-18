@@ -40,12 +40,14 @@ struct ST_CLASS(PoolPolicy)
    unsigned int Type;
    const char*  Name;
 
+   size_t       DefaultMaxIncrement;
+
    int (*ComparisonFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode1,
                              const struct ST_CLASS(PoolElementNode)* poolElementNode2);
    size_t (*SelectionFunction)(struct ST_CLASS(PoolNode)*         poolNode,
                                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
                                const size_t                       maxPoolElementNodes,
-                               const size_t                       maxIncrement);
+                               size_t                             maxIncrement);
    void (*InitializePoolElementNodeFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode);
    void (*UpdatePoolElementNodeFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode);
    void (*PrepareSelectionFunction)(struct ST_CLASS(PoolNode)* poolNode);
