@@ -473,7 +473,8 @@ static int ST_CLASS(getOwnershipHandleTable)(
               size_t                                      maxElements)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-
+   size_t i;
+   
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {
       return(0);
@@ -509,12 +510,12 @@ static int ST_CLASS(getOwnershipHandleTable)(
    }
 
 #ifdef PRINT_GETNAMETABLE_RESULT
-   printf("GetOwnershipHandleTable result: %u items\n", handleTableExtract->PoolElementNodes);
-   for(size_t i = 0;i < handleTableExtract->PoolElementNodes;i++) {
+   printf("GetOwnershipHandleTable result: %u items\n", (unsigned int)handleTableExtract->PoolElementNodes);
+   for(i = 0;i < handleTableExtract->PoolElementNodes;i++) {
       poolElementNode = handleTableExtract->PoolElementNodeArray[i];
-      printf("#%3d: \"", i);
+      printf("#%3d: \"", (int)i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle.Size, poolElementNode->Identifier);
+      printf("\"/%d, $%08x", (int)poolElementNode->OwnerPoolNode->Handle.Size, poolElementNode->Identifier);
       puts("");
    }
 #endif
@@ -530,7 +531,8 @@ static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagem
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-
+   size_t i;
+   
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {
       return(0);
@@ -596,12 +598,12 @@ finish:
 
 
 #ifdef PRINT_GETNAMETABLE_RESULT
-   printf("GetGlobalHandleTable result: %u items\n", handleTableExtract->PoolElementNodes);
-   for(size_t i = 0;i < handleTableExtract->PoolElementNodes;i++) {
+   printf("GetGlobalHandleTable result: %u items\n", (unsigned int)handleTableExtract->PoolElementNodes);
+   for(i = 0;i < handleTableExtract->PoolElementNodes;i++) {
       poolElementNode = handleTableExtract->PoolElementNodeArray[i];
-      printf("#%3d: \"", i);
+      printf("#%3d: \"", (int)i);
       poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdout);
-      printf("\"/%d, $%08x", poolElementNode->OwnerPoolNode->Handle.Size,
+      printf("\"/%d, $%08x", (int)poolElementNode->OwnerPoolNode->Handle.Size,
                              poolElementNode->Identifier);
       puts("");
    }

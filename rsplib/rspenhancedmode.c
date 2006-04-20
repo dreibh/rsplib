@@ -1164,7 +1164,7 @@ ssize_t rsp_recvmsg(int                    sd,
                                  &rinfo->rinfo_stream,
                                  currentTimeout);
          LOG_VERBOSE
-         fprintf(stdlog, "received=%d\n", received);
+         fprintf(stdlog, "received=%d\n", (int)received);
          LOG_END
 
          if(received == 0) {

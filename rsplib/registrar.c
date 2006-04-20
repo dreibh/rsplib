@@ -3549,13 +3549,13 @@ int main(int argc, char** argv)
    printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
    printf("   Endpoint Keep Alive Transmission Interval:   %lldms\n", registrar->EndpointKeepAliveTransmissionInterval / 1000);
    printf("   Endpoint Keep Alive Timeout Interval:        %lldms\n", registrar->EndpointKeepAliveTimeoutInterval / 1000);
-   printf("   Max Increment:                               %u\n",     registrar->MaxIncrement);
-   printf("   Max Handle Resolution Items (MaxHResItems):  %u\n",     registrar->MaxHandleResolutionItems);
+   printf("   Max Increment:                               %u\n",     (unsigned int)registrar->MaxIncrement);
+   printf("   Max Handle Resolution Items (MaxHResItems):  %u\n",     (unsigned int)registrar->MaxHandleResolutionItems);
    puts("ENRP Parameters:");
    printf("   Peer Heartbeat Cylce:                        %lldms\n", registrar->PeerHeartbeatCycle / 1000);
    printf("   Peer Max Time Last Heard:                    %lldms\n", registrar->PeerMaxTimeLastHeard / 1000);
    printf("   Peer Max Time No Response:                   %lldms\n", registrar->PeerMaxTimeNoResponse / 1000);
-   printf("   Max Elements per Handle Table Request:       %u\n",     registrar->MaxElementsPerHTRequest);
+   printf("   Max Elements per Handle Table Request:       %u\n",     (unsigned int)registrar->MaxElementsPerHTRequest);
    printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorHuntTimeout / 1000);
    printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
    puts("");

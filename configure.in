@@ -296,8 +296,15 @@ sunos4*)
     # CFLAGS="$CFLAGS `glib-config --cflags`"
     # LDFLAGS="$LDFLAGS `glib-config --libs`"
     ;;
-darwin*)
+darwin7*)
     CFLAGS="$CFLAGS -DDARWIN"
+    CXXFLAGS="$CXXFLAGS -DDARWIN"
+    thread_LIBS="-lpthread"
+    # CFLAGS="$CFLAGS `glib-config --cflags`"
+    # LDFLAGS="$LDFLAGS `glib-config --libs`"
+    ;;
+darwin8*)
+    CFLAGS="$CFLAGS -DDARWIN -DUSE_SELECT"
     CXXFLAGS="$CXXFLAGS -DDARWIN"
     thread_LIBS="-lpthread"
     # CFLAGS="$CFLAGS `glib-config --cflags`"

@@ -82,7 +82,7 @@ void CalcAppServer::printParameters()
    printf("   Object Name              = %s\n", ObjectName.c_str());
    printf("   Vector File Name         = %s\n", VectorFileName.c_str());
    printf("   Scalar File Name         = %s\n", ScalarFileName.c_str());
-   printf("   Max Jobs                 = %u\n", MaxJobs);
+   printf("   Max Jobs                 = %u\n", (unsigned int)MaxJobs);
    printf("   Capacity                 = %1.1f [Calculations/s]\n",Capacity);
    printf("   KA Transmission Interval = %llu [us]\n", KeepAliveTransmissionInterval);
    printf("   KA Timeout Interval      = %llu [us]\n", KeepAliveTimeoutInterval);
@@ -297,7 +297,7 @@ void CalcAppServer::finish(EventHandlingResult initializeResult)
 
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Uptime\"        %1.6f\n", ObjectName.c_str(), serviceUptime / 1000000.0);
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Capacity\"      %1.0f\n", ObjectName.c_str(), Capacity);
-      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Max Jobs\"      %u\n",    ObjectName.c_str(), MaxJobs);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Max Jobs\"      %u\n",    ObjectName.c_str(), (unsigned int)MaxJobs);
 
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Used Capacity\"   %1.0f\n", ObjectName.c_str(), totalUsedCapacity);
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Wasted Capacity\" %1.0f\n", ObjectName.c_str(), totalWastedCapacity);
@@ -442,7 +442,7 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
             getMicroTime() / 1000000.0,
             serviceUptime / 1000000.0,
             availableCalculations, TotalUsedCalculations, utilization,
-            Jobs, MaxJobs);
+            (unsigned int)Jobs, (unsigned int)MaxJobs);
       fflush(VectorFH);
    }
 }

@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <netdb.h>
+
 #ifdef SOLARIS
 #include <sys/sockio.h>
 #endif
@@ -144,7 +145,75 @@ ssize_t sctp_sendx(int                           sd,
 }
 #endif
 #endif
+#ifdef USE_SELECT
+int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
+{
+   // ====== Prepare timeout setting ========================================
+   struct timeval  timeout;
+   struct timeval* to;
+   int    fdcount = 0;
+   int tsize;
+   int       result;
+   unsigned int i;
+   
+   if(time < 0)
+      to = NULL;
+   else {
+      to = &timeout;
+      timeout.tv_sec  = time / 1000;
+      timeout.tv_usec = (time % 1000) * 1000;
+   }
 
+   // ====== Prepare FD settings ============================================
+   fd_set readfdset;
+   fd_set writefdset;
+   fd_set exceptfdset;
+   FD_ZERO(&readfdset);
+   FD_ZERO(&writefdset);
+   FD_ZERO(&exceptfdset);
+   for(i = 0; i < count; i++) {
+      if(fdlist[i].fd < 0) {
+         continue;
+      }
+      if(fdlist[i].events & POLLIN) {
+         FD_SET(fdlist[i].fd,&readfdset);
+      }
+      if(fdlist[i].events & POLLOUT) {
+         FD_SET(fdlist[i].fd,&writefdset);
+      }
+      FD_SET(fdlist[i].fd,&exceptfdset);
+      fdcount++;
+   }
+   if(fdcount == 0) {
+      return(0);
+   }
+   for(i = 0;i < count;i++) {
+      fdlist[i].revents = 0;
+   }
+
+   // ====== Do ext_select() ================================================
+   tsize  = getdtablesize();
+   result = ext_select(tsize,&readfdset,&writefdset,&exceptfdset,to);
+
+   if(result < 0) {
+      return(result);
+   }
+
+   // ====== Set result flags ===============================================
+   for(i = 0;i < count;i++) {
+      if(FD_ISSET(fdlist[i].fd,&readfdset) && (fdlist[i].events & POLLIN)) {
+         fdlist[i].revents |= POLLIN;
+      }
+      if(FD_ISSET(fdlist[i].fd,&writefdset) && (fdlist[i].events & POLLOUT)) {
+         fdlist[i].revents |= POLLOUT;
+      }
+      if(FD_ISSET(fdlist[i].fd,&exceptfdset)) {
+         fdlist[i].revents |= POLLERR;
+      }
+   }
+   return(result);
+}
+#endif
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
 
@@ -620,12 +689,12 @@ size_t getAddressesFromSocket(int sockfd, union sockaddr_union** addressArray)
    }
    else {
       LOG_VERBOSE4
-      fprintf(stdlog, "Obtained %d address(es)\n",addresses);
+      fprintf(stdlog, "Obtained %d address(es)\n",(int)addresses);
       LOG_END
    }
 
    LOG_VERBOSE4
-   fprintf(stdlog, "Obtained addresses: %u\n", addresses);
+   fprintf(stdlog, "Obtained addresses: %u\n", (unsigned int)addresses);
    for(i = 0;i < addresses;i++) {
       fputaddress(&(*addressArray)[i].sa, true, stdlog);
       fputs("\n", stdlog);

@@ -694,12 +694,12 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Job Size Started\"     %1.0f\n", objectName, TotalJobSizeStarted);
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Job Size Completed\"   %1.0f\n", objectName, TotalJobSizeCompleted);
 
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRequests\"      %u\n", objectName, process.TotalCalcAppRequests);
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppAccepts\"       %u\n", objectName, process.TotalCalcAppAccepts);
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRejects\"       %u\n", objectName, process.TotalCalcAppRejects);
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppCompletes\"     %u\n", objectName, process.TotalCalcAppCompletes);
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAlives\"    %u\n", objectName, process.TotalCalcAppKeepAlives);
-   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAliveAcks\" %u\n", objectName, process.TotalCalcAppKeepAliveAcks);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRequests\"      %u\n", objectName, (unsigned int)process.TotalCalcAppRequests);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppAccepts\"       %u\n", objectName, (unsigned int)process.TotalCalcAppAccepts);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppRejects\"       %u\n", objectName, (unsigned int)process.TotalCalcAppRejects);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppCompletes\"     %u\n", objectName, (unsigned int)process.TotalCalcAppCompletes);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAlives\"    %u\n", objectName, (unsigned int)process.TotalCalcAppKeepAlives);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAliveAcks\" %u\n", objectName, (unsigned int)process.TotalCalcAppKeepAliveAcks);
 
    if(process.CurrentJob) {
       delete process.CurrentJob;
