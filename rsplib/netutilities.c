@@ -145,6 +145,7 @@ ssize_t sctp_sendx(int                           sd,
 }
 #endif
 #endif
+
 #ifdef USE_SELECT
 int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 {
@@ -155,7 +156,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
    int tsize;
    int       result;
    unsigned int i;
-   
+
    if(time < 0)
       to = NULL;
    else {
@@ -194,7 +195,6 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
    // ====== Do ext_select() ================================================
    tsize  = getdtablesize();
    result = ext_select(tsize,&readfdset,&writefdset,&exceptfdset,to);
-
    if(result < 0) {
       return(result);
    }
@@ -214,6 +214,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
    return(result);
 }
 #endif
+
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
 

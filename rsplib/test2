@@ -22,7 +22,7 @@ PU_AMERICA=`cat pu-usa.hosts`
 PU_EUROPE=`cat pu-europe.hosts`
 PU_MISCOPT="-jobinterval=5.0 -jobsize=1000000 -loglevel=6"
 
-MULTIPLIKATOR=3
+MULTIPLIKATOR=1
 
 
 # ---------------------------
