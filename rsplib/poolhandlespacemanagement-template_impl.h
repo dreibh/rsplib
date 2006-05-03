@@ -26,9 +26,9 @@
 /*
 #define PRINT_SELECTION_RESULT
 */
-
+/*
 #define PRINT_GETNAMETABLE_RESULT
-
+*/
 
 
 /* ###### Helper function for update notification ######################## */
@@ -474,7 +474,7 @@ static int ST_CLASS(getOwnershipHandleTable)(
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t i;
-   
+
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {
       return(0);
@@ -532,7 +532,7 @@ static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagem
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t i;
-   
+
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {
       return(0);

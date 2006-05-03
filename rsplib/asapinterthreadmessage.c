@@ -47,6 +47,7 @@ struct ASAPInterThreadMessage* asapInterThreadMessageNew(
    aitm->TransmissionTrials       = 0;
    aitm->ResponseTimeoutTimeStamp = 0;
    aitm->CreationTimeStamp        = getMicroTime();
+   aitm->TransmissionTimeStamp    = 0;
    return(aitm);
 }
 

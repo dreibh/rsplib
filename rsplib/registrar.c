@@ -1230,6 +1230,16 @@ static void updateDistance(int                                     fd,
          assocStatus.sstat_assoc_id = assocID;
          if(ext_getsockopt(fd, IPPROTO_SCTP, SCTP_STATUS, (char*)&assocStatus, &assocStatusLength) == 0) {
             *distance = assocStatus.sstat_primary.spinfo_srtt / 2;
+            LOG_NOTE
+            fprintf(stdlog, " FD %d, assoc %u: primary=", fd, assocID);
+            fputaddress((struct sockaddr*)&assocStatus.sstat_primary.spinfo_address,
+                        false, stdlog);
+            fprintf(stdlog, " cwnd=%u srtt=%u rto=%u mtu=%u\n",
+                    assocStatus.sstat_primary.spinfo_cwnd,
+                    assocStatus.sstat_primary.spinfo_srtt,
+                    assocStatus.sstat_primary.spinfo_rto,
+                    assocStatus.sstat_primary.spinfo_mtu);
+            LOG_END
          }
          else {
             LOG_WARNING
@@ -1314,7 +1324,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
             /* ====== Set distance for distance-sensitive policies ======= */
             distance = 0xffffffff;
             updateDistance(fd, assocID, message->PoolElementPtr,
-                           &updatedPolicySettings,false, &distance);
+                           &updatedPolicySettings, false, &distance);
 
             message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                               &registrar->Handlespace,

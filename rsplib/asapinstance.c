@@ -989,12 +989,13 @@ static void asapInstanceHandleResponseFromRegistrar(
          /* No timeout occurred -> stop timeout timer */
          timerStop(&asapInstance->RegistrarTimeoutTimer);
 
-         LOG_ACTION
-         fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar with RTT %lluus\n",
+         LOG_NOTE
+         fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar\n"
+                         "RTT %lluus, queuing delay %lluus\n",
                  response->Type, aitm->Request->Type,
-                 getMicroTime() - aitm->CreationTimeStamp);
+                 getMicroTime() - aitm->CreationTimeStamp,
+                 aitm->TransmissionTimeStamp - aitm->CreationTimeStamp);
          LOG_END
-printf("rtt=%llu\n", getMicroTime() - aitm->CreationTimeStamp);
 
          aitm->Response = response;
          if(asapInstance->LastAITM == aitm) {
@@ -1239,6 +1240,7 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
                asapInstanceDisconnectFromRegistrar(asapInstance, true);
                break;
             }
+            aitm->TransmissionTimeStamp = getMicroTime();
 
             if(!aitm->ResponseExpected) {
                /* No response from registrar expected. */
