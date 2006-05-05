@@ -1230,7 +1230,7 @@ static void updateDistance(int                                     fd,
          assocStatus.sstat_assoc_id = assocID;
          if(ext_getsockopt(fd, IPPROTO_SCTP, SCTP_STATUS, (char*)&assocStatus, &assocStatusLength) == 0) {
             *distance = assocStatus.sstat_primary.spinfo_srtt / 2;
-            LOG_NOTE
+            LOG_VERBOSE
             fprintf(stdlog, " FD %d, assoc %u: primary=", fd, assocID);
             fputaddress((struct sockaddr*)&assocStatus.sstat_primary.spinfo_address,
                         false, stdlog);

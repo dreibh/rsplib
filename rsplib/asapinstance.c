@@ -249,7 +249,10 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
+   struct sctp_assoc_value sctpAssocValue;
+
    if(asapInstance->RegistrarSocket < 0) {
+      /* ====== Look for registrar, if no FD is given ==================== */
       if(sd < 0) {
          LOG_ACTION
          fputs("Starting registrar hunt...\n", stdlog);
@@ -267,6 +270,7 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
          }
       }
 
+      /* ====== Initialize new connection ================================ */
       asapInstance->RegistrarSocket              = sd;
       asapInstance->RegistrarConnectionTimeStamp = getMicroTime();
       fdCallbackNew(&asapInstance->RegistrarFDCallback,
@@ -280,6 +284,18 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
       LOG_NOTE
       fprintf(stdlog, "Connected to registrar $%08x\n", asapInstance->RegistrarIdentifier);
       LOG_END
+
+      /* ====== Tune SACK handling ======================================= */
+      sctpAssocValue.assoc_id    = 0;
+      sctpAssocValue.assoc_value = 0;
+      if(ext_setsockopt(asapInstance->RegistrarSocket,
+                        IPPROTO_SCTP, SCTP_DELAYED_ACK_TIME,
+                        &sctpAssocValue, sizeof(sctpAssocValue)) < 0) {
+         LOG_WARNING
+         logerror("Unable to set SCTP_DELAYED_ACK_TIME");
+         LOG_END
+      }
+
    }
    return(true);
 }
@@ -904,7 +920,7 @@ static void asapInstanceHandleEndpointKeepAlive(
          }
          else {
             LOG_ERROR
-            logerror("sctp_peeloff() for incoming registrar association from new registrar failed");
+            logerror("Peel-off for incoming registrar association from new registrar failed");
             LOG_END
          }
       }
@@ -989,7 +1005,7 @@ static void asapInstanceHandleResponseFromRegistrar(
          /* No timeout occurred -> stop timeout timer */
          timerStop(&asapInstance->RegistrarTimeoutTimer);
 
-         LOG_NOTE
+         LOG_VERBOSE
          fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar\n"
                          "RTT %lluus, queuing delay %lluus\n",
                  response->Type, aitm->Request->Type,

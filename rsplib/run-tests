@@ -10,10 +10,10 @@ sleep 3600
 ./test2 stop all
 ./test2 results
 
-./test3 start all
-sleep 3600
-./test3 stop all
-./test3 results
+# ./test3 start all
+# sleep 3600
+# ./test3 stop all
+# ./test3 results
 
 R --vanilla <plot-test1.R
 scp test1.pdf svn:

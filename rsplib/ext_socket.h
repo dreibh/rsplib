@@ -57,7 +57,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  1
-#define SOCKETAPI_MINOR_VERSION  8000
+#define SOCKETAPI_MINOR_VERSION  9000
 
 
 #define MSG_UNORDERED    (1 << 31)
@@ -349,6 +349,13 @@ struct sctp_event_subscribe
 };
 
 
+struct sctp_assoc_value {
+   sctp_assoc_t            assoc_id;
+   uint32_t                assoc_value;
+};
+
+
+
 #define SCTP_INITMSG                1000
 #define SCTP_AUTOCLOSE              1001
 
@@ -364,6 +371,11 @@ struct sctp_event_subscribe
 #define SCTP_NODELAY                1018
 #define SCTP_SET_DEFAULT_SEND_PARAM 1019
 #define SCTP_EVENTS                 1020
+#define SCTP_DELAYED_ACK_TIME       1021
+#define SCTP_FRAGMENT_INTERLEAVE    1022
+#define SCTP_PARTIAL_DELIVERY_POINT 1023
+#define SCTP_MAXSEG                 1024
+#define SCTP_I_WANT_MAPPED_V4_ADDR  1025
 
 
 
@@ -530,14 +542,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_read(a,b,c) ::read(a,b,c)
 #define ext_write(a,b,c) ::write(a,b,c)
 #define ext_select(a,b,c,d,e) ::select(a,b,c,d,e)
-#ifdef USE_SELECT
-extern "C" {
-#include <poll.h>
-int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
-}
-#else
 #define ext_poll(a,b,c) ::poll(a,b,c)
-#endif
 #define ext_pipe(a) ::pipe(a)
 #else
 #define ext_socket(a,b,c) socket(a,b,c)
@@ -562,12 +567,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #define ext_read(a,b,c) read(a,b,c)
 #define ext_write(a,b,c) write(a,b,c)
 #define ext_select(a,b,c,d,e) select(a,b,c,d,e)
-#ifdef USE_SELECT
-#include <poll.h>
-int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
-#else
 #define ext_poll(a,b,c) poll(a,b,c)
-#endif
 #define ext_pipe(a) pipe(a)
 #endif
 
