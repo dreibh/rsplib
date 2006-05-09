@@ -1224,7 +1224,8 @@ static void updateDistance(int                                     fd,
 
    /* ====== Set distance for distance-sensitive policies ======= */
    if((poolElementNode->PolicySettings.PolicyType == PPT_LEASTUSED_DPF) ||
-       (poolElementNode->PolicySettings.PolicyType == PPT_WEIGHTED_RANDOM_DPF)) {
+      (poolElementNode->PolicySettings.PolicyType == PPT_LEASTUSED_DEGRADATION_DPF) ||
+      (poolElementNode->PolicySettings.PolicyType == PPT_WEIGHTED_RANDOM_DPF)) {
       if(*distance == 0xffffffff) {
          assocStatusLength = sizeof(assocStatus);
          assocStatus.sstat_assoc_id = assocID;

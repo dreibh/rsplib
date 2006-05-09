@@ -518,7 +518,7 @@ static int ST_CLASS(leastUsedDegradationDPFComparison)(
       v2 = 0xffffffffULL;
    }
 
-
+/*
    printf("dpf1=%1.6lf deg1=%1.3f%% l1=$%x ldpf1=%1.8lf d1=%3u v1=$%llx ; ",
           dpf1,
           poolElementNode1->Degradation * 100.0 / (double)0xffffff,
@@ -533,7 +533,7 @@ static int ST_CLASS(leastUsedDegradationDPFComparison)(
           ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff),
           poolElementNode2->PolicySettings.Distance,
           v2);
-
+*/
 
    COMPARE_KEY_ASCENDING(v1, v2);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
