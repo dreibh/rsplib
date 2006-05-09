@@ -577,7 +577,7 @@ int rsp_register_tags(int                        sd,
       rserpoolSocket->PoolElement->LoadInfo               = *loadinfo;
       rserpoolSocket->PoolElement->ReregistrationInterval = reregistrationInterval;
       rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
-      rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, false);
+      rserpoolSocket->PoolElement->HasControlChannel      = tagListGetData(tags, TAG_UserTransport_HasControlChannel, 1);
 
       /* ====== Do registration ============================================= */
       if(doRegistration(rserpoolSocket, true) == false) {

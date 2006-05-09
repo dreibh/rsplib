@@ -296,6 +296,7 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
    struct rserpool_policy_leastused*                                 lu;
    struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
+   struct rserpool_policy_leastused_degradation_dpf*                 luddpf;
    struct rserpool_policy_priority_leastused*                        plu;
    struct rserpool_policy_priority_leastused_degradation*            plud;
    struct rserpool_policy_random*                                    rd;
@@ -387,6 +388,18 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           lud->pp_lud_load    = hton24(poolPolicySettings->Load);
           lud->pp_lud_pad     = 0x00;
           lud->pp_lud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+       break;
+      case PPT_LEASTUSED_DEGRADATION_DPF:
+          luddpf = (struct rserpool_policy_leastused_degradation_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation_dpf));
+          if(luddpf == NULL) {
+             return(false);
+          }
+          luddpf->pp_luddpf_policy   = poolPolicySettings->PolicyType;
+          luddpf->pp_luddpf_load     = hton24(poolPolicySettings->Load);
+          luddpf->pp_luddpf_pad      = 0x00;
+          luddpf->pp_luddpf_loaddeg  = hton24(poolPolicySettings->LoadDegradation);
+          luddpf->pp_luddpf_load_dpf = htonl(poolPolicySettings->LoadDPF);
+          luddpf->pp_luddpf_distance = htonl(poolPolicySettings->Distance);
        break;
       case PPT_PRIORITY_LEASTUSED:
           plu = (struct rserpool_policy_priority_leastused*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused));

@@ -53,12 +53,14 @@ extern "C" {
 
 #define PPT_WEIGHTED_RANDOM_DPF                       0x20
 #define PPT_LEASTUSED_DPF                             0x21
+#define PPT_LEASTUSED_DEGRADATION_DPF                 0x22
 
 
 #define PPT_IS_ADAPTIVE(p) \
    ( ((p) == PPT_LEASTUSED) || \
      ((p) == PPT_LEASTUSED_DPF) || \
      ((p) == PPT_LEASTUSED_DEGRADATION) || \
+     ((p) == PPT_LEASTUSED_DEGRADATION_DPF) || \
      ((p) == PPT_PRIORITY_LEASTUSED) || \
      ((p) == PPT_PRIORITY_LEASTUSED_DEGRADATION) || \
      ((p) == PPT_RANDOMIZED_LEASTUSED) || \

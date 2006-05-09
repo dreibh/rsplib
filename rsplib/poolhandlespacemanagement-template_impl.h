@@ -473,7 +473,9 @@ static int ST_CLASS(getOwnershipHandleTable)(
               size_t                                      maxElements)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-   size_t i;
+#ifdef PRINT_GETNAMETABLE_RESULT
+   size_t                            i;
+#endif
 
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {
@@ -531,7 +533,9 @@ static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagem
 {
    struct ST_CLASS(PoolNode)*        poolNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
-   size_t i;
+#ifdef PRINT_GETNAMETABLE_RESULT
+   size_t                            i;
+#endif
 
    maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
    if(maxElements < 1) {

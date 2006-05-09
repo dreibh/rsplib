@@ -185,6 +185,16 @@ struct rserpool_policy_leastused_degradation
    uint32_t pp_lud_loaddeg:24;
 };
 
+struct rserpool_policy_leastused_degradation_dpf
+{
+   uint8_t  pp_luddpf_policy:8;
+   uint32_t pp_luddpf_load:24;
+   uint8_t  pp_luddpf_pad:8;
+   uint32_t pp_luddpf_loaddeg:24;
+   uint32_t pp_luddpf_load_dpf;
+   uint32_t pp_luddpf_distance;
+};
+
 struct rserpool_policy_priority_leastused
 {
    uint8_t  pp_plu_policy:8;

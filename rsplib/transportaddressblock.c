@@ -452,7 +452,7 @@ size_t transportAddressBlockFilter(
       filteredAddressBlock->Next      = NULL;
       filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
       filteredAddressBlock->Port      = originalAddressBlock->Port;
-      filteredAddressBlock->Flags     = 0;
+      filteredAddressBlock->Flags     = originalAddressBlock->Flags;
       filteredAddressBlock->Addresses = selected;
       j = 0;
       for(i = 0;i < originalAddressBlock->Addresses;i++) {

@@ -415,7 +415,6 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
                                   (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
                                   unpackedAddrs,
                                   rspAddrInfo->ai_addrs);
-
          ST_CLASS(poolElementNodeNew)(
             &myPoolElementNode,
             rspAddrInfo->ai_pe_id,

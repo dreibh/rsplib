@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 {
    struct rsp_info     info;
    struct rsp_loadinfo loadInfo;
+   double              degradation;
    unsigned int        reregInterval = 30000;
    unsigned int        runtimeLimit  = 0;
    unsigned int        service       = SERVICE_ECHO;
@@ -112,17 +113,31 @@ int main(int argc, char** argv)
          else if(!(strcmp((const char*)&argv[i][8], "RandomizedLeastUsed"))) {
             loadInfo.rli_policy = PPT_RANDOMIZED_LEASTUSED;
          }
-         else if(sscanf((const char*)&argv[i][8], "LeastUsedDegradation:%u", &loadInfo.rli_load_degradation) == 1) {
-            if(loadInfo.rli_load_degradation > 0xffffff) {
+         else if(sscanf((const char*)&argv[i][8], "LeastUsedDegradation:%lf", &degradation) == 1) {
+            loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)0xffffff);
+            if(loadInfo.rli_load_degradation < 0) {
+               fputs("ERROR: Bad LUD degradation value!\n", stderr);
+               exit(1);
+            }
+            else if(loadInfo.rli_load_degradation > 0xffffff) {
                fputs("ERROR: Bad LUD degradation value!\n", stderr);
                exit(1);
             }
             loadInfo.rli_policy = PPT_LEASTUSED_DEGRADATION;
          }
-         else if(sscanf((const char*)&argv[i][8], "PriorityLeastUsed:%u", &loadInfo.rli_load_degradation) == 1) {
+         else if(sscanf((const char*)&argv[i][8], "PriorityLeastUsed:%lf", &degradation) == 1) {
+            loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)0xffffff);
+            if(loadInfo.rli_load_degradation < 0) {
+               fputs("ERROR: Bad PLU degradation value!\n", stderr);
+               exit(1);
+            }
+            else if(loadInfo.rli_load_degradation > 0xffffff) {
+               fputs("ERROR: Bad PLU degradation value!\n", stderr);
+               exit(1);
+            }
             loadInfo.rli_policy = PPT_PRIORITY_LEASTUSED;
          }
-         else if(sscanf((const char*)&argv[i][8], "RandomizedPriorityLeastUsed:%u", &loadInfo.rli_load_degradation) == 1) {
+         else if(!(strcmp((const char*)&argv[i][8], "RandomizedPriorityLeastUsed"))) {
             loadInfo.rli_policy = PPT_RANDOMIZED_PRIORITY_LEASTUSED;
          }
          else if(sscanf((const char*)&argv[i][8], "LeastUsedDPF:%lf", &dpf) == 1) {
@@ -132,6 +147,23 @@ int main(int argc, char** argv)
             }
             loadInfo.rli_load_dpf = (unsigned int)rint(dpf * (double)0xffffffff);
             loadInfo.rli_policy = PPT_LEASTUSED_DPF;
+         }
+         else if(sscanf((const char*)&argv[i][8], "LeastUsedDegradationDPF:%lf:%lf", &degradation, &dpf) == 2) {
+            if((dpf < 0.0) || (dpf > 1.0)) {
+               fputs("ERROR: Bad LU-DPF DPF value!\n", stderr);
+               exit(1);
+            }
+            loadInfo.rli_load_dpf         = (unsigned int)rint(dpf * (double)0xffffffff);
+            loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)0xffffff);
+            if(loadInfo.rli_load_degradation < 0) {
+               fputs("ERROR: Bad LU-DPF degradation value!\n", stderr);
+               exit(1);
+            }
+            else if(loadInfo.rli_load_degradation > 0xffffff) {
+               fputs("ERROR: Bad LU-DPF degradation value!\n", stderr);
+               exit(1);
+            }
+            loadInfo.rli_policy = PPT_LEASTUSED_DEGRADATION_DPF;
          }
          else if(sscanf((const char*)&argv[i][8], "WeightedRoundRobin:%u", &loadInfo.rli_weight) == 1) {
             loadInfo.rli_policy = PPT_WEIGHTED_ROUNDROBIN;

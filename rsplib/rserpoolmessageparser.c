@@ -508,6 +508,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
    struct rserpool_policy_leastused*                                 lu;
    struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
+   struct rserpool_policy_leastused_degradation_dpf*                 luddpf;
    struct rserpool_policy_priority_leastused*                        plu;
    struct rserpool_policy_priority_leastused_degradation*            plud;
    struct rserpool_policy_random*                                    rd;
@@ -603,6 +604,34 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          else {
             LOG_WARNING
             fputs("LUD TLV too short\n", stdlog);
+            LOG_END
+            message->Error = RSPERR_INVALID_VALUES;
+            return(false);
+         }
+       break;
+      case PPT_LEASTUSED_DEGRADATION_DPF:
+         if(tlvLength >= sizeof(struct rserpool_policy_leastused_degradation_dpf)) {
+            luddpf = (struct rserpool_policy_leastused_degradation_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation_dpf));
+            if(luddpf == NULL) {
+               return(false);
+            }
+            poolPolicySettings->PolicyType      = luddpf->pp_luddpf_policy;
+            poolPolicySettings->Weight          = 0;
+            poolPolicySettings->Load            = ntoh24(luddpf->pp_luddpf_load);
+            poolPolicySettings->LoadDegradation = ntoh24(luddpf->pp_luddpf_loaddeg);
+            poolPolicySettings->LoadDPF         = ntohl(luddpf->pp_luddpf_load_dpf);
+            poolPolicySettings->Distance        = ntohl(luddpf->pp_luddpf_distance);
+            LOG_VERBOSE3
+            fprintf(stdlog, "Scanned policy LUD-DPF, load=$%06x, loaddeg=$%06x, ldpf=%1.3f%%, distance=%u\n",
+                    poolPolicySettings->Load,
+                    poolPolicySettings->LoadDegradation,
+                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)0xffffffff),
+                    poolPolicySettings->Distance);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fputs("LUD-DPF TLV too short\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
