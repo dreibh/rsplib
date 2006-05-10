@@ -1,5 +1,7 @@
 planetlab2.flux.utah.edu
-planet2.seattle.intel-research.net
-alice.cs.princeton.edu
-vn2.cs.wustl.edu
-planet2.berkeley.intel-research.net
+# alice.cs.princeton.edu
+# vn2.cs.wustl.edu
+planetlab1.ucsd.edu
+planetlab1.cs.ucla.edu
+planetlab6.millennium.berkeley.edu
+planetlab9.millennium.berkeley.edu

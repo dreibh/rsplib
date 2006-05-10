@@ -262,7 +262,12 @@ int main(int argc, char** argv)
             }
          }
          else {
-            perror("Unable to receive response");
+            if(received == 0) {
+               fputs("ERROR: Connection closed by peer!\n", stderr);
+            }
+            else {
+               perror("Unable to receive response");
+            }
             rserpoolMessageDelete(message);
             ext_close(sd);
             exit(1);

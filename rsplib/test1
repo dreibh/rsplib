@@ -4,23 +4,23 @@
 
 TESTID=messung1
 
-PR_AUSTRALIA=`cat pr-australia.hosts`
-PR_ASIA=`cat pr-asia.hosts`
-PR_AMERICA=`cat pr-usa.hosts`
-PR_EUROPE=`cat pr-europe.hosts`
-PR_MISCOPT="-loglevel=3"
+PR_AUSTRALIA=`grep "^[a-Z0-9]" pr-australia.hosts`
+PR_ASIA=`grep "^[a-Z0-9]" pr-asia.hosts`
+PR_AMERICA=`grep "^[a-Z0-9]" pr-usa.hosts`
+PR_EUROPE=`grep "^[a-Z0-9]" pr-europe.hosts`
+PR_MISCOPT="-loglevel=3 -distancestep=75"
 
-PE_AUSTRALIA=`cat pe-australia.hosts`
-PE_ASIA=`cat pe-asia.hosts`
-PE_AMERICA=`cat pe-usa.hosts`
-PE_EUROPE=`cat pe-europe.hosts`
-PE_MISCOPT="-calcapp -rereginterval=3333 -policy=LeastUsedDegradationDPF:0.05:0.0001 -capmaxjobs=10 -loglevel=3 "
+PE_AUSTRALIA=`grep "^[a-Z0-9]" pe-australia.hosts`
+PE_ASIA=`grep "^[a-Z0-9]" pe-asia.hosts`
+PE_AMERICA=`grep "^[a-Z0-9]" pe-usa.hosts`
+PE_EUROPE=`grep "^[a-Z0-9]" pe-europe.hosts`
+PE_MISCOPT="-calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.0001 -capmaxjobs=5 -loglevel=3"
 
-PU_AUSTRALIA=`cat pu-australia.hosts`
-PU_ASIA=`cat pu-asia.hosts`
-PU_AMERICA=`cat pu-usa.hosts`
-PU_EUROPE=`cat pu-europe.hosts`
-PU_MISCOPT="-jobinterval=60.0 -jobsize=1000000 -loglevel=6"
+PU_AUSTRALIA=`grep "^[a-Z0-9]" pu-australia.hosts`
+PU_ASIA=`grep "^[a-Z0-9]" pu-asia.hosts`
+PU_AMERICA=`grep "^[a-Z0-9]" pu-usa.hosts`
+PU_EUROPE=`grep "^[a-Z0-9]" pu-europe.hosts`
+PU_MISCOPT="-jobinterval=5.0 -jobsize=1000000 -loglevel=3"
 
 MULTIPLIKATOR=1
 

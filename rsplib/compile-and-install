@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+make && ./create-binaries && grep "^[a-Z0-9]" p?-*.hosts | sort -u | xargs ./install-binaries

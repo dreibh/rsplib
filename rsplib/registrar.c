@@ -63,6 +63,7 @@
 
 #define MAX_NS_TRANSPORTADDRESSES                                          16
 #define MIN_ENDPOINT_ADDRESS_SCOPE                                          4
+#define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
 #define REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
 #define REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL      1000000
@@ -122,6 +123,7 @@ struct Registrar
    struct TakeoverProcessList                 Takeovers;
    struct Timer                               TakeoverExpiryTimer;
 
+   size_t                                     DistanceStep;
    size_t                                     MaxBadPEReports;
    unsigned long long                         AutoCloseTimeout;
    unsigned long long                         ServerAnnounceCycle;
@@ -301,6 +303,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->ENRPAnnounceViaMulticast  = enrpAnnounceViaMulticast;
 
 
+      registrar->DistanceStep                          = REGISTRAR_DEFAULT_DISTANCE_STEP;
       registrar->MaxBadPEReports                       = REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS;
       registrar->ServerAnnounceCycle                   = REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE;
       registrar->EndpointMonitoringHeartbeatInterval   = REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
@@ -1209,8 +1212,18 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
 }
 
 
+/* ###### Round distance to nearest step ################################# */
+static unsigned int roundDistance(const unsigned int distance,
+                                  const unsigned int step)
+{
+   const unsigned int d = (unsigned int)rint((double)distance / step) * step;
+   return(d);
+}
+
+
 /* ###### Update distance for distance-sensitive policies ################ */
-static void updateDistance(int                                     fd,
+static void updateDistance(struct Registrar*                       registrar,
+                           int                                     fd,
                            sctp_assoc_t                            assocID,
                            const struct ST_CLASS(PoolElementNode)* poolElementNode,
                            struct PoolPolicySettings*              updatedPolicySettings,
@@ -1230,7 +1243,8 @@ static void updateDistance(int                                     fd,
          assocStatusLength = sizeof(assocStatus);
          assocStatus.sstat_assoc_id = assocID;
          if(ext_getsockopt(fd, IPPROTO_SCTP, SCTP_STATUS, (char*)&assocStatus, &assocStatusLength) == 0) {
-            *distance = assocStatus.sstat_primary.spinfo_srtt / 2;
+            *distance = roundDistance(assocStatus.sstat_primary.spinfo_srtt / 2,
+                                      registrar->DistanceStep);
             LOG_VERBOSE
             fprintf(stdlog, " FD %d, assoc %u: primary=", fd, assocID);
             fputaddress((struct sockaddr*)&assocStatus.sstat_primary.spinfo_address,
@@ -1324,7 +1338,8 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
 
             /* ====== Set distance for distance-sensitive policies ======= */
             distance = 0xffffffff;
-            updateDistance(fd, assocID, message->PoolElementPtr,
+            updateDistance(registrar,
+                           fd, assocID, message->PoolElementPtr,
                            &updatedPolicySettings, false, &distance);
 
             message->Error = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
@@ -1792,7 +1807,8 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       if(message->PoolElementPtr->HomeRegistrarIdentifier != registrar->ServerID) {
          /* ====== Set distance for distance-sensitive policies ======= */
          distance = 0xffffffff;
-         updateDistance(fd, assocID, message->PoolElementPtr,
+         updateDistance(registrar,
+                        fd, assocID, message->PoolElementPtr,
                         &updatedPolicySettings, true, &distance);
 
          result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
@@ -2633,7 +2649,8 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
          poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
          while(poolElementNode != NULL) {
             /* ====== Set distance for distance-sensitive policies ======= */
-            updateDistance(fd, assocID, poolElementNode,
+            updateDistance(registrar,
+                           fd, assocID, poolElementNode,
                            &updatedPolicySettings, true, &distance);
 
             if(poolElementNode->HomeRegistrarIdentifier != registrar->ServerID) {
@@ -3271,6 +3288,7 @@ int main(int argc, char** argv)
          /* to be handled later */
       }
       else if( (!(strncmp(argv[i], "-maxbadpereports=",17))) ||
+               (!(strncmp(argv[i], "-distancestep=",14))) ||
                (!(strncmp(argv[i], "-autoclosetimeout=",18))) ||
                (!(strncmp(argv[i], "-serverannouncecycle=",21))) ||
                (!(strncmp(argv[i], "-endpointkeepalivetransmissioninterval=",39))) ||
@@ -3403,6 +3421,12 @@ int main(int argc, char** argv)
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-peer=",6))) {
          addPeer(registrar, (char*)&argv[i][6]);
+      }
+      else if(!(strncmp(argv[i], "-distancestep=",14))) {
+         registrar->DistanceStep = atol((char*)&argv[i][14]);
+         if(registrar->DistanceStep < 1) {
+            registrar->DistanceStep = 1;
+         }
       }
       else if(!(strncmp(argv[i], "-maxbadpereports=",17))) {
          registrar->MaxBadPEReports = atol((char*)&argv[i][17]);
@@ -3555,6 +3579,7 @@ int main(int argc, char** argv)
    printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
 
    puts("\nASAP Parameters:");
+   printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
    printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)registrar->MaxBadPEReports);
    printf("   Server Announce Cycle:                       %lldms\n", registrar->ServerAnnounceCycle / 1000);
    printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
