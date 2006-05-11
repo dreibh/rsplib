@@ -15,14 +15,15 @@ generateOutput <- function(inFile)
 
    data <- loadResults(inFile)
 
-   xSet <- data$CompleteTimeStamp
+   xSet <- (data$CompleteTimeStamp / 60)
    xOffset <- -min(xSet)
    xSet <- xSet + xOffset
 
-   xTitle <- "Request Completion Time Stamp [s]"
+   hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
+
+   xTitle <- "Time [Minutes]"
    ySet <- data$HandlingSpeed
-   yTitle <- "Request Handling Speed [Calculations/s]"
-   #yTitle <- "Request Handling Time [s]"
+   yTitle <- "Average Request Handling Speed [Calculations/s]"
 
    zSet <- data$ObjectName
    zTitle <- "PU"
@@ -40,12 +41,11 @@ generateOutput <- function(inFile)
    pTitle <- ""
 
 
-   xAxisTicks <- getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
+   xAxisTicks <- seq(0, 60, 5)   # getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
    yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
 
    mainTitle <- paste(sep="", "Request Handling Performance ", inFile)
 
-   hbarSet <- data$QueuingTimeStamp + xOffset
    plotstd6(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                         pSet, aSet, bSet, xSet, ySet, zSet,
                         vSet, wSet, vTitle, wTitle,

@@ -67,25 +67,104 @@ getUnit <- function(title)
 }
 
 
+
+
+# Check sets
+checkSets <- function(data,
+                      xSet=c(), ySet=c(), zSet=c(),
+                      vSet=c(), wSet=c(),
+                      aSet=c(), bSet=c(), pSet=c(),
+                      runNoSet=c())
+{
+   if(length(xSet) < 1) {
+      stop("checkSets: xSet is empty!")
+   }
+   if( (length(xSet) != length(ySet)) ) {
+      stop("checkSets: xSet and ySet length differ!")
+   }
+   if( (length(zSet) > 0) && (length(xSet) != length(zSet)) ) {
+      stop("checkSets: xSet and zSet length differ!")
+   }
+   if( (length(vSet) > 0) && (length(xSet) != length(vSet)) ) {
+      stop("checkSets: xSet and vSet length differ!")
+   }
+   if( (length(wSet) > 0) && (length(xSet) != length(wSet)) ) {
+      stop("checkSets: xSet and wSet length differ!")
+   }
+   if( (length(aSet) > 0) && (length(xSet) != length(aSet)) ) {
+      stop("checkSets: xSet and aSet length differ!")
+   }
+   if( (length(bSet) > 0) && (length(xSet) != length(bSet)) ) {
+      stop("checkSets: xSet and bSet length differ!")
+   }
+   if( (length(pSet) > 0) && (length(xSet) != length(pSet)) ) {
+      stop("checkSets: xSet and pSet length differ!")
+   }
+
+   if(length(runNoSet) > 0) {
+      runs <- length(levels(factor(runNoSet)))
+
+      zFilter <- TRUE
+      if(length(zSet) > 0) {
+         zFilter <- (zSet == zSet[1])
+      }
+      vFilter <- TRUE
+      if(length(vSet) > 0) {
+         vFilter <- (vSet == vSet[1])
+      }
+      wFilter <- TRUE
+      if(length(wSet) > 0) {
+         wFilter <- (wSet == wSet[1])
+      }
+      aFilter <- TRUE
+      if(length(aSet) > 0) {
+         aFilter <- (aSet == aSet[1])
+      }
+      bFilter <- TRUE
+      if(length(bSet) > 0) {
+         bFilter <- (bSet == bSet[1])
+      }
+      pFilter <- TRUE
+      if(length(pSet) > 0) {
+         pFilter <- (pSet == pSet[1])
+      }
+
+      filter <- (xSet == xSet[1]) &
+               zFilter & vFilter & wFilter & aFilter & bFilter & pFilter
+      ySubset <- subset(data, filter)
+      n <- length(ySubset)
+
+      if(n != runs) {
+         stop("checkSets: Number of value differs from number of runs!")
+      }
+   }
+}
+
+
 # Plot x/y plot with different curves as z with confidence intervals in
 # y direction. x and z can be numeric or strings, y must be numeric since
 # confidence intervals have to be computed.
 plotstd3 <- function(mainTitle,
                      xTitle, yTitle, zTitle,
                      xSet, ySet, zSet,
-                     vSet        = c(),
-                     wSet        = c(),
-                     vTitle      = "??vTitle??",
-                     wTitle      = "??wTitle??",
-                     xAxisTicks  = c(),
-                     yAxisTicks  = c(),
-                     hbarSet     = c(),
-                     type        = "lines",
-                     hideLegend  = FALSE,
-                     legendOnly  = FALSE,
-                     legendPos   = c(0,1),
-                     colorMode   = FALSE,
-                     frameColor  = par("fg"))
+                     vSet              = c(),
+                     wSet              = c(),
+                     vTitle            = "??vTitle??",
+                     wTitle            = "??wTitle??",
+                     xAxisTicks        = c(),
+                     yAxisTicks        = c(),
+                     confidence        = 0.95,
+                     hbarSet           = c(),
+                     hbarMeanSteps     = 10,
+                     xSeparatorsSet    = c(),
+                     xSeparatorsTitles = c(),
+                     xSeparatorsColors  = c(),
+                     type              = "lines",
+                     hideLegend        = FALSE,
+                     legendOnly        = FALSE,
+                     legendPos         = c(0,1),
+                     colorMode         = FALSE,
+                     frameColor        = par("fg"))
 {
    xLevels <- levels(factor(xSet))
    yLevels <- levels(factor(ySet))
@@ -125,7 +204,6 @@ plotstd3 <- function(mainTitle,
 
    xRange <- range(as.numeric(xSet), finite=TRUE)
    yRange <- range(as.numeric(ySet), finite=TRUE)
-   zRange <- range(as.numeric(zSet), finite=TRUE)
    if(missing(xAxisTicks) || (length(xAxisTicks) == 0) || nlevels(xSet)) {
       xAxisTicks <- xLevels
    }
@@ -287,7 +365,7 @@ plotstd3 <- function(mainTitle,
                         yMean <- mean(ySubset)
                         yMax <- max(ySubset)
                         if(yMin != yMax) {
-                           yTest <- t.test(ySubset)
+                           yTest <- t.test(ySubset, conf.level=confidence)
                            yMin <- yTest$conf.int[1]
                            yMax <- yTest$conf.int[2]
                         }
@@ -352,6 +430,74 @@ plotstd3 <- function(mainTitle,
                }
             }
          }
+      }
+   }
+
+
+   # ----- Plot hbar mean line ----------------------------------------------
+   if( ((type == "h") || (type=="hbars")) &&
+       (hbarMeanSteps > 1) ) {
+      xSteps <- hbarMeanSteps
+      xWidth <- ((max(xSet) - min(xSet)) / xSteps)
+      xSegments <- seq(min(xSet), max(xSet) - xWidth, by=xWidth)
+
+      oldY <- c()
+      for(xValue in xSegments) {
+         mSet <- subset(ySet, (xSet >= xValue) &
+                              (xSet <= xValue + xWidth))
+         mMean <- mean(mSet)
+         mMin <- min(mSet)
+         mMax <- max(mSet)
+         if(mMin != mMax) {
+            mTest <- t.test(mSet, conf.level=confidence)
+            mMin  <- mTest$conf.int[1]
+            mMax  <- mTest$conf.int[2]
+         }
+
+         # ------ Plot line segment -----------------------------------------
+         if(xValue > min(xSet)) {
+            lines(c(xValue, xValue),
+                  c(oldY, mMean),
+                  col=zColorArray, lwd=4*par("cex"))
+         }
+         lines(c(xValue, xValue + xWidth),
+               c(mMean, mMean),
+               col=zColorArray, lwd=4*par("cex"))
+         oldY <- mean(mSet)
+
+         # ------ Plot confidence interval ----------------------------------
+         x <- xValue + (xWidth / 2)
+         cintWidthFraction <- 75
+         cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
+         lines(c(x, x), c(mMin, mMax),
+               col=zColorArray, lwd=1*par("cex"))
+         lines(c(x - cintWidth, x + cintWidth),
+               c(mMin, mMin),
+               col=zColorArray, lwd=1*par("cex"))
+         lines(c(x - cintWidth, x + cintWidth),
+               c(mMax, mMax),
+               col=zColorArray, lwd=1*par("cex"))
+      }
+   }
+
+
+   # ------ Plot separators -------------------------------------------------
+   if(length(xSeparatorsSet) > 0) {
+      if(length(xSeparatorsColors) < 1) {
+         xSeparatorsColors <- rainbow(length(xSeparatorsSet))
+      }
+
+      i <- 1
+      for(xValue in xSeparatorsSet) {
+         lines(c(xValue, xValue),
+               c(-9e307, 9e307), lwd=2*par("cex"),
+               col=xSeparatorsColors[i])
+         text(xValue + strwidth("i"),
+               max(yAxisTicks) - strheight(xSeparatorsTitles[i]),
+               xSeparatorsTitles[i],
+               col=xSeparatorsColors[i],
+               adj=c(0,0))
+         i <- i + 1
       }
    }
 
@@ -539,19 +685,24 @@ plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
 # 2-dimensional array of plotstd3 plots
 plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      aSet, bSet, xSet, ySet, zSet,
-                     vSet       = c(),
-                     wSet       = c(),
-                     vTitle     = "??vTitle??",
-                     wTitle     = "??wTitle??",
-                     aAxisTicks = length(levels(factor(aSet))) > 1,
-                     bAxisTicks = length(levels(factor(bSet))) > 1,
-                     xAxisTicks = c(), yAxisTicks = c(),
-                     hbarSet    = c(),
-                     type       = "lines",
-                     hideLegend = FALSE,
-                     legendPos  = c(0,1),
-                     colorMode  = cmColor,
-                     frameColor = par("fg"))
+                     vSet              = c(),
+                     wSet              = c(),
+                     vTitle            = "??vTitle??",
+                     wTitle            = "??wTitle??",
+                     aAxisTicks        = length(levels(factor(aSet))) > 1,
+                     bAxisTicks        = length(levels(factor(bSet))) > 1,
+                     xAxisTicks        = c(), yAxisTicks = c(),
+                     confidence        = 0.95,
+                     hbarSet           = c(),
+                     hbarMeanSteps     = 10,
+                     xSeparatorsSet    = c(),
+                     xSeparatorsTitles = c(),
+                     xSeparatorsColors  = c(),
+                     type              = "lines",
+                     hideLegend        = FALSE,
+                     legendPos         = c(0,1),
+                     colorMode         = cmColor,
+                     frameColor        = par("fg"))
 {
    aLevels <- levels(factor(aSet))
    bLevels <- levels(factor(bSet))
@@ -708,7 +859,12 @@ plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                   xSubset, ySubset, zSubset,
                   vSubset, wSubset, vTitle, wTitle,
                   xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+                  confidence = confidence,
                   hbarSet = hbarSet,
+                  hbarMeanSteps = hbarMeanSteps,
+                  xSeparatorsSet = xSeparatorsSet,
+                  xSeparatorsTitles = xSeparatorsTitles,
+                  xSeparatorsColors = xSeparatorsColors,
                   type = type,
                   hideLegend=hideLegend,
                   legendPos=legendPos,
@@ -738,22 +894,27 @@ plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 # multi-page 2-dimensional array of plotstd3 plots
 plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      pSet, aSet, bSet, xSet, ySet, zSet,
-                     vSet           = c(),
-                     wSet           = c(),
-                     vTitle         = "??vTitle??",
-                     wTitle         =" ??wTitle??",
-                     aAxisTicks     = length(levels(factor(aSet))) > 1,
-                     bAxisTicks     = length(levels(factor(bSet))) > 1,
-                     xAxisTicks     = c(),
-                     yAxisTicks     = c(),
-                     hbarSet        = c(),
-                     type           = "lines",
-                     pStart         = 0,
-                     hideLegend     = FALSE,
-                     legendPos      = c(0,1),
-                     colorMode      = FALSE,
-                     frameColor     = par("fg"),
-                     simulationName = "")
+                     vSet              = c(),
+                     wSet              = c(),
+                     vTitle            = "??vTitle??",
+                     wTitle            = "??wTitle??",
+                     aAxisTicks        = length(levels(factor(aSet))) > 1,
+                     bAxisTicks        = length(levels(factor(bSet))) > 1,
+                     xAxisTicks        = c(),
+                     yAxisTicks        = c(),
+                     confidence        = 0.95,
+                     hbarSet           = c(),
+                     hbarMeanSteps     = 10,
+                     xSeparatorsSet    = c(),
+                     xSeparatorsTitles = c(),
+                     xSeparatorsColors  = c(),
+                     type              = "lines",
+                     pStart            = 0,
+                     hideLegend        = FALSE,
+                     legendPos         = c(0,1),
+                     colorMode         = FALSE,
+                     frameColor        = par("fg"),
+                     simulationName    = "")
 {
    if(length(pSet) == 0) {
       pSet <- rep(1, length(xSet))
@@ -792,13 +953,18 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      xTitle, yTitle, zTitle,
                      xSubset, ySubset, zSubset,
                      vSubset, wSubset, vTitle, wTitle,
-                     xAxisTicks=xAxisTicks, yAxisTicks=yAxisTicks,
-                     hbarSet=hbarSet,
-                     type=type,
-                     hideLegend=hideLegend,
-                     legendPos=legendPos,
-                     colorMode=colorMode,
-                     frameColor=frameColor)
+                     xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+                     confidence = confidence,
+                     hbarSet = hbarSet,
+                     hbarMeanSteps = hbarMeanSteps,
+                     xSeparatorsSet = xSeparatorsSet,
+                     xSeparatorsTitles = xSeparatorsTitles,
+                     xSeparatorsColors = xSeparatorsColors,
+                     type = type,
+                     hideLegend = hideLegend,
+                     legendPos = legendPos,
+                     colorMode = colorMode,
+                     frameColor = frameColor)
          }
          else {
             oldPar2 <- par(font.main=3, cex.main=0.9)
@@ -806,14 +972,19 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      aTitle, xTitle, yTitle, zTitle,
                      aSubset, xSubset, ySubset, zSubset,
                      vSubset, wSubset, vTitle, wTitle,
-                     aAxisTicks=aAxisTicks,
-                     xAxisTicks=xAxisTicks, yAxisTicks=yAxisTicks,
-                     hbarSet=hbarSet,
-                     type=type,
-                     hideLegend=hideLegend,
-                     legendPos=legendPos,
-                     colorMode=colorMode,
-                     frameColor=frameColor)
+                     aAxisTicks = aAxisTicks,
+                     xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+                     confidence = confidence,
+                     hbarSet = hbarSet,
+                     hbarMeanSteps = hbarMeanSteps,
+                     xSeparatorsSet = xSeparatorsSet,
+                     xSeparatorsTitles = xSeparatorsTitles,
+                     xSeparatorsColors = xSeparatorsColors,
+                     type = type,
+                     hideLegend = hideLegend,
+                     legendPos = legendPos,
+                     colorMode = colorMode,
+                     frameColor = frameColor)
             par(oldPar2)
          }
       }
@@ -823,14 +994,19 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                   aTitle, bTitle, xTitle, yTitle, zTitle,
                   aSubset, bSubset, xSubset, ySubset, zSubset,
                   vSubset, wSubset, vTitle, wTitle,
-                  aAxisTicks=aAxisTicks, bAxisTicks=bAxisTicks,
-                  xAxisTicks=xAxisTicks, yAxisTicks=yAxisTicks,
-                  hbarSet=hbarSet,
-                  type=type,
-                  hideLegend=hideLegend,
-                  legendPos=legendPos,
-                  colorMode=colorMode,
-                  frameColor=frameColor)
+                  aAxisTicks = aAxisTicks, bAxisTicks = bAxisTicks,
+                  xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+                  confidence = confidence,
+                  hbarSet = hbarSet,
+                  hbarMeanSteps = hbarMeanSteps,
+                  xSeparatorsSet = xSeparatorsSet,
+                  xSeparatorsTitles = xSeparatorsTitles,
+                  xSeparatorsColors = xSeparatorsColors,
+                  type = type,
+                  hideLegend = hideLegend,
+                  legendPos = legendPos,
+                  colorMode = colorMode,
+                  frameColor = frameColor)
          par(oldPar2)
       }
 
@@ -853,6 +1029,9 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 # Get "useful" ticks from given data set
 getUsefulTicks <- function(set, count = 10, integerOnly = FALSE)
 {
+   if(length(set) < 1) {
+      stop("getUsefulTicks: The set is empty!")
+   }
    minValue <- min(set)
    maxValue <- max(set)
    if(minValue == maxValue) {
@@ -893,6 +1072,9 @@ getUsefulTicks <- function(set, count = 10, integerOnly = FALSE)
 # Get "useful" integer ticks from given data set
 getIntegerTicks <- function(set, count = 10)
 {
+   if(length(set) < 1) {
+      stop("getIntegerTicks: The set is empty!")
+   }
    return(getUsefulTicks(set, count, integerOnly = TRUE))
 }
 
