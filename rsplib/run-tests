@@ -22,12 +22,17 @@ sleep 60
 ./test3 start europe pu 15
 ./test3 start america pu 15
 ./test3 start asia pu 15
-sleep 300
+sleep 900
 ./test3 stop asia pe 2
-sleep 300
+sleep 900
 ./test3 start europe pe 6
 ./test3 start america pe 6
+sleep 900
+./test3 start asia pe 5
 sleep 300
+./test3 stop europe pe 1
+./test3 stop america pe 1
+sleep 900
 ./test3 stop all
 ./test3 results
 
