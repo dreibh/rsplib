@@ -64,6 +64,7 @@ resetAll ()
 
 startNetwork ()
 {
+   # ------ Start PRs -------------------------------------------------------
    optPeers=""
    for peer in $PR_ALL ; do
       optPeers="$optPeers -peer=$peer:3864"
@@ -77,11 +78,14 @@ startNetwork ()
       fi
    done
 
+   # ------ Options for static PRs ------------------------------------------
+   optRegistrars=""
+   for pr in $localPRs ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+
+   # ------ Start PEs -------------------------------------------------------
    if [ ! "x$localPEs" = "x" ]; then
-      optRegistrars=""
-      for pr in $localPRs ; do
-         optRegistrars="$optRegistrars -registrar=$pr:3863"
-      done
       number=1
       for pe in $localPEs ; do
          if [ ! $number -gt $localPELimit ] ; then
@@ -98,20 +102,24 @@ startNetwork ()
       fi
    fi
 
-   number=1
-   for pu in $localPUs ; do
-      if [ ! $number -gt $localPULimit ] ; then
-         echo "Starting PU on $pu ..."
-         ./start-process "PoolUser-$number" "./rootshell -c \"./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP\" >$TESTID-pu$number-$pu.log 2>&1" $pu &
-         let number=$number+1
-      else
-         echo "Skipping PU $pu!"
-      fi
-   done
+   # ------ Start PUs -------------------------------------------------------
+   if [ ! "x$localPUs" = "x" ]; then
+      number=1
+      for pu in $localPUs ; do
+         if [ ! $number -gt $localPULimit ] ; then
+            echo "Starting PU on $pu ..."
+            ./start-process "PoolUser-$number" "./rootshell -c \"./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP\" >$TESTID-pu$number-$pu.log 2>&1" $pu &
+            let number=$number+1
+         else
+            echo "Skipping PU $pu!"
+         fi
+      done
+   fi
 }
 
 stopNetwork ()
 {
+   # ------ Stop PRs --------------------------------------------------------
    number=1
    for pu in $localPUs ; do
       if [ ! $number -gt $localPULimit ] ; then
@@ -121,6 +129,8 @@ stopNetwork ()
          echo "Skipping PU $pu!"
       fi
    done
+
+   # ------ Stop PEs --------------------------------------------------------
    number=1
    for pe in $localPEs ; do
       if [ ! $number -gt $localPELimit ] ; then
@@ -130,6 +140,8 @@ stopNetwork ()
          echo "Skipping PE $pe!"
       fi
    done
+
+   # ------ Stop PUs --------------------------------------------------------
    number=1
    for pr in $localPRs ; do
       if [ ! $number -gt $localPRLimit ] ; then
