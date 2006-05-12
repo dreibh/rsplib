@@ -22,7 +22,7 @@ generateOutput <- function(inFile, resultType, mainTitle="")
    xTitle <- "Time [Minutes]"
 
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
-   hbarMeanSteps <- 20
+   hbarMeanSteps <- 26
 
    if(resultType =="HandlingTime") {
       ySet <- data$HandlingTime
@@ -65,7 +65,6 @@ pdf("test2.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", poi
 
 generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor")
 generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor")
-
 generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy")
 generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy")
 

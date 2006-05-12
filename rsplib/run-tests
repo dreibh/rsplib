@@ -84,6 +84,7 @@ sleep 3600
 # ./test4 results
 
 
+R --vanilla <plot-test1.R
 R --vanilla <plot-test2.R
 tar czvf m.tar.gz messung?
-svn m.tar.gz test2.pdf svn:
+svn m.tar.gz test?.pdf svn:
