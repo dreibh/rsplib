@@ -2,4 +2,4 @@
 
 . ./planetlab-config
 
-make && ./create-binaries && grep "^[a-Z0-9]" p?-*.hosts | sort -u | xargs ./install-binaries
+make && ./create-binaries && ls p?-*.hosts | xargs -n 1 cat | grep "^[a-Z0-9]" | sort -u | xargs ./install-binaries
