@@ -484,13 +484,22 @@ plotstd3 <- function(mainTitle,
    # ------ Plot separators -------------------------------------------------
    if(length(xSeparatorsSet) > 0) {
       if(length(xSeparatorsColors) < 1) {
-         xSeparatorsColors <- rainbow(length(xSeparatorsSet))
+         if(colorMode == cmColor) {
+            xSeparatorsColors <- rainbow(length(xSeparatorsSet))
+         }
+         else if(colorMode == cmGrayScale) {
+            xSeparatorsColors <- graybow(length(xSeparatorsSet))
+         }
+         else {
+            xSeparatorsColors <- rep(par("fg"), length(zLevels))
+            frameColor  <- par("fg")
+         }
       }
 
       i <- 1
       for(xValue in xSeparatorsSet) {
          lines(c(xValue, xValue),
-               c(-9e307, 9e307), lwd=2*par("cex"),
+               c(-9e99, 9e99), lwd=2*par("cex"),
                col=xSeparatorsColors[i])
          text(xValue + strwidth("i"),
                max(yAxisTicks) - strheight(xSeparatorsTitles[i]),
