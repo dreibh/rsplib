@@ -64,6 +64,6 @@ fi && \
 cd .. && \
 tar cvf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2"
 
-echo -e "\x1b[34m`date`: Downloadin binary archive from $SERVER ...\x1b[0m"
+echo -e "\x1b[34m`date`: Downloading binary archive from $SERVER ...\x1b[0m"
 scp -i $PLANETLAB_KEY $PLANETLAB_USER@$SERVER:$DISTNAME/$DISTDIRNAME/$DISTNAME-bin.tar.bz2 .
 tar xjvf $DISTNAME-bin.tar.bz2

@@ -4,7 +4,7 @@ hideLegend          <- TRUE
 colorMode           <- cmColor
 legendPos           <- c(1,1)
 
-generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE)
+generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxisTicks=c())
 {
 
    data <- loadResults(inFile)
@@ -37,7 +37,9 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE)
    wTitle <- ""
 
    xAxisTicks <- getUsefulTicks(xSet)   # getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
-   yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
+   if(length(yAxisTicks) < 2) {
+      yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
+   }
 
    if(summary) {
       plotstd3(mainTitle, xTitle, yTitle, zTitle, xSet, ySet,
@@ -78,8 +80,12 @@ pdf("test2.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", poi
 
 xSeparatorsSet <- c()
 xSeparatorsTitles <- c()
-# generateOutput("x.vec.bz2", "HandlingTime")
-# generateOutput("x.vec.bz2", "HandlingSpeed")
+generateOutput("messung1/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung2/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", TRUE,
+               seq(0,50,10))
+generateOutput("messung1/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor")
+generateOutput("messung2/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy")
 
 
 xSeparatorsSet <- c(15, 30, 45, 50)
@@ -87,10 +93,12 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor")
-generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy")
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor")
-generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy")
+generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", TRUE,
+               seq(0,50,10))
+generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor", TRUE)
+generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy", TRUE)
 
 generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", FALSE)
 generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", FALSE)

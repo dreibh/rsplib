@@ -88,7 +88,6 @@ sleep 3600
 
 
 
-R --vanilla <plot-test1.R
 R --vanilla <plot-test2.R
 tar czvf m.tar.gz messung?
 scp m.tar.gz test?.pdf svn:
