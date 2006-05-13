@@ -26,64 +26,65 @@ sleep 900
 ./test3 results
 
 
-./test4 start europe pr
-./test4 start america pr
-./test4 start asia pr
-sleep 60
-./test4 start europe pe 5
-./test4 start america pe 5
-./test4 start asia pe 5
-sleep 60
-./test4 start europe pu 15
-./test4 start america pu 15
-./test4 start asia pu 15
-sleep 900
-./test4 stop asia pe 2
-sleep 900
-./test4 start europe pe 6
-./test4 start america pe 6
-sleep 900
-./test4 start asia pe 5
-sleep 300
-./test4 stop europe pe 1
-./test4 stop america pe 1
-sleep 900
-./test4 stop all
-./test4 results
 
-
-
-./test1 start europe pr
-./test1 start america pr
-./test1 start asia pr
-sleep 60
-./test1 start europe pe 5
-./test1 start america pe 5
-./test1 start asia pe 5
-sleep 60
-./test1 start europe pu 15
-./test1 start america pu 15
-./test1 start asia pu 15
-sleep 3600
-./test1 stop all
-./test1 results
-
-
-
-./test2 start europe pr
-./test2 start america pr
-./test2 start asia pr
-sleep 60
-./test2 start europe pe 5
-./test2 start america pe 5
-./test2 start asia pe 5
-sleep 60
-./test2 start europe pu 15
-./test2 start america pu 15
-./test2 start asia pu 15
-sleep 3600
-./test2 stop all
-./test2 results
+# ./test4 start europe pr
+# ./test4 start america pr
+# ./test4 start asia pr
+# sleep 60
+# ./test4 start europe pe 5
+# ./test4 start america pe 5
+# ./test4 start asia pe 5
+# sleep 60
+# ./test4 start europe pu 15
+# ./test4 start america pu 15
+# ./test4 start asia pu 15
+# sleep 900
+# ./test4 stop asia pe 2
+# sleep 900
+# ./test4 start europe pe 6
+# ./test4 start america pe 6
+# sleep 900
+# ./test4 start asia pe 5
+# sleep 300
+# ./test4 stop europe pe 1
+# ./test4 stop america pe 1
+# sleep 900
+# ./test4 stop all
+# ./test4 results
+#
+#
+#
+# ./test1 start europe pr
+# ./test1 start america pr
+# ./test1 start asia pr
+# sleep 60
+# ./test1 start europe pe 5
+# ./test1 start america pe 5
+# ./test1 start asia pe 5
+# sleep 60
+# ./test1 start europe pu 15
+# ./test1 start america pu 15
+# ./test1 start asia pu 15
+# sleep 3600
+# ./test1 stop all
+# ./test1 results
+#
+#
+#
+# ./test2 start europe pr
+# ./test2 start america pr
+# ./test2 start asia pr
+# sleep 60
+# ./test2 start europe pe 5
+# ./test2 start america pe 5
+# ./test2 start asia pe 5
+# sleep 60
+# ./test2 start europe pu 15
+# ./test2 start america pu 15
+# ./test2 start asia pu 15
+# sleep 3600
+# ./test2 stop all
+# ./test2 results
 
 
 
