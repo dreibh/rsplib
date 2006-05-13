@@ -62,7 +62,8 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
          wSubset <- subset(wSet, filter)
          hbarSubset <- subset(hbarSet, filter)
          plotstd3(paste(sep="", mainTitle, ", PU=", z),
-                  xTitle, yTitle, zTitle, xSet, ySet,
+                  xTitle, yTitle, zTitle,
+                  xSubset, ySubset,
                   zSubset, vSubset, wSubset, vTitle, wTitle,
                   hbarSet = hbarSubset, hbarMeanSteps = hbarMeanSteps,
                   xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
