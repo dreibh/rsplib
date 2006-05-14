@@ -78,8 +78,32 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
 pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
 
 
-data <- loadResults("messung3/pu-vectors.vec.bz2")
-#data <- loadResults("x.vec.bz2")
+#data <- loadResults("messung3/pu-vectors.vec.bz2")
+data <- loadResults("x.vec.bz2")
+
+
+handlingTimeStat <- function(data, start, end)
+{
+   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
+   f <- (queuingTime >= start) &
+        (queuingTime <= end)
+   htSubset <- subset(data$HandlingTime, f)
+   htMin  <- min(htSubset)
+   htMax  <- max(htSubset)
+   htMean <- mean(htSubset)
+   htTest <- t.test(htSubset)
+   cat(sep="", start, "-", end, ":   mean=", htMean,
+       " +/- ", htMean - htTest$conf.int[1], "   ",
+       "min=", htMin, " max=", htMax,
+       "\n")
+}
+
+handlingTimeStat(data, 1, 14)
+handlingTimeStat(data, 16, 29)
+handlingTimeStat(data, 31, 45)
+handlingTimeStat(data, 46, 49)
+handlingTimeStat(data, 51, 64)
+
 
 f <- (data$HandlingTime > 80)
 c <- subset(data$ObjectName, f)
