@@ -1,0 +1,251 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+
+PR_AUSTRALIA=`grep "^[a-Z0-9]" pr-australia.hosts`
+PR_ASIA=`grep "^[a-Z0-9]" pr-asia.hosts`
+PR_AMERICA=`grep "^[a-Z0-9]" pr-usa.hosts`
+PR_EUROPE=`grep "^[a-Z0-9]" pr-europe.hosts`
+PR_MISCOPT="-loglevel=3 -distancestep=75"
+
+PE_AUSTRALIA=`grep "^[a-Z0-9]" pe-australia.hosts`
+PE_ASIA=`grep "^[a-Z0-9]" pe-asia.hosts`
+PE_AMERICA=`grep "^[a-Z0-9]" pe-usa.hosts`
+PE_EUROPE=`grep "^[a-Z0-9]" pe-europe.hosts`
+PE_MISCOPT="-calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.0001 -capmaxjobs=5 -loglevel=3"
+
+PU_AUSTRALIA=`grep "^[a-Z0-9]" pu-australia.hosts`
+PU_ASIA=`grep "^[a-Z0-9]" pu-asia.hosts`
+PU_AMERICA=`grep "^[a-Z0-9]" pu-usa.hosts`
+PU_EUROPE=`grep "^[a-Z0-9]" pu-europe.hosts`
+PU_MISCOPT="-jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+
+MULTIPLIKATOR=1
+
+
+# ---------------------------
+puAustralia=$PU_AUSTRALIA
+puAsia=$PU_ASIA
+puAmerica=$PU_AMERICA
+puEurope=$PU_EUROPE
+peAustralia=$PE_AUSTRALIA
+peAsia=$PE_ASIA
+peAmerica=$PE_AMERICA
+peEurope=$PE_EUROPE
+i=1 ; while [ $i -lt $MULTIPLIKATOR ] ; do
+   PU_AUSTRALIA="$PU_AUSTRALIA $puAustralia"
+   PU_ASIA="$PU_ASIA $puAsia"
+   PU_AMERICA="$PU_AMERICA $puAmerica"
+   PU_EUROPE="$PU_EUROPE $puEurope"
+   PE_AUSTRALIA="$PE_AUSTRALIA $peAustralia"
+   PE_ASIA="$PE_ASIA $peAsia"
+   PE_AMERICA="$PE_AMERICA $peAmerica"
+   PE_EUROPE="$PE_EUROPE $peEurope"
+   let i=$i+1
+done
+# ---------------------------
+
+
+PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
+PE_ALL="$PE_AUSTRALIA $PE_ASIA $PE_AMERICA $PE_EUROPE"
+PU_ALL="$PU_AUSTRALIA $PU_ASIA $PU_AMERICA $PU_EUROPE"
+
+
+
+resetAll ()
+{
+   ./stop-processes Registrar
+   ./stop-processes PoolElement
+   ./stop-processes PoolUser
+}
+
+
+startNetwork ()
+{
+   # ------ Start PRs -------------------------------------------------------
+   optPeers=""
+   for peer in $PR_ALL ; do
+      optPeers="$optPeers -peer=$peer:3864"
+   done
+   number=1
+   for pr in $localPRs ; do
+      if [ ! $number -gt $localPRLimit ] ; then
+         echo "Starting PR on $pr ..."
+         ./start-process "Registrar-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
+         let number=$number+1
+      fi
+   done
+
+   # ------ Options for static PRs ------------------------------------------
+   optRegistrars=""
+   for pr in $localPRs ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+
+   # ------ Start PEs -------------------------------------------------------
+   if [ ! "x$localPEs" = "x" ]; then
+      number=1
+      for pe in $localPEs ; do
+         if [ ! $number -gt $localPELimit ] ; then
+            echo "Starting PE on $pe ..."
+            ./start-process "PoolElement-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
+            let number=$number+1
+         else
+            echo "Skipping PE $pe!"
+         fi
+      done
+
+      if [ ! "x$localPUs" = "x" ]; then
+         sleep 30
+      fi
+   fi
+
+   # ------ Start PUs -------------------------------------------------------
+   if [ ! "x$localPUs" = "x" ]; then
+      number=1
+      for pu in $localPUs ; do
+         if [ ! $number -gt $localPULimit ] ; then
+            echo "Starting PU on $pu ..."
+            ./start-process "PoolUser-$number" "./rootshell -c \"./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP\" >$TESTID-pu$number-$pu.log 2>&1" $pu &
+            let number=$number+1
+         else
+            echo "Skipping PU $pu!"
+         fi
+      done
+   fi
+}
+
+stopNetwork ()
+{
+   # ------ Stop PRs --------------------------------------------------------
+   number=1
+   for pu in $localPUs ; do
+      if [ ! $number -gt $localPULimit ] ; then
+         ./stop-process "PoolUser-$number" $pu
+         let number=$number+1
+      else
+         echo "Skipping PU $pu!"
+      fi
+   done
+
+   # ------ Stop PEs --------------------------------------------------------
+   number=1
+   for pe in $localPEs ; do
+      if [ ! $number -gt $localPELimit ] ; then
+         ./stop-process "PoolElement-$number" $pe
+         let number=$number+1
+      else
+         echo "Skipping PE $pe!"
+      fi
+   done
+
+   # ------ Stop PUs --------------------------------------------------------
+   number=1
+   for pr in $localPRs ; do
+      if [ ! $number -gt $localPRLimit ] ; then
+         ./stop-process "Registrar-$number" $pr
+         let number=$number+1
+      else
+         echo "Skipping PR $pr!"
+      fi
+   done
+}
+
+
+action ()
+{
+   localPRLimit=999999999
+   localPELimit=999999999
+   localPULimit=999999999
+   if [ "x$2" = "xaustralia" ] ; then
+      echo "Components in Australia"
+      localPRs=$PR_AUSTRALIA
+      localPEs=$PE_AUSTRALIA
+      localPUs=$PU_AUSTRALIA
+   elif [ "x$2" = "xasia" ] ; then
+      echo "Components in Asia"
+      localPRs=$PR_ASIA
+      localPEs=$PE_ASIA
+      localPUs=$PU_ASIA
+   elif [ "x$2" = "xeurope" ] ; then
+      echo "Components in Europe"
+      localPRs=$PR_EUROPE
+      localPEs=$PE_EUROPE
+      localPUs=$PU_EUROPE
+   elif [ "x$2" = "xamerica" ] ; then
+      echo "Components in America"
+      localPRs=$PR_AMERICA
+      localPEs=$PE_AMERICA
+      localPUs=$PU_AMERICA
+   else
+      echo "Components in all regions"
+      action $1 asia $3 $4 $5 $6
+      action $1 america $3 $4 $5 $6
+      action $1 europe $3 $4 $5 $6
+      return
+   fi
+
+   if [ "x$3" = "xpe" ] ; then
+      echo "- PEs only"
+      localPUs=
+      localPRLimit=0
+      if [ "x$4" != "x" ] ; then
+         localPELimit=$4
+         echo "- PE limit is $localPELimit"
+      fi
+   elif [ "x$3" = "xpu" ] ; then
+      echo "- PUs only"
+      localPEs=
+      localPRLimit=0
+      if [ ! "x$4" = "x" ] ; then
+         localPULimit=$4
+         echo "- PU limit is $localPULimit"
+      fi
+   elif [ "x$3" = "xpr" ] ; then
+      echo "- PRs only"
+      localPEs=
+      localPUs=
+   else
+      echo "- PRs, PEs and PUs"
+      if [ ! "x$4" = "x" ] ; then
+         localPRLimit=$4
+         echo "- PR limit is $localPRLimit"
+      fi
+      if [ ! "x$5" = "x" ] ; then
+         localPELimit=$5
+         echo "- PE limit is $localPELimit"
+      fi
+      if [ ! "x$6" = "x" ] ; then
+         localPULimit=$6
+         echo "- PU limit is $localPULimit"
+      fi
+   fi
+
+   if [ "x$1" = "xstart" ] ; then
+      echo "=> Start"
+      startNetwork
+   elif [ "x$1" = "xstop" ] ; then
+      echo "=> Stop"
+      stopNetwork
+   fi
+}
+
+
+
+if [ $# -lt 1 ] ; then
+   echo "Usage: fractal-scenario1 [start|stop|reset] {all|europe|australia|asia|america} {pr|pu|pe|all} {amount limit|{PRs PEs PUs}}"
+fi
+
+if [ "x$1" = "xstart" -o "x$1" = "xstop" ] ; then
+   action $1 $2 $3 $4 $5 $6
+elif [ "x$1" = "xreset" ] ; then
+   echo "Resetting everything!"
+   resetAll
+elif [ "x$1" = "xresults" ] ; then
+   echo "Fetching results!"
+   echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
+   ./combine-vectors $TESTID
+else
+   echo "ERROR: Bad parameter!"
+fi
