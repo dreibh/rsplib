@@ -101,9 +101,9 @@ generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy
 generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor", TRUE)
 generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy", TRUE)
 
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", FALSE)
-generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", FALSE)
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor", FALSE)
-generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy", FALSE)
+# generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", FALSE)
+# generateOutput("messung4/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", FALSE)
+# generateOutput("messung3/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor", FALSE)
+# generateOutput("messung4/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy", FALSE)
 
 dev.off()
