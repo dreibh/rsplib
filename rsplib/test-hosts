@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ls p?-*.hosts | xargs -n 1 cat | grep "^[a-Z0-9]" | sort -u | xargs ./filter-hosts -showbad
