@@ -2,7 +2,7 @@ source("plotter.R")
 
 hideLegend          <- TRUE
 colorMode           <- cmColor
-legendPos           <- c(1,1)
+legendPos           <- c(0,0.5)
 
 generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxisTicks=c())
 {
@@ -74,14 +74,6 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
 }
 
 
-
-pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
-
-
-#data <- loadResults("messung3/pu-vectors.vec.bz2")
-data <- loadResults("x.vec.bz2")
-
-
 handlingTimeStat <- function(data, start, end)
 {
    queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
@@ -98,17 +90,21 @@ handlingTimeStat <- function(data, start, end)
        "\n")
 }
 
-handlingTimeStat(data, 1, 14)
-handlingTimeStat(data, 16, 29)
-handlingTimeStat(data, 31, 45)
-handlingTimeStat(data, 46, 49)
-handlingTimeStat(data, 51, 64)
 
 
-f <- (data$HandlingTime > 80)
-c <- subset(data$ObjectName, f)
-cat("LV:",levels(factor(data$ObjectName)),"\n")
-cat("bad:",levels(factor(c)),"\n")
+
+pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
+
+
+#data <- loadResults("messung3/pu-vectors.vec.bz2")
+data <- loadResults("x.vec.bz2")
+
+# handlingTimeStat(data, 1, 14)
+# handlingTimeStat(data, 16, 29)
+# handlingTimeStat(data, 31, 45)
+# handlingTimeStat(data, 46, 49)
+# handlingTimeStat(data, 51, 64)
+
 
 xSeparatorsSet <- c(15, 30, 45, 50)
 xSeparatorsTitles <- c("Failures\nin Asia",

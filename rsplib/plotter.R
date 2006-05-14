@@ -495,17 +495,26 @@ plotstd3 <- function(mainTitle,
             frameColor  <- par("fg")
          }
       }
+      legendBackground <- "gray95"
+      if(colorMode == cmBlackAndWhite) {
+         legendBackground <- "white"
+      }
 
       i <- 1
       for(xValue in xSeparatorsSet) {
          lines(c(xValue, xValue),
                c(-9e99, 9e99), lwd=2*par("cex"),
                col=xSeparatorsColors[i])
+         xAdjust <- -(strwidth(xSeparatorsTitles[i]) / 2)
+         rect(xValue + xAdjust, max(yAxisTicks),
+              xValue + xAdjust + strwidth(xSeparatorsTitles[i]) + 2 * strwidth("i"),
+              max(yAxisTicks) - strheight(xSeparatorsTitles[i]) - 1.0 * strheight("i"),
+              col=legendBackground)
          text(xValue + strwidth("i"),
-               max(yAxisTicks) - strheight(xSeparatorsTitles[i]),
-               xSeparatorsTitles[i],
-               col=xSeparatorsColors[i],
-               adj=c(0,0))
+              max(yAxisTicks) - 0.5 * strheight(xSeparatorsTitles[i]) - 0.5 * strheight("i"),
+              xSeparatorsTitles[i],
+              col=xSeparatorsColors[i],
+              adj=c(0.5,0.5))
          i <- i + 1
       }
    }
@@ -513,26 +522,23 @@ plotstd3 <- function(mainTitle,
 
    # ------ Plot legend -----------------------------------------------------
    if(!hideLegend) {
-      lx <- min(xRange) + ((max(xRange) - min(xRange)) / 2)
-      ly <- min(yRange) + ((max(yRange) - min(yRange)) / 2)
+      lx <- (max(xRange) - min(xRange)) * legendPos[1]
+      ly <- (max(yRange) - min(yRange)) * legendPos[2]
       lxjust <- 0.5
       lyjust <- 0.5
       if(legendPos[1] < 0.5) {
-         lx <- min(xRange)
          lxjust <- 0
       }
       else if(legendPos[1] > 0.5) {
-         lx <- max(xRange)
          lxjust <- 1
       }
       if(legendPos[2] < 0.5) {
-         ly <- min(yRange)
          lyjust <- 0
       }
       else if(legendPos[2] > 0.5) {
-         ly <- max(yRange)
          lyjust <- 1
       }
+
       legendBackground <- "gray95"
       if(colorMode == cmBlackAndWhite) {
          legendColors <- par("fg")
