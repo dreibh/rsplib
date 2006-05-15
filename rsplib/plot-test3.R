@@ -12,17 +12,19 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    xTitle <- "Time [Minutes]"
 
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
-   hbarMeanSteps <- 26
+   hbarMeanSteps <- 52
 
-   if(resultType =="HandlingTime") {
+   aggregator <- hbarDefaultAggregator
+   if(resultType == "HandlingTime") {
       ySet <- data$HandlingTime
       yTitle <- "Average Request Handling Time [s]"
    }
-   else if(resultType =="HandlingSpeed") {
+   else if(resultType == "HandlingSpeed") {
       ySet <- data$HandlingSpeed
+      aggregator <- hbarHandlingSpeedAggregator
       yTitle <- "Average Request Handling Speed [Calculations/s]"
    }
-   else if(resultType =="QueueLength") {
+   else if(resultType == "QueueLength") {
       ySet <- data$QueueLength
       yTitle <- "Average Queue Length [1]"
    }
@@ -46,6 +48,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
       plotstd3(mainTitle, xTitle, yTitle, zTitle, xSet, ySet,
                zSet, vSet, wSet, vTitle, wTitle,
                hbarSet = hbarSet, hbarMeanSteps = hbarMeanSteps,
+               hbarAggregator = aggregator,
                xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                type="h",
@@ -67,6 +70,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
                   xSubset, ySubset,
                   zSubset, vSubset, wSubset, vTitle, wTitle,
                   hbarSet = hbarSubset, hbarMeanSteps = hbarMeanSteps,
+                  hbarAggregator = aggregator,
                   xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                   xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                   type="h",
@@ -100,7 +104,7 @@ pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsi
 
 
 #data <- loadResults("x.vec.bz2")
-data <- loadResults("messung3a/pu-vectors.vec.bz2")
+#data <- loadResults("messung3a/pu-vectors.vec.bz2")
 
 
 f <- (data$HandlingTime > 30)

@@ -141,6 +141,39 @@ checkSets <- function(data,
 }
 
 
+# Default hbar aggregator
+hbarDefaultAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
+{
+   mSet <- ySet
+   mMean <- mean(mSet)
+   mMin <- min(mSet)
+   mMax <- max(mSet)
+   if(mMin != mMax) {
+      mTest <- t.test(mSet, conf.level=confidence)
+      mMin  <- mTest$conf.int[1]
+      mMax  <- mTest$conf.int[2]
+   }
+   return(c(mMean,mMin,mMax))
+}
+
+
+hbarHandlingSpeedAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
+{
+   handlingTime  <- 60 * (xSet - hbarSet)
+   handlingSpeed <- ySet
+   totalHandlingTime <- 0
+   totalJobSize <- 0
+   for(i in seq(1, length(handlingTime))) {
+      totalHandlingTime <- totalHandlingTime + handlingTime[i]
+      totalJobSize <- totalJobSize + (handlingTime[i] * handlingSpeed[i])
+   }
+   mMean <- totalJobSize / totalHandlingTime
+   mMin <- mMean
+   mMax <- mMean
+   return(c(mMean,mMin,mMax))
+}
+
+
 # Plot x/y plot with different curves as z with confidence intervals in
 # y direction. x and z can be numeric or strings, y must be numeric since
 # confidence intervals have to be computed.
@@ -156,6 +189,7 @@ plotstd3 <- function(mainTitle,
                      confidence        = 0.95,
                      hbarSet           = c(),
                      hbarMeanSteps     = 10,
+                     hbarAggregator    = hbarDefaultAggregator,
                      xSeparatorsSet    = c(),
                      xSeparatorsTitles = c(),
                      xSeparatorsColors  = c(),
@@ -443,16 +477,16 @@ plotstd3 <- function(mainTitle,
 
       oldY <- c()
       for(xValue in xSegments) {
-         mSet <- subset(ySet, (xSet >= xValue) &
-                              (xSet <= xValue + xWidth))
-         mMean <- mean(mSet)
-         mMin <- min(mSet)
-         mMax <- max(mSet)
-         if(mMin != mMax) {
-            mTest <- t.test(mSet, conf.level=confidence)
-            mMin  <- mTest$conf.int[1]
-            mMax  <- mTest$conf.int[2]
-         }
+         filter <- (xSet >= xValue) &
+                   (xSet <= xValue + xWidth)
+
+         aggregate <- hbarAggregator(
+                         subset(xSet, filter), subset(ySet, filter),
+                         subset(hbarSet, filter), zValue,
+                         confidence)
+         mMean <- aggregate[1]
+         mMin <- aggregate[2]
+         mMax <- aggregate[3]
 
          # ------ Plot line segment -----------------------------------------
          if(colorMode == cmColor) {
@@ -469,7 +503,7 @@ plotstd3 <- function(mainTitle,
          lines(c(xValue, xValue + xWidth),
                c(mMean, mMean),
                col=meanBarColor, lwd=4*par("cex"))
-         oldY <- mean(mSet)
+         oldY <- mMean
 
          # ------ Plot confidence interval ----------------------------------
          x <- xValue + (xWidth / 2)
