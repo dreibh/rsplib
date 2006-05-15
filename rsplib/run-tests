@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TESTIDs="messung3a messung3b messung3c messung3d messung3e"
+TESTIDs="messung3h messung3i messung3j messung3k messung3l messung3m"
 for testID in $TESTIDs ; do
    export TESTID=$testID
    ./test3a start europe pr
@@ -29,7 +29,7 @@ for testID in $TESTIDs ; do
    ./test3a results
 done
 
-TESTIDs="messung4a messung4b messung4c messung4d messung4e"
+TESTIDs="messung4f messung4g messung4h messung4i messung4j"
 for testID in $TESTIDs ; do
    export TESTID=$testID
    ./test4a start europe pr

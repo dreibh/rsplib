@@ -1,6 +1,6 @@
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planet5.cs.huji.ac.il"   # planetlab2.exp-math.uni-essen.de
+PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel make subversion libpcap bzip2-devel slocate"
 
 DISTNAME="rsplib-1.9.0"
@@ -12,7 +12,7 @@ DISTSTRIP=0
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver calcappserver fractalserver discardserver nameserver daytimeserver echoserver"
 SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
 
-OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000000"
+OPT_CSP=""   # -cspserver=132.252.150.151:2960 -cspinterval=1000000"
 
 
 #PLANETLAB_KEY=~/.ssh/lupo

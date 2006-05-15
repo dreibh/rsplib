@@ -13,13 +13,13 @@ PE_AUSTRALIA=`grep "^[a-Z0-9]" pe-australia.hosts`
 PE_ASIA=`grep "^[a-Z0-9]" pe-asia.hosts`
 PE_AMERICA=`grep "^[a-Z0-9]" pe-usa.hosts`
 PE_EUROPE=`grep "^[a-Z0-9]" pe-europe.hosts`
-PE_MISCOPT="-calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.0001 -capmaxjobs=5 -loglevel=3"
+PE_MISCOPT="-calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.00001 -capmaxjobs=5 -loglevel=3"
 
 PU_AUSTRALIA=`grep "^[a-Z0-9]" pu-australia.hosts`
 PU_ASIA=`grep "^[a-Z0-9]" pu-asia.hosts`
 PU_AMERICA=`grep "^[a-Z0-9]" pu-usa.hosts`
 PU_EUROPE=`grep "^[a-Z0-9]" pu-europe.hosts`
-PU_MISCOPT="-jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+PU_MISCOPT="-jobinterval=10.0 -jobsize=1000000 -loglevel=3"
 
 MULTIPLIKATOR=1
 

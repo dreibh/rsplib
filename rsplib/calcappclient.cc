@@ -54,6 +54,7 @@ struct Job
    unsigned long long QueuingTimeStamp;
    unsigned long long StartupTimeStamp;
    unsigned long long AcceptTimeStamp;
+   size_t             QueueLength;
 };
 
 class JobQueue
@@ -64,10 +65,14 @@ class JobQueue
 
    void enqueue(Job* job);
    Job* dequeue();
+   inline size_t getLength() const {
+      return(Jobs);
+   }
 
    private:
-   Job* FirstJob;
-   Job* LastJob;
+   size_t Jobs;
+   Job*   FirstJob;
+   Job*   LastJob;
 };
 
 
@@ -76,6 +81,7 @@ JobQueue::JobQueue()
 {
    FirstJob = NULL;
    LastJob  = NULL;
+   Jobs     = 0;
 }
 
 
@@ -87,9 +93,11 @@ JobQueue::~JobQueue()
       Job* nextJob =  currentJob->Next;
       delete currentJob;
       currentJob = nextJob;
+      Jobs--;
    }
    FirstJob = NULL;
    LastJob  = NULL;
+   CHECK(Jobs == 0);
 }
 
 
@@ -108,6 +116,8 @@ void JobQueue::enqueue(Job* job)
       LastJob ->Next = job;
       LastJob        = job;
    }
+   job->QueueLength = Jobs;   // Amount of queued jobs before this job
+   Jobs++;
 }
 
 
@@ -124,6 +134,8 @@ Job* JobQueue::dequeue()
    }
    if(job != NULL) {
      job->StartupTimeStamp = getMicroTime();
+     CHECK(Jobs > 0);
+     Jobs--;
    }
    return(job);
 }
@@ -371,6 +383,7 @@ void handleCalcAppCompleted(struct Process* process,
    TotalJobSizeCompleted += process->CurrentJob->JobSize;
 
    cout << "Job #" << process->CurrentJob->JobID << " completed:" << endl
+        << "   Queue Length   = " << process->CurrentJob->QueueLength << endl
         << "   JobSize        = " << process->CurrentJob->JobSize << endl
         << "   JobInterval    = " << (JobInterval / 1000000.0) << " [s]" << endl
         << "   StartupDelay   = " << startupDelay   << " [s]" << endl
@@ -383,15 +396,17 @@ void handleCalcAppCompleted(struct Process* process,
    if(VectorLine == 0) {
       fprintf(VectorFH, "ObjectName "
                         "JobID JobSize JobInterval "
+                        "QueueLength "
                         "QueuingDelay StartupDelay ProcessingTime "
                         "HandlingTime HandlingSpeed "
                         "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n");
    }
-   fprintf(VectorFH," %u %s %u %1.0f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
+   fprintf(VectorFH," %u %s %u %1.0f %1.6f %u %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
            ++VectorLine,
            process->ObjectName,
            process->CurrentJob->JobID, process->CurrentJob->JobSize,
            JobInterval / 1000000.0,
+           process->CurrentJob->QueueLength,
            queuingDelay, startupDelay, processingTime,
            handlingTime, handlingSpeed,
            process->CurrentJob->QueuingTimeStamp / 1000000.0,

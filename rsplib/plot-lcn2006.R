@@ -1,18 +1,44 @@
 source("plotter.R")
 
 hideLegend          <- TRUE
-colorMode           <- cmColor
-legendPos           <- c(0,0.5)
+colorMode           <- cmGrayScale
+legendPos           <- c(1,1)
 
-generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxisTicks=c())
+
+handlingTimeStat <- function(data, start, end)
 {
+   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
+   f <- (queuingTime >= start) &
+        (queuingTime <= end)
+   htSubset <- subset(data$HandlingTime, f)
+   htMin  <- min(htSubset)
+   htMax  <- max(htSubset)
+   htMean <- mean(htSubset)
+   htTest <- t.test(htSubset)
+   cat(sep="", start, "-", end, ":   mean=", htMean,
+       " +/- ", htMean - htTest$conf.int[1], "   ",
+       "min=", htMin, " max=", htMax,
+       "\n")
+}
+
+generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxisTicks=c(), yAxisTicks=c())
+{
+   data <- loadResults(inFile)
+
+   cat("-----",inFile,"-----\n")
+   handlingTimeStat(data, 1, 14)
+   handlingTimeStat(data, 16, 29)
+   handlingTimeStat(data, 31, 45)
+   handlingTimeStat(data, 46, 49)
+   handlingTimeStat(data, 51, 64)
+
    xSet <- (data$CompleteTimeStamp / 60)
    xOffset <- -min(xSet)
    xSet <- xSet + xOffset
    xTitle <- "Time [Minutes]"
 
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
-   hbarMeanSteps <- 26
+   hbarMeanSteps <- 52
 
    if(resultType =="HandlingTime") {
       ySet <- data$HandlingTime
@@ -33,9 +59,11 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    wSet <- c()
    wTitle <- ""
 
-   xAxisTicks <- getUsefulTicks(xSet)   # getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
+   if(length(xAxisTicks) < 2) {
+      xAxisTicks <- getUsefulTicks(xSet)
+   }
    if(length(yAxisTicks) < 2) {
-      yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
+      yAxisTicks <- getIntegerTicks(ySet, count=10)
    }
 
    if(summary) {
@@ -49,8 +77,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
                legendPos = legendPos)
    }
    else {
-      # levels(factor(zSet))
-      for(z in c("PU-11-planetlab1.iii.u-tokyo.ac.jp")) {
+      for(z in levels(factor(zSet))) {
          cat(sep="", "z=", z, "\n")
          filter <- (zSet == z)
          xSubset <- subset(xSet, filter)
@@ -74,52 +101,19 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
 }
 
 
-handlingTimeStat <- function(data, start, end)
-{
-   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
-   f <- (queuingTime >= start) &
-        (queuingTime <= end)
-   htSubset <- subset(data$HandlingTime, f)
-   htMin  <- min(htSubset)
-   htMax  <- max(htSubset)
-   htMean <- mean(htSubset)
-   htTest <- t.test(htSubset)
-   cat(sep="", start, "-", end, ":   mean=", htMean,
-       " +/- ", htMean - htTest$conf.int[1], "   ",
-       "min=", htMin, " max=", htMax,
-       "\n")
-}
-
-
-
-
-#pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
-
-
-#data <- loadResults("x.vec.bz2")
-#data <- loadResults("messung3g/pu-vectors.vec.bz2")
-
-
-f <- (data$HandlingTime > 50)
-bad <- subset(data$ObjectName, f)
-cat("BAD: ", levels(factor(bad)), "\n")
-
-
-
-handlingTimeStat(data, 1, 14)
-handlingTimeStat(data, 16, 29)
-handlingTimeStat(data, 31, 45)
-handlingTimeStat(data, 46, 49)
-handlingTimeStat(data, 51, 64)
-
 
 xSeparatorsSet <- c(15, 30, 45, 50)
 xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor",
-               FALSE,
-               seq(0,90,10))
 
-#dev.off()
+pdf("lcn2006-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+generateOutput("messung4d/pu-vectors.vec.bz2", "HandlingTime", "", TRUE,
+               seq(0,65,5), seq(0,16,2))
+dev.off()
+
+pdf("lcn2006-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingTime", "", TRUE,
+               seq(0,65,5), seq(0,16,2))
+dev.off()

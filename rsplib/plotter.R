@@ -455,14 +455,20 @@ plotstd3 <- function(mainTitle,
          }
 
          # ------ Plot line segment -----------------------------------------
+         if(colorMode == cmColor) {
+            meanBarColor <- zColorArray
+         }
+         else {
+            meanBarColor <- par("fg")
+         }
          if(xValue > min(xSet)) {
             lines(c(xValue, xValue),
                   c(oldY, mMean),
-                  col=zColorArray, lwd=4*par("cex"))
+                  col=meanBarColor, lwd=4*par("cex"))
          }
          lines(c(xValue, xValue + xWidth),
                c(mMean, mMean),
-               col=zColorArray, lwd=4*par("cex"))
+               col=meanBarColor, lwd=4*par("cex"))
          oldY <- mean(mSet)
 
          # ------ Plot confidence interval ----------------------------------
@@ -470,13 +476,13 @@ plotstd3 <- function(mainTitle,
          cintWidthFraction <- 75
          cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
          lines(c(x, x), c(mMin, mMax),
-               col=zColorArray, lwd=1*par("cex"))
+               col=meanBarColor, lwd=1*par("cex"))
          lines(c(x - cintWidth, x + cintWidth),
                c(mMin, mMin),
-               col=zColorArray, lwd=1*par("cex"))
+               col=meanBarColor, lwd=1*par("cex"))
          lines(c(x - cintWidth, x + cintWidth),
                c(mMax, mMax),
-               col=zColorArray, lwd=1*par("cex"))
+               col=meanBarColor, lwd=1*par("cex"))
       }
    }
 
@@ -503,7 +509,7 @@ plotstd3 <- function(mainTitle,
       i <- 1
       for(xValue in xSeparatorsSet) {
          lines(c(xValue, xValue),
-               c(-9e99, 9e99), lwd=2*par("cex"),
+               c(-9e99, 9e99), lwd=4*par("cex"),
                col=xSeparatorsColors[i])
          xAdjust <- -(strwidth(xSeparatorsTitles[i]) / 2)
          rect(xValue + xAdjust, max(yAxisTicks),
