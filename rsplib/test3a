@@ -19,7 +19,7 @@ PU_AUSTRALIA=`grep "^[a-Z0-9]" pu-australia.hosts`
 PU_ASIA=`grep "^[a-Z0-9]" pu-asia.hosts`
 PU_AMERICA=`grep "^[a-Z0-9]" pu-usa.hosts`
 PU_EUROPE=`grep "^[a-Z0-9]" pu-europe.hosts`
-PU_MISCOPT="-jobinterval=10.0 -jobsize=1000000 -loglevel=3"
+PU_MISCOPT="-jobinterval=7.5 -jobsize=1000000 -loglevel=3"
 
 MULTIPLIKATOR=1
 

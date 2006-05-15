@@ -22,6 +22,10 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
       ySet <- data$HandlingSpeed
       yTitle <- "Average Request Handling Speed [Calculations/s]"
    }
+   else if(resultType =="QueueLength") {
+      ySet <- data$QueueLength
+      yTitle <- "Average Queue Length [1]"
+   }
    else {
       stop("Bad result type!")
    }
@@ -49,8 +53,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
                legendPos = legendPos)
    }
    else {
-      # levels(factor(zSet))
-      for(z in c("PU-11-planetlab1.iii.u-tokyo.ac.jp")) {
+      for(z in levels(factor(zSet))) {
          cat(sep="", "z=", z, "\n")
          filter <- (zSet == z)
          xSubset <- subset(xSet, filter)
@@ -93,14 +96,14 @@ handlingTimeStat <- function(data, start, end)
 
 
 
-#pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
+pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
 
 
 #data <- loadResults("x.vec.bz2")
-#data <- loadResults("messung3g/pu-vectors.vec.bz2")
+data <- loadResults("messung3a/pu-vectors.vec.bz2")
 
 
-f <- (data$HandlingTime > 50)
+f <- (data$HandlingTime > 30)
 bad <- subset(data$ObjectName, f)
 cat("BAD: ", levels(factor(bad)), "\n")
 
@@ -118,8 +121,9 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-generateOutput("messung3/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor",
-               FALSE,
-               seq(0,90,10))
+generateOutput("XXX/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor",
+               TRUE)
+# generateOutput("XXX/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor",
+#                FALSE)
 
-#dev.off()
+dev.off()
