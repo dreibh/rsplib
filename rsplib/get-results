@@ -60,7 +60,7 @@ for SERVER in $SERVER_LIST; do
          echo \"Compressing files \$FILES ...\" && \
          sudo bzip2 \$FILES ; \
       fi && \
-      find . -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czvf $TESTID-$SERVER-results.tar.gz" &
+      find . -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" &
 done
 
 wait

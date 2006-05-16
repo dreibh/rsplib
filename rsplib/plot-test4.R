@@ -39,13 +39,19 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
    hbarMeanSteps <- 52
 
-   if(resultType =="HandlingTime") {
+   aggregator <- hbarDefaultAggregator
+   if(resultType == "HandlingTime") {
       ySet <- data$HandlingTime
       yTitle <- "Average Request Handling Time [s]"
    }
-   else if(resultType =="HandlingSpeed") {
+   else if(resultType == "HandlingSpeed") {
       ySet <- data$HandlingSpeed
+      aggregator <- hbarHandlingSpeedAggregator
       yTitle <- "Average Request Handling Speed [Calculations/s]"
+   }
+   else if(resultType == "QueueLength") {
+      ySet <- data$QueueLength
+      yTitle <- "Average Queue Length [1]"
    }
    else {
       stop("Bad result type!")
@@ -67,6 +73,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
       plotstd3(mainTitle, xTitle, yTitle, zTitle, xSet, ySet,
                zSet, vSet, wSet, vTitle, wTitle,
                hbarSet = hbarSet, hbarMeanSteps = hbarMeanSteps,
+               hbarAggregator = aggregator,
                xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                type="h",
@@ -88,6 +95,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
                   xSubset, ySubset,
                   zSubset, vSubset, wSubset, vTitle, wTitle,
                   hbarSet = hbarSubset, hbarMeanSteps = hbarMeanSteps,
+                  hbarAggregator = aggregator,
                   xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                   xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                   type="h",
@@ -116,36 +124,36 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-# generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingTime", "3a Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung3b/pu-vectors.vec.bz2", "HandlingTime", "3b Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung3c/pu-vectors.vec.bz2", "HandlingTime", "3c Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung3d/pu-vectors.vec.bz2", "HandlingTime", "3d Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung3e/pu-vectors.vec.bz2", "HandlingTime", "3e Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung4a/pu-vectors.vec.bz2", "HandlingTime", "4a Least Used Policy ", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung4b/pu-vectors.vec.bz2", "HandlingTime", "4b Least Used Policy ", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung4c/pu-vectors.vec.bz2", "HandlingTime", "4c Least Used Policy ", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung4d/pu-vectors.vec.bz2", "HandlingTime", "4d Least Used Policy ", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung4e/pu-vectors.vec.bz2", "HandlingTime", "4e Least Used Policy ", TRUE,
-#                seq(0,50,10))
+generateOutput("messung3l/pu-vectors.vec.bz2", "HandlingTime", "3l Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3m/pu-vectors.vec.bz2", "HandlingTime", "3m Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3n/pu-vectors.vec.bz2", "HandlingTime", "3n Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3o/pu-vectors.vec.bz2", "HandlingTime", "3o Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3p/pu-vectors.vec.bz2", "HandlingTime", "3p Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3q/pu-vectors.vec.bz2", "HandlingTime", "3q Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3r/pu-vectors.vec.bz2", "HandlingTime", "3r Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3s/pu-vectors.vec.bz2", "HandlingTime", "3s Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung3t/pu-vectors.vec.bz2", "HandlingTime", "3t Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
 
-# generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingTime", "3a Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,15,2))
-generateOutput("messung3h/pu-vectors.vec.bz2", "HandlingTime", "3g Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,15,2))
-
-# generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingTime", "3a Least Used Policy with Delay Penalty Factor", FALSE,
-#                seq(0,15,2))
-
-# generateOutput("messung4d/pu-vectors.vec.bz2", "HandlingTime", "4d Least Used Policy ", TRUE,
-#                seq(0,15,2))
+generateOutput("messung4f/pu-vectors.vec.bz2", "HandlingTime", "4f Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4g/pu-vectors.vec.bz2", "HandlingTime", "4g Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4h/pu-vectors.vec.bz2", "HandlingTime", "4h Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4i/pu-vectors.vec.bz2", "HandlingTime", "4i Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4j/pu-vectors.vec.bz2", "HandlingTime", "4j Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
+generateOutput("messung4k/pu-vectors.vec.bz2", "HandlingTime", "4k Least Used Policy with Delay Penalty Factor", TRUE,
+               seq(0,50,10))
 
 dev.off()

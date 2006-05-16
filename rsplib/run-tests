@@ -1,65 +1,68 @@
 #!/bin/bash
 
-TESTIDs="messung3m messung3n messung3o messung3p messung3q messung3r messung3s messung3t"
-for testID in $TESTIDs ; do
-   export TESTID=$testID
-   ./test3a start europe pr
-   ./test3a start america pr
-   ./test3a start asia pr
-   sleep 60
-   ./test3a start europe pe 5
-   ./test3a start america pe 5
-   ./test3a start asia pe 5
-   sleep 60
-   ./test3a start europe pu 15
-   ./test3a start america pu 15
-   ./test3a start asia pu 15
-   sleep 900
-   ./test3a stop asia pe 2
-   sleep 900
-   ./test3a start europe pe 6
-   ./test3a start america pe 6
-   sleep 900
-   ./test3a start asia pe 5
-   sleep 300
-   ./test3a stop europe pe 1
-   ./test3a stop america pe 1
-   sleep 900
-   ./test3a stop all
-   ./test3a results
-done
+echo "Falsches Skript!"
 
-TESTIDs="messung4f messung4g messung4h messung4i messung4j messung4k messung4l"
-for testID in $TESTIDs ; do
-   export TESTID=$testID
-   ./test4a start europe pr
-   ./test4a start america pr
-   ./test4a start asia pr
-   sleep 60
-   ./test4a start europe pe 5
-   ./test4a start america pe 5
-   ./test4a start asia pe 5
-   sleep 60
-   ./test4a start europe pu 15
-   ./test4a start america pu 15
-   ./test4a start asia pu 15
-   sleep 900
-   ./test4a stop asia pe 2
-   sleep 900
-   ./test4a start europe pe 6
-   ./test4a start america pe 6
-   sleep 900
-   ./test4a start asia pe 5
-   sleep 300
-   ./test4a stop europe pe 1
-   ./test4a stop america pe 1
-   sleep 900
-   ./test4a stop all
-   ./test4a results
-done
 
-tar czvf m.tar.gz messung? messung??
-scp m.tar.gz test?.pdf svn:
+# TESTIDs="messung3m messung3n messung3o messung3p messung3q messung3r messung3s messung3t"
+# for testID in $TESTIDs ; do
+#    export TESTID=$testID
+#    ./test3a start europe pr
+#    ./test3a start america pr
+#    ./test3a start asia pr
+#    sleep 60
+#    ./test3a start europe pe 5
+#    ./test3a start america pe 5
+#    ./test3a start asia pe 5
+#    sleep 60
+#    ./test3a start europe pu 15
+#    ./test3a start america pu 15
+#    ./test3a start asia pu 15
+#    sleep 900
+#    ./test3a stop asia pe 2
+#    sleep 900
+#    ./test3a start europe pe 6
+#    ./test3a start america pe 6
+#    sleep 900
+#    ./test3a start asia pe 5
+#    sleep 300
+#    ./test3a stop europe pe 1
+#    ./test3a stop america pe 1
+#    sleep 900
+#    ./test3a stop all
+#    ./test3a results
+# done
+#
+# TESTIDs="messung4f messung4g messung4h messung4i messung4j messung4k messung4l"
+# for testID in $TESTIDs ; do
+#    export TESTID=$testID
+#    ./test4a start europe pr
+#    ./test4a start america pr
+#    ./test4a start asia pr
+#    sleep 60
+#    ./test4a start europe pe 5
+#    ./test4a start america pe 5
+#    ./test4a start asia pe 5
+#    sleep 60
+#    ./test4a start europe pu 15
+#    ./test4a start america pu 15
+#    ./test4a start asia pu 15
+#    sleep 900
+#    ./test4a stop asia pe 2
+#    sleep 900
+#    ./test4a start europe pe 6
+#    ./test4a start america pe 6
+#    sleep 900
+#    ./test4a start asia pe 5
+#    sleep 300
+#    ./test4a stop europe pe 1
+#    ./test4a stop america pe 1
+#    sleep 900
+#    ./test4a stop all
+#    ./test4a results
+# done
+#
+# tar czvf m.tar.gz messung? messung??
+# scp m.tar.gz test?.pdf svn:
 
 
 

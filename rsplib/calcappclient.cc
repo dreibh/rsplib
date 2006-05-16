@@ -742,6 +742,9 @@ int main(int argc, char** argv)
       if(!(strncmp(argv[i],"-ph=",4))) {
          poolHandle = (char*)&argv[i][4];
       }
+      if(!(strncmp(argv[i],"-poolhandle=",12))) {
+         poolHandle = (char*)&argv[i][12];
+      }
       else if(!(strncmp(argv[i], "-object=" ,8))) {
          objectName = (char*)&argv[i][8];
       }
