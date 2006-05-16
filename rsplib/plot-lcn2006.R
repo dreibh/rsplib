@@ -40,13 +40,19 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxis
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
    hbarMeanSteps <- 52
 
-   if(resultType =="HandlingTime") {
+   aggregator <- hbarDefaultAggregator
+   if(resultType == "HandlingTime") {
       ySet <- data$HandlingTime
       yTitle <- "Average Request Handling Time [s]"
    }
-   else if(resultType =="HandlingSpeed") {
+   else if(resultType == "HandlingSpeed") {
       ySet <- data$HandlingSpeed
+      aggregator <- hbarHandlingSpeedAggregator
       yTitle <- "Average Request Handling Speed [Calculations/s]"
+   }
+   else if(resultType == "QueueLength") {
+      ySet <- data$QueueLength
+      yTitle <- "Average Queue Length [1]"
    }
    else {
       stop("Bad result type!")
@@ -70,6 +76,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxis
       plotstd3(mainTitle, xTitle, yTitle, zTitle, xSet, ySet,
                zSet, vSet, wSet, vTitle, wTitle,
                hbarSet = hbarSet, hbarMeanSteps = hbarMeanSteps,
+               hbarAggregator = aggregator,
                xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                type="h",
@@ -91,6 +98,7 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxis
                   xSubset, ySubset,
                   zSubset, vSubset, wSubset, vTitle, wTitle,
                   hbarSet = hbarSubset, hbarMeanSteps = hbarMeanSteps,
+                  hbarAggregator = aggregator,
                   xSeparatorsSet = xSeparatorsSet, xSeparatorsTitles = xSeparatorsTitles,
                   xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
                   type="h",
@@ -109,11 +117,11 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Normal\nOperation")
 
 pdf("lcn2006-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
-generateOutput("messung4d/pu-vectors.vec.bz2", "HandlingTime", "", TRUE,
-               seq(0,65,5), seq(0,16,2))
+generateOutput("messung4d/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
+               seq(0,65,5), seq(0,1000000,200000))
 dev.off()
 
 pdf("lcn2006-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
-generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingTime", "", TRUE,
-               seq(0,65,5), seq(0,16,2))
+generateOutput("messung3a/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
+               seq(0,65,5), seq(0,1000000,200000))
 dev.off()
