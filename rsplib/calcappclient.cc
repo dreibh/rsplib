@@ -739,9 +739,6 @@ int main(int argc, char** argv)
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
 #endif
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i],"-ph=",4))) {
-         poolHandle = (char*)&argv[i][4];
-      }
       if(!(strncmp(argv[i],"-poolhandle=",12))) {
          poolHandle = (char*)&argv[i][12];
       }
@@ -810,6 +807,7 @@ int main(int argc, char** argv)
         << "Object                  = " << objectName << endl
         << "Vector File             = " << vectorFileName << endl
         << "Scalar File             = " << scalarFileName << endl
+        << "Pool Handle             = " << poolHandle << endl
         << "Job Interval            = " << (JobInterval / 1000000.0) << " [s]" << endl
         << "Job Size                = " << JobSize << " [Calculations]" << endl
         << "Keep-Alive Transm. Int. = " << (KeepAliveTransmissionInterval / 1000000.0) << " [s]" << endl

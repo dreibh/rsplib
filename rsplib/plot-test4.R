@@ -109,51 +109,21 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
 
 pdf("test4.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
 
-# xSeparatorsSet <- c()
-# xSeparatorsTitles <- c()
-# generateOutput("messung1/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung2/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy", TRUE,
-#                seq(0,50,10))
-# generateOutput("messung1/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor")
-# generateOutput("messung2/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy")
-
-
 xSeparatorsSet <- c(15, 30, 45, 50)
 xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-generateOutput("messung3l/pu-vectors.vec.bz2", "HandlingTime", "3l Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3m/pu-vectors.vec.bz2", "HandlingTime", "3m Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3n/pu-vectors.vec.bz2", "HandlingTime", "3n Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3o/pu-vectors.vec.bz2", "HandlingTime", "3o Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3p/pu-vectors.vec.bz2", "HandlingTime", "3p Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3q/pu-vectors.vec.bz2", "HandlingTime", "3q Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3r/pu-vectors.vec.bz2", "HandlingTime", "3r Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3s/pu-vectors.vec.bz2", "HandlingTime", "3s Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung3t/pu-vectors.vec.bz2", "HandlingTime", "3t Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-
-generateOutput("messung4f/pu-vectors.vec.bz2", "HandlingTime", "4f Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung4g/pu-vectors.vec.bz2", "HandlingTime", "4g Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung4h/pu-vectors.vec.bz2", "HandlingTime", "4h Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung4i/pu-vectors.vec.bz2", "HandlingTime", "4i Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung4j/pu-vectors.vec.bz2", "HandlingTime", "4j Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
-generateOutput("messung4k/pu-vectors.vec.bz2", "HandlingTime", "4k Least Used Policy with Delay Penalty Factor", TRUE,
-               seq(0,50,10))
+runsSet <- c("00")
+for(run in runsSet) {
+  generateOutput(paste(sep="", "messung5A-", run, "/pu-vectors.vec.bz2"),
+                 "HandlingTime",
+                 paste(sep="", "messung5A-", run, " - Least Used Policy with Delay Penalty Factor"),
+                 TRUE, seq(0, 50, 5))
+  generateOutput(paste(sep="", "messung5B-", run, "/pu-vectors.vec.bz2"),
+                 "HandlingTime",
+                 paste(sep="", "messung5B-", run, " - Least Used Policy"),
+                 TRUE, seq(0, 50, 5))
+}
 
 dev.off()
