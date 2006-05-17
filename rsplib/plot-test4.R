@@ -114,7 +114,7 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-runsSet <- c("01")
+runsSet <- c("00")
 for(run in runsSet) {
   generateOutput(paste(sep="", "messung6A-", run, "/pu-vectors.vec.bz2"),
                  "HandlingTime",
