@@ -114,15 +114,15 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-runsSet <- c("00")
+runsSet <- c("01")
 for(run in runsSet) {
-  generateOutput(paste(sep="", "messung5A-", run, "/pu-vectors.vec.bz2"),
+  generateOutput(paste(sep="", "messung6A-", run, "/pu-vectors.vec.bz2"),
                  "HandlingTime",
-                 paste(sep="", "messung5A-", run, " - Least Used Policy with Delay Penalty Factor"),
+                 paste(sep="", "messung6A-", run, " - Least Used Policy with Delay Penalty Factor"),
                  TRUE, seq(0, 50, 5))
-  generateOutput(paste(sep="", "messung5B-", run, "/pu-vectors.vec.bz2"),
+  generateOutput(paste(sep="", "messung6B-", run, "/pu-vectors.vec.bz2"),
                  "HandlingTime",
-                 paste(sep="", "messung5B-", run, " - Least Used Policy"),
+                 paste(sep="", "messung6B-", run, " - Least Used Policy"),
                  TRUE, seq(0, 50, 5))
 }
 

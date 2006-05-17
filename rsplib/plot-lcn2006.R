@@ -117,11 +117,11 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Normal\nOperation")
 
 pdf("lcn2006-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
-generateOutput("messung4g/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
+generateOutput("messung5B-09/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))
 dev.off()
 
 pdf("lcn2006-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
-generateOutput("messung3s/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
+generateOutput("messung5A-09/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))
 dev.off()

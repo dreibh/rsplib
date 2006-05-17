@@ -355,6 +355,8 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
+   char buffer[4096];
+
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
       process->Status = PS_Failed;
@@ -394,25 +396,27 @@ void handleCalcAppCompleted(struct Process* process,
         << " => HandlingSpeed   = " << handlingSpeed << " [Calculations/s]" << endl;
 
    if(VectorLine == 0) {
-      fprintf(VectorFH, "ObjectName "
-                        "JobID JobSize JobInterval "
-                        "QueueLength "
-                        "QueuingDelay StartupDelay ProcessingTime "
-                        "HandlingTime HandlingSpeed "
-                        "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n");
+      fputs("ObjectName "
+            "JobID JobSize JobInterval "
+            "QueueLength "
+            "QueuingDelay StartupDelay ProcessingTime "
+            "HandlingTime HandlingSpeed "
+            "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n", VectorFH);
    }
-   fprintf(VectorFH," %u %s %u %1.0f %1.6f %u %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
-           ++VectorLine,
-           process->ObjectName,
-           process->CurrentJob->JobID, process->CurrentJob->JobSize,
-           JobInterval / 1000000.0,
-           process->CurrentJob->QueueLength,
-           queuingDelay, startupDelay, processingTime,
-           handlingTime, handlingSpeed,
-           process->CurrentJob->QueuingTimeStamp / 1000000.0,
-           process->CurrentJob->StartupTimeStamp / 1000000.0,
-           process->CurrentJob->AcceptTimeStamp / 1000000.0,
-           process->CurrentJob->CompleteTimeStamp / 1000000.0);
+   snprintf((char*)&buffer, sizeof(buffer),
+            " %u %s %u %1.0f %1.6f %u %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
+            ++VectorLine,
+            process->ObjectName,
+            process->CurrentJob->JobID, process->CurrentJob->JobSize,
+            JobInterval / 1000000.0,
+            process->CurrentJob->QueueLength,
+            queuingDelay, startupDelay, processingTime,
+            handlingTime, handlingSpeed,
+            process->CurrentJob->QueuingTimeStamp / 1000000.0,
+            process->CurrentJob->StartupTimeStamp / 1000000.0,
+            process->CurrentJob->AcceptTimeStamp / 1000000.0,
+            process->CurrentJob->CompleteTimeStamp / 1000000.0);
+   fwrite((char*)&buffer, strlen(buffer), 1, VectorFH);
    fflush(VectorFH);
 }
 
