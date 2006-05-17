@@ -54,13 +54,16 @@ for SERVER in $SERVER_LIST; do
    ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Packaging results on $SERVER ...\" &&
       cd bin && \
-      sudo rm -f *.tar.bz2 *.log.bz2 *.vec.bz2 *.sca.bz2 *.tar.gz && \
-      FILES=\`find . -name \"core.*\" -or -name \"$TESTID-*.log\" -or -name \"$TESTID-*.vec\" -or -name \"$TESTID-*.sca\"\` && \
-      if [ \"x\$FILES\" != \"x\" ]; then \
-         echo \"Compressing files \$FILES ...\" && \
-         sudo bzip2 \$FILES ; \
+      INFILES=\`find . -name \"$TESTID-*.log\" -or -name \"$TESTID-*.vec\" -or -name \"$TESTID-*.sca\"\` && \
+      BZFILES=\`find . -name \"$TESTID-*.log.bz2\" -or -name \"$TESTID-*.vec.bz2\" -or -name \"$TESTID-*.sca.bz2\"\` && \
+      if [ \"x\$INFILES\" != \"x\" ]; then \
+         if [ \"x\$BZFILES\" != \"x\" ]; then \
+            sudo rm -f \$BZFILES ; \
+         fi && \
+         echo \"Compressing files \$INFILES ...\" && \
+         sudo bzip2 -k \$INFILES ; \
       fi && \
-      find . -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" &
+      find . -name \"core.*\" -or -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" &
 done
 
 wait
