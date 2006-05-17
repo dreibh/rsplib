@@ -355,8 +355,6 @@ void handleCalcAppCompleted(struct Process* process,
                             CalcAppMessage* message,
                             const size_t    size)
 {
-   char buffer[4096];
-
    if(process->CurrentJob->JobID != ntohl(message->JobID)) {
       cerr << "ERROR: CalcAppCompleted for wrong job!" << endl;
       process->Status = PS_Failed;
@@ -401,22 +399,31 @@ void handleCalcAppCompleted(struct Process* process,
             "QueueLength "
             "QueuingDelay StartupDelay ProcessingTime "
             "HandlingTime HandlingSpeed "
-            "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n", VectorFH);
+            "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp   EndMarker\n", VectorFH);
    }
-   snprintf((char*)&buffer, sizeof(buffer),
-            " %u %s %u %1.0f %1.6f %u %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f %1.6f\n",
+
+   char basicsBuffer[512];
+   char performanceBuffer[512];
+   char timeStampBuffer[512];
+   snprintf((char*)&basicsBuffer, sizeof(basicsBuffer),
+            "%06u %s %u %1.0f %1.6f",
             ++VectorLine,
             process->ObjectName,
-            process->CurrentJob->JobID, process->CurrentJob->JobSize,
-            JobInterval / 1000000.0,
+            process->CurrentJob->JobID,
+            process->CurrentJob->JobSize,
+            JobInterval / 1000000.0);
+   snprintf((char*)&performanceBuffer, sizeof(performanceBuffer),
+            "%u %1.6f %1.6f %1.6f %1.6f %1.6f",
             process->CurrentJob->QueueLength,
             queuingDelay, startupDelay, processingTime,
-            handlingTime, handlingSpeed,
+            handlingTime, handlingSpeed);
+   snprintf((char*)&timeStampBuffer, sizeof(timeStampBuffer),
+            "%1.6f %1.6f %1.6f %1.6f",
             process->CurrentJob->QueuingTimeStamp / 1000000.0,
             process->CurrentJob->StartupTimeStamp / 1000000.0,
             process->CurrentJob->AcceptTimeStamp / 1000000.0,
             process->CurrentJob->CompleteTimeStamp / 1000000.0);
-   fwrite((char*)&buffer, strlen(buffer), 1, VectorFH);
+   fprintf(VectorFH, "%s   %s   %s   MyEndMarker\n   ", basicsBuffer, performanceBuffer, timeStampBuffer);
    fflush(VectorFH);
 }
 

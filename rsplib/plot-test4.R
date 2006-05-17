@@ -25,11 +25,11 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    data <- loadResults(inFile)
 
    cat("-----",inFile,"-----\n")
-   handlingTimeStat(data, 1, 14)
-   handlingTimeStat(data, 16, 29)
-   handlingTimeStat(data, 31, 45)
-   handlingTimeStat(data, 46, 49)
-   handlingTimeStat(data, 51, 64)
+#    handlingTimeStat(data, 1, 14)
+#    handlingTimeStat(data, 16, 29)
+#    handlingTimeStat(data, 31, 45)
+#    handlingTimeStat(data, 46, 49)
+#    handlingTimeStat(data, 51, 64)
 
    xSet <- (data$CompleteTimeStamp / 60)
    xOffset <- -min(xSet)
@@ -114,14 +114,14 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-runsSet <- c("00")
+runsSet <- c("X1","X2","X3")
 for(run in runsSet) {
   generateOutput(paste(sep="", "messung6A-", run, "/pu-vectors.vec.bz2"),
-                 "HandlingTime",
+                 "HandlingSpeed",
                  paste(sep="", "messung6A-", run, " - Least Used Policy with Delay Penalty Factor"),
                  TRUE, seq(0, 50, 5))
   generateOutput(paste(sep="", "messung6B-", run, "/pu-vectors.vec.bz2"),
-                 "HandlingTime",
+                 "HandlingSpeed",
                  paste(sep="", "messung6B-", run, " - Least Used Policy"),
                  TRUE, seq(0, 50, 5))
 }
