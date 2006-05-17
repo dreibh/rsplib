@@ -1,4 +1,4 @@
- /*
+/*
  * The rsplib Prototype -- An RSerPool Implementation.
  * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
@@ -423,8 +423,9 @@ void handleCalcAppCompleted(struct Process* process,
             process->CurrentJob->StartupTimeStamp / 1000000.0,
             process->CurrentJob->AcceptTimeStamp / 1000000.0,
             process->CurrentJob->CompleteTimeStamp / 1000000.0);
-   fprintf(VectorFH, "%s   %s   %s   MyEndMarker\n   ", basicsBuffer, performanceBuffer, timeStampBuffer);
-   fflush(VectorFH);
+   fprintf(VectorFH, "%s   %s   %s\n",
+           basicsBuffer, performanceBuffer, timeStampBuffer);
+   // fflush(VectorFH);
 }
 
 
@@ -834,16 +835,18 @@ int main(int argc, char** argv)
    }
 
    VectorFH = fopen(vectorFileName, "w");
-   if(VectorFH == NULL) {
+   if(VectorFH == NULL) {   // Make stream nun-buffered!
       cout << " Unable to open output file " << vectorFileName << endl;
       finishLogging();
    }
+   setbuf(VectorFH, NULL);
 
    ScalarFH = fopen(scalarFileName, "w");
    if(ScalarFH == NULL) {
       cout << " Unable to open output file " << scalarFileName << endl;
       finishLogging();
    }
+   setbuf(ScalarFH, NULL);   // Make stream nun-buffered!
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
 
 #ifndef FAST_BREAK

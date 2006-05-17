@@ -270,12 +270,14 @@ EventHandlingResult CalcAppServer::initialize()
       cout << " Unable to open output file " << VectorFileName << endl;
       return(EHR_Abort);
    }
+   setbuf(VectorFH, NULL);   // Make stream nun-buffered!
 
    ScalarFH = fopen(ScalarFileName.c_str(), "w");
    if(ScalarFH == NULL) {
       cout << " Unable to open output file " << ScalarFileName << endl;
       return(EHR_Abort);
    }
+   setbuf(ScalarFH, NULL);   // Make stream nun-buffered!
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
    return(EHR_Okay);
 }
@@ -443,7 +445,7 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
             serviceUptime / 1000000.0,
             availableCalculations, TotalUsedCalculations, utilization,
             (unsigned int)Jobs, (unsigned int)MaxJobs);
-      fflush(VectorFH);
+      // fflush(VectorFH);
    }
 }
 
