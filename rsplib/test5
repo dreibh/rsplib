@@ -118,7 +118,7 @@ startNetwork ()
 
 stopNetwork ()
 {
-   # ------ Stop PRs --------------------------------------------------------
+   # ------ Stop PUs --------------------------------------------------------
    number=1
    for pu in $localPUs ; do
       if [ ! $number -gt $localPULimit ] ; then
