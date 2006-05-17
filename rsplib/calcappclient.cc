@@ -395,11 +395,11 @@ void handleCalcAppCompleted(struct Process* process,
 
    if(VectorLine == 0) {
       fputs("ObjectName "
-            "JobID JobSize JobInterval "
+            "JobID JobSize JobInterval   "
             "QueueLength "
             "QueuingDelay StartupDelay ProcessingTime "
-            "HandlingTime HandlingSpeed "
-            "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp   EndMarker\n", VectorFH);
+            "HandlingTime HandlingSpeed   "
+            "QueuingTimeStamp StartupTimeStamp AcceptTimeStamp CompleteTimeStamp\n", VectorFH);
    }
 
    char basicsBuffer[512];
