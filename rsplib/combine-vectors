@@ -45,4 +45,4 @@ PU_VECTORS=`ls $TESTID-pu*.vec.bz2`
       echo "--values=$v"
       echo "--input=$v"
    done
-) | ../combinesummaries pu-vectors.vec.bz2 "Host"
+) | ../combinesummaries pu-vectors.vec.bz2 "Host" -quiet

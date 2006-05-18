@@ -43,8 +43,10 @@ while [ ! x$1 = "x" ] ; do
       if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
          echo "Processing $PIDFILE: sending SIGINT to $PID ..."
          kill $PID
+         # echo STOP $! -- $PID -- $PIDFILE >$RANDOM-$RANDOM.td0
       else
          echo "Processing $PIDFILE: process is already gone."
+         # echo DEAD $! -- $PIDFILE >$RANDOM-$RANDOM.td0
       fi
       rm $PIDFILE
    fi

@@ -133,14 +133,24 @@ int main(int argc, char** argv)
    char         inBuffer[1024];
    char*        command;
    int          bzerror;
+   bool         quiet = false;
 
    if(argc < 3) {
       cerr << "Usage: " << argv[0]
-           << " [Output File] [Var Names]" << endl;
+           << " [Output File] [Var Names] {-quiet}" << endl;
       exit(1);
    }
-   cout << "CombineSummaries - Version 2.00" << endl
-        << "===============================" << endl << endl;
+   for(int i = 3;i < argc;i++) {
+      if(!(strcmp(argv[i], "-quiet"))) {
+         quiet = true;
+      }
+   }
+
+
+   if(!quiet) {
+      cout << "CombineSummaries - Version 2.10" << endl
+           << "===============================" << endl << endl;
+   }
 
 
    FILE* outFile = fopen(argv[1], "w");
@@ -160,8 +170,10 @@ int main(int argc, char** argv)
    varNames     = argv[2];
    varValues[0] = 0x00;
    strcpy((char*)&simulationsDirectory, ".");
-   cout << "Ready> ";
-   cout.flush();
+   if(!quiet) {
+      cout << "Ready> ";
+      cout.flush();
+   }
    while((command = fgets((char*)&inBuffer, sizeof(inBuffer), stdin))) {
       command[strlen(command) - 1] = 0x00;
       if(command[0] == 0x00) {
@@ -169,7 +181,9 @@ int main(int argc, char** argv)
          break;
       }
 
-      cout << command << endl;
+      if(!quiet) {
+         cout << command << endl;
+      }
 
       if(!(strncmp(command, "--values=", 9))) {
          snprintf((char*)&varValues, sizeof(varValues), "%s", (char*)&command[9]);
@@ -203,17 +217,21 @@ int main(int argc, char** argv)
          exit(1);
       }
 
-      cout << "Ready> ";
-      cout.flush();
+      if(!quiet) {
+         cout << "Ready> ";
+         cout.flush();
+      }
    }
 
 
    unsigned int in, out;
    BZ2_bzWriteClose(&bzerror, outBZFile, 0, &in, &out);
-   cout << endl << endl
-        << "Results written to " << argv[1]
-        << " (" << outPos << " lines, "
-        << in << " -> " << out << " - " << ((double)out * 100.0 / in) << "%)" << endl;
+   if(!quiet) {
+      cout << endl << endl
+         << "Results written to " << argv[1]
+         << " (" << outPos << " lines, "
+         << in << " -> " << out << " - " << ((double)out * 100.0 / in) << "%)" << endl;
+   }
    fclose(outFile);
 
    return(0);

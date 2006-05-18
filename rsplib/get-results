@@ -60,10 +60,10 @@ for SERVER in $SERVER_LIST; do
          if [ \"x\$BZFILES\" != \"x\" ]; then \
             sudo rm -f \$BZFILES ; \
          fi && \
-         echo \"Compressing files \$INFILES ...\" && \
          sudo bzip2 -k \$INFILES ; \
       fi && \
-      find . -name \"core.*\" -or -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" &
+      find . -name \"core.*\" -or -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" \
+         2>&1 | grep -v "tcgetattr: Inappropriate ioctl for device" &
 done
 
 wait
@@ -71,14 +71,15 @@ wait
 
 for SERVER in $SERVER_LIST; do
    echo "Transfering $TESTID-$SERVER-results.tar.gz ..."
-   scp -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/$TESTID-$SERVER-results.tar.gz . &
+   scp -q -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER:bin/$TESTID-$SERVER-results.tar.gz . &
 done
 
 wait
 
 
+echo "Unpacking results ..."
 for SERVER in $SERVER_LIST; do
-   echo "Unpacking $TESTID-$SERVER-results.tar.gz ..."
+   # echo "Unpacking $TESTID-$SERVER-results.tar.gz ..."
    tar xzf $TESTID-$SERVER-results.tar.gz
 done
 

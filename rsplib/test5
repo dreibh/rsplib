@@ -74,6 +74,8 @@ startNetwork ()
          echo "Starting PR on $pr ..."
          ./start-process "Registrar-$TESTID-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
          let number=$number+1
+#       else
+#          echo "Skipping PR $pr!"
       fi
    done
 
@@ -91,8 +93,8 @@ startNetwork ()
             echo "Starting PE on $pe ..."
             ./start-process "PoolElement-$TESTID-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
             let number=$number+1
-         else
-            echo "Skipping PE $pe!"
+#          else
+#             echo "Skipping PE $pe!"
          fi
       done
 
@@ -109,8 +111,8 @@ startNetwork ()
             echo "Starting PU on $pu ..."
             ./start-process "PoolUser-$TESTID-$number" "./rootshell -c \"./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP\" >$TESTID-pu$number-$pu.log 2>&1" $pu &
             let number=$number+1
-         else
-            echo "Skipping PU $pu!"
+#          else
+#             echo "Skipping PU $pu!"
          fi
       done
    fi
@@ -124,8 +126,8 @@ stopNetwork ()
       if [ ! $number -gt $localPULimit ] ; then
          ./stop-process "PoolUser-$TESTID-$number" $pu
          let number=$number+1
-      else
-         echo "Skipping PU $pu!"
+#       else
+#          echo "Skipping PU $pu!"
       fi
    done
 
@@ -135,8 +137,8 @@ stopNetwork ()
       if [ ! $number -gt $localPELimit ] ; then
          ./stop-process "PoolElement-$TESTID-$number" $pe
          let number=$number+1
-      else
-         echo "Skipping PE $pe!"
+#       else
+#          echo "Skipping PE $pe!"
       fi
    done
 
@@ -146,8 +148,8 @@ stopNetwork ()
       if [ ! $number -gt $localPRLimit ] ; then
          ./stop-process "Registrar-$TESTID-$number" $pr
          let number=$number+1
-      else
-         echo "Skipping PR $pr!"
+#       else
+#          echo "Skipping PR $pr!"
       fi
    done
 }
@@ -159,74 +161,77 @@ action ()
    localPELimit=999999999
    localPULimit=999999999
    if [ "x$2" = "xaustralia" ] ; then
-      echo "Components in Australia"
+      # echo "Components in Australia"
       localPRs=$PR_AUSTRALIA
       localPEs=$PE_AUSTRALIA
       localPUs=$PU_AUSTRALIA
    elif [ "x$2" = "xasia" ] ; then
-      echo "Components in Asia"
+      # echo "Components in Asia"
       localPRs=$PR_ASIA
       localPEs=$PE_ASIA
       localPUs=$PU_ASIA
    elif [ "x$2" = "xeurope" ] ; then
-      echo "Components in Europe"
+      # echo "Components in Europe"
       localPRs=$PR_EUROPE
       localPEs=$PE_EUROPE
       localPUs=$PU_EUROPE
    elif [ "x$2" = "xamerica" ] ; then
-      echo "Components in America"
+      # echo "Components in America"
       localPRs=$PR_AMERICA
       localPEs=$PE_AMERICA
       localPUs=$PU_AMERICA
-   else
-      echo "Components in all regions"
+   elif [ "x$2" = "xall" ] ; then
+      # echo "Components in all regions"
       action $1 asia $3 $4 $5 $6
       action $1 america $3 $4 $5 $6
       action $1 europe $3 $4 $5 $6
       return
+   else
+      echo "ERROR: Invalid region specified!"
+      exit
    fi
 
    if [ "x$3" = "xpe" ] ; then
-      echo "- PEs only"
+      # echo "- PEs only"
       localPUs=
       localPRLimit=0
       if [ "x$4" != "x" ] ; then
          localPELimit=$4
-         echo "- PE limit is $localPELimit"
+         # echo "- PE limit is $localPELimit"
       fi
    elif [ "x$3" = "xpu" ] ; then
-      echo "- PUs only"
+      # echo "- PUs only"
       localPEs=
       localPRLimit=0
       if [ ! "x$4" = "x" ] ; then
          localPULimit=$4
-         echo "- PU limit is $localPULimit"
+         # echo "- PU limit is $localPULimit"
       fi
    elif [ "x$3" = "xpr" ] ; then
-      echo "- PRs only"
+      # echo "- PRs only"
       localPEs=
       localPUs=
    else
-      echo "- PRs, PEs and PUs"
+      # echo "- PRs, PEs and PUs"
       if [ ! "x$4" = "x" ] ; then
          localPRLimit=$4
-         echo "- PR limit is $localPRLimit"
+         # echo "- PR limit is $localPRLimit"
       fi
       if [ ! "x$5" = "x" ] ; then
          localPELimit=$5
-         echo "- PE limit is $localPELimit"
+         # echo "- PE limit is $localPELimit"
       fi
       if [ ! "x$6" = "x" ] ; then
          localPULimit=$6
-         echo "- PU limit is $localPULimit"
+         # echo "- PU limit is $localPULimit"
       fi
    fi
 
    if [ "x$1" = "xstart" ] ; then
-      echo "=> Start"
+      # echo "=> Start"
       startNetwork
    elif [ "x$1" = "xstop" ] ; then
-      echo "=> Stop"
+      # echo "=> Stop"
       stopNetwork
    fi
 }
