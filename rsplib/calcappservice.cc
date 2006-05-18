@@ -270,14 +270,14 @@ EventHandlingResult CalcAppServer::initialize()
       cout << " Unable to open output file " << VectorFileName << endl;
       return(EHR_Abort);
    }
-   setbuf(VectorFH, NULL);   // Make stream nun-buffered!
+   setbuf(VectorFH, NULL);   // Make stream non-buffered!
 
    ScalarFH = fopen(ScalarFileName.c_str(), "w");
    if(ScalarFH == NULL) {
       cout << " Unable to open output file " << ScalarFileName << endl;
       return(EHR_Abort);
    }
-   setbuf(ScalarFH, NULL);   // Make stream nun-buffered!
+   setbuf(ScalarFH, NULL);   // Make stream non-buffered!
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
    return(EHR_Okay);
 }
@@ -436,11 +436,12 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
    const double             utilization           = TotalUsedCalculations / availableCalculations;
    if(VectorFH) {
       if(VectorLine == 0) {
-         fprintf(VectorFH, "ObjectName CurrentTimeStamp Runtime AvailableCalculations UsedCalculations Utilization CurrentJobs MaxJobs\n");
+         fprintf(VectorFH, "ObjectName PID CurrentTimeStamp Runtime   AvailableCalculations UsedCalculations Utilization   CurrentJobs MaxJobs\n");
       }
-      fprintf(VectorFH," %u %s %1.6f %1.6f %1.0f %1.0f %1.6f %u %u\n",
+      fprintf(VectorFH,"%06u %s %u %1.6f %1.6f   %1.0f %1.0f %1.6f   %u %u\n",
             ++VectorLine,
             ObjectName.c_str(),
+            (unsigned int)getpid(),
             getMicroTime() / 1000000.0,
             serviceUptime / 1000000.0,
             availableCalculations, TotalUsedCalculations, utilization,

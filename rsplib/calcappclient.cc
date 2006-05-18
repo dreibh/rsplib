@@ -394,7 +394,7 @@ void handleCalcAppCompleted(struct Process* process,
         << " => HandlingSpeed   = " << handlingSpeed << " [Calculations/s]" << endl;
 
    if(VectorLine == 0) {
-      fputs("ObjectName "
+      fputs("ObjectName PID "
             "JobID JobSize JobInterval   "
             "QueueLength "
             "QueuingDelay StartupDelay ProcessingTime "
@@ -406,9 +406,10 @@ void handleCalcAppCompleted(struct Process* process,
    char performanceBuffer[512];
    char timeStampBuffer[512];
    snprintf((char*)&basicsBuffer, sizeof(basicsBuffer),
-            "%06u %s %u %1.0f %1.6f",
+            "%06u %s %u %u %1.0f %1.6f",
             ++VectorLine,
             process->ObjectName,
+            (unsigned int)getpid(),
             process->CurrentJob->JobID,
             process->CurrentJob->JobSize,
             JobInterval / 1000000.0);
@@ -835,7 +836,7 @@ int main(int argc, char** argv)
    }
 
    VectorFH = fopen(vectorFileName, "w");
-   if(VectorFH == NULL) {   // Make stream nun-buffered!
+   if(VectorFH == NULL) {   // Make stream non-buffered!
       cout << " Unable to open output file " << vectorFileName << endl;
       finishLogging();
    }
@@ -846,7 +847,7 @@ int main(int argc, char** argv)
       cout << " Unable to open output file " << scalarFileName << endl;
       finishLogging();
    }
-   setbuf(ScalarFH, NULL);   // Make stream nun-buffered!
+   setbuf(ScalarFH, NULL);   // Make stream non-buffered!
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
 
 #ifndef FAST_BREAK
