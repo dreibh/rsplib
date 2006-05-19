@@ -1,14 +1,14 @@
 #!/bin/bash
 
-runSets="00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"
+runSets="13 14 15 16"
 for run in $runSets ; do
    M1ID="messung6A-$run"
    M2ID="messung6B-$run"
    PR="-loglevel=3 -distancestep=75"
    M1PE="-poolhandle=PoolOne -calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.00001 -capmaxjobs=5 -loglevel=3"
    M2PE="-poolhandle=PoolTwo -calcapp -rereginterval=3333 -policy=LeastUsed -capmaxjobs=5 -loglevel=3"
-   M1PU="-poolhandle=PoolOne -jobinterval=10 -jobsize=1000000 -loglevel=3"
-   M2PU="-poolhandle=PoolTwo -jobinterval=10 -jobsize=1000000 -loglevel=3"
+   M1PU="-poolhandle=PoolOne -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+   M2PU="-poolhandle=PoolTwo -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
 
 
    # ------ Registrars ------------------------------------------------------

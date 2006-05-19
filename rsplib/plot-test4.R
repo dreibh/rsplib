@@ -25,15 +25,16 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    data <- loadResults(inFile)
 # cat("L=",length(data$CompleteTimeStamp),"\n")
 # return()
-handlingTimeStat(data, 0, 5)
-return()
+#handlingTimeStat(data, 0, 5)
+#return()
 
    cat("-----",inFile,"-----\n")
-#    handlingTimeStat(data, 1, 14)
-#    handlingTimeStat(data, 16, 29)
-#    handlingTimeStat(data, 31, 45)
-#    handlingTimeStat(data, 46, 49)
-#    handlingTimeStat(data, 51, 64)
+   handlingTimeStat(data, 1, 14)
+   handlingTimeStat(data, 16, 29)
+   handlingTimeStat(data, 31, 45)
+   handlingTimeStat(data, 46, 49)
+   handlingTimeStat(data, 51, 64)
+return()
 
    xSet <- (data$CompleteTimeStamp / 60)
    xOffset <- -min(xSet)
@@ -118,7 +119,7 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-runsSet <- c("X0","X1","X2","X3","X4","X5","X6","X7")
+runsSet <- c("01","04")   # c("00","01","02","03","04","05","06","07","08","09","10","11","12")
 for(run in runsSet) {
   generateOutput(paste(sep="", "messung6A-", run, "/pu-vectors.vec.bz2"),
                  "HandlingTime",

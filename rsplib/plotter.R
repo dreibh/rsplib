@@ -506,17 +506,19 @@ plotstd3 <- function(mainTitle,
          oldY <- mMean
 
          # ------ Plot confidence interval ----------------------------------
-         x <- xValue + (xWidth / 2)
-         cintWidthFraction <- 75
-         cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
-         lines(c(x, x), c(mMin, mMax),
-               col=meanBarColor, lwd=1*par("cex"))
-         lines(c(x - cintWidth, x + cintWidth),
-               c(mMin, mMin),
-               col=meanBarColor, lwd=1*par("cex"))
-         lines(c(x - cintWidth, x + cintWidth),
-               c(mMax, mMax),
-               col=meanBarColor, lwd=1*par("cex"))
+         if(mMin != mMax) {
+            x <- xValue + (xWidth / 2)
+            cintWidthFraction <- 75
+            cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
+            lines(c(x, x), c(mMin, mMax),
+                  col=meanBarColor, lwd=1*par("cex"))
+            lines(c(x - cintWidth, x + cintWidth),
+                  c(mMin, mMin),
+                  col=meanBarColor, lwd=1*par("cex"))
+            lines(c(x - cintWidth, x + cintWidth),
+                  c(mMax, mMax),
+                  col=meanBarColor, lwd=1*par("cex"))
+         }
       }
    }
 

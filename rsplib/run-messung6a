@@ -2,8 +2,8 @@
 
 runSets="X2 X3"
 for run in $runSets ; do
-   export M1ID="messung6A-$run"
-   export M2ID="messung6B-$run"
+   M1ID="messung6A-$run"
+   M2ID="messung6B-$run"
    PR="-loglevel=3 -distancestep=75"
    M1PE="-poolhandle=PoolOne -calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.00001 -capmaxjobs=5 -loglevel=3"
    M2PE="-poolhandle=PoolTwo -calcapp -rereginterval=3333 -policy=LeastUsed -capmaxjobs=5 -loglevel=3"
