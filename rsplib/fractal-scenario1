@@ -4,17 +4,17 @@
 
 TESTID=fractal-scenario1
 
-PR_AUSTRALIA=`cat pr-australia.hosts`
-PR_ASIA=`cat pr-asia.hosts`
-PR_AMERICA=`cat pr-usa.hosts`
-PR_EUROPE=`cat pr-europe.hosts`
+PR_AUSTRALIA=`grep "^[a-Z0-9]" pr-australia.hosts`
+PR_ASIA=`grep "^[a-Z0-9]" pr-asia.hosts`
+PR_AMERICA=`grep "^[a-Z0-9]" pr-usa.hosts`
+PR_EUROPE=`grep "^[a-Z0-9]" pr-europe.hosts`
 PR_ALL="$PR_AUSTRALIA $PR_ASIA $PR_AMERICA $PR_EUROPE"
 PR_MISCOPT="-loglevel=3"
 
-PE_AUSTRALIA=`cat pe-australia.hosts`
-PE_ASIA=`cat pe-asia.hosts`
-PE_AMERICA=`(cat pe-usa.hosts && cat usa.hosts) | sort -u`
-PE_EUROPE=`cat pe-europe.hosts`
+PE_AUSTRALIA=`grep "^[a-Z0-9]" pe-australia.hosts`
+PE_ASIA=`grep "^[a-Z0-9]" pe-asia.hosts`
+PE_AMERICA=`grep "^[a-Z0-9]" pe-usa.hosts`
+PE_EUROPE=`grep "^[a-Z0-9]" pe-europe.hosts`
 PE_ALL="$PE_AUSTRALIA $PE_ASIA $PE_AMERICA $PE_EUROPE"
 PE_MISCOPT="-fractal -fgpfailureafter=0 -rereginterval=10000 -policy=LeastUsed -loglevel=3 "
 

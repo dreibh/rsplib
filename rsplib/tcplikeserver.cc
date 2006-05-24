@@ -155,8 +155,8 @@ void TCPLikeServer::run()
       while(!Shutdown) {
          flags     = 0;
          received = rsp_recvmsg(RSerPoolSocketDescriptor,
-                              (char*)&buffer, sizeof(buffer),
-                              &rinfo, &flags, 1000000);
+                                (char*)&buffer, sizeof(buffer),
+                                &rinfo, &flags, 5000);
          if(received > 0) {
             // ====== Handle event ==========================================
             if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
@@ -263,7 +263,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register_tags(rserpoolSocket,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, reregInterval, tags) == 0) {
+                           loadinfo, reregInterval, 0, tags) == 0) {
 
          // ====== Main loop ================================================
          TCPLikeServerList        serverSet(maxThreads);
@@ -276,7 +276,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             serverSet.removeFinished();
 
             // ====== Wait for incoming sessions ============================
-            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25000);
+            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25);
             if(newRSerPoolSocket >= 0) {
                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                if((serviceThread) && (serverSet.add(serviceThread))) {
@@ -293,15 +293,11 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                const double newLoad = serverSet.getTotalLoad();
                if(fabs(newLoad - oldLoad) >= 0.01) {
                   oldLoad = newLoad;
-                  struct TagItem mytags[4];
                   loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
-                  mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
-                  mytags[0].Data = 0;
-                  mytags[1].Tag  = TAG_MORE;
-                  mytags[1].Data = (tagdata_t)tags;
                   rsp_register_tags(rserpoolSocket,
                                     (const unsigned char*)poolHandle, strlen(poolHandle),
-                                    loadinfo, reregInterval, (TagItem*)&mytags);
+                                    loadinfo, reregInterval, REGF_DONTWAIT,
+                                    tags);
                }
             }
 
@@ -315,7 +311,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
 
          // ====== Clean up =================================================
          serverSet.removeAll();
-         rsp_deregister(rserpoolSocket);
+         rsp_deregister(rserpoolSocket, DEREGF_DONTWAIT);
       }
       else {
          printf("ERROR: Failed to register PE to pool %s\n", poolHandle);

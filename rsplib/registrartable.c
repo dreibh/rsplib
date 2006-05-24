@@ -38,7 +38,7 @@
 
 #include "tdtypes.h"
 #include "registrartable.h"
-#include "rserpool.h"
+#include "rserpool-internals.h"
 #include "rserpoolmessage.h"
 #include "asapinstance.h"
 #include "leaflinkedredblacktree.h"

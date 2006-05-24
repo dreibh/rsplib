@@ -12,7 +12,7 @@ DISTSTRIP=0
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver calcappserver fractalserver discardserver nameserver daytimeserver echoserver"
 SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
 
-OPT_CSP=""   # "-cspserver=132.252.150.151:2960 -cspinterval=1000000"
+OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000000"
 
 
 #PLANETLAB_KEY=~/.ssh/lupo

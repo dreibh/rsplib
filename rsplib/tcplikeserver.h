@@ -26,7 +26,7 @@
 #ifndef TCPLIKESERVER_H
 #define TCPLIKESERVER_H
 
-#include "rserpool.h"
+#include "rserpool-internals.h"
 #include "cpprspserver.h"
 #include "thread.h"
 

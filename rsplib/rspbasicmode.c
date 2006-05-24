@@ -24,7 +24,7 @@
  */
 
 #include "tdtypes.h"
-#include "rserpool.h"
+#include "rserpool-internals.h"
 #include "rserpoolsocket.h"
 #include "dispatcher.h"
 #include "identifierbitmap.h"
@@ -382,6 +382,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
                                       struct rsp_addrinfo* rspAddrInfo,
                                       struct rsp_loadinfo* rspLoadInfo,
                                       unsigned int         registrationLife,
+                                      int                  flags,
                                       struct TagItem*      tags)
 {
    struct PoolHandle                myPoolHandle;
@@ -412,7 +413,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
          transportAddressBlockNew(myTransportAddressBlock,
                                   rspAddrInfo->ai_protocol,
                                   getPort((struct sockaddr*)rspAddrInfo->ai_addr),
-                                  (tagListGetData(tags, TAG_UserTransport_HasControlChannel, 0) != 0) ? TABF_CONTROLCHANNEL : 0,
+                                  (flags & REGF_CONTROLCHANNEL) ? TABF_CONTROLCHANNEL : 0,
                                   unpackedAddrs,
                                   rspAddrInfo->ai_addrs);
          ST_CLASS(poolElementNodeNew)(
@@ -434,7 +435,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
          LOG_END
 
          result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode,
-                     (bool)tagListGetData(tags, TAG_RspPERegistration_WaitForResult, (tagdata_t)true));
+                                       !(flags & REGF_DONTWAIT));
          if(result != RSPERR_OKAY) {
             rspAddrInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
          }
@@ -459,10 +460,12 @@ unsigned int rsp_pe_registration(const unsigned char* poolHandle,
                                  const size_t         poolHandleSize,
                                  struct rsp_addrinfo* rspAddrInfo,
                                  struct rsp_loadinfo* rspLoadInfo,
-                                 unsigned int         registrationLife)
+                                 unsigned int         registrationLife,
+                                 int                  flags)
 {
    return(rsp_pe_registration_tags(poolHandle, poolHandleSize,
-                                   rspAddrInfo, rspLoadInfo, registrationLife, NULL));
+                                   rspAddrInfo, rspLoadInfo, registrationLife,
+                                   flags, NULL));
 }
 
 
@@ -470,6 +473,7 @@ unsigned int rsp_pe_registration(const unsigned char* poolHandle,
 unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
                                         const size_t         poolHandleSize,
                                         const uint32_t       identifier,
+                                        int                  flags,
                                         struct TagItem*      tags)
 {
    struct PoolHandle myPoolHandle;
@@ -478,7 +482,7 @@ unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
       result = asapInstanceDeregister(gAsapInstance, &myPoolHandle, identifier,
-                  (bool)tagListGetData(tags, TAG_RspPEDeregistration_WaitForResult, (tagdata_t)true));
+                                      !(flags & DEREGF_DONTWAIT));
    }
    else {
       result = RSPERR_NOT_INITIALIZED;
@@ -493,9 +497,11 @@ unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
 /* ###### Deregister pool element ######################################## */
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
-                                   const uint32_t       identifier)
+                                   const uint32_t       identifier,
+                                   int                  flags)
 {
-   return(rsp_pe_deregistration_tags(poolHandle, poolHandleSize, identifier, NULL));
+   return(rsp_pe_deregistration_tags(poolHandle, poolHandleSize, identifier,
+                                     flags, NULL));
 }
 
 

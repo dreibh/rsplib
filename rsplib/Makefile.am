@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = librsplib.la libcpprspserver.la
 
 librsplibincludedir      = $(prefix)/include/rserpool
-librsplibinclude_HEADERS = rserpool.h rserpool-internals.h
+librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h
 librsplib_la_SOURCES = \
 asapinstance.c \
 asapinstance.h \
@@ -65,6 +65,8 @@ redblacktree_impl.h \
 registrartable.c \
 registrartable.h \
 rserpool.h \
+rserpool-internals.h \
+rserpool-policytypes.h \
 rserpoolsocket.c \
 rserpoolsocket.h \
 rserpoolerror.c \

@@ -62,7 +62,7 @@ for SERVER in $SERVER_LIST; do
          fi && \
          sudo bzip2 -k \$INFILES ; \
       fi && \
-      find . -name \"core.*\" -or -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" \
+      find . -name LastUpdate -or -name \"$TESTID-*.bz2\" | xargs sudo tar czf $TESTID-$SERVER-results.tar.gz" \
          2>&1 | grep -v "tcgetattr: Inappropriate ioctl for device" &
 done
 

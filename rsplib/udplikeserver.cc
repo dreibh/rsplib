@@ -191,7 +191,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       // ====== Register PE =================================================
       if(rsp_register(RSerPoolSocketDescriptor,
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, reregInterval) == 0) {
+                      loadinfo, reregInterval, 0) == 0) {
          double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)0xffffff);
 
          // ====== Startup ==================================================
@@ -219,7 +219,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                }
                ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor,
                                               (char*)&buffer, sizeof(buffer),
-                                              &rinfo, &flags, timeout);
+                                              &rinfo, &flags, (int)(timeout / 1000));
 
                // ====== Handle data ========================================
                if(received > 0) {
@@ -273,16 +273,11 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                   const double newLoad = getLoad();
                   if(fabs(newLoad - oldLoad) >= 0.01) {
                      oldLoad = newLoad;
-                     struct TagItem mytags[4];
                      loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
-                     mytags[0].Tag  = TAG_RspPERegistration_WaitForResult;
-                     mytags[0].Data = 0;
-                     mytags[1].Tag  = TAG_MORE;
-                     mytags[1].Data = (tagdata_t)tags;
                      if(rsp_register_tags(
                            RSerPoolSocketDescriptor,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, reregInterval, (TagItem*)&mytags) != 0) {
+                           loadinfo, reregInterval, REGF_DONTWAIT, tags) != 0) {
                         puts("ERROR: Failed to re-register PE with new load setting!");
                      }
                   }
@@ -294,7 +289,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          finish(initializeResult);
 
          // ====== Clean up =================================================
-         rsp_deregister(RSerPoolSocketDescriptor);
+         rsp_deregister(RSerPoolSocketDescriptor, 0);
       }
       else {
          printf("ERROR: Failed to register PE to pool %s\n", poolHandle);

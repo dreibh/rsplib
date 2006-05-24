@@ -30,7 +30,7 @@
  */
 
 #include "tdtypes.h"
-#include "rserpool.h"
+#include "rserpool-internals.h"
 #include "loglevel.h"
 #include "asapinstance.h"
 #include "rserpoolmessage.h"
@@ -187,6 +187,8 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
 /* ###### Destructor ##################################################### */
 void asapInstanceDelete(struct ASAPInstance* asapInstance)
 {
+   struct ASAPInterThreadMessage* aitm;
+
    if(asapInstance) {
       if(asapInstance->MainLoopThread != 0) {
          asapInstance->MainLoopShutdown = true;
@@ -213,7 +215,15 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
          asapInstance->RegistrarSet = NULL;
       }
       timerDelete(&asapInstance->RegistrarTimeoutTimer);
+
+      /* There may still be AITM messages queued. Remove them first. */
+      aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortDequeue(&asapInstance->MainLoopPort);
+      while(aitm) {
+         asapInterThreadMessageDelete(aitm);
+         aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortDequeue(&asapInstance->MainLoopPort);
+      }
       interThreadMessagePortDelete(&asapInstance->MainLoopPort);
+
       free(asapInstance);
    }
 }

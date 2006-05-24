@@ -32,6 +32,7 @@
 #include <qimage.h>
 #include <qdir.h>
 
+#include "rserpool.h"
 #include "fractalgeneratorpackets.h"
 
 

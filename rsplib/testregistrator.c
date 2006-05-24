@@ -200,7 +200,7 @@ int main(int argc, char** argv)
       }
       if(rsp_register(poolElementArray[i],
                       (const unsigned char*)poolHandle, strlen(poolHandle),
-                      &loadinfo, 60000) != 0) {
+                      &loadinfo, 60000, 0) != 0) {
          perror("Unable to register pool element");
          exit(1);
       }
@@ -216,7 +216,7 @@ int main(int argc, char** argv)
 
    if(!noDeregistration) {
       for(i = 0;i < elements;i++) {
-         rsp_deregister(poolElementArray[i]);
+         rsp_deregister(poolElementArray[i], 0);
          rsp_close(poolElementArray[i]);
       }
    }

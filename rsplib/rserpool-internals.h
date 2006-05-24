@@ -27,7 +27,6 @@
 #define RSERPOOLINTERNALS_H
 
 #include "rserpool.h"
-#include "poolpolicysettings.h"
 
 
 #ifdef __cplusplus
@@ -39,7 +38,6 @@ struct TagItem;
 
 
 #define TAG_PoolElement_Identifier                   (TAG_USER + 1000)
-#define TAG_UserTransport_HasControlChannel          (TAG_USER + 1050)
 
 #define TAG_RspSession_ConnectTimeout                (TAG_USER + 2000)
 #define TAG_RspSession_HandleResolutionRetryDelay    (TAG_USER + 2001)
@@ -53,19 +51,18 @@ struct TagItem;
 #define TAG_RspLib_RegistrarRequestTimeout           (TAG_USER + 4006)
 #define TAG_RspLib_RegistrarResponseTimeout          (TAG_USER + 4007)
 
-#define TAG_RspPERegistration_WaitForResult          (TAG_USER + 5000)
-#define TAG_RspPEDeregistration_WaitForResult        (TAG_USER + 5001)
-
 
 unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
                                       const size_t         poolHandleSize,
                                       struct rsp_addrinfo* rspAddrInfo,
                                       struct rsp_loadinfo* rspLoadInfo,
                                       unsigned int         registrationLife,
+                                      int                  flags,
                                       struct TagItem*      tags);
 unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
                                         const size_t         poolHandleSize,
                                         const uint32_t       identifier,
+                                        int                  flags,
                                         struct TagItem*      tags);
 unsigned int rsp_pe_failure_tags(const unsigned char* poolHandle,
                                  const size_t         poolHandleSize,
@@ -83,8 +80,11 @@ int rsp_register_tags(int                        sd,
                       const size_t               poolHandleSize,
                       const struct rsp_loadinfo* loadinfo,
                       unsigned int               reregistrationInterval,
+                      int                        flags,
                       struct TagItem*            tags);
-int rsp_deregister_tags(int sd, struct TagItem* tags);
+int rsp_deregister_tags(int            sd,
+                       int             flags,
+                       struct TagItem* tags);
 int rsp_accept_tags(int                sd,
                     unsigned long long timeout,
                     struct TagItem*    tags);
@@ -94,6 +94,10 @@ int rsp_connect_tags(int                  sd,
                      struct TagItem*      tags);
 int rsp_forcefailover_tags(int             sd,
                            struct TagItem* tags);
+
+
+int rsp_mapsocket(int sd, int toSD);
+int rsp_unmapsocket(int sd);
 
 
 /**

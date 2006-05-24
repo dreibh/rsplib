@@ -28,10 +28,12 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <netdb.h>
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <ext_socket.h>
-#include <netdb.h>
+
+#include "rserpool-policytypes.h"
 
 
 #ifdef __cplusplus
@@ -39,13 +41,13 @@ extern "C" {
 #endif
 
 
-#define RSPLIB_VERSION  0
+#define RSPLIB_VERSION  1
 #define RSPLIB_REVISION 9
 
 
 /*
    ##########################################################################
-   #### BASIC MODE                                                       ####
+   #### LIBRARY INITIALIZATION/CLEAN-UP                                  ####
    ##########################################################################
 */
 
@@ -69,9 +71,42 @@ struct rsp_info
    unsigned int               ri_csp_interval;
 };
 
+struct rsp_loadinfo
+{
+   uint32_t rli_policy;
+   uint32_t rli_weight;
+   uint32_t rli_weight_dpf;
+   uint32_t rli_load;
+   uint32_t rli_load_degradation;
+   uint32_t rli_load_dpf;
+};
+
+#define REGF_DONTWAIT         (1 << 0)   /* Do not wait for Registration Response   */
+#define REGF_CONTROLCHANNEL   (1 << 1)   /* Pool Element has Control Channel        */
+
+#define DEREGF_DONTWAIT       (1 << 0)   /* Do not wait for Deregistration Response */
+
+
+/**
+  * Initialize the RSerPool library. This function must be called before any
+  * other RSerPool library function can be used.
+  *
+  * @param info rsp_info structure with parameters (NULL for defaults).
+  * @param 0 in case of success; -1 in case of an error.
+  */
 int rsp_initialize(struct rsp_info* info);
+
+/**
+  * Clean-up the RSerPool library.
+  */
 void rsp_cleanup();
 
+
+/*
+   ##########################################################################
+   #### BASIC MODE API                                                   ####
+   ##########################################################################
+*/
 
 struct rsp_addrinfo {
    int                  ai_family;
@@ -84,29 +119,19 @@ struct rsp_addrinfo {
    uint32_t             ai_pe_id;
 };
 
-struct rsp_loadinfo
-{
-   uint32_t rli_policy;
-   uint32_t rli_weight;
-   uint32_t rli_weight_dpf;
-   uint32_t rli_load;
-   uint32_t rli_load_degradation;
-   uint32_t rli_load_dpf;
-};
-
-
 unsigned int rsp_pe_registration(const unsigned char* poolHandle,
                                  const size_t         poolHandleSize,
                                  struct rsp_addrinfo* rspAddrInfo,
                                  struct rsp_loadinfo* rspLoadInfo,
-                                 unsigned int         registrationLife);
+                                 unsigned int         registrationLife,
+                                 int                  flags);
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
-                                   const uint32_t       identifier);
+                                   const uint32_t       identifier,
+                                   int                  flags);
 unsigned int rsp_pe_failure(const unsigned char* poolHandle,
                             const size_t         poolHandleSize,
                             const uint32_t       identifier);
-
 int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     const size_t          poolHandleSize,
                     struct rsp_addrinfo** rserpoolAddrInfo);
@@ -116,7 +141,7 @@ void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
 
 /*
    ##########################################################################
-   #### ENHANCED MODE                                                    ####
+   #### ENHANCED MODE API                                                ####
    ##########################################################################
 */
 
@@ -193,33 +218,186 @@ union rserpool_notification
 #define RSERPOOL_SHUTDOWN_EVENT 3
 
 
+/* #######################################################################
+   #### RSerPool Socket Functions                                     ####
+   ####################################################################### */
+
+/**
+  * Creation of a RSerPool socket.
+  *
+  * @param domain Socket domain (e.g. AF_INET, AF_INET6, AF_UNSPEC).
+  * @param type Socket type (e.g. SOCK_DGRAM, SOCK_STREAM, SOCK_SEQPACKET).
+  * @param protocol Socket protocol (usually IPPROTO_SCTP).
+  * @return Socket descriptor or -1 in case of an error.
+  */
 int rsp_socket(int domain, int type, int protocol);
+
+/**
+  * Bind RSerPool socket to address(es).
+  *
+  * @param sd Socket descriptor.
+  * @param addrs Pointer to packed address array.
+  * @param addrcnt Number of addresses in address array.
+  * @return 0 in case of success; -1 in case of an error.
+  */
 int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt);
+
+/**
+  * Close RSerPool socket.
+  *
+  * @param sd Socket descriptor.
+  * @return 0 in case of success; -1 in case of an error.
+  */
 int rsp_close(int sd);
 
+/**
+  * Poll function for RSerPool sockets.
+  *
+  * @param ufds Poll array.
+  * @param nfds Number of FDs in poll array.
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return Number of FDs with events.
+  */
 int rsp_poll(struct pollfd* ufds, unsigned int nfds, int timeout);
-int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
+
+/**
+  * Select function for RSerPool sockets.
+  *
+  * @param n Maximum FD number plus 1.
+  * @param readfds Read FD set.
+  * @param writefds Write FD set.
+  * @param exceptfds Exception FD set.
+  * @param timeout Timeout in form of timeval structure (NULL for infinite).
+  * @return Number of FDs with events.
+  */
+int rsp_select(int             n,
+               fd_set*         readfds,
+               fd_set*         writefds,
+               fd_set*         exceptfds,
                struct timeval* timeout);
 
-int rsp_mapsocket(int sd, int toSD);
-int rsp_unmapsocket(int sd);
+/**
+  * Get RSerPool socket option.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param level Level number.
+  * @param optname Option number.
+  * @param optval Buffer to store option value to.
+  * @param optlen Pointer to option length. After returning, the value is set to the actual option length.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_getsockopt(int sd, int level, int optname, void* optval, socklen_t* optlen);
+
+/**
+  * Set RSerPool socket option.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param level Level number.
+  * @param optname Option number.
+  * @param optval Option value.
+  * @param optlen Length of the option value.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_setsockopt(int sd, int level, int optname, const void* optval, socklen_t optlen);
 
 
+/* #######################################################################
+   #### Pool Element Functions                                        ####
+   ####################################################################### */
+
+/**
+  * Register a pool element. Upon registration, the RSerPool socket becomes a Pool Element
+  * socket.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param poolHandle Pool handle.
+  * @param poolHandleSize Size of the pool handle in bytes.
+  * @param loadinfo rsp_loadinfo structure describing the pool policy (NULL for default, i.e. Round Robin).
+  * @param reregistrationInterval Reregistration interval in milliseconds.
+  * @param flags Flags (Set REGF_DONTWAIT in order to avoid blocking until reception of Registration Response).
+  * @return 0 in case of success; -1 in case of an error.
+  */
 int rsp_register(int                        sd,
                  const unsigned char*       poolHandle,
                  const size_t               poolHandleSize,
                  const struct rsp_loadinfo* loadinfo,
-                 unsigned int               reregistrationInterval);
-int rsp_deregister(int sd);
-int rsp_accept(int                sd,
-               unsigned long long timeout);
+                 unsigned int               reregistrationInterval,
+                 int                        flags);
+
+
+/**
+  * Deregister a pool element.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param flags Flags.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_deregister(int sd,
+                   int flags);
+
+/**
+  * Accept incoming session on RSerPool Pool Element socket.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return RSerPool socket descriptor for the new session in case of success; -1 in case of an error.
+  */
+int rsp_accept(int sd,
+               int timeout);
+
+
+/* #######################################################################
+   #### Pool User Functions                                           ####
+   ####################################################################### */
+
+/**
+  * Connect a RSerPool socket to a pool. Upon connection establishment, the RSerPool Socket becomes
+  * a description for the new session.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param poolHandle Pool handle.
+  * @param poolHandleSize Size of the pool handle in bytes.
+  * @return 0 in case of success; -1 in case of an error.
+  */
 int rsp_connect(int                  sd,
                 const unsigned char* poolHandle,
                 const size_t         poolHandleSize);
+
+/**
+  * Check, if a RSerPool socket has received a cookie from its PE.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @return 1, if a cookie has been received; 0 otherwise.
+  */
 int rsp_has_cookie(int sd);
+
+/**
+  * For a failover to a new Pool Element.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @return 0 in case of success; -1 in case of an error.
+  */
 int rsp_forcefailover(int sd);
 
 
+/* #######################################################################
+   #### Session Input/Output Functions                                ####
+   ####################################################################### */
+
+/**
+  * Send data to a RSerPool socket (session).
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param data Data to send.
+  * @param dataLength Length of the data in bytes.
+  * @param msg_flags Message flags.
+  * @param sessionID Session ID (for one-to-many style RSerPool socket only).
+  * @param sctpPPID SCTP payload protocol identifier.
+  * @param sctpStreamID SCTP stream ID.
+  * @param sctpTimeToLive SCTP time to live (ignored, if Pr-SCTP is not available).
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  */
 ssize_t rsp_sendmsg(int                sd,
                     const void*        data,
                     size_t             dataLength,
@@ -228,35 +406,124 @@ ssize_t rsp_sendmsg(int                sd,
                     uint32_t           sctpPPID,
                     uint16_t           sctpStreamID,
                     uint32_t           sctpTimeToLive,
-                    unsigned long long timeout);
+                    int                timeout);
+
+/**
+  * Send cookie via control channel.
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param data Cookie data to send.
+  * @param dataLength Length of the cookie data in bytes.
+  * @param sessionID Session ID (for one-to-many style RSerPool socket only).
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return length of the sent cookie data in case of success; -1 in case of an error.
+  */
+ssize_t rsp_send_cookie(int                  sd,
+                        const unsigned char* cookie,
+                        const size_t         cookieSize,
+                        rserpool_session_t   sessionID,
+                        int                  timeout);
+
+/**
+  * Receive data from a RSerPool socket (session).
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param buffer Buffer to write the received data into.
+  * @param bufferLength Buffer size.
+  * @param rinfo rsp_sndrcvinfo structure containing information about the received data (in particular the session ID for one-to-may style RSerPool sockets).
+  * @param msg_flags Pointer to message flags. In case of RSerPool notification, this function will set MSG_RSERPOOL_NOTIFICATION; for a received cookie echo, MSG_RSERPOOL_COOKIE_ECHO will be set.
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  */
 ssize_t rsp_recvmsg(int                    sd,
                     void*                  buffer,
                     size_t                 bufferLength,
                     struct rsp_sndrcvinfo* rinfo,
                     int*                   msg_flags,
-                    unsigned long long     timeout);
-ssize_t rsp_send_cookie(int                  sd,
-                        const unsigned char* cookie,
-                        const size_t         cookieSize,
-                        rserpool_session_t   sessionID,
-                        unsigned long long   timeout);
+                    int                    timeout);
+
+/**
+  * Wrapper for rsp_recvmsg().
+  *
+  * @param fd RSerPool socket descriptor.
+  * @param buffer Buffer to write the received data into.
+  * @param bufferLength Buffer size.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  *
+  * @see rsp_recvmsg
+  */
 ssize_t rsp_read(int fd, void* buffer, size_t bufferLength);
-ssize_t rsp_write(int fd, const char* buffer, size_t bufferLength);
+
+/**
+  * Wrapper for rsp_recvmsg().
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param buffer Buffer to write the received data into.
+  * @param bufferLength Buffer size.
+  * @param flags Message flags.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  *
+  * @see rsp_recvmsg
+  */
 ssize_t rsp_recv(int sd, void* buffer, size_t bufferLength, int flags);
-ssize_t rsp_send(int sd, const void* buffer, size_t bufferLength, int flags);
-int rsp_getsockopt(int sd, int level, int optname, void* optval, socklen_t* optlen);
-int rsp_setsockopt(int sd, int level, int optname, const void* optval, socklen_t optlen);
+
+/**
+  * Wrapper for rsp_sendmsg().
+  *
+  * @param fd RSerPool socket descriptor.
+  * @param data Data to send.
+  * @param dataLength Length of the data in bytes.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  *
+  * @see rsp_sendmsg
+  */
+ssize_t rsp_write(int fd, const char* data, size_t dataLength);
+
+/**
+  * Wrapper for rsp_sendmsg().
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param data Data to send.
+  * @param dataLength Length of the data in bytes.
+  * @param flags Message flags.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  *
+  * @see rsp_sendmsg
+  */
+ssize_t rsp_send(int sd, const void* data, size_t dataLength, int flags);
 
 
+/* #######################################################################
+   #### Miscellaneous Functions                                       ####
+   ####################################################################### */
+
+/**
+  * Print contents of RSerPool notification.
+  *
+  * @param notification RSerPool notification.
+  * @param fd File descriptor to print notification to (e.g. stdout).
+  */
 void rsp_print_notification(const union rserpool_notification* notification, FILE* fd);
+
+/**
+  * Translate policy ID into textual representation.
+  *
+  * @param policyType Policy type.
+  * @return Name of the policy or NULL if the type is unknown.
+  */
 const char* rsp_getpolicybytype(unsigned int policyType);
+
+/**
+  * Translate policy name into ID.
+  *
+  * @param policyName Policy name.
+  * @return ID of the policy or PPT_UNDEFINED in case of unknown policy.
+  */
 unsigned int rsp_getpolicybyname(const char* policyName);
 
 
 #ifdef __cplusplus
 }
 #endif
-
-#include "rserpool-internals.h"
 
 #endif

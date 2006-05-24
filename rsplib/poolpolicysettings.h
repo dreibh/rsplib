@@ -28,45 +28,12 @@
 
 #include <stdio.h>
 
+#include "rserpool-policytypes.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#define PPT_UNDEFINED                                 0x00
-
-#define PPT_ROUNDROBIN                                0x01
-#define PPT_WEIGHTED_ROUNDROBIN                       0x02
-#define PPT_RANDOM                                    0x03
-#define PPT_WEIGHTED_RANDOM                           0x04
-
-#define PPT_LEASTUSED                                 0x05
-#define PPT_LEASTUSED_DEGRADATION                     0x06
-#define PPT_RANDOMIZED_LEASTUSED                      0x07
-#define PPT_RANDOMIZED_LEASTUSED_DEGRADATION          0x08
-
-#define PPT_PRIORITY_LEASTUSED                        0x09
-#define PPT_PRIORITY_LEASTUSED_DEGRADATION            0x0a
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0x0b
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0x0c
-
-#define PPT_WEIGHTED_RANDOM_DPF                       0x20
-#define PPT_LEASTUSED_DPF                             0x21
-#define PPT_LEASTUSED_DEGRADATION_DPF                 0x22
-
-
-#define PPT_IS_ADAPTIVE(p) \
-   ( ((p) == PPT_LEASTUSED) || \
-     ((p) == PPT_LEASTUSED_DPF) || \
-     ((p) == PPT_LEASTUSED_DEGRADATION) || \
-     ((p) == PPT_LEASTUSED_DEGRADATION_DPF) || \
-     ((p) == PPT_PRIORITY_LEASTUSED) || \
-     ((p) == PPT_PRIORITY_LEASTUSED_DEGRADATION) || \
-     ((p) == PPT_RANDOMIZED_LEASTUSED) || \
-     ((p) == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) || \
-     ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED) || \
-     ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION) )
 
 
 struct PoolPolicySettings
@@ -97,7 +64,7 @@ void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
                                       char*                            buffer,
                                       const size_t                     bufferSize);
 int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
-                                        const struct PoolPolicySettings* pps2);
+                                 const struct PoolPolicySettings* pps2);
 int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps);
 int poolPolicySettingsAdapt(struct PoolPolicySettings* pps,
                             const unsigned int         destinationType);

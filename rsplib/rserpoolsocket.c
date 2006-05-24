@@ -83,12 +83,12 @@ struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
 
 /* ###### Wait until there is something to read ########################## */
 bool waitForRead(struct RSerPoolSocket* rserpoolSocket,
-                 unsigned long long     timeout)
+                 int                    timeout)
 {
    struct pollfd ufds[1];
    ufds[0].fd     = rserpoolSocket->Descriptor;
    ufds[0].events = POLLIN;
-   int result = rsp_poll((struct pollfd*)&ufds, 1, (int)(timeout / 1000));
+   int result = rsp_poll((struct pollfd*)&ufds, 1, timeout);
    if((result > 0) && (ufds[0].revents & POLLIN)) {
       return(true);
    }
@@ -98,7 +98,9 @@ bool waitForRead(struct RSerPoolSocket* rserpoolSocket,
 
 
 /* ###### Delete pool element ############################################ */
-void deletePoolElement(struct PoolElement* poolElement, struct TagItem* tags)
+void deletePoolElement(struct PoolElement* poolElement,
+                       int                 flags,
+                       struct TagItem*     tags)
 {
    int result;
 
@@ -110,7 +112,7 @@ void deletePoolElement(struct PoolElement* poolElement, struct TagItem* tags)
       result = rsp_pe_deregistration_tags((unsigned char*)&poolElement->Handle.Handle,
                                           poolElement->Handle.Size,
                                           poolElement->Identifier,
-                                          tags);
+                                          flags, tags);
       if(result != RSPERR_OKAY) {
          LOG_ERROR
          fprintf(stdlog, "Deregistration failed: ");
@@ -161,7 +163,6 @@ void reregistrationTimer(struct Dispatcher* dispatcher,
 bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
                     bool                   waitForRegistrationResult)
 {
-   struct TagItem        tags[16];
    struct rsp_addrinfo*  rspAddrInfo;
    struct rsp_addrinfo*  rspAddrInfo2;
    struct rsp_addrinfo*  next;
@@ -289,20 +290,22 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
    }
 
    /* ====== Set policy type and parameters ================================= */
-   tags[0].Tag  = TAG_UserTransport_HasControlChannel;
-   tags[0].Data = (tagdata_t)rserpoolSocket->PoolElement->HasControlChannel;
-   tags[1].Tag  = TAG_RspPERegistration_WaitForResult;
-   tags[1].Data = (tagdata_t)waitForRegistrationResult;
-   tags[2].Tag  = TAG_END;
+   int flags = 0;
+   if(waitForRegistrationResult == false) {
+      flags |= REGF_DONTWAIT;
+   }
+   if(rserpoolSocket->PoolElement->HasControlChannel) {
+      flags |= REGF_CONTROLCHANNEL;
+   }
 
    /* ====== Do registration ================================================ */
-   result = rsp_pe_registration_tags(
+   result = rsp_pe_registration(
                (unsigned char*)&rserpoolSocket->PoolElement->Handle.Handle,
                rserpoolSocket->PoolElement->Handle.Size,
                rspAddrInfo,
                &rserpoolSocket->PoolElement->LoadInfo,
                (unsigned int)(rserpoolSocket->PoolElement->RegistrationLife / 1000ULL),
-               (struct TagItem*)&tags);
+               flags);
    if(result == RSPERR_OKAY) {
       rserpoolSocket->PoolElement->Identifier = rspAddrInfo->ai_pe_id;
       LOG_VERBOSE2
