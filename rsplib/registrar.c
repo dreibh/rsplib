@@ -1246,7 +1246,7 @@ static void updateDistance(struct Registrar*                       registrar,
             *distance = roundDistance(assocStatus.sstat_primary.spinfo_srtt / 2,
                                       registrar->DistanceStep);
             LOG_VERBOSE
-            fprintf(stdlog, " FD %d, assoc %u: primary=", fd, assocID);
+            fprintf(stdlog, " FD %d, assoc %u: primary=", fd, (unsigned int)assocID);
             fputaddress((struct sockaddr*)&assocStatus.sstat_primary.spinfo_address,
                         false, stdlog);
             fprintf(stdlog, " cwnd=%u srtt=%u rto=%u mtu=%u\n",
@@ -2887,7 +2887,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
          else {
             LOG_WARNING
             fprintf(stdlog, "Received PPID $%08x on wrong socket -> Sending ABORT to assoc %u!\n",
-                    ppid, assocID);
+                    ppid, (unsigned int)assocID);
             LOG_END
             sendabort(fd, assocID);
          }
