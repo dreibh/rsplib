@@ -85,9 +85,9 @@ int rsp_register_tags(int                        sd,
 int rsp_deregister_tags(int            sd,
                        int             flags,
                        struct TagItem* tags);
-int rsp_accept_tags(int                sd,
-                    unsigned long long timeout,
-                    struct TagItem*    tags);
+int rsp_accept_tags(int             sd,
+                    int             timeout,
+                    struct TagItem* tags);
 int rsp_connect_tags(int                  sd,
                      const unsigned char* poolHandle,
                      const size_t         poolHandleSize,
