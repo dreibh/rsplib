@@ -621,6 +621,9 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #ifndef SPP_SACKDELAY_DISABLE
 #define SPP_SACKDELAY_DISABLE SPP_SACKDELAY_DISABLED
 #endif
+#ifndef sctp_adaptation_layer_event
+#define sctp_adaptation_layer_event sctp_adaption_layer_event
+#endif
 
 #endif
 
