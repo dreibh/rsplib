@@ -1875,8 +1875,9 @@ static bool scanMessage(struct RSerPoolMessage* message)
    }
    else {
       LOG_ERROR
-      fprintf(stdlog, "Wrong PPID ($%08x)\n", message->PPID);
-      LOG_END_FATAL
+      fprintf(stdlog, "Wrong PPID ($%08x), expected ASAP or ENRP\n", message->PPID);
+      LOG_END
+      return(false);
    }
 
    switch(message->Type) {
