@@ -408,6 +408,8 @@ void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t job
 void CalcAppServer::handleJobCompleteTimer(CalcAppServer::CalcAppServerJob* job)
 {
    cout << "Job " << job->SessionID << "/" << job->JobID << " is complete!" << endl;
+   updateCalculations();
+   scheduleJobs();
    sendCalcAppComplete(job);
    removeJob(job);
 }
