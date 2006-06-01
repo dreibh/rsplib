@@ -46,6 +46,10 @@
 using namespace std;
 
 
+#define FPU_RECV_TIMEOUT 3000
+#define FPU_SEND_TIMEOUT 3000
+
+
 /* ###### Constructor #################################################### */
 FractalPU::FractalPU(const size_t width,
                      const size_t height,
@@ -161,7 +165,7 @@ bool FractalPU::sendParameter()
    parameter.N             = Parameter.N;
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                      0, htonl(PPID_FGP), 0, 0, 5000000);
+                      0, htonl(PPID_FGP), 0, 0, FPU_SEND_TIMEOUT);
    if(sent < 0) {
       logerror("rsp_sendmsg() failed");
       return(false);
@@ -310,7 +314,7 @@ void FractalPU::run()
             PoolElementUsages = 0;
 
 
-            // ====== Initialize image object and timeout timer ================
+            // ====== Initialize image object and timeout timer =============
             qApp->lock();
             Parameter.Width         = width();
             Parameter.Height        = height();
@@ -350,7 +354,7 @@ void FractalPU::run()
                      ssize_t received;
 
                      received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                            &rinfo, &flags, 3000);
+                                            &rinfo, &flags, FPU_RECV_TIMEOUT);
                      while(received > 0) {
                         // ====== Handle notification =======================
                         if(flags & MSG_RSERPOOL_NOTIFICATION) {
@@ -404,7 +408,7 @@ void FractalPU::run()
 
                         flags = 0;
                         received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                               &rinfo, &flags, 3000);
+                                               &rinfo, &flags, FPU_RECV_TIMEOUT);
                      }
 
                      if(success == false) {
