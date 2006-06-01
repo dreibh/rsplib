@@ -114,8 +114,8 @@ bool FractalGeneratorServer::sendData(FGPData* data)
    data->StartY = htonl(data->StartY);
 
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                        data, dataSize, 0,
-                        0, htonl(PPID_FGP), 0, 0, 0);
+                      data, dataSize, 0,
+                      0, htonl(PPID_FGP), 0, 0, 0);
 
    data->Points = 0;
    data->StartX = 0;

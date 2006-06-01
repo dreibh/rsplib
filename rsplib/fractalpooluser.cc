@@ -46,8 +46,8 @@
 using namespace std;
 
 
-#define FPU_RECV_TIMEOUT 3000
-#define FPU_SEND_TIMEOUT 3000
+#define FPU_RECV_TIMEOUT 5000
+#define FPU_SEND_TIMEOUT 5000
 
 
 /* ###### Constructor #################################################### */
