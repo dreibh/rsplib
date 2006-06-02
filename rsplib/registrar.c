@@ -3207,7 +3207,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    sctpEvents.sctp_peer_error_event       = 1;
    sctpEvents.sctp_shutdown_event         = 1;
    sctpEvents.sctp_partial_delivery_event = 1;
-   sctpEvents.sctp_adaptation_layer_event = 1;
+   /* sctpEvents.sctp_adaptation_layer_event = 1; */
    if(ext_setsockopt(*sctpSocket, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
       perror("setsockopt() for SCTP_EVENTS failed");
       exit(1);
