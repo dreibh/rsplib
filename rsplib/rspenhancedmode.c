@@ -442,15 +442,15 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
    waitingTime = (1000 * timeout->tv_sec) + (timeout->tv_usec / 1000);
    result = rsp_poll((struct pollfd*)&ufds, nfds, waitingTime);
    if(result > 0) {
-      for(i = 0;i < n;i++) {
-         if( (!(ufds[nfds].events & POLLIN)) && (readfds) ) {
-            FD_CLR(i, readfds);
+      for(i = 0;i < nfds;i++) {
+         if( (!(ufds[i].events & POLLIN)) && (readfds) ) {
+            FD_CLR(ufds[i].fd, readfds);
          }
-         if( (!(ufds[nfds].events & POLLOUT)) && (writefds) ) {
-            FD_CLR(i, writefds);
+         if( (!(ufds[i].events & POLLOUT)) && (writefds) ) {
+            FD_CLR(ufds[i].fd, writefds);
          }
-         if( (!(ufds[nfds].events & (POLLIN|POLLHUP|POLLNVAL))) && (exceptfds) ) {
-            FD_CLR(i, exceptfds);
+         if( (!(ufds[i].events & (POLLIN|POLLHUP|POLLNVAL))) && (exceptfds) ) {
+            FD_CLR(ufds[i].fd, exceptfds);
          }
       }
    }
