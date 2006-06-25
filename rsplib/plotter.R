@@ -564,8 +564,8 @@ plotstd3 <- function(mainTitle,
 
    # ------ Plot legend -----------------------------------------------------
    if(!hideLegend) {
-      lx <- (max(xRange) - min(xRange)) * legendPos[1]
-      ly <- (max(yRange) - min(yRange)) * legendPos[2]
+      lx <- min(xRange) + ((max(xRange) - min(xRange)) * legendPos[1])
+      ly <- min(yRange) + ((max(yRange) - min(yRange)) * legendPos[2])
       lxjust <- 0.5
       lyjust <- 0.5
       if(legendPos[1] < 0.5) {
@@ -609,6 +609,12 @@ plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
                      aAxisTicks = length(levels(factor(aSet))) > 1,
                      xAxisTicks = c(),
                      yAxisTicks = c(),
+                     confidence = 0.95,
+                     hbarSet           = c(),
+                     hbarMeanSteps     = 10,
+                     xSeparatorsSet    = c(),
+                     xSeparatorsTitles = c(),
+                     xSeparatorsColors  = c(),
                      type       = "lines",
                      hideLegend = FALSE,
                      legendPos  = c(0,1),
@@ -721,6 +727,12 @@ plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
                xSubset, ySubset, zSubset,
                vSubset, wSubset, vTitle, wTitle,
                xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+               confidence = confidence,
+               hbarSet = hbarSet,
+               hbarMeanSteps = hbarMeanSteps,
+               xSeparatorsSet = xSeparatorsSet,
+               xSeparatorsTitles = xSeparatorsTitles,
+               xSeparatorsColors = xSeparatorsColors,
                type = type,
                hideLegend = hideLegend,
                legendPos = legendPos,
@@ -1073,7 +1085,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
       mtext(simulationName,
             side=1, at=0, line=0.5, adj=0, outer=TRUE,
             xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-      mtext(paste(sep="", "Copyright © ", format(Sys.time(), "%Y"), " Thomas Dreibholz - ", date()),
+      mtext(paste(sep="", "Copyright  ", format(Sys.time(), "%Y"), " Thomas Dreibholz - ", date()),
             side=1, at=1, line=0.5, adj=1, outer=TRUE,
             xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
 
