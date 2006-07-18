@@ -1269,7 +1269,10 @@ ssize_t rsp_recvmsg(int                    sd,
 
 
       /* ====== Nothing read from socket, but there may be a notification === */
-      else {
+      if(received < 0) {
+         /* A cookie or notification may have been received. In this case,
+            the if-blocks above have set received to -1! */
+
          /* ====== Give back Cookie Echo and notifications ================== */
          if(buffer != NULL) {
             received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, false);
