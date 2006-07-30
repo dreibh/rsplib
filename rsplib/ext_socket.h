@@ -589,7 +589,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #include <sys/uio.h>
 #include <netinet/sctp.h>
 
-
+/*
 #ifndef SCTP_UNORDERED
 #define SCTP_UNORDERED MSG_UNORDERED
 #endif
@@ -602,6 +602,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #ifndef MSG_EOF
 #define SCTP_EOF MSG_EOF
 #endif
+*/
 
 #ifndef SPP_HB_ENABLE
 #define SPP_HB_ENABLE SPP_HB_ENABLED

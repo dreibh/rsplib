@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -1983,8 +1983,9 @@ static void handlePeerPresence(struct Registrar*       registrar,
       else {
          LOG_ERROR
          fprintf(stdlog, "Unable to obtain peer addresses of FD %d, assoc %u\n",
-               fd, (unsigned int)assocID);
+                 fd, (unsigned int)assocID);
          LOG_END
+         return;
       }
    }
    LOG_VERBOSE2

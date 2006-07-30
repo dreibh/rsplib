@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -2138,7 +2138,6 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       fputs("\n", stdlog);
       LOG_END
 
-      CHECK((*message)->Error != RSPERR_OKAY);
       return((*message)->Error);
    }
    return(RSPERR_OUT_OF_MEMORY);
