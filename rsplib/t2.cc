@@ -9,10 +9,13 @@
 
 int main(int argc, char** argv)
 {
+   char          lastIFName[IFNAMSIZ];
    char          buffer[4096];
    struct ifconf ifc;
 
-   int sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+   int family = AF_INET;
+
+   int sd = socket(family, SOCK_DGRAM, IPPROTO_UDP);
 
 
    ifc.ifc_len = sizeof(buffer);
@@ -23,11 +26,10 @@ int main(int argc, char** argv)
       int                 offset;
 
       // loop over all interfaces
+      lastIFName[0] = 0x00;
       ifrbase = ifc.ifc_req;
       for(size_t i =0,offset = 0;offset < ifc.ifc_len;i++) {
          ifr = (const struct ifreq*)(&((char*)ifrbase)[offset]);
-         printf("#%d = %s  o=%d\n", i, ifr->ifr_name,offset);
-
 #ifdef HAVE_SIN_LEN
          /* The ifreq structure is overwritten by the following ioctl
             calls -> calculate the new offset here! */
@@ -38,11 +40,15 @@ int main(int argc, char** argv)
          offset += sizeof(struct ifreq);
 #endif
 
-         if(ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
-            if( (ifr->ifr_flags & IFF_UP) &&
-                (ifr->ifr_flags & IFF_MULTICAST) ) {
-
-               puts("ok!");
+         if(strcmp(lastIFName, ifr->ifr_name)) {
+            strcpy((char*)&lastIFName, ifr->ifr_name);
+            printf("#%d = %s  o=%d\n", i, ifr->ifr_name,offset);
+ 
+            if(ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
+               if( (ifr->ifr_flags & IFF_UP) &&
+                   (ifr->ifr_flags & IFF_MULTICAST) ) {
+                  puts("ok!");
+               }
             }
          }
       }
