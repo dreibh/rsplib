@@ -18,12 +18,25 @@ int main(int argc, char** argv)
    ifc.ifc_len = sizeof(buffer);
    ifc.ifc_buf = buffer;
    if(ioctl(sd, SIOCGIFCONF, (char*)&ifc) >= 0) {
-      struct ifreq* ifr;
+      const struct ifreq* ifr;
+      const struct ifreq* ifrbase;
+      int                 offset;
 
       // loop over all interfaces
-      ifr = ifc.ifc_req;
-      for(size_t i = 0;i < ifc.ifc_len / sizeof(struct ifreq);i++, ifr++) {
-         printf("#%d = %s\n", i, ifr->ifr_name);
+      ifrbase = ifc.ifc_req;
+      for(size_t i =0,offset = 0;offset < ifc.ifc_len;i++) {
+         ifr = (const struct ifreq*)(&((char*)ifrbase)[offset]);
+         printf("#%d = %s  o=%d\n", i, ifr->ifr_name,offset);
+
+#ifdef HAVE_SIN_LEN
+         /* The ifreq structure is overwritten by the following ioctl
+            calls -> calculate the new offset here! */
+         offset += sizeof(ifr->ifr_name) +
+                      (ifr->ifr_addr.sa_len > sizeof(struct sockaddr) ?
+                         ifr->ifr_addr.sa_len : sizeof(struct sockaddr));
+#else
+         offset += sizeof(struct ifreq);
+#endif
 
          if(ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
             if( (ifr->ifr_flags & IFF_UP) &&
@@ -32,10 +45,13 @@ int main(int argc, char** argv)
                puts("ok!");
             }
          }
-         else {
-            printf("Skipping interface %s\n", ifr->ifr_name);
-         }
       }
+      
+      
+      for(size_t i = 0;i < ifc.ifc_len;i++) {
+         if(isprint(buffer[i])) printf("%c", buffer[i]); else printf(".");         
+      }
+      puts("");
    }
    else {
       perror("ioctl SIOCGIFCONF failed - unable to obtain network interfaces");
