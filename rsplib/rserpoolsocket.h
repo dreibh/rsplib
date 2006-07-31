@@ -71,6 +71,7 @@ struct RSerPoolSocket
    int                           SocketType;
    int                           SocketProtocol;
    int                           Socket;
+   struct MessageBuffer*         MsgBuffer;
 
    struct PoolElement*           PoolElement;        /* PE mode                      */
    struct Session*               ConnectedSession;   /* TCP-like PU mode             */

@@ -44,6 +44,7 @@
 
 #include "rserpoolmessage.h"
 #include "poolhandlespacemanagement.h"
+#include "messagebuffer.h"
 #include "takeoverprocesslist.h"
 #include "randomizer.h"
 #include "breakdetector.h"
@@ -63,6 +64,7 @@
 
 #define MAX_NS_TRANSPORTADDRESSES                                          16
 #define MIN_ENDPOINT_ADDRESS_SCOPE                                          4
+#define RSERPOOL_MESSAGE_BUFFER_SIZE                                    65536
 #define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
 #define REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
@@ -100,19 +102,25 @@ struct Registrar
    struct Timer                               HandlespaceActionTimer;
    struct Timer                               PeerActionTimer;
 
+   struct MessageBuffer*                      UDPMessageBuffer;
+
    int                                        ASAPAnnounceSocket;
+   int                                        ASAPAnnounceSocketFamily;
    struct FDCallback                          ASAPSocketFDCallback;
    union sockaddr_union                       ASAPAnnounceAddress;
    bool                                       ASAPSendAnnounces;
    int                                        ASAPSocket;
+   struct MessageBuffer*                      ASAPMessageBuffer;
    struct Timer                               ASAPAnnounceTimer;
 
    int                                        ENRPMulticastOutputSocket;
+   int                                        ENRPMulticastOutputSocketFamily;
    int                                        ENRPMulticastInputSocket;
    struct FDCallback                          ENRPMulticastInputSocketFDCallback;
    union sockaddr_union                       ENRPMulticastAddress;
    int                                        ENRPUnicastSocket;
    struct FDCallback                          ENRPUnicastSocketFDCallback;
+   struct MessageBuffer*                      ENRPUnicastMessageBuffer;
    bool                                       ENRPAnnounceViaMulticast;
    bool                                       ENRPUseMulticast;
    struct Timer                               ENRPAnnounceTimer;
@@ -251,6 +259,25 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 
    registrar = (struct Registrar*)malloc(sizeof(struct Registrar));
    if(registrar != NULL) {
+      registrar->UDPMessageBuffer = messageBufferNew(RSERPOOL_MESSAGE_BUFFER_SIZE, false);
+      if(registrar->UDPMessageBuffer == NULL) {
+         free(registrar);
+         return(NULL);
+      }
+      registrar->ASAPMessageBuffer = messageBufferNew(RSERPOOL_MESSAGE_BUFFER_SIZE, true);
+      if(registrar->ASAPMessageBuffer == NULL) {
+         messageBufferDelete(registrar->UDPMessageBuffer);
+         free(registrar);
+         return(NULL);
+      }
+      registrar->ENRPUnicastMessageBuffer = messageBufferNew(RSERPOOL_MESSAGE_BUFFER_SIZE, true);
+      if(registrar->ENRPUnicastMessageBuffer == NULL) {
+         messageBufferDelete(registrar->ASAPMessageBuffer);
+         messageBufferDelete(registrar->UDPMessageBuffer);
+         free(registrar);
+         return(NULL);
+      }
+
       registrar->ServerID = serverID;
       if(registrar->ServerID == 0) {
          registrar->ServerID = random32();
@@ -335,6 +362,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       if(registrar->ASAPAnnounceSocket >= 0) {
          setNonBlocking(registrar->ASAPAnnounceSocket);
       }
+      registrar->ASAPAnnounceSocketFamily = getFamily(&registrar->ASAPAnnounceAddress.sa);
 
       fdCallbackNew(&registrar->ASAPSocketFDCallback,
                     &registrar->StateMachine,
@@ -359,6 +387,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                        registrarSocketCallback,
                        (void*)registrar);
       }
+      registrar->ENRPMulticastOutputSocketFamily = getFamily(&registrar->ENRPMulticastAddress.sa);
 
       timerStart(&registrar->ENRPAnnounceTimer, getMicroTime() + registrar->MentorHuntTimeout);
       if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
@@ -434,6 +463,12 @@ void registrarDelete(struct Registrar* registrar)
          registrar->ASAPAnnounceSocket = -1;
       }
       dispatcherDelete(&registrar->StateMachine);
+      messageBufferDelete(registrar->ENRPUnicastMessageBuffer);
+      registrar->ENRPUnicastMessageBuffer = NULL;
+      messageBufferDelete(registrar->ASAPMessageBuffer);
+      registrar->ASAPMessageBuffer = NULL;
+      messageBufferDelete(registrar->UDPMessageBuffer);
+      registrar->UDPMessageBuffer = NULL;
       free(registrar);
    }
 }
@@ -479,12 +514,14 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       message->RegistrarIdentifier = registrar->ServerID;
       messageLength = rserpoolMessage2Packet(message);
       if(messageLength > 0) {
-         if(ext_sendto(registrar->ASAPAnnounceSocket,
-                       message->Buffer,
-                       messageLength,
-                       0,
-                       (struct sockaddr*)&registrar->ASAPAnnounceAddress,
-                       getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress)) < (ssize_t)messageLength) {
+         if(sendMulticastOverAllInterfaces(
+               registrar->ASAPAnnounceSocket,
+               registrar->ASAPAnnounceSocketFamily,
+               message->Buffer,
+               messageLength,
+               0,
+               (struct sockaddr*)&registrar->ASAPAnnounceAddress,
+               getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress)) <= 0) {
             LOG_WARNING
             logerror("Unable to send announce");
             LOG_END
@@ -572,6 +609,7 @@ static void sendPeerPresence(struct Registrar*             registrar,
                              const bool                    replyRequired)
 {
    struct RSerPoolMessage*       message;
+   size_t                        messageLength;
    struct ST_CLASS(PeerListNode) peerListNode;
    char                          localAddressArrayBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
@@ -605,13 +643,33 @@ static void sendPeerPresence(struct Registrar*             registrar,
          ST_CLASS(peerListNodePrint)(&peerListNode, stdlog, ~0);
          fputs("\n", stdlog);
          LOG_END
-         if(rserpoolMessageSend((sd == registrar->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
-                                sd, assocID, msgSendFlags, 0, message) == false) {
-            LOG_WARNING
-            fputs("Sending PeerPresence failed\n", stdlog);
-            LOG_END
+
+         messageLength = rserpoolMessage2Packet(message);
+         if(messageLength > 0) {
+            if(sd == registrar->ENRPMulticastOutputSocket) {
+               if(sendMulticastOverAllInterfaces(
+                     registrar->ENRPMulticastOutputSocket,
+                     registrar->ENRPMulticastOutputSocketFamily,
+                     message->Buffer,
+                     messageLength,
+                     0,
+                     &destinationAddressList->sa,
+                     getSocklen(&destinationAddressList->sa)) <= 0) {
+                  LOG_WARNING
+                  fputs("Sending PeerPresence via multicast failed\n", stdlog);
+                  LOG_END
+               }
+            }
+            else {
+               if(rserpoolMessageSend(IPPROTO_SCTP,
+                                      sd, assocID, msgSendFlags, 0, message) == false) {
+                  LOG_WARNING
+                  fputs("Sending PeerPresence via unicast failed\n", stdlog);
+                  LOG_END
+               }
+            }
+            rserpoolMessageDelete(message);
          }
-         rserpoolMessageDelete(message);
       }
       else {
          LOG_ERROR
@@ -704,8 +762,10 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct Registrar*              registrar = (struct Registrar*)userData;
+#ifndef MSG_SEND_TO_ALL
    struct ST_CLASS(PeerListNode)* peerListNode;
+#endif
+   struct Registrar*              registrar = (struct Registrar*)userData;
 
    if(registrar->InInitializationPhase) {
       LOG_NOTE
@@ -729,6 +789,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                        0, false);
    }
 
+#ifndef MSG_SEND_TO_ALL
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers.List);
    while(peerListNode != NULL) {
       if(!(peerListNode->Flags & PLNF_MULTICAST)) {
@@ -747,6 +808,13 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                         &registrar->Peers.List,
                         peerListNode);
    }
+#else
+#warning Using MSG_SEND_TO_ALL!
+   sendPeerPresence(registrar,
+                    registrar->ENRPUnicastSocket, 0,
+                    MSG_SEND_TO_ALL,
+                    NULL, 0, 0, false);
+#endif
 
    unsigned long long n = getMicroTime() + randomizeCycle(registrar->PeerHeartbeatCycle);
    timerStart(timer, n);
@@ -1146,7 +1214,9 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
                              struct ST_CLASS(PoolElementNode)* poolElementNode,
                              const uint16_t                    action)
 {
+#ifndef MSG_SEND_TO_ALL
    struct ST_CLASS(PeerListNode)* peerListNode;
+#endif
    struct RSerPoolMessage*        message;
 
    message = rserpoolMessageNew(NULL, 65536);
@@ -1187,6 +1257,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
          }
       }
 
+#ifndef MSG_SEND_TO_ALL
       peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers.List);
       while(peerListNode != NULL) {
          if(!(peerListNode->Flags & PLNF_MULTICAST)) {
@@ -1206,6 +1277,13 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
                            &registrar->Peers.List,
                            peerListNode);
       }
+#else
+#warning Using MSG_SEND_TO_ALL!
+      rserpoolMessageSend(IPPROTO_SCTP,
+                          registrar->ENRPUnicastSocket,
+                          0,
+                          MSG_SEND_TO_ALL, 0, message);
+#endif
 
       rserpoolMessageDelete(message);
    }
@@ -2820,7 +2898,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
    union sctp_notification* notification;
    union sockaddr_union     remoteAddress;
    socklen_t                remoteAddressLength;
-   char                     buffer[65536];
+   struct MessageBuffer*    messageBuffer;
    int                      flags;
    uint32_t                 ppid;
    sctp_assoc_t             assocID;
@@ -2835,14 +2913,22 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
    fprintf(stdlog, "Event on socket %d...\n", fd);
    LOG_END
 
+   if(fd == registrar->ASAPSocket) {
+      messageBuffer = registrar->ASAPMessageBuffer;
+   }
+   else if(fd == registrar->ENRPUnicastSocket) {
+      messageBuffer = registrar->ENRPUnicastMessageBuffer;
+   }
+   else {
+      messageBuffer = registrar->UDPMessageBuffer;
+   }
+
    flags               = 0;
    remoteAddressLength = sizeof(remoteAddress);
-   received = recvfromplus(fd,
-                           (char*)&buffer, sizeof(buffer), &flags,
-                           (struct sockaddr*)&remoteAddress,
-                           &remoteAddressLength,
-                           &ppid, &assocID, &streamID,
-                           0);
+   received = messageBufferRead(messageBuffer, fd, &flags,
+                                (struct sockaddr*)&remoteAddress,
+                                &remoteAddressLength,
+                                &ppid, &assocID, &streamID, 0);
    if(received > 0) {
       if(!(flags & MSG_NOTIFICATION)) {
          if(!( (((ppid == PPID_ASAP) && (fd != registrar->ASAPSocket)) ||
@@ -2854,8 +2940,9 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                ppid = PPID_ENRP;
             }
 
-            result = rserpoolPacket2Message(buffer, &remoteAddress, assocID, ppid,
-                                          received, sizeof(buffer), &message);
+            result = rserpoolPacket2Message(messageBuffer->Buffer,
+                                            &remoteAddress, assocID, ppid,
+                                            received, messageBuffer->BufferSize, &message);
             if(message != NULL) {
                if(result == RSPERR_OKAY) {
                   message->BufferAutoDelete = false;
@@ -2879,7 +2966,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                         message->Type = EHT_ERROR;
                      }
                      rserpoolMessageSend(IPPROTO_SCTP,
-                                          fd, assocID, 0, 0, message);
+                                         fd, assocID, 0, 0, message);
                   }
                }
                rserpoolMessageDelete(message);
@@ -2894,44 +2981,44 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
          }
       }
       else {
-         notification = (union sctp_notification*)&buffer;
+         notification = (union sctp_notification*)messageBuffer->Buffer;
          switch(notification->sn_header.sn_type) {
             case SCTP_ASSOC_CHANGE:
                if(notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) {
                   LOG_ACTION
                   fprintf(stdlog, "Association communication lost for socket %d, assoc %u\n",
-                           registrar->ASAPSocket,
-                           (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+                          registrar->ASAPSocket,
+                          (unsigned int)notification->sn_assoc_change.sac_assoc_id);
 
                   LOG_END
                   registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                            notification->sn_assoc_change.sac_assoc_id);
+                                                          notification->sn_assoc_change.sac_assoc_id);
                }
                else if(notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) {
                   LOG_ACTION
                   fprintf(stdlog, "Association shutdown completed for socket %d, assoc %u\n",
-                           registrar->ASAPSocket,
-                           (unsigned int)notification->sn_assoc_change.sac_assoc_id);
+                          registrar->ASAPSocket,
+                          (unsigned int)notification->sn_assoc_change.sac_assoc_id);
 
                   LOG_END
                   registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                            notification->sn_assoc_change.sac_assoc_id);
+                                                          notification->sn_assoc_change.sac_assoc_id);
                }
                break;
             case SCTP_SHUTDOWN_EVENT:
                LOG_ACTION
                fprintf(stdlog, "Shutdown event for socket %d, assoc %u\n",
-                        registrar->ASAPSocket,
-                        (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
+                       registrar->ASAPSocket,
+                       (unsigned int)notification->sn_shutdown_event.sse_assoc_id);
 
                LOG_END
                registrarRemovePoolElementsOfConnection(registrar, fd,
-                                                         notification->sn_shutdown_event.sse_assoc_id);
+                                                       notification->sn_shutdown_event.sse_assoc_id);
                break;
          }
       }
    }
-   else {
+   else if(received != MBRead_Partial) {
       LOG_WARNING
       logerror("Unable to read from registrar socket");
       LOG_END

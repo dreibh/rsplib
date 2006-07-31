@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -328,8 +328,8 @@ int connectplus(int                   sockfd,
   * @param buffer Data to send.
   * @param length Length of data to send.
   * @param flags sendmsg() flags.
-  * @param to Destination address or NULL for connection-oriented socket.
-  * @param tolen Length of destination address or 0 if not given.
+  * @param toaddrs Destination addresses or NULL for connection-oriented socket.
+  * @param toaddrcnt Number of destination addresses.
   * @param ppid SCTP Payload Protocol Identifier.
   * @param assocID SCTP Association ID or 0 for connection-oriented socket.
   * @param streamID SCTP Stream ID.
@@ -404,6 +404,25 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID);
 bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add);
+
+/**
+  * Send multicast message over each possible interface.
+  *
+  * @param sockfd Socket descriptor.
+  * @param family Socket family (AF_INET or AF_INET6).
+  * @param buffer Data to send.
+  * @param length Length of data to send.
+  * @param flags sendmsg() flags.
+  * @param to Destination address or NULL for connection-oriented socket.
+  * @param tolen Length of destination address or 0 if not given.
+  */
+size_t sendMulticastOverAllInterfaces(int                    sockfd,
+                                      int                    family,
+                                      const void*            buffer,
+                                      const size_t           length,
+                                      const int              flags,
+                                      const struct sockaddr* to,
+                                      socklen_t              tolen);
 
 /**
   * Set address and port reuse on socket on or off.

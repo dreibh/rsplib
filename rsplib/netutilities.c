@@ -8,7 +8,7 @@
  *
  * Acknowledgement
  * This work was partially funded by the Bundesministerium fr Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (F�derkennzeichen 01AK045).
+ * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -1754,6 +1754,96 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const bool                  add)
 {
    return(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add));
+}
+
+
+/* ###### Send multicast message over each possible interface ############ */
+size_t sendMulticastOverAllInterfaces(int                    sd,
+                                      int                    family,
+                                      const void*            buffer,
+                                      const size_t           length,
+                                      const int              flags,
+                                      const struct sockaddr* to,
+                                      socklen_t              tolen)
+{
+   char           ifcbuffer[4096];
+   struct ifconf  ifc;
+   struct ifreq*  ifr;
+   struct in_addr inaddr;
+   size_t         i;
+   unsigned int   outif;
+   bool           ready;
+   size_t         successes = 0;
+
+   /* ====== Get all interfaces ========================================== */
+   ifc.ifc_len = sizeof(ifcbuffer);
+   ifc.ifc_buf = ifcbuffer;
+   if(ext_ioctl(sd, SIOCGIFCONF, (char*)&ifc) >= 0) {
+
+      /* ====== Loop over all interfaces ================================= */
+      ifr = ifc.ifc_req;
+      for(i = 0;i < ifc.ifc_len / sizeof(struct ifreq);i++,ifr++) {
+         /* printf("#%d = %s\n", i, ifr->ifr_name); */
+
+         if(ext_ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
+            if( (ifr->ifr_flags & IFF_UP) &&
+                (ifr->ifr_flags & IFF_MULTICAST) ) {
+               LOG_VERBOSE5
+               fprintf(stdlog, "Trying to send multicast via interface %s...\n",
+                       ifr->ifr_name);
+               LOG_END
+
+               ready = false;
+               if(family == AF_INET) {
+                  if(ext_ioctl(sd, SIOCGIFADDR, (char*)ifr) >= 0) {
+                     memcpy(&inaddr, &((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr, sizeof(struct in_addr));
+                     if(ext_setsockopt(sd, IPPROTO_IP, IP_MULTICAST_IF, &inaddr, sizeof(inaddr)) == 0) {
+                        ready = true;
+                     }
+                     else {
+                        LOG_ERROR
+                        logerror("Cannot set interface using IP_MULTICAST_IF");
+                        LOG_END
+                     }
+                  }
+                  else {
+                     LOG_ERROR
+                     logerror("ioctl SIOCGIFADDR failed - unable to obtain interfaces details");
+                     LOG_END
+                  }
+               }
+               else if(family == AF_INET6) {
+                  outif = if_nametoindex(ifr->ifr_name);
+                  if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
+                     ready = true;
+                  }
+               }
+
+               if(ready) {
+                  if(ext_sendto(sd, buffer, length, flags, to, tolen) > 0) {
+                     LOG_VERBOSE5
+                     fprintf(stdlog, "Successfully sent multicast via interface %s\n",
+                             ifr->ifr_name);
+                     LOG_END
+                     successes++;
+                  }
+               }
+            }
+         }
+         else {
+            LOG_ERROR
+            logerror("ioctl SIOCGIFFLAGS failed - unable to obtain interfaces details");
+            LOG_END
+         }
+      }
+   }
+   else {
+      LOG_ERROR
+      logerror("ioctl SIOCGIFCONF failed - unable to obtain network interfaces");
+      LOG_END
+   }
+
+   return(successes);
 }
 
 

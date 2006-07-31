@@ -128,8 +128,8 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    }
 
    /* ====== Allocate message buffer ===================================== */
-   rserpoolSocket->MessageBuffer = (char*)malloc(RSERPOOL_MESSAGE_BUFFER_SIZE);
-   if(rserpoolSocket->MessageBuffer == NULL) {
+   rserpoolSocket->MsgBuffer = messageBufferNew(RSERPOOL_MESSAGE_BUFFER_SIZE, true);
+   if(rserpoolSocket->MsgBuffer == NULL) {
       free(rserpoolSocket);
       close(fd);
       errno = ENOMEM;
@@ -139,7 +139,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    /* ====== Create session ID allocation bitmap ========================= */
    rserpoolSocket->SessionAllocationBitmap = identifierBitmapNew(SESSION_SETSIZE);
    if(rserpoolSocket->SessionAllocationBitmap == NULL) {
-      free(rserpoolSocket->MessageBuffer);
+      free(rserpoolSocket->MsgBuffer);
       free(rserpoolSocket);
       close(fd);
       errno = ENOMEM;
@@ -179,7 +179,7 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    /* ====== Has there been a problem? =================================== */
    if(rserpoolSocket->Descriptor < 0) {
       identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
-      free(rserpoolSocket->MessageBuffer);
+      free(rserpoolSocket->MsgBuffer);
       free(rserpoolSocket);
       close(fd);
       errno = EMFILE;
@@ -242,9 +242,9 @@ int rsp_close(int sd)
       identifierBitmapDelete(rserpoolSocket->SessionAllocationBitmap);
       rserpoolSocket->SessionAllocationBitmap = NULL;
    }
-   if(rserpoolSocket->MessageBuffer) {
-      free(rserpoolSocket->MessageBuffer);
-      rserpoolSocket->MessageBuffer = NULL;
+   if(rserpoolSocket->MsgBuffer) {
+      messageBufferDelete(rserpoolSocket->MsgBuffer);
+      rserpoolSocket->MsgBuffer = NULL;
    }
    threadSafetyDelete(&rserpoolSocket->SessionSetMutex);
    threadSafetyDelete(&rserpoolSocket->Mutex);
@@ -1134,7 +1134,8 @@ ssize_t rsp_recvmsg(int                    sd,
 
    /* ====== Give back Cookie Echo and notifications ===================== */
    if(buffer != NULL) {
-      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, true);
+      received = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength,
+                                             rinfo, msg_flags, true);
       if(received > 0) {
          return(received);
       }
@@ -1157,14 +1158,13 @@ ssize_t rsp_recvmsg(int                    sd,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket, currentTimeout);
          LOG_END
          flags = 0;
-         received = recvfromplus(rserpoolSocket->Socket,
-                                 (char*)rserpoolSocket->MessageBuffer,
-                                 RSERPOOL_MESSAGE_BUFFER_SIZE,
-                                 &flags, NULL, 0,
-                                 &rinfo->rinfo_ppid,
-                                 &assocID,
-                                 &rinfo->rinfo_stream,
-                                 currentTimeout);
+         received = messageBufferRead(rserpoolSocket->MsgBuffer,
+                                      rserpoolSocket->Socket,
+                                      &flags, NULL, 0,
+                                      &rinfo->rinfo_ppid,
+                                      &assocID,
+                                      &rinfo->rinfo_stream,
+                                      currentTimeout);
          LOG_VERBOSE
          fprintf(stdlog, "received=%d\n", (int)received);
          LOG_END
@@ -1218,14 +1218,14 @@ ssize_t rsp_recvmsg(int                    sd,
          /* ====== Handle notification ====================================== */
          if(flags & MSG_NOTIFICATION) {
             handleNotification(rserpoolSocket,
-                               (const union sctp_notification*)rserpoolSocket->MessageBuffer);
+                               (const union sctp_notification*)rserpoolSocket->MsgBuffer->Buffer);
             received = -1;
          }
 
          /* ====== Handle ASAP control channel message ====================== */
          else if(ntohl(rinfo->rinfo_ppid) == PPID_ASAP) {
             handleControlChannelMessage(rserpoolSocket, assocID,
-                                        (char*)rserpoolSocket->MessageBuffer, received);
+                                        rserpoolSocket->MsgBuffer->Buffer, received);
             received = -1;
          }
 
@@ -1261,7 +1261,7 @@ ssize_t rsp_recvmsg(int                    sd,
                }
             }
             received = min(received, (ssize_t)bufferLength);
-            memcpy(buffer, (const char*)rserpoolSocket->MessageBuffer, received);
+            memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
          }
 
          threadSafetyUnlock(&rserpoolSocket->Mutex);

@@ -158,6 +158,14 @@ void TCPLikeServer::run()
                                 (char*)&buffer, sizeof(buffer),
                                 &rinfo, &flags, 5000);
          if(received > 0) {
+            /*
+            for(int i = 0;i < received;i++) {
+               printf("%02x ", ((unsigned char*)&buffer)[i]);
+            }
+            puts("");
+            fflush(stdout);
+            */
+
             // ====== Handle event ==========================================
             if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
                if(IsNewSession) {

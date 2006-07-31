@@ -6,8 +6,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -35,6 +35,7 @@
 #include "tdtypes.h"
 #include "dispatcher.h"
 #include "tagitem.h"
+#include "messagebuffer.h"
 #include "rserpoolmessage.h"
 #include "poolhandlespacemanagement.h"
 #include "registrartable.h"
@@ -59,7 +60,9 @@ struct ASAPInstance
    struct ASAPInterThreadMessage*             LastAITM;
 
    int                                        RegistrarHuntSocket;
+   struct MessageBuffer*                      RegistrarHuntMessageBuffer;
    int                                        RegistrarSocket;
+   struct MessageBuffer*                      RegistrarMessageBuffer;
    RegistrarIdentifierType                    RegistrarIdentifier;
    unsigned long long                         RegistrarConnectionTimeStamp;
 

@@ -175,7 +175,8 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
       fprintf(stdlog, "Message length exceeds message size!\n"
              "p=%u + l=%u - 4 > size=%u\n",
              (unsigned int)message->Position, (unsigned int)length, (unsigned int)message->BufferSize);
-      LOG_END
+      LOG_END_FATAL
+// ????????????????
       message->Error = RSPERR_INVALID_VALUES;
       return(0);
    }

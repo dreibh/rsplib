@@ -45,6 +45,7 @@
 #include "sockaddrunion.h"
 #include "dispatcher.h"
 #include "timer.h"
+#include "messagebuffer.h"
 #include "poolhandlespacemanagement.h"
 #include "rserpoolmessage.h"
 
@@ -106,35 +107,41 @@ unsigned int registrarTableAddStaticEntry(
   * Handle notification of registrar hunt socket.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarHuntFD Descriptor of registrar hunt socket.
+  * @param registrarHuntFD Socket descriptor for registrar hunt socket.
+  * @param registrarHuntMessageBuffer MessageBuffer for registrar hunt socket.
   * @param notification Notification to be handled.
   */
 void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
                                                            int                            registrarHuntFD,
+                                                           struct MessageBuffer*          registrarHuntMessageBuffer,
                                                            const union sctp_notification* notification);
 
 /**
   * Peel off registrar assoc ID from registrar hunt socket.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarHuntFD Descriptor of registrar hunt socket.
+  * @param registrarHuntFD Socket descriptor for registrar hunt socket.
+  * @param registrarHuntMessageBuffer MessageBuffer for registrar hunt socket.
   * @param assocID Association ID to peel off.
   * @return Socket descriptor for peeled-off registrar association.
   */
 int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
                                           int                    registrarHuntFD,
+                                          struct MessageBuffer*  registrarHuntMessageBuffer,
                                           sctp_assoc_t           assocID);
 
 /**
   * Do registrar hunt.
   *
   * @param registrarTable RegistrarTable.
-  * @param registrarHuntFD Socket description for registrar connection.
+  * @param registrarHuntFD Socket descriptor for registrar hunt socket.
+  * @param registrarHuntMessageBuffer MessageBuffer for registrar hunt socket.
   * @param registrarIdentifier Reference to store new PR's identifier to.
   * @return Socket descriptor for peeled-off registrar association.
   */
 int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                int                      registrarHuntFD,
+                               struct MessageBuffer*    registrarHuntMessageBuffer,
                                RegistrarIdentifierType* registrarIdentifier);
 
 
