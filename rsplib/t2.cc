@@ -43,7 +43,7 @@ int main(int argc, char** argv)
          if(strcmp(lastIFName, ifr->ifr_name)) {
             strcpy((char*)&lastIFName, ifr->ifr_name);
             printf("#%d = %s  o=%d\n", i, ifr->ifr_name,offset);
- 
+
             if(ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
                if( (ifr->ifr_flags & IFF_UP) &&
                    (ifr->ifr_flags & IFF_MULTICAST) ) {
@@ -52,10 +52,10 @@ int main(int argc, char** argv)
             }
          }
       }
-      
-      
+
+
       for(size_t i = 0;i < ifc.ifc_len;i++) {
-         if(isprint(buffer[i])) printf("%c", buffer[i]); else printf(".");         
+         if(isprint(buffer[i])) printf("%c", buffer[i]); else printf(".");
       }
       puts("");
    }

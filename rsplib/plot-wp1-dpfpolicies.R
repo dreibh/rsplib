@@ -116,12 +116,12 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
 
-pdf("lcn2006-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+pdf("wp1-dpfpolicies-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
 generateOutput("messung6A-01/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))
 dev.off()
 
-pdf("lcn2006-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+pdf("wp1-dpfpolicies-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
 generateOutput("messung6B-01/pu-vectors.vec.bz2", "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))
 dev.off()
