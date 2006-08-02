@@ -1796,6 +1796,12 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
          offset += sizeof(struct ifreq);
 #endif
 
+         /* Is the interface's address type the right one? */
+         if(ifr->ifr_addr.sa_family != family) {
+           /* No! */
+           continue;
+         }
+
          if(strcmp(lastIFName, ifr->ifr_name)) {
             strcpy((char*)&lastIFName, ifr->ifr_name);
 
@@ -1825,11 +1831,12 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                      }
                      else {
                         LOG_ERROR
-                        logerror("ioctl SIOCGIFADDR failed - unable to obtain interfaces details");
+                        logerror("ioctl SIOCGIFADDR failed - unable to set multicast interface");
+                        fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);                        
                         LOG_END
                      }
                   }
-                  else if(family == AF_INET6) {
+                  else if(family == AF_INET6) {                  
                      outif = if_nametoindex(ifr->ifr_name);
                      if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
                         ready = true;
@@ -1849,12 +1856,14 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                }
             }
          }
+         /*
          else {
             LOG_ERROR
             logerror("ioctl SIOCGIFFLAGS failed - unable to obtain interfaces details");
             fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);
             LOG_END
          }
+         */
       }
    }
    else {

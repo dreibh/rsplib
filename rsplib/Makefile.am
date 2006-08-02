@@ -142,7 +142,7 @@ endif
 if BUILD_QT_PROGRAMS
 noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries t2
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries
+noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries t2
 endif
 
 
