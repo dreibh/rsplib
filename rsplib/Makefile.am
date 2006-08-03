@@ -198,5 +198,5 @@ cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIB
 EXTRA_DIST = registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
 
 
-t2_SOURCES = t2.cc
-t2_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+# t2_SOURCES = t2.cc
+# t2_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

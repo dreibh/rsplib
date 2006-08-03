@@ -85,6 +85,9 @@ struct CSPObject
 };
 
 
+bool useCompactMode = false;
+
+
 /* ###### CSPObject print function ####################################### */
 static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
@@ -113,34 +116,36 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
            (unsigned int)cspObject->Associations,
            workload,
            cspObject->Status);
-   for(i = 0;i < cspObject->Associations;i++) {
-      getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
-                          (char*)&str, sizeof(str));
-      switch(cspObject->AssociationArray[i].ProtocolID) {
-         case IPPROTO_SCTP:
-            fprintf(fd,"   -> %s SCTP ppid=$%08x",
-                  str,
-                  cspObject->AssociationArray[i].PPID);
-          break;
-         case IPPROTO_TCP:
-            fprintf(fd,"   -> %s TCP", str);
-          break;
-         case IPPROTO_UDP:
-            fprintf(fd,"   -> %s UDP", str);
-          break;
-         default:
-            fprintf(fd,"   -> %s proto=%d ppid=$%08x",
-                  str,
-                  cspObject->AssociationArray[i].ProtocolID,
-                  cspObject->AssociationArray[i].PPID);
-          break;
+   if(!useCompactMode) {
+      for(i = 0;i < cspObject->Associations;i++) {
+         getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
+                             (char*)&str, sizeof(str));
+         switch(cspObject->AssociationArray[i].ProtocolID) {
+            case IPPROTO_SCTP:
+               fprintf(fd,"   -> %s SCTP ppid=$%08x",
+                     str,
+                     cspObject->AssociationArray[i].PPID);
+             break;
+            case IPPROTO_TCP:
+               fprintf(fd,"   -> %s TCP", str);
+             break;
+            case IPPROTO_UDP:
+               fprintf(fd,"   -> %s UDP", str);
+             break;
+            default:
+               fprintf(fd,"   -> %s proto=%d ppid=$%08x",
+                     str,
+                     cspObject->AssociationArray[i].ProtocolID,
+                     cspObject->AssociationArray[i].PPID);
+             break;
+         }
+         if(cspObject->AssociationArray[i].Duration != ~0ULL) {
+            fprintf(fd, "  duration=%4llu.%03llus",
+                    cspObject->AssociationArray[i].Duration / 1000000,
+                    (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
+         }
+         fputs("\x1b[0K\n", fd);
       }
-      if(cspObject->AssociationArray[i].Duration != ~0ULL) {
-         fprintf(fd, "  duration=%4llu.%03llus",
-                 cspObject->AssociationArray[i].Duration / 1000000,
-                 (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
-      }
-      fputs("\x1b[0K\n", fd);
    }
    fputs("\x1b[0m\x1b[0K", fd);
 }
@@ -297,6 +302,12 @@ int main(int argc, char** argv)
          if(initLogging(argv[n]) == false) {
             exit(1);
          }
+      }
+      else if(!(strcmp(argv[n], "-compact"))) {
+         useCompactMode = true;
+      }
+      else if(!(strcmp(argv[n], "-full"))) {
+         useCompactMode = false;
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
