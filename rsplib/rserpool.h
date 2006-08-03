@@ -65,6 +65,7 @@ struct rsp_info
    const char*                ri_build_date;
    const char*                ri_build_time;
    struct rsp_registrar_info* ri_registrars;
+   struct sockaddr*           ri_registrar_announce;
 
    uint64_t                   ri_csp_identifier;
    struct sockaddr*           ri_csp_server;

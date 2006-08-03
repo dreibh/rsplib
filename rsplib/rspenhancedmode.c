@@ -406,7 +406,7 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
                struct timeval* timeout)
 {
    struct pollfd ufds[FD_SETSIZE];
-   unsigned int  nfds;
+   int           nfds;
    int           waitingTime;
    int           result;
    int           i;

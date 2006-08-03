@@ -30,6 +30,7 @@
 #include "pingpongpackets.h"
 #include "netutilities.h"
 #include "randomizer.h"
+#include "netutilities.h"
 
 
 /* ###### Main program ################################################### */
@@ -40,6 +41,7 @@ int main(int argc, char** argv)
    union rserpool_notification* notification;
    struct rsp_info              info;
    struct rsp_sndrcvinfo        rinfo;
+   union sockaddr_union         asapAnnounceAddress;
    char                         buffer[65536 + 4];
    char                         str[128];
    struct pollfd                ufds;
@@ -79,6 +81,13 @@ int main(int argc, char** argv)
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
             exit(1);
          }
+      }
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
+         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
+            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
+            exit(1);
+         }
+         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];

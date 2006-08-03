@@ -41,6 +41,7 @@
 #include "rsputilities.h"
 #include "randomizer.h"
 #include "fractalgeneratorpackets.h"
+#include "netutilities.h"
 
 
 using namespace std;
@@ -471,10 +472,11 @@ finish:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   struct rsp_info info;
-   char*           poolHandle    = "FractalGeneratorPool";
-   const char*     configDirName = "fgpconfig";
-   int             i;
+   struct rsp_info      info;
+   union sockaddr_union asapAnnounceAddress;
+   char*                poolHandle    = "FractalGeneratorPool";
+   const char*          configDirName = "fgpconfig";
+   int                  i;
 
    memset(&info, 0, sizeof(info));
 
@@ -508,6 +510,13 @@ int main(int argc, char** argv)
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
             exit(1);
          }
+      }
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
+         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
+            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
+            exit(1);
+         }
+         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);

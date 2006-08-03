@@ -28,6 +28,7 @@
 #include "breakdetector.h"
 #include "tagitem.h"
 #include "rsputilities.h"
+#include "netutilities.h"
 #include "standardservices.h"
 #include "fractalgeneratorservice.h"
 #include "calcappservice.h"
@@ -45,14 +46,15 @@
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   struct rsp_info     info;
-   struct rsp_loadinfo loadInfo;
-   double              degradation;
-   unsigned int        reregInterval = 30000;
-   unsigned int        runtimeLimit  = 0;
-   unsigned int        service       = SERVICE_ECHO;
-   const char*         poolHandle    = NULL;
-   struct TagItem      tags[8];
+   struct rsp_info      info;
+   struct rsp_loadinfo  loadInfo;
+   union sockaddr_union asapAnnounceAddress;
+   double               degradation;
+   unsigned int         reregInterval = 30000;
+   unsigned int         runtimeLimit  = 0;
+   unsigned int         service       = SERVICE_ECHO;
+   const char*          poolHandle    = NULL;
+   struct TagItem       tags[8];
 
    /* ====== Read parameters ============================================= */
    memset(&info, 0, sizeof(info));
@@ -88,6 +90,13 @@ int main(int argc, char** argv)
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
             exit(1);
          }
+      }
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
+         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
+            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
+            exit(1);
+         }
+         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];

@@ -739,13 +739,14 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   struct rsp_info    info;
-   char*              poolHandle        = "CalcAppPool";
-   char*              vectorFileName    = "CalcAppPU.vec";
-   char*              scalarFileName    = "CalcAppPU.sca";
-   char*              objectName        = "scenario.calcapppooluser[0]";
-   unsigned long long startupDelayStamp = getMicroTime();
-   int                i;
+   struct rsp_info      info;
+   union sockaddr_union asapAnnounceAddress;
+   char*                poolHandle        = "CalcAppPool";
+   char*                vectorFileName    = "CalcAppPU.vec";
+   char*                scalarFileName    = "CalcAppPU.sca";
+   char*                objectName        = "scenario.calcapppooluser[0]";
+   unsigned long long   startupDelayStamp = getMicroTime();
+   int                  i;
 
    memset(&info, 0, sizeof(info));
 #ifdef ENABLE_CSP
@@ -802,6 +803,13 @@ int main(int argc, char** argv)
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
             exit(1);
          }
+      }
+      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
+         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
+            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
+            exit(1);
+         }
+         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else {
          printf("ERROR: Bad arguments %s!\n", argv[i]);

@@ -187,8 +187,9 @@ static void registrarAssocIDNodePrint(const void* node, FILE* fd)
 
 
 /* ###### Constructor ####################################################### */
-struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
-                                         struct TagItem*    tags)
+struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
+                                         const union sockaddr_union* registrarAnnounceAddress,
+                                         struct TagItem*             tags)
 {
    union sockaddr_union*  announceAddress;
    union sockaddr_union   defaultAnnounceAddress;
@@ -211,11 +212,13 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
       registrarTable->RegistrarAnnounceTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
                                                                       ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
 
-      CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
-      announceAddress = (union sockaddr_union*)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceAddress,
-                                                                 (tagdata_t)&defaultAnnounceAddress);
-      memcpy(&registrarTable->AnnounceAddress, announceAddress, sizeof(registrarTable->AnnounceAddress));
-
+      if(registrarAnnounceAddress) {
+         memcpy(&registrarTable->AnnounceAddress, registrarAnnounceAddress, sizeof(registrarTable->AnnounceAddress));
+      }
+      else {
+         CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
+         memcpy(&registrarTable->AnnounceAddress, &defaultAnnounceAddress, sizeof(registrarTable->AnnounceAddress));
+      }
 
       /* ====== Show results ================================================ */
       LOG_VERBOSE3

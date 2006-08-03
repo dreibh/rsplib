@@ -98,11 +98,13 @@ struct ASAPInstance
   * Constructor.
   *
   * @param dispatcher Dispatcher.
+  * @param registrarAnnounceAddress Multicast address for PR announces.
   * @param tags TagItems.
   * @return ASAPInstance or NULL in case of error.
   */
-struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
-                                     struct TagItem*    tags);
+struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
+                                     const union sockaddr_union* registrarAnnounceAddress,
+                                     struct TagItem*             tags);
 
 /**
   * Destructor.

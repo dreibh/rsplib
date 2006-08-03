@@ -216,6 +216,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 #endif
 
 #ifdef LINUX
+#define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
 #ifdef HAVE_KERNEL_SCTP
 
 #include <netinet/in_systm.h>
@@ -223,8 +224,6 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-
-#define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
 
 enum AddressScopingFlags {
    ASF_HideLoopback           = (1 << 0),
@@ -1777,6 +1776,43 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
    bool                ready;
    size_t              successes = 0;
 
+#ifdef LINUX
+   FILE*               v6list;
+   unsigned int        dummy;
+   char                addrBuffer[36];
+   char                ifName[IFNAMSIZ];
+
+   if(family == AF_INET6) {
+      v6list = fopen(LINUX_PROC_IPV6_FILE, "r");
+      if (v6list != NULL) {
+         lastIFName[0] = 0x00;
+          while(fscanf(v6list, "%32s %02x %02x %02x %02x %32s\n",
+                       (char*)&addrBuffer, &dummy, &dummy, &dummy, &dummy,
+                       (char*)&ifName) == 6) {
+             if(strcmp(lastIFName, ifName)) {
+                strcpy((char*)&lastIFName, ifName);
+                LOG_VERBOSE
+                fprintf(stdlog, "Trying to send multicast via interface %s...\n",
+                        ifName);
+                LOG_END
+                outif = if_nametoindex(ifName);
+                if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
+                   if(ext_sendto(sd, buffer, length, flags, to, tolen) > 0) {
+                      LOG_VERBOSE
+                      fprintf(stdlog, "Successfully sent multicast via interface %s\n",
+                              ifName);
+                      LOG_END
+                      successes++;
+                   }
+                }
+             }
+          }
+          fclose(v6list);
+      }
+   }
+   else {
+#endif
+
    /* ====== Get all interfaces ========================================== */
    ifc.ifc_len = sizeof(ifcbuffer);
    ifc.ifc_buf = ifcbuffer;
@@ -1832,16 +1868,18 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                      else {
                         LOG_ERROR
                         logerror("ioctl SIOCGIFADDR failed - unable to set multicast interface");
-                        fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);                        
+                        fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);
                         LOG_END
                      }
                   }
-                  else if(family == AF_INET6) {                  
+#ifndef LINUX
+                  else if(family == AF_INET6) {
                      outif = if_nametoindex(ifr->ifr_name);
                      if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
                         ready = true;
                      }
                   }
+#endif
 
                   /* ====== Actually send the multicast message ========== */
                   if(ready) {
@@ -1872,6 +1910,9 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
       LOG_END
    }
 
+#ifdef LINUX
+   }
+#endif
    return(successes);
 }
 

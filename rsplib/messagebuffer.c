@@ -32,9 +32,9 @@
 /* ###### Constructor #################################################### */
 struct MessageBuffer* messageBufferNew(size_t bufferSize, const bool useEOR)
 {
-   struct MessageBuffer* messageBuffer = malloc(sizeof(struct MessageBuffer));
+   struct MessageBuffer* messageBuffer = (struct MessageBuffer*)malloc(sizeof(struct MessageBuffer));
    if(messageBuffer) {
-      messageBuffer->Buffer = malloc(bufferSize);
+      messageBuffer->Buffer = (char*)malloc(bufferSize);
       if(messageBuffer->Buffer == NULL) {
          free(messageBuffer);
          return(NULL);

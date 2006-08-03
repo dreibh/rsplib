@@ -79,10 +79,12 @@ struct RegistrarTable
   * Constructor.
   *
   * @param dispatcher Dispatcher.
+  * @param registrarAnnounceAddress Multicast address for PR announces.
   * @param tags TagItem array.
   */
-struct RegistrarTable* registrarTableNew(struct Dispatcher* dispatcher,
-                                         struct TagItem*    tags);
+struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
+                                         const union sockaddr_union* registrarAnnounceAddress,
+                                         struct TagItem*             tags);
 
 
 /**

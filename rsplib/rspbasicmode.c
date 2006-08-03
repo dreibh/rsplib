@@ -92,7 +92,7 @@ int rsp_initialize(struct rsp_info* info)
    threadSafetyNew(&gThreadSafety, "RsplibInstance");
    threadSafetyNew(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
-   gAsapInstance = asapInstanceNew(&gDispatcher, NULL);
+   gAsapInstance = asapInstanceNew(&gDispatcher, (union sockaddr_union*)info->ri_registrar_announce, NULL);
    if(gAsapInstance) {
       if(info) {
          info->ri_version    = RSPLIB_VERSION;

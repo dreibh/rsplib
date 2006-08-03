@@ -63,8 +63,9 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
 
 
 /* ###### Constructor #################################################### */
-struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
-                                     struct TagItem*    tags)
+struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
+                                     const union sockaddr_union* registrarAnnounceAddress,
+                                     struct TagItem*             tags)
 {
    struct ASAPInstance*        asapInstance = NULL;
    struct sctp_event_subscribe sctpEvents;
@@ -115,7 +116,7 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher* dispatcher,
          }
 
          /* ====== Initialize registrar table ============================ */
-         asapInstance->RegistrarSet = registrarTableNew(asapInstance->StateMachine, tags);
+         asapInstance->RegistrarSet = registrarTableNew(asapInstance->StateMachine, registrarAnnounceAddress, tags);
          if(asapInstance->RegistrarSet == NULL) {
             asapInstanceDelete(asapInstance);
             return(NULL);
