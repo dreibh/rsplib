@@ -504,10 +504,10 @@ void handleEvents(Process*    process,
    int                          flags;
 
    flags = 0;
-   received = rsp_recvmsg(process->RSerPoolSocketDescriptor,
-                          (char*)&buffer, sizeof(buffer),
-                          &rinfo, &flags,
-                          0);
+   received = rsp_recvfullmsg(process->RSerPoolSocketDescriptor,
+                              (char*)&buffer, sizeof(buffer),
+                              &rinfo, &flags,
+                              0);
    if(received > 0) {
       if(flags & MSG_RSERPOOL_NOTIFICATION) {
          notification = (union rserpool_notification*)&buffer;

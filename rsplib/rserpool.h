@@ -426,7 +426,8 @@ ssize_t rsp_send_cookie(int                  sd,
                         int                  timeout);
 
 /**
-  * Receive data from a RSerPool socket (session).
+  * Receive data from a RSerPool socket (session). This function may return partial
+  * messages, check for MSG_EOR in msg_flags!
   *
   * @param sd RSerPool socket descriptor.
   * @param buffer Buffer to write the received data into.
@@ -442,6 +443,25 @@ ssize_t rsp_recvmsg(int                    sd,
                     struct rsp_sndrcvinfo* rinfo,
                     int*                   msg_flags,
                     int                    timeout);
+
+/**
+  * Receive full message from a RSerPool socket (session), i.e. until MSG_EOR. Note, that
+  * the message may still be partial when the buffer is too small!
+  *
+  * @param sd RSerPool socket descriptor.
+  * @param buffer Buffer to write the received data into.
+  * @param bufferLength Buffer size.
+  * @param rinfo rsp_sndrcvinfo structure containing information about the received data (in particular the session ID for one-to-may style RSerPool sockets).
+  * @param msg_flags Pointer to message flags. In case of RSerPool notification, this function will set MSG_RSERPOOL_NOTIFICATION; for a received cookie echo, MSG_RSERPOOL_COOKIE_ECHO will be set.
+  * @param timeout Timeout in milliseconds; -1 for infinite.
+  * @return length of the sent data in case of success; -1 in case of an error.
+  */
+ssize_t rsp_recvfullmsg(int                    sd,
+                        void*                  buffer,
+                        size_t                 bufferLength,
+                        struct rsp_sndrcvinfo* rinfo,
+                        int*                   msg_flags,
+                        int                    timeout);
 
 /**
   * Wrapper for rsp_recvmsg().

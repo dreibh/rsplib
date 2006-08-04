@@ -217,9 +217,9 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                      timeout = min(timeout, NextTimerTimeStamp - now);
                   }
                }
-               ssize_t received = rsp_recvmsg(RSerPoolSocketDescriptor,
-                                              (char*)&buffer, sizeof(buffer),
-                                              &rinfo, &flags, (int)(timeout / 1000));
+               ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
+                                                  (char*)&buffer, sizeof(buffer),
+                                                  &rinfo, &flags, (int)(timeout / 1000));
 
                // ====== Handle data ========================================
                if(received > 0) {

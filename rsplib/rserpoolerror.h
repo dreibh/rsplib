@@ -41,11 +41,15 @@ extern "C" {
 #define RSPERR_UNRECOGNIZED_MESSAGE          0x0002
 #define RSPERR_AUTHORIZATION_FAILURE         0x0003
 #define RSPERR_INVALID_VALUES                0x0004
+#define RSPERR_INCOMPATIBLE_POOL_POLICY      0x0005
+#define RSPERR_OUT_OF_MEMORY                 0x0006
+#define RSPERR_WRONG_PROTOCOL                0x0007
+#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0008
+#define RSPERR_NOT_FOUND                     0x0009
 
 /* Implementation-specific error causes */
 #define RSPERR_NOT_INITIALIZED               0x1000
 #define RSPERR_BUFFERSIZE_EXCEEDED           0x1001
-#define RSPERR_OUT_OF_MEMORY                 0x1002
 #define RSPERR_READ_ERROR                    0x1003
 #define RSPERR_WRITE_ERROR                   0x1004
 #define RSPERR_CONNECTION_FAILURE_SOCKET     0x1005
@@ -55,13 +59,9 @@ extern "C" {
 
 /* Handlespace-management specific error causes */
 #define RSPERR_NO_RESOURCES                  0xf002
-#define RSPERR_NOT_FOUND                     0xf003
 #define RSPERR_INVALID_ID                    0xf004
 #define RSPERR_OWN_ID                        0xf005
 #define RSPERR_DUPLICATE_ID                  0xf006
-#define RSPERR_WRONG_PROTOCOL                0xf007
-#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0xf008
-#define RSPERR_INCOMPATIBLE_POOL_POLICY      0xf009
 #define RSPERR_INVALID_POOL_POLICY           0xf00a
 #define RSPERR_INVALID_POOL_HANDLE           0xf00b
 #define RSPERR_INVALID_ADDRESSES             0xf00c

@@ -154,9 +154,9 @@ void TCPLikeServer::run()
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
          flags     = 0;
-         received = rsp_recvmsg(RSerPoolSocketDescriptor,
-                                (char*)&buffer, sizeof(buffer),
-                                &rinfo, &flags, 5000);
+         received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
+                                    (char*)&buffer, sizeof(buffer),
+                                    &rinfo, &flags, 5000);
          if(received > 0) {
             /*
             for(int i = 0;i < received;i++) {

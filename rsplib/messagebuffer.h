@@ -81,9 +81,8 @@ void messageBufferDelete(struct MessageBuffer* messageBuffer);
   * @param streamID Reference to store SCTP Stream ID to.
   * @param timeToLive Reference to store SCTP Time To Live to.
   * @param timeout Timeout for receiving data.
-  * @param Bytes read or MBRead_Error in case of error or MBRead_Partial in case of partial read!
+  * @param Bytes read or MBRead_Error in case of error or MBRead_Partial in case of partial read (ppid, assocID and streamID will be valid)!
   */
-
 ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
                           int                      sockfd,
                           int*                     flags,
@@ -93,6 +92,23 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
                           sctp_assoc_t*            assocID,
                           uint16_t*                streamID,
                           const unsigned long long timeout);
+
+/**
+  * Reset message buffer (set offset to 0).
+  *
+  * @param messageBuffer MessageBuffer.
+  */
+void messageBufferReset(struct MessageBuffer* messageBuffer);
+
+
+/**
+  * Check whether message buffer contains a message fragment.
+  *
+  * @param messageBuffer MessageBuffer.
+  * @return true, if there is a fragment; false otherwise.
+  */
+bool messageBufferHasPartial(struct MessageBuffer* messageBuffer);
+
 
 #ifdef __cplusplus
 }

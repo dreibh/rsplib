@@ -151,12 +151,22 @@ int main(int argc, char** argv)
                   }
                }
                else {
-                  for(i = 0;i < received;i++) {
+                  /* ====== Replace non-printable characters ============= */
+                  buffer[received] = 0x00;
+                  for(i = received;i >= 0;i--) {
+                     if(buffer[i] < ' ') {
+                        buffer[i] = 0x00;
+                     }
+                     else {
+                        break;
+                     }
+                  }
+                  for(   ;i >= 0;i--) {
                      if((unsigned char)buffer[i] < 30) {
                         buffer[i] = '.';
                      }
                   }
-                  buffer[i] = 0x00;
+
                   printf("\x1b[34mfrom PE $%08x> %s\x1b[0m\n",
                          rinfo.rinfo_pe_id, buffer);
                   fflush(stdout);

@@ -47,8 +47,9 @@
 using namespace std;
 
 
-#define FPU_RECV_TIMEOUT 5000
-#define FPU_SEND_TIMEOUT 5000
+#define FPU_RECV_TIMEOUT     5000
+#define FPU_SEND_TIMEOUT     5000
+#define FPU_INTER_IMAGE_SECS    3
 
 
 /* ###### Constructor #################################################### */
@@ -354,13 +355,14 @@ void FractalPU::run()
                      int            flags = 0;
                      ssize_t received;
 
-                     received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                            &rinfo, &flags, FPU_RECV_TIMEOUT);
+                     received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                                                &rinfo, &flags, FPU_RECV_TIMEOUT);
                      while(received > 0) {
                         // ====== Handle notification =======================
                         if(flags & MSG_RSERPOOL_NOTIFICATION) {
                            union rserpool_notification* notification =
                               (union rserpool_notification*)&data;
+                           printTimeStamp(stdout);
                            printf("Notification: ");
                            rsp_print_notification((union rserpool_notification*)&data, stdout);
                            puts("");
@@ -408,11 +410,11 @@ void FractalPU::run()
                         }
 
                         flags = 0;
-                        received = rsp_recvmsg(Session, (char*)&data, sizeof(data),
-                                               &rinfo, &flags, FPU_RECV_TIMEOUT);
+                        received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                                                   &rinfo, &flags, FPU_RECV_TIMEOUT);
                      }
-
                      if(success == false) {
+                        printTimeStamp(stdout);
                         printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
                         rsp_forcefailover(Session);
                      }
@@ -420,6 +422,7 @@ void FractalPU::run()
                   } while(rsp_has_cookie(Session));
                }
                else {
+                  printTimeStamp(stdout);
                   printf("FAILOVER AFTER FAILED sendParameter() (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
                   rsp_forcefailover(Session);
                }
@@ -438,7 +441,16 @@ finish:
             Session = -1;
 
             if(Running) {
-               usleep(3000000);
+               char str[128];
+               size_t secsToWait = FPU_INTER_IMAGE_SECS;
+               while(secsToWait > 0) {
+                  usleep(1000000);
+                  secsToWait--;
+                  snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", secsToWait);
+                  qApp->lock();
+                  statusBar()->message(str);
+                  qApp->unlock();
+               }
             }
 
 

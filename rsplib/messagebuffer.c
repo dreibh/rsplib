@@ -119,3 +119,17 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
    }
    return(result);
 }
+
+
+/* ###### Reset message buffer ########################################### */
+void messageBufferReset(struct MessageBuffer* messageBuffer)
+{
+   messageBuffer->BufferPos = 0;
+}
+
+
+/* ###### Does message buffer contain a fragment? ######################## */
+bool messageBufferHasPartial(struct MessageBuffer* messageBuffer)
+{
+   return(messageBuffer->BufferPos > 0);
+}

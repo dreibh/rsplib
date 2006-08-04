@@ -60,6 +60,7 @@ struct NotificationQueue
 
 void notificationQueueNew(struct NotificationQueue* notificationQueue);
 void notificationQueueDelete(struct NotificationQueue* notificationQueue);
+void notificationQueueClear(struct NotificationQueue* notificationQueue);
 struct NotificationNode* notificationQueueEnqueueNotification(
                             struct NotificationQueue* notificationQueue,
                             const bool                isPreReadNotification,

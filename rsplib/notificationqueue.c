@@ -42,6 +42,14 @@ void notificationQueueNew(struct NotificationQueue* notificationQueue)
 /* ###### Destructor ##################################################### */
 void notificationQueueDelete(struct NotificationQueue* notificationQueue)
 {
+   notificationQueueClear(notificationQueue);
+}
+
+
+/* ###### Clean up queue ################################################# */
+void notificationQueueClear(struct NotificationQueue* notificationQueue)
+{
+
    struct NotificationNode* next;
 
    while(notificationQueue->PreReadQueue) {

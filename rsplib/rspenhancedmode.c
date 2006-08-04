@@ -869,6 +869,8 @@ int rsp_forcefailover_tags(int             sd,
    /* When next rsp_sendmsg() fails, a new FAILOVER_NECESSARY notification
       has to be sent. */
    rserpoolSocket->ConnectedSession->IsFailed = false;
+   /* But for now, remove all queued notifications - they are out of date! */
+   notificationQueueClear(&rserpoolSocket->Notifications);
 
    /* ====== Report failure ============================================== */
    if((rserpoolSocket->ConnectedSession->ConnectedPE != 0) &&
@@ -1169,6 +1171,9 @@ ssize_t rsp_recvmsg(int                    sd,
          fprintf(stdlog, "received=%d\n", (int)received);
          LOG_END
 
+         /* Note, messageBufferRead()'s PPID byte order is host byte order! */
+         rinfo->rinfo_ppid = htonl(rinfo->rinfo_ppid);
+
          if(received == 0) {
             threadSafetyLock(&rserpoolSocket->Mutex);
             if(rserpoolSocket->ConnectedSession) {
@@ -1213,8 +1218,6 @@ ssize_t rsp_recvmsg(int                    sd,
       if(received > 0) {
          threadSafetyLock(&rserpoolSocket->Mutex);
 
-         rinfo->rinfo_ppid = htonl(rinfo->rinfo_ppid);
-
          /* ====== Handle notification ====================================== */
          if(flags & MSG_NOTIFICATION) {
             handleNotification(rserpoolSocket,
@@ -1223,7 +1226,8 @@ ssize_t rsp_recvmsg(int                    sd,
          }
 
          /* ====== Handle ASAP control channel message ====================== */
-         else if(ntohl(rinfo->rinfo_ppid) == PPID_ASAP) {
+         else if( (flags & MSG_EOR) &&
+                  (ntohl(rinfo->rinfo_ppid) == PPID_ASAP) ) {
             handleControlChannelMessage(rserpoolSocket, assocID,
                                         rserpoolSocket->MsgBuffer->Buffer, received);
             received = -1;
@@ -1259,9 +1263,10 @@ ssize_t rsp_recvmsg(int                    sd,
                   errno = ENOMEM;
                   return(-1);
                }
+               received = min(received, (ssize_t)bufferLength);
+               memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
             }
-            received = min(received, (ssize_t)bufferLength);
-            memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
+            *msg_flags |= MSG_EOR;
          }
 
          threadSafetyUnlock(&rserpoolSocket->Mutex);
@@ -1269,11 +1274,11 @@ ssize_t rsp_recvmsg(int                    sd,
 
 
       /* ====== Nothing read from socket, but there may be a notification === */
-      if(received < 0) {
+      if(received <= 0) {
          /* A cookie or notification may have been received. In this case,
             the if-blocks above have set received to -1! */
 
-         /* ====== Give back Cookie Echo and notifications ================== */
+         /* ====== Give back Cookie Echo and notifications =============== */
          if(buffer != NULL) {
             received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, false);
             if(received2 > 0) {
@@ -1281,10 +1286,109 @@ ssize_t rsp_recvmsg(int                    sd,
             }
          }
       }
+
+      /* ====== Partial message ========================================== */
+      if( (received < 0) &&
+          (messageBufferHasPartial(rserpoolSocket->MsgBuffer)) &&
+          (ntohl(rinfo->rinfo_ppid) != PPID_ASAP) ) {
+         if(buffer != NULL) {
+            if((ssize_t)bufferLength < rserpoolSocket->MsgBuffer->BufferPos) {
+               LOG_ERROR
+               fputs("Buffer is too small to keep even partial message\n", stdlog);
+               LOG_END
+               errno = ENOMEM;
+               return(-1);
+            }
+            received = min(rserpoolSocket->MsgBuffer->BufferPos, (ssize_t)bufferLength);
+            memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
+         }
+         messageBufferReset(rserpoolSocket->MsgBuffer);
+         *msg_flags &= ~MSG_EOR;
+         break;
+      }
    } while((received < 0) &&
            (timeout >= 0) && (getMicroTime() < startTimeStamp + (1000ULL * timeout)));
 
    return(received);
+}
+
+
+/* ###### RSerPool socket read() implementation ########################## */
+ssize_t rsp_read(int fd, void* buffer, size_t bufferLength)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   int                    flags = 0;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, fd);
+   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
+      return(rsp_recvmsg(fd, buffer, bufferLength, NULL, &flags, -1));
+   }
+   return(ext_read(rserpoolSocket->Socket, buffer, bufferLength));
+}
+
+
+/* ###### Receive full message (until MSG_EOR) ########################### */
+ssize_t rsp_recvfullmsg(int                    sd,
+                        void*                  buffer,
+                        size_t                 bufferLength,
+                        struct rsp_sndrcvinfo* rinfo,
+                        int*                   msg_flags,
+                        int                    timeout)
+{
+   unsigned long long       now          = getMicroTime();
+   const unsigned long long endTimeStamp = now  + (1000ULL * timeout);
+   size_t                   offset       = 0;
+   ssize_t                  received;
+
+   while( ((received = rsp_recvmsg(sd, (char*)&((char*)buffer)[offset], bufferLength - offset,
+                                  rinfo, msg_flags,
+                                  ((endTimeStamp - now) > 0) ? (int)((endTimeStamp - now) / 1000) : 0)) > 0) &&
+          (offset < bufferLength) ) {
+      offset += received;
+      if(*msg_flags & MSG_EOR) {
+         return(offset);
+      }
+      now = getMicroTime();
+   }
+   return(received);
+}
+
+
+/* ###### RSerPool socket recv() implementation ########################## */
+ssize_t rsp_recv(int sd, void* buffer, size_t bufferLength, int flags)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
+      return(rsp_recvmsg(sd, buffer, bufferLength, NULL, &flags, -1));
+   }
+   return(ext_read(rserpoolSocket->Socket, buffer, bufferLength));
+}
+
+
+/* ###### RSerPool socket send() implementation ########################## */
+ssize_t rsp_send(int sd, const void* buffer, size_t bufferLength, int flags)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+#ifdef MSG_NOSIGNAL
+   flags |= MSG_NOSIGNAL;
+#endif
+   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
+      return(rsp_sendmsg(sd, buffer, bufferLength, flags, 0, 0, 0, 0, -1));
+   }
+   return(ext_send(rserpoolSocket->Socket, buffer, bufferLength, flags));
+}
+
+
+/* ###### RSerPool socket write() implementation ######################### */
+ssize_t rsp_write(int fd, const char* buffer, size_t bufferLength)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, fd);
+   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
+      return(rsp_sendmsg(fd, buffer, bufferLength, 0, 0, 0, 0, 0, -1));
+   }
+   return(ext_write(rserpoolSocket->Socket, buffer, bufferLength));
 }
 
 
@@ -1333,58 +1437,6 @@ ssize_t rsp_send_cookie(int                  sd,
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return((result == true) ? (ssize_t)cookieSize : -1);
-}
-
-
-/* ###### RSerPool socket read() implementation ########################## */
-ssize_t rsp_read(int fd, void* buffer, size_t bufferLength)
-{
-   struct RSerPoolSocket* rserpoolSocket;
-   int                    flags = 0;
-   GET_RSERPOOL_SOCKET(rserpoolSocket, fd);
-   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_recvmsg(fd, buffer, bufferLength, NULL, &flags, -1));
-   }
-   return(ext_read(rserpoolSocket->Socket, buffer, bufferLength));
-}
-
-
-/* ###### RSerPool socket write() implementation ######################### */
-ssize_t rsp_write(int fd, const char* buffer, size_t bufferLength)
-{
-   struct RSerPoolSocket* rserpoolSocket;
-   GET_RSERPOOL_SOCKET(rserpoolSocket, fd);
-   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_sendmsg(fd, buffer, bufferLength, 0, 0, 0, 0, 0, -1));
-   }
-   return(ext_write(rserpoolSocket->Socket, buffer, bufferLength));
-}
-
-
-/* ###### RSerPool socket recv() implementation ########################## */
-ssize_t rsp_recv(int sd, void* buffer, size_t bufferLength, int flags)
-{
-   struct RSerPoolSocket* rserpoolSocket;
-   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_recvmsg(sd, buffer, bufferLength, NULL, &flags, -1));
-   }
-   return(ext_read(rserpoolSocket->Socket, buffer, bufferLength));
-}
-
-
-/* ###### RSerPool socket send() implementation ########################## */
-ssize_t rsp_send(int sd, const void* buffer, size_t bufferLength, int flags)
-{
-   struct RSerPoolSocket* rserpoolSocket;
-   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-#ifdef MSG_NOSIGNAL
-   flags |= MSG_NOSIGNAL;
-#endif
-   if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_sendmsg(sd, buffer, bufferLength, flags, 0, 0, 0, 0, -1));
-   }
-   return(ext_send(rserpoolSocket->Socket, buffer, bufferLength, flags));
 }
 
 

@@ -1212,7 +1212,7 @@ static void asapInstanceHandleRegistrarConnectionEvent(
          }
       }
    }
-   else {
+   else if(received != MBRead_Partial) {
       LOG_WARNING
       fputs("Disconnecting from registrar due to disconnect\n", stdlog);
       LOG_END

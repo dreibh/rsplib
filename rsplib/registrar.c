@@ -63,7 +63,7 @@
 
 
 #define MAX_NS_TRANSPORTADDRESSES                                          16
-#define MIN_ENDPOINT_ADDRESS_SCOPE                                          4
+#define MIN_ENDPOINT_ADDRESS_SCOPE                                          6
 #define RSERPOOL_MESSAGE_BUFFER_SIZE                                    65536
 #define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
 #define REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS                                3
@@ -3243,6 +3243,9 @@ static void getSocketPair(const char*                   sctpAddressParameter,
             setPort((struct sockaddr*)&sctpAddressArray[i], localPort);
          }
       }
+      else {
+         setPort((struct sockaddr*)&udpAddress, configuredPort);
+      }
       *sctpSocket = ext_socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(*sctpSocket < 0) {
          continue;
@@ -3275,6 +3278,10 @@ static void getSocketPair(const char*                   sctpAddressParameter,
       *sctpSocket = -1;
       ext_close(*udpSocket);
       *udpSocket = -1;
+
+      if(configuredPort != 0) {
+         break;
+      }
    }
 
    if((*sctpSocket < 0) || (requiresUDPSocket && (*udpSocket < 0))) {

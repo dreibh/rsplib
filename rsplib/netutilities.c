@@ -1791,7 +1791,7 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                        (char*)&ifName) == 6) {
              if(strcmp(lastIFName, ifName)) {
                 strcpy((char*)&lastIFName, ifName);
-                LOG_VERBOSE
+                LOG_VERBOSE4
                 fprintf(stdlog, "Trying to send multicast via interface %s...\n",
                         ifName);
                 LOG_END
@@ -1846,7 +1846,7 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                    (ifr->ifr_flags & IFF_MULTICAST) ) {
 
                   /* ====== This interface is usable ===================== */
-                  LOG_VERBOSE
+                  LOG_VERBOSE4
                   fprintf(stdlog, "Trying to send multicast via interface %s...\n",
                           ifr->ifr_name);
                   LOG_END
