@@ -1,4 +1,6 @@
-How to set up a simple test of rsplib-0.8.0 using the unstable files:
+A. FIRST STEPS
+
+How to set up a simple test of rsplib-1.9.0 using the unstable files:
 
 1. Get latest sctplib1-****.tar.gz and install it by
    - unpacking the Tar/GZip archive
@@ -19,16 +21,23 @@ How to set up a simple test of rsplib-0.8.0 using the unstable files:
    - ./autgen.sh
       (invokes automake, calls ./configure with some parameters, calls make)
 
+      Configure Parameters:
+      --enable-qt: Enables Qt usage; this is necessary for the Fractal Generator
+                   client! Without Qt, the client's compilation will be skipped.
+      --enable-hsmgtverify: Enable Handlespace Management verification. This is
+                            useful for debugging only (makes the PR slow!)
+      --enable-csp: Enable the Component Status Protocol support (very recommended!)
+
 4. Ensure that multicast is working!
    - You need a configured Ethernet interface to use multicast, even if you want to
      make tests only via loopback! Multicast does not work correctly otherwise,
      at least under Linux and Darwin.
      Alternative:
      If you have a dummy device, configure it and set a default route to it:
-     root# ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up
+     root# ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up multicast
      root# route add default gw 10.0.0.2
    - Ensure that your firewall settings for the ethernet interface allow
-     UDP packets from the nameserver (Server Announce).
+     UDP packets from the registrar (Server Announce).
 
 5. Start at least one registrar
    ./registrar-example
@@ -46,8 +55,148 @@ How to set up a simple test of rsplib-0.8.0 using the unstable files:
     this parameter, you have to manually enter text lines at standard input.)
 
 7. If everythink works, you can test RSerPool functionality by stopping the pool
-   element and watching the failover. The example Echo service uses ASAP Cookies
-   to store the line number.
+   element and watching the failover.
+
+
+
+B. DEMO SERVERS
+
+All demo servers can be started using the ./server program. It takes a set of
+common parameters as well as some service-specific arguments. These parameters
+are explained in the following.
+
+Note: For most of the provided services, the latest version of Wireshark
+      (http://www.wireshark.org) already includes packets dissectors!
+
+
+B.1 Common Parameters
+
+-loglevel=0-9: Sets the logging verbosity from 0 (none) to 9 (very verbose).
+
+-logcolor=on|off: Turns ANSI colorization of the logging output on or off.
+
+-logfile=filename: Write logging output to a file (default is stdout).
+
+-poolhandle=PH: Sets the PH to a non-default value; otherwise, the default
+                setting will be the service-specific default (see below).
+
+-registrar=Address:Port: Adds a static PR entry into the Registrar Table.
+                         It is possible to add multiple entries.
+
+-asapannounce=Address:Port: Sets the multicast address and port the ASAP instance
+                            listens for ASAP Server Announces on.
+
+-rereginterval=milliseconds: Sets the PE's re-registration interval (in ms).
+
+-runtime=seconds: After the configured amount of seconds, the service is
+                  shut down.
+
+-policy=Policy...: Sets the pool policy and its parameters:
+ Valid Settings:
+ - Random
+ - WeightedRandom:Weight
+ - RoundRobin
+ - WeightedRoundRobin:Weight
+ - LeastUsed
+ - LeastUsedDegradation:Degradation (0 to 1)
+
+
+B.2 Echo Service
+
+-echo: Selects Echo service. The default PH will be "EchoPool".
+
+
+B.3 Discard Service
+
+-discard: Selects Discard service. The default PH will be "DiscardPool".
+
+
+B.4 Daytime Service
+
+-daytime: Selects Daytime service. The default PH will be "DaytimePool".
+
+
+B.5 Character Generator Service
+
+-chargen: Selects Character Generator service. The default PH will be "ChargenPool".
+
+
+B.6 Ping Pong Service
+
+-pingpong: Selects Ping Pong service. The default PH will be "PingPongPool".
+
+-pppfailureafter=number: After the set number of packets, the server will terminate
+                         the connection in order to test failovers.
+
+-pppmaxthreads=threads: Sets the maximum number of simultaneous sessions.
+
+
+B.7 Fractal Generator Service
+
+-fractal: Selects the Fractal Generator service. The default PH will be "FractalGeneratorPool".
+
+-fgptestmode: Generate simple test pattern instead of calculating a fractal
+              graphics (useful to conserve CPU power).
+
+-fgpfailureafter=number: After the set number of data packets, the server will
+                         terminate the connection in order to test failovers.
+
+-fgpmaxthreads=threads: Sets the maximum number of simultaneous sessions.
+
+
+B. DEMO CLIENTS
+
+B.1 Common Parameters
+
+-loglevel=0-9: Sets the logging verbosity from 0 (none) to 9 (very verbose).
+
+-logcolor=on|off: Turns ANSI colorization of the logging output on or off.
+
+-logfile=filename: Write logging output to a file (default is stdout).
+
+-poolhandle=PH: Sets the PH.
+
+
+B.2 Terminal (e.g. for Echo, Discard, Daytime and Chargen services)
+
+Start with ./terminal; the default PH is EchoPool.
+
+
+B.3 Fractal Client (for the Fractal Generator service)
+
+./fractalpooluser
+
+-configdir=Directory: Sets the directory with the fractal graphics parameter
+                      files. The file scenarios.conf has to include a list of
+                      parameter files. The actual parameter file used for an
+                      image is randomly selected from this list.
+
+B.4 Ping Pong Client (for the Fractal Generator service)
+
+./pingpong
+
+-interval=milliseconds: Sets the Ping interval.
+
+
+
+C. COMPONENT STATUS PROTOCOL
+
+The Component Status Protocol is a simple UDP-based protocol for RSerPool
+components to send their status to a central monitoring component. A
+console-based receiver is ./cspmonitor; it receives the status updates by
+default on UDP port 2960.
+
+In order to send status information, the registrar as well as all servers and
+clients described in section B provide two parameters:
+
+-cspserver=Address:Port: Sets the CSP monitor server's address and port.
+
+-cspinterval=Interval: Sets the interval for the CSP status updates in
+                       milliseconds.
+
+Note: Both parameters MUST be provided in order to send status updates!
+
+
 
 ==================================================================================
 Please subscribe to our mailing list and report any problems you discover!
@@ -57,4 +206,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+10.08.2006 Thomas Dreibholz, dreibh@exp-math.uni-essen.de

@@ -31,7 +31,7 @@ AC_PROG_LIBTOOL
 
 AC_ARG_ENABLE([csp],
 [  --enable-csp            enable CSP support ]
-[default=no]],enable_csp=$enableval,enable_csp=no)
+[default=yes]],enable_csp=$enableval,enable_csp=yes)
 if test "${enable_csp}" = "yes"; then
    AC_DEFINE(ENABLE_CSP, 1, "Define to 1 if CSP is supported.")
 fi
