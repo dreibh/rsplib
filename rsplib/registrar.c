@@ -3425,7 +3425,7 @@ int main(int argc, char** argv)
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-cspinterval=", 13))) {
-         cspReportInterval = atol((char*)&argv[i][13]);
+         cspReportInterval = 1000ULL * atol((char*)&argv[i][13]);
       }
       else if(!(strncmp(argv[i], "-cspserver=", 11))) {
          if(!string2address((char*)&argv[i][11], &cspReportAddress)) {
@@ -3668,7 +3668,7 @@ int main(int argc, char** argv)
       printf("CSP Report Address:     ");
       fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
       puts("");
-      printf("CSP Report Interval:    %lldus\n", cspReportInterval);
+      printf("CSP Report Interval:    %lldms\n", cspReportInterval / 1000);
    }
 #endif
    printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);

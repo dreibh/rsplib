@@ -110,7 +110,7 @@ int rsp_initialize(struct rsp_info* info)
             cspReporterNew(gCSPReporter, &gDispatcher,
                            info->ri_csp_identifier,
                            info->ri_csp_server,
-                           info->ri_csp_interval,
+                           1000UL * info->ri_csp_interval,
                            getComponentStatus,
                            NULL);
          }
