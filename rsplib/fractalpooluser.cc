@@ -49,7 +49,7 @@ using namespace std;
 
 #define FPU_RECV_TIMEOUT     5000
 #define FPU_SEND_TIMEOUT     5000
-#define FPU_INTER_IMAGE_SECS    3
+#define FPU_INTER_IMAGE_SECS    5
 
 
 /* ###### Constructor #################################################### */
@@ -395,9 +395,12 @@ void FractalPU::run()
                                  default:
                                     packets++;
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed data packet #%u (from PE $%08x)...",
+                                             "Processed paket #%u; PE is $%08x",
                                              packets, rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
+                                    snprintf((char*)&statusText, sizeof(statusText),
+                                             "Processed data packet #%u (from PE $%08x)...",
+                                             packets, rinfo.rinfo_pe_id);
                                     qApp->lock();
                                     statusBar()->message(statusText);
                                     qApp->unlock();
