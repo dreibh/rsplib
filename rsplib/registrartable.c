@@ -191,7 +191,6 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
                                          const union sockaddr_union* registrarAnnounceAddress,
                                          struct TagItem*             tags)
 {
-   union sockaddr_union*  announceAddress;
    union sockaddr_union   defaultAnnounceAddress;
    struct RegistrarTable* registrarTable = (struct RegistrarTable*)malloc(sizeof(struct RegistrarTable));
 

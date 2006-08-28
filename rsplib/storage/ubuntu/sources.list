@@ -1,4 +1,3 @@
-
 deb http://de.archive.ubuntu.com/ubuntu/ dapper main restricted
 deb-src http://de.archive.ubuntu.com/ubuntu/ dapper main restricted
 
@@ -31,10 +30,11 @@ deb-src http://security.ubuntu.com/ubuntu dapper-security main restricted
 deb http://security.ubuntu.com/ubuntu dapper-security universe
 deb-src http://security.ubuntu.com/ubuntu dapper-security universe
 
+
 # Multiverse
 deb http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
 deb-src http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
 
 # PLF
-deb http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
-deb-src http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
+#deb http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
+#deb-src http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
