@@ -3,11 +3,16 @@
 . ./planetlab-config
 
 
+showbad=0
+testhosts=0
 if [ "x$1" = "x-showbad" ] ; then
    shift
    showbad=1
-else
-   showbad=0
+   testhosts=0
+elif [ "x$1" = "x-test" ] ; then
+   shift
+   showbad=1
+   testhosts=1
 fi
 
 SERVER_LIST=`\
@@ -23,6 +28,9 @@ good=0
 bad=0
 for SERVER in $SERVER_LIST; do
    isgood=0
+   if [ $testhosts = 1 ] ; then
+      echo "# Testing $SERVER ..."
+   fi
    if ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "echo \"$SERVER is ready!\"" 2>/dev/null 1>/dev/null ; then
       isgood=1
    fi

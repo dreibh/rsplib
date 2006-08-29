@@ -762,9 +762,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-#ifndef MSG_SEND_TO_ALL
    struct ST_CLASS(PeerListNode)* peerListNode;
-#endif
    struct Registrar*              registrar = (struct Registrar*)userData;
 
    if(registrar->InInitializationPhase) {
@@ -789,13 +787,18 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                        0, false);
    }
 
-#ifndef MSG_SEND_TO_ALL
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers.List);
    while(peerListNode != NULL) {
-      if(!(peerListNode->Flags & PLNF_MULTICAST)) {
+      /* If MSG_SEND_TO_ALL is available, unicast messages must only be sent
+         to static peers not yet connected. That is, their ID is 0. */
+      if( (!(peerListNode->Flags & PLNF_MULTICAST))
+#ifdef MSG_SEND_TO_ALL
+          && (peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)
+#endif
+        ) {
          LOG_VERBOSE1
          fprintf(stdlog, "Sending PeerPresence to unicast peer $%08x...\n",
-                  peerListNode->Identifier);
+                 peerListNode->Identifier);
          LOG_END
          sendPeerPresence(registrar,
                           registrar->ENRPUnicastSocket, 0, 0,
@@ -808,7 +811,7 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                         &registrar->Peers.List,
                         peerListNode);
    }
-#else
+#ifdef MSG_SEND_TO_ALL
 #warning Using MSG_SEND_TO_ALL!
    sendPeerPresence(registrar,
                     registrar->ENRPUnicastSocket, 0,
@@ -3043,7 +3046,7 @@ static size_t registrarGetReportFunction(
    size_t                         pools;
    size_t                         poolElements;
 
-   LOG_VERBOSE2
+   LOG_VERBOSE4
    fputs("Sending a Component Status Protocol report...\n", stdlog);
    LOG_END
    peers        = ST_CLASS(peerListManagementGetPeers)(&registrar->Peers);

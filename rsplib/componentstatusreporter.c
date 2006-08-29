@@ -207,7 +207,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
    size_t                       caeArraySize;
    double                       workload;
 
-   LOG_VERBOSE3
+   LOG_VERBOSE4
    fputs("Creating and sending CSP report...\n", stdlog);
    LOG_END
 
@@ -234,7 +234,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
    timerStart(&cspReporter->CSPReportTimer,
               getMicroTime() + cspReporter->CSPReportInterval);
 
-   LOG_VERBOSE3
+   LOG_VERBOSE4
    fputs("Sending CSP report completed\n", stdlog);
    LOG_END
 }

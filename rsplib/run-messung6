@@ -1,6 +1,6 @@
 #!/bin/bash
 
-runSets="13 14 15 16"
+runSets="T1"
 for run in $runSets ; do
    M1ID="messung6A-$run"
    M2ID="messung6B-$run"
