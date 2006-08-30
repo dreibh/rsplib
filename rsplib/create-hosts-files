@@ -1,10 +1,12 @@
 #!/bin/bash
 
+. ./planetlab-config
 
 MAX_GOOD=5
 PUs=15
 PEs=6
 PRs=1
+
 
 
 get-hosts ()
@@ -61,24 +63,38 @@ write-hosts ()
    ( echo $OUT_PRs | xargs -n1 ) >pr-$HOSTSFILEMIDDLE.hosts
 }
 
+get-all-good-hosts ()
+{
+   hosts=`echo $IN_HOSTS | xargs -n1 echo | sort -u`
+   ALL_GOOD_HOSTS=`echo $hosts | xargs -x ./exectime "./filter-hosts >/dev/null"`
+}
+
+
 
 # IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
 # HOSTSFILEMIDDLE="essen"
 # test-hosts
 
 
-IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
-HOSTSFILEMIDDLE="europe"
-test-hosts
+# IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="europe"
+# test-hosts
+#
+# IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="america"
+# test-hosts
+#
+# IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="asia"
+# test-hosts
+#
+# IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="australia"
+# test-hosts
 
-IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
-HOSTSFILEMIDDLE="america"
-test-hosts
 
-IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
-HOSTSFILEMIDDLE="asia"
-test-hosts
 
-IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
-HOSTSFILEMIDDLE="australia"
-test-hosts
+# IN_HOSTS="`cat all-planetlab.hosts`"
+# let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
+# get-all-good-hosts
+# ( echo $ALL_GOOD_HOSTS | xargs -n1 ) >good.hosts
