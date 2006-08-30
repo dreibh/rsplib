@@ -6,13 +6,19 @@ PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc
 DISTNAME="rsplib-1.9.0"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--enable-csp"
-DISTPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
+DISTPRGS="registrar terminal pingpong server gettimestamp testregistrator calcappclient hsdump rootshell"
 KILLALLMISC="perftool bzip2 gzip tar"
 DISTSTRIP=0
 DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver calcappserver fractalserver discardserver nameserver daytimeserver echoserver"
 SUIDPRGS="registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump rootshell"
 
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000"
+
+
+# Auf dem Server zum Test ausführen
+# Ping + 16 MBytes /dev/urandom + SHA1 => 9s auf Athlon 1.3GHz
+SERVER_TEST_TIMEOUT=36
+SERVER_TEST="ping -W5 -c1 www.planet-lab.org && dd if=/dev/urandom of=test.data count=16000 bs=1000 && sha1sum test.data && rm -f test.data"
 
 
 #PLANETLAB_KEY=~/.ssh/lupo

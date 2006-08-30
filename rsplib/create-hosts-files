@@ -1,0 +1,84 @@
+#!/bin/bash
+
+
+MAX_GOOD=5
+PUs=15
+PEs=6
+PRs=1
+
+
+get-hosts ()
+{
+   GH_OUTPUT=""
+   i=0 ; while [ $i -lt $GH_AMOUNT ] ; do
+      j=0;
+      for host in $goodhosts ; do
+         if [ $j -lt $MAX_GOOD ] ; then
+            GH_OUTPUT="$GH_OUTPUT $host"
+            let i=$i+1
+            if [ $i -ge $GH_AMOUNT ]; then
+               return
+            fi
+         fi
+         let j=$j+1
+      done
+   done
+}
+
+test-hosts ()
+{
+   hosts=`echo $IN_HOSTS | xargs -n1 echo | sort -u`
+   goodhosts=`echo $hosts | xargs -x ./exectime "./filter-hosts >/dev/null"`
+
+   if [ "x$goodhosts" = "x" ] ; then
+      echo "ERROR: No good hosts found!"
+      exit 1
+   fi
+
+   GH_GOODHOSTS=$goodhosts
+   GH_AMOUNT=$PUs
+   get-hosts
+   OUT_PUs=$GH_OUTPUT
+
+   GH_AMOUNT=$PEs
+   get-hosts
+   OUT_PEs=$GH_OUTPUT
+
+   GH_AMOUNT=$PRs
+   get-hosts
+   OUT_PRs=$GH_OUTPUT
+
+   echo "PRs: $OUT_PRs"
+   echo "PEs: $OUT_PEs"
+   echo "PUs: $OUT_PUs"
+   write-hosts
+}
+
+write-hosts ()
+{
+   ( echo $OUT_PUs | xargs -n1 ) >pu-$HOSTSFILEMIDDLE.hosts
+   ( echo $OUT_PEs | xargs -n1 ) >pe-$HOSTSFILEMIDDLE.hosts
+   ( echo $OUT_PRs | xargs -n1 ) >pr-$HOSTSFILEMIDDLE.hosts
+}
+
+
+# IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="essen"
+# test-hosts
+
+
+IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="europe"
+test-hosts
+
+IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="america"
+test-hosts
+
+IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="asia"
+test-hosts
+
+IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="australia"
+test-hosts
