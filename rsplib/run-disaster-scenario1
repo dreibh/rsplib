@@ -1,0 +1,112 @@
+#!/bin/bash
+
+runSets="U01 U02 U03 U04 U05 U06 U07 U08 U09 U10 U11 U12 U13 U14 U15 U16 U17 U18 U19 U20 U21 U22 U23 U24 U25 U26 U27 U28 U29 U30 U31 U32 U33 U34 U35 U36"
+for run in $runSets ; do
+
+   M1ID="messung-disaster1A-$run"
+   M2ID="messung-disaster1B-$run"
+   PR="-loglevel=3 -distancestep=75"
+   M1PE="-poolhandle=PoolOne -calcapp -rereginterval=3333 -policy=LeastUsedDPF:0.00001 -capmaxjobs=5 -loglevel=3"
+   M2PE="-poolhandle=PoolTwo -calcapp -rereginterval=3333 -policy=LeastUsed -capmaxjobs=5 -loglevel=3"
+   M1PU="-poolhandle=PoolOne -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+   M2PU="-poolhandle=PoolTwo -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+
+
+   # ------ Registrars ------------------------------------------------------
+   echo "`date` ========== $M1ID/$M2ID: Phase S1 - Starting PRs =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start europe pr
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start america pr
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start asia pr
+   sleep 60
+
+   # ------ PEs -------------------------------------------------------------
+   echo "`date` ========== $M1ID/$M2ID: Phase S2 - Starting PEs =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start europe pe 5
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start america pe 5
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start asia pe 5
+
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start europe pe 5
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start america pe 5
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start asia pe 5
+   sleep 120
+
+   # ------ PUs -------------------------------------------------------------
+   echo "`date` ========== $M1ID/$M2ID: Phase S3 - Starting PUs =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start europe pu 15
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start america pu 15
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start asia pu 15
+
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start europe pu 15
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start america pu 15
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start asia pu 15
+
+   # ========================================================================
+
+
+   echo "`date` ========== $M1ID/$M2ID: Phase T1 - Normal operation =========="
+   sleep 900
+
+   echo "`date` ========== $M1ID/$M2ID: Phase T2 - Failure in Asia =========="
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop asia pe 2
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop asia pe 2
+   sleep 900
+
+   echo "`date` ========== $M1ID/$M2ID: Phase T3 - Activating backup capacity =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start america pe 6
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start europe pe 6
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start america pe 6
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start europe pe 6
+   sleep 900
+
+   echo "`date` ========== $M1ID/$M2ID: Phase T4 - Recovered PEs in Asia =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" start asia pe 5
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" start asia pe 5
+   sleep 300
+
+   echo "`date` ========== $M1ID/$M2ID: Phase T5 - Back to normal operation =========="
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop america pe 1
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop europe pe 1
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop america pe 1
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop europe pe 1
+   sleep 900
+
+
+   # ========================================================================
+
+   # ------ Shutdown --------------------------------------------------------
+   echo "`date` ========== $M1ID/$M2ID: Phase E1 - Stopping all components  =========="
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop europe pu
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop america pu
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop asia pu
+
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop europe pu
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop america pu
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop asia pu
+   sleep 10
+
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop europe pe
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop america pe
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" stop asia pe
+
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop europe pe
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop america pe
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop asia pe
+   sleep 10
+
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop europe pr
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop america pr
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" stop asia pr
+   sleep 10
+
+   # ------ Get results -----------------------------------------------------
+   echo "`date` ========== $M1ID/$M2ID: Phase E2 - Fetching results  =========="
+   rm -rf $M1ID/
+   rm -rf $M2ID/
+   ./three-regions-scenario "$M1ID" "$PR" "$M1PE" "$M1PU" results
+   ./three-regions-scenario "$M2ID" "$PR" "$M2PE" "$M2PU" results
+
+   echo "`date` ========== $M1ID/$M2ID: Completed! ============================"
+   echo ""
+   echo ""
+
+done

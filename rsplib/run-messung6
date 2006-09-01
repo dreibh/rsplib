@@ -1,7 +1,8 @@
 #!/bin/bash
 
-runSets="T17 T18 T19 T20 T21 T22 T23 T24 T25 T26 T27 T28 T29 T30 T31 T32"
+runSets="U01 U02 U03 U04 U05 U06 U07 U08 U09 U10 U11 U12 U13 U14 U15 U16 U17 U18 U19 U20 U21 U22 U23 U24 U25 U26 U27 U28 U29 U30 U31 U32 U33 U34 U35 U36"
 for run in $runSets ; do
+
    M1ID="messung6A-$run"
    M2ID="messung6B-$run"
    PR="-loglevel=3 -distancestep=75"
