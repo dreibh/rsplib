@@ -76,21 +76,22 @@ get-all-good-hosts ()
 # test-hosts
 
 
-# IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="europe"
-# test-hosts
-#
-# IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="america"
-# test-hosts
-#
-# IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="asia"
-# test-hosts
-#
-# IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="australia"
-# test-hosts
+
+IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="europe"
+test-hosts
+
+IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="america"
+test-hosts
+
+IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="asia"
+test-hosts
+
+IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="australia"
+test-hosts
 
 
 

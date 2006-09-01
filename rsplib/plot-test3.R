@@ -2,17 +2,43 @@ source("plotter.R")
 
 hideLegend          <- TRUE
 colorMode           <- cmColor
-legendPos           <- c(0,0.5)
+legendPos           <- c(1,1)
 
-generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxisTicks=c())
+
+handlingTimeStat <- function(data, start, end)
 {
+   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
+   f <- (queuingTime >= start) &
+        (queuingTime <= end)
+   htSubset <- subset(data$HandlingTime, f)
+   htMin  <- min(htSubset)
+   htMax  <- max(htSubset)
+   htMean <- mean(htSubset)
+   htTest <- t.test(htSubset)
+   cat(sep="", start, "-", end, ":   mean=", htMean,
+       " +/- ", htMean - htTest$conf.int[1], "   ",
+       "min=", htMin, " max=", htMax,
+       "\n")
+}
+
+generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxisTicks=c(), yAxisTicks=c())
+{
+   data <- loadResults(inFile)
+
+   cat("-----",inFile,"-----\n")
+   handlingTimeStat(data, 1, 14)
+   handlingTimeStat(data, 16, 29)
+   handlingTimeStat(data, 31, 45)
+   handlingTimeStat(data, 46, 49)
+   handlingTimeStat(data, 51, 64)
+
    xSet <- (data$CompleteTimeStamp / 60)
    xOffset <- -min(xSet)
    xSet <- xSet + xOffset
    xTitle <- "Time [Minutes]"
 
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
-   hbarMeanSteps <- 52
+   hbarMeanSteps <- 39
 
    aggregator <- hbarDefaultAggregator
    if(resultType == "HandlingTime") {
@@ -39,9 +65,11 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    wSet <- c()
    wTitle <- ""
 
-   xAxisTicks <- getUsefulTicks(xSet)   # getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
+   if(length(xAxisTicks) < 2) {
+      xAxisTicks <- getUsefulTicks(xSet)
+   }
    if(length(yAxisTicks) < 2) {
-      yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
+      yAxisTicks <- getIntegerTicks(ySet, count=10)
    }
 
    if(summary) {
@@ -81,53 +109,22 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
 }
 
 
-handlingTimeStat <- function(data, start, end)
-{
-   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
-   f <- (queuingTime >= start) &
-        (queuingTime <= end)
-   htSubset <- subset(data$HandlingTime, f)
-   htMin  <- min(htSubset)
-   htMax  <- max(htSubset)
-   htMean <- mean(htSubset)
-   htTest <- t.test(htSubset)
-   cat(sep="", start, "-", end, ":   mean=", htMean,
-       " +/- ", htMean - htTest$conf.int[1], "   ",
-       "min=", htMin, " max=", htMax,
-       "\n")
-}
-
-
-
-
-pdf("x.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
-
-
-#data <- loadResults("x.vec.bz2")
-#data <- loadResults("messung3a/pu-vectors.vec.bz2")
-
-
-f <- (data$HandlingTime > 30)
-bad <- subset(data$ObjectName, f)
-cat("BAD: ", levels(factor(bad)), "\n")
-
-
-
-handlingTimeStat(data, 1, 14)
-handlingTimeStat(data, 16, 29)
-handlingTimeStat(data, 31, 45)
-handlingTimeStat(data, 46, 49)
-handlingTimeStat(data, 51, 64)
-
 
 xSeparatorsSet <- c(15, 30, 45, 50)
 xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-generateOutput("XXX/pu-vectors.vec.bz2", "HandlingSpeed", "Least Used Policy with Delay Penalty Factor",
-               TRUE)
-# generateOutput("XXX/pu-vectors.vec.bz2", "HandlingTime", "Least Used Policy with Delay Penalty Factor",
-#                FALSE)
 
+testSet <- c("T1","T2","T3","T4","T5","T6","T7","T8")
+
+pdf("test3.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+for(test in testSet) {
+   generateOutput(paste(sep="", "messung6A-", test, "/pu-vectors.vec.bz2"),
+                  "HandlingSpeed", "", TRUE,
+                  seq(0,65,5), seq(0,1000000,200000))
+   generateOutput(paste(sep="", "messung6B-", test, "/pu-vectors.vec.bz2"),
+                  "HandlingSpeed", "", TRUE,
+                  seq(0,65,5), seq(0,1000000,200000))
+}
 dev.off()
