@@ -4,6 +4,7 @@ hideLegend          <- TRUE
 colorMode           <- cmColor
 legendPos           <- c(1,1)
 
+
 handlingTimeStat <- function(data, start, end)
 {
    queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
@@ -20,13 +21,9 @@ handlingTimeStat <- function(data, start, end)
        "\n")
 }
 
-generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxisTicks=c())
+generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, xAxisTicks=c(), yAxisTicks=c())
 {
    data <- loadResults(inFile)
-# cat("L=",length(data$CompleteTimeStamp),"\n")
-# return()
-#handlingTimeStat(data, 0, 5)
-#return()
 
    cat("-----",inFile,"-----\n")
    handlingTimeStat(data, 1, 14)
@@ -34,15 +31,34 @@ generateOutput <- function(inFile, resultType, mainTitle="", summary=TRUE, yAxis
    handlingTimeStat(data, 31, 45)
    handlingTimeStat(data, 46, 49)
    handlingTimeStat(data, 51, 64)
-return()
+
+
+   zSet <- data$Measurement
+   zTitle <- "Measurement"
+   vSet <- c()   # data$ObjectName
+   vTitle <- ""
+   wSet <- c()
+   wTitle <- ""
+
 
    xSet <- (data$CompleteTimeStamp / 60)
-   xOffset <- -min(xSet)
+   xOffset <- rep(0, length(xSet))
+   for(z in levels(factor(zSet))) {
+      o <- -min(subset(xSet, (zSet == z)))
+      cat(z, o, " ...\n")
+      for(i in seq(1, length(xSet))) {
+         if(zSet[i] == z) {
+            xOffset[i] <- o
+         }
+      }
+   }
+
    xSet <- xSet + xOffset
    xTitle <- "Time [Minutes]"
 
+
    hbarSet <- (data$QueuingTimeStamp / 60) + xOffset
-   hbarMeanSteps <- 52
+   hbarMeanSteps <- 39
 
    aggregator <- hbarDefaultAggregator
    if(resultType == "HandlingTime") {
@@ -62,19 +78,15 @@ return()
       stop("Bad result type!")
    }
 
-   zSet <- data$ObjectName
-   zTitle <- ""
-   vSet <- c()
-   vTitle <- ""
-   wSet <- c()
-   wTitle <- ""
-
-   xAxisTicks <- getUsefulTicks(xSet)   # getIntegerTicks(seq(0, max(xSet) - 60))   # Set to c() for automatic setting
+   if(length(xAxisTicks) < 2) {
+      xAxisTicks <- getUsefulTicks(xSet)
+   }
    if(length(yAxisTicks) < 2) {
-      yAxisTicks <- getIntegerTicks(ySet, count=10)   # Set to c() for automatic setting
+      yAxisTicks <- getIntegerTicks(ySet, count=10)
    }
 
    if(summary) {
+cat("X1\n")
       plotstd3(mainTitle, xTitle, yTitle, zTitle, xSet, ySet,
                zSet, vSet, wSet, vTitle, wTitle,
                hbarSet = hbarSet, hbarMeanSteps = hbarMeanSteps,
@@ -84,6 +96,7 @@ return()
                type="h",
                colorMode = colorMode, hideLegend = hideLegend,
                legendPos = legendPos)
+cat("X2\n")
    }
    else {
       for(z in levels(factor(zSet))) {
@@ -112,23 +125,19 @@ return()
 
 
 
-pdf("test4.pdf", width=11.69, height=8.26, onefile=TRUE, family="Helvetica", pointsize=14)
-
 xSeparatorsSet <- c(15, 30, 45, 50)
 xSeparatorsTitles <- c("Failures\nin Asia",
                         "Backup\nCapacity",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
-runsSet <- c("01","04")   # c("00","01","02","03","04","05","06","07","08","09","10","11","12")
-for(run in runsSet) {
-  generateOutput(paste(sep="", "messung6A-", run, "/pu-vectors.vec.bz2"),
-                 "HandlingTime",
-                 paste(sep="", "messung6A-", run, " - Least Used Policy with Delay Penalty Factor"),
-                 TRUE, seq(0, 50, 5))
-  generateOutput(paste(sep="", "messung6B-", run, "/pu-vectors.vec.bz2"),
-                 "HandlingTime",
-                 paste(sep="", "messung6B-", run, " - Least Used Policy"),
-                 TRUE, seq(0, 50, 5))
-}
 
+scenario <- "DisasterScenario1"
+
+pdf("test4.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+generateOutput(paste(sep="", scenario, "-A.data.bz2"),
+               "HandlingSpeed", "", TRUE,
+               seq(0,65,5), seq(0,1000000,200000))
+generateOutput(paste(sep="", scenario, "-B.data.bz2"),
+               "HandlingSpeed", "", TRUE,
+               seq(0,65,5), seq(0,1000000,200000))
 dev.off()

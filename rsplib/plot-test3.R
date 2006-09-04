@@ -116,7 +116,7 @@ xSeparatorsTitles <- c("Failures\nin Asia",
                         "Reco-\nvery\nComp-\nleted",
                         "Normal\nOperation")
 
-testSet <- c("T1","T2","T3","T4","T5","T6","T7","T8")
+testSet <- c("U01","U02","U03","U04","U05","U06","U07","U08","U09","U10","U11","U12","U13","U14","U15","U16","U17","U18","U19","U20","U21","U22")
 
 pdf("test3.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
 for(test in testSet) {

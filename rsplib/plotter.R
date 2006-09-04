@@ -480,44 +480,53 @@ plotstd3 <- function(mainTitle,
          filter <- (xSet >= xValue) &
                    (xSet <= xValue + xWidth)
 
-         aggregate <- hbarAggregator(
-                         subset(xSet, filter), subset(ySet, filter),
-                         subset(hbarSet, filter), zValue,
-                         confidence)
-         mMean <- aggregate[1]
-         mMin <- aggregate[2]
-         mMax <- aggregate[3]
+         xAggSubset <- subset(xSet, filter)
+cat("x=",xValue,xValue + xWidth,length(xAggSubset),"\n")
 
-         # ------ Plot line segment -----------------------------------------
-         if(colorMode == cmColor) {
-            meanBarColor <- zColorArray
-         }
-         else {
-            meanBarColor <- par("fg")
-         }
-         if(xValue > min(xSet)) {
-            lines(c(xValue, xValue),
-                  c(oldY, mMean),
+         if(length(xAggSubset) > 0) {
+            yAggSubset    <- subset(ySet, filter)
+            hbarAggSubset <- subset(hbarSet, filter)
+
+            aggregate <- hbarAggregator(
+                           xAggSubset, yAggSubset,
+                           hbarAggSubset, zValue,
+                           confidence)
+            mMean <- aggregate[1]
+            mMin <- aggregate[2]
+            mMax <- aggregate[3]
+
+            # ------ Plot line segment -----------------------------------------
+            if(colorMode == cmColor) {
+               meanBarColor <- zColorArray
+            }
+            else {
+               meanBarColor <- par("fg")
+            }
+            if(xValue > min(xSet)) {
+               lines(c(xValue, xValue),
+                     c(oldY, mMean),
+                     col=meanBarColor, lwd=4*par("cex"))
+            }
+            lines(c(xValue, xValue + xWidth),
+                  c(mMean, mMean),
                   col=meanBarColor, lwd=4*par("cex"))
-         }
-         lines(c(xValue, xValue + xWidth),
-               c(mMean, mMean),
-               col=meanBarColor, lwd=4*par("cex"))
-         oldY <- mMean
+            oldY <- mMean
 
-         # ------ Plot confidence interval ----------------------------------
-         if(mMin != mMax) {
-            x <- xValue + (xWidth / 2)
-            cintWidthFraction <- 75
-            cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
-            lines(c(x, x), c(mMin, mMax),
-                  col=meanBarColor, lwd=1*par("cex"))
-            lines(c(x - cintWidth, x + cintWidth),
-                  c(mMin, mMin),
-                  col=meanBarColor, lwd=1*par("cex"))
-            lines(c(x - cintWidth, x + cintWidth),
-                  c(mMax, mMax),
-                  col=meanBarColor, lwd=1*par("cex"))
+            # ------ Plot confidence interval ----------------------------------
+   cat("x4: ", xValue, mMean, mMin, mMax, "\n")
+            if(mMin != mMax) {
+               x <- xValue + (xWidth / 2)
+               cintWidthFraction <- 75
+               cintWidth <- (max(xSet) - min(ySet)) / cintWidthFraction
+               lines(c(x, x), c(mMin, mMax),
+                     col=meanBarColor, lwd=1*par("cex"))
+               lines(c(x - cintWidth, x + cintWidth),
+                     c(mMin, mMin),
+                     col=meanBarColor, lwd=1*par("cex"))
+               lines(c(x - cintWidth, x + cintWidth),
+                     c(mMax, mMax),
+                     col=meanBarColor, lwd=1*par("cex"))
+            }
          }
       }
    }
