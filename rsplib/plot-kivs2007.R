@@ -131,10 +131,12 @@ xSeparatorsTitles <- c("Failures\nin Asia",
 
 scenario <- "DisasterScenario1"
 
-pdf("test4.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+pdf("kivs2007-leastuseddpf.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
 generateOutput(paste(sep="", scenario, "-A.data.bz2"),
                "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))
+dev.off()
+pdf("kivs2007-leastused.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
 generateOutput(paste(sep="", scenario, "-B.data.bz2"),
                "HandlingSpeed", "", TRUE,
                seq(0,65,5), seq(0,1000000,200000))

@@ -481,7 +481,6 @@ plotstd3 <- function(mainTitle,
                    (xSet <= xValue + xWidth)
 
          xAggSubset <- subset(xSet, filter)
-cat("x=",xValue,xValue + xWidth,length(xAggSubset),"\n")
 
          if(length(xAggSubset) > 0) {
             yAggSubset    <- subset(ySet, filter)
@@ -513,7 +512,6 @@ cat("x=",xValue,xValue + xWidth,length(xAggSubset),"\n")
             oldY <- mMean
 
             # ------ Plot confidence interval ----------------------------------
-   cat("x4: ", xValue, mMean, mMin, mMax, "\n")
             if(mMin != mMax) {
                x <- xValue + (xWidth / 2)
                cintWidthFraction <- 75
@@ -1173,7 +1171,7 @@ loadResults <- function(name, customFilter="")
    }
 
    dataInputCommand <- filter
-   cat(sep="","Loading from pipe [", dataInputCommand, "]...\n")
+   cat(sep="", "Loading from pipe [", dataInputCommand, "]...\n")
    data <- read.table(pipe(dataInputCommand))
    return(data)
 }
