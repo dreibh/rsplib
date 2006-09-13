@@ -12,18 +12,21 @@ class StreamNode;
 
 class ChunkNode
 {
+   // ====== Public methods =================================================
    public:
    ChunkNode(const char*    buffer,
              const size_t   length,
              const uint32_t seqNumber);
    ~ChunkNode();
 
+   // ====== Public data ====================================================
    public:
    uint32_t ChunkSeqNumber;
    size_t   Length;
    size_t   Position;
    char*    Buffer;
 
+   // ====== Private methods ================================================
    private:
    friend class StreamNode;
 
@@ -35,10 +38,12 @@ class ChunkNode
    static int ComparisonFunction(const void* nodePtr1, const void* nodePtr2);
    static void PrintFunction(const void* nodePtr, FILE* fh);
 
+   // ====== Private data ===================================================
    SimpleRedBlackTreeNode Node;
 };
 
 
+// ###### Constructor #######################################################
 ChunkNode::ChunkNode(const char*    buffer,
                      const size_t   length,
                      const uint32_t seqNumber)
@@ -52,13 +57,17 @@ ChunkNode::ChunkNode(const char*    buffer,
    memcpy(Buffer, buffer, length);
 }
 
+
+// ###### Destructor ########################################################
 ChunkNode::~ChunkNode()
 {
-   delete Buffer;
+   delete [] Buffer;
    Buffer = NULL;
    simpleRedBlackTreeNodeDelete(&Node);
 }
 
+
+// ###### Compare chunk nodes ###############################################
 int ChunkNode::ComparisonFunction(const void* nodePtr1, const void* nodePtr2)
 {
    const ChunkNode* node1 = getChunkNode((void*)nodePtr1);
@@ -86,6 +95,8 @@ exit(1);
    return(0);
 }
 
+
+// ###### Print chunk node ##################################################
 void ChunkNode::PrintFunction(const void* nodePtr, FILE* fh)
 {
    const ChunkNode* chunkNode = getChunkNode((void*)nodePtr);
@@ -94,6 +105,123 @@ void ChunkNode::PrintFunction(const void* nodePtr, FILE* fh)
 }
 
 
+class Dissector
+{
+   // ====== Public methods =================================================
+   public:
+   Dissector();
+   virtual ~Dissector();
+
+   virtual size_t getHeaderLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress) const;
+   virtual size_t getPacketLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress,
+                                  const char*           data,
+                                  const size_t          dataLength);
+
+   // ====== Public data ====================================================
+   static Dissector* Default;
+};
+
+
+Dissector gDefaultDissector;
+Dissector* Dissector::Default = &gDefaultDissector;
+
+
+// ###### Constructor #######################################################
+Dissector::Dissector()
+{
+}
+
+
+// ###### Destructor ########################################################
+Dissector::~Dissector()
+{
+}
+
+
+// ###### Get header length #################################################
+size_t Dissector::getHeaderLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress) const
+{
+   return(1);
+}
+
+
+// ###### Get packet length #################################################
+size_t Dissector::getPacketLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress,
+                                  const char*           data,
+                                  const size_t          dataLength)
+{
+   return(dataLength);
+}
+
+
+
+
+class TLVDissector
+{
+   // ====== Public methods =================================================
+   public:
+   TLVDissector();
+   virtual ~TLVDissector();
+
+   virtual size_t getHeaderLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress) const;
+   virtual size_t getPacketLength(int                   protocol,
+                                  const sockaddr_union* srcAddress,
+                                  const sockaddr_union* dstAddress,
+                                  const char*           data,
+                                  const size_t          dataLength);
+
+   // ====== Public data ====================================================
+   struct TLVHeader {
+      uint8_t  Type;
+      uint8_t  Flags;
+      uint16_t Length;
+   };
+};
+
+
+// ###### Constructor #######################################################
+TLVDissector::TLVDissector()
+{
+}
+
+
+// ###### Destructor ########################################################
+TLVDissector::~TLVDissector()
+{
+}
+
+
+// ###### Get header length #################################################
+size_t TLVDissector::getHeaderLength(int                   protocol,
+                                     const sockaddr_union* srcAddress,
+                                     const sockaddr_union* dstAddress) const
+{
+   return(sizeof(TLVHeader));
+}
+
+
+// ###### Get packet length #################################################
+size_t TLVDissector::getPacketLength(int                   protocol,
+                                     const sockaddr_union* srcAddress,
+                                     const sockaddr_union* dstAddress,
+                                     const char*           data,
+                                     const size_t          dataLength)
+{
+   CHECK(dataLength >= sizeof(TLVHeader));
+   const TLVHeader* tlvHeader = (const TLVHeader*)data;
+   return(ntohs(tlvHeader->Length));
+}
+
 
 
 
@@ -101,19 +229,28 @@ class StreamTree;
 
 class StreamNode
 {
+   // ====== Public methods =================================================
    public:
    StreamNode();
    StreamNode(int                   protocol,
               const sockaddr_union* srcAddress,
               const sockaddr_union* dstAddress,
-              const uint32_t        initSeq);
+              const uint32_t        initSeq,
+              Dissector*            dissector);
    ~StreamNode();
 
    size_t handleData(const char*    buffer,
                      const size_t   length,
                      const uint32_t seqNumber);
-   size_t bytesAvailable();
+   size_t readFromBuffer(char*        buffer,
+                         const size_t bufferSize,
+                         bool         peek = false);
+   inline size_t bytesAvailable(const size_t maxSize = ~0) {
+      return(readFromBuffer(NULL, maxSize));
+   }
 
+
+   // ====== Private methods ================================================
    private:
    friend class StreamTree;
 
@@ -149,9 +286,11 @@ class StreamNode
    }
 
 
+   // ====== Private data ===================================================
    SimpleRedBlackTreeNode FlowNode;
    SimpleRedBlackTreeNode TimerNode;
    SimpleRedBlackTree     ChunkSet;
+   Dissector*             PacketDissector;
 
    int                    Protocol;
    sockaddr_union         SrcAddress;
@@ -163,6 +302,7 @@ class StreamNode
 
 class StreamTree
 {
+   // ====== Public methods =================================================
    public:
    StreamTree();
    ~StreamTree();
@@ -170,7 +310,8 @@ class StreamTree
    void addStream(int                   protocol,
                   const sockaddr_union* srcAddress,
                   const sockaddr_union* dstAddress,
-                  const uint32_t        initSeq);
+                  const uint32_t        initSeq,
+                  Dissector*            dissector = Dissector::Default);
    StreamNode* findStream(int                   protocol,
                           const sockaddr_union* srcAddress,
                           const sockaddr_union* dstAddress);
@@ -185,26 +326,32 @@ class StreamTree
                      const uint32_t        seqNumber);
    void dump();
 
+   // ====== Private data ===================================================
    private:
    SimpleRedBlackTree FlowTree;
    SimpleRedBlackTree TimerTree;
 };
 
 
+// ###### Default constructor ###############################################
 StreamNode::StreamNode()
 {
 }
 
+
+// ###### Constructor #######################################################
 StreamNode::StreamNode(int                   protocol,
                        const sockaddr_union* srcAddress,
                        const sockaddr_union* dstAddress,
-                       const uint32_t        initSeq)
+                       const uint32_t        initSeq,
+                       Dissector*            dissector)
 {
-   Protocol   = protocol,
-   SrcAddress = *srcAddress;
-   DstAddress = *dstAddress;
-   LastUpdate = getMicroTime();
-   SeqNumber  = initSeq;
+   PacketDissector = dissector;
+   Protocol        = protocol,
+   SrcAddress      = *srcAddress;
+   DstAddress      = *dstAddress;
+   LastUpdate      = getMicroTime();
+   SeqNumber       = initSeq;
 
    simpleRedBlackTreeNodeNew(&FlowNode);
    simpleRedBlackTreeNodeNew(&TimerNode);
@@ -212,6 +359,7 @@ StreamNode::StreamNode(int                   protocol,
 }
 
 
+// ###### Destructor ########################################################
 StreamNode::~StreamNode()
 {
    simpleRedBlackTreeDelete(&ChunkSet);
@@ -220,6 +368,7 @@ StreamNode::~StreamNode()
 }
 
 
+// ###### Compare flow nodes ################################################
 int StreamNode::FlowNodeComparisonFunction(const void* nodePtr1, const void* nodePtr2)
 {
    const StreamNode* node1 = getStreamNodeFromFlowNode((void*)nodePtr1);
@@ -242,6 +391,8 @@ int StreamNode::FlowNodeComparisonFunction(const void* nodePtr1, const void* nod
    return(result);
 }
 
+
+// ###### Print flow node ###################################################
 void StreamNode::FlowNodePrintFunction(const void* nodePtr, FILE* fh)
 {
    const StreamNode* node = getStreamNodeFromFlowNode((void*)nodePtr);
@@ -268,6 +419,7 @@ void StreamNode::FlowNodePrintFunction(const void* nodePtr, FILE* fh)
 }
 
 
+// ###### Compare timer nodes ###############################################
 int StreamNode::TimerNodeComparisonFunction(const void* nodePtr1, const void* nodePtr2)
 {
    const StreamNode* node1 = getStreamNodeFromTimerNode((void*)nodePtr1);
@@ -283,6 +435,7 @@ int StreamNode::TimerNodeComparisonFunction(const void* nodePtr1, const void* no
 }
 
 
+// ###### Print timer node ##################################################
 void StreamNode::TimerNodePrintFunction(const void* nodePtr, FILE* fh)
 {
    const StreamNode* node = getStreamNodeFromTimerNode((void*)nodePtr);
@@ -290,6 +443,7 @@ void StreamNode::TimerNodePrintFunction(const void* nodePtr, FILE* fh)
 }
 
 
+// ###### Handle incoming data ##############################################
 size_t StreamNode::handleData(const char*    buffer,
                               const size_t   length,
                               const uint32_t seqNumber)
@@ -305,34 +459,66 @@ size_t StreamNode::handleData(const char*    buffer,
       delete chunkNode;
    }
 
-puts("OK!");
-   return(bytesAvailable());
+   //return(bytesAvailable());
+   return(length);
 }
 
 
-size_t StreamNode::bytesAvailable()
+// ###### Read from chunk buffer ############################################
+size_t StreamNode::readFromBuffer(char*        buffer,
+                                  const size_t bufferSize,
+                                  bool         peek)
 {
-   size_t bytes = 0;
+   size_t   bytesRead = 0;
+   uint32_t seqNumber = SeqNumber;
 
    ChunkNode* chunkNode = getFirstChunkNode();
    while(chunkNode != NULL) {
+      if( (bytesRead >= bufferSize) ||
+          (chunkNode->ChunkSeqNumber + (uint32_t)chunkNode->Position != seqNumber) ) {
+         break;
+      }
 
-puts("xxx");
-      chunkNode = getNextChunkNode(chunkNode);
+      size_t chunkBytes = chunkNode->Length - chunkNode->Position;
+      if(chunkBytes > bufferSize - bytesRead) {
+         chunkBytes = bufferSize - bytesRead;
+      }
+      ChunkNode* nextChunkNode = getNextChunkNode(chunkNode);
+
+      if(buffer) {
+         memcpy(&buffer[bytesRead], &chunkNode->Buffer[chunkNode->Position], chunkBytes);
+         if(!peek) {
+            SeqNumber           += (uint32_t)chunkBytes;
+            chunkNode->Position += chunkBytes;
+            if(chunkNode->Position >= chunkNode->Length) {
+               CHECK(simpleRedBlackTreeRemove(&ChunkSet, &chunkNode->Node) == &chunkNode->Node);
+               delete chunkNode;
+            }
+         }
+      }
+
+      bytesRead += chunkBytes;
+      seqNumber += (uint32_t)chunkBytes;
+
+      chunkNode = nextChunkNode;
    }
 
-   return(bytes);
+   return(bytesRead);
 }
 
 
 
 
+
+// ###### Constructor #######################################################
 StreamTree::StreamTree()
 {
    simpleRedBlackTreeNew(&FlowTree, &StreamNode::FlowNodePrintFunction, &StreamNode::FlowNodeComparisonFunction);
    simpleRedBlackTreeNew(&TimerTree, &StreamNode::TimerNodePrintFunction, &StreamNode::TimerNodeComparisonFunction);
 }
 
+
+// ###### Destructor ########################################################
 StreamTree::~StreamTree()
 {
    simpleRedBlackTreeDelete(&FlowTree);
@@ -340,12 +526,14 @@ StreamTree::~StreamTree()
 }
 
 
+// ###### Add stream ########################################################
 void StreamTree::addStream(int                   protocol,
                            const sockaddr_union* srcAddress,
                            const sockaddr_union* dstAddress,
-                           const uint32_t        initSeq)
+                           const uint32_t        initSeq,
+                           Dissector*            dissector)
 {
-   StreamNode* streamNode = new StreamNode(protocol, srcAddress, dstAddress, initSeq);
+   StreamNode* streamNode = new StreamNode(protocol, srcAddress, dstAddress, initSeq, dissector);
    if(streamNode) {
       CHECK(simpleRedBlackTreeInsert(&FlowTree, &streamNode->FlowNode) == &streamNode->FlowNode);
       CHECK(simpleRedBlackTreeInsert(&TimerTree, &streamNode->TimerNode) == &streamNode->TimerNode);
@@ -353,6 +541,7 @@ void StreamTree::addStream(int                   protocol,
 }
 
 
+// ###### Find stream #######################################################
 StreamNode* StreamTree::findStream(int                   protocol,
                                    const sockaddr_union* srcAddress,
                                    const sockaddr_union* dstAddress)
@@ -369,6 +558,7 @@ StreamNode* StreamTree::findStream(int                   protocol,
 }
 
 
+// ###### Remove stream #####################################################
 void StreamTree::removeStream(int                   protocol,
                               const sockaddr_union* srcAddress,
                               const sockaddr_union* dstAddress)
@@ -382,6 +572,7 @@ void StreamTree::removeStream(int                   protocol,
 }
 
 
+// ###### Handle incoming data ##############################################
 size_t StreamTree::handleData(int                   protocol,
                               const sockaddr_union* srcAddress,
                               const sockaddr_union* dstAddress,
@@ -397,6 +588,7 @@ size_t StreamTree::handleData(int                   protocol,
 }
 
 
+// ###### Print stream tree #################################################
 void StreamTree::dump()
 {
    puts("StreamTree:");
@@ -407,21 +599,53 @@ void StreamTree::dump()
 
 
 
+
+
 void test1(StreamTree* tree,
            const sockaddr_union* srcAddress,
            const sockaddr_union* dstAddress,
            int seq)
 {
-   char q = 0;
+   char q = 65;
    uint32_t s=seq;
-   for(size_t i = 0;i < 3;i++) {
+   size_t b=0;
+   for(size_t i = 0;i < 13;i++) {
       size_t len = random() % 1500;
       char data[len];
-      for(size_t j = 0;j < len;j++) data[j++] = q++;
+      for(size_t j = 0;j < len;j++) { data[j] = q++; }
       tree->handleData(IPPROTO_SCTP, srcAddress, dstAddress, data, len, s);
-      s += len;
+      s += len; b+=len;
    }
+
+   StreamNode* sn = tree->findStream(IPPROTO_SCTP, srcAddress, dstAddress);
+   CHECK(sn);
+
+   printf("Reading...\n");
+   q=65;
+   size_t u = 0;
+   for(size_t i = 0;i <= b;i++) {
+      size_t n = 3;
+      char arr[n];
+      size_t r = sn->readFromBuffer((char*)&arr, sizeof(arr), false);
+      if(r <= 0) {
+         printf("STOP at %d\n",i);
+         break;
+      }
+//       printf("%d %d\n",(unsigned char)q,(unsigned char)c);
+      for(size_t i = 0;i < r;i++) {
+         if(q!=arr[i]) {
+            printf("DIFF at %d\n",i);
+            exit(1);
+         }
+         q++; u++;
+      }
+   }
+
+   printf("IN: %d  OUT: %d\n",b,u);
 }
+
+
+
 
 
 int main(int argc, char** argv)
