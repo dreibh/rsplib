@@ -161,12 +161,10 @@ hbarHandlingSpeedAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
 {
    handlingTime  <- 60 * (xSet - hbarSet)
    handlingSpeed <- ySet
-   totalHandlingTime <- 0
-   totalJobSize <- 0
-   for(i in seq(1, length(handlingTime))) {
-      totalHandlingTime <- totalHandlingTime + handlingTime[i]
-      totalJobSize <- totalJobSize + (handlingTime[i] * handlingSpeed[i])
-   }
+
+   totalHandlingTime <- sum(handlingTime)
+   totalJobSize      <- sum(handlingTime * handlingSpeed)
+
    mMean <- totalJobSize / totalHandlingTime
    mMin <- mMean
    mMax <- mMean
