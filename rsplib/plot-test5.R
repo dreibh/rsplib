@@ -1,8 +1,9 @@
 source("plotter.R")
 
-hideLegend          <- TRUE
-colorMode           <- cmColor
-legendPos           <- c(1,1)
+ownOutput  <- FALSE
+hideLegend <- TRUE
+colorMode  <- cmColor
+legendPos  <- c(1,1)
 
 
 getTimeOffsetVector <- function(data)
@@ -104,7 +105,7 @@ dumpAverageResults <- function(inFile, data, timeOffsetVector)
    xSet <- factor(xSet)
 
    xAxisTicks <- c()
-   yAxisTicks <- seq(0,4,.5)
+   yAxisTicks <- seq(1,10,1)
    legendPos  <- c(1,1)
    hideLegend <- FALSE
 
@@ -204,34 +205,35 @@ dumpJobsResults <- function(inFile, data, timeOffsetVector,
 
 
 
-#inFile <- "DisasterScenario1-A.data.bz2"
-
 cat("Loading data ...\n")
-inFileA <- "U-Test-A.data.bz2"
-inFileB <- "U-Test-B.data.bz2"
-dataA <- loadResults(inFileA)
-dataB <- loadResults(inFileB)
-timeOffsetVectorA <- getTimeOffsetVector(dataA)
-timeOffsetVectorB <- getTimeOffsetVector(dataB)
+inFileA <- "DisasterScenario1-A.data.bz2"
+inFileB <- "DisasterScenario1-B.data.bz2"
+# dataA <- loadResults(inFileA)
+# dataB <- loadResults(inFileB)
+# timeOffsetVectorA <- getTimeOffsetVector(dataA)
+# timeOffsetVectorB <- getTimeOffsetVector(dataB)
 cat("Loading data completed!\n")
 
 
+if(!ownOutput) { pdf("test5.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14) }
 
-pdf("test5-plotA1.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+if(ownOutput) { pdf("test5-plotA1.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14) }
 dumpAverageResults(inFileA, dataA, timeOffsetVectorA)
-dev.off()
-pdf("test5-plotA2.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+if(ownOutput) { dev.off() }
+if(ownOutput) { pdf("test5-plotA2.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14) }
 dumpJobsResults(inFileA, dataA, timeOffsetVectorA,
                 "HandlingSpeed", "", TRUE,
                 seq(0,65,5), seq(0,1000000,200000))
-dev.off()
+if(ownOutput) { dev.off() }
 
 
-pdf("test5-plotB1.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+if(ownOutput) { pdf("test5-plotB1.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14) }
 dumpAverageResults(inFileB, dataB, timeOffsetVectorB)
-dev.off()
-pdf("test5-plotB2.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14)
+if(ownOutput) { dev.off() }
+if(ownOutput) { pdf("test5-plotB2.pdf", width=12.5, height=7.5, onefile=TRUE, family="Helvetica", pointsize=14) }
 dumpJobsResults(inFileB, dataB, timeOffsetVectorB,
                 "HandlingSpeed", "", TRUE,
                 seq(0,65,5), seq(0,1000000,200000))
-dev.off()
+if(ownOutput) { dev.off() }
+
+if(!ownOutput) { dev.off() }
