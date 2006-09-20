@@ -36,5 +36,5 @@ deb http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
 deb-src http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
 
 # PLF
-#deb http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
-#deb-src http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
+deb http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
+deb-src http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
