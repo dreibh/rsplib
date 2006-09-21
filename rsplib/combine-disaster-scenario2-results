@@ -10,9 +10,9 @@ for m in $INPUT ; do
 done
 ) | ./combinesummaries $OUTPUT-A.data.bz2 Measurement
 
-# (
-# for m in $INPUT ; do
-#    echo "--values=$m"
-#    echo "--input=messung-disaster2B-$m/pu-vectors.vec.bz2"
-# done
-# ) | ./combinesummaries $OUTPUT-B.data.bz2 Measurement
+(
+for m in $INPUT ; do
+   echo "--values=$m"
+   echo "--input=messung-disaster2B-$m/pu-vectors.vec.bz2"
+done
+) | ./combinesummaries $OUTPUT-B.data.bz2 Measurement
