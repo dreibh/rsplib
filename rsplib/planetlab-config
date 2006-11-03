@@ -1,6 +1,6 @@
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il"
+PLANETLAB_COMPILEHOST="planet5.cs.huji.ac.il"   # "planetlab2.exp-math.uni-essen.de"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel make subversion libpcap bzip2-devel slocate"
 
 DISTNAME="rsplib-1.9.0"
