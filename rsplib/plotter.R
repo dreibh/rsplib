@@ -161,10 +161,12 @@ hbarHandlingSpeedAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
 {
    handlingTime  <- 60 * (xSet - hbarSet)
    handlingSpeed <- ySet
-
-   totalHandlingTime <- sum(handlingTime)
-   totalJobSize      <- sum(handlingTime * handlingSpeed)
-
+   totalHandlingTime <- 0
+   totalJobSize <- 0
+   for(i in seq(1, length(handlingTime))) {
+      totalHandlingTime <- totalHandlingTime + handlingTime[i]
+      totalJobSize <- totalJobSize + (handlingTime[i] * handlingSpeed[i])
+   }
    mMean <- totalJobSize / totalHandlingTime
    mMin <- mMean
    mMax <- mMean
@@ -196,7 +198,11 @@ plotstd3 <- function(mainTitle,
                      legendOnly        = FALSE,
                      legendPos         = c(0,1),
                      colorMode         = FALSE,
-                     frameColor        = par("fg"))
+                     frameColor        = par("fg"),
+                     legendSizeFactor  = 0.8,
+                     zValueFilter      = "%s",
+                     vValueFilter      = "%s",
+                     wValueFilter      = "%s")
 {
    xLevels <- levels(factor(xSet))
    yLevels <- levels(factor(ySet))
@@ -336,16 +342,16 @@ plotstd3 <- function(mainTitle,
             # ----- Legend settings -----------------------------------------
             if((length(vLevels) > 1) ||
                (length(wLevels) > 1)) {
-               legendText <- paste(sep="", getAbbreviation(zTitle), "=", z)
+               legendText <- paste(sep="", getAbbreviation(zTitle), "=", gettextf(zValueFilter, z))
             }
             else {
                legendText  <- paste(sep="", z)
             }
             if(length(vLevels) > 1) {
-               legendText <- paste(sep="", legendText, ", ", getAbbreviation(vTitle), "=", v)
+               legendText <- paste(sep="", legendText, ", ", getAbbreviation(vTitle), "=", gettextf(vValueFilter, v))
             }
             if(length(wLevels) > 1) {
-               legendText <- paste(sep="", legendText, ", ", getAbbreviation(wTitle), "=", w)
+               legendText <- paste(sep="", legendText, ", ", getAbbreviation(wTitle), "=", gettextf(wValueFilter, w))
             }
             legendColor <- zColorArray[zPosition]
             legendStyle <- vPosition %% 7
@@ -374,10 +380,10 @@ plotstd3 <- function(mainTitle,
                            c(ySubset[x], ySubset[x]),
                            col=legendColor, cex=par("cex"), pch=legendDot)
                   }
-                  legendTexts <- append(legendTexts, legendText)
+                  legendTexts  <- append(legendTexts, legendText)
                   legendColors <- append(legendColors, legendColor)
                   legendStyles <- append(legendStyles, legendStyle)
-                  legendDots <- append(legendDots, legendDot)
+                  legendDots   <- append(legendDots, legendDot)
                }
 
                # ----- Lines plot -------------------------------------------
@@ -600,7 +606,7 @@ plotstd3 <- function(mainTitle,
              lty=legendStyles,
              pch=legendDots,
              text.col=legendColors,
-             lwd=par("cex"), cex=0.8*par("cex"))
+             lwd=par("cex"), cex=legendSizeFactor*par("cex"))
    }
 }
 
@@ -1169,7 +1175,7 @@ loadResults <- function(name, customFilter="")
    }
 
    dataInputCommand <- filter
-   cat(sep="", "Loading from pipe [", dataInputCommand, "]...\n")
+   cat(sep="", "Loading from pipe [", dataInputCommand, "] ...\n")
    data <- read.table(pipe(dataInputCommand))
    return(data)
 }
