@@ -386,8 +386,9 @@ plotstd3 <- function(mainTitle,
                   legendDots   <- append(legendDots, legendDot)
                }
 
-               # ----- Lines plot -------------------------------------------
-               else if((type == "l") || (type=="lines")) {
+               # ----- Lines or Steps plot ----------------------------------
+               else if((type == "l") || (type=="lines") ||
+                       (type == "s") || (type=="steps")) {
                   # These sets will contain mean y line and its confidence intervals
                   xPlotSet <- c()
                   yPlotMinSet <- c()
@@ -427,8 +428,20 @@ plotstd3 <- function(mainTitle,
                      if((length(vLevels) > 1) || (length(wLevels) > 1)) {
                         lineWidth <- 3
                      }
-                     lines(xPlotSet, yPlotMeanSet,
-                           col=legendColor, lty=legendStyle, lwd=lineWidth*par("cex"))
+                     if((type == "l") || (type=="lines")) {
+                        lines(xPlotSet, yPlotMeanSet,
+                              col=legendColor, lty=legendStyle, lwd=lineWidth*par("cex"))
+                     }
+                     else if((type == "s") || (type=="steps")) {
+                        for(i in seq(1, length(xPlotSet) - 1)) {
+                           lines(c(xPlotSet[i], xPlotSet[i + 1]),
+                                 c(yPlotMeanSet[i],yPlotMeanSet[i]),
+                                 col=legendColor, lty=legendStyle, lwd=lineWidth*par("cex"))
+                           lines(c(xPlotSet[i + 1], xPlotSet[i + 1]),
+                                 c(yPlotMeanSet[i],yPlotMeanSet[i + 1]),
+                                 col=legendColor, lty=legendStyle, lwd=lineWidth*par("cex"))
+                        }
+                     }
 
                      cintWidthFraction <- 75
                      cintWidth <- (max(xRange) - min(xRange)) / cintWidthFraction
