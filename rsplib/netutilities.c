@@ -1938,7 +1938,7 @@ bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
    struct sctp_rtoinfo     rtoinfo;
    struct sctp_paddrparams peerParams;
    struct sctp_assocparams assocParams;
-   union sockaddr_union*   addrs;
+   union sockaddr_union*   addrs = NULL;
    socklen_t               size;
    int                     i, n;
    bool                    result = true;

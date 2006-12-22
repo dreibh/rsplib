@@ -1155,6 +1155,7 @@ static void asapInstanceHandleRegistrarConnectionEvent(
       LOG_ERROR
       fprintf(stdlog, "Event for unknown socket %d\n", fd);
       LOG_END_FATAL
+      return;   /* Avoids warning about uninitializes message buffer. */
    }
 
    flags               = 0;

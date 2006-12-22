@@ -604,6 +604,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #endif
 */
 
+/*
 #ifndef SPP_HB_ENABLE
 #define SPP_HB_ENABLE SPP_HB_ENABLED
 #endif
@@ -622,6 +623,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #ifndef SPP_SACKDELAY_DISABLE
 #define SPP_SACKDELAY_DISABLE SPP_SACKDELAY_DISABLED
 #endif
+*/
 
 #endif
 

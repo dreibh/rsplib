@@ -157,18 +157,26 @@ double networkToDouble(network_double_t value)
 
 #else
 
+union DoubleIntUnion
+{
+   double             Double;
+   unsigned long long Integer;
+};
+
 /* ###### Convert double to machine-independent form ##################### */
 network_double_t doubleToNetwork(const double d)
 {
-   const unsigned long long* v = (const unsigned long long*)&d;
-   return(hton64(*v));
+   union DoubleIntUnion valueUnion;
+   valueUnion.Double = d;
+   return(hton64(valueUnion.Integer));
 }
 
 /* ###### Convert machine-independent form to double ##################### */
 double networkToDouble(network_double_t value)
 {
-   unsigned long long w = ntoh64(value);
-   return(*((double*)&w));
+   union DoubleIntUnion valueUnion;
+   valueUnion.Integer = ntoh64(value);
+   return(valueUnion.Double);
 }
 
 #endif
