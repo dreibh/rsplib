@@ -259,8 +259,8 @@ if test "$enable_maintainer_mode" = "yes"; then
 CFLAGS="$CFLAGS -Wall -g3 -O0"
 CXXFLAGS="$CXXFLAGS -Wall -g3 -O0"
 else
-CFLAGS="$CFLAGS -Wall -Os -g0"
-CXXFLAGS="$CXXFLAGS -Wall -Os -g0"
+CFLAGS="$CFLAGS -Wall -O3 -g0"
+CXXFLAGS="$CXXFLAGS -Wall -O3 -g0"
 fi
 
 

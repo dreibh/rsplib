@@ -1,8 +1,14 @@
 #!/bin/sh
 
-/etc/init.d/shorewall stop
-/etc/init.d/iptables stop
-/etc/init.d/ip6tables stop
+if [ -e /etc/init.d/shorewall ] ; then
+   /etc/init.d/shorewall stop
+fi
+if [ -e /etc/init.d/iptables ] ; then
+   /etc/init.d/iptables stop
+fi
+if [ -e /etc/init.d/ip6tables ] ; then
+   /etc/init.d/ip6tables stop
+fi
 
 iptables -L
 ip6tables -L
@@ -13,7 +19,7 @@ if [ ! -e /etc/sysconfig/network-scripts/ifcfg-dummy0 ] ; then
    # Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
    #          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
    ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 up multicast
-   ip addr add 2000:1:2:3:4:5:6:7/64 dev dummy0
+   ip addr add 3ffe:1:2:3:4:5:6:7/64 dev dummy0
    # ip addr add fec0:1:2:3:4:5:6:7/64 dev dummy0
    # ip addr add fec1:9:8:7:6:5:4:3/64 dev dummy0
 else
@@ -21,4 +27,4 @@ else
 fi
 
 route add default gw 10.255.255.200
-route --inet6 add default gw 2000:1:2:3:4:5:6:7777
+route --inet6 add default gw 3ffe:1:2:3:4:5:6:7777
