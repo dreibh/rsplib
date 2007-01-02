@@ -1,10 +1,10 @@
-deb http://de.archive.ubuntu.com/ubuntu/ dapper main restricted
-deb-src http://de.archive.ubuntu.com/ubuntu/ dapper main restricted
+deb http://de.archive.ubuntu.com/ubuntu/ edgy main restricted
+deb-src http://de.archive.ubuntu.com/ubuntu/ edgy main restricted
 
 ## Major bug fix updates produced after the final release of the
 ## distribution.
-deb http://de.archive.ubuntu.com/ubuntu/ dapper-updates main restricted
-deb-src http://de.archive.ubuntu.com/ubuntu/ dapper-updates main restricted
+deb http://de.archive.ubuntu.com/ubuntu/ edgy-updates main restricted
+deb-src http://de.archive.ubuntu.com/ubuntu/ edgy-updates main restricted
 
 ## Uncomment the following two lines to add software from the 'universe'
 ## repository.
@@ -13,8 +13,8 @@ deb-src http://de.archive.ubuntu.com/ubuntu/ dapper-updates main restricted
 ## your rights to use the software. Also, please note that software in
 ## universe WILL NOT receive any review or updates from the Ubuntu security
 ## team.
-deb http://de.archive.ubuntu.com/ubuntu/ dapper universe
-deb-src http://de.archive.ubuntu.com/ubuntu/ dapper universe
+deb http://de.archive.ubuntu.com/ubuntu/ edgy universe
+deb-src http://de.archive.ubuntu.com/ubuntu/ edgy universe
 
 ## Uncomment the following two lines to add software from the 'backports'
 ## repository.
@@ -23,18 +23,25 @@ deb-src http://de.archive.ubuntu.com/ubuntu/ dapper universe
 ## newer versions of some applications which may provide useful features.
 ## Also, please note that software in backports WILL NOT receive any review
 ## or updates from the Ubuntu security team.
-deb http://de.archive.ubuntu.com/ubuntu/ dapper-backports main restricted universe multiverse
-deb-src http://de.archive.ubuntu.com/ubuntu/ dapper-backports main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu dapper-security main restricted
-deb-src http://security.ubuntu.com/ubuntu dapper-security main restricted
-deb http://security.ubuntu.com/ubuntu dapper-security universe
-deb-src http://security.ubuntu.com/ubuntu dapper-security universe
+deb http://de.archive.ubuntu.com/ubuntu/ edgy-backports main restricted universe multiverse
+deb-src http://de.archive.ubuntu.com/ubuntu/ edgy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu edgy-security main restricted
+deb-src http://security.ubuntu.com/ubuntu edgy-security main restricted
+deb http://security.ubuntu.com/ubuntu edgy-security universe
+deb-src http://security.ubuntu.com/ubuntu edgy-security universe
 
 
 # Multiverse
-deb http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
-deb-src http://de.archive.ubuntu.com/ubuntu/ dapper multiverse
+deb http://de.archive.ubuntu.com/ubuntu/ edgy multiverse
+deb-src http://de.archive.ubuntu.com/ubuntu/ edgy multiverse
 
-# PLF
-deb http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
-deb-src http://packages.freecontrib.org/ubuntu/plf/ dapper free non-free
+## Medibuntu - Ubuntu 6.10 "edgy eft" (ex PLF)
+## Please report any bug on https://launchpad.net/products/medibuntu/+bugs
+deb http://medibuntu.sos-sts.com/repo/ edgy free
+deb http://medibuntu.sos-sts.com/repo/ edgy non-free
+deb-src http://medibuntu.sos-sts.com/repo/ edgy free
+deb-src http://medibuntu.sos-sts.com/repo/ edgy non-free
+
+# Seveas
+deb http://mirror.ubuntulinux.nl edgy-seveas all
+deb-src http://mirror.ubuntulinux.nl edgy-seveas all
