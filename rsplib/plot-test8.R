@@ -10,10 +10,10 @@ colorMode <- cmColor
 legendSizeFactor <- 1
 
 mainTitle <- "Handling Time Histogram"
-yTitle <- "Frequency [1]"
+yTitle <- "Average Number of Requests during Measurement Runtime [1]"
 
 xSet <- data$HandlingTime
-xTitle <- "Handling Time Interval [s]"
+xTitle <- "Request Handling Time Interval [s]"
 
 xAxisTicks <- seq(0,2.5,0.5)
 yAxisTicks <- seq(0,6000,1000)

@@ -1131,9 +1131,9 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 plothist.valuefilter <- function(value, confidence)
 {
    if(confidence != 0) {
-      return(sprintf("%1.1f+/-%1.1f", value, confidence))
+      return(sprintf("%1.2f ± %1.0f%%", value, 100.0*confidence/value))
    }
-   return(sprintf("%1.1f", value))
+   return(sprintf("%1.2f", value))
 }
 
 
@@ -1145,6 +1145,7 @@ plothist <- function(mainTitle,
                      xAxisTicks       = getUsefulTicks(xSet),
                      yAxisTicks       = c(),
                      breakSpace       = 0.2,
+                     freq             = TRUE,
                      hideLegend       = FALSE,
                      legendPos        = c(1,1),
                      colorMode        = FALSE,
@@ -1194,12 +1195,17 @@ plothist <- function(mainTitle,
    }
    breakSet <- sort(unique(breakSet))
 
-   r <- hist(xSet, br=breakSet, plot=FALSE)
+   r <- hist(xSet, br=breakSet, plot=FALSE, freq=freq)
    opar <- par(col.lab=frameColor,col.main=frameColor,font.main=2,cex.main=2)
 
    xRange <- c(min(xAxisTicks), max(xAxisTicks))
    if(length(yAxisTicks) < 2) {
-      yAxisTicks <- getUsefulTicks(r$count)
+      if(freq == TRUE) {
+         yAxisTicks <- getUsefulTicks(r$count)
+      }
+      else {
+         yAxisTicks <- getUsefulTicks(r$density)
+      }
    }
    yRange <- c(0, max(yAxisTicks))
 
@@ -1234,31 +1240,38 @@ plothist <- function(mainTitle,
    for(zValue in zLevels) {
 
       cBreakSet <- c()
-      cCountSet <- c()
+      cResultSet <- c()
 
       for(cValue in cLevels) {
          xSubset <- subset(xSet, (zSet == zValue) & (cSet == cValue))
 
-         r <- hist(xSubset, br=breakSet, plot=FALSE)
+         r <- hist(xSubset, br=breakSet, plot=FALSE, freq=freq)
          cBreakSet <- append(cBreakSet, r$breaks[2:length(r$breaks)-1])
-         cCountSet <- append(cCountSet, r$count)
-      }
+         if(freq == TRUE) {
+            cResultSet <- append(cResultSet, r$count)
+         }
+         else {
+            cResultSet <- append(cResultSet, r$density)
+         }
 
+         # cat("=> ",sum(r$density * diff(r$breaks)),"\n")   # Das ist immer gleich 1.
+
+      }
 
       bCount <- 1
       bLevels <- breakSet
       for(bValue in bLevels[1:length(bLevels)-1]) {
-         sSet <- subset(cCountSet, (cBreakSet == bValue))
+         sSet <- subset(cResultSet, (cBreakSet == bValue))
 
-         meanCount <- mean(sSet)
-         minCount  <- min(sSet)
-         maxCount  <- max(sSet)
-         lowCount <- meanCount
-         highCount <- meanCount
-         if((showConfidence == TRUE) && (minCount != maxCount)) {
+         meanResult <- mean(sSet)
+         minResult  <- min(sSet)
+         maxResult  <- max(sSet)
+         lowResult <- meanResult
+         highResult <- meanResult
+         if((showConfidence == TRUE) && (minResult != maxResult)) {
             testCount <- t.test(sSet, conf.level=0.95)
-            lowCount  <- testCount$conf.int[1]
-            highCount  <- testCount$conf.int[2]
+            lowResult  <- testCount$conf.int[1]
+            highResult  <- testCount$conf.int[2]
          }
 
          barLeft  <- bValue
@@ -1271,30 +1284,30 @@ plothist <- function(mainTitle,
          barRight <- barLeft + (barWidth / length(zLevels))
 
 
-         rect(c(barLeft), c(0), c(barRight), meanCount,
+         rect(c(barLeft), c(0), c(barRight), meanResult,
                col=zColorArray[zCount + 1])
          if(showConfidence == TRUE) {
-            rect(c(barLeft), c(lowCount),
-                 c(barRight), c(highCount),
+            rect(c(barLeft), c(lowResult),
+                 c(barRight), c(highResult),
                  col=NA, lty=2, lwd=2, border="gray50")
          }
          if(showMinMax == TRUE) {
-            rect(c(barLeft+0.075*barWidth), c(minCount),
-                 c(barRight-0.075*barWidth), c(maxCount),
+            rect(c(barLeft+0.075*barWidth), c(minResult),
+                 c(barRight-0.075*barWidth), c(maxResult),
                  col=NA, lty=2, lwd=1, border="gray40")
          }
 
-         textY <- meanCount
+         textY <- meanResult
          if(showConfidence == TRUE) {
-            textY <- highCount
+            textY <- highResult
          }
          if(showMinMax == TRUE) {
-            textY <- max(textY, maxCount)
+            textY <- max(textY, maxResult)
          }
 
          text(c(barLeft + (0.5 * barWidth / length(zLevels))),
               c(textY),
-              valueFilter(meanCount,highCount-meanCount),
+              valueFilter(meanResult,highResult-meanResult),
               adj=c(0,0),
               srt=80,
               col=zColorArray[zCount + 1])

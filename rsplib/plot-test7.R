@@ -23,7 +23,8 @@ frameColor <- "gold4"
 
 
 
-pdf("test7.pdf", width=10, height=10, onefile=TRUE, family="Helvetica", pointsize=18)
+pdf("test7.pdf", width=10, height=10, onefile=TRUE, family="Helvetica", pointsize=22)
+par(font.lab=2)
 plothist(mainTitle, xTitle, yTitle, zTitle, xSet, ySet, zSet, cSet,
          xAxisTicks=xAxisTicks,
          frameColor=frameColor,
