@@ -1127,6 +1127,220 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 }
 
 
+# Value filter for printing histogram plot values
+plothist.valuefilter <- function(value, confidence)
+{
+   if(confidence != 0) {
+      return(sprintf("%1.1f+/-%1.1f", value, confidence))
+   }
+   return(sprintf("%1.1f", value))
+}
+
+
+# Plot a histogram.
+plothist <- function(mainTitle,
+                     xTitle, yTitle, zTitle,
+                     xSet, ySet, zSet,
+                     cSet,
+                     xAxisTicks       = getUsefulTicks(xSet),
+                     yAxisTicks       = c(),
+                     breakSpace       = 0.2,
+                     hideLegend       = FALSE,
+                     legendPos        = c(1,1),
+                     colorMode        = FALSE,
+                     zColorArray      = c(),
+                     frameColor       = par("fg"),
+                     legendSizeFactor = 0.8,
+                     showMinMax       = FALSE,
+                     showConfidence   = TRUE,
+                     confidence       = 0.95,
+                     valueFilter      = plothist.valuefilter)
+{
+   # ------ Initialize variables --------------------------------------------
+   cLevels <- levels(factor(cSet))
+   zLevels <- levels(factor(zSet))
+   if(length(zColorArray) == 0) {
+      if(colorMode == cmColor) {
+         if(length(zLevels) <= 4) {
+            zColorArray <- rainbow(length(zLevels))
+         }
+         else {
+            zColorArray <- rainbow(length(zLevels), gamma=2)
+         }
+      }
+      else if(colorMode == cmGrayScale) {
+         zColorArray <- graybow(length(zLevels))
+         frameColor  <- par("fg")
+      }
+      else {
+         zColorArray <- rep(par("fg"), length(zLevels))
+         frameColor  <- par("fg")
+      }
+   }
+
+   legendBackground <- "gray95"
+   if(colorMode == cmBlackAndWhite) {
+      legendBackground <- "white"
+   }
+
+
+   # ------ Initialize plot ----------------------------------------------------
+   breakSet <- xAxisTicks
+   if(min(xSet) < min(breakSet)) {
+      breakSet <- append(breakSet, c(min(xSet)))
+   }
+   if(max(xSet) > max(breakSet)) {
+      breakSet <- append(breakSet, c(max(xSet)))
+   }
+   breakSet <- sort(unique(breakSet))
+
+   r <- hist(xSet, br=breakSet, plot=FALSE)
+   opar <- par(col.lab=frameColor,col.main=frameColor,font.main=2,cex.main=2)
+
+   xRange <- c(min(xAxisTicks), max(xAxisTicks))
+   if(length(yAxisTicks) < 2) {
+      yAxisTicks <- getUsefulTicks(r$count)
+   }
+   yRange <- c(0, max(yAxisTicks))
+
+   plot.new()
+   plot.window(xRange, yRange)
+   axis(1, xAxisTicks, col=frameColor, col.axis=frameColor)
+   axis(2, yAxisTicks, col=frameColor, col.axis=frameColor)
+   abline(v=xAxisTicks, lty=1, col="lightgray")
+   abline(h=yAxisTicks, lty=1, col="lightgray")
+   box(col=frameColor)
+
+   mtext(xTitle, col=frameColor,
+         side = 1, at = xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   mtext(yTitle, col=frameColor,
+         side = 2, at = yRange[1] + ((yRange[2] - yRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   mtext(mainTitle, col=frameColor,
+         side=3, at=xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.main"), cex = par("cex.main"))
+   if(length(zLevels) > 1) {
+      mtext(zTitle, col=frameColor,
+            side = 3, at = max(xRange), line=0.5, adj=1,
+            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   }
+
+   par(opar)
+
+
+   # ------ Plot bars -------------------------------------------------------
+   zCount <- 0
+   for(zValue in zLevels) {
+
+      cBreakSet <- c()
+      cCountSet <- c()
+
+      for(cValue in cLevels) {
+         xSubset <- subset(xSet, (zSet == zValue) & (cSet == cValue))
+
+         r <- hist(xSubset, br=breakSet, plot=FALSE)
+         cBreakSet <- append(cBreakSet, r$breaks[2:length(r$breaks)-1])
+         cCountSet <- append(cCountSet, r$count)
+      }
+
+
+      bCount <- 1
+      bLevels <- breakSet
+      for(bValue in bLevels[1:length(bLevels)-1]) {
+         sSet <- subset(cCountSet, (cBreakSet == bValue))
+
+         meanCount <- mean(sSet)
+         minCount  <- min(sSet)
+         maxCount  <- max(sSet)
+         lowCount <- meanCount
+         highCount <- meanCount
+         if((showConfidence == TRUE) && (minCount != maxCount)) {
+            testCount <- t.test(sSet, conf.level=0.95)
+            lowCount  <- testCount$conf.int[1]
+            highCount  <- testCount$conf.int[2]
+         }
+
+         barLeft  <- bValue
+         barRight <- bLevels[bCount + 1]
+         barWidth <- barRight - barLeft
+         barWidth <- barWidth - breakSpace * barWidth
+
+         barLeft <- (0.5 * breakSpace * barWidth) +
+                        (barLeft + zCount * (barWidth / length(zLevels)))
+         barRight <- barLeft + (barWidth / length(zLevels))
+
+
+         rect(c(barLeft), c(0), c(barRight), meanCount,
+               col=zColorArray[zCount + 1])
+         if(showConfidence == TRUE) {
+            rect(c(barLeft), c(lowCount),
+                 c(barRight), c(highCount),
+                 col=NA, lty=2, lwd=2, border="gray50")
+         }
+         if(showMinMax == TRUE) {
+            rect(c(barLeft+0.075*barWidth), c(minCount),
+                 c(barRight-0.075*barWidth), c(maxCount),
+                 col=NA, lty=2, lwd=1, border="gray40")
+         }
+
+         textY <- meanCount
+         if(showConfidence == TRUE) {
+            textY <- highCount
+         }
+         if(showMinMax == TRUE) {
+            textY <- max(textY, maxCount)
+         }
+
+         text(c(barLeft + (0.5 * barWidth / length(zLevels))),
+              c(textY),
+              valueFilter(meanCount,highCount-meanCount),
+              adj=c(0,0),
+              srt=80,
+              col=zColorArray[zCount + 1])
+
+         bCount <- bCount + 1
+      }
+      zCount <- zCount + 1
+   }
+
+
+   # ------ Plot legend -----------------------------------------------------
+   if(!hideLegend) {
+      lx <- min(xRange) + ((max(xRange) - min(xRange)) * legendPos[1])
+      ly <- min(yRange) + ((max(yRange) - min(yRange)) * legendPos[2])
+      lxjust <- 0.5
+      lyjust <- 0.5
+      if(legendPos[1] < 0.5) {
+         lxjust <- 0
+      }
+      else if(legendPos[1] > 0.5) {
+         lxjust <- 1
+      }
+      if(legendPos[2] < 0.5) {
+         lyjust <- 0
+      }
+      else if(legendPos[2] > 0.5) {
+         lyjust <- 1
+      }
+
+      legendBackground <- "gray95"
+      if(colorMode == cmBlackAndWhite) {
+         legendColors <- par("fg")
+         legendBackground <- "white"
+      }
+      legend(lx, ly,
+            xjust = lxjust,
+            yjust = lyjust,
+            zLevels,
+            bg=legendBackground,
+            col=zColorArray,
+            text.col=zColorArray,
+            lwd=5*par("cex"), cex=legendSizeFactor*par("cex"))
+   }
+}
+
+
 # Get "useful" ticks from given data set
 getUsefulTicks <- function(set, count = 10, integerOnly = FALSE)
 {

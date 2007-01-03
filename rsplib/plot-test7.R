@@ -1,7 +1,7 @@
 source("plotter.R")
 
 
-data <- loadResults("test.data")
+data <- loadResults("test2.data")
 
 hideLegend <- FALSE
 legendPos <- c(1,1)
@@ -14,154 +14,22 @@ xSet <- data$Value1
 xTitle <- "Interval [s]"
 zSet <- data$Type
 zTitle <- "Pool Policy"
+cSet <- data$Measurement
+
+xAxisTicks <- seq(0,30,5)
 
 
 frameColor <- "gold4"
 
 
 
-# Plot a histogram.
-plothist <- function(mainTitle,
-                     xTitle, yTitle, zTitle,
-                     xSet, ySet, zSet,
-                     breakSet          = getUsefulTicks(xSet),
-                     breakSpace        = 0.2,
-                     hideLegend        = FALSE,
-                     legendPos         = c(1,1),
-                     colorMode         = FALSE,
-                     zColorArray       = c(),
-                     frameColor        = par("fg"),
-                     legendSizeFactor  = 0.8)
-{
-   # ------ Initialize variables --------------------------------------------
-   zLevels <- levels(factor(zSet))
-   if(length(zColorArray) == 0) {
-      if(colorMode == cmColor) {
-         if(length(zLevels) <= 4) {
-            zColorArray <- rainbow(length(zLevels))
-         }
-         else {
-            zColorArray <- rainbow(length(zLevels), gamma=2)
-         }
-      }
-      else if(colorMode == cmGrayScale) {
-         zColorArray <- graybow(length(zLevels))
-         frameColor  <- par("fg")
-      }
-      else {
-         zColorArray <- rep(par("fg"), length(zLevels))
-         frameColor  <- par("fg")
-      }
-   }
-
-   legendBackground <- "gray95"
-   if(colorMode == cmBlackAndWhite) {
-      legendBackground <- "white"
-   }
-
-
-   # ------ Initialize plot ----------------------------------------------------
-   r <- hist(xSet, br=breakSet, plot=FALSE)
-   opar <- par(col.lab=frameColor,col.main=frameColor,font.main=2,cex.main=2)
-
-   xRange <- c(min(r$breaks), max(r$breaks))
-   yRange <- c(0, max(r$count))
-   xAxisTicks <- r$breaks
-   yAxisTicks <- getUsefulTicks(yRange)
-
-   plot.new()
-   plot.window(xRange, yRange)
-   axis(1, xAxisTicks, col=frameColor, col.axis=frameColor)
-   axis(2, yAxisTicks, col=frameColor, col.axis=frameColor)
-   abline(h=yAxisTicks, lty=1, col="lightgray")
-   abline(v=xAxisTicks, lty=1, col="lightgray")
-   box(col=frameColor)
-
-   mtext(xTitle, col=frameColor,
-         side = 1, at = xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
-         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-   mtext(yTitle, col=frameColor,
-         side = 2, at = yRange[1] + ((yRange[2] - yRange[1]) / 2), line=2.5,
-         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-   mtext(mainTitle, col=frameColor,
-         side=3, at=xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
-         xpd = NA, font = par("font.main"), cex = par("cex.main"))
-   if(length(zLevels) > 1) {
-      mtext(zTitle, col=frameColor,
-            side = 3, at = max(xRange), line=0.5, adj=1,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-   }
-
-   par(opar)
-
-
-   # ------ Plot bars -------------------------------------------------------
-   count <- 0
-   for(zValue in zLevels) {
-      xSubset <- subset(xSet, (zSet == zValue))
-
-      r <- hist(xSubset, br=breakSet, plot=FALSE)
-      brLeft <- r$breaks[1:length(breakSet) - 1]
-      brRight <- r$breaks[2:length(breakSet)]
-      brWidth <- brRight - brLeft
-      brWidth <- brWidth - breakSpace * brWidth
-
-      brLeft <- (0.5 * breakSpace * brWidth) + (brLeft + count * (brWidth / length(zLevels)))
-      brRight <- brLeft + (brWidth / length(zLevels))
-
-      rect(brLeft, rep(0, length(brLeft)),
-         brRight, r$count,
-         col=zColorArray[count + 1])
-
-      text(brLeft + (0.5 * brWidth / length(zLevels)), r$count,
-         paste("",r$count,""),
-         adj=c(0.5,-0.5),
-         col=zColorArray[count + 1])
-
-      count <- count + 1
-   }
-
-
-   # ------ Plot legend -----------------------------------------------------
-   if(!hideLegend) {
-      lx <- min(xRange) + ((max(xRange) - min(xRange)) * legendPos[1])
-      ly <- min(yRange) + ((max(yRange) - min(yRange)) * legendPos[2])
-      lxjust <- 0.5
-      lyjust <- 0.5
-      if(legendPos[1] < 0.5) {
-         lxjust <- 0
-      }
-      else if(legendPos[1] > 0.5) {
-         lxjust <- 1
-      }
-      if(legendPos[2] < 0.5) {
-         lyjust <- 0
-      }
-      else if(legendPos[2] > 0.5) {
-         lyjust <- 1
-      }
-
-      legendBackground <- "gray95"
-      if(colorMode == cmBlackAndWhite) {
-         legendColors <- par("fg")
-         legendBackground <- "white"
-      }
-      legend(lx, ly,
-            xjust = lxjust,
-            yjust = lyjust,
-            zLevels,
-            bg=legendBackground,
-            col=zColorArray,
-            text.col=zColorArray,
-            lwd=5*par("cex"), cex=legendSizeFactor*par("cex"))
-   }
-}
-
-
-
 pdf("test7.pdf", width=10, height=10, onefile=TRUE, family="Helvetica", pointsize=18)
-plothist(mainTitle, xTitle, yTitle, zTitle, xSet, ySet, zSet,
+plothist(mainTitle, xTitle, yTitle, zTitle, xSet, ySet, zSet, cSet,
+         xAxisTicks=xAxisTicks,
          frameColor=frameColor,
          colorMode=colorMode,
-         hideLegend=hideLegend)
+         hideLegend=hideLegend,
+         showMinMax=TRUE,
+         showConfidence=TRUE,
+         confidence=0.9)
 dev.off()
