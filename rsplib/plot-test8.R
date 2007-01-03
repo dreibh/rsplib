@@ -1,18 +1,25 @@
 source("plotter.R")
 
 
-data <- loadResults("test.data")
+# data <- loadResults("test1.data.bz2")
+
 
 hideLegend <- FALSE
 legendPos <- c(1,1)
 colorMode <- cmColor
 legendSizeFactor <- 1
 
-mainTitle <- "Test-Histogramm"
+mainTitle <- "Handling Time Histogram"
 yTitle <- "Frequency [1]"
-xSet <- data$Value1
-xTitle <- "Interval [s]"
-zSet <- data$Type
+
+xSet <- data$HandlingTime
+xTitle <- "Handling Time Interval [s]"
+
+xAxisTicks <- seq(0,4,0.5)
+yAxisTicks <- seq(0,20000,2500)
+
+
+zSet <- data$Policy
 zTitle <- "Pool Policy"
 
 
@@ -24,7 +31,8 @@ frameColor <- "gold4"
 plothist <- function(mainTitle,
                      xTitle, yTitle, zTitle,
                      xSet, ySet, zSet,
-                     breakSet          = getUsefulTicks(xSet),
+                     xAxisTicks        = getUsefulTicks(xSet),
+                     yAxisTicks        = c(),
                      breakSpace        = 0.2,
                      hideLegend        = FALSE,
                      legendPos         = c(1,1),
@@ -61,20 +69,23 @@ plothist <- function(mainTitle,
 
 
    # ------ Initialize plot ----------------------------------------------------
+   breakSet <- union(xAxisTicks, c(min(xSet), max(xSet)))
+
    r <- hist(xSet, br=breakSet, plot=FALSE)
    opar <- par(col.lab=frameColor,col.main=frameColor,font.main=2,cex.main=2)
 
-   xRange <- c(min(r$breaks), max(r$breaks))
-   yRange <- c(0, max(r$count))
-   xAxisTicks <- r$breaks
-   yAxisTicks <- getUsefulTicks(yRange)
+   xRange <- c(min(xAxisTicks), max(xAxisTicks))
+   if(length(yAxisTicks) < 2) {
+      yAxisTicks <- getUsefulTicks(r$count)
+   }
+   yRange <- c(0, max(yAxisTicks))
 
    plot.new()
    plot.window(xRange, yRange)
    axis(1, xAxisTicks, col=frameColor, col.axis=frameColor)
    axis(2, yAxisTicks, col=frameColor, col.axis=frameColor)
-   abline(h=yAxisTicks, lty=1, col="lightgray")
    abline(v=xAxisTicks, lty=1, col="lightgray")
+   abline(h=yAxisTicks, lty=1, col="lightgray")
    box(col=frameColor)
 
    mtext(xTitle, col=frameColor,
@@ -113,9 +124,13 @@ plothist <- function(mainTitle,
          brRight, r$count,
          col=zColorArray[count + 1])
 
-      text(brLeft + (0.5 * brWidth / length(zLevels)), r$count,
-         paste("",r$count,""),
-         adj=c(0.5,-0.5),
+      x <- brLeft + (0.5 * brWidth / length(zLevels))
+      y <- r$count
+      t <- paste("",r$count,"")
+      text(x[2:length(r$count)], y[2:length(r$count)],
+         t[2:length(r$count)],
+         adj=c(0,0),
+         srt=75,
          col=zColorArray[count + 1])
 
       count <- count + 1
@@ -159,8 +174,11 @@ plothist <- function(mainTitle,
 
 
 
+cat("ACHTUNG: Absolute Zeit funktioniert nur bei erster Messung. Dann OFFSET notwendig!!!\n")
+
 pdf("test7.pdf", width=10, height=10, onefile=TRUE, family="Helvetica", pointsize=18)
 plothist(mainTitle, xTitle, yTitle, zTitle, xSet, ySet, zSet,
+         xAxisTicks=xAxisTicks, yAxisTicks=yAxisTicks,
          frameColor=frameColor,
          colorMode=colorMode,
          hideLegend=hideLegend)
