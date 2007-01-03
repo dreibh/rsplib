@@ -198,6 +198,7 @@ plotstd3 <- function(mainTitle,
                      legendOnly        = FALSE,
                      legendPos         = c(0,1),
                      colorMode         = FALSE,
+                     zColorArray       = c(),
                      frameColor        = par("fg"),
                      legendSizeFactor  = 0.8,
                      zValueFilter      = "%s",
@@ -228,16 +229,23 @@ plotstd3 <- function(mainTitle,
    }
    wLevels <- levels(factor(wSet))
 
-   if(colorMode == cmColor) {
-      zColorArray <- rainbow(length(zLevels))
-   }
-   else if(colorMode == cmGrayScale) {
-      zColorArray <- graybow(length(zLevels))
-      frameColor  <- par("fg")
-   }
-   else {
-      zColorArray <- rep(par("fg"), length(zLevels))
-      frameColor  <- par("fg")
+   if(length(zColorArray) == 0) {
+      if(colorMode == cmColor) {
+         if(length(zLevels) <= 4) {
+            zColorArray <- rainbow(length(zLevels))
+         }
+         else {
+            zColorArray <- rainbow(length(zLevels), gamma=2)
+         }
+      }
+      else if(colorMode == cmGrayScale) {
+         zColorArray <- graybow(length(zLevels))
+         frameColor  <- par("fg")
+      }
+      else {
+         zColorArray <- rep(par("fg"), length(zLevels))
+         frameColor  <- par("fg")
+      }
    }
 
    xRange <- range(as.numeric(xSet), finite=TRUE)
@@ -268,7 +276,7 @@ plotstd3 <- function(mainTitle,
       }
       axis(2, yAxisTicks, col=frameColor, col.axis=frameColor)
 
-      grid(20, 20)
+      grid(20, 20, lty=1)
       box(col=frameColor)
       xLabel <- getVariable(xTitle)
       if(getAbbreviation(xTitle) != getVariable(xTitle)) {
