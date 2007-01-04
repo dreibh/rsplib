@@ -300,85 +300,6 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
       }
    }
 
-
-#if 0
-// ------------------
-
-   if( ((flags & PLNF_DYNAMIC) && (registrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER)) ||
-       ((!(flags & PLNF_DYNAMIC)) && (registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER)) ) {
-      return(RSPERR_INVALID_ID);
-   }
-
-   /* Check, if a static entry is updated with an ID */
-   if(registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
-      *peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
-                                                                   UNDEFINED_REGISTRAR_IDENTIFIER,
-                                                                   transportAddressBlock);
-printf("FND=%p\n",*peerListNode);
-      if(*peerListNode) {
-         /* When the found ID is a static entry, update this entry with
-            the ID */
-         if(!((*peerListNode)->Flags & PLNF_DYNAMIC)) {
-            ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
-                                    registrarIdentifier,
-                                    (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
-                                    (*peerListNode)->AddressBlock);
-            ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
-                                                &updatedPeerListNode, &errorCode);
-            CHECK(errorCode == RSPERR_OKAY);
-            return(RSPERR_OKAY);
-         }
-      }
-   }
-
-   if(peerListManagement->NewPeerListNode == NULL) {
-      peerListManagement->NewPeerListNode = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
-      if(peerListManagement->NewPeerListNode == NULL) {
-         return(RSPERR_OUT_OF_MEMORY);
-      }
-   }
-
-   /* Attention: transportAddressBlock MUST be copied when this
-      PeerListNode is added! */
-   ST_CLASS(peerListNodeNew)(peerListManagement->NewPeerListNode,
-                             registrarIdentifier,
-                             flags,
-                             (struct TransportAddressBlock*)transportAddressBlock);
-   *peerListNode = ST_CLASS(peerListAddOrUpdatePeerListNode)(&peerListManagement->List,
-                                                             &peerListManagement->NewPeerListNode,
-                                                             &errorCode);
-   if(errorCode == RSPERR_OKAY) {
-      (*peerListNode)->LastUpdateTimeStamp = currentTimeStamp;
-
-      if(*peerListNode != peerListManagement->NewPeerListNode) {
-puts("UPDATE!=?!!?");
-      }
-
-      userTransport = transportAddressBlockDuplicate(transportAddressBlock);
-      if(userTransport != NULL) {
-         if((*peerListNode)->AddressBlock != transportAddressBlock) {  /* see comment above! */
-            transportAddressBlockDelete((*peerListNode)->AddressBlock);
-            free((*peerListNode)->AddressBlock);
-         }
-         (*peerListNode)->AddressBlock = userTransport;
-
-         if(peerListManagement->Handlespace) {
-            (*peerListNode)->OwnershipChecksum =
-               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-                  &peerListManagement->Handlespace->Handlespace,
-                  (*peerListNode)->Identifier);
-         }
-      }
-      else {
-         ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
-            peerListManagement,
-            *peerListNode);
-         *peerListNode = NULL;
-         errorCode = RSPERR_OUT_OF_MEMORY;
-      }
-   }
-#endif
-
 #ifdef VERIFY
    ST_CLASS(peerListVerify)(&peerListManagement->List);
 #endif
@@ -394,15 +315,22 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
    struct ST_CLASS(PeerListNode) updatedPeerListNode;
    unsigned int                  errorCode;
 
+   if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
+      ST_CLASS(peerListDeactivateTimer)(&peerListManagement->List,
+                                        peerListNode);
+   }
+
    /* Check, if a static entry with ID should be turned into ID-less entry only */
    if((!(peerListNode->Flags & PLNF_DYNAMIC)) &&
       (peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      ST_CLASS(peerListRemovePeerListNode)(&peerListManagement->List, peerListNode);
+      ST_CLASS(peerListNodeDelete)(peerListNode);
+      /* Note: AddressBlock and Flags remain valid here! */
       ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
                                 0,
                                 peerListNode->Flags,
                                 peerListNode->AddressBlock);
-      ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, peerListNode,
-                                           &updatedPeerListNode, &errorCode);
+      ST_CLASS(peerListAddPeerListNode)(&peerListManagement->List, peerListNode, &errorCode);
       CHECK(errorCode == RSPERR_OKAY);
    }
    else {

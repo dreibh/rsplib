@@ -85,18 +85,18 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
                                   struct ST_CLASS(PeerList)* peerList);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const RegistrarIdentifierType            identifier,
+                                  const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestPrevPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const RegistrarIdentifierType            identifier,
+                                  const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindNearestNextPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,
-                                  const RegistrarIdentifierType            identifier,
+                                  const RegistrarIdentifierType       identifier,
                                   const struct TransportAddressBlock* transportAddressBlock);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
-                                  struct ST_CLASS(PeerList)*        peerList,
+                                  struct ST_CLASS(PeerList)*     peerList,
                                   struct ST_CLASS(PeerListNode)* peerListNode);
 unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
                 const struct ST_CLASS(PeerList)*     peerList,

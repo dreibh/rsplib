@@ -101,6 +101,8 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
    peerListNode->Identifier          = identifier;
    peerListNode->Flags               = flags;
    peerListNode->OwnershipChecksum   = INITIAL_HANDLESPACE_CHECKSUM;
+   peerListNode->TakeoverRegistrarID = UNDEFINED_REGISTRAR_IDENTIFIER;
+   peerListNode->TakeoverProcess     = NULL;
 
    peerListNode->LastUpdateTimeStamp = 0;
    peerListNode->TimerCode           = 0;

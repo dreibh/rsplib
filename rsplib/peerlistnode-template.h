@@ -33,6 +33,7 @@ extern "C" {
 
 
 struct ST_CLASS(PeerList);
+struct TakeoverProcess;
 
 
 #define PLNF_STATIC    0
@@ -42,6 +43,7 @@ struct ST_CLASS(PeerList);
 
 #define PLNT_MAX_TIME_LAST_HEARD    3000
 #define PLNT_MAX_TIME_NO_RESPONSE   3001
+#define PLNT_TAKEOVER_EXPIRY        3002
 
 
 struct ST_CLASS(PeerListNode)
@@ -58,6 +60,9 @@ struct ST_CLASS(PeerListNode)
    unsigned long long                 TimerTimeStamp;
 
    HandlespaceChecksumAccumulatorType OwnershipChecksum;
+
+   RegistrarIdentifierType            TakeoverRegistrarID;
+   struct TakeoverProcess*            TakeoverProcess;
 
    struct TransportAddressBlock*      AddressBlock;
    void*                              UserData;
@@ -87,7 +92,6 @@ void ST_CLASS(peerListNodeGetDescription)(
         char*                                buffer,
         const size_t                         bufferSize,
         const unsigned int                   fields);
-void ST_CLASS(peerListNodeVerify)(struct ST_CLASS(PeerListNode)* peerListNode);
 void ST_CLASS(peerListNodePrint)(const struct ST_CLASS(PeerListNode)* peerListNode,
                                  FILE*                                fd,
                                  const unsigned int                   fields);

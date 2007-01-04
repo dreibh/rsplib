@@ -1140,7 +1140,7 @@ static void asapInstanceHandleRegistrarConnectionEvent(
 
    dispatcherLock(asapInstance->StateMachine);
 
-   LOG_VERBOSE
+   LOG_VERBOSE2
    fputs("Entering Connection Handler...\n", stdlog);
    LOG_END
 
