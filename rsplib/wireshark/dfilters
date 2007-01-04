@@ -4,3 +4,5 @@
 "RSerPool ASAP Traffic via SCTP" sctp&&asap
 "RSerPool ASAP Endpoint Keep-Alives with Home-Bit" sctp&&(asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01))
 "RSerPool Registrar Takeovers" sctp&&((enrp&&((enrp.message_type==0x07)||(enrp.message_type==0x08)||(enrp.message_type==0x09))) || (asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01)))
+"RSerPool Registrar Synchronizations" sctp&&enrp&&((enrp.message_type==0x02)||(enrp.message_type==0x03))
+"RSerPool Registrar Failure Handling" sctp&&((enrp&&((enrp.message_type==0x07)||(enrp.message_type==0x08)||(enrp.message_type==0x09)||(enrp.message_type==0x02)||(enrp.message_type==0x03))) || (asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01)))
