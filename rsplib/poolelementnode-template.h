@@ -40,6 +40,9 @@ extern "C" {
 #define PENT_KEEPALIVE_TRANSMISSION 1001
 #define PENT_KEEPALIVE_TIMEOUT      1002
 
+/* Pool Element flags */
+#define PENF_MARKED (1 << 0)
+
 
 /* ====== Pool Element Node ============================================== */
 struct ST_CLASS(PoolNode);
@@ -53,11 +56,12 @@ struct ST_CLASS(PoolElementNode)
    struct STN_CLASSNAME               PoolElementOwnershipStorageNode;
    struct ST_CLASS(PoolNode)*         OwnerPoolNode;
 
-   HandlespaceChecksumAccumulatorType Checksum;
    PoolElementIdentifierType          Identifier;
+   HandlespaceChecksumAccumulatorType Checksum;
    RegistrarIdentifierType            HomeRegistrarIdentifier;
    unsigned int                       RegistrationLife;
    struct PoolPolicySettings          PolicySettings;
+   unsigned int                       Flags;
 
    PoolElementSeqNumberType           SeqNumber;
    PoolElementSeqNumberType           RoundCounter;

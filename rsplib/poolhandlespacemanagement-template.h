@@ -169,6 +169,14 @@ int ST_CLASS(poolHandlespaceManagementGetHandleTable)(
        size_t                                      maxElements);
 
 
+void ST_CLASS(poolHandlespaceManagementMarkPoolElementNodes)(
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        const RegistrarIdentifierType ownerID);
+size_t ST_CLASS(poolHandlespaceManagementPurgeMarkedPoolElementNodes)(
+          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+          const RegistrarIdentifierType ownerID);
+
+
 #ifdef __cplusplus
 }
 #endif

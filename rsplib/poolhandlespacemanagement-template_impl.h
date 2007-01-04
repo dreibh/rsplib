@@ -681,3 +681,47 @@ size_t ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(
 
    return(purgedPoolElements);
 }
+
+
+/* ###### Mark pool element nodes owned by given PR ###################### */
+void ST_CLASS(poolHandlespaceManagementMarkPoolElementNodes)(
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        const RegistrarIdentifierType ownerID)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+
+   poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                        &poolHandlespaceManagement->Handlespace, ownerID);
+   while(poolElementNode) {
+      nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
+                               &poolHandlespaceManagement->Handlespace, poolElementNode);
+      poolElementNode->Flags |= PENF_MARKED;
+      poolElementNode = nextPoolElementNode;
+   }
+}
+
+
+/* ###### Purge marked pool element nodes owned by given PR ############## */
+size_t ST_CLASS(poolHandlespaceManagementPurgeMarkedPoolElementNodes)(
+          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+          const RegistrarIdentifierType ownerID)
+{
+   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
+   size_t                            count = 0;
+
+   poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
+                        &poolHandlespaceManagement->Handlespace, ownerID);
+   while(poolElementNode) {
+      nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
+                               &poolHandlespaceManagement->Handlespace, poolElementNode);
+      if(poolElementNode->Flags & PENF_MARKED) {
+         CHECK(ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
+                  poolHandlespaceManagement, poolElementNode) == RSPERR_OKAY);
+         count++;
+      }
+      poolElementNode = nextPoolElementNode;
+   }
+   return(count);
+}

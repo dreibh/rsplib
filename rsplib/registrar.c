@@ -2096,6 +2096,8 @@ static void handlePeerPresence(struct Registrar*       registrar,
                sendHandleTableRequest(registrar, fd, assocID, 0,
                                       NULL, 0,
                                       peerListNode->Identifier);
+               ST_CLASS(poolHandlespaceManagementMarkPoolElementNodes)(&registrar->Handlespace,
+                                                                       message->SenderID);
             }
          }
 
@@ -2601,7 +2603,7 @@ static void handleListResponse(struct Registrar*       registrar,
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                            &message->PeerListPtr->List);
          while(peerListNode) {
-            LOG_ACTION
+            LOG_VERBOSE2
             fputs("Trying to add peer ", stdlog);
             ST_CLASS(peerListNodePrint)(peerListNode, stdlog, ~0);
             fputs(" to peer list\n", stdlog);
@@ -2742,6 +2744,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
    struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
    unsigned int                      result;
+   size_t                            purged;
 
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
@@ -2843,6 +2846,14 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
             sendHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
          }
          else {
+            purged = ST_CLASS(poolHandlespaceManagementPurgeMarkedPoolElementNodes)(
+                        &registrar->Handlespace, message->SenderID);
+            if(purged) {
+               LOG_ACTION
+               fprintf(stdlog, "Purged %u PEs after last Handle Table Response from $%08x\n",
+                       purged, message->SenderID);
+               LOG_END
+            }
             if((registrar->InInitializationPhase) &&
                (registrar->MentorServerID == message->SenderID)) {
                registrar->InInitializationPhase = false;

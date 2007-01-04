@@ -39,33 +39,34 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    STN_METHOD(New)(&poolElementNode->PoolElementConnectionStorageNode);
    STN_METHOD(New)(&poolElementNode->PoolElementOwnershipStorageNode);
 
-   poolElementNode->OwnerPoolNode               = NULL;
+   poolElementNode->OwnerPoolNode              = NULL;
 
-   poolElementNode->Checksum                    = INITIAL_HANDLESPACE_CHECKSUM;
-   poolElementNode->Identifier                  = identifier;
-   poolElementNode->HomeRegistrarIdentifier     = homeRegistrarIdentifier;
-   poolElementNode->RegistrationLife            = registrationLife;
-   poolElementNode->PolicySettings              = *pps;
+   poolElementNode->Checksum                   = INITIAL_HANDLESPACE_CHECKSUM;
+   poolElementNode->Identifier                 = identifier;
+   poolElementNode->HomeRegistrarIdentifier    = homeRegistrarIdentifier;
+   poolElementNode->RegistrationLife           = registrationLife;
+   poolElementNode->PolicySettings             = *pps;
+   poolElementNode->Flags                      = 0;
 
-   poolElementNode->SeqNumber                   = 0;
-   poolElementNode->RoundCounter                = 0;
-   poolElementNode->VirtualCounter              = 0;
-   poolElementNode->SelectionCounter            = 0;
-   poolElementNode->Degradation                 = 0;
-   poolElementNode->UnreachabilityReports       = 0;
+   poolElementNode->SeqNumber                  = 0;
+   poolElementNode->RoundCounter               = 0;
+   poolElementNode->VirtualCounter             = 0;
+   poolElementNode->SelectionCounter           = 0;
+   poolElementNode->Degradation                = 0;
+   poolElementNode->UnreachabilityReports      = 0;
 
-   poolElementNode->LastUpdateTimeStamp         = 0;
+   poolElementNode->LastUpdateTimeStamp        = 0;
 
-   poolElementNode->TimerTimeStamp              = 0;
-   poolElementNode->TimerCode                   = 0;
+   poolElementNode->TimerTimeStamp             = 0;
+   poolElementNode->TimerCode                  = 0;
 
-   poolElementNode->ConnectionSocketDescriptor  = connectionSocketDescriptor;
-   poolElementNode->ConnectionAssocID           = connectionAssocID;
+   poolElementNode->ConnectionSocketDescriptor = connectionSocketDescriptor;
+   poolElementNode->ConnectionAssocID          = connectionAssocID;
 
-   poolElementNode->UserTransport               = userTransport;
-   poolElementNode->RegistratorTransport        = registratorTransport;
+   poolElementNode->UserTransport              = userTransport;
+   poolElementNode->RegistratorTransport       = registratorTransport;
 
-   poolElementNode->UserData                    = 0;
+   poolElementNode->UserData                   = 0;
 }
 
 
@@ -117,6 +118,9 @@ void ST_CLASS(poolElementNodeGetDescription)(
    char transportAddressDescription[1024];
 
    snprintf(buffer, bufferSize, "$%08x", poolElementNode->Identifier);
+   if(poolElementNode->Flags & PENF_MARKED) {
+      safestrcat(buffer, " [marked]", bufferSize);
+   }
    if(fields & (PENPO_CONNECTION|PENPO_CHECKSUM|PENPO_HOME_PR|PENPO_REGLIFE|PENPO_UR_REPORTS|PENPO_LASTUPDATE)) {
       safestrcat(buffer, "\n     ", bufferSize);
    }
@@ -241,6 +245,7 @@ HandlespaceChecksumAccumulatorType ST_CLASS(poolElementNodeComputeChecksum)(
 int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       poolElementNode,
                                     const struct ST_CLASS(PoolElementNode)* source)
 {
+   poolElementNode->Flags &= ~PENF_MARKED;
    if(poolPolicySettingsComparison(&poolElementNode->PolicySettings,
                                    &source->PolicySettings) != 0) {
       /* ====== Update policy information ================================ */
