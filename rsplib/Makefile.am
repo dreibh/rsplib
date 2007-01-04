@@ -157,7 +157,7 @@ fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_
 endif
 
 
-registrar_SOURCES = registrar.c takeoverprocess.c takeoverprocess.h takeoverprocesslist.c takeoverprocesslist.h
+registrar_SOURCES = registrar.c takeoverprocess.c takeoverprocess.h
 registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 hsdump_SOURCES = hsdump.c
