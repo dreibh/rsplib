@@ -23,7 +23,7 @@
  */
 
 /* ###### Print ########################################################## */
-void ST_CLASS(peerListIndexStorageNodePrint)(const void *nodePtr, FILE* fd)
+void ST_CLASS(peerListIndexStorageNodePrint)(const void* nodePtr, FILE* fd)
 {
    const struct ST_CLASS(PeerListNode)* peerListNode = (struct ST_CLASS(PeerListNode)*)nodePtr;
    ST_CLASS(peerListNodePrint)(peerListNode, fd, 0);
@@ -68,8 +68,8 @@ void ST_CLASS(peerListTimerStorageNodePrint)(const void* nodePtr, FILE* fd)
 
 
 /* ###### Comparison ##################################################### */
-int ST_CLASS(peerListTimerStorageNodeComparison)(const void *nodePtr1,
-                                                 const void *nodePtr2)
+int ST_CLASS(peerListTimerStorageNodeComparison)(const void* nodePtr1,
+                                                 const void* nodePtr2)
 {
    const struct ST_CLASS(PeerListNode)* node1 =
       ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)((void*)nodePtr1);

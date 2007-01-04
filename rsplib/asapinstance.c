@@ -968,7 +968,7 @@ static void asapInstanceHandleEndpointKeepAlive(
       }
       else {
          LOG_WARNING
-         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x. The H bit is not set, therefore ignoring it.",
+         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x. The H bit is not set, therefore ignoring it.\n",
                message->RegistrarIdentifier,
                (unsigned int)message->AssocID,
                asapInstance->RegistrarIdentifier);

@@ -54,8 +54,8 @@ struct ST_CLASS(PoolNode)
 };
 
 
-void ST_CLASS(poolIndexStorageNodePrint)(const void *nodePtr, FILE* fd);
-int ST_CLASS(poolIndexStorageNodeComparison)(const void *nodePtr1, const void *nodePtr2);
+void ST_CLASS(poolIndexStorageNodePrint)(const void* nodePtr, FILE* fd);
+int ST_CLASS(poolIndexStorageNodeComparison)(const void* nodePtr1, const void* nodePtr2);
 
 
 void ST_CLASS(poolNodeNew)(struct ST_CLASS(PoolNode)*         poolNode,
