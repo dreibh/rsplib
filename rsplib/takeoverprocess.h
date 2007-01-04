@@ -2,7 +2,7 @@
  * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
- * $Id: peerlistnode-template.h 953 2006-02-22 09:05:42Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,25 +34,19 @@ extern "C" {
 
 struct TakeoverProcess
 {
-   struct STN_CLASSNAME    IndexStorageNode;
-   struct STN_CLASSNAME    TimerStorageNode;
-
-   RegistrarIdentifierType TargetID;
-   unsigned long long      ExpiryTimeStamp;
-
    size_t                  OutstandingAcknowledgements;
    RegistrarIdentifierType PeerIDArray[0];
 };
 
 
-struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN_CLASSNAME* node);
-struct TakeoverProcess* getTakeoverProcessFromTimerStorageNode(struct STN_CLASSNAME* node);
-void takeoverProcessIndexPrint(const void* takeoverProcessPtr,
-                               FILE*       fd);
-int takeoverProcessIndexComparison(const void* takeoverProcessPtr1,
-                                   const void* takeoverProcessPtr2);
-int takeoverProcessTimerComparison(const void* takeoverProcessPtr1,
-                                   const void* takeoverProcessPtr2);
+struct TakeoverProcess* takeoverProcessNew(
+                           const RegistrarIdentifierType        targetID,
+                           struct ST_CLASS(PeerListManagement)* peerList);
+void takeoverProcessDelete(struct TakeoverProcess* takeoverProcess);
+
+size_t takeoverProcessAcknowledge(struct TakeoverProcess*       takeoverProcess,
+                                  const RegistrarIdentifierType targetID,
+                                  const RegistrarIdentifierType acknowledgerID);
 
 
 #ifdef __cplusplus

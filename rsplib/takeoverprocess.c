@@ -2,7 +2,7 @@
  * An Efficient RSerPool Pool Handlespace Management Implementation
  * Copyright (C) 2004-2006 by Thomas Dreibholz
  *
- * $Id: peerlistnode-template.h 953 2006-02-22 09:05:42Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,69 +25,59 @@
 #include "takeoverprocess.h"
 
 
-/* ###### Get takeover process from index storage node ################### */
-struct TakeoverProcess* getTakeoverProcessFromIndexStorageNode(struct STN_CLASSNAME* node)
+/* ###### Constructor #################################################### */
+struct TakeoverProcess* takeoverProcessNew(
+                           const RegistrarIdentifierType        targetID,
+                           struct ST_CLASS(PeerListManagement)* peerList)
 {
-   const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
-   long n = (long)node - ((long)&dummy->IndexStorageNode - (long)dummy);
-   return((struct TakeoverProcess*)n);
+   struct TakeoverProcess*        takeoverProcess;
+   struct ST_CLASS(PeerListNode)* peerListNode;
+   const size_t                   peers = ST_CLASS(peerListManagementGetPeers)(peerList);
+
+   CHECK(targetID != 0);
+   CHECK(targetID != peerList->List.OwnIdentifier);
+
+   takeoverProcess = (struct TakeoverProcess*)malloc(sizeof(struct TakeoverProcess) +
+                                                     sizeof(RegistrarIdentifierType) * peers);
+   if(takeoverProcess != NULL) {
+      takeoverProcess->OutstandingAcknowledgements = 0;
+      peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerList->List);
+      while(peerListNode != NULL) {
+         if((peerListNode->Identifier != targetID) &&
+            (peerListNode->Identifier != peerList->List.OwnIdentifier) &&
+            (peerListNode->Identifier != 0)) {
+            takeoverProcess->PeerIDArray[takeoverProcess->OutstandingAcknowledgements++] =
+               peerListNode->Identifier;
+         }
+         peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerList->List, peerListNode);
+      }
+   }
+
+   return(takeoverProcess);
 }
 
 
-/* ###### Get takeover process from timer storage node ################### */
-struct TakeoverProcess* getTakeoverProcessFromTimerStorageNode(struct STN_CLASSNAME* node)
+/* ###### Destructor ##################################################### */
+void takeoverProcessDelete(struct TakeoverProcess* takeoverProcess)
 {
-   const struct TakeoverProcess* dummy = (struct TakeoverProcess*)node;
-   long n = (long)node - ((long)&dummy->TimerStorageNode - (long)dummy);
-   return((struct TakeoverProcess*)n);
+   free(takeoverProcess);
 }
 
 
-/* ###### Print ########################################################## */
-void takeoverProcessIndexPrint(const void* takeoverProcessPtr,
-                               FILE*       fd)
+/* ###### Acknowledge takeover process ################################### */
+size_t takeoverProcessAcknowledge(struct TakeoverProcess*       takeoverProcess,
+                                  const RegistrarIdentifierType targetID,
+                                  const RegistrarIdentifierType acknowledgerID)
 {
    size_t i;
 
-   struct TakeoverProcess* takeoverProcess = (struct TakeoverProcess*)takeoverProcessPtr;
-   fprintf(fd, "   - Takeover for $%08x (expiry in %lldus)\n",
-           takeoverProcess->TargetID,
-           (long long)takeoverProcess->ExpiryTimeStamp - (long long)getMicroTime());
    for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
-      fprintf(fd, "      * Ack required by $%08x\n", takeoverProcess->PeerIDArray[i]);
+      if(takeoverProcess->PeerIDArray[i] == acknowledgerID) {
+         for(   ;i < takeoverProcess->OutstandingAcknowledgements - 1;i++) {
+            takeoverProcess->PeerIDArray[i] = takeoverProcess->PeerIDArray[i + 1];
+         }
+         takeoverProcess->OutstandingAcknowledgements--;
+      }
    }
-}
-
-
-/* ###### Comparison ##################################################### */
-int takeoverProcessIndexComparison(const void* takeoverProcessPtr1,
-                                   const void* takeoverProcessPtr2)
-{
-   const struct TakeoverProcess* takeoverProcess1 = getTakeoverProcessFromIndexStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr1);
-   const struct TakeoverProcess* takeoverProcess2 = getTakeoverProcessFromIndexStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr2);
-
-   if(takeoverProcess1->TargetID < takeoverProcess2->TargetID) {
-      return(-1);
-   }
-   else if(takeoverProcess1->TargetID > takeoverProcess2->TargetID) {
-      return(1);
-   }
-   return(0);
-}
-
-
-/* ###### Comparison ##################################################### */
-int takeoverProcessTimerComparison(const void* takeoverProcessPtr1,
-                                   const void* takeoverProcessPtr2)
-{
-   const struct TakeoverProcess* takeoverProcess1 = getTakeoverProcessFromTimerStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr1);
-   const struct TakeoverProcess* takeoverProcess2 = getTakeoverProcessFromTimerStorageNode((struct STN_CLASSNAME*)takeoverProcessPtr2);
-
-   if(takeoverProcess1->ExpiryTimeStamp < takeoverProcess2->ExpiryTimeStamp) {
-      return(-1);
-   }
-   else if(takeoverProcess1->ExpiryTimeStamp > takeoverProcess2->ExpiryTimeStamp) {
-      return(1);
-   }
-   return(0);
+   return(takeoverProcess->OutstandingAcknowledgements);
 }
