@@ -76,7 +76,7 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
 
    LOG_VERBOSE4
    fprintf(stdlog, "Reading into message buffer from socket %d: offset=%u, max=%u\n",
-           sockfd, messageBuffer->BufferPos, messageBuffer->BufferSize);
+           sockfd, (unsigned int)messageBuffer->BufferPos, (unsigned int)messageBuffer->BufferSize);
    LOG_END
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],

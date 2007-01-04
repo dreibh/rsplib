@@ -415,7 +415,7 @@ void handleCalcAppCompleted(struct Process* process,
             JobInterval / 1000000.0);
    snprintf((char*)&performanceBuffer, sizeof(performanceBuffer),
             "%u %1.6f %1.6f %1.6f %1.6f %1.6f",
-            process->CurrentJob->QueueLength,
+            (unsigned int)process->CurrentJob->QueueLength,
             queuingDelay, startupDelay, processingTime,
             handlingTime, handlingSpeed);
    snprintf((char*)&timeStampBuffer, sizeof(timeStampBuffer),

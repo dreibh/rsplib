@@ -147,13 +147,13 @@ int main(int argc, char** argv)
       if(threadPtrSet[i]->Runtime != ~0ULL) {
          snprintf((char*)&str, sizeof(str), "   - %6Lums - Thread %2u: %s",
                   threadPtrSet[i]->Runtime / 1000,
-                  threadPtrSet[i]->ID, threadPtrSet[i]->CmdLine);
+                  (unsigned int)threadPtrSet[i]->ID, threadPtrSet[i]->CmdLine);
          cout << threadPtrSet[i]->Argument << endl;
       }
       else {
          snprintf((char*)&str, sizeof(str), "   - Result %d - Thread %2u: %s",
                   threadPtrSet[i]->Result,
-                  threadPtrSet[i]->ID, threadPtrSet[i]->CmdLine);
+                  (unsigned int)threadPtrSet[i]->ID, threadPtrSet[i]->CmdLine);
       }
       cerr << str << endl;
    }
