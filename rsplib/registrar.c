@@ -1085,9 +1085,9 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
 
          takeoverProcessDelete(peerListNode->TakeoverProcess);
          peerListNode->TakeoverProcess = NULL;
-         CHECK(ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
-                        &registrar->Peers,
-                        peerListNode));
+         ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
+                  &registrar->Peers,
+                  peerListNode);
       }
 
       /* ====== Bad timer ================================================ */
