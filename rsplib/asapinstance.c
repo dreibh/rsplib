@@ -978,6 +978,9 @@ static void asapInstanceHandleEndpointKeepAlive(
    else {
       if(asapInstance->RegistrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
          asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
+         LOG_NOTE
+         fprintf(stdlog, "Home registrar is $%08x\n", asapInstance->RegistrarIdentifier);
+         LOG_END
       }
    }
 
