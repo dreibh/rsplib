@@ -1857,7 +1857,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       return;
    }
 
-   LOG_ACTION
+   LOG_VERBOSE
    fputs("Got HandleUpdate for ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
    fprintf(stdlog, "/$%08x, action $%04x\n",
