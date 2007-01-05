@@ -1468,8 +1468,8 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
                   PENT_KEEPALIVE_TRANSMISSION,
                   getMicroTime() + registrar->EndpointKeepAliveTransmissionInterval);
                timerRestart(&registrar->HandlespaceActionTimer,
-                           ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
-                              &registrar->Handlespace));
+                            ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
+                               &registrar->Handlespace));
 
                /* ====== Print debug information ============================ */
                LOG_VERBOSE3
@@ -2401,6 +2401,11 @@ static void finishTakeover(struct Registrar*             registrar,
       fputs("\n", stdlog);
       LOG_END
 
+      /* Deactivate expiry timer */
+      ST_CLASS(poolHandlespaceNodeDeactivateTimer)(
+         &registrar->Handlespace.Handlespace,
+         poolElementNode);
+
       /* Update handlespace */
       ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
          &registrar->Handlespace.Handlespace,
@@ -2410,8 +2415,20 @@ static void finishTakeover(struct Registrar*             registrar,
       /* Tell node about new home PR */
       sendEndpointKeepAlive(registrar, poolElementNode, true);
 
+      /* Schedule endpoint keep-alive timeout */
+      ST_CLASS(poolHandlespaceNodeActivateTimer)(
+         &registrar->Handlespace.Handlespace,
+         poolElementNode,
+         PENT_KEEPALIVE_TIMEOUT,
+         getMicroTime() + registrar->EndpointKeepAliveTimeoutInterval);
+
       poolElementNode = nextPoolElementNode;
    }
+
+   /* ====== Restart the handlespace action timer ======================== */
+   timerRestart(&registrar->HandlespaceActionTimer,
+                ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
+                   &registrar->Handlespace));
 
    /* ====== Remove takeover process ===================================== */
    LOG_WARNING

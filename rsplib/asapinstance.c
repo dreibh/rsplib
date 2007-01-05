@@ -943,7 +943,7 @@ static void asapInstanceHandleEndpointKeepAlive(
    if(fd == asapInstance->RegistrarHuntSocket) {
       if(message->Flags & AHF_ENDPOINT_KEEP_ALIVE_HOME) {
          LOG_NOTE
-         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home-registrar assoc $%08x -> replacing home registrar\n",
+         fprintf(stdlog, "EndpointKeepAlive from $%08x (assoc %u) instead of home registrar assoc $%08x -> replacing home registrar\n",
                message->RegistrarIdentifier,
                (unsigned int)message->AssocID,
                asapInstance->RegistrarIdentifier);
@@ -1356,8 +1356,9 @@ static void* asapInstanceMainLoop(void* args)
       dispatcherGetPollParameters(asapInstance->StateMachine,
                                   (struct pollfd*)&ufds, &nfds, &timeout, &pollTimeStamp);
       pipeIndex = nfds;
-      ufds[pipeIndex].fd     = asapInstance->MainLoopPipe[0];
-      ufds[pipeIndex].events = POLLIN;
+      ufds[pipeIndex].fd      = asapInstance->MainLoopPipe[0];
+      ufds[pipeIndex].events  = POLLIN;
+      ufds[pipeIndex].revents = 0;
       if((struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort) !=
             asapInstance->LastAITM) {
          /* There are new AITM messages to be handled.

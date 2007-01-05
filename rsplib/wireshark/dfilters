@@ -1,8 +1,12 @@
-"RSerPool and SCTP Traffic" (asap&&(asap.message_type!=0x0a)&&(asap.message_type!=0x07)&&(asap.message_type!=0x08))||(enrp&&(enrp.message_type!=1))||((!(asap||enrp))&&(sctp.chunk_type != 3)&&(sctp.chunk_type != 4)&&(sctp.chunk_type != 5))
+"RSerPool Traffic" asap||enrp
+"RSerPool Traffic via SCTP + SCTP Control, without Monitoring" (sctp&&enrp&&(!((enrp.message_type==0x01)&&(!enrp.message_flags&0x01))))||(sctp&&(asap&&(((asap.message_type!=0x07)&&(asap.message_type!=0x08))||((asap.message_type==0x07)&&(asap.message_flags&0x01)))))||((!(asap||enrp))&&(sctp.chunk_type != 3)&&(sctp.chunk_type != 4)&&(sctp.chunk_type != 5))
+"RSerPool Traffic via SCTP, without Monitoring" (sctp&&enrp&&(!((enrp.message_type==0x01)&&(!enrp.message_flags&0x01))))||(sctp&&(asap&&(((asap.message_type!=0x07)&&(asap.message_type!=0x08))||((asap.message_type==0x07)&&(asap.message_flags&0x01)))))
 "RSerPool Traffic via SCTP" sctp&&(asap||enrp)
-"RSerPool ENRP Traffic via SCTP" sctp&&enrp
+"RSerPool ASAP Traffic via SCTP, without Monitoring" sctp&&(asap&&(((asap.message_type!=0x07)&&(asap.message_type!=0x08))||((asap.message_type==0x07)&&(asap.message_flags&0x01))))
 "RSerPool ASAP Traffic via SCTP" sctp&&asap
-"RSerPool ASAP Endpoint Keep-Alives with Home-Bit" sctp&&(asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01))
+"RSerPool Home-Registrar Changes" sctp&&(asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01))
+"RSerPool ENRP Traffic via SCTP, without Monitoring" sctp&&enrp&&(!((enrp.message_type==0x01)&&(!enrp.message_flags&0x01)))
+"RSerPool ENRP Traffic via SCTP" sctp&&enrp
 "RSerPool Registrar Takeovers" sctp&&((enrp&&((enrp.message_type==0x07)||(enrp.message_type==0x08)||(enrp.message_type==0x09))) || (asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01)))
 "RSerPool Registrar Synchronizations" sctp&&enrp&&((enrp.message_type==0x02)||(enrp.message_type==0x03))
 "RSerPool Registrar Failure Handling" sctp&&((enrp&&((enrp.message_type==0x07)||(enrp.message_type==0x08)||(enrp.message_type==0x09)||(enrp.message_type==0x02)||(enrp.message_type==0x03))) || (asap&&(asap.message_type==0x07)&&(asap.message_flags&0x01)))
