@@ -101,6 +101,8 @@ void ST_CLASS(peerListNodeNew)(struct ST_CLASS(PeerListNode)* peerListNode,
    peerListNode->Identifier          = identifier;
    peerListNode->Flags               = flags;
    peerListNode->OwnershipChecksum   = INITIAL_HANDLESPACE_CHECKSUM;
+
+   peerListNode->Status              = 0;
    peerListNode->TakeoverRegistrarID = UNDEFINED_REGISTRAR_IDENTIFIER;
    peerListNode->TakeoverProcess     = NULL;
 
@@ -188,6 +190,22 @@ void ST_CLASS(peerListNodeGetDescription)(
    }
    if(peerListNode->Flags & PLNF_MULTICAST) {
       safestrcat(buffer, "+multicast", bufferSize);
+   }
+
+   if(peerListNode->Status & PLNS_LISTSYNC) {
+      safestrcat(buffer, " LISTSYNC", bufferSize);
+   }
+   if(peerListNode->Status & PLNS_HTSYNC) {
+      safestrcat(buffer, " HTSYNC", bufferSize);
+   }
+   if(peerListNode->Status & PLNS_MENTOR) {
+      safestrcat(buffer, " MENTOR", bufferSize);
+   }
+   if(peerListNode->TakeoverProcess) {
+      safestrcat(buffer, " TAKEOVER(own)", bufferSize);
+   }
+   if(peerListNode->TakeoverRegistrarID) {
+      safestrcat(buffer, " TAKEOVER(other)", bufferSize);
    }
 
    if((fields & PLNPO_TRANSPORT) &&

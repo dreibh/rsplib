@@ -36,14 +36,21 @@ struct ST_CLASS(PeerList);
 struct TakeoverProcess;
 
 
+/* Flags */
 #define PLNF_STATIC    0
 #define PLNF_DYNAMIC   (1 << 0)
 #define PLNF_FROM_PEER (1 << 1)
 #define PLNF_MULTICAST (1 << 2)
 
-#define PLNT_MAX_TIME_LAST_HEARD    3000
-#define PLNT_MAX_TIME_NO_RESPONSE   3001
-#define PLNT_TAKEOVER_EXPIRY        3002
+/* Status */
+#define PLNS_LISTSYNC  (1 << 0)   /* Peer List synchronization in progress    */
+#define PLNS_HTSYNC    (1 << 1)   /* Handle Table synchronization in progress */
+#define PLNS_MENTOR    (1 << 2)   /* Synchronization with mentor PR           */
+
+/* Timer Codes */
+#define PLNT_MAX_TIME_LAST_HEARD  3000
+#define PLNT_MAX_TIME_NO_RESPONSE 3001
+#define PLNT_TAKEOVER_EXPIRY      3002
 
 
 struct ST_CLASS(PeerListNode)
@@ -61,6 +68,7 @@ struct ST_CLASS(PeerListNode)
 
    HandlespaceChecksumAccumulatorType OwnershipChecksum;
 
+   unsigned int                       Status;
    RegistrarIdentifierType            TakeoverRegistrarID;
    struct TakeoverProcess*            TakeoverProcess;
 

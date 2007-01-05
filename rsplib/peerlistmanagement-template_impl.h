@@ -230,6 +230,10 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                       (*peerListNode)->AddressBlock);
             ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
                                                  &updatedPeerListNode, &errorCode);
+            (*peerListNode)->OwnershipChecksum =
+               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                  &peerListManagement->Handlespace->Handlespace,
+                  (*peerListNode)->Identifier);
             return(errorCode);
          }
 
@@ -243,6 +247,10 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                       (*peerListNode)->AddressBlock);
             ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
                                                  &updatedPeerListNode, &errorCode);
+            (*peerListNode)->OwnershipChecksum =
+               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                  &peerListManagement->Handlespace->Handlespace,
+                  (*peerListNode)->Identifier);
             return(errorCode);
          }
       }

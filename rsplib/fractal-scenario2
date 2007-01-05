@@ -7,8 +7,8 @@ TESTID=fractal-scenario2
 PR_LIST=`cat pe-america.hosts pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
 PE_LIST=`cat good.hosts|grep "^[a-Z0-9]"|sort -u`
 
-PR_MISCOPT="-loglevel=4"
-PE_MISCOPT="-fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=3 "
+PR_MISCOPT="-cspinterval=5000 -loglevel=4"
+PE_MISCOPT="-cspinterval=60000 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=3 "
 
 
 resetAll ()
@@ -26,7 +26,7 @@ startNetwork ()
    number=1
    for pr in $PR_LIST ; do
       echo "Starting PR on $pr ..."
-      ./start-process "Registrar-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
+      ./start-process "Registrar-$number" "./rootshell -c \"./registrar $OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers \" >$TESTID-pr$number-$pr.log 2>&1" $pr &
       let number=$number+1
    done
 
@@ -37,7 +37,7 @@ startNetwork ()
    number=1
    for pe in $PE_LIST ; do
       echo "Starting PE on $pe ..."
-      ./start-process "PoolElement-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
+      ./start-process "PoolElement-$number" "./rootshell -c \"./server $OPT_CSP $PE_MISCOPT $optRegistrars -identifier=$number \" >$TESTID-pe$number-$pe.log 2>&1" $pe &
       let number=$number+1
    done
 }

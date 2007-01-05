@@ -128,8 +128,6 @@ size_t ST_CLASS(poolHandlespaceNodeGetConnectionNodesForConnection)(
           const sctp_assoc_t                    assocID);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementConnectionNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolElementConnectionNode)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      const int                             connectionSocketDescriptor,

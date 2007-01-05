@@ -706,7 +706,8 @@ static void sendHandleTableRequest(struct Registrar*           registrar,
                                    int                         msgSendFlags,
                                    const union sockaddr_union* destinationAddressList,
                                    const size_t                destinationAddresses,
-                                   RegistrarIdentifierType     receiverID)
+                                   RegistrarIdentifierType     receiverID,
+                                   unsigned int                flags)
 {
    struct RSerPoolMessage* message;
 
@@ -717,7 +718,7 @@ static void sendHandleTableRequest(struct Registrar*           registrar,
       message->AssocID      = assocID;
       message->AddressArray = (union sockaddr_union*)destinationAddressList;
       message->Addresses    = destinationAddresses;
-      message->Flags        = 0x00;
+      message->Flags        = flags;
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = receiverID;
       if(rserpoolMessageSend(IPPROTO_SCTP,
@@ -1890,7 +1891,7 @@ static void handleHandleUpdate(struct Registrar*       registrar,
                      getMicroTime(),
                      &newPoolElementNode);
          if(result == RSPERR_OKAY) {
-            LOG_ACTION
+            LOG_VERBOSE
             fputs("Successfully registered ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
             fprintf(stdlog, "/$%08x\n", newPoolElementNode->Identifier);
@@ -2076,28 +2077,46 @@ static void handlePeerPresence(struct Registrar*       registrar,
                   &peerListNode);
 
       if(result == RSPERR_OKAY) {
-         /* ====== Checksum handling ===================================== */
-         LOG_VERBOSE2
-         fputs("Successfully added peer ", stdlog);
-         ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-         fputs("\n", stdlog);
-         LOG_END
-
          /* ====== Check if synchronization is necessary ================= */
          if(assocID != 0) {
-            /* Attention: We only synchronize on SCTP-received Presence messages! */
-            checksum = ST_CLASS(peerListNodeGetOwnershipChecksum)(
-                          peerListNode);
-            if(checksum != message->Checksum) {
+            if(!(peerListNode->Status & PLNS_HTSYNC)) {
+               /* Attention: We only synchronize on SCTP-received Presence messages! */
+               checksum = ST_CLASS(peerListNodeGetOwnershipChecksum)(
+                             peerListNode);
+               if(checksum != message->Checksum) {
+                  LOG_ACTION
+                  fprintf(stdlog, "Handle Table synchronization with peer $%08x is necessary -> requesting it...\n",
+                          peerListNode->Identifier);
+                  LOG_END
+                  LOG_VERBOSE
+                  fprintf(stdlog, "Checksum is $%x, should be $%x\n",
+                          checksum, message->Checksum);
+                  LOG_END
+
+                  peerListNode->Status |= PLNS_HTSYNC;
+                  sendHandleTableRequest(registrar, fd, assocID, 0,
+                                         NULL, 0,
+                                         peerListNode->Identifier,
+                                         EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY);
+                  ST_CLASS(poolHandlespaceManagementMarkPoolElementNodes)(&registrar->Handlespace,
+                                                                          message->SenderID);
+               }
+            }
+            else {
                LOG_ACTION
-               fprintf(stdlog, "Synchronization with peer $%08x is necessary -> requesting handle table...\n",
+               fprintf(stdlog, "Synchronization with peer $%08x is still in progress -> no new synchronization\n",
                        peerListNode->Identifier);
                LOG_END
-               sendHandleTableRequest(registrar, fd, assocID, 0,
-                                      NULL, 0,
-                                      peerListNode->Identifier);
-               ST_CLASS(poolHandlespaceManagementMarkPoolElementNodes)(&registrar->Handlespace,
-                                                                       message->SenderID);
+            }
+            if(!(peerListNode->Status & PLNS_LISTSYNC)) {
+               LOG_ACTION
+               fprintf(stdlog, "Peer List synchronization with peer $%08x is necessary -> requesting it...\n",
+                        peerListNode->Identifier);
+               LOG_END
+               peerListNode->Status |= PLNS_LISTSYNC;
+               sendListRequest(registrar, fd, assocID, 0,
+                                          NULL, 0,
+                                          peerListNode->Identifier);
             }
          }
 
@@ -2143,6 +2162,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
             ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
             fputs(" as mentor server...\n", stdlog);
             LOG_END
+            peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
             registrar->MentorServerID = peerListNode->Identifier;
             sendPeerPresence(registrar,
                              registrar->ENRPUnicastSocket,
@@ -2162,7 +2182,8 @@ static void handlePeerPresence(struct Registrar*       registrar,
                                    0, 0,
                                    peerListNode->AddressBlock->AddressArray,
                                    peerListNode->AddressBlock->Addresses,
-                                   peerListNode->Identifier);
+                                   peerListNode->Identifier,
+                                   0x00);
          }
       }
       else {
@@ -2577,13 +2598,13 @@ static void handleListRequest(struct Registrar*       registrar,
       response->PeerListPtrAutoDelete = false;
 
       LOG_VERBOSE
-      fprintf(stdlog, "Sending PeerListResponse to peer $%08x...\n",
+      fprintf(stdlog, "Sending ListResponse to peer $%08x...\n",
               message->SenderID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              fd, assocID, 0, 0, response) == false) {
          LOG_WARNING
-         fputs("Sending PeerListResponse failed\n", stdlog);
+         fputs("Sending ListResponse failed\n", stdlog);
          LOG_END
       }
 
@@ -2605,16 +2626,17 @@ static void handleListResponse(struct Registrar*       registrar,
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
       LOG_VERBOSE5
-      fputs("Skipping our own PeerListResponse message\n", stdlog);
+      fputs("Skipping our own ListResponse message\n", stdlog);
       LOG_END
       return;
    }
 
    LOG_VERBOSE
-   fprintf(stdlog, "Got PeerListResponse from peer $%08x\n",
+   fprintf(stdlog, "Got ListResponse from peer $%08x\n",
            message->SenderID);
    LOG_END
 
+   /* ====== Handle response ============================================= */
    if(!(message->Flags & EHF_LIST_RESPONSE_REJECT)) {
       if(message->PeerListPtr) {
          peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
@@ -2653,7 +2675,7 @@ static void handleListResponse(struct Registrar*       registrar,
             }
             else {
                LOG_ACTION
-               fputs("Skipping unknown peer (due to ID=0) from PeerListResponse: ", stdlog);
+               fputs("Skipping unknown peer (due to ID=0) from ListResponse: ", stdlog);
                ST_CLASS(peerListNodePrint)(peerListNode, stdlog, ~0);
                fputs("\n", stdlog);
                LOG_END
@@ -2676,7 +2698,7 @@ static void handleListResponse(struct Registrar*       registrar,
    }
    else {
       LOG_ACTION
-      fprintf(stdlog, "Rejected PeerListResponse from peer $%08x\n",
+      fprintf(stdlog, "Rejected ListResponse from peer $%08x\n",
               message->SenderID);
       LOG_END
    }
@@ -2758,6 +2780,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
+   struct ST_CLASS(PeerListNode)*    peerListNode;
    struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
    unsigned int                      result;
@@ -2771,11 +2794,25 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
       return;
    }
 
-   LOG_VERBOSE
+   LOG_ACTION
    fprintf(stdlog, "Got HandleTableResponse from peer $%08x\n",
            message->SenderID);
    LOG_END
 
+
+   /* ====== Find peer list node ========================================= */
+   peerListNode = ST_CLASS(peerListFindPeerListNode)(
+                           &registrar->Peers.List,
+                           message->SenderID, NULL);
+   if(peerListNode == NULL) {
+      LOG_WARNING
+      fprintf(stdlog, "Got HandleTableResponse from peer $%08x which is not in peer list\n",
+            message->SenderID);
+      LOG_END
+      return;
+   }
+
+   /* ====== Propagate response data into the handlespace ================ */
    if(!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) {
       if(message->HandlespacePtr) {
          distance = 0xffffffff;
@@ -2800,7 +2837,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
                            getMicroTime(),
                            &newPoolElementNode);
                if(result == RSPERR_OKAY) {
-                  LOG_ACTION
+                  LOG_VERBOSE
                   fputs("Successfully registered ", stdlog);
                   poolHandlePrint(&message->Handle, stdlog);
                   fprintf(stdlog, "/$%08x\n", poolElementNode->Identifier);
@@ -2856,13 +2893,15 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
 
 
          if(message->Flags & EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND) {
-            LOG_VERBOSE
+            LOG_ACTION
             fprintf(stdlog, "HandleTableResponse has MoreToSend flag set -> sending HandleTableRequest to peer $%08x to get more data\n",
                     message->SenderID);
             LOG_END
-            sendHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID);
+            sendHandleTableRequest(registrar, fd, message->AssocID, 0, NULL, 0, message->SenderID,
+                                   (peerListNode->Status & PLNS_MENTOR) ? 0x00 : EHF_HANDLE_TABLE_REQUEST_OWN_CHILDREN_ONLY);
          }
          else {
+            peerListNode->Status &= ~(PLNS_MENTOR|PLNS_HTSYNC);   /* Synchronization completed */
             purged = ST_CLASS(poolHandlespaceManagementPurgeMarkedPoolElementNodes)(
                         &registrar->Handlespace, message->SenderID);
             if(purged) {
@@ -2881,12 +2920,16 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
             }
          }
       }
+      else {
+         peerListNode->Status &= ~(PLNS_MENTOR|PLNS_HTSYNC);   /* Synchronization completed */
+      }
    }
    else {
       LOG_ACTION
-      fprintf(stdlog, "Rejected HandleTableResponse from peer $%08x\n",
+      fprintf(stdlog, "Peer $%08x has rejected the HandleTableRequest\n",
               message->SenderID);
       LOG_END
+      peerListNode->Status &= ~(PLNS_MENTOR|PLNS_HTSYNC);   /* Synchronization completed */
    }
 }
 
@@ -3197,7 +3240,7 @@ static void addPeer(struct Registrar* registrar, char* arg)
          *idx = 0x00;
       }
       if(!string2address(address, &addressArray[addresses])) {
-         printf("ERROR: Bad address %s! Use format <address:port>.\n",address);
+         fprintf(stderr, "ERROR: Bad address %s! Use format <address:port>.\n",address);
          exit(1);
       }
       addresses++;
@@ -3273,7 +3316,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
             *idx = 0x00;
          }
          if(!string2address(address, &sctpAddressArray[sctpAddresses])) {
-            printf("ERROR: Bad local address %s! Use format <address:port>.\n",address);
+            fprintf(stderr, "ERROR: Bad local address %s! Use format <address:port>.\n", address);
             exit(1);
          }
          sctpAddresses++;
@@ -3508,8 +3551,8 @@ int main(int argc, char** argv)
       }
 #endif
       else {
-         printf("ERROR: Invalid argument <%s>!\n", argv[i]);
-         printf("Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
+         fprintf(stderr, "ERROR: Invalid argument <%s>!\n", argv[i]);
+         fprintf(stderr, "Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
             "{-cspserver=address} {-cspinterval=microseconds}"
 #endif

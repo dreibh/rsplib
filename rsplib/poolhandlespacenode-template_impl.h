@@ -1136,20 +1136,6 @@ void ST_CLASS(poolHandlespaceNodeVerify)(struct ST_CLASS(PoolHandlespaceNode)* p
             (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode));
 
    if(poolHandlespaceNode->HomeRegistrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
-// ??????????????????????
-HandlespaceChecksumAccumulatorType a;
-HandlespaceChecksumAccumulatorType b;
-      a = ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
-               (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode);
-      b = ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-               (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode,
-               poolHandlespaceNode->HomeRegistrarIdentifier);
-if(a!=b) {
-puts("------");
-ST_CLASS(poolHandlespaceNodePrint)(poolHandlespaceNode,stdout,~0);
-puts("------");
-}
-
       CHECK(ST_CLASS(poolHandlespaceNodeGetOwnershipChecksum)(
                (struct ST_CLASS(PoolHandlespaceNode)*)poolHandlespaceNode) ==
             ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
@@ -1311,54 +1297,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
       return(poolElementNode);
    }
    return(NULL);
-}
-
-
-/* ###### Get last connection node of given connection ################### */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementConnectionNodeForConnection)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const int                             connectionSocketDescriptor,
-                                     const sctp_assoc_t                    assocID)
-{
-CHECK(0);
-/*
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
-   struct PoolHandle                 lastPoolHandle;
-
-   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
-   if(homeRegistrarIdentifier == 0xffffffff) {  ?????????????????????
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetLastPoolElementConnectionNode)(poolHandlespaceNode);
-   }
-   else {
-      poolElementNode = ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolElementConnectionNode)(
-                           poolHandlespaceNode,
-                           connectionSocketDescriptor, assocID,
-                           &lastPoolHandle,
-                           0);
-   }
-   if(poolElementNode) {
-      nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNode)(
-                               poolHandlespaceNode, poolElementNode);
-      while(nextPoolElementNode) {
-         if((nextPoolElementNode->SocketDescriptor == connectionSocketDescriptor) &&
-            (nextPoolElementNode->AssocID          == assocID)) {
-            poolElementNode = nextPoolElementNode;
-         }
-         else {
-            break;
-         }
-         nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNode)(
-                                 poolHandlespaceNode, nextPoolElementNode);
-      }
-   }
-   if((poolElementNode                   != NULL) &&
-      (poolElementNode->SocketDescriptor == connectionSocketDescriptor) &&
-      (poolElementNode->AssocID          == assocID)) {
-      return(poolElementNode);
-   }
-   return(NULL);
-*/
 }
 
 
