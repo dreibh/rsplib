@@ -75,7 +75,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
    unsigned int                   result;
    size_t                         i;
 
-   LOG_VERBOSE
+   LOG_VERBOSE2
    fputs("Trying to receive registrar announce...\n",  stdlog);
    LOG_END
 

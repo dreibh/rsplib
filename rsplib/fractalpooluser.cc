@@ -491,6 +491,7 @@ int main(int argc, char** argv)
    union sockaddr_union asapAnnounceAddress;
    char*                poolHandle    = "FractalGeneratorPool";
    const char*          configDirName = "fgpconfig";
+   const char*          caption       = NULL;
    unsigned int         identifier;
    int                  i;
 
@@ -523,6 +524,9 @@ int main(int argc, char** argv)
 #endif
       else if(!(strncmp(argv[i],"-configdir=",11))) {
          configDirName = (char*)&argv[i][11];
+      }
+      else if(!(strncmp(argv[i],"-caption=",9))) {
+         caption = (char*)&argv[i][9];
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
@@ -568,6 +572,9 @@ int main(int argc, char** argv)
    QApplication application(argc, argv);
    FractalPU* fractalPU = new FractalPU(400, 250, poolHandle, configDirName);
    Q_CHECK_PTR(fractalPU);
+   if(caption) {
+      fractalPU->setCaption(caption);
+   }
    fractalPU->show();
    const int result = application.exec();
    delete fractalPU;
