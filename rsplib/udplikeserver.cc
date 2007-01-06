@@ -189,9 +189,9 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       puts("\n");
 
       // ====== Register PE =================================================
-      if(rsp_register(RSerPoolSocketDescriptor,
-                      (const unsigned char*)poolHandle, strlen(poolHandle),
-                      loadinfo, reregInterval, 0) == 0) {
+      if(rsp_register_tags(RSerPoolSocketDescriptor,
+                           (const unsigned char*)poolHandle, strlen(poolHandle),
+                           loadinfo, reregInterval, 0, tags) == 0) {
          double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)0xffffff);
 
          // ====== Startup ==================================================

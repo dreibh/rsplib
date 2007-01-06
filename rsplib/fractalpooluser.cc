@@ -491,6 +491,7 @@ int main(int argc, char** argv)
    union sockaddr_union asapAnnounceAddress;
    char*                poolHandle    = "FractalGeneratorPool";
    const char*          configDirName = "fgpconfig";
+   unsigned int         identifier;
    int                  i;
 
    memset(&info, 0, sizeof(info));
@@ -505,8 +506,14 @@ int main(int argc, char** argv)
          }
       }
 #ifdef ENABLE_CSP
-      else if(!(strncasecmp(argv[i], "-identifier=", 12))) {
-         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, atol((char*)&argv[i][12]));
+      else if(!(strncmp(argv[i], "-identifier=", 12))) {
+         if(sscanf((const char*)&argv[i][12], "0x%x", &identifier) == 0) {
+            if(sscanf((const char*)&argv[i][12], "%u", &identifier) == 0) {
+               fputs("ERROR: Bad registrar ID given!\n", stderr);
+               exit(1);
+            }
+         }
+         info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, identifier);
       }
       else if(!(strncmp(argv[i], "-csp" ,4))) {
          if(initComponentStatusReporter(&info, argv[i]) == false) {

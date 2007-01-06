@@ -50,6 +50,7 @@ int main(int argc, char** argv)
    struct rsp_loadinfo  loadInfo;
    union sockaddr_union asapAnnounceAddress;
    double               degradation;
+   unsigned int         identifier;
    unsigned int         reregInterval = 30000;
    unsigned int         runtimeLimit  = 0;
    unsigned int         service       = SERVICE_ECHO;
@@ -80,7 +81,13 @@ int main(int argc, char** argv)
       }
 #endif
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
-         tags[0].Data = atol((const char*)&argv[i][12]);
+         if(sscanf((const char*)&argv[i][12], "0x%x", &identifier) == 0) {
+            if(sscanf((const char*)&argv[i][12], "%u", &identifier) == 0) {
+               fputs("ERROR: Bad registrar ID given!\n", stderr);
+               exit(1);
+            }
+         }
+         tags[0].Data = identifier;
 #ifdef ENABLE_CSP
          info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
 #endif

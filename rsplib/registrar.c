@@ -3477,12 +3477,13 @@ int main(int argc, char** argv)
    string2address("127.0.0.1:2960", &cspReportAddress);
 #endif
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-tcp=",5))) {
-         fputs("ERROR: TCP mapping is not supported -> Use SCTP!", stderr);
-         exit(1);
-      }
-      else if(!(strncmp(argv[i], "-identifier=", 12))) {
-         serverID = atol((char*)&argv[i][12]);
+      if(!(strncmp(argv[i], "-identifier=", 12))) {
+         if(sscanf((const char*)&argv[i][12], "0x%x", &serverID) == 0) {
+            if(sscanf((const char*)&argv[i][12], "%u", &serverID) == 0) {
+               fputs("ERROR: Bad registrar ID given!\n", stderr);
+               exit(1);
+            }
+         }
       }
       else if(!(strncmp(argv[i], "-peer=",6))) {
          /* to be handled later */
