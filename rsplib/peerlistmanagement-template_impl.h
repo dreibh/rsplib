@@ -320,8 +320,7 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode)
 {
-   struct ST_CLASS(PeerListNode) updatedPeerListNode;
-   unsigned int                  errorCode;
+   unsigned int errorCode;
 
    if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
       ST_CLASS(peerListDeactivateTimer)(&peerListManagement->List,
@@ -334,7 +333,7 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
       ST_CLASS(peerListRemovePeerListNode)(&peerListManagement->List, peerListNode);
       ST_CLASS(peerListNodeDelete)(peerListNode);
       /* Note: AddressBlock and Flags remain valid here! */
-      ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
+      ST_CLASS(peerListNodeNew)(peerListNode,
                                 0,
                                 peerListNode->Flags,
                                 peerListNode->AddressBlock);

@@ -297,6 +297,9 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddPeerListNode)(
       return(NULL);
    }
 
+   /* Allow random selection. It might be useful to add priorities ... */
+   peerListNode->PeerListIndexStorageNode.Value = 1;
+
    result = ST_METHOD(Insert)(&peerList->PeerListIndexStorage,
                               &peerListNode->PeerListIndexStorageNode);
    if(result == &peerListNode->PeerListIndexStorageNode) {
