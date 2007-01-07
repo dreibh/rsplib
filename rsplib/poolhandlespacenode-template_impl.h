@@ -1135,7 +1135,8 @@ void ST_CLASS(poolHandlespaceNodeVerify)(struct ST_CLASS(PoolHandlespaceNode)* p
       i++;
    }
    CHECK(i == ownerships);
-   CHECK(poolHandlespaceNode->OwnedPoolElements == ownedPEs);
+   CHECK((poolHandlespaceNode->HomeRegistrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER) ||
+         (poolHandlespaceNode->OwnedPoolElements == ownedPEs));
 
    i = 0; j = 0;
    poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(poolHandlespaceNode);
