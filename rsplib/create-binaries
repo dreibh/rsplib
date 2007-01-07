@@ -35,7 +35,12 @@ fi
 rm -rf $DISTNAME-bin.tar.bz2 bin/
 
 cd ..
+rm -f *.tar.gz   # Entferne alte Dists!
 make dist
+if [ ! -e $DISTNAME.tar.gz ] ; then
+   echo "ERROR: Unable to create distribution $DISTNAME! Is this the correct version?"
+   exit 1
+fi
 cd $DISTDIRNAME
 
 
