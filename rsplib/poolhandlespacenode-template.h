@@ -43,6 +43,7 @@ struct ST_CLASS(PoolHandlespaceNode)
    HandlespaceChecksumAccumulatorType  OwnershipChecksum;            /* Ownership checksum             */
    RegistrarIdentifierType             HomeRegistrarIdentifier;      /* This NS's Identifier           */
    size_t                              PoolElements;                 /* Number of Pool Elements        */
+   size_t                              OwnedPoolElements;            /* Number of owned Pool Elements  */
 
    void* NotificationUserData;
    void (*PoolNodeUpdateNotification)(struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
@@ -161,6 +162,8 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                                      struct ST_CLASS(PoolElementNode)*     poolElementNode);
 size_t ST_CLASS(poolHandlespaceNodeGetPoolElementNodes)(
+          const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
+size_t ST_CLASS(poolHandlespaceNodeGetOwnedPoolElementNodes)(
           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);
 size_t ST_CLASS(poolHandlespaceNodeGetPoolNodes)(
           const struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode);

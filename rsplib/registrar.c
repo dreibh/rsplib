@@ -3147,16 +3147,19 @@ static size_t registrarGetReportFunction(
    size_t                         peers;
    size_t                         pools;
    size_t                         poolElements;
+   size_t                         ownedPoolElements;
 
    LOG_VERBOSE4
    fputs("Sending a Component Status Protocol report...\n", stdlog);
    LOG_END
-   peers        = ST_CLASS(peerListManagementGetPeers)(&registrar->Peers);
-   pools        = ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace);
-   poolElements = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
+   peers             = ST_CLASS(peerListManagementGetPeers)(&registrar->Peers);
+   pools             = ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace);
+   poolElements      = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
+   ownedPoolElements = ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace);
    snprintf(statusText, CSPR_STATUS_SIZE,
-            "%u PEs in %u Pool%s, %u Peer%s",
+            "%u[%u] PEs in %u Pool%s, %u Peer%s",
             (unsigned int)poolElements,
+            (unsigned int)ownedPoolElements,
             (unsigned int)pools, (pools == 1) ? "" : "s",
             (unsigned int)peers, (peers == 1) ? "" : "s");
    getComponentLocation(componentLocation, registrar->ASAPSocket, 0);

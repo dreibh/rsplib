@@ -80,6 +80,8 @@ size_t ST_CLASS(poolHandlespaceManagementGetPools)(
           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 size_t ST_CLASS(poolHandlespaceManagementGetPoolElements)(
           const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+size_t ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(
+          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfPool)(
           struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
           const struct PoolHandle*                    poolHandle);

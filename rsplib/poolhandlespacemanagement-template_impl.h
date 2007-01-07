@@ -307,6 +307,14 @@ size_t ST_CLASS(poolHandlespaceManagementGetPoolElements)(
 }
 
 
+/* ###### Get number of owned pool elements ############################## */
+size_t ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(
+          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetOwnedPoolElementNodes)(&poolHandlespaceManagement->Handlespace));
+}
+
+
 /* ###### Get number of pool elements of given pool ###################### */
 size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfPool)(
           struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
