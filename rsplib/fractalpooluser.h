@@ -42,12 +42,15 @@ class FractalPU : public QMainWindow,
    Q_OBJECT
 
    public:
-   FractalPU(const size_t width,
-             const size_t height,
-             const char*  poolHandle,
-             const char*  configDirName,
-             QWidget*     parent = NULL,
-             const char*  name   = NULL);
+   FractalPU(const size_t       width,
+             const size_t       height,
+             const char*        poolHandle,
+             const char*        configDirName,
+             const unsigned int sendTimeout,
+             const unsigned int recvTimeout,
+             const unsigned int interImageTime,
+             QWidget*           parent = NULL,
+             const char*        name   = NULL);
    ~FractalPU();
 
    void restartCalculation();
@@ -89,6 +92,10 @@ class FractalPU : public QMainWindow,
    FGPParameter              Parameter;
    size_t                    Run;
    size_t                    PoolElementUsages;
+
+   unsigned int              SendTimeout;
+   unsigned int              RecvTimeout;
+   unsigned int              InterImageTime;
 
    QStringList               ConfigList;
    QDir                      ConfigDirectory;

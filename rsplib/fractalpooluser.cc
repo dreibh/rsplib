@@ -47,23 +47,32 @@
 using namespace std;
 
 
-#define FPU_RECV_TIMEOUT     5000
-#define FPU_SEND_TIMEOUT     5000
-#define FPU_INTER_IMAGE_SECS    5
+#define DEFAULT_FPU_WIDTH             400
+#define DEFAULT_FPU_HEIGHT            250
+#define DEFAULT_FPU_SEND_TIMEOUT     5000
+#define DEFAULT_FPU_RECV_TIMEOUT     5000
+#define DEFAULT_FPU_INTER_IMAGE_TIME    5
 
 
 /* ###### Constructor #################################################### */
-FractalPU::FractalPU(const size_t width,
-                     const size_t height,
-                     const char*  poolHandle,
-                     const char*  configDirName,
-                     QWidget*     parent,
-                     const char*  name)
+FractalPU::FractalPU(const size_t       width,
+                     const size_t       height,
+                     const char*        poolHandle,
+                     const char*        configDirName,
+                     const unsigned int sendTimeout,
+                     const unsigned int recvTimeout,
+                     const unsigned int interImageTime,
+                     QWidget*           parent,
+                     const char*        name)
    : QMainWindow(parent, name)
 {
    Image          = NULL;
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
+
+   RecvTimeout    = sendTimeout;
+   SendTimeout    = recvTimeout;
+   InterImageTime = interImageTime;
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName);
@@ -167,7 +176,7 @@ bool FractalPU::sendParameter()
    parameter.N             = Parameter.N;
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                      0, htonl(PPID_FGP), 0, 0, FPU_SEND_TIMEOUT);
+                      0, htonl(PPID_FGP), 0, 0, SendTimeout);
    if(sent < 0) {
       logerror("rsp_sendmsg() failed");
       return(false);
@@ -356,7 +365,7 @@ void FractalPU::run()
                      ssize_t received;
 
                      received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                                &rinfo, &flags, FPU_RECV_TIMEOUT);
+                                                &rinfo, &flags, RecvTimeout);
                      while(received > 0) {
                         // ====== Handle notification =======================
                         if(flags & MSG_RSERPOOL_NOTIFICATION) {
@@ -414,7 +423,7 @@ void FractalPU::run()
 
                         flags = 0;
                         received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                                   &rinfo, &flags, FPU_RECV_TIMEOUT);
+                                                   &rinfo, &flags, RecvTimeout);
                      }
                      if(success == false) {
                         printTimeStamp(stdout);
@@ -445,7 +454,7 @@ finish:
 
             if(Running) {
                char str[128];
-               size_t secsToWait = FPU_INTER_IMAGE_SECS;
+               size_t secsToWait = InterImageTime;
                while(secsToWait > 0) {
                   usleep(1000000);
                   secsToWait--;
@@ -489,9 +498,14 @@ int main(int argc, char** argv)
 {
    struct rsp_info      info;
    union sockaddr_union asapAnnounceAddress;
-   char*                poolHandle    = "FractalGeneratorPool";
-   const char*          configDirName = "fgpconfig";
-   const char*          caption       = NULL;
+   char*                poolHandle     = "FractalGeneratorPool";
+   const char*          configDirName  = "fgpconfig";
+   const char*          caption        = NULL;
+   int                  width          = DEFAULT_FPU_WIDTH;
+   int                  height         = DEFAULT_FPU_HEIGHT;
+   unsigned int         sendTimeout    = DEFAULT_FPU_SEND_TIMEOUT;
+   unsigned int         recvTimeout    = DEFAULT_FPU_RECV_TIMEOUT;
+   unsigned int         interImageTime = DEFAULT_FPU_INTER_IMAGE_TIME;
    unsigned int         identifier;
    int                  i;
 
@@ -531,6 +545,21 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
+      else if(!(strncmp(argv[i], "-width=" ,7))) {
+         width = atol((char*)&argv[i][7]);
+      }
+      else if(!(strncmp(argv[i], "-height=" ,8))) {
+         height = atol((char*)&argv[i][8]);
+      }
+      else if(!(strncmp(argv[i], "-sendtimeout=" ,13))) {
+         sendTimeout = atol((char*)&argv[i][13]);
+      }
+      else if(!(strncmp(argv[i], "-recvtimeout=" ,13))) {
+         recvTimeout = atol((char*)&argv[i][13]);
+      }
+      else if(!(strncmp(argv[i], "-interimagetime=" ,16))) {
+         interImageTime = atol((char*)&argv[i][16]);
+      }
       else if(!(strncmp(argv[i], "-registrar=", 11))) {
          if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
             fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
@@ -554,11 +583,28 @@ int main(int argc, char** argv)
       info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
    }
 #endif
+   if(width < 64) {
+      width = 64;
+   }
+   else if(width > 8192) {
+      width = 8192;
+   }
+   if(height < 64) {
+      height = 64;
+   }
+   else if(height > 4096) {
+      height = 4096;
+   }
 
 
    puts("Fractal Pool User - Version 1.0");
    puts("===============================\n");
-   printf("Pool Handle = %s\n\n", poolHandle);
+   printf("Pool Handle      = %s\n", poolHandle);
+   printf("Width            = %u\n", width);
+   printf("Height           = %u\n", height);
+   printf("Send Timeout     = %u [ms]\n", sendTimeout);
+   printf("Receive Timeout  = %u [ms]\n", recvTimeout);
+   printf("Inter Image Time = %u [s]\n\n", interImageTime);
 
 
    beginLogging();
@@ -570,7 +616,8 @@ int main(int argc, char** argv)
 
 
    QApplication application(argc, argv);
-   FractalPU* fractalPU = new FractalPU(400, 250, poolHandle, configDirName);
+   FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
+                                        sendTimeout, recvTimeout, interImageTime);
    Q_CHECK_PTR(fractalPU);
    if(caption) {
       fractalPU->setCaption(caption);
