@@ -205,60 +205,35 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    /* ====== Handle dynamic entry ======================================== */
    if(flags & PLNF_DYNAMIC) {
       if(registrarIdentifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
+         /* A dynamic entry must have a valid registrar ID! */
          return(RSPERR_INVALID_ID);
       }
-      *peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
-                                                                   registrarIdentifier,
-                                                                   transportAddressBlock);
-      if(*peerListNode == NULL) {
-         /* Is this a new dynamic entry or update of static entry?*/
-         *peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
-                                                                      UNDEFINED_REGISTRAR_IDENTIFIER,
-                                                                      transportAddressBlock);
-
-         /* ====== New dynamic entry or update of static entry =========== */
-         if(*peerListNode == NULL) {
-            /* New dynamic entry */
-         }
-
-         /* ====== Update static entry =================================== */
-         else {
-            CHECK(!((*peerListNode)->Flags & PLNF_DYNAMIC));
-            ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
-                                      registrarIdentifier,
-                                      (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
-                                      (*peerListNode)->AddressBlock);
-            ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
-                                                 &updatedPeerListNode, &errorCode);
-            (*peerListNode)->OwnershipChecksum =
-               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-                  &peerListManagement->Handlespace->Handlespace,
-                  (*peerListNode)->Identifier);
-            return(errorCode);
-         }
-
-      }
-      else {
-         /* ====== Update static entry =================================== */
-         if(!((*peerListNode)->Flags & PLNF_DYNAMIC)) {
-            ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
-                                      registrarIdentifier,
-                                      (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
-                                      (*peerListNode)->AddressBlock);
-            ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
-                                                 &updatedPeerListNode, &errorCode);
-            (*peerListNode)->OwnershipChecksum =
-               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-                  &peerListManagement->Handlespace->Handlespace,
-                  (*peerListNode)->Identifier);
-            return(errorCode);
-         }
+      if( ( ((*peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                           registrarIdentifier,
+                                                                           NULL)) != NULL) ||
+            ((*peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(peerListManagement,
+                                                                           UNDEFINED_REGISTRAR_IDENTIFIER,
+                                                                           transportAddressBlock)) != NULL)
+          ) && (!((*peerListNode)->Flags & PLNF_DYNAMIC)) ) {
+         /* ====== Update of static entry ================================ */
+         ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
+                                    registrarIdentifier,
+                                    (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
+                                    (*peerListNode)->AddressBlock);
+         ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
+                                                &updatedPeerListNode, &errorCode);
+         (*peerListNode)->OwnershipChecksum =
+            ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+               &peerListManagement->Handlespace->Handlespace,
+               (*peerListNode)->Identifier);
+         return(errorCode);
       }
    }
 
    /* ====== Handle static entry ========================================= */
    else {
       if(registrarIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+         /* A new static entry must have an undefined registrar ID! */
          return(RSPERR_INVALID_ID);
       }
    }

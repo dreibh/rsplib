@@ -1,0 +1,13 @@
+#!/bin/sh
+
+CSPCONFIG=""
+if [ x$CSP_SERVER != "x" ] ; then
+   if [ x$CSP_INTERVAL != "x" ] ; then
+      if [ $CSP_INTERVAL -gt 0 ] ; then
+         echo "Using CSP server $CSP_SERVER with interval $CSP_INTERVAL ms..."
+         export CSPCONFIG="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL"
+      fi
+   fi
+fi
+
+./registrar -asap=[::]:2002 -enrp=[::]:10002 -peer=132.252.150.151:10001 -asapannounce=auto -enrpmulticast=auto -logcolor=on -loglevel=3 -identifier=0xffff2222 $CSPCONFIG $@

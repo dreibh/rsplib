@@ -8,7 +8,7 @@ PR_LIST=`cat pe-america.hosts pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`   # ACHT
 PE_LIST=`cat planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
 #PE_LIST=`cat pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`
 
-PR_MISCOPT="-cspinterval=5000 -loglevel=4"
+PR_MISCOPT="-cspinterval=1000 -loglevel=4"
 PE_MISCOPT="-cspinterval=0000 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=3 "
 
 
