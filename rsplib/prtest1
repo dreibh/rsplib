@@ -10,4 +10,4 @@ if [ x$CSP_SERVER != "x" ] ; then
    fi
 fi
 
-./registrar -asap=[::]:2001 -enrp=[::]:10001 -logcolor=on -loglevel=3 -identifier=0xffff1111 $CSPCONFIG $@
+./registrar -asap=[::]:2001 -enrp=[::]:10001 -peer=132.252.150.151:10002 -logcolor=on -loglevel=3 -identifier=0xffff1111 $CSPCONFIG $@
