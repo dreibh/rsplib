@@ -62,6 +62,7 @@ FractalPU::FractalPU(const size_t       width,
                      const unsigned int sendTimeout,
                      const unsigned int recvTimeout,
                      const unsigned int interImageTime,
+                     const size_t       threads,
                      QWidget*           parent,
                      const char*        name)
    : QMainWindow(parent, name)
@@ -73,6 +74,7 @@ FractalPU::FractalPU(const size_t       width,
    RecvTimeout    = sendTimeout;
    SendTimeout    = recvTimeout;
    InterImageTime = interImageTime;
+   Threads        = threads;
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName);
@@ -156,85 +158,6 @@ void FractalPU::closeEvent(QCloseEvent* closeEvent)
 }
 
 
-/* ###### Send Parameter message ######################################### */
-bool FractalPU::sendParameter()
-{
-   FGPParameter parameter;
-   ssize_t      sent;
-
-   parameter.Header.Type   = FGPT_PARAMETER;
-   parameter.Header.Flags  = 0x00;
-   parameter.Header.Length = htons(sizeof(parameter));
-   parameter.Width         = htonl(Parameter.Width);
-   parameter.Height        = htonl(Parameter.Height);
-   parameter.AlgorithmID   = htonl(Parameter.AlgorithmID);
-   parameter.MaxIterations = htonl(Parameter.MaxIterations);
-   parameter.C1Real        = Parameter.C1Real;
-   parameter.C1Imag        = Parameter.C1Imag;
-   parameter.C2Real        = Parameter.C2Real;
-   parameter.C2Imag        = Parameter.C2Imag;
-   parameter.N             = Parameter.N;
-
-   sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                      0, htonl(PPID_FGP), 0, 0, SendTimeout);
-   if(sent < 0) {
-      logerror("rsp_sendmsg() failed");
-      return(false);
-   }
-   return(true);
-}
-
-
-/* ###### Handle Data message ############################################ */
-FractalPU::DataStatus FractalPU::handleData(const FGPData* data,
-                                            const size_t   size)
-{
-   if(size < getFGPDataSize(0)) {
-      return(Invalid);
-   }
-   size_t p      = 0;
-   size_t x      = ntohl(data->StartX);
-   size_t y      = ntohl(data->StartY);
-   size_t points = ntohl(data->Points);
-   if((points == 0) && (x == 0xffffffff) && (y == 0xffffffff)) {
-      update();
-      return(Finalizer);
-   }
-   if(size < getFGPDataSize(points)) {
-      return(Invalid);
-   }
-   if(x >= (size_t)Image->width()) {
-      return(Invalid);
-   }
-   if(y >= (size_t)Image->height()) {
-      return(Invalid);
-   }
-   if(points > FGD_MAX_POINTS) {
-      return(Invalid);
-   }
-
-   while(y < (size_t)Image->height()) {
-      while(x < (size_t)Image->width()) {
-         if(p >= points) {
-            goto finished;
-         }
-         const uint32_t point = ntohl(data->Buffer[p]);
-         const QColor color(((point + (2 * Run) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
-         setPoint(x, y, color.rgb());
-         p++;
-
-         x++;
-      }
-      x = 0;
-      y++;
-   }
-
-finished:
-   paintImage(ntohl(data->StartY), y);
-   return(Okay);
-}
-
-
 /* ###### Get parameters from config file ################################ */
 void FractalPU::getNextParameters()
 {
@@ -277,18 +200,13 @@ void FractalPU::getNextParameters()
       Parameter.AlgorithmID = FGPA_MANDELBROT;
    }
 
-   const double c1real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
-   const double c1imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
-   const double c2real = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
-   const double c2imag = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
-
-   Parameter.C1Real = doubleToNetwork(c1real);
-   Parameter.C1Imag = doubleToNetwork(c1imag);
-   Parameter.C2Real = doubleToNetwork(c2real);
-   Parameter.C2Imag = doubleToNetwork(c2imag);
+   Parameter.C1Real = doc.elementsByTagName("C1Real").item(0).firstChild().toText().data().toDouble();
+   Parameter.C1Imag = doc.elementsByTagName("C1Imag").item(0).firstChild().toText().data().toDouble();
+   Parameter.C2Real = doc.elementsByTagName("C2Real").item(0).firstChild().toText().data().toDouble();
+   Parameter.C2Imag = doc.elementsByTagName("C2Imag").item(0).firstChild().toText().data().toDouble();
 
    // Defaults; will be overwritten if specified in the parameter file.
-   Parameter.N             = doubleToNetwork(2.0);
+   Parameter.N             = 2.0;
    Parameter.MaxIterations = 123;
 
    QDomElement userOptions = doc.elementsByTagName("Useroptions").item(0).toElement();
@@ -300,109 +218,277 @@ void FractalPU::getNextParameters()
          Parameter.MaxIterations = value.toInt();
       }
       else if(name == "N") {
-         const double n = value.toDouble();
-         Parameter.N = doubleToNetwork(n);
+         Parameter.N = value.toDouble();
       }
       child = child.nextSibling();
    }
 }
 
 
-/* ###### Fractal PU thread ############################################## */
+/* ###### Fractal PU thread implementation ############################### */
 void FractalPU::run()
+{
+   FractalCalculationThread* calculationThread[Threads];
+
+   Run     = 0;
+   Running = true;
+   while(Running) {
+      // ====== Initialize image object and timeout timer ===================
+      Run++;
+      qApp->lock();
+      Parameter.Width         = width();
+      Parameter.Height        = height();
+      Parameter.C1Real        = -1.5;
+      Parameter.C1Imag        = 1.5;
+      Parameter.C2Real        = 1.5;
+      Parameter.C2Imag        = -1.5;
+      Parameter.N             = 2.0;
+      Parameter.MaxIterations = 1024;
+      Parameter.AlgorithmID   = FGPA_MANDELBROT;
+      getNextParameters();
+      if(Image == NULL) {
+         Image = new QImage(Parameter.Width, Parameter.Height, 32);
+         Q_CHECK_PTR(Image);
+         Image->fill(qRgb(255, 255, 255));
+      }
+      qApp->unlock();
+
+
+      // ====== Start job distribution ======================================
+      // cout << "Starting job distribution ..." << endl;
+      qApp->lock();
+      statusBar()->message("Starting job distribution ...");
+      qApp->unlock();
+      for(size_t i = 0;i < Threads;i++) {
+         calculationThread[i] = new FractalCalculationThread(this, i,
+                                       0, i * (Parameter.Height / Threads),
+                                       Parameter.Width, Parameter.Height / Threads,
+                                       (Threads == 1));
+         Q_CHECK_PTR(calculationThread[i]);
+         calculationThread[i]->start();
+      }
+
+
+      // ====== Wait for job completion =====================================
+      // cout << "Waiting for job completion ..." << endl;
+      if(Threads > 1) {
+         qApp->lock();
+         statusBar()->message("Waiting for job completion ...");
+         qApp->unlock();
+      }
+      size_t failed = 0;
+      for(size_t i = 0;i < Threads;i++) {
+         calculationThread[i]->wait();
+         if(!calculationThread[i]->getSuccess()) {
+            failed++;
+         }
+         delete calculationThread[i];
+         calculationThread[i] = NULL;
+      }
+      qApp->lock();
+      statusBar()->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
+      qApp->unlock();
+
+      // ====== Pause before next image =====================================
+      if(Running) {
+         char str[128];
+         size_t secsToWait = InterImageTime;
+         while(secsToWait > 0) {
+            usleep(1000000);
+            secsToWait--;
+            snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", secsToWait);
+            qApp->lock();
+            statusBar()->message(str);
+            qApp->unlock();
+         }
+      }
+
+
+      // ====== Clean-up ====================================================
+      qApp->lock();
+      if( (!Running) ||
+         (Image->width() != width()) ||
+         (Image->height() != height()) ) {
+         // Thread destruction or size change
+         delete Image;
+         Image = NULL;
+      }
+      qApp->unlock();
+   }
+}
+
+
+/* ###### Fractal PU thread constructor ################################## */
+FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
+                                                   const unsigned int threadID,
+                                                   const size_t       viewX,
+                                                   const size_t       viewY,
+                                                   const size_t       viewWidth,
+                                                   const size_t       viewHeight,
+                                                   const bool         showStatus)
+
+{
+   ThreadID   = threadID;
+   Master     = fractalPU;
+   ViewX      = viewX;
+   ViewY      = viewY;
+   ViewWidth  = viewWidth;
+   ViewHeight = viewHeight;
+   ShowStatus = showStatus;
+   Session    = -1;
+   Success    = false;
+}
+
+
+/* ###### Send Parameter message ######################################### */
+bool FractalCalculationThread::sendParameterMessage()
+{
+   FGPParameter parameter;
+   ssize_t      sent;
+
+   parameter.Header.Type   = FGPT_PARAMETER;
+   parameter.Header.Flags  = 0x00;
+   parameter.Header.Length = htons(sizeof(parameter));
+   parameter.Width         = htonl(ViewWidth);
+   parameter.Height        = htonl(ViewHeight);
+   parameter.AlgorithmID   = htonl(Master->Parameter.AlgorithmID);
+   parameter.MaxIterations = htonl(Master->Parameter.MaxIterations);
+   parameter.C1Real        = doubleToNetwork(Master->Parameter.C1Real + (double)ViewX * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width);
+   parameter.C1Imag        = doubleToNetwork(Master->Parameter.C1Imag + (double)ViewY * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height);
+   parameter.C2Real        = doubleToNetwork(Master->Parameter.C1Real + (double)(ViewX + ViewWidth) * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width);
+   parameter.C2Imag        = doubleToNetwork(Master->Parameter.C1Imag + (double)(ViewY + ViewHeight) * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height);
+   parameter.N             = doubleToNetwork(Master->Parameter.N);
+
+   sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
+                      0, htonl(PPID_FGP), 0, 0, Master->SendTimeout);
+   if(sent < 0) {
+      logerror("rsp_sendmsg() failed");
+      return(false);
+   }
+   return(true);
+}
+
+
+/* ###### Handle Data message ############################################ */
+FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage(const FGPData* data,
+                                                                                 const size_t   size)
+{
+   if(size < getFGPDataSize(0)) {
+      return(Invalid);
+   }
+   size_t p      = 0;
+   size_t x      = ntohl(data->StartX);
+   size_t y      = ntohl(data->StartY);
+   size_t points = ntohl(data->Points);
+   if((points == 0) && (x == 0xffffffff) && (y == 0xffffffff)) {
+      // Master->update();
+      return(Finalizer);
+   }
+   if(size < getFGPDataSize(points)) {
+      return(Invalid);
+   }
+   if(x >= ViewWidth) {
+      return(Invalid);
+   }
+   if(y >= ViewHeight) {
+      return(Invalid);
+   }
+   if(points > FGD_MAX_POINTS) {
+      return(Invalid);
+   }
+
+   while(y < ViewHeight) {
+      while(x < ViewWidth) {
+         if(p >= points) {
+            goto finished;
+         }
+         const uint32_t point = ntohl(data->Buffer[p]);
+         const QColor color(((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
+         Master->setPoint(x + ViewX, y + ViewY, color.rgb());
+         p++;
+
+         x++;
+      }
+      x = 0;
+      y++;
+   }
+
+finished:
+   Master->paintImage(ntohl(data->StartY) + ViewY, y + ViewY);
+   return(Okay);
+}
+
+
+/* ###### Fractal PU thread implementation ############################### */
+void FractalCalculationThread::run()
 {
    char statusText[128];
 
-   Running           = true;
-   Run               = 0;
    PoolElementUsages = 0;
 
-   for(;;) {
-      Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
-      if(Session >= 0) {
-         if(rsp_connect(Session, PoolHandle, PoolHandleSize) == 0) {
-            Run++;
-            PoolElementUsages = 0;
+   Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
+   if(Session >= 0) {
+      if(rsp_connect(Session, Master->PoolHandle, Master->PoolHandleSize) == 0) {
 
-
-            // ====== Initialize image object and timeout timer =============
-            qApp->lock();
-            Parameter.Width         = width();
-            Parameter.Height        = height();
-            Parameter.C1Real        = doubleToNetwork(-1.5);
-            Parameter.C1Imag        = doubleToNetwork(1.5);
-            Parameter.C2Real        = doubleToNetwork(1.5);
-            Parameter.C2Imag        = doubleToNetwork(-1.5);
-            Parameter.N             = doubleToNetwork(2.0);
-            Parameter.MaxIterations = 1024;
-            Parameter.AlgorithmID   = FGPA_MANDELBROT;
-            getNextParameters();
-            if(Image == NULL) {
-               Image = new QImage(Parameter.Width, Parameter.Height, 32);
-               Q_CHECK_PTR(Image);
-               Image->fill(qRgb(255, 255, 255));
+         // ====== Begin image calculation ==================================
+         do {
+            if(ShowStatus) {
+               rsp_csp_setstatus(Session, 0, "Sending parameter command...");
+               // cout << "Sending parameter command..." << endl;
+               qApp->lock();
+               Master->statusBar()->message("Sending parameter command...");
+               qApp->unlock();
             }
-            qApp->unlock();
+            if(sendParameterMessage()) {
+               do {
 
-            rsp_csp_setstatus(Session, 0, "Sending parameter command...");
-            // cout << "Sending parameter command..." << endl;
-            qApp->lock();
-            statusBar()->message("Sending parameter command...");
-            qApp->unlock();
+                  // ====== Handle received result chunks ===================
+                  size_t         packets = 0;
+                  FGPData        data;
+                  rsp_sndrcvinfo rinfo;
+                  int            flags = 0;
+                  ssize_t received;
 
-
-            // ====== Begin image calculation ===============================
-            bool success = false;
-            do {
-               if(sendParameter()) {
-                  do {
-
-                     // ====== Handle received result chunks ================
-                     size_t         packets = 0;
-                     FGPData        data;
-                     rsp_sndrcvinfo rinfo;
-                     int            flags = 0;
-                     ssize_t received;
-
-                     received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                                &rinfo, &flags, RecvTimeout);
-                     while(received > 0) {
-                        // ====== Handle notification =======================
-                        if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                           union rserpool_notification* notification =
-                              (union rserpool_notification*)&data;
-                           printTimeStamp(stdout);
-                           printf("Notification: ");
-                           rsp_print_notification((union rserpool_notification*)&data, stdout);
-                           puts("");
-                           if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
-                              if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
-                                 break;
-                              }
-                              else if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_COMPLETE) {
-                                 PoolElementUsages++;
-                              }
+                  received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                                             &rinfo, &flags, Master->RecvTimeout);
+                  while(received > 0) {
+                     // ====== Handle notification ==========================
+                     if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                        union rserpool_notification* notification =
+                           (union rserpool_notification*)&data;
+                        printTimeStamp(stdout);
+                        printf("Notification: ");
+                        rsp_print_notification((union rserpool_notification*)&data, stdout);
+                        puts("");
+                        if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
+                           if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
+                              break;
+                           }
+                           else if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_COMPLETE) {
+                              PoolElementUsages++;
                            }
                         }
+                     }
 
-                        // ====== Handle Data ===============================
-                        else {
-                           if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
-                              (data.Header.Type == FGPT_DATA)) {
-                              qApp->lock();
-                              const DataStatus status = handleData(&data, received);
-                              qApp->unlock();
+                     // ====== Handle Data ==================================
+                     else {
+                        if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
+                           (data.Header.Type == FGPT_DATA)) {
+                           qApp->lock();
+                           const DataStatus status = handleDataMessage(&data, received);
+                           qApp->unlock();
 
-                              switch(status) {
-                                 case Finalizer:
-                                    success = true;
-                                    goto finish;
-                                 break;
-                                 case Invalid:
-                                    cerr << "ERROR: Invalid data block received!" << endl;
-                                 break;
-                                 default:
-                                    packets++;
+                           switch(status) {
+                              case Finalizer:
+                                 Success = true;
+                                 goto finish;
+                              break;
+                              case Invalid:
+                                 cerr << "ERROR: Invalid data block received!" << endl;
+                              break;
+                              default:
+                                 packets++;
+                                 if(ShowStatus) {
                                     snprintf((char*)&statusText, sizeof(statusText),
                                              "Processed paket #%u; PE is $%08x",
                                              packets, rinfo.rinfo_pe_id);
@@ -411,84 +497,52 @@ void FractalPU::run()
                                              "Processed data packet #%u (from PE $%08x)...",
                                              packets, rinfo.rinfo_pe_id);
                                     qApp->lock();
-                                    statusBar()->message(statusText);
+                                    Master->statusBar()->message(statusText);
                                     qApp->unlock();
-                                 break;
-                              }
-                           }
-                           if(!Running) {
-                              goto finish;
+                                 }
+                              break;
                            }
                         }
-
-                        flags = 0;
-                        received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                                   &rinfo, &flags, RecvTimeout);
-                     }
-                     if(success == false) {
-                        printTimeStamp(stdout);
-                        printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
-                        rsp_forcefailover(Session);
+                        if(!Master->Running) {
+                           goto finish;
+                        }
                      }
 
-                  } while(rsp_has_cookie(Session));
-               }
-               else {
-                  printTimeStamp(stdout);
-                  printf("FAILOVER AFTER FAILED sendParameter() (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
-                  rsp_forcefailover(Session);
-               }
-            } while(success == false);
+                     flags = 0;
+                     received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                                                &rinfo, &flags, Master->RecvTimeout);
+                  }
+                  if(Success == false) {
+                     printTimeStamp(stdout);
+                     printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
+                     rsp_forcefailover(Session);
+                  }
 
-finish:
-            // ====== Image calculation completed ==============================
-            const char* statusText = (success == true) ? "Image completed!" : "Image calculation failed!";
+               } while(rsp_has_cookie(Session));
+            }
+            else {
+               printTimeStamp(stdout);
+               printf("FAILOVER AFTER FAILED sendParameterMessage() (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
+               rsp_forcefailover(Session);
+            }
+         } while(Success == false);
+
+         // ====== Image calculation completed ==============================
+         if(ShowStatus) {
+            const char* statusText = (Success == true) ? "Image completed!" : "Image calculation failed!";
             rsp_csp_setstatus(Session, 0, statusText);
-            // cout << statusText << endl;
-            qApp->lock();
-            statusBar()->message(statusText);
-            qApp->unlock();
-
-            rsp_close(Session);
-            Session = -1;
-
-            if(Running) {
-               char str[128];
-               size_t secsToWait = InterImageTime;
-               while(secsToWait > 0) {
-                  usleep(1000000);
-                  secsToWait--;
-                  snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", secsToWait);
-                  qApp->lock();
-                  statusBar()->message(str);
-                  qApp->unlock();
-               }
-            }
-
-
-            // ====== Clean-up =================================================
-            qApp->lock();
-            if( (!Running) ||
-               (Image->width() != width()) ||
-               (Image->height() != height()) ) {
-               // Thread destruction or size change
-               delete Image;
-               Image = NULL;
-            }
-            qApp->unlock();
-
-            if(!Running) {
-               break;
-            }
-         }
-         else {
-            logerror("rsp_connect() failed");
          }
       }
       else {
-         logerror("rsp_socket() failed");
+         logerror("rsp_connect() failed");
       }
    }
+   else {
+      logerror("rsp_socket() failed");
+   }
+
+finish:
+   rsp_close(Session);
 }
 
 
@@ -501,6 +555,7 @@ int main(int argc, char** argv)
    char*                poolHandle     = "FractalGeneratorPool";
    const char*          configDirName  = "fgpconfig";
    const char*          caption        = NULL;
+   size_t               threads        = 1;
    int                  width          = DEFAULT_FPU_WIDTH;
    int                  height         = DEFAULT_FPU_HEIGHT;
    unsigned int         sendTimeout    = DEFAULT_FPU_SEND_TIMEOUT;
@@ -551,6 +606,9 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-height=" ,8))) {
          height = atol((char*)&argv[i][8]);
       }
+      else if(!(strncmp(argv[i], "-threads=" ,9))) {
+         threads = atol((char*)&argv[i][9]);
+      }
       else if(!(strncmp(argv[i], "-sendtimeout=" ,13))) {
          sendTimeout = atol((char*)&argv[i][13]);
       }
@@ -583,6 +641,12 @@ int main(int argc, char** argv)
       info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
    }
 #endif
+   if(threads < 1) {
+      threads = 1;
+   }
+   else if(threads > 100) {
+      threads = 100;
+   }
    if(width < 64) {
       width = 64;
    }
@@ -604,7 +668,8 @@ int main(int argc, char** argv)
    printf("Height           = %u\n", height);
    printf("Send Timeout     = %u [ms]\n", sendTimeout);
    printf("Receive Timeout  = %u [ms]\n", recvTimeout);
-   printf("Inter Image Time = %u [s]\n\n", interImageTime);
+   printf("Inter Image Time = %u [s]\n", interImageTime);
+   printf("Threads          = %u\n\n", threads);
 
 
    beginLogging();
@@ -617,7 +682,8 @@ int main(int argc, char** argv)
 
    QApplication application(argc, argv);
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
-                                        sendTimeout, recvTimeout, interImageTime);
+                                        sendTimeout, recvTimeout, interImageTime,
+                                        threads);
    Q_CHECK_PTR(fractalPU);
    if(caption) {
       fractalPU->setCaption(caption);

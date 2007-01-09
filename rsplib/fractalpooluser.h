@@ -36,10 +36,55 @@
 #include "fractalgeneratorpackets.h"
 
 
+class FractalPU;
+
+
+class FractalCalculationThread : public QThread
+{
+   public:
+   FractalCalculationThread(FractalPU*         fractalPU,
+                            const unsigned int threadID,
+                            const size_t       viewX,
+                            const size_t       viewY,
+                            const size_t       viewWidth,
+                            const size_t       viewHeight,
+                            const bool         showStatus);
+   virtual void run();
+
+   inline bool getSuccess() const {
+      return(Success);
+   }
+
+   private:
+   enum DataStatus {
+      Okay      = 0,
+      Finalizer = 1,
+      Invalid   = 2
+   };
+
+   bool sendParameterMessage();
+   DataStatus handleDataMessage(const FGPData* data,
+                                const size_t   size);
+
+   unsigned int ThreadID;
+   FractalPU*   Master;
+   size_t       ViewX;
+   size_t       ViewY;
+   size_t       ViewWidth;
+   size_t       ViewHeight;
+   bool         ShowStatus;
+   bool         Success;
+   int          Session;
+   size_t       PoolElementUsages;
+};
+
+
 class FractalPU : public QMainWindow,
                   public QThread
 {
    Q_OBJECT
+
+   friend class FractalCalculationThread;
 
    public:
    FractalPU(const size_t       width,
@@ -49,6 +94,7 @@ class FractalPU : public QMainWindow,
              const unsigned int sendTimeout,
              const unsigned int recvTimeout,
              const unsigned int interImageTime,
+             const size_t       threads,
              QWidget*           parent = NULL,
              const char*        name   = NULL);
    ~FractalPU();
@@ -71,31 +117,33 @@ class FractalPU : public QMainWindow,
 
    private:
    virtual void run();
-   bool sendParameter();
    void getNextParameters();
    void paintImage(const size_t startY, const size_t endY);
 
-   enum DataStatus {
-      Okay      = 0,
-      Finalizer = 1,
-      Invalid   = 2
+   struct FractalParameter
+   {
+      unsigned int     Width;
+      unsigned int     Height;
+      unsigned int     MaxIterations;
+      unsigned int     AlgorithmID;
+      double           C1Real;
+      double           C1Imag;
+      double           C2Real;
+      double           C2Imag;
+      double           N;
    };
-   DataStatus handleData(const FGPData* data,
-                         const size_t   size);
 
+   FractalParameter          Parameter;
    bool                      Running;
    QImage*                   Image;
+   size_t                    Run;
 
    const unsigned char*      PoolHandle;
    size_t                    PoolHandleSize;
-   int                       Session;
-   FGPParameter              Parameter;
-   size_t                    Run;
-   size_t                    PoolElementUsages;
-
    unsigned int              SendTimeout;
    unsigned int              RecvTimeout;
    unsigned int              InterImageTime;
+   size_t                    Threads;
 
    QStringList               ConfigList;
    QDir                      ConfigDirectory;
