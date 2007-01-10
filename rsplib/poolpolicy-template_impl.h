@@ -41,8 +41,8 @@ static unsigned int ST_CLASS(getSum)(const unsigned int v1,
    if(v < 0) {
       v = 0;
    }
-   else if(v > (long long)0xffffffff) {
-      v = (long long)0xffffffff;
+   else if(v > (long long)PPV_MAX_LOAD) {
+      v = (long long)PPV_MAX_LOAD;
    }
    return((unsigned int)v);
 }
@@ -64,8 +64,8 @@ static unsigned long long ST_CLASS(getValueFraction)(
       /* v=0 does not make sense here: PE would never be selected. */
       v = 1;
    }
-   else if(v > (long long)0xffffffff) {
-      v = (long long)0xffffffff;
+   else if(v > (long long)PPV_MAX_WEIGHT) {
+      v = (long long)PPV_MAX_WEIGHT;
    }
    return((unsigned long long)v);
 }
@@ -382,14 +382,14 @@ static int ST_CLASS(weightedRandomDPFComparison)(
 static void ST_CLASS(weightedRandomDPFUpdatePoolElementNode)(
               struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
-   const double dpf = (double)poolElementNode->PolicySettings.Distance * ((double)poolElementNode->PolicySettings.WeightDPF / (double)0xffffffff);
+   const double dpf = (double)poolElementNode->PolicySettings.Distance * ((double)poolElementNode->PolicySettings.WeightDPF / (double)PPV_MAX_WEIGHTDPF);
    long long value  = (long long)poolElementNode->PolicySettings.Weight -
                          (long long)rint((double)poolElementNode->PolicySettings.Weight * dpf);
    if(value < 0) {
       value = 1;
    }
-   else if(value > 0xffffffffLL) {
-      value = 0xffffffffLL;
+   else if(value > (long long)PPV_MAX_WEIGHT) {
+      value = (long long)PPV_MAX_WEIGHT;
    }
 
    poolElementNode->PoolElementSelectionStorageNode.Value = (unsigned int)value;
@@ -424,29 +424,29 @@ static int ST_CLASS(leastUsedDPFComparison)(
    const struct ST_CLASS(PoolElementNode)* poolElementNode1,
    const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
-   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff);
-   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff);
+   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
 
-   unsigned long long v1 = (unsigned long long)rint((double)poolElementNode1->PolicySettings.Load + (dpf1 * (double)0xffffff));
-   if(v1 > 0xffffffffULL) {
-      v1 = 0xffffffffULL;
+   unsigned long long v1 = (unsigned long long)rint((double)poolElementNode1->PolicySettings.Load + (dpf1 * (double)PPV_MAX_LOAD));
+   if(v1 > (long long)PPV_MAX_LOAD) {
+      v1 = (long long)PPV_MAX_LOAD;
    }
-   unsigned long long v2 = (unsigned long long)rint((double)poolElementNode2->PolicySettings.Load + (dpf2 * (double)0xffffff));
-   if(v2 > 0xffffffffULL) {
-      v2 = 0xffffffffULL;
+   unsigned long long v2 = (unsigned long long)rint((double)poolElementNode2->PolicySettings.Load + (dpf2 * (double)PPV_MAX_LOAD));
+   if(v2 > (long long)PPV_MAX_LOAD) {
+      v2 = (long long)PPV_MAX_LOAD;
    }
 
 /*
    printf("dpf1=%1.6lf l1=$%x ldpf1=%1.8lf d1=%3u v1=$%x ; ",
           dpf1,
           poolElementNode1->PolicySettings.Load,
-          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff),
+          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
           poolElementNode1->PolicySettings.Distance,
           v1);
    printf("dpf2=%1.6lf l2=$%x ldpf2=%1.8lf d2=%3u v2=$%x\n",
           dpf2,
           poolElementNode2->PolicySettings.Load,
-          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff),
+          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
           poolElementNode2->PolicySettings.Distance,
           v2);
 */
@@ -500,37 +500,37 @@ static int ST_CLASS(leastUsedDegradationDPFComparison)(
    const struct ST_CLASS(PoolElementNode)* poolElementNode1,
    const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
-   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff);
-   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff);
+   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
 
    unsigned long long v1 = (unsigned long long)rint(
       (double)poolElementNode1->PolicySettings.Load +
       (double)poolElementNode1->Degradation +
-      (dpf1 * (double)0xffffff));
-   if(v1 > 0xffffffffULL) {
-      v1 = 0xffffffffULL;
+      (dpf1 * (double)PPV_MAX_LOADDPF));
+   if(v1 > (long long)PPV_MAX_LOAD) {
+      v1 = (long long)PPV_MAX_LOAD;
    }
    unsigned long long v2 = (unsigned long long)rint(
       (double)poolElementNode2->PolicySettings.Load +
       (double)poolElementNode2->Degradation +
-      (dpf2 * (double)0xffffff));
-   if(v2 > 0xffffffffULL) {
-      v2 = 0xffffffffULL;
+      (dpf2 * (double)PPV_MAX_LOAD));
+   if(v2 > (long long)PPV_MAX_LOAD) {
+      v2 = (long long)PPV_MAX_LOAD;
    }
 
 /*
    printf("dpf1=%1.6lf deg1=%1.3f%% l1=$%x ldpf1=%1.8lf d1=%3u v1=$%llx ; ",
           dpf1,
-          poolElementNode1->Degradation * 100.0 / (double)0xffffff,
+          poolElementNode1->Degradation * 100.0 / (double)PPV_MAX_LOADDEGRADATION,
           poolElementNode1->PolicySettings.Load,
-          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)0xffffffff),
+          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)(long long)PPV_MAX_LOAD_DPF),
           poolElementNode1->PolicySettings.Distance,
           v1);
    printf("dpf2=%1.6lf deg1=%1.3f%% l2=$%x ldpf2=%1.8lf d2=%3u v2=$%llx\n",
           dpf2,
-          poolElementNode2->Degradation * 100.0 / (double)0xffffff,
+          poolElementNode2->Degradation * 100.0 / (double)PPV_MAX_LOAD_DEGRADATION,
           poolElementNode2->PolicySettings.Load,
-          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)0xffffffff),
+          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
           poolElementNode2->PolicySettings.Distance,
           v2);
 */
@@ -617,7 +617,7 @@ static void ST_CLASS(randomizedLeastUsedUpdatePoolElementNode)(
                struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    poolElementNode->PoolElementSelectionStorageNode.Value =
-      ST_CLASS(getValueFraction)(PEPS_MAX_LOAD,
+      ST_CLASS(getValueFraction)(PPV_MAX_LOAD,
                                  poolElementNode->PolicySettings.Load,
                                  0, 0);
 }
@@ -644,7 +644,7 @@ static void ST_CLASS(randomizedLeastUsedDegradationUpdatePoolElementNode)(
                struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    poolElementNode->PoolElementSelectionStorageNode.Value =
-      ST_CLASS(getValueFraction)(PEPS_MAX_LOAD,
+      ST_CLASS(getValueFraction)(PPV_MAX_LOAD,
                                  poolElementNode->PolicySettings.Load,
                                  poolElementNode->Degradation, 0);
 }
@@ -671,7 +671,7 @@ static void ST_CLASS(randomizedPriorityLeastUsedUpdatePoolElementNode)(
                struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    poolElementNode->PoolElementSelectionStorageNode.Value =
-      ST_CLASS(getValueFraction)(PEPS_MAX_LOAD,
+      ST_CLASS(getValueFraction)(PPV_MAX_LOAD,
                                  poolElementNode->PolicySettings.Load,
                                  poolElementNode->PolicySettings.LoadDegradation,
                                  0);
@@ -699,7 +699,7 @@ static void ST_CLASS(randomizedPriorityLeastUsedDegradationUpdatePoolElementNode
                struct ST_CLASS(PoolElementNode)* poolElementNode)
 {
    poolElementNode->PoolElementSelectionStorageNode.Value =
-      ST_CLASS(getValueFraction)(PEPS_MAX_LOAD,
+      ST_CLASS(getValueFraction)(PPV_MAX_LOAD,
                                  poolElementNode->PolicySettings.Load,
                                  poolElementNode->PolicySettings.LoadDegradation,
                                  poolElementNode->Degradation);

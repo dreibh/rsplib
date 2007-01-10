@@ -82,7 +82,7 @@ void TCPLikeServer::shutdown()
 // ##### Get load ###########################################################
 double TCPLikeServer::getLoad() const
 {
-   return((double)Load / (double)0xffffff);
+   return((double)Load / (double)PPV_MAX_LOAD);
 }
 
 
@@ -95,8 +95,8 @@ void TCPLikeServer::setLoad(double load)
       fputs("ERROR: Invalid load setting!\n", stderr);
       return;
    }
-   const unsigned int newLoad = (unsigned int)rint(load * (double)0xffffff);
-   if(ServerList->LoadSum - Load + newLoad > 0xffffff) {
+   const unsigned int newLoad = (unsigned int)floor(load * (double)PPV_MAX_LOAD);
+   if((long long)ServerList->LoadSum - (long long)Load + (long long)newLoad > PPV_MAX_LOAD) {
       fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stderr);
       return;
    }
@@ -259,10 +259,10 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       }
       puts("   Policy Settings");
       printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-      printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)0xffffff));
-      printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)0xffffffff));
+      printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+      printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
       printf("      Weight               = %u\n", loadinfo->rli_weight);
-      printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)0xffffffff));
+      printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
       if(printParameters) {
          printParameters(userData);
       }
@@ -301,7 +301,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                const double newLoad = serverSet.getTotalLoad();
                if(fabs(newLoad - oldLoad) >= 0.01) {
                   oldLoad = newLoad;
-                  loadinfo->rli_load = (unsigned int)rint(newLoad * (double)0xffffff);
+                  loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
                   rsp_register_tags(rserpoolSocket,
                                     (const unsigned char*)poolHandle, strlen(poolHandle),
                                     loadinfo, reregInterval, REGF_DONTWAIT,
@@ -462,7 +462,7 @@ double TCPLikeServerList::getTotalLoad()
    unlock();
 
    if(threads > 0) {
-      return(LoadSum / (double)0xffffff);
+      return(LoadSum / (double)PPV_MAX_LOAD);
    }
    return(0.0);
 }

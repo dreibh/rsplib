@@ -3060,7 +3060,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 
                   handleMessage(registrar, message, fd);
                }
-               else {
+               else if(message->Error != RSPERR_UNRECOGNIZED_PARAMETER_SILENT) {
                   if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
                      /* For ASAP or ENRP messages, we can reply
                         error message */

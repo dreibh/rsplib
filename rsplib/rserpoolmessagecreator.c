@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -324,24 +324,23 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(rd == NULL) {
              return(false);
           }
-          rd->pp_rd_policy = poolPolicySettings->PolicyType;
-          rd->pp_rd_pad    = 0;
+          rd->pp_rd_policy = htonl(poolPolicySettings->PolicyType);
        break;
       case PPT_WEIGHTED_RANDOM:
           wrd = (struct rserpool_policy_weighted_random*)getSpace(message, sizeof(struct rserpool_policy_weighted_random));
           if(wrd == NULL) {
              return(false);
           }
-          wrd->pp_wrd_policy = poolPolicySettings->PolicyType;
-          wrd->pp_wrd_weight = hton24(poolPolicySettings->Weight);
+          wrd->pp_wrd_policy = htonl(poolPolicySettings->PolicyType);
+          wrd->pp_wrd_weight = htonl(poolPolicySettings->Weight);
        break;
       case PPT_WEIGHTED_RANDOM_DPF:
           wrddpf = (struct rserpool_policy_weighted_random_dpf*)getSpace(message, sizeof(struct rserpool_policy_weighted_random_dpf));
           if(wrddpf == NULL) {
              return(false);
           }
-          wrddpf->pp_wrddpf_policy     = poolPolicySettings->PolicyType;
-          wrddpf->pp_wrddpf_weight     = hton24(poolPolicySettings->Weight);
+          wrddpf->pp_wrddpf_policy     = htonl(poolPolicySettings->PolicyType);
+          wrddpf->pp_wrddpf_weight     = htonl(poolPolicySettings->Weight);
           wrddpf->pp_wrddpf_weight_dpf = htonl(poolPolicySettings->WeightDPF);
           wrddpf->pp_wrddpf_distance   = htonl(poolPolicySettings->Distance);
        break;
@@ -350,32 +349,31 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(rr == NULL) {
              return(false);
           }
-          rr->pp_rr_policy = poolPolicySettings->PolicyType;
-          rr->pp_rr_pad    = 0;
+          rr->pp_rr_policy = htonl(poolPolicySettings->PolicyType);
        break;
       case PPT_WEIGHTED_ROUNDROBIN:
           wrr = (struct rserpool_policy_weighted_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_weighted_roundrobin));
           if(wrr == NULL) {
              return(false);
           }
-          wrr->pp_wrr_policy = poolPolicySettings->PolicyType;
-          wrr->pp_wrr_weight = hton24(poolPolicySettings->Weight);
+          wrr->pp_wrr_policy = htonl(poolPolicySettings->PolicyType);
+          wrr->pp_wrr_weight = htonl(poolPolicySettings->Weight);
        break;
       case PPT_LEASTUSED:
           lu = (struct rserpool_policy_leastused*)getSpace(message, sizeof(struct rserpool_policy_leastused));
           if(lu == NULL) {
              return(false);
           }
-          lu->pp_lu_policy = poolPolicySettings->PolicyType;
-          lu->pp_lu_load   = hton24(poolPolicySettings->Load);
+          lu->pp_lu_policy = htonl(poolPolicySettings->PolicyType);
+          lu->pp_lu_load   = htonl(poolPolicySettings->Load);
        break;
       case PPT_LEASTUSED_DPF:
           ludpf = (struct rserpool_policy_leastused_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_dpf));
           if(ludpf == NULL) {
              return(false);
           }
-          ludpf->pp_ludpf_policy   = poolPolicySettings->PolicyType;
-          ludpf->pp_ludpf_load     = hton24(poolPolicySettings->Load);
+          ludpf->pp_ludpf_policy   = htonl(poolPolicySettings->PolicyType);
+          ludpf->pp_ludpf_load     = htonl(poolPolicySettings->Load);
           ludpf->pp_ludpf_load_dpf = htonl(poolPolicySettings->LoadDPF);
           ludpf->pp_ludpf_distance = htonl(poolPolicySettings->Distance);
        break;
@@ -384,20 +382,18 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(lud == NULL) {
              return(false);
           }
-          lud->pp_lud_policy  = poolPolicySettings->PolicyType;
-          lud->pp_lud_load    = hton24(poolPolicySettings->Load);
-          lud->pp_lud_pad     = 0x00;
-          lud->pp_lud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+          lud->pp_lud_policy  = htonl(poolPolicySettings->PolicyType);
+          lud->pp_lud_load    = htonl(poolPolicySettings->Load);
+          lud->pp_lud_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       case PPT_LEASTUSED_DEGRADATION_DPF:
           luddpf = (struct rserpool_policy_leastused_degradation_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation_dpf));
           if(luddpf == NULL) {
              return(false);
           }
-          luddpf->pp_luddpf_policy   = poolPolicySettings->PolicyType;
-          luddpf->pp_luddpf_load     = hton24(poolPolicySettings->Load);
-          luddpf->pp_luddpf_pad      = 0x00;
-          luddpf->pp_luddpf_loaddeg  = hton24(poolPolicySettings->LoadDegradation);
+          luddpf->pp_luddpf_policy   = htonl(poolPolicySettings->PolicyType);
+          luddpf->pp_luddpf_load     = htonl(poolPolicySettings->Load);
+          luddpf->pp_luddpf_loaddeg  = htonl(poolPolicySettings->LoadDegradation);
           luddpf->pp_luddpf_load_dpf = htonl(poolPolicySettings->LoadDPF);
           luddpf->pp_luddpf_distance = htonl(poolPolicySettings->Distance);
        break;
@@ -406,58 +402,55 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(plu == NULL) {
              return(false);
           }
-          plu->pp_plu_policy = poolPolicySettings->PolicyType;
-          plu->pp_plu_load   = hton24(poolPolicySettings->Load);
+          plu->pp_plu_policy = htonl(poolPolicySettings->PolicyType);
+          plu->pp_plu_load   = htonl(poolPolicySettings->Load);
        break;
       case PPT_PRIORITY_LEASTUSED_DEGRADATION:
           plud = (struct rserpool_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused_degradation));
           if(plud == NULL) {
              return(false);
           }
-          plud->pp_plud_policy  = poolPolicySettings->PolicyType;
-          plud->pp_plud_load    = hton24(poolPolicySettings->Load);
-          plud->pp_plud_pad     = 0x00;
-          plud->pp_plud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+          plud->pp_plud_policy  = htonl(poolPolicySettings->PolicyType);
+          plud->pp_plud_load    = htonl(poolPolicySettings->Load);
+          plud->pp_plud_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       case PPT_RANDOMIZED_LEASTUSED:
           rlu = (struct rserpool_policy_randomized_leastused*)getSpace(message, sizeof(struct rserpool_policy_randomized_leastused));
           if(rlu == NULL) {
              return(false);
           }
-          rlu->pp_rlu_policy = poolPolicySettings->PolicyType;
-          rlu->pp_rlu_load   = hton24(poolPolicySettings->Load);
+          rlu->pp_rlu_policy = htonl(poolPolicySettings->PolicyType);
+          rlu->pp_rlu_load   = htonl(poolPolicySettings->Load);
        break;
       case PPT_RANDOMIZED_LEASTUSED_DEGRADATION:
           rlud = (struct rserpool_policy_randomized_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_randomized_leastused_degradation));
           if(rlud == NULL) {
              return(false);
           }
-          rlud->pp_rlud_policy  = poolPolicySettings->PolicyType;
-          rlud->pp_rlud_load    = hton24(poolPolicySettings->Load);
-          rlud->pp_rlud_pad     = 0x00;
-          rlud->pp_rlud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+          rlud->pp_rlud_policy  = htonl(poolPolicySettings->PolicyType);
+          rlud->pp_rlud_load    = htonl(poolPolicySettings->Load);
+          rlud->pp_rlud_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       case PPT_RANDOMIZED_PRIORITY_LEASTUSED:
           rplu = (struct rserpool_policy_randomized_priority_leastused*)getSpace(message, sizeof(struct rserpool_policy_randomized_priority_leastused));
           if(rplu == NULL) {
              return(false);
           }
-          rplu->pp_rplu_policy = poolPolicySettings->PolicyType;
-          rplu->pp_rplu_load   = hton24(poolPolicySettings->Load);
+          rplu->pp_rplu_policy = htonl(poolPolicySettings->PolicyType);
+          rplu->pp_rplu_load   = htonl(poolPolicySettings->Load);
        break;
       case PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION:
           rplud = (struct rserpool_policy_randomized_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_randomized_priority_leastused_degradation));
           if(rplud == NULL) {
              return(false);
           }
-          rplud->pp_rplud_policy  = poolPolicySettings->PolicyType;
-          rplud->pp_rplud_load    = hton24(poolPolicySettings->Load);
-          rplud->pp_rplud_pad     = 0x00;
-          rplud->pp_rplud_loaddeg = hton24(poolPolicySettings->LoadDegradation);
+          rplud->pp_rplud_policy  = htonl(poolPolicySettings->PolicyType);
+          rplud->pp_rplud_load    = htonl(poolPolicySettings->Load);
+          rplud->pp_rplud_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       default:
          LOG_ERROR
-         fprintf(stdlog,"Unknown policy #$%02x\n",poolPolicySettings->PolicyType);
+         fprintf(stdlog, "Unknown policy #$%02x\n", poolPolicySettings->PolicyType);
          LOG_END_FATAL
          return(false);
        break;
@@ -470,7 +463,8 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
 /* ###### Create pool element parameter ################################## */
 static bool createPoolElementParameter(
                struct RSerPoolMessage*                 message,
-               const struct ST_CLASS(PoolElementNode)* poolElement)
+               const struct ST_CLASS(PoolElementNode)* poolElement,
+               const bool                              includeRegistratorTransport)
 {
    size_t                                tlvPosition = 0;
    struct rserpool_poolelementparameter* pep;
@@ -503,7 +497,8 @@ static bool createPoolElementParameter(
       return(false);
    }
 
-   if(poolElement->RegistratorTransport) {
+   if(includeRegistratorTransport) {
+      CHECK(poolElement->RegistratorTransport);
       if(createTransportParameter(message, poolElement->RegistratorTransport) == false) {
          return(false);
       }
@@ -732,7 +727,7 @@ static bool createRegistrationMessage(struct RSerPoolMessage* message)
    if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
+   if(createPoolElementParameter(message, message->PoolElementPtr, false) == false) {
       return(false);
    }
    if(message->Error != 0x00) {
@@ -851,7 +846,7 @@ static bool createHandleResolutionResponseMessage(struct RSerPoolMessage* messag
       }
 
       for(i = 0;i < message->PoolElementPtrArraySize;i++) {
-         if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
+         if(createPoolElementParameter(message, message->PoolElementPtrArray[i], false) == false) {
             return(false);
          }
       }
@@ -884,7 +879,7 @@ static bool createBusinessCardMessage(struct RSerPoolMessage* message)
       return(false);
    }
    for(i = 0;i < message->PoolElementPtrArraySize;i++) {
-      if(createPoolElementParameter(message, message->PoolElementPtrArray[i]) == false) {
+      if(createPoolElementParameter(message, message->PoolElementPtrArray[i], false) == false) {
          return(false);
       }
    }
@@ -1123,7 +1118,7 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
             }
 
             CHECK(hte->PoolElementNodeArray[i]->RegistratorTransport != NULL);
-            if(createPoolElementParameter(message, hte->PoolElementNodeArray[i]) == false) {
+            if(createPoolElementParameter(message, hte->PoolElementNodeArray[i], true) == false) {
                if(i < 1) {
                   return(false);
                }
@@ -1153,9 +1148,9 @@ static bool createHandleTableResponseMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer name update ######################################## */
-static bool createNameUpdateMessage(struct RSerPoolMessage* message)
+static bool createHandleUpdateMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_peernameupdateparameter* pnup;
+   struct rserpool_handleupdateparameter* pnup;
 
    CHECK(message->PoolElementPtr->RegistratorTransport != NULL);
 
@@ -1165,7 +1160,7 @@ static bool createNameUpdateMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   pnup = (struct rserpool_peernameupdateparameter*)getSpace(message, sizeof(struct rserpool_peernameupdateparameter));
+   pnup = (struct rserpool_handleupdateparameter*)getSpace(message, sizeof(struct rserpool_handleupdateparameter));
    if(pnup == NULL) {
       return(false);
    }
@@ -1178,7 +1173,7 @@ static bool createNameUpdateMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(createPoolElementParameter(message, message->PoolElementPtr) == false) {
+   if(createPoolElementParameter(message, message->PoolElementPtr, true) == false) {
       return(false);
    }
 
@@ -1447,7 +1442,7 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
           LOG_VERBOSE2
           fputs("Creating HandleUpdate message...\n", stdlog);
           LOG_END
-          if(createNameUpdateMessage(message) == true) {
+          if(createHandleUpdateMessage(message) == true) {
              return(message->Position);
           }
         break;

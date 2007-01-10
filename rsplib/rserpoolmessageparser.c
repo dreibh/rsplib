@@ -132,7 +132,7 @@ static bool handleUnknownTLV(struct RSerPoolMessage* message,
               tlvType, (unsigned int)message->Position);
       LOG_END
       message->Position -= sizeof(struct rserpool_tlv_header);
-      message->Error     = RSPERR_OKAY;
+      message->Error     = RSPERR_UNRECOGNIZED_PARAMETER_SILENT;
       return(false);
    }
    else if((tlvType & ATT_ACTION_MASK) == ATT_ACTION_STOP_AND_REPORT) {
@@ -518,6 +518,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
    struct rserpool_policy_randomized_leastused_degradation*          rlud;
    struct rserpool_policy_randomized_priority_leastused*             rplu;
    struct rserpool_policy_randomized_priority_leastused_degradation* rplud;
+   uint32_t                                                          policyType;
 
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_POLICY, true);
@@ -527,26 +528,26 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
    }
    tlvLength -= sizeof(struct rserpool_tlv_header);
 
-   if(tlvLength < 1) {
+   if(tlvLength < sizeof(policyType)) {
       LOG_WARNING
       fputs("TLV too short\n", stdlog);
       LOG_END
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   tlvType = (uint8_t)message->Buffer[message->Position];
+   policyType = ntohl(*((uint32_t*)&message->Buffer[message->Position]));
 
    poolPolicySettingsNew(poolPolicySettings);
-   switch(PURE_ATT_TYPE(tlvType)) {
+   switch(policyType) {
       case PPT_LEASTUSED:
          if(tlvLength >= sizeof(struct rserpool_policy_leastused)) {
             lu = (struct rserpool_policy_leastused*)getSpace(message, sizeof(struct rserpool_policy_leastused));
             if(lu == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = lu->pp_lu_policy;
+            poolPolicySettings->PolicyType = ntohl(lu->pp_lu_policy);
             poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntoh24(lu->pp_lu_load);
+            poolPolicySettings->Load       = ntohl(lu->pp_lu_load);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy LU, load=$%06x\n",poolPolicySettings->Load);
             LOG_END
@@ -565,15 +566,15 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(ludpf == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = ludpf->pp_ludpf_policy;
+            poolPolicySettings->PolicyType = ntohl(ludpf->pp_ludpf_policy);
             poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntoh24(ludpf->pp_ludpf_load);
+            poolPolicySettings->Load       = ntohl(ludpf->pp_ludpf_load);
             poolPolicySettings->LoadDPF    = ntohl(ludpf->pp_ludpf_load_dpf);
             poolPolicySettings->Distance   = ntohl(ludpf->pp_ludpf_distance);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy LU-DPF, load=$%06x, ldpf=%1.3f%%, distance=%u\n",
                     poolPolicySettings->Load,
-                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)0xffffffff),
+                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)PPV_MAX_LOADDPF),
                     poolPolicySettings->Distance);
             LOG_END
          }
@@ -591,10 +592,10 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(lud == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType      = lud->pp_lud_policy;
+            poolPolicySettings->PolicyType      = ntohl(lud->pp_lud_policy);
             poolPolicySettings->Weight          = 0;
-            poolPolicySettings->Load            = ntoh24(lud->pp_lud_load);
-            poolPolicySettings->LoadDegradation = ntoh24(lud->pp_lud_loaddeg);
+            poolPolicySettings->Load            = ntohl(lud->pp_lud_load);
+            poolPolicySettings->LoadDegradation = ntohl(lud->pp_lud_loaddeg);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy LUD, load=$%06x loaddeg=$%06x\n",
                     poolPolicySettings->Load,
@@ -615,17 +616,17 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(luddpf == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType      = luddpf->pp_luddpf_policy;
+            poolPolicySettings->PolicyType      = ntohl(luddpf->pp_luddpf_policy);
             poolPolicySettings->Weight          = 0;
-            poolPolicySettings->Load            = ntoh24(luddpf->pp_luddpf_load);
-            poolPolicySettings->LoadDegradation = ntoh24(luddpf->pp_luddpf_loaddeg);
+            poolPolicySettings->Load            = ntohl(luddpf->pp_luddpf_load);
+            poolPolicySettings->LoadDegradation = ntohl(luddpf->pp_luddpf_loaddeg);
             poolPolicySettings->LoadDPF         = ntohl(luddpf->pp_luddpf_load_dpf);
             poolPolicySettings->Distance        = ntohl(luddpf->pp_luddpf_distance);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy LUD-DPF, load=$%06x, loaddeg=$%06x, ldpf=%1.3f%%, distance=%u\n",
                     poolPolicySettings->Load,
                     poolPolicySettings->LoadDegradation,
-                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)0xffffffff),
+                    100.0 * ((double)poolPolicySettings->LoadDPF / (double)PPV_MAX_LOADDPF),
                     poolPolicySettings->Distance);
             LOG_END
          }
@@ -643,9 +644,9 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(plu == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = plu->pp_plu_policy;
+            poolPolicySettings->PolicyType = ntohl(plu->pp_plu_policy);
             poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntoh24(plu->pp_plu_load);
+            poolPolicySettings->Load       = ntohl(plu->pp_plu_load);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy PLU, load=$%06x\n",poolPolicySettings->Load);
             LOG_END
@@ -664,10 +665,10 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(plud == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType      = plud->pp_plud_policy;
+            poolPolicySettings->PolicyType      = ntohl(plud->pp_plud_policy);
             poolPolicySettings->Weight          = 0;
-            poolPolicySettings->Load            = ntoh24(plud->pp_plud_load);
-            poolPolicySettings->LoadDegradation = ntoh24(plud->pp_plud_loaddeg);
+            poolPolicySettings->Load            = ntohl(plud->pp_plud_load);
+            poolPolicySettings->LoadDegradation = ntohl(plud->pp_plud_loaddeg);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy PLUD, load=$%06x loaddeg=$%06x\n",
                     poolPolicySettings->Load,
@@ -689,7 +690,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
             }
-            poolPolicySettings->PolicyType = rd->pp_rd_policy;
+            poolPolicySettings->PolicyType = ntohl(rd->pp_rd_policy);
             poolPolicySettings->Weight     = 0;
             poolPolicySettings->Load       = 0;
 
@@ -712,8 +713,8 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
             }
-            poolPolicySettings->PolicyType = wrd->pp_wrd_policy;
-            poolPolicySettings->Weight     = ntoh24(wrd->pp_wrd_weight);
+            poolPolicySettings->PolicyType = ntohl(wrd->pp_wrd_policy);
+            poolPolicySettings->Weight     = ntohl(wrd->pp_wrd_weight);
             poolPolicySettings->Load       = 0;
 
             LOG_VERBOSE3
@@ -736,8 +737,8 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
             }
-            poolPolicySettings->PolicyType = wrddpf->pp_wrddpf_policy;
-            poolPolicySettings->Weight     = ntoh24(wrddpf->pp_wrddpf_weight);
+            poolPolicySettings->PolicyType = ntohl(wrddpf->pp_wrddpf_policy);
+            poolPolicySettings->Weight     = ntohl(wrddpf->pp_wrddpf_weight);
             poolPolicySettings->Load       = 0;
             poolPolicySettings->WeightDPF  = ntohl(wrddpf->pp_wrddpf_weight_dpf);
             poolPolicySettings->Distance   = ntohl(wrddpf->pp_wrddpf_distance);
@@ -745,7 +746,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy WRAND-DPF, weight=%u, wdpf=%1.3f%%, distance=%u\n",
                     poolPolicySettings->Weight,
-                    100.0 * ((double)poolPolicySettings->WeightDPF / (double)0xffffffff),
+                    100.0 * ((double)poolPolicySettings->WeightDPF / (double)PPV_MAX_WEIGHTDPF),
                     poolPolicySettings->Distance);
             LOG_END
          }
@@ -764,7 +765,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
             }
-            poolPolicySettings->PolicyType = rr->pp_rr_policy;
+            poolPolicySettings->PolicyType = ntohl(rr->pp_rr_policy);
             poolPolicySettings->Weight     = 0;
             poolPolicySettings->Load       = 0;
             LOG_VERBOSE3
@@ -786,8 +787,8 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUES;
                return(false);
             }
-            poolPolicySettings->PolicyType = wrr->pp_wrr_policy;
-            poolPolicySettings->Weight     = ntoh24(wrr->pp_wrr_weight);
+            poolPolicySettings->PolicyType = ntohl(wrr->pp_wrr_policy);
+            poolPolicySettings->Weight     = ntohl(wrr->pp_wrr_weight);
             poolPolicySettings->Load       = 0;
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy WRR, weight=%u\n",poolPolicySettings->Weight);
@@ -807,9 +808,9 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(rlu == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = rlu->pp_rlu_policy;
+            poolPolicySettings->PolicyType = ntohl(rlu->pp_rlu_policy);
             poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntoh24(rlu->pp_rlu_load);
+            poolPolicySettings->Load       = ntohl(rlu->pp_rlu_load);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy RLU, load=$%06x\n",poolPolicySettings->Load);
             LOG_END
@@ -828,10 +829,10 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(rlud == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType      = rlud->pp_rlud_policy;
+            poolPolicySettings->PolicyType      = ntohl(rlud->pp_rlud_policy);
             poolPolicySettings->Weight          = 0;
-            poolPolicySettings->Load            = ntoh24(rlud->pp_rlud_load);
-            poolPolicySettings->LoadDegradation = ntoh24(rlud->pp_rlud_loaddeg);
+            poolPolicySettings->Load            = ntohl(rlud->pp_rlud_load);
+            poolPolicySettings->LoadDegradation = ntohl(rlud->pp_rlud_loaddeg);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy RLUD, load=$%06x loaddeg=$%06x\n",
                     poolPolicySettings->Load,
@@ -852,9 +853,9 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(rplu == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = rplu->pp_rplu_policy;
+            poolPolicySettings->PolicyType = ntohl(rplu->pp_rplu_policy);
             poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntoh24(rplu->pp_rplu_load);
+            poolPolicySettings->Load       = ntohl(rplu->pp_rplu_load);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy PLU, load=$%06x\n",poolPolicySettings->Load);
             LOG_END
@@ -873,10 +874,10 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(rplud == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType      = rplud->pp_rplud_policy;
+            poolPolicySettings->PolicyType      = ntohl(rplud->pp_rplud_policy);
             poolPolicySettings->Weight          = 0;
-            poolPolicySettings->Load            = ntoh24(rplud->pp_rplud_load);
-            poolPolicySettings->LoadDegradation = ntoh24(rplud->pp_rplud_loaddeg);
+            poolPolicySettings->Load            = ntohl(rplud->pp_rplud_load);
+            poolPolicySettings->LoadDegradation = ntohl(rplud->pp_rplud_loaddeg);
             LOG_VERBOSE3
             fprintf(stdlog, "Scanned policy RPLUD, load=$%06x loaddeg=$%06x\n",
                     poolPolicySettings->Load,
@@ -904,7 +905,8 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
 
 /* ###### Scan pool element paramter ##################################### */
 static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
-                                            struct RSerPoolMessage* message)
+                                            struct RSerPoolMessage* message,
+                                            const bool              registratorTransportRequired)
 {
    struct rserpool_poolelementparameter* pep;
    char                                  userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
@@ -938,8 +940,10 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
       return(false);
    }
 
-   if(scanTransportParameter(message, registratorTransportAddressBlock)) {
-      hasRegistratorTransportAddressBlock = true;
+   if(registratorTransportRequired) {
+      if(scanTransportParameter(message, registratorTransportAddressBlock)) {
+         hasRegistratorTransportAddressBlock = true;
+      }
    }
 
    if(checkFinishTLV(message, tlvPosition) == false) {
@@ -1091,10 +1095,10 @@ static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
 static bool scanErrorParameter(struct RSerPoolMessage* message)
 {
    struct rserpool_errorcause* aec;
-   char*                   data;
-   size_t                  dataLength;
-   size_t                  tlvPosition = 0;
-   size_t                  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_OPERATION_ERROR, true);
+   char*                       data;
+   size_t                      dataLength;
+   size_t                      tlvPosition = 0;
+   size_t                      tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_OPERATION_ERROR, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       return(false);
    }
@@ -1302,7 +1306,7 @@ static bool scanRegistrationMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   message->PoolElementPtr = scanPoolElementParameter(message);
+   message->PoolElementPtr = scanPoolElementParameter(message, false);
    if(message->PoolElementPtr == NULL) {
       return(false);
    }
@@ -1395,7 +1399,7 @@ static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
             return(false);
          }
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
-            scanPoolElementParameter(message);
+            scanPoolElementParameter(message, false);
          if(message->PoolElementPtrArray[message->PoolElementPtrArraySize] == false) {
             break;
          }
@@ -1478,7 +1482,7 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
             return(false);
          }
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
-            scanPoolElementParameter(message);
+            scanPoolElementParameter(message, false);
          message->PoolElementPtrArraySize++;
       }
    }
@@ -1650,7 +1654,7 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 
       while(scanPoolHandleParameter(message, &message->Handle)) {
          scannedPoolElementParameters = 0;
-         poolElementNode = scanPoolElementParameter(message);
+         poolElementNode = scanPoolElementParameter(message, true);
          while(poolElementNode) {
             if(poolElementNode->RegistratorTransport == NULL) {
                free(poolElementNode->UserTransport);
@@ -1689,7 +1693,7 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
                return(false);
             }
 
-            poolElementNode = scanPoolElementParameter(message);
+            poolElementNode = scanPoolElementParameter(message, true);
          }
 
          if(scannedPoolElementParameters == 0) {
@@ -1709,9 +1713,9 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 /* ###### Scan peer handle table response message ########################## */
 static bool scanHandleUpdateMessage(struct RSerPoolMessage* message)
 {
-   struct rserpool_peernameupdateparameter* pnup;
+   struct rserpool_handleupdateparameter* pnup;
 
-   pnup = (struct rserpool_peernameupdateparameter*)getSpace(message, sizeof(struct rserpool_peernameupdateparameter));
+   pnup = (struct rserpool_handleupdateparameter*)getSpace(message, sizeof(struct rserpool_handleupdateparameter));
    if(pnup == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
@@ -1723,7 +1727,7 @@ static bool scanHandleUpdateMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   message->PoolElementPtr = scanPoolElementParameter(message);
+   message->PoolElementPtr = scanPoolElementParameter(message, true);
    if(message->PoolElementPtr == NULL) {
       return(false);
    }
@@ -2125,6 +2129,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       LOG_END
 
       if(scanMessage(*message) == true) {
+         (*message)->Error = RSPERR_OKAY;
          LOG_VERBOSE3
          fputs("Message successfully scanned!\n", stdlog);
          LOG_END
@@ -2137,8 +2142,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       rserpoolErrorPrint((*message)->Error, stdlog);
       fputs("\n", stdlog);
       LOG_END
-
-      return((*message)->Error);
+      return(RSPERR_OKAY);
    }
    return(RSPERR_OUT_OF_MEMORY);
 }

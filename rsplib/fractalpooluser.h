@@ -27,10 +27,10 @@
 #define FRACTALPOOLUSER_H
 
 
-#include <qmainwindow.h>
 #include <qthread.h>
 #include <qimage.h>
 #include <qdir.h>
+#include <qstatusbar.h>
 
 #include "rserpool.h"
 #include "fractalgeneratorpackets.h"
@@ -79,7 +79,48 @@ class FractalCalculationThread : public QThread
 };
 
 
-class FractalPU : public QMainWindow,
+class ImageDisplay : public QWidget
+{
+   Q_OBJECT
+
+   public:
+   ImageDisplay(QWidget*    parent = NULL,
+                const char* name   = NULL);
+   ~ImageDisplay();
+
+   void initialize(const size_t width, const size_t height);
+   void destroy();
+   void paintImage(const size_t startY, const size_t endY);
+
+   inline unsigned int getPoint(const size_t x, const size_t y) {
+      return(Image->pixel(x, y));
+   }
+
+   inline void setPoint(const size_t x, const size_t y, const unsigned int color) {
+      Image->setPixel(x, y, color);
+   }
+
+   inline void fillRect(const size_t x,     const size_t y,
+                        const size_t width, const size_t height,
+                        const unsigned int color) {
+      if(Image) {
+         for(size_t j = y;j < y + height;j++) {
+            for(size_t i = x;i < x + width;i++) {
+               Image->setPixel(i, j, color);
+            }
+         }
+      }
+   }
+
+   protected:
+   void paintEvent(QPaintEvent* paintEvent);
+
+   private:
+   QImage* Image;
+};
+
+
+class FractalPU : public QWidget,
                   public QThread
 {
    Q_OBJECT
@@ -99,43 +140,32 @@ class FractalPU : public QMainWindow,
              const char*        name   = NULL);
    ~FractalPU();
 
-   void restartCalculation();
-
-   inline unsigned int getPoint(const size_t x, const size_t y) {
-      return(Image->pixel(x, y));
-   }
-
-   inline void setPoint(const size_t x, const size_t y, const unsigned int value) {
-      Image->setPixel(x, y, value);
-   }
-
 
    protected:
-   void paintEvent(QPaintEvent* paintEvent);
    void closeEvent(QCloseEvent* closeEvent);
 
 
    private:
    virtual void run();
    void getNextParameters();
-   void paintImage(const size_t startY, const size_t endY);
 
    struct FractalParameter
    {
-      unsigned int     Width;
-      unsigned int     Height;
-      unsigned int     MaxIterations;
-      unsigned int     AlgorithmID;
-      double           C1Real;
-      double           C1Imag;
-      double           C2Real;
-      double           C2Imag;
-      double           N;
+      unsigned int Width;
+      unsigned int Height;
+      unsigned int MaxIterations;
+      unsigned int AlgorithmID;
+      double       C1Real;
+      double       C1Imag;
+      double       C2Real;
+      double       C2Imag;
+      double       N;
    };
 
    FractalParameter          Parameter;
    bool                      Running;
-   QImage*                   Image;
+   ImageDisplay*             Display;
+   QStatusBar*               StatusBar;
    size_t                    Run;
 
    const unsigned char*      PoolHandle;

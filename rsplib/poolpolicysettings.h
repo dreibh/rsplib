@@ -48,14 +48,6 @@ struct PoolPolicySettings
 };
 
 
-#define PEPS_MIN_WEIGHT                   0
-#define PEPS_MAX_WEIGHT          0xffffffff
-#define PEPS_MIN_LOAD                     0
-#define PEPS_MAX_LOAD              0xffffff
-#define PEPS_MIN_LOADDEGRADATION          0
-#define PEPS_MAX_LOADDEGRADATION   0xffffff
-
-
 void poolPolicySettingsNew(struct PoolPolicySettings* pps);
 void poolPolicySettingsDelete(struct PoolPolicySettings* pps);
 void poolPolicySettingsPrint(const struct PoolPolicySettings* pps,

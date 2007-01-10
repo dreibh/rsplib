@@ -54,6 +54,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_CONNECTION_FAILURE_CONNECT,    "connect() failure" },
    { RSPERR_NO_REGISTRAR,                  "no registrar available" },
    { RSPERR_TIMEOUT,                       "timeout" },
+   { RSPERR_UNRECOGNIZED_PARAMETER_SILENT, "unrecognized parameter (silent)" },
 
    /* Handlespace-management specific error causes */
    { RSPERR_NO_RESOURCES,                  "no resources" },

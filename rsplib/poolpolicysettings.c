@@ -67,12 +67,12 @@ int poolPolicySettingsComparison(const struct PoolPolicySettings* pps1,
 /* ###### Check, if settings are valid ################################### */
 int poolPolicySettingsIsValid(const struct PoolPolicySettings* pps)
 {
-   return( (pps->Weight >= PEPS_MIN_WEIGHT) &&
-           (pps->Weight <= PEPS_MAX_WEIGHT) &&
-           (pps->Load >= PEPS_MIN_LOAD) &&
-           (pps->Load <= PEPS_MAX_LOAD) &&
-           (pps->LoadDegradation >= PEPS_MIN_LOADDEGRADATION) &&
-           (pps->LoadDegradation <= PEPS_MAX_LOADDEGRADATION) );
+   return( (pps->Weight >= PPV_MIN_WEIGHT) &&
+           (pps->Weight <= PPV_MAX_WEIGHT) &&
+           (pps->Load >= PPV_MIN_LOAD) &&
+           (pps->Load <= PPV_MAX_LOAD) &&
+           (pps->LoadDegradation >= PPV_MIN_LOAD_DEGRADATION) &&
+           (pps->LoadDegradation <= PPV_MAX_LOAD_DEGRADATION) );
 }
 
 
@@ -94,10 +94,10 @@ void poolPolicySettingsGetDescription(const struct PoolPolicySettings* pps,
             "t=$%02x [w=%u l=%1.3f%% ldeg=%1.3f%% ldpf=%1.6f wdpf=%1.6f dist=%u]",
             pps->PolicyType,
             pps->Weight,
-            (100.0 * pps->Load) / (double)0xffffff,
-            (100.0 * pps->LoadDegradation) / (double)0xffffff,
-            pps->LoadDPF / (double)0xffffffff,
-            pps->WeightDPF / (double)0xffffffff,
+            (100.0 * pps->Load) / (double)(long long)PPV_MAX_LOAD,
+            (100.0 * pps->LoadDegradation) / (double)(long long)PPV_MAX_LOAD_DEGRADATION,
+            pps->LoadDPF / (double)(long long)PPV_MAX_LOAD,
+            pps->WeightDPF / (double)PPV_MAX_WEIGHTDPF,
             pps->Distance);
 }
 

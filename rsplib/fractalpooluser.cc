@@ -25,6 +25,7 @@
 
 #include <qapplication.h>
 #include <qstatusbar.h>
+#include <qlayout.h>
 #include <qthread.h>
 #include <qpainter.h>
 #include <qfile.h>
@@ -65,9 +66,17 @@ FractalPU::FractalPU(const size_t       width,
                      const size_t       threads,
                      QWidget*           parent,
                      const char*        name)
-   : QMainWindow(parent, name)
+   : QWidget(parent, name)
 {
-   Image          = NULL;
+   QGridLayout* layout = new QGridLayout(this, 2, 1);
+   Q_CHECK_PTR(layout);
+   Display        = new ImageDisplay(this, "Display");
+   Q_CHECK_PTR(Display);
+   StatusBar      = new QStatusBar(this);
+   Q_CHECK_PTR(StatusBar);
+   Display->setMinimumSize(width, height);
+   layout->addWidget(Display, 0, 0);
+   layout->addWidget(StatusBar, 1, 0);
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
 
@@ -100,9 +109,8 @@ FractalPU::FractalPU(const size_t       width,
    }
 
    // ====== Initialize widget and PU thread ================================
-   resize(width, height);
    setCaption("Fractal Pool User");
-   statusBar()->message("Welcome to Fractal PU!", 3000);
+   StatusBar->message("Welcome to Fractal PU!", 3000);
    show();
    start();
 }
@@ -113,26 +121,67 @@ FractalPU::~FractalPU()
 {
    Running = false;
    wait();
-   delete Image;
+   delete Display;
+   Display = NULL;
+}
+
+
+/* ###### ImageDisplay constructor ####################################### */
+ImageDisplay::ImageDisplay(QWidget*    parent,
+                           const char* name)
+   : QWidget(parent, name)
+{
    Image = NULL;
 }
 
 
-/* ###### Paint fractal image ############################################ */
-void FractalPU::paintImage(const size_t startY, const size_t endY)
+/* ###### ImageDisplay destructor ######################################## */
+ImageDisplay::~ImageDisplay()
 {
-   QPainter p;
-   p.begin(this);
-   p.drawImage(0, startY,
-               *Image,
-               0, startY,
-               Image->width(), endY + 1 - startY);
-   p.end();
+   destroy();
+}
+
+
+/* ###### Initialize ImageDisplay ######################################## */
+void ImageDisplay::initialize(const size_t width, const size_t height)
+{
+   destroy();
+   if(Image == NULL) {
+      Image = new QImage(width, height, 32);
+      Q_CHECK_PTR(Image);
+      Image->fill(qRgb(200, 200, 200));
+      setMinimumSize(width, height);
+   }
+}
+
+
+/* ###### Destroy ImageDisplay ########################################### */
+void ImageDisplay::destroy()
+{
+   if(Image) {
+      delete Image;
+      Image = NULL;
+   }
+}
+
+
+/* ###### Paint ImageDisplay ############################################# */
+void ImageDisplay::paintImage(const size_t startY, const size_t endY)
+{
+   if(Image) {
+      QPainter p;
+      p.begin(this);
+      p.drawImage(0, startY,
+                  *Image,
+                  0, startY,
+                  Image->width(), endY + 1 - startY);
+      p.end();
+   }
 }
 
 
 /* ###### Handle Paint event ############################################# */
-void FractalPU::paintEvent(QPaintEvent* paintEvent)
+void ImageDisplay::paintEvent(QPaintEvent* paintEvent)
 {
    qApp->lock();
    if(Image) {
@@ -236,8 +285,9 @@ void FractalPU::run()
       // ====== Initialize image object and timeout timer ===================
       Run++;
       qApp->lock();
-      Parameter.Width         = width();
-      Parameter.Height        = height();
+      Display->initialize(Display->width(), Display->height());
+      Parameter.Width         = Display->width();
+      Parameter.Height        = Display->height();
       Parameter.C1Real        = -1.5;
       Parameter.C1Imag        = 1.5;
       Parameter.C2Real        = 1.5;
@@ -246,34 +296,49 @@ void FractalPU::run()
       Parameter.MaxIterations = 1024;
       Parameter.AlgorithmID   = FGPA_MANDELBROT;
       getNextParameters();
-      if(Image == NULL) {
-         Image = new QImage(Parameter.Width, Parameter.Height, 32);
-         Q_CHECK_PTR(Image);
-         Image->fill(qRgb(255, 255, 255));
-      }
       qApp->unlock();
 
 
       // ====== Start job distribution ======================================
       // cout << "Starting job distribution ..." << endl;
       qApp->lock();
-      statusBar()->message("Starting job distribution ...");
-      qApp->unlock();
-      for(size_t i = 0;i < Threads;i++) {
-         calculationThread[i] = new FractalCalculationThread(this, i,
-                                       0, i * (Parameter.Height / Threads),
-                                       Parameter.Width, Parameter.Height / Threads,
-                                       (Threads == 1));
-         Q_CHECK_PTR(calculationThread[i]);
-         calculationThread[i]->start();
-      }
+      StatusBar->message("Starting job distribution ...");
 
+      const size_t yCount = (size_t)floor(sqrt((double)Threads));
+      const size_t yStep  = (size_t)rint((double)Parameter.Height / yCount);
+      size_t remaining = Threads;
+      size_t number    = 0;
+      for(size_t yPosition = 0;yPosition < yCount;yPosition++) {
+         const size_t xCount = (yPosition < yCount - 1) ? min(remaining, yCount) : remaining;
+         if(xCount > 0) {
+            const size_t xStep = (size_t)rint(Parameter.Width / xCount);
+            remaining -= xCount;
+            for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
+               if(Threads > 1) {
+                  const QColor color(((5 * number) % 72) * 5, 150, 255, QColor::Hsv);
+                  Display->fillRect(xPosition * xStep, yPosition * yStep,
+                                    xStep, yStep, color.rgb());
+               }
+
+               calculationThread[number] =
+                  new FractalCalculationThread(this, number,
+                         xPosition * xStep, yPosition * yStep, xStep, yStep,
+                         (Threads == 1));
+               Q_CHECK_PTR(calculationThread[number]);
+               calculationThread[number]->start();
+               number++;
+            }
+         }
+         Display->paintImage(yPosition * yStep, (yPosition + 1) * yStep);
+      }
+      qApp->unlock();
+      CHECK(number == Threads);
 
       // ====== Wait for job completion =====================================
       // cout << "Waiting for job completion ..." << endl;
       if(Threads > 1) {
          qApp->lock();
-         statusBar()->message("Waiting for job completion ...");
+         StatusBar->message("Waiting for job completion ...");
          qApp->unlock();
       }
       size_t failed = 0;
@@ -286,7 +351,7 @@ void FractalPU::run()
          calculationThread[i] = NULL;
       }
       qApp->lock();
-      statusBar()->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
+      StatusBar->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
       qApp->unlock();
 
       // ====== Pause before next image =====================================
@@ -298,22 +363,10 @@ void FractalPU::run()
             secsToWait--;
             snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", secsToWait);
             qApp->lock();
-            statusBar()->message(str);
+            StatusBar->message(str);
             qApp->unlock();
          }
       }
-
-
-      // ====== Clean-up ====================================================
-      qApp->lock();
-      if( (!Running) ||
-         (Image->width() != width()) ||
-         (Image->height() != height()) ) {
-         // Thread destruction or size change
-         delete Image;
-         Image = NULL;
-      }
-      qApp->unlock();
    }
 }
 
@@ -404,7 +457,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
          }
          const uint32_t point = ntohl(data->Buffer[p]);
          const QColor color(((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
-         Master->setPoint(x + ViewX, y + ViewY, color.rgb());
+         Master->Display->setPoint(x + ViewX, y + ViewY, color.rgb());
          p++;
 
          x++;
@@ -414,7 +467,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
    }
 
 finished:
-   Master->paintImage(ntohl(data->StartY) + ViewY, y + ViewY);
+   Master->Display->paintImage(ntohl(data->StartY) + ViewY, y + ViewY);
    return(Okay);
 }
 
@@ -436,7 +489,7 @@ void FractalCalculationThread::run()
                rsp_csp_setstatus(Session, 0, "Sending parameter command...");
                // cout << "Sending parameter command..." << endl;
                qApp->lock();
-               Master->statusBar()->message("Sending parameter command...");
+               Master->StatusBar->message("Sending parameter command...");
                qApp->unlock();
             }
             if(sendParameterMessage()) {
@@ -497,15 +550,16 @@ void FractalCalculationThread::run()
                                              "Processed data packet #%u (from PE $%08x)...",
                                              packets, rinfo.rinfo_pe_id);
                                     qApp->lock();
-                                    Master->statusBar()->message(statusText);
+                                    Master->StatusBar->message(statusText);
                                     qApp->unlock();
                                  }
                               break;
                            }
                         }
-                        if(!Master->Running) {
-                           goto finish;
-                        }
+                     }
+
+                     if(!Master->Running) {
+                        goto finish;
                      }
 
                      flags = 0;
@@ -644,8 +698,8 @@ int main(int argc, char** argv)
    if(threads < 1) {
       threads = 1;
    }
-   else if(threads > 100) {
-      threads = 100;
+   else if(threads > 512) {
+      threads = 512;
    }
    if(width < 64) {
       width = 64;

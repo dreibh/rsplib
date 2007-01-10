@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -138,9 +138,11 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
                free(message->PoolElementPtrArray[i]->UserTransport);
                message->PoolElementPtrArray[i]->UserTransport = NULL;
 
-               transportAddressBlockDelete(message->PoolElementPtrArray[i]->RegistratorTransport);
-               free(message->PoolElementPtrArray[i]->RegistratorTransport);
-               message->PoolElementPtrArray[i]->RegistratorTransport = NULL;
+               if(message->PoolElementPtrArray[i]->RegistratorTransport) {
+                  transportAddressBlockDelete(message->PoolElementPtrArray[i]->RegistratorTransport);
+                  free(message->PoolElementPtrArray[i]->RegistratorTransport);
+                  message->PoolElementPtrArray[i]->RegistratorTransport = NULL;
+               }
 
                free(message->PoolElementPtrArray[i]);
                message->PoolElementPtrArray[i] = NULL;

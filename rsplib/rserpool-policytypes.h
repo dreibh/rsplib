@@ -26,26 +26,26 @@
 #define RSERPOOL_POLICYTYPES_H
 
 
-#define PPT_UNDEFINED                                 0x00
+#define PPT_UNDEFINED                                 0x00000000
 
-#define PPT_ROUNDROBIN                                0x01
-#define PPT_WEIGHTED_ROUNDROBIN                       0x02
-#define PPT_RANDOM                                    0x03
-#define PPT_WEIGHTED_RANDOM                           0x04
+#define PPT_ROUNDROBIN                                0x01000000
+#define PPT_WEIGHTED_ROUNDROBIN                       0x02000000
+#define PPT_RANDOM                                    0x03000000
+#define PPT_WEIGHTED_RANDOM                           0x04000000
 
-#define PPT_LEASTUSED                                 0x05
-#define PPT_LEASTUSED_DEGRADATION                     0x06
-#define PPT_RANDOMIZED_LEASTUSED                      0x07
-#define PPT_RANDOMIZED_LEASTUSED_DEGRADATION          0x08
+#define PPT_LEASTUSED                                 0x05000000
+#define PPT_LEASTUSED_DEGRADATION                     0x06000000
+#define PPT_RANDOMIZED_LEASTUSED                      0x07000000
+#define PPT_RANDOMIZED_LEASTUSED_DEGRADATION          0x08000000
 
-#define PPT_PRIORITY_LEASTUSED                        0x09
-#define PPT_PRIORITY_LEASTUSED_DEGRADATION            0x0a
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0x0b
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0x0c
+#define PPT_PRIORITY_LEASTUSED                        0x09000000
+#define PPT_PRIORITY_LEASTUSED_DEGRADATION            0x0a000000
+#define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0x0b000000
+#define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0x0c000000
 
-#define PPT_WEIGHTED_RANDOM_DPF                       0x20
-#define PPT_LEASTUSED_DPF                             0x21
-#define PPT_LEASTUSED_DEGRADATION_DPF                 0x22
+#define PPT_WEIGHTED_RANDOM_DPF                       0x20000000
+#define PPT_LEASTUSED_DPF                             0x21000000
+#define PPT_LEASTUSED_DEGRADATION_DPF                 0x22000000
 
 
 #define PPT_IS_ADAPTIVE(p) \
@@ -59,6 +59,18 @@
      ((p) == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) || \
      ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED) || \
      ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION) )
+
+
+#define PPV_MIN_WEIGHT                    0
+#define PPV_MAX_WEIGHT           0xffffffff
+#define PPV_MIN_LOAD                      0
+#define PPV_MAX_LOAD             0xffffffff
+#define PPV_MIN_LOAD_DEGRADATION          0
+#define PPV_MAX_LOAD_DEGRADATION 0xffffffff
+#define PPV_MIN_LOADDPF                   0
+#define PPV_MAX_LOADDPF          0xffffffff
+#define PPV_MIN_WEIGHTDPF                 0
+#define PPV_MAX_WEIGHTDPF        0xffffffff
 
 
 #endif

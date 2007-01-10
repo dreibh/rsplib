@@ -1579,7 +1579,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
                *identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, rserpoolSocket->PoolElement->Identifier);
             }
             if(PPT_IS_ADAPTIVE(rserpoolSocket->PoolElement->LoadInfo.rli_policy)) {
-               *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)0xffffff;
+               *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)PPV_MAX_LOAD;
             }
          }
          rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);

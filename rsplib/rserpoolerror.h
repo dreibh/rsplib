@@ -56,6 +56,7 @@ extern "C" {
 #define RSPERR_CONNECTION_FAILURE_CONNECT    0x1006
 #define RSPERR_NO_REGISTRAR                  0x1007
 #define RSPERR_TIMEOUT                       0x1008
+#define RSPERR_UNRECOGNIZED_PARAMETER_SILENT 0x1009
 
 /* Handlespace-management specific error causes */
 #define RSPERR_NO_RESOURCES                  0xf002

@@ -91,14 +91,14 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-load=" ,6))) {
          loadinfo.rli_load = atol((char*)&argv[i][6]);
-         if(loadinfo.rli_load > 0xffffff) {
-            loadinfo.rli_load = 0xffffff;
+         if(loadinfo.rli_load > PPV_MAX_LOAD) {
+            loadinfo.rli_load = PPV_MAX_LOAD;
          }
       }
       else if(!(strncmp(argv[i], "-loaddeg=" ,9))) {
          loadinfo.rli_load_degradation = atol((char*)&argv[i][9]);
-         if(loadinfo.rli_load_degradation > 0xffffff) {
-            loadinfo.rli_load_degradation = 0xffffff;
+         if(loadinfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            loadinfo.rli_load_degradation = PPV_MAX_LOAD_DEGRADATION;
          }
       }
       else if(!(strncmp(argv[i], "-weight=" ,8))) {

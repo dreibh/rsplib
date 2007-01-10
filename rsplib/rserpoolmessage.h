@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fr Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Fï¿½derkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -153,108 +153,101 @@ struct rserpool_udptransportparameter
 
 struct rserpool_policy_roundrobin
 {
-   uint8_t  pp_rr_policy:8;
-   uint32_t pp_rr_pad:24;
+   uint32_t pp_rr_policy;
 };
 
 struct rserpool_policy_weighted_roundrobin
 {
-   uint8_t  pp_wrr_policy:8;
-   uint32_t pp_wrr_weight:24;
+   uint32_t pp_wrr_policy;
+   uint32_t pp_wrr_weight;
 };
 
 struct rserpool_policy_leastused
 {
-   uint8_t  pp_lu_policy:8;
-   uint32_t pp_lu_load:24;
+   uint32_t  pp_lu_policy;
+   uint32_t pp_lu_load;
 };
 
 struct rserpool_policy_leastused_dpf
 {
-   uint8_t  pp_ludpf_policy:8;
-   uint32_t pp_ludpf_load:24;
+   uint32_t  pp_ludpf_policy;
+   uint32_t pp_ludpf_load;
    uint32_t pp_ludpf_load_dpf;
    uint32_t pp_ludpf_distance;
 };
 
 struct rserpool_policy_leastused_degradation
 {
-   uint8_t  pp_lud_policy:8;
-   uint32_t pp_lud_load:24;
-   uint8_t  pp_lud_pad:8;
-   uint32_t pp_lud_loaddeg:24;
+   uint32_t pp_lud_policy;
+   uint32_t pp_lud_load;
+   uint32_t pp_lud_loaddeg;
 };
 
 struct rserpool_policy_leastused_degradation_dpf
 {
-   uint8_t  pp_luddpf_policy:8;
-   uint32_t pp_luddpf_load:24;
-   uint8_t  pp_luddpf_pad:8;
-   uint32_t pp_luddpf_loaddeg:24;
+   uint32_t pp_luddpf_policy;
+   uint32_t pp_luddpf_load;
+   uint32_t pp_luddpf_loaddeg;
    uint32_t pp_luddpf_load_dpf;
    uint32_t pp_luddpf_distance;
 };
 
 struct rserpool_policy_priority_leastused
 {
-   uint8_t  pp_plu_policy:8;
-   uint32_t pp_plu_load:24;
+   uint32_t pp_plu_policy;
+   uint32_t pp_plu_load;
 };
 
 struct rserpool_policy_priority_leastused_degradation
 {
-   uint8_t  pp_plud_policy:8;
-   uint32_t pp_plud_load:24;
-   uint8_t  pp_plud_pad:8;
-   uint32_t pp_plud_loaddeg:24;
+   uint32_t pp_plud_policy;
+   uint32_t pp_plud_load;
+   uint32_t pp_plud_loaddeg;
 };
 
 struct rserpool_policy_random
 {
-   uint8_t  pp_rd_policy:8;
-   uint32_t pp_rd_pad:24;
+   uint32_t pp_rd_policy;
 };
 
 struct rserpool_policy_weighted_random
 {
-   uint8_t  pp_wrd_policy:8;
-   uint32_t pp_wrd_weight:24;
+   uint32_t pp_wrd_policy;
+   uint32_t pp_wrd_weight;
 };
 
 struct rserpool_policy_weighted_random_dpf
 {
-   uint8_t  pp_wrddpf_policy:8;
-   uint32_t pp_wrddpf_weight:24;
+   uint32_t pp_wrddpf_policy;
+   uint32_t pp_wrddpf_weight;
    uint32_t pp_wrddpf_weight_dpf;
    uint32_t pp_wrddpf_distance;
 };
 
 struct rserpool_policy_randomized_leastused
 {
-   uint8_t  pp_rlu_policy:8;
-   uint32_t pp_rlu_load:24;
+   uint32_t pp_rlu_policy;
+   uint32_t pp_rlu_load;
 };
 
 struct rserpool_policy_randomized_leastused_degradation
 {
-   uint8_t  pp_rlud_policy:8;
-   uint32_t pp_rlud_load:24;
-   uint8_t  pp_rlud_pad:8;
-   uint32_t pp_rlud_loaddeg:24;
+   uint32_t pp_rlud_policy;
+   uint32_t pp_rlud_load;
+   uint32_t pp_rlud_loaddeg;
 };
 
 struct rserpool_policy_randomized_priority_leastused
 {
-   uint8_t  pp_rplu_policy:8;
-   uint32_t pp_rplu_load:24;
+   uint32_t pp_rplu_policy;
+   uint32_t pp_rplu_load;
 };
 
 struct rserpool_policy_randomized_priority_leastused_degradation
 {
-   uint8_t  pp_rplud_policy:8;
-   uint32_t pp_rplud_load:24;
-   uint8_t  pp_rplud_pad:8;
-   uint32_t pp_rplud_loaddeg:24;
+   uint32_t pp_rplud_policy;
+   uint32_t pp_rplud_load;
+   uint32_t pp_rplud_loaddeg;
 };
 
 
@@ -287,7 +280,7 @@ struct rserpool_peerpresenceparameter
    uint32_t ppp_checksum;
 };
 
-struct rserpool_peernameupdateparameter
+struct rserpool_handleupdateparameter
 {
    uint32_t pnup_sender_id;
    uint32_t pnup_receiver_id;
