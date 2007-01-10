@@ -1,6 +1,6 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * $Id$
  *

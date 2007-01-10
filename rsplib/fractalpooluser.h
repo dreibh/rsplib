@@ -1,6 +1,6 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * $Id$
  *
@@ -143,6 +143,7 @@ class FractalPU : public QWidget,
 
    protected:
    void closeEvent(QCloseEvent* closeEvent);
+   void resizeEvent(QResizeEvent* resizeEvent);
 
 
    private:
@@ -162,21 +163,28 @@ class FractalPU : public QWidget,
       double       N;
    };
 
-   FractalParameter          Parameter;
-   bool                      Running;
-   ImageDisplay*             Display;
-   QStatusBar*               StatusBar;
-   size_t                    Run;
+   enum FractalGeneratorStatus {
+      FPU_Shutdown       = 0,
+      FPU_CalcAborted    = 1,
+      FPU_CalcInProgress = 2
+   };
 
-   const unsigned char*      PoolHandle;
-   size_t                    PoolHandleSize;
-   unsigned int              SendTimeout;
-   unsigned int              RecvTimeout;
-   unsigned int              InterImageTime;
-   size_t                    Threads;
+   FractalCalculationThread** CalculationThreadArray;
+   FractalParameter           Parameter;
+   FractalGeneratorStatus     Status;
+   ImageDisplay*              Display;
+   QStatusBar*                StatusBar;
+   size_t                     Run;
 
-   QStringList               ConfigList;
-   QDir                      ConfigDirectory;
+   const unsigned char*       PoolHandle;
+   size_t                     PoolHandleSize;
+   unsigned int               SendTimeout;
+   unsigned int               RecvTimeout;
+   unsigned int               InterImageTime;
+   size_t                     Threads;
+
+   QStringList                ConfigList;
+   QDir                       ConfigDirectory;
 };
 
 

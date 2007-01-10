@@ -205,11 +205,11 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
 
       /* ====== ASAP Instance settings ==================================== */
       registrarTable->RegistrarConnectMaxTrials = tagListGetData(tags, TAG_RspLib_RegistrarConnectMaxTrials,
-                                                              ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS);
+                                                                 ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS);
       registrarTable->RegistrarConnectTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
-                                                                     ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
+                                                                                   ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
       registrarTable->RegistrarAnnounceTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
-                                                                      ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
+                                                                                   ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
 
       if(registrarAnnounceAddress) {
          memcpy(&registrarTable->AnnounceAddress, registrarAnnounceAddress, sizeof(registrarTable->AnnounceAddress));

@@ -1,8 +1,8 @@
 /*
  * IPv4 Subnet Calculator
- * Copyright (C) 2005-2006 by Thomas Dreibholz
+ * Copyright (C) 2005-2007 by Thomas Dreibholz
  *
- * $Id: subnetcalc.cc 964 2006-02-27 10:31:57Z dreibh $
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

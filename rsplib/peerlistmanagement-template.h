@@ -1,6 +1,6 @@
 /*
  * An Efficient RSerPeerList PeerList List Management Implementation
- * Copyright (C) 2004-2006 by Thomas Dreibholz
+ * Copyright (C) 2004-2007 by Thomas Dreibholz
  *
  * $Id$
  *

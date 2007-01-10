@@ -5,8 +5,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium für Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium fuer Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (Foerderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or

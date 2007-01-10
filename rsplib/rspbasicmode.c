@@ -1,6 +1,6 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * $Id$
  *
@@ -119,8 +119,8 @@ int rsp_initialize(struct rsp_info* info)
 
       /* ====== Initialize session storage =============================== */
       simpleRedBlackTreeNew(&gRSerPoolSocketSet,
-                                rserpoolSocketPrint,
-                                rserpoolSocketComparison);
+                            rserpoolSocketPrint,
+                            rserpoolSocketComparison);
 
       /* ====== Initialize RSerPool Socket descriptor storage ============ */
       simpleRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);

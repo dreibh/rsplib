@@ -1,6 +1,6 @@
 /*
  * The rsplib Prototype -- An RSerPool Implementation.
- * Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+ * Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
  *
  * $Id$
  *
@@ -78,6 +78,8 @@ FractalPU::FractalPU(const size_t       width,
    Display->setMinimumSize(width, height);
    layout->addWidget(Display, 0, 0);
    layout->addWidget(StatusBar, 1, 0);
+   layout->setRowStretch(0, 10);
+   layout->setRowStretch(1, 0);
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
 
@@ -120,7 +122,7 @@ FractalPU::FractalPU(const size_t       width,
 /* ###### Destructor ##################################################### */
 FractalPU::~FractalPU()
 {
-   Running = false;
+   Status = FPU_Shutdown;
    wait();
    delete Display;
    Display = NULL;
@@ -151,7 +153,6 @@ void ImageDisplay::initialize(const size_t width, const size_t height)
       Image = new QImage(width, height, 32);
       Q_CHECK_PTR(Image);
       Image->fill(qRgb(200, 200, 200));
-      setMinimumSize(width, height);
    }
 }
 
@@ -203,8 +204,15 @@ void ImageDisplay::paintEvent(QPaintEvent* paintEvent)
 /* ###### Handle Close event ############################################# */
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
-   Running = false;
+   Status = FPU_Shutdown;
    qApp->exit(0);
+}
+
+
+/* ###### Handle Resize event ############################################ */
+void FractalPU::resizeEvent(QResizeEvent* resizeEvent)
+{
+   Status = FPU_CalcAborted;
 }
 
 
@@ -278,14 +286,15 @@ void FractalPU::getNextParameters()
 /* ###### Fractal PU thread implementation ############################### */
 void FractalPU::run()
 {
-   FractalCalculationThread* calculationThread[Threads];
+   CalculationThreadArray = new FractalCalculationThread*[Threads];
+   Q_CHECK_PTR(CalculationThreadArray);
 
-   Run     = 0;
-   Running = true;
-   while(Running) {
+   Run    = 0;
+   while(Status != FPU_Shutdown) {
       // ====== Initialize image object and timeout timer ===================
-      Run++;
       qApp->lock();
+      Status = FPU_CalcInProgress;
+      Run++;
       Display->initialize(Display->width(), Display->height());
       Parameter.Width         = Display->width();
       Parameter.Height        = Display->height();
@@ -322,12 +331,12 @@ void FractalPU::run()
                                     xStep, yStep, color.rgb());
                }
 
-               calculationThread[number] =
+               CalculationThreadArray[number] =
                   new FractalCalculationThread(this, number,
                          xPosition * xStep, yPosition * yStep, xStep, yStep,
                          (Threads == 1));
-               Q_CHECK_PTR(calculationThread[number]);
-               calculationThread[number]->start();
+               Q_CHECK_PTR(CalculationThreadArray[number]);
+               CalculationThreadArray[number]->start();
                number++;
             }
          }
@@ -345,20 +354,22 @@ void FractalPU::run()
       }
       size_t failed = 0;
       for(size_t i = 0;i < Threads;i++) {
-         calculationThread[i]->wait();
-         if(!calculationThread[i]->getSuccess()) {
+         CalculationThreadArray[i]->wait();
+         if(!CalculationThreadArray[i]->getSuccess()) {
             failed++;
          }
-         delete calculationThread[i];
-         calculationThread[i] = NULL;
       }
       qApp->lock();
       StatusBar->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
       setCursor(Qt::ArrowCursor);
+      for(size_t i = 0;i < Threads;i++) {
+         delete CalculationThreadArray[i];   // Must be called with qApp locked!
+         CalculationThreadArray[i] = NULL;
+      }
       qApp->unlock();
 
       // ====== Pause before next image =====================================
-      if(Running) {
+      if(Status == FPU_CalcInProgress) {
          char str[128];
          size_t secsToWait = InterImageTime;
          while(secsToWait > 0) {
@@ -369,6 +380,12 @@ void FractalPU::run()
             StatusBar->message(str);
             qApp->unlock();
          }
+      }
+      else if(Status == FPU_CalcAborted) {
+         qApp->lock();
+         StatusBar->message("Restarting ...");
+         qApp->unlock();
+         usleep(500000);
       }
    }
 }
@@ -561,7 +578,7 @@ void FractalCalculationThread::run()
                         }
                      }
 
-                     if(!Master->Running) {
+                     if(Master->Status != FractalPU::FPU_CalcInProgress) {
                         goto finish;
                      }
 
