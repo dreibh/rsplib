@@ -28,6 +28,7 @@
 #include <qlayout.h>
 #include <qthread.h>
 #include <qpainter.h>
+#include <qcursor.h>
 #include <qfile.h>
 #include <qstringlist.h>
 #include <qdom.h>
@@ -302,6 +303,7 @@ void FractalPU::run()
       // ====== Start job distribution ======================================
       // cout << "Starting job distribution ..." << endl;
       qApp->lock();
+      setCursor(Qt::WaitCursor);
       StatusBar->message("Starting job distribution ...");
 
       const size_t yCount = (size_t)floor(sqrt((double)Threads));
@@ -352,6 +354,7 @@ void FractalPU::run()
       }
       qApp->lock();
       StatusBar->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
+      setCursor(Qt::ArrowCursor);
       qApp->unlock();
 
       // ====== Pause before next image =====================================
@@ -543,7 +546,7 @@ void FractalCalculationThread::run()
                                  packets++;
                                  if(ShowStatus) {
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed paket #%u; PE is $%08x",
+                                             "Processed packet #%u; PE is $%08x",
                                              packets, rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
                                     snprintf((char*)&statusText, sizeof(statusText),
