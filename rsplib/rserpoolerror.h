@@ -42,10 +42,11 @@ extern "C" {
 #define RSPERR_AUTHORIZATION_FAILURE         0x0003
 #define RSPERR_INVALID_VALUES                0x0004
 #define RSPERR_INCOMPATIBLE_POOL_POLICY      0x0005
-#define RSPERR_OUT_OF_MEMORY                 0x0006
-#define RSPERR_WRONG_PROTOCOL                0x0007
-#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0008
-#define RSPERR_NOT_FOUND                     0x0009
+#define RSPERR_UNSUPPORTED_POOL_POLICY       0x0006
+#define RSPERR_OUT_OF_MEMORY                 0x0007
+#define RSPERR_WRONG_PROTOCOL                0x0008
+#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0009
+#define RSPERR_NOT_FOUND                     0x000a
 
 /* Implementation-specific error causes */
 #define RSPERR_NOT_INITIALIZED               0x1000

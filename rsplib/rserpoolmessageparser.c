@@ -502,7 +502,6 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
 static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                                 struct PoolPolicySettings* poolPolicySettings)
 {
-   uint8_t                                                           tlvType;
    struct rserpool_policy_roundrobin*                                rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
    struct rserpool_policy_leastused*                                 lu;
@@ -893,9 +892,11 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          }
        break;
       default:
-         if(handleUnknownTLV(message, tlvType, tlvLength) == false) {
-            return(false);
-         }
+         LOG_WARNING
+         fprintf(stdlog, "Unsupported policy $%08x\n", policyType);
+         LOG_END
+         message->Error = RSPERR_UNSUPPORTED_POOL_POLICY;
+         return(false);
        break;
    }
 

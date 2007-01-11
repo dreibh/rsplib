@@ -79,6 +79,12 @@ int rsp_initialize(struct rsp_info* info)
 {
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
+   struct rsp_info    emptyinfo;
+
+   if(info == NULL) {
+      memset(&emptyinfo, 0, sizeof(emptyinfo));
+      info = &emptyinfo;
+   }
 
    /* ====== Check for problems ========================================== */
    if(gAsapInstance != NULL) {

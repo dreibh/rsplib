@@ -1,14 +1,6 @@
-# without this order in this file, autoconf will not work!
-# the argument is a source file out of your sources. But
-# acinclude.m4 makes the job for all programs ;-)
 AC_INIT(rsplib/rspbasicmode.c)
-
-# enable the following if you want to use autoconf/automake
-# framework from a certain directory (like kde-common)
 AC_CONFIG_AUX_DIR(admin)
-
 AC_CANONICAL_HOST
-
 AM_INIT_AUTOMAKE(rsplib, 2.1.0)
 
 AC_PREFIX_DEFAULT(/usr/local)
@@ -17,8 +9,6 @@ if test "x$prefix" = "xNONE"; then
   ac_configure_args="$ac_configure_args --prefix $prefix"
 fi
 
-# without this order in this file, automake will be confused!
-#
 AM_CONFIG_HEADER(config.h)
 
 # Checks for programs.
@@ -513,10 +503,10 @@ else
 fi
 
 
-RSPLIB_CURRENT=1
-RSPLIB_REVISION=9
-RSPLIB_AGE=1
-RSPLIB_RELEASE=1910
+RSPLIB_CURRENT=2
+RSPLIB_REVISION=1
+RSPLIB_AGE=0
+RSPLIB_RELEASE=2100
 
 AC_SUBST(RSPLIB_CURRENT)
 AC_SUBST(RSPLIB_REVISION)
@@ -528,7 +518,7 @@ AC_SUBST(RSPLIB_RELEASE)
 # AC_ARG_PROGRAM
 
 # add here all your Makefiles. These will be created by configure
-AC_OUTPUT(Makefile rsplib/Makefile )
+AC_OUTPUT(Makefile rsplib/Makefile rsplib/wireshark/Makefile rsplib/fgpconfig/Makefile )
 
 
 echo ""

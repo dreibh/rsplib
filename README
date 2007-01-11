@@ -1,49 +1,72 @@
 A. FIRST STEPS
 
-How to set up a simple test of rsplib-1.9.0 using the unstable files:
+How to set up a simple test of the rsplib-2.1.0 release:
 
-1. Get latest sctplib1-****.tar.gz and install it by
-   - unpacking the Tar/GZip archive
-   - ./autgen.sh
-      (invokes automake, calls ./configure with some parameters, calls make)
-   . make install
-      (as root!)
+1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
+   implementation, do the following two steps first:
 
-2. Get latest socketapi-****.tar.gz and install it by
-   - unpacking the Tar/GZip archive
-   - ./autgen.sh
-      (invokes automake, calls ./configure with some parameters, calls make)
-   . make install
-      (as root!)
+ 1.a. Get latest sctplib-****.tar.gz archive and install it by
+      - Unpack the Tar/GZip archive
+      - ./configure
+      - make
+      - make install
+         (as root!)
 
-3. Get latest rsplib2-****.tar.gz and install it by
-   - unpacking the Tar/GZip archive
-   - ./autgen.sh
-      (invokes automake, calls ./configure with some parameters, calls make)
+ 1.b. Get latest socketapi-****.tar.gz and install it by
+      - Unpack the Tar/GZip archive
+      - ./configure
+      - make
+      - make install
+         (as root!)
 
-      Configure Parameters:
+2. Get latest rsplib-****.tar.gz and install it by
+      - Unpack the Tar/GZip archive
+      - If, AND ONLY IF, you would like to use *kernel* SCTP, do:
+         ./configure --enable-kernel-sctp
+        OTHERWISE (i.e. sctplib/socketapi userland implementation):
+         ./configure
+      - make
+      - make install
+         (Only necessary if you want an installation; as root!)
+
+      Optional "configure" Parameters:
       --enable-qt: Enables Qt usage; this is necessary for the Fractal Generator
                    client! Without Qt, the client's compilation will be skipped.
+      --disable-qt: Disables Qt usage; the Fractal Generator client will *not*
+                    be available. (DEFAULT)
+
+      --enable-maintainer-mode: Enable the creation of debug symbols (-g) and turn
+                                off compiler optimization. Necessary for debugging,
+                                but makes programs much larger and slower. (DEFAULT)
+      --disable-maintainer-mode: Disables maintainer mode. The code will be optimized
+                                 and without debugging symbols. Node: Please turn on
+                                 the maintainer mode if you discover any problems and
+                                 report bugs to us!
+
       --enable-hsmgtverify: Enable Handlespace Management verification. This is
                             useful for debugging only (makes the PR slow!)
-      --enable-csp: Enable the Component Status Protocol support (very recommended!)
+      --disable-hsmgtverify: Turns off Handlespace Management verification. (DEFAULT)
 
-4. Ensure that multicast is working!
-   - You need a configured Ethernet interface to use multicast, even if you want to
-     make tests only via loopback! Multicast does not work correctly otherwise,
-     at least under Linux and Darwin.
+      --enable-csp: Enable the Component Status Protocol support (strongly recommended!)
+                    (DEFAULT)
+      --disable-csp: Turns the Component Status Protocol support off.
+
+3. Ensure that multicast is working!
+   - You need a configured network interface AND a default route to use multicast,
+     even if you want to make tests only via loopback! Multicast does not work
+     correctly otherwise, at least under Linux and Darwin.
      Alternative:
      If you have a dummy device, configure it and set a default route to it:
-     root# ifconfig dummy0 10.0.0.1 netmask 255.255.255.0 broadcast 10.0.0.255 up multicast
-     root# route add default gw 10.0.0.2
+     root# ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 broadcast 10.255.255.255 up multicast
+     root# route add default gw 10.255.255.254
    - Ensure that your firewall settings for the ethernet interface allow
      UDP packets from the registrar (Server Announce).
 
-5. Start at least one registrar
+4. Start at least one registrar
    ./registrar-example
    (You can start multiple registrars; they may also run on different hosts, of course)
 
-6. Start at least one pool element
+5. Start at least one pool element
    ./poolelement-example
    (You can start multiple pool elements; they may also run on different hosts, of course.
     If it complains about finding no registrar, check the multicast settings!)
@@ -57,16 +80,33 @@ How to set up a simple test of rsplib-1.9.0 using the unstable files:
 7. If everythink works, you can test RSerPool functionality by stopping the pool
    element and watching the failover.
 
+8. You can monitor the status of each component using the Component Status Protocol
+   client "cspclient". Simply start it by "./cspmonitor". It will listen for status
+   messages sent via UDP on port 2960. The components (registrar, server, etc.) accept
+   the command line arguments "-cspserver=<Server>:<Port>" and
+   "-cspinterval=<Microseconds>". For example, if you want a status update every 300ms
+   and your CSP client is listening on port 2960 of host 1.2.3.4, use the arguments
+   "-cspserver=1.2.3.4:2960 -cspinterval=300".
+   NOTE: You *must* specify address AND interval, otherwise no messages are sent.
+
+9. You can use Wireshark (http://www.wireshark.org) to observe the RSerPool and demo
+   protocol traffic. Coloring rules and filters can be found in the directory
+   "rsplib/wireshark" Simply copy "colorfilters", "dfilters" and optionally
+   "preferences" to ~/.wireshark (or /root/.wireshark).
+   The "rsplib/wireshark" directory also includes the packet dissector souces for
+   the demo protocols. These dissectors are already included in recent Wireshark
+   distributions and are usually not needed!
 
 
-B. DEMO SERVERS
+
+B. DEMO POOL ELEMENTS (SERVERS)
 
 All demo servers can be started using the ./server program. It takes a set of
 common parameters as well as some service-specific arguments. These parameters
 are explained in the following.
 
 Note: For most of the provided services, the latest version of Wireshark
-      (http://www.wireshark.org) already includes packets dissectors!
+      (http://www.wireshark.org) already includes the packets dissectors!
 
 
 B.1 Common Parameters
@@ -144,9 +184,10 @@ B.7 Fractal Generator Service
 -fgpmaxthreads=threads: Sets the maximum number of simultaneous sessions.
 
 
-B. DEMO CLIENTS
 
-B.1 Common Parameters
+C. DEMO POOL USERS (CLIENTS)
+
+C.1 Common Parameters
 
 -loglevel=0-9: Sets the logging verbosity from 0 (none) to 9 (very verbose).
 
@@ -157,12 +198,12 @@ B.1 Common Parameters
 -poolhandle=PH: Sets the PH.
 
 
-B.2 Terminal (e.g. for Echo, Discard, Daytime and Chargen services)
+C.2 Terminal (e.g. for Echo, Discard, Daytime and Chargen services)
 
 Start with ./terminal; the default PH is EchoPool.
 
 
-B.3 Fractal Client (for the Fractal Generator service)
+C.3 Fractal Client (for the Fractal Generator service)
 
 ./fractalpooluser
 
@@ -171,7 +212,13 @@ B.3 Fractal Client (for the Fractal Generator service)
                       parameter files. The actual parameter file used for an
                       image is randomly selected from this list.
 
-B.4 Ping Pong Client (for the Fractal Generator service)
+-threads=Count:       Sets the number of parallel sessions for the calculation
+                      of an image.
+
+-caption=Title:       Sets the window title.
+
+
+C.4 Ping Pong Client (for the Fractal Generator service)
 
 ./pingpong
 
@@ -179,7 +226,7 @@ B.4 Ping Pong Client (for the Fractal Generator service)
 
 
 
-C. COMPONENT STATUS PROTOCOL
+D. COMPONENT STATUS PROTOCOL
 
 The Component Status Protocol is a simple UDP-based protocol for RSerPool
 components to send their status to a central monitoring component. A
@@ -206,4 +253,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-10.08.2006 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+11.01.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de

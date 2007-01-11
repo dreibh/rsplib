@@ -1,5 +1,5 @@
 #!/bin/bash
- ./registrar -loglevel=5 -cspserver=10.255.255.1:2960 -cspinterval=333 -autoclosetimeout=30 \
+./registrar -loglevel=5 -cspserver=10.255.255.1:2960 -cspinterval=333 -autoclosetimeout=30 \
    -asap=0.0.0.0:2001 \
    -enrp=0.0.0.0:10001 -peer=10.255.255.1:10002 -peer=10.255.255.1:10003 \
    -identifier=1 $@

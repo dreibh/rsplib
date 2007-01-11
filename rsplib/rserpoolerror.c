@@ -65,6 +65,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_WRONG_PROTOCOL,                "wrong protocol" },
    { RSPERR_WRONG_CONTROLCHANNEL_HANDLING, "wrong control channel handling" },
    { RSPERR_INCOMPATIBLE_POOL_POLICY,      "incompatible pool policy" },
+   { RSPERR_UNSUPPORTED_POOL_POLICY,       "unsupported pool policy" },
    { RSPERR_INVALID_POOL_POLICY,           "invalid pool policy" },
    { RSPERR_INVALID_POOL_HANDLE,           "invalid pool handle (too long)" },
    { RSPERR_INVALID_REGISTRATOR,           "invalid registrator" },
