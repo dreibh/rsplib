@@ -23,15 +23,17 @@
  *
  */
 
-#include "tdtypes.h"
 #include "rserpool.h"
+#include "tdtypes.h"
 #include "calcapppackets.h"
 #include "statistics.h"
-#include "rsputilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
 #include "randomizer.h"
-#include "loglevel.h"
+#include "debug.h"
+#ifdef ENABLE_CSP
+#include "componentstatuspackets.h"
+#endif
 
 #include <ext_socket.h>
 #include <iostream>
@@ -748,11 +750,14 @@ int main(int argc, char** argv)
    unsigned long long   startupDelayStamp = getMicroTime();
    int                  i;
 
-   memset(&info, 0, sizeof(info));
+   rsp_initinfo(&info);
 #ifdef ENABLE_CSP
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
 #endif
    for(i = 1;i < argc;i++) {
+      if(rsp_initarg(&info, argv[i])) {
+         /* rsplib argument */
+      }
       if(!(strncmp(argv[i],"-poolhandle=",12))) {
          poolHandle = (char*)&argv[i][12];
       }
@@ -791,26 +796,6 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-#ifdef ENABLE_CSP
-      else if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
-      }
-#endif
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
-      }
-      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
-            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
-            exit(1);
-         }
-         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
-      }
       else {
          printf("ERROR: Bad arguments %s!\n", argv[i]);
          exit(1);
@@ -837,7 +822,6 @@ int main(int argc, char** argv)
         << endl;
 
 
-   beginLogging();
    if(rsp_initialize(&info) < 0) {
       logerror("Unable to initialize rsplib");
       exit(1);
@@ -846,14 +830,12 @@ int main(int argc, char** argv)
    VectorFH = fopen(vectorFileName, "w");
    if(VectorFH == NULL) {   // Make stream non-buffered!
       cout << " Unable to open output file " << vectorFileName << endl;
-      finishLogging();
    }
    setbuf(VectorFH, NULL);
 
    ScalarFH = fopen(scalarFileName, "w");
    if(ScalarFH == NULL) {
       cout << " Unable to open output file " << scalarFileName << endl;
-      finishLogging();
    }
    setbuf(ScalarFH, NULL);   // Make stream non-buffered!
    fprintf(ScalarFH, "run 1 \"scenario\"\n");
@@ -869,8 +851,8 @@ int main(int argc, char** argv)
    fclose(ScalarFH);
    fclose(VectorFH);
 
-   finishLogging();
    rsp_cleanup();
+   rsp_freeinfo(&info);
    puts("\nTerminated!");
    return(0);
 }

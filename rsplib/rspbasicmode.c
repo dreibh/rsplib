@@ -81,6 +81,8 @@ int rsp_initialize(struct rsp_info* info)
    static const char* buildTime = __TIME__;
    struct rsp_info    emptyinfo;
 
+   beginLogging();
+
    if(info == NULL) {
       memset(&emptyinfo, 0, sizeof(emptyinfo));
       info = &emptyinfo;
@@ -213,6 +215,7 @@ void rsp_cleanup()
       threadSafetyDelete(&gRSerPoolSocketSetMutex);
       threadSafetyDelete(&gThreadSafety);
    }
+   finishLogging();
 }
 
 

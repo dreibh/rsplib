@@ -24,14 +24,15 @@
  */
 
 #include "rserpool.h"
-#include "loglevel.h"
 #include "breakdetector.h"
 #include "tagitem.h"
-#include "rsputilities.h"
 #include "netutilities.h"
 #include "standardservices.h"
 #include "fractalgeneratorservice.h"
 #include "calcappservice.h"
+#ifdef ENABLE_CSP
+#include "componentstatuspackets.h"
+#endif
 
 
 #define SERVICE_ECHO     1
@@ -46,19 +47,18 @@
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   struct rsp_info      info;
-   struct rsp_loadinfo  loadInfo;
-   union sockaddr_union asapAnnounceAddress;
-   double               degradation;
-   unsigned int         identifier;
-   unsigned int         reregInterval = 30000;
-   unsigned int         runtimeLimit  = 0;
-   unsigned int         service       = SERVICE_ECHO;
-   const char*          poolHandle    = NULL;
-   struct TagItem       tags[8];
+   struct rsp_info     info;
+   struct rsp_loadinfo loadInfo;
+   struct TagItem      tags[8];
+   double              degradation;
+   unsigned int        identifier;
+   unsigned int        reregInterval = 30000;
+   unsigned int        runtimeLimit  = 0;
+   unsigned int        service       = SERVICE_ECHO;
+   const char*         poolHandle    = NULL;
 
    /* ====== Read parameters ============================================= */
-   memset(&info, 0, sizeof(info));
+   rsp_initinfo(&info);
    tags[0].Tag  = TAG_PoolElement_Identifier;
    tags[0].Data = 0;
    tags[1].Tag  = TAG_DONE;
@@ -68,19 +68,10 @@ int main(int argc, char** argv)
    memset(&loadInfo, 0, sizeof(loadInfo));
    loadInfo.rli_policy = PPT_ROUNDROBIN;
    for(int i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
+      if(rsp_initarg(&info, argv[i])) {
+         /* rsplib argument */
       }
-#ifdef ENABLE_CSP
-      if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
-      }
-#endif
-      else if(!(strncmp(argv[i], "-identifier=", 12))) {
+      if(!(strncmp(argv[i], "-identifier=", 12))) {
          if(sscanf((const char*)&argv[i][12], "0x%x", &identifier) == 0) {
             if(sscanf((const char*)&argv[i][12], "%u", &identifier) == 0) {
                fputs("ERROR: Bad registrar ID given!\n", stderr);
@@ -91,19 +82,6 @@ int main(int argc, char** argv)
 #ifdef ENABLE_CSP
          info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
 #endif
-      }
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
-      }
-      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
-            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
-            exit(1);
-         }
-         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
@@ -405,5 +383,6 @@ int main(int argc, char** argv)
                                 (struct TagItem*)&tags);
    }
 
+   rsp_freeinfo(&info);
    return(0);
 }

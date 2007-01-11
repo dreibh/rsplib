@@ -83,6 +83,7 @@ rserpoolmessageparser.c \
 rserpoolmessageparser.h \
 rspbasicmode.c \
 rspenhancedmode.c \
+rsputilities.c \
 session.h \
 sessionstorage.c \
 sessionstorage.h \
@@ -154,7 +155,7 @@ if BUILD_QT_PROGRAMS
 fractalpooluser_MOC      = fractalpooluser.moc.cc
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS)
 fractalpooluser_CXXADD   = $(QT_CXXFLAGS)
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h $(fractalpooluser_MOC) rsputilities.c rsputilities.h
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h $(fractalpooluser_MOC)
 fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 endif
 
@@ -174,19 +175,19 @@ combinesummaries_LDADD   = -lbz2
 rootshell_SOURCES = rootshell.c
 rootshell_LDADD   =
 
-testregistrator_SOURCES = testregistrator.c rsputilities.c rsputilities.h
+testregistrator_SOURCES = testregistrator.c
 testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-terminal_SOURCES = terminal.c rsputilities.c rsputilities.h
+terminal_SOURCES = terminal.c
 terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-pingpong_SOURCES = pingpong.c rsputilities.c rsputilities.h
+pingpong_SOURCES = pingpong.c
 pingpong_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-server_SOURCES = server.cc rsputilities.c rsputilities.h standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h
+server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h
 server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
-calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h rsputilities.c rsputilities.h
+calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
 calcappclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 fork_SOURCES = fork.c

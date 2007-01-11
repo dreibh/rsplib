@@ -24,7 +24,8 @@
  */
 
 #include "tdtypes.h"
-#include "loglevel.h"
+#include "debug.h"
+#include "timeutilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
 #include "componentstatusreporter.h"
@@ -298,11 +299,6 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      else if(!(strncmp(argv[n], "-log" ,4))) {
-         if(initLogging(argv[n]) == false) {
-            exit(1);
-         }
-      }
       else if(!(strcmp(argv[n], "-compact"))) {
          useCompactMode = true;
       }
@@ -338,7 +334,6 @@ int main(int argc, char** argv)
    puts("======================================\n");
 
    installBreakDetector();
-   beginLogging();
    printf("\x1b[;H\x1b[2J");
 
    while(!breakDetected()) {
@@ -363,7 +358,6 @@ int main(int argc, char** argv)
 
    ext_close(sd);
    simpleRedBlackTreeDelete(&objectStorage);
-   finishLogging();
    puts("\nTerminated!");
    return(0);
 }

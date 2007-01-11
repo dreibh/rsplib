@@ -433,20 +433,20 @@ void registrarDelete(struct Registrar* registrar)
       timerDelete(&registrar->HandlespaceActionTimer);
       timerDelete(&registrar->PeerActionTimer);
       if(registrar->ENRPMulticastOutputSocket >= 0) {
-         ext_close(registrar->ENRPMulticastOutputSocket >= 0);
+         ext_close(registrar->ENRPMulticastOutputSocket);
          registrar->ENRPMulticastOutputSocket = -1;
       }
       if(registrar->ENRPMulticastInputSocket >= 0) {
          fdCallbackDelete(&registrar->ENRPMulticastInputSocketFDCallback);
-         ext_close(registrar->ENRPMulticastInputSocket >= 0);
+         ext_close(registrar->ENRPMulticastInputSocket);
          registrar->ENRPMulticastInputSocket = -1;
       }
       if(registrar->ENRPUnicastSocket >= 0) {
-         ext_close(registrar->ENRPUnicastSocket >= 0);
+         ext_close(registrar->ENRPUnicastSocket);
          registrar->ENRPUnicastSocket = -1;
       }
       if(registrar->ASAPAnnounceSocket >= 0) {
-         ext_close(registrar->ASAPAnnounceSocket >= 0);
+         ext_close(registrar->ASAPAnnounceSocket);
          registrar->ASAPAnnounceSocket = -1;
       }
       dispatcherDelete(&registrar->StateMachine);
@@ -3826,7 +3826,6 @@ int main(int argc, char** argv)
                                  (struct pollfd*)&ufds, nfds, timeout,
                                  pollTimeStamp);
    }
-
 
    /* ====== Clean up ==================================================== */
    registrarDelete(registrar);

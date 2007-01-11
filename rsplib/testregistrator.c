@@ -24,9 +24,7 @@
  */
 
 #include "rserpool.h"
-#include "loglevel.h"
 #include "breakdetector.h"
-#include "rsputilities.h"
 #ifdef ENABLE_CSP
 #include "componentstatusreporter.h"
 #include "randomizer.h"
@@ -52,30 +50,15 @@ int main(int argc, char** argv)
    size_t        i;
 
 
-   memset(&info, 0, sizeof(info));
+   rsp_initinfo(&info);
    memset(&loadinfo, 0, sizeof(loadinfo));
    loadinfo.rli_policy           = PPT_ROUNDROBIN;
    loadinfo.rli_weight           = 1;
    loadinfo.rli_load             = 0;
    loadinfo.rli_load_degradation = 0;
    for(i = 1;i < (size_t)argc;i++) {
-      if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
-      }
-#ifdef ENABLE_CSP
-      else if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
-      }
-#endif
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
+      if(rsp_initarg(&info, argv[i])) {
+         /* rsplib argument */
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
@@ -172,10 +155,8 @@ int main(int argc, char** argv)
       }
    }
 
-   beginLogging();
    if(rsp_initialize(&info) < 0) {
       perror("Unable to initialize rsplib!");
-      finishLogging();
       exit(1);
    }
 
@@ -223,7 +204,7 @@ int main(int argc, char** argv)
 
 
    rsp_cleanup();
-   finishLogging();
+   rsp_freeinfo(&info);
    puts("\nTerminated!");
    return(0);
 }

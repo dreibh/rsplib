@@ -100,16 +100,6 @@ int rsp_mapsocket(int sd, int toSD);
 int rsp_unmapsocket(int sd);
 
 
-/**
-  * Set session's application status text for rsp_csp_getcomponentstatus().
-  *
-  * @param sd SessionDescriptor.
-  * @param statusText Status text.
-  */
-int rsp_csp_setstatus(int                sd,
-                      rserpool_session_t sessionID,
-                      const char*        statusText);
-
 #ifdef __cplusplus
 }
 #endif

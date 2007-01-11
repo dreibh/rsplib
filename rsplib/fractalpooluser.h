@@ -32,6 +32,7 @@
 #include <qdir.h>
 #include <qstatusbar.h>
 
+#include "tdtypes.h"
 #include "rserpool.h"
 #include "fractalgeneratorpackets.h"
 
@@ -92,11 +93,11 @@ class ImageDisplay : public QWidget
    void destroy();
    void paintImage(const size_t startY, const size_t endY);
 
-   inline unsigned int getPoint(const size_t x, const size_t y) {
+   inline unsigned int getPixel(const size_t x, const size_t y) {
       return(Image->pixel(x, y));
    }
 
-   inline void setPoint(const size_t x, const size_t y, const unsigned int color) {
+   inline void setPixel(const size_t x, const size_t y, const unsigned int color) {
       Image->setPixel(x, y, color);
    }
 
@@ -104,8 +105,8 @@ class ImageDisplay : public QWidget
                         const size_t width, const size_t height,
                         const unsigned int color) {
       if(Image) {
-         for(size_t j = y;j < y + height;j++) {
-            for(size_t i = x;i < x + width;i++) {
+         for(size_t j = y;j < min(y + height, (size_t)Image->height());j++) {
+            for(size_t i = x;i < min(x + width, (size_t)Image->width());i++) {
                Image->setPixel(i, j, color);
             }
          }

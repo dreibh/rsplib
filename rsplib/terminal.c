@@ -24,11 +24,12 @@
  */
 
 #include "rserpool.h"
-#include "loglevel.h"
 #include "breakdetector.h"
-#include "rsputilities.h"
 #include "randomizer.h"
 #include "netutilities.h"
+#ifdef ENABLE_CSP
+#include "componentstatuspackets.h"
+#endif
 
 
 /* ###### Main program ################################################### */
@@ -37,7 +38,6 @@ int main(int argc, char** argv)
    struct rsp_info              info;
    struct rsp_sndrcvinfo        rinfo;
    union rserpool_notification* notification;
-   union sockaddr_union         asapAnnounceAddress;
    char                         buffer[65536 + 4];
    char*                        poolHandle = "EchoPool";
    struct pollfd                ufds[2];
@@ -48,33 +48,10 @@ int main(int argc, char** argv)
    int                          sd;
    int                          i;
 
-   memset(&info, 0, sizeof(info));
-
+   rsp_initinfo(&info);
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
-      }
-#ifdef ENABLE_CSP
-      else if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
-      }
-#endif
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
-      }
-      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
-            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
-            exit(1);
-         }
-         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
+      if(rsp_initarg(&info, argv[i])) {
+         /* rsplib argument */
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
@@ -96,20 +73,18 @@ int main(int argc, char** argv)
    printf("Pool Handle = %s\n\n", poolHandle);
 
 
-   beginLogging();
-
    if(rsp_initialize(&info) < 0) {
-      logerror("Unable to initialize rsplib");
+      fputs("ERROR: Unable to initialize rsplib\n", stderr);
       exit(1);
    }
 
    sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd < 0) {
-      logerror("Unable to create RSerPool socket");
+      perror("Unable to create RSerPool socket");
       exit(1);
    }
    if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle)) < 0) {
-      logerror("Unable to connect to pool element");
+      perror("Unable to connect to pool element");
       exit(1);
    }
 
@@ -182,6 +157,6 @@ int main(int argc, char** argv)
    puts("\nTerminated!");
    rsp_close(sd);
    rsp_cleanup();
-   finishLogging();
+   rsp_freeinfo(&info);
    return 0;
 }

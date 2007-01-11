@@ -28,14 +28,16 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "stringutilities.h"
-#include "rsputilities.h"
 #include "debug.h"
+#ifdef ENABLE_CSP
+#include "componentstatuspackets.h"
+#endif
 
 
 /* ###### Create new static registrar entry in rsp_info ###### */
 #define MAX_PR_TRANSPORTADDRESSES 128
-int addStaticRegistrar(struct rsp_info* info,
-                       const char*      addressString)
+static int addStaticRegistrar(struct rsp_info* info,
+                              const char*      addressString)
 {
    union sockaddr_union       addressArray[MAX_PR_TRANSPORTADDRESSES];
    struct sockaddr*           packedAddressArray;
@@ -88,25 +90,14 @@ int addStaticRegistrar(struct rsp_info* info,
 }
 
 
-/* ###### Free static registrar entries of rsp_info ###################### */
-void freeStaticRegistrars(struct rsp_info* info)
-{
-   struct rsp_registrar_info* registrarInfo;
-   while(info->ri_registrars) {
-      registrarInfo = info->ri_registrars;
-      info->ri_registrars = registrarInfo->rri_next;
-      free(registrarInfo->rri_addr);
-      free(registrarInfo);
-   }
-}
-
-
 #ifdef ENABLE_CSP
 /* ###### Set logging parameter ########################################## */
-static union sockaddr_union cspServerAddress;
-bool initComponentStatusReporter(struct rsp_info* info,
-                                 const char*      parameter)
+static bool initComponentStatusReporter(struct rsp_info* info,
+                                        const char*      parameter)
 {
+   static union sockaddr_union cspServerAddress;
+   unsigned int                identifier;
+
    if(!(strncmp(parameter, "-cspserver=", 11))) {
       if(!string2address((const char*)&parameter[11], &cspServerAddress)) {
          fprintf(stderr,
@@ -120,6 +111,15 @@ bool initComponentStatusReporter(struct rsp_info* info,
       info->ri_csp_interval = atol((const char*)&parameter[13]);
       return(true);
    }
+   else if(!(strncmp(parameter, "-cspidentifier=", 15))) {
+      if(sscanf((const char*)&parameter[15], "0x%x", &identifier) == 0) {
+         if(sscanf((const char*)&parameter[15], "%u", &identifier) == 0) {
+            fputs("ERROR: Bad registrar ID given!\n", stderr);
+            exit(1);
+         }
+      }
+      info->ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
+   }
    else {
       fprintf(stderr, "ERROR: Invalid CSP parameter %s\n", parameter);
       return(false);
@@ -127,3 +127,61 @@ bool initComponentStatusReporter(struct rsp_info* info,
    return(true);
 }
 #endif
+
+
+/* ###### Initialize rsp_info ############################################ */
+void rsp_initinfo(struct rsp_info* info)
+{
+   memset(info, 0, sizeof(struct rsp_info));
+}
+
+
+/* ###### Free static registrar entries of rsp_info ###################### */
+void rsp_freeinfo(struct rsp_info* info)
+{
+   struct rsp_registrar_info* registrarInfo;
+   while(info->ri_registrars) {
+      registrarInfo = info->ri_registrars;
+      info->ri_registrars = registrarInfo->rri_next;
+      free(registrarInfo->rri_addr);
+      free(registrarInfo);
+   }
+}
+
+
+/* ###### Handle rsplib argument and put result into rsp_info ############ */
+int rsp_initarg(struct rsp_info* info, const char* arg)
+{
+   static union sockaddr_union asapAnnounceAddress;
+
+   if(!(strncmp(arg, "-log" ,4))) {
+      if(initLogging(arg) == false) {
+         exit(1);
+      }
+      return(1);
+   }
+#ifdef ENABLE_CSP
+   else if(!(strncmp(arg, "-csp" ,4))) {
+      if(initComponentStatusReporter(info, arg) == false) {
+         exit(1);
+      }
+      return(1);
+   }
+#endif
+   else if(!(strncmp(arg, "-registrar=", 11))) {
+      if(addStaticRegistrar(info, (char*)&arg[11]) < 0) {
+         fprintf(stderr, "ERROR: Bad registrar setting %s\n", arg);
+         exit(1);
+      }
+      return(1);
+   }
+   else if(!(strncmp(arg, "-asapannounce=", 14))) {
+      if(string2address((char*)&arg[14], &asapAnnounceAddress) == false) {
+         fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", arg);
+         exit(1);
+      }
+      info->ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
+      return(1);
+   }
+   return(0);
+}

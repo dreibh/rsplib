@@ -89,6 +89,35 @@ struct rsp_loadinfo
 
 
 /**
+  * Initialize rsp_info structure with defaults.
+  *
+  * @param info rsp_info structure with parameters.
+  */
+void rsp_initinfo(struct rsp_info* info);
+
+/**
+  * Free rsp_info structure contents allocated upon rsp_initarg
+  * calls.
+  *
+  * @param info rsp_info structure with parameters.
+  *
+  * @see rsp_initarg
+  */
+void rsp_freeinfo(struct rsp_info* info);
+
+/**
+  * Handle command line argument and put results into rsp_info structure
+  * (if it is an rsplib parameter).
+  *
+  * @param info rsp_info structure with parameters.
+  * @return 1 in case of success, 0 if the parameter is unknown.
+  *
+  * @see rsp_initarg
+  */
+int rsp_initarg(struct rsp_info* info, const char* arg);
+
+
+/**
   * Initialize the RSerPool library. This function must be called before any
   * other RSerPool library function can be used.
   *
@@ -542,6 +571,15 @@ const char* rsp_getpolicybytype(unsigned int policyType);
   */
 unsigned int rsp_getpolicybyname(const char* policyName);
 
+/**
+  * Set session's application status text for rsp_csp_getcomponentstatus().
+  *
+  * @param sd SessionDescriptor.
+  * @param statusText Status text.
+  */
+int rsp_csp_setstatus(int                sd,
+                      rserpool_session_t sessionID,
+                      const char*        statusText);
 
 #ifdef __cplusplus
 }

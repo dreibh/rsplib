@@ -224,10 +224,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 unsigned int         runtimeLimit,
                                 struct TagItem*      tags)
 {
-   beginLogging();
    if(rsp_initialize(info) < 0) {
       puts("ERROR: Unable to initialize rsplib Library!\n");
-      finishLogging();
       return;
    }
 
@@ -331,7 +329,6 @@ void TCPLikeServer::poolElement(const char*          programTitle,
    }
 
    rsp_cleanup();
-   finishLogging();
    puts("\nTerminated!");
 }
 

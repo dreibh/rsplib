@@ -36,14 +36,16 @@
 #include <complex>
 
 #include "tdtypes.h"
+#include "rserpool.h"
 #include "fractalpooluser.h"
-#include "rserpool-internals.h"
-#include "loglevel.h"
-#include "netutilities.h"
-#include "rsputilities.h"
-#include "randomizer.h"
 #include "fractalgeneratorpackets.h"
+#include "timeutilities.h"
+#include "randomizer.h"
 #include "netutilities.h"
+#include "debug.h"
+#ifdef ENABLE_CSP
+#include "componentstatuspackets.h"
+#endif
 
 
 using namespace std;
@@ -326,7 +328,7 @@ void FractalPU::run()
             remaining -= xCount;
             for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
                if(Threads > 1) {
-                  const QColor color(((5 * number) % 72) * 5, 150, 255, QColor::Hsv);
+                  const QColor color(((5 * number) % 72) * 5, 100, 255, QColor::Hsv);
                   Display->fillRect(xPosition * xStep, yPosition * yStep,
                                     xStep, yStep, color.rgb());
                }
@@ -477,7 +479,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
          }
          const uint32_t point = ntohl(data->Buffer[p]);
          const QColor color(((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
-         Master->Display->setPoint(x + ViewX, y + ViewY, color.rgb());
+         Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
 
          x++;
@@ -624,30 +626,26 @@ finish:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   struct rsp_info      info;
-   union sockaddr_union asapAnnounceAddress;
-   char*                poolHandle     = "FractalGeneratorPool";
-   const char*          configDirName  = "fgpconfig";
-   const char*          caption        = NULL;
-   size_t               threads        = 1;
-   int                  width          = DEFAULT_FPU_WIDTH;
-   int                  height         = DEFAULT_FPU_HEIGHT;
-   unsigned int         sendTimeout    = DEFAULT_FPU_SEND_TIMEOUT;
-   unsigned int         recvTimeout    = DEFAULT_FPU_RECV_TIMEOUT;
-   unsigned int         interImageTime = DEFAULT_FPU_INTER_IMAGE_TIME;
-   unsigned int         identifier;
-   int                  i;
+   struct rsp_info info;
+   char*           poolHandle     = "FractalGeneratorPool";
+   const char*     configDirName  = "fgpconfig";
+   const char*     caption        = NULL;
+   size_t          threads        = 1;
+   int             width          = DEFAULT_FPU_WIDTH;
+   int             height         = DEFAULT_FPU_HEIGHT;
+   unsigned int    sendTimeout    = DEFAULT_FPU_SEND_TIMEOUT;
+   unsigned int    recvTimeout    = DEFAULT_FPU_RECV_TIMEOUT;
+   unsigned int    interImageTime = DEFAULT_FPU_INTER_IMAGE_TIME;
+   unsigned int    identifier;
+   int             i;
 
-   memset(&info, 0, sizeof(info));
-
+   rsp_initinfo(&info);
 #ifdef ENABLE_CSP
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
 #endif
    for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-log" ,4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
+      if(rsp_initarg(&info, argv[i])) {
+         /* rsplib argument */
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
@@ -658,11 +656,6 @@ int main(int argc, char** argv)
             }
          }
          info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, identifier);
-      }
-      else if(!(strncmp(argv[i], "-csp" ,4))) {
-         if(initComponentStatusReporter(&info, argv[i]) == false) {
-            exit(1);
-         }
       }
 #endif
       else if(!(strncmp(argv[i],"-configdir=",11))) {
@@ -691,19 +684,6 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-interimagetime=" ,16))) {
          interImageTime = atol((char*)&argv[i][16]);
-      }
-      else if(!(strncmp(argv[i], "-registrar=", 11))) {
-         if(addStaticRegistrar(&info, (char*)&argv[i][11]) < 0) {
-            fprintf(stderr, "ERROR: Bad registrar setting %s\n", argv[i]);
-            exit(1);
-         }
-      }
-      else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         if(string2address((char*)&argv[i][14], &asapAnnounceAddress) == false) {
-            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", argv[i]);
-            exit(1);
-         }
-         info.ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
       }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
@@ -746,8 +726,6 @@ int main(int argc, char** argv)
    printf("Threads          = %u\n\n", threads);
 
 
-   beginLogging();
-
    if(rsp_initialize(&info) < 0) {
       logerror("Unable to initialize rsplib");
       exit(1);
@@ -769,6 +747,6 @@ int main(int argc, char** argv)
 
    puts("\nTerminated!");
    rsp_cleanup();
-   finishLogging();
+   rsp_freeinfo(&info);
    return(result);
 }
