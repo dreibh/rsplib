@@ -221,11 +221,13 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                     (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
                                     (*peerListNode)->AddressBlock);
          ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
-                                                &updatedPeerListNode, &errorCode);
-         (*peerListNode)->OwnershipChecksum =
-            ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
-               &peerListManagement->Handlespace->Handlespace,
-               (*peerListNode)->Identifier);
+                                              &updatedPeerListNode, &errorCode);
+         if(peerListManagement->Handlespace) {
+            (*peerListNode)->OwnershipChecksum =
+               ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
+                  &peerListManagement->Handlespace->Handlespace,
+                  (*peerListNode)->Identifier);
+         }
          return(errorCode);
       }
    }

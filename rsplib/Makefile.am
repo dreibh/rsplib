@@ -204,10 +204,3 @@ gettimestamp_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_L
 
 cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
-
-
-#t3_SOURCES = t3.cc
-#t3_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
-
-#t4_SOURCES = t4.cc
-#t4_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
