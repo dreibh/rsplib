@@ -78,32 +78,32 @@ get-all-good-hosts ()
 
 
 
-# IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="essen"
-# test-hosts
+IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="essen"
+test-hosts
 
-# IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="europe"
-# test-hosts
-#
-# IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="america"
-# test-hosts
-#
-# IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
-# HOSTSFILEMIDDLE="asia"
-# test-hosts
-#
-# IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
-# let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
-# HOSTSFILEMIDDLE="australia"
-# test-hosts
+IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="europe"
+test-hosts
+
+IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="america"
+test-hosts
+
+IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
+HOSTSFILEMIDDLE="asia"
+test-hosts
+
+IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
+let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
+HOSTSFILEMIDDLE="australia"
+test-hosts
 
 
 
-echo "Testing *all* nodes sequentially. This will take a long time ..."
-. ./planetlab-config
-IN_HOSTS="`cat all-planetlab.hosts`"
-OUT_HOSTS=planetlab.hosts
-let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
-get-all-good-hosts
+# echo "Testing *all* nodes sequentially. This will take a long time ..."
+# . ./planetlab-config
+# IN_HOSTS="`cat all-planetlab.hosts`"
+# OUT_HOSTS=planetlab.hosts
+# let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
+# get-all-good-hosts
