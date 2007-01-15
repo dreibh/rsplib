@@ -98,7 +98,10 @@ class ImageDisplay : public QWidget
    }
 
    inline void setPixel(const size_t x, const size_t y, const unsigned int color) {
-      Image->setPixel(x, y, color);
+      if( (y < (size_t)Image->height()) &&
+          (x < (size_t)Image->width()) ) {
+         Image->setPixel(x, y, color);
+      }
    }
 
    inline void fillRect(const size_t x,     const size_t y,
