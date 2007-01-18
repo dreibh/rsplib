@@ -1,0 +1,18 @@
+<!DOCTYPE XMLFractalSave>
+<FractalV1>
+ <Algorithm>
+  <AlgorithmName>MandelbrotN</AlgorithmName>
+  <C1Real>-4.9667812500000002584599201327364426106214523315429687500000000000e-01</C1Real>
+  <C1Imag>4.4394570312499997966071418886713217943906784057617187500000000000e-01</C1Imag>
+  <C2Real>-2.9178749999999997744026813961681909859180450439453125000000000000e-01</C2Real>
+  <C2Imag>2.9027773437499998498978470706788357347249984741210937500000000000e-01</C2Imag>
+  <Useroptions>
+   <MaxIterations>100</MaxIterations>
+   <N>2</N>
+  </Useroptions>
+ </Algorithm>
+ <ColorScheme>
+  <ColorSchemeName>SimpleHSV</ColorSchemeName>
+ </ColorScheme>
+ <Resolution>800*600</Resolution>
+</FractalV1>
