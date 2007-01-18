@@ -49,7 +49,8 @@ class FractalCalculationThread : public QThread
                             const size_t       viewY,
                             const size_t       viewWidth,
                             const size_t       viewHeight,
-                            const bool         showStatus);
+                            const bool         showStatus,
+                            const bool         colorMarks);
    virtual void run();
 
    inline bool getSuccess() const {
@@ -74,6 +75,7 @@ class FractalCalculationThread : public QThread
    size_t       ViewWidth;
    size_t       ViewHeight;
    bool         ShowStatus;
+   bool         ColorMarks;
    bool         Success;
    int          Session;
    size_t       PoolElementUsages;
@@ -119,7 +121,7 @@ class ImageDisplay : public QWidget
    protected:
    void paintEvent(QPaintEvent* paintEvent);
 
-   private:
+   public:
    QImage* Image;
 };
 
@@ -139,6 +141,8 @@ class FractalPU : public QWidget,
              const unsigned int sendTimeout,
              const unsigned int recvTimeout,
              const unsigned int interImageTime,
+             const char*        imageStoragePrefix,
+             const bool         colorMarks,
              const size_t       threads,
              QWidget*           parent = NULL,
              const char*        name   = NULL);
@@ -185,10 +189,12 @@ class FractalPU : public QWidget,
    unsigned int               SendTimeout;
    unsigned int               RecvTimeout;
    unsigned int               InterImageTime;
+   bool                       ColorMarks;
    size_t                     Threads;
 
    QStringList                ConfigList;
    QDir                       ConfigDirectory;
+   QString                    ImageStoragePrefix;
 };
 
 

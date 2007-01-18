@@ -56,6 +56,14 @@ using namespace std;
 #define DEFAULT_FPU_SEND_TIMEOUT     5000
 #define DEFAULT_FPU_RECV_TIMEOUT     5000
 #define DEFAULT_FPU_INTER_IMAGE_TIME    5
+#define DEFAULT_FPU_THREADS             1
+
+#define DEFAULT_FPU_CAPTION     NULL
+#define DEFAULT_FPU_POOLHANDLE  "FractalGeneratorPool"
+#define DEFAULT_FPU_CONFIGDIR   "fgpconfig"
+#define DEFAULT_FPU_IMAGEPREFIX ""
+#define DEFAULT_FPU_COLORMARKS  TRUE
+
 
 
 /* ###### Constructor #################################################### */
@@ -66,6 +74,8 @@ FractalPU::FractalPU(const size_t       width,
                      const unsigned int sendTimeout,
                      const unsigned int recvTimeout,
                      const unsigned int interImageTime,
+                     const char*        imageStoragePrefix,
+                     const bool         colorMarks,
                      const size_t       threads,
                      QWidget*           parent,
                      const char*        name)
@@ -85,10 +95,12 @@ FractalPU::FractalPU(const size_t       width,
    PoolHandle     = (const unsigned char*)poolHandle;
    PoolHandleSize = strlen((const char*)PoolHandle);
 
-   RecvTimeout    = sendTimeout;
-   SendTimeout    = recvTimeout;
-   InterImageTime = interImageTime;
-   Threads        = threads;
+   RecvTimeout        = sendTimeout;
+   SendTimeout        = recvTimeout;
+   InterImageTime     = interImageTime;
+   ImageStoragePrefix = QString(imageStoragePrefix);
+   ColorMarks         = colorMarks;
+   Threads            = threads;
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName);
@@ -327,7 +339,7 @@ void FractalPU::run()
             const size_t xStep = (size_t)rint(Parameter.Width / xCount);
             remaining -= xCount;
             for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
-               if(Threads > 1) {
+               if((Threads > 1) && (ColorMarks)) {
                   const QColor color(((5 * number) % 72) * 5, 100, 255, QColor::Hsv);
                   Display->fillRect(xPosition * xStep, yPosition * yStep,
                                     xStep, yStep, color.rgb());
@@ -336,7 +348,7 @@ void FractalPU::run()
                CalculationThreadArray[number] =
                   new FractalCalculationThread(this, number,
                          xPosition * xStep, yPosition * yStep, xStep, yStep,
-                         (Threads == 1));
+                         (Threads == 1), ColorMarks);
                Q_CHECK_PTR(CalculationThreadArray[number]);
                CalculationThreadArray[number]->start();
                number++;
@@ -370,6 +382,20 @@ void FractalPU::run()
       }
       qApp->unlock();
 
+      // ====== Save image ==================================================
+      if(ImageStoragePrefix != "") {
+         QString fileNumber;
+         fileNumber.sprintf("%06u", Run);
+         const QString fileName(ImageStoragePrefix + "-" + fileNumber + ".png");
+         StatusBar->message("Storing image as " + fileName);
+         if(!Display->Image->save(fileName, "PNG")) {
+            StatusBar->message("Storing image as " + fileName+ " failed!");
+         }
+         else {
+            StatusBar->message("Storing image as " + fileName+ " stored");
+         }
+      }
+
       // ====== Pause before next image =====================================
       if(Status == FPU_CalcInProgress) {
          char str[128];
@@ -400,7 +426,8 @@ FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
                                                    const size_t       viewY,
                                                    const size_t       viewWidth,
                                                    const size_t       viewHeight,
-                                                   const bool         showStatus)
+                                                   const bool         showStatus,
+                                                   const bool         colorMarks)
 
 {
    ThreadID   = threadID;
@@ -410,6 +437,7 @@ FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
    ViewWidth  = viewWidth;
    ViewHeight = viewHeight;
    ShowStatus = showStatus;
+   ColorMarks = colorMarks;
    Session    = -1;
    Success    = false;
 }
@@ -477,8 +505,11 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
          if(p >= points) {
             goto finished;
          }
-         const uint32_t point = ntohl(data->Buffer[p]);
-         const QColor color(((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages)) % 72) * 5, 255, 255, QColor::Hsv);
+         uint32_t point = ntohl(data->Buffer[p]);
+         if(ColorMarks) {
+            point = (point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5;
+         }
+         const QColor color(point, 255, 255, QColor::Hsv);
          Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
 
@@ -627,15 +658,17 @@ finish:
 int main(int argc, char** argv)
 {
    struct rsp_info info;
-   char*           poolHandle     = "FractalGeneratorPool";
-   const char*     configDirName  = "fgpconfig";
-   const char*     caption        = NULL;
-   size_t          threads        = 1;
-   int             width          = DEFAULT_FPU_WIDTH;
-   int             height         = DEFAULT_FPU_HEIGHT;
-   unsigned int    sendTimeout    = DEFAULT_FPU_SEND_TIMEOUT;
-   unsigned int    recvTimeout    = DEFAULT_FPU_RECV_TIMEOUT;
-   unsigned int    interImageTime = DEFAULT_FPU_INTER_IMAGE_TIME;
+   const char*     caption            = DEFAULT_FPU_CAPTION;
+   size_t          threads            = DEFAULT_FPU_THREADS;
+   const char*     poolHandle         = DEFAULT_FPU_POOLHANDLE;
+   const char*     configDirName      = DEFAULT_FPU_CONFIGDIR;
+   int             width              = DEFAULT_FPU_WIDTH;
+   int             height             = DEFAULT_FPU_HEIGHT;
+   unsigned int    sendTimeout        = DEFAULT_FPU_SEND_TIMEOUT;
+   unsigned int    recvTimeout        = DEFAULT_FPU_RECV_TIMEOUT;
+   unsigned int    interImageTime     = DEFAULT_FPU_INTER_IMAGE_TIME;
+   const char*     imageStoragePrefix = DEFAULT_FPU_IMAGEPREFIX;
+   bool            colorMarks         = DEFAULT_FPU_COLORMARKS;
    unsigned int    identifier;
    int             i;
 
@@ -659,13 +692,13 @@ int main(int argc, char** argv)
       }
 #endif
       else if(!(strncmp(argv[i],"-configdir=",11))) {
-         configDirName = (char*)&argv[i][11];
+         configDirName = (const char*)&argv[i][11];
       }
       else if(!(strncmp(argv[i],"-caption=",9))) {
-         caption = (char*)&argv[i][9];
+         caption = (const char*)&argv[i][9];
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
-         poolHandle = (char*)&argv[i][12];
+         poolHandle = (const char*)&argv[i][12];
       }
       else if(!(strncmp(argv[i], "-width=" ,7))) {
          width = atol((char*)&argv[i][7]);
@@ -684,6 +717,15 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-interimagetime=" ,16))) {
          interImageTime = atol((char*)&argv[i][16]);
+      }
+      else if(!(strncmp(argv[i], "-imagestorageprefix=" ,20))) {
+         imageStoragePrefix = (const char*)&argv[i][20];
+      }
+      else if(!(strcmp(argv[i], "-colormarks"))) {
+         colorMarks = TRUE;
+      }
+      else if(!(strcmp(argv[i], "-nocolormarks"))) {
+         colorMarks = FALSE;
       }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
@@ -717,13 +759,15 @@ int main(int argc, char** argv)
 
    puts("Fractal Pool User - Version 1.0");
    puts("===============================\n");
-   printf("Pool Handle      = %s\n", poolHandle);
-   printf("Width            = %u\n", width);
-   printf("Height           = %u\n", height);
-   printf("Send Timeout     = %u [ms]\n", sendTimeout);
-   printf("Receive Timeout  = %u [ms]\n", recvTimeout);
-   printf("Inter Image Time = %u [s]\n", interImageTime);
-   printf("Threads          = %u\n\n", threads);
+   printf("Pool Handle          = %s\n", poolHandle);
+   printf("Width                = %u\n", width);
+   printf("Height               = %u\n", height);
+   printf("Send Timeout         = %u [ms]\n", sendTimeout);
+   printf("Receive Timeout      = %u [ms]\n", recvTimeout);
+   printf("Inter Image Time     = %u [s]\n", interImageTime);
+   printf("Image Storage Prefix = %s\n", imageStoragePrefix);
+   printf("Color Marks          = %s\n", (colorMarks == TRUE) ? "on" : "off");
+   printf("Threads              = %u\n\n", threads);
 
 
    if(rsp_initialize(&info) < 0) {
@@ -735,7 +779,7 @@ int main(int argc, char** argv)
    QApplication application(argc, argv);
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
                                         sendTimeout, recvTimeout, interImageTime,
-                                        threads);
+                                        imageStoragePrefix, colorMarks, threads);
    Q_CHECK_PTR(fractalPU);
    if(caption) {
       fractalPU->setCaption(caption);
