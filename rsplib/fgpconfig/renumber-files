@@ -1,0 +1,10 @@
+#!/bin/bash
+
+FILES=`ls *.fsf`
+
+number=0
+for filename in $FILES ; do
+   echo "svn move $filename input-$number.fsf"
+   svn --force move $filename input-$number.fsf
+   let number=$number+1
+done
