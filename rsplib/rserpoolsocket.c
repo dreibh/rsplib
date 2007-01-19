@@ -312,9 +312,10 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
       fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n",
               rserpoolSocket->PoolElement->Identifier);
       LOG_END
-
+/*
       printf("(Re-)Registration successful, ID is $%08x\n",
              rserpoolSocket->PoolElement->Identifier);
+*/
    }
    else {
       LOG_ERROR
