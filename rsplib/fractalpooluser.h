@@ -195,6 +195,7 @@ class FractalPU : public QWidget,
    QStringList                ConfigList;
    QDir                       ConfigDirectory;
    QString                    ImageStoragePrefix;
+   size_t                     FileNumber;
 };
 
 

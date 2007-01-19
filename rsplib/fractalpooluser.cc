@@ -101,6 +101,7 @@ FractalPU::FractalPU(const size_t       width,
    ImageStoragePrefix = QString(imageStoragePrefix);
    ColorMarks         = colorMarks;
    Threads            = threads;
+   FileNumber         = 0;
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName);
@@ -383,10 +384,14 @@ void FractalPU::run()
       qApp->unlock();
 
       // ====== Save image ==================================================
-      if(ImageStoragePrefix != "") {
-         QString fileNumber;
-         fileNumber.sprintf("%06u", Run);
-         const QString fileName(ImageStoragePrefix + "-" + fileNumber + ".png");
+      if((failed == 0) && (ImageStoragePrefix != "")) {
+         QString fileName;
+         do {
+            FileNumber++;
+            QString fileSuffix;
+            fileSuffix.sprintf("-%06u.png", FileNumber);
+            fileName = ImageStoragePrefix + fileSuffix;
+         } while((QFile::exists(fileName)) && (FileNumber < 999999));
          StatusBar->message("Storing image as " + fileName);
          if(!Display->Image->save(fileName, "PNG")) {
             StatusBar->message("Storing image as " + fileName+ " failed!");
