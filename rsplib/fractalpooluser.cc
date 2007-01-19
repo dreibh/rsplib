@@ -509,6 +509,9 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
          if(ColorMarks) {
             point = (point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5;
          }
+         else {
+            point = (point % 72) * 5;
+         }
          const QColor color(point, 255, 255, QColor::Hsv);
          Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
