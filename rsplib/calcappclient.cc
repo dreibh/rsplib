@@ -741,14 +741,13 @@ finished:
 // ###### Main program ######################################################
 int main(int argc, char** argv)
 {
-   struct rsp_info      info;
-   union sockaddr_union asapAnnounceAddress;
-   char*                poolHandle        = "CalcAppPool";
-   char*                vectorFileName    = "CalcAppPU.vec";
-   char*                scalarFileName    = "CalcAppPU.sca";
-   char*                objectName        = "scenario.calcapppooluser[0]";
-   unsigned long long   startupDelayStamp = getMicroTime();
-   int                  i;
+   struct rsp_info    info;
+   char*              poolHandle        = "CalcAppPool";
+   char*              vectorFileName    = "CalcAppPU.vec";
+   char*              scalarFileName    = "CalcAppPU.sca";
+   char*              objectName        = "scenario.calcapppooluser[0]";
+   unsigned long long startupDelayStamp = getMicroTime();
+   int                i;
 
    rsp_initinfo(&info);
 #ifdef ENABLE_CSP
