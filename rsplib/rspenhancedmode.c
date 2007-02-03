@@ -1292,14 +1292,14 @@ ssize_t rsp_recvmsg(int                    sd,
           (messageBufferHasPartial(rserpoolSocket->MsgBuffer)) &&
           (ntohl(rinfo->rinfo_ppid) != PPID_ASAP) ) {
          if(buffer != NULL) {
-            if((ssize_t)bufferLength < rserpoolSocket->MsgBuffer->BufferPos) {
+            if(bufferLength < rserpoolSocket->MsgBuffer->BufferPos) {
                LOG_ERROR
                fputs("Buffer is too small to keep even partial message\n", stdlog);
                LOG_END
                errno = ENOMEM;
                return(-1);
             }
-            received = min(rserpoolSocket->MsgBuffer->BufferPos, (ssize_t)bufferLength);
+            received = min(rserpoolSocket->MsgBuffer->BufferPos, bufferLength);
             memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
          }
          messageBufferReset(rserpoolSocket->MsgBuffer);

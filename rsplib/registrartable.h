@@ -79,10 +79,12 @@ struct RegistrarTable
   * Constructor.
   *
   * @param dispatcher Dispatcher.
+  * @param enableAutoConfig true to use multicast announces; false otherwise.
   * @param registrarAnnounceAddress Multicast address for PR announces.
   * @param tags TagItem array.
   */
 struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
+                                         const bool                  enableAutoConfig,
                                          const union sockaddr_union* registrarAnnounceAddress,
                                          struct TagItem*             tags);
 

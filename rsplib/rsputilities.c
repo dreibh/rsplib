@@ -28,6 +28,7 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "stringutilities.h"
+#include "asapinstance.h"
 #include "debug.h"
 #ifdef ENABLE_CSP
 #include "componentstatuspackets.h"
@@ -176,11 +177,22 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
       return(1);
    }
    else if(!(strncmp(arg, "-asapannounce=", 14))) {
-      if(string2address((char*)&arg[14], &asapAnnounceAddress) == false) {
-         fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", arg);
-         exit(1);
+      if(!(strcasecmp((const char*)&arg[14], "auto"))) {
+         info->ri_registrar_announce = NULL;
+         info->ri_disable_autoconfig = 0;
       }
-      info->ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
+      else if(!(strcasecmp((const char*)&arg[14], "off"))) {
+         info->ri_registrar_announce = NULL;
+         info->ri_disable_autoconfig = 1;
+      }
+      else {
+         if(string2address((const char*)&arg[14], &asapAnnounceAddress) == false) {
+            fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", arg);
+            exit(1);
+         }
+         info->ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
+         info->ri_disable_autoconfig = 0;
+      }
       return(1);
    }
    return(0);

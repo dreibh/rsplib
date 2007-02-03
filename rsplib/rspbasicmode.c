@@ -100,7 +100,10 @@ int rsp_initialize(struct rsp_info* info)
    threadSafetyNew(&gThreadSafety, "RsplibInstance");
    threadSafetyNew(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
    dispatcherNew(&gDispatcher, lock, unlock, NULL);
-   gAsapInstance = asapInstanceNew(&gDispatcher, (union sockaddr_union*)info->ri_registrar_announce, NULL);
+   gAsapInstance = asapInstanceNew(&gDispatcher,
+                                   (info->ri_disable_autoconfig == 0),
+                                   (union sockaddr_union*)info->ri_registrar_announce,
+                                   NULL);
    if(gAsapInstance) {
       if(info) {
          info->ri_version    = RSPLIB_VERSION;
@@ -142,7 +145,7 @@ int rsp_initialize(struct rsp_info* info)
 
          /* ====== Add static registrars ================================= */
          if( (info == NULL) ||
-	     (addStaticRegistrars(gAsapInstance->RegistrarSet, info)) ) {
+             (addStaticRegistrars(gAsapInstance->RegistrarSet, info)) ) {
             LOG_NOTE
             fputs("rsplib is ready\n", stdlog);
             LOG_END

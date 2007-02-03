@@ -83,9 +83,9 @@ FractalPU::FractalPU(const size_t       width,
 {
    QGridLayout* layout = new QGridLayout(this, 2, 1);
    Q_CHECK_PTR(layout);
-   Display        = new ImageDisplay(this, "Display");
+   Display = new ImageDisplay(this, "Display");
    Q_CHECK_PTR(Display);
-   StatusBar      = new QStatusBar(this);
+   StatusBar = new QStatusBar(this);
    Q_CHECK_PTR(StatusBar);
    Display->setMinimumSize(width, height);
    layout->addWidget(Display, 0, 0);
@@ -301,8 +301,7 @@ void FractalPU::getNextParameters()
 /* ###### Fractal PU thread implementation ############################### */
 void FractalPU::run()
 {
-   CalculationThreadArray = new FractalCalculationThread*[Threads];
-   Q_CHECK_PTR(CalculationThreadArray);
+   FractalCalculationThread* calculationThreadArray[Threads];
 
    Run    = 0;
    while(Status != FPU_Shutdown) {
@@ -346,12 +345,12 @@ void FractalPU::run()
                                     xStep, yStep, color.rgb());
                }
 
-               CalculationThreadArray[number] =
+               calculationThreadArray[number] =
                   new FractalCalculationThread(this, number,
                          xPosition * xStep, yPosition * yStep, xStep, yStep,
                          (Threads == 1), ColorMarks);
-               Q_CHECK_PTR(CalculationThreadArray[number]);
-               CalculationThreadArray[number]->start();
+               Q_CHECK_PTR(calculationThreadArray[number]);
+               calculationThreadArray[number]->start();
                number++;
             }
          }
@@ -369,8 +368,8 @@ void FractalPU::run()
       }
       size_t failed = 0;
       for(size_t i = 0;i < Threads;i++) {
-         CalculationThreadArray[i]->wait();
-         if(!CalculationThreadArray[i]->getSuccess()) {
+         calculationThreadArray[i]->wait();
+         if(!calculationThreadArray[i]->getSuccess()) {
             failed++;
          }
       }
@@ -378,8 +377,8 @@ void FractalPU::run()
       StatusBar->message((failed == 0) ? "Image completed!" : "Image calculation failed!");
       setCursor(Qt::ArrowCursor);
       for(size_t i = 0;i < Threads;i++) {
-         delete CalculationThreadArray[i];   // Must be called with qApp locked!
-         CalculationThreadArray[i] = NULL;
+         delete calculationThreadArray[i];   // Must be called with qApp locked!
+         calculationThreadArray[i] = NULL;
       }
       qApp->unlock();
 

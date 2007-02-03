@@ -188,10 +188,10 @@ static void registrarAssocIDNodePrint(const void* node, FILE* fd)
 
 /* ###### Constructor ####################################################### */
 struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
+                                         const bool                  enableAutoConfig,
                                          const union sockaddr_union* registrarAnnounceAddress,
                                          struct TagItem*             tags)
 {
-   union sockaddr_union   defaultAnnounceAddress;
    struct RegistrarTable* registrarTable = (struct RegistrarTable*)malloc(sizeof(struct RegistrarTable));
 
    if(registrarTable != NULL) {
@@ -209,14 +209,62 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
       registrarTable->RegistrarConnectTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarConnectTimeout,
                                                                                    ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
       registrarTable->RegistrarAnnounceTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
-                                                                                   ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
+                                                                                    ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
 
-      if(registrarAnnounceAddress) {
-         memcpy(&registrarTable->AnnounceAddress, registrarAnnounceAddress, sizeof(registrarTable->AnnounceAddress));
+      if(enableAutoConfig) {
+         if(registrarAnnounceAddress == NULL) {
+            CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &registrarTable->AnnounceAddress) == true);
+         }
+         else {
+            memcpy(&registrarTable->AnnounceAddress, registrarAnnounceAddress, sizeof(registrarTable->AnnounceAddress));
+         }
+
+         /* ====== Join announce multicast groups ======================== */
+         registrarTable->AnnounceSocket = ext_socket(registrarTable->AnnounceAddress.sa.sa_family,
+                                                     SOCK_DGRAM, IPPROTO_UDP);
+         if(registrarTable->AnnounceSocket >= 0) {
+            fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
+                          registrarTable->Dispatcher,
+                          registrarTable->AnnounceSocket,
+                          FDCE_Read,
+                          registrarAnnouceFDCallback,
+                          registrarTable);
+
+            setReusable(registrarTable->AnnounceSocket, 1);
+            if(bindplus(registrarTable->AnnounceSocket,
+                        &registrarTable->AnnounceAddress,
+                        1) == false) {
+               LOG_ERROR
+               fputs("Unable to bind multicast socket to address ",  stdlog);
+               fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress.sa, true, stdlog);
+               fputs("\n",  stdlog);
+               LOG_END
+               registrarTableDelete(registrarTable);
+               return(false);
+            }
+
+            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
+                                          &registrarTable->AnnounceAddress,
+                                          true)) {
+               LOG_WARNING
+               fputs("Joining multicast group ",  stdlog);
+               fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
+               fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+               LOG_END
+            }
+         }
+         else {
+            LOG_ERROR
+            fputs("Creating a socket for registrar announces failed\n",  stdlog);
+            LOG_END
+            registrarTableDelete(registrarTable);
+            return(false);
+         }
       }
       else {
-         CHECK(string2address(ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS, &defaultAnnounceAddress) == true);
-         memcpy(&registrarTable->AnnounceAddress, &defaultAnnounceAddress, sizeof(registrarTable->AnnounceAddress));
+         /* Autoconfig disabled */
+         registrarTable->AnnounceSocket = -1;
+         memset(&registrarTable->AnnounceAddress, 0, sizeof(registrarTable->AnnounceAddress));
       }
 
       /* ====== Show results ================================================ */
@@ -224,56 +272,35 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
       fputs("New RegistrarTable's configuration:\n",  stdlog);
       fprintf(stdlog, "registrar.announce.timeout  = %llu [us]\n", registrarTable->RegistrarAnnounceTimeout);
       fputs("registrar.announce.address  = ",  stdlog);
-      fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress, true, stdlog);
+      if(registrarTable->AnnounceAddress.sa.sa_family != 0) {
+         fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress, true, stdlog);
+      }
+      else {
+         fputs("none", stdlog);
+      }
       fputs("\n",  stdlog);
       fprintf(stdlog, "registrar.connect.maxtrials = %u\n",        registrarTable->RegistrarConnectMaxTrials);
       fprintf(stdlog, "registrar.connect.timeout   = %llu [us]\n", registrarTable->RegistrarConnectTimeout);
       LOG_END
 
-
-      /* ====== Join announce multicast groups ============================ */
-      registrarTable->AnnounceSocket = ext_socket(registrarTable->AnnounceAddress.sa.sa_family,
-                                                  SOCK_DGRAM, IPPROTO_UDP);
-      if(registrarTable->AnnounceSocket >= 0) {
-         fdCallbackNew(&registrarTable->AnnounceSocketFDCallback,
-                       registrarTable->Dispatcher,
-                       registrarTable->AnnounceSocket,
-                       FDCE_Read,
-                       registrarAnnouceFDCallback,
-                       registrarTable);
-
-         setReusable(registrarTable->AnnounceSocket, 1);
-         if(bindplus(registrarTable->AnnounceSocket,
-                     &registrarTable->AnnounceAddress,
-                     1) == false) {
-            LOG_ERROR
-            fputs("Unable to bind multicast socket to address ",  stdlog);
-            fputaddress((struct sockaddr*)&registrarTable->AnnounceAddress.sa, true, stdlog);
-            fputs("\n",  stdlog);
-            LOG_END
-            registrarTableDelete(registrarTable);
-            return(false);
-         }
-
-         if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                       &registrarTable->AnnounceAddress,
-                                       true)) {
-            LOG_WARNING
-            fputs("Joining multicast group ",  stdlog);
-            fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
-            fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
-            LOG_END
-         }
-      }
-      else {
-         LOG_ERROR
-         fputs("Creating a socket for registrar announces failed\n",  stdlog);
-         LOG_END
-         registrarTableDelete(registrarTable);
-         return(false);
-      }
    }
    return(registrarTable);
+}
+
+
+/* ###### Destructor ##################################################### */
+void registrarTableDelete(struct RegistrarTable* registrarTable)
+{
+   if(registrarTable != NULL) {
+      if(registrarTable->AnnounceSocket >= 0) {
+         fdCallbackDelete(&registrarTable->AnnounceSocketFDCallback);
+         ext_close(registrarTable->AnnounceSocket);
+         registrarTable->AnnounceSocket = -1;
+      }
+      simpleRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
+      ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
+      free(registrarTable);
+   }
 }
 
 
@@ -469,22 +496,6 @@ void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable
       removeRegistrarAssocID(registrarTable,
                              registrarHuntFD,
                              notification->sn_shutdown_event.sse_assoc_id);
-   }
-}
-
-
-/* ###### Destructor ##################################################### */
-void registrarTableDelete(struct RegistrarTable* registrarTable)
-{
-   if(registrarTable != NULL) {
-      if(registrarTable->AnnounceSocket >= 0) {
-         fdCallbackDelete(&registrarTable->AnnounceSocketFDCallback);
-         ext_close(registrarTable->AnnounceSocket);
-         registrarTable->AnnounceSocket = -1;
-      }
-      simpleRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
-      ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
-      free(registrarTable);
    }
 }
 
@@ -690,9 +701,10 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
 
-            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                          &registrarTable->AnnounceAddress,
-                                          true)) {
+            if( (registrarTable->AnnounceAddress.sa.sa_family != 0) &&
+                (!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
+                                            &registrarTable->AnnounceAddress,
+                                            true)) ) {
                LOG_WARNING
                fputs("Joining multicast group ",  stdlog);
                fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
