@@ -59,13 +59,13 @@ for SERVER in $SERVER_LIST; do
          cmd="$cmd ;"
       fi
       first=0
-      cmd="$cmd sudo killall $i 2>/dev/null >/dev/null"
+      cmd="$cmd sudo killall -KILL $i 2>/dev/null >/dev/null"
    done
    cmd="$cmd ; sudo ps ; sudo killall bash"
    # echo $cmd
 
    (
-   ssh -t -t -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Executing killall on $SERVER ...\" && \
       $cmd && \
       echo \"\`date\`: $SERVER is ready!\""

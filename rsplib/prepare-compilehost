@@ -33,10 +33,10 @@ for SERVER in $SERVER_LIST; do
       fi
       first=1
    done
-   cmd="$cmd ; sudo yum -y -C update ; sudo yum -y -C upgrade ; sudo updatedb ; echo \"\`date\`: $SERVER is ready!\""
+   cmd="sudo yum -y update ; sudo yum -y -C upgrade ; $cmd ; sudo /sbin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
    #echo $cmd
 
-   ssh -t -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
+   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
 done
 
 wait

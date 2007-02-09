@@ -54,7 +54,7 @@ for SERVER in $SERVER_LIST; do
    cmd="if [ -e bin/ ] ; then sudo rm -rf bin/ ; fi"
 
    (
-   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Executing clearall on $SERVER ...\" && \
       $cmd ; \
       echo \"\`date\`: $SERVER is ready!\""
