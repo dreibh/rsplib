@@ -36,14 +36,13 @@ extern "C" {
 
 struct IdentifierBitmap
 {
-   size_t Entries;
-   size_t Available;
-
-   size_t Slots;
-   size_t Bitmap[0];
+   size_t        Entries;
+   size_t        Available;
+   size_t        Slots;
+   unsigned long Bitmap[0];
 };
 
-#define IdentifierBitmapSlotsize (sizeof(size_t) * 8)
+#define IdentifierBitmapSlotsize (sizeof(unsigned long) * 8)
 
 
 struct IdentifierBitmap* identifierBitmapNew(const size_t entries);

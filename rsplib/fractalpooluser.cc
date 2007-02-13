@@ -453,6 +453,11 @@ bool FractalCalculationThread::sendParameterMessage()
    FGPParameter parameter;
    ssize_t      sent;
 
+   const double c1real = Master->Parameter.C1Real + (double)ViewX * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width;
+   const double c1imag = Master->Parameter.C1Imag + (double)ViewY * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height;
+   const double c2real = Master->Parameter.C1Real + (double)(ViewX + ViewWidth) * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width;
+   const double c2imag = Master->Parameter.C1Imag + (double)(ViewY + ViewHeight) * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height;
+
    parameter.Header.Type   = FGPT_PARAMETER;
    parameter.Header.Flags  = 0x00;
    parameter.Header.Length = htons(sizeof(parameter));
@@ -460,10 +465,10 @@ bool FractalCalculationThread::sendParameterMessage()
    parameter.Height        = htonl(ViewHeight);
    parameter.AlgorithmID   = htonl(Master->Parameter.AlgorithmID);
    parameter.MaxIterations = htonl(Master->Parameter.MaxIterations);
-   parameter.C1Real        = doubleToNetwork(Master->Parameter.C1Real + (double)ViewX * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width);
-   parameter.C1Imag        = doubleToNetwork(Master->Parameter.C1Imag + (double)ViewY * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height);
-   parameter.C2Real        = doubleToNetwork(Master->Parameter.C1Real + (double)(ViewX + ViewWidth) * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width);
-   parameter.C2Imag        = doubleToNetwork(Master->Parameter.C1Imag + (double)(ViewY + ViewHeight) * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height);
+   parameter.C1Real        = doubleToNetwork(c1real);
+   parameter.C1Imag        = doubleToNetwork(c1imag);
+   parameter.C2Real        = doubleToNetwork(c2real);
+   parameter.C2Imag        = doubleToNetwork(c2imag);
    parameter.N             = doubleToNetwork(Master->Parameter.N);
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,

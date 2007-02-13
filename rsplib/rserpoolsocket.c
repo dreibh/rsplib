@@ -75,7 +75,7 @@ struct RSerPoolSocket* getRSerPoolSocketForDescriptor(int sd)
    if(rserpoolSocket == NULL) {
       LOG_ERROR
       fprintf(stdlog, "Bad RSerPool socket descriptor %d\n", sd);
-      LOG_END
+      LOG_END_FATAL
    }
    return(rserpoolSocket);
 }

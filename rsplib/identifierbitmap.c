@@ -55,8 +55,8 @@ void identifierBitmapDelete(struct IdentifierBitmap* identifierBitmap)
 /* ###### Allocate ID #################################################### */
 int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
 {
-   size_t i, j;
-   int    id = -1;
+   unsigned int i, j;
+   int      id = -1;
 
    if(identifierBitmap->Available > 0) {
       i = 0;
@@ -68,13 +68,13 @@ int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
       j = 0;
       while((j < IdentifierBitmapSlotsize) &&
             (id < (int)identifierBitmap->Entries) &&
-            (identifierBitmap->Bitmap[i] & (1 << j))) {
+            (identifierBitmap->Bitmap[i] & (1UL << j))) {
          j++;
          id++;
       }
       CHECK(id < (int)identifierBitmap->Entries);
 
-      identifierBitmap->Bitmap[i] |= (1 << j);
+      identifierBitmap->Bitmap[i] |= (1UL << j);
       identifierBitmap->Available--;
    }
 
@@ -86,15 +86,15 @@ int identifierBitmapAllocateID(struct IdentifierBitmap* identifierBitmap)
 int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap,
                                        const int                id)
 {
-   size_t i, j;
+   unsigned int i, j;
 
    CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
    i = id / IdentifierBitmapSlotsize;
    j = id % IdentifierBitmapSlotsize;
-   if(identifierBitmap->Bitmap[i] & (1 << j)) {
+   if(identifierBitmap->Bitmap[i] & (1UL << j)) {
       return(-1);
    }
-   identifierBitmap->Bitmap[i] |= (1 << j);
+   identifierBitmap->Bitmap[i] |= (1UL << j);
    identifierBitmap->Available--;
    return(id);
 }
@@ -103,12 +103,12 @@ int identifierBitmapAllocateSpecificID(struct IdentifierBitmap* identifierBitmap
 /* ###### Free ID ######################################################## */
 void identifierBitmapFreeID(struct IdentifierBitmap* identifierBitmap, const int id)
 {
-   size_t i, j;
+   unsigned int i, j;
 
    CHECK((id >= 0) && (id < (int)identifierBitmap->Entries));
    i = id / IdentifierBitmapSlotsize;
    j = id % IdentifierBitmapSlotsize;
-   CHECK(identifierBitmap->Bitmap[i] & (1 << j));
-   identifierBitmap->Bitmap[i] &= ~(1 << j);
+   CHECK(identifierBitmap->Bitmap[i] & (1UL << j));
+   identifierBitmap->Bitmap[i] &= ~(1UL << j);
    identifierBitmap->Available++;
 }

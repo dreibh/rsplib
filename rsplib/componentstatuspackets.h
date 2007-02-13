@@ -29,6 +29,11 @@
 #include <stdint.h>
 
 
+/* Ensure consistent alignment! */
+#pragma pack(push)
+#pragma pack(4)
+
+
 #define CSP_VERSION        0x0200
 
 
@@ -83,5 +88,7 @@ struct ComponentStatusReport
 #define CSR_SET_WORKLOAD(w) ((w < 0.0) ? 0xffff : (uint16_t)rint(w * 0xfffe))
 #define CSR_GET_WORKLOAD(w) ((w == 0xffff) ? -1.0 : (double)(w / (double)0xfffe))
 
+
+#pragma pack(pop)
 
 #endif

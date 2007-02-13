@@ -29,6 +29,11 @@
 #include <stdint.h>
 
 
+// Ensure consistent alignment!
+#pragma pack(push)
+#pragma pack(4)
+
+
 #define PPID_PPP 0x29097602
 
 #define PPPT_PING 0x01
@@ -65,5 +70,6 @@ struct PPPCookie
    uint64_t ReplyNo;
 };
 
+#pragma pack(pop)
 
 #endif

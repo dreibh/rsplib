@@ -31,6 +31,11 @@
 #include <stdint.h>
 
 
+// Ensure consistent alignment!
+#pragma pack(push)
+#pragma pack(4)
+
+
 #define PPID_FGP 0x29097601
 
 #define FGPT_PARAMETER 0x01
@@ -48,6 +53,7 @@ struct FGPCommonHeader
 #define FGPA_MANDELBROT  1
 #define FGPA_MANDELBROTN 2
 
+
 struct FGPParameter
 {
    FGPCommonHeader  Header;
@@ -61,7 +67,6 @@ struct FGPParameter
    network_double_t C2Imag;
    network_double_t N;
 };
-
 
 #define FGD_MAX_POINTS 324
 
@@ -106,5 +111,7 @@ struct FractalGeneratorStatus {
    uint32_t            CurrentY;
 };
 
+
+#pragma pack(pop)
 
 #endif
