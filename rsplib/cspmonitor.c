@@ -107,13 +107,13 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, int=%4Ldms, A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, int=%4lldms, A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
            (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
-           cspObject->ReportInterval / 1000,
+           (long long)cspObject->ReportInterval / 1000,
            (unsigned int)cspObject->Associations,
            workload,
            cspObject->Status);
@@ -142,8 +142,8 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
          }
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
             fprintf(fd, "  duration=%4llu.%03llus",
-                    cspObject->AssociationArray[i].Duration / 1000000,
-                    (cspObject->AssociationArray[i].Duration % 1000000) / 1000);
+                    (unsigned long long)cspObject->AssociationArray[i].Duration / 1000000,
+                    (unsigned long long)(cspObject->AssociationArray[i].Duration % 1000000) / 1000);
          }
          fputs("\x1b[0K\n", fd);
       }

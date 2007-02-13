@@ -84,7 +84,7 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
                          flags, from, fromlen, ppid, assocID, streamID, timeout);
    LOG_VERBOSE4
    fprintf(stdlog, "Read result for socket %d is %d, EOR=%s, NOTIFICATION=%s, useEOR=%s\n",
-           sockfd, result,
+           sockfd, (int)result,
            (*flags & MSG_EOR) ? "yes" : "no",
            (*flags & MSG_NOTIFICATION) ? "yes" : "no",
            (messageBuffer->UseEOR == true) ? "yes" : "no");
@@ -93,14 +93,14 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
       messageBuffer->BufferPos += (size_t)result;
       if( (messageBuffer->UseEOR) && (!(*flags & MSG_EOR)) ) {
          LOG_VERBOSE4
-         fprintf(stdlog, "Partially read %d bytes on socket %d\n", result, sockfd);
+         fprintf(stdlog, "Partially read %d bytes on socket %d\n", (int)result, sockfd);
          LOG_END
          result = MBRead_Partial;
       }
       else {
          LOG_VERBOSE4
          fprintf(stdlog, "Partially read %d bytes on socket %d, message of %u bytes completed\n",
-                 result, sockfd, messageBuffer->BufferPos);
+                 (int)result, sockfd, (int)messageBuffer->BufferPos);
          LOG_END
          /*
          LOG_VERBOSE5

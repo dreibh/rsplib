@@ -106,7 +106,7 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
                     const unsigned int     cspReportInterval,
                     size_t                 (*cspGetReportFunction)(
                                               void*                         userData,
-                                              unsigned long long*           identifier,
+                                              uint64_t*                     identifier,
                                               struct ComponentAssociation** caeArray,
                                               char*                         statusText,
                                               char*                         componentAddress,

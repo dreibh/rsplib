@@ -157,7 +157,7 @@ void registrarDumpPeers(struct Registrar* registrar);
 #ifdef ENABLE_CSP
 static size_t registrarGetReportFunction(
                  void*                         userData,
-                 unsigned long long*           identifier,
+                 uint64_t*                     identifier,
                  struct ComponentAssociation** caeArray,
                  char*                         statusText,
                  char*                         componentLocation,
@@ -2907,7 +2907,7 @@ static void handleHandleTableResponse(struct Registrar*       registrar,
             if(purged) {
                LOG_ACTION
                fprintf(stdlog, "Purged %u PEs after last Handle Table Response from $%08x\n",
-                       purged, message->SenderID);
+                       (unsigned int)purged, message->SenderID);
                LOG_END
             }
             if((registrar->InInitializationPhase) &&
@@ -3135,7 +3135,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
 /* ###### Get CSP report ################################################# */
 static size_t registrarGetReportFunction(
                  void*                         userData,
-                 unsigned long long*           identifier,
+                 uint64_t*                     identifier,
                  struct ComponentAssociation** caeArray,
                  char*                         statusText,
                  char*                         componentLocation,

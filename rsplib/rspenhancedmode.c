@@ -1507,7 +1507,7 @@ int rsp_csp_setstatus(int                sd,
 #ifdef ENABLE_CSP
 /* ###### Get CSP status ################################################# */
 size_t getSessionStatus(struct ComponentAssociation** caeArray,
-                        unsigned long long*           identifier,
+                        uint64_t*                     identifier,
                         char*                         statusText,
                         char*                         componentLocation,
                         double*                       workload,

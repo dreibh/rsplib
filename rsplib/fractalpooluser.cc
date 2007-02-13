@@ -388,7 +388,7 @@ void FractalPU::run()
          do {
             FileNumber++;
             QString fileSuffix;
-            fileSuffix.sprintf("-%06u.png", FileNumber);
+            fileSuffix.sprintf("-%06u.png", (unsigned int)FileNumber);
             fileName = ImageStoragePrefix + fileSuffix;
          } while((QFile::exists(fileName)) && (FileNumber < 999999));
          StatusBar->message("Storing image as " + fileName);
@@ -407,7 +407,7 @@ void FractalPU::run()
          while(secsToWait > 0) {
             usleep(1000000);
             secsToWait--;
-            snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", secsToWait);
+            snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", (int)secsToWait);
             qApp->lock();
             StatusBar->message(str);
             qApp->unlock();
@@ -604,11 +604,11 @@ void FractalCalculationThread::run()
                                  if(ShowStatus) {
                                     snprintf((char*)&statusText, sizeof(statusText),
                                              "Processed packet #%u; PE is $%08x",
-                                             packets, rinfo.rinfo_pe_id);
+                                             (unsigned int)packets, rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
                                     snprintf((char*)&statusText, sizeof(statusText),
                                              "Processed data packet #%u (from PE $%08x)...",
-                                             packets, rinfo.rinfo_pe_id);
+                                             (unsigned int)packets, rinfo.rinfo_pe_id);
                                     qApp->lock();
                                     Master->StatusBar->message(statusText);
                                     qApp->unlock();
@@ -774,7 +774,7 @@ int main(int argc, char** argv)
    printf("Inter Image Time     = %u [s]\n", interImageTime);
    printf("Image Storage Prefix = %s\n", imageStoragePrefix);
    printf("Color Marks          = %s\n", (colorMarks == TRUE) ? "on" : "off");
-   printf("Threads              = %u\n\n", threads);
+   printf("Threads              = %u\n\n", (unsigned int)threads);
 
 
    if(rsp_initialize(&info) < 0) {

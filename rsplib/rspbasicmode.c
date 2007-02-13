@@ -58,13 +58,13 @@ static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
                                 struct rsp_info*       info);
 #ifdef ENABLE_CSP
 static size_t getComponentStatus(void*                         userData,
-                                 unsigned long long*           identifier,
+                                 uint64_t*                     identifier,
                                  struct ComponentAssociation** caeArray,
                                  char*                         statusText,
                                  char*                         componentAddress,
                                  double*                       workload);
 extern size_t getSessionStatus(struct ComponentAssociation** caeArray,
-                               unsigned long long*           identifier,
+                               uint64_t*                     identifier,
                                char*                         statusText,
                                char*                         componentAddress,
                                double*                       workload,
@@ -574,7 +574,7 @@ unsigned int rsp_getpolicybyname(const char* policyName)
 #ifdef ENABLE_CSP
 /* ###### Get PE/PU status ############################################### */
 static size_t getComponentStatus(void*                         userData,
-                                 unsigned long long*           identifier,
+                                 uint64_t*                     identifier,
                                  struct ComponentAssociation** caeArray,
                                  char*                         statusText,
                                  char*                         componentAddress,

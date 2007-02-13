@@ -143,13 +143,13 @@ int main(int argc, char** argv)
 
                      printf("\x1b[34m");
                      printTimeStamp(stdout);
-                     printf("Ack #%Lu from PE $%08x (reply #%Lu)\x1b[0m\n",
-                           recvMessageNo, rinfo.rinfo_pe_id, recvReplyNo);
+                     printf("Ack #%llu from PE $%08x (reply #%llu)\x1b[0m\n",
+                            (unsigned long long)recvMessageNo, rinfo.rinfo_pe_id, (unsigned long long)recvReplyNo);
 
                      if(recvReplyNo - lastReplyNo != 1) {
                         printTimeStamp(stdout);
-                        printf("*** Detected gap of %Ld! ***\n",
-                               (uint64_t)recvReplyNo - (uint64_t)lastReplyNo);
+                        printf("*** Detected gap of %lld! ***\n",
+                               (unsigned long long)recvReplyNo - (unsigned long long)lastReplyNo);
                      }
                      lastReplyNo = recvReplyNo;
                   }
@@ -163,8 +163,8 @@ int main(int argc, char** argv)
          lastPing = getMicroTime();
 
          snprintf((char*)&str,sizeof(str),
-                  "Nachricht: %Lu, Zeitstempel: %llu",
-                  messageNo, lastPing);
+                  "Nachricht: %llu, Zeitstempel: %llu",
+                  (unsigned long long)messageNo, (unsigned long long)lastPing);
          size_t dataLength = strlen(str);
 
          ping = (struct Ping*)&buffer;
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
          sent = rsp_sendmsg(sd, (char*)ping, sizeof(struct Ping) + dataLength, 0,
                             0, htonl(PPID_PPP), 0, 0, 0);
          if(sent > 0) {
-            printf("Message #%Ld sent\n", messageNo);
+            printf("Message #%Ld sent\n", (unsigned long long)messageNo);
             messageNo++;
          }
       }
