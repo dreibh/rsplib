@@ -75,7 +75,8 @@ elif [ "x$1" = "xuser" ] ; then
    for pr in $PR_LIST ; do
       optRegistrars="$optRegistrars -registrar=$pr:3863"
    done
-   ./fractalpooluser $optRegistrars -loglevel=1 $OPT_CSP
+   shift
+   ./fractalpooluser $optRegistrars -loglevel=1 $OPT_CSP $@
 else
    echo "ERROR: Bad parameter!"
 fi
