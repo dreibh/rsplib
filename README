@@ -66,18 +66,21 @@ How to set up a simple test of the rsplib-2.1.0 release:
    ./registrar-example
    (You can start multiple registrars; they may also run on different hosts, of course)
 
+   Alternatively, start the registrar directly:
+   ./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto
+   See also chapter D for registrar parameters.
+
 5. Start at least one pool element
    ./poolelement-example
    (You can start multiple pool elements; they may also run on different hosts, of course.
     If it complains about finding no registrar, check the multicast settings!)
 
 6. Start a pool user
-   ./pooluser-example -auto=250
-   (If it complains about finding no registrar, check the multicast settings!
-    -auto=250 sends a text string to the Echo PE every 250ms. If you do not set
-    this parameter, you have to manually enter text lines at standard input.)
+   ./pooluser-example
+   (If it complains about finding no registrar, check the multicast settings!)
+   Now, you have to manually enter text lines on standard input.
 
-7. If everythink works, you can test RSerPool functionality by stopping the pool
+7. If everything works, you can test RSerPool functionality by stopping the pool
    element and watching the failover.
 
 8. You can monitor the status of each component using the Component Status Protocol
@@ -226,7 +229,79 @@ C.4 Ping Pong Client (for the Fractal Generator service)
 
 
 
-D. COMPONENT STATUS PROTOCOL
+D. REGISTRAR
+
+Start with ./registrar. By default, the auto-configuration (for ASAP as well as
+for ENRP) is turned off! The script "./registrar-example" is provided for
+convenience and starts the registrar with auto-configuration turned on.
+
+In most cases, you want the following command line:
+./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto
+
+
+
+D.1 Common Parameters
+
+-loglevel=0-9: Sets the logging verbosity from 0 (none) to 9 (very verbose).
+
+-logcolor=on|off: Turns ANSI colorization of the logging output on or off.
+
+-logfile=filename: Write logging output to a file (default is stdout).
+
+-peer=Address:Port: Adds a static PR entry into the Peer List.
+                    It is possible to add multiple entries.
+
+
+D.2 ASAP Parameters
+
+-asap=auto|address:port{,address}: Sets the ASAP endpoint address(es). Use "auto"
+                                   to automatically set it (default).
+                                   Examples: -asap=auto
+                                             -asap=1.2.3.4:3863
+                                             -asap=1.2.3.4:3863,[2000::1:2:3],9.8.7.6
+
+-asapannounce=auto|address:port: Sets the multicast address and UDP port to send
+                                 the ASAP Announces to. Use "auto" for default.
+                                 Examples: -asapannounce=auto
+                                           -asapannounce=239.0.0.1:3863
+
+-maxbadpereports=reports: Sets the maximum number of ASAP Endpoint Unreachable reports before
+                          removing a PE.
+
+-endpointkeepalivetransmissioninterval=milliseconds: Sets the ASAP Endpoint Keep Alive interval.
+
+-endpointkeepalivetimeoutinterval=milliseconds: Sets the ASAP Endpoint Keep Alive timeout.
+
+-serverannouncecycle=milliseconds: Sets the ASAP Announce interval.
+
+-autoclosetimeout=seconds: Sets the SCTP autoclose timeout for idle ASAP associations.
+
+
+D.3 ENRP Parameters
+
+-enrp=auto|address:port{,address}: Sets the ENRP endpoint address(es). Use "auto"
+                                   to automatically set it (default).
+                                   Examples: -enrp=auto
+                                             -enrp=1.2.3.4:3864
+                                             -enrp=1.2.3.4:3864,[2000::1:2:3],9.8.7.6
+
+-enrpmulticast=auto|address:port: Sets the ENRP multicast address and UDP port for ENRP.
+                                  Use "auto" for default.
+                                  Examples: -enrpmulticast=auto
+                                            -enrpmulticast=239.0.0.1:3864
+
+-peerheartbeatcycle=milliseconds: Sets the ENRP peer heartbeat interval.
+
+-peermaxtimelastheard=milliseconds: Sets the ENRP peer max time last heard.
+
+-peermaxtimenoresponse=milliseconds: Sets the ENRP maximum time without response.
+
+-takeoverexpiryinterval=milliseconds: Sets the ENRP takeover timeout.
+
+-mentorhuntinterval=milliseconds: Sets the mentor PR hunt interval.
+
+
+E. COMPONENT STATUS PROTOCOL
 
 The Component Status Protocol is a simple UDP-based protocol for RSerPool
 components to send their status to a central monitoring component. A
@@ -253,4 +328,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-11.01.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+23.02.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de

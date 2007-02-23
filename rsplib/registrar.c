@@ -3558,10 +3558,11 @@ int main(int argc, char** argv)
          fprintf(stderr, "ERROR: Invalid argument <%s>!\n", argv[i]);
          fprintf(stderr, "Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
-            "{-cspserver=address} {-cspinterval=microseconds}"
+            "{-cspserver=address} {-cspinterval=microseconds} "
 #endif
             "{-identifier=registrar identifier} "
             "{-autoclosetimeout=seconds} {-serverannouncecycle=milliseconds} "
+            "{-maxbadpereports=reports} "
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds}"
