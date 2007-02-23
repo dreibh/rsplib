@@ -60,10 +60,10 @@ while [ ! x$1 = "x" ] ; do
    fi
 
    # Achtung:
-   # Option -t sorgt dafür, daß Pseudo-Terminal erzeugt wird.
+   # Option -t sorgt dafr, daï¿½Pseudo-Terminal erzeugt wird.
    # Optionen -t -t erzwingen Erstellung von Pseudo-Terminal, auch wenn stdin keines ist!
    # -> Lokaler ssh-Abbruch -> Abbruch der entfernten Prozesse.
-   ( ssh -t -t -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
+   ( ssh -t -t -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER " \
         cd ~/bin && \
         ulimit -c unlimited && \
         if [ \"x$PROGCHK\" = \"x1\" ] ; then \
@@ -75,7 +75,7 @@ while [ ! x$1 = "x" ] ; do
               exit 1 ; \
            fi \
         fi && \
-        echo \"`date`: $SERVER> $PROGCALL\" | head -c117 | xargs -i§ echo §... && \
+        echo \"`date`: $SERVER> $PROGCALL\" | head -c117 | xargs -i echo ... && \
         $PROGCALL" 2>&1 &
      echo $! >$PIDFILE )  | grep -v "tcgetattr: Inappropriate ioctl for device" &
    # This is necessary to get rid of the stupid tcgetattr error prints, but

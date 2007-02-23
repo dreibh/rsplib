@@ -37,7 +37,7 @@ for SERVER in $SERVER_LIST; do
    if [ $showhosts = 1 ] ; then
       echo "# Testing $SERVER ..."
    fi
-   ./execalarm $SERVER_TEST_TIMEOUT "ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER \"$SERVER_TEST && echo \\\"$SERVER is ready!\\\"\"" 1>$SERVER_TEST_OUTPUT 2>$SERVER_TEST_OUTPUT
+   ./execalarm $SERVER_TEST_TIMEOUT "ssh -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER \"$SERVER_TEST && echo \\\"$SERVER is ready!\\\"\"" 1>$SERVER_TEST_OUTPUT 2>$SERVER_TEST_OUTPUT
    result=$?
    if [ $result -eq 0 ]  ; then
       isgood=1

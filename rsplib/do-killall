@@ -65,7 +65,7 @@ for SERVER in $SERVER_LIST; do
    # echo $cmd
 
    (
-   ssh -i $PLANETLAB_KEY -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER "\
+   ssh -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER "\
       echo \"\`date\`: Executing killall on $SERVER ...\" && \
       $cmd && \
       echo \"\`date\`: $SERVER is ready!\""
