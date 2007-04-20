@@ -692,7 +692,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
          unsigned long long nextTimer = now + 500000;
          nextTimer = min(nextTimer, process.NextJobTimeStamp);
          unsigned long long timeout = (nextTimer >= now) ? (nextTimer - now) : 1;
-         usleep((unsigned int)(timeout / 1000ULL));
+         usleep((unsigned int)timeout);
          handleTimer(&process);
          if(breakDetected()) {
             goto finished;
