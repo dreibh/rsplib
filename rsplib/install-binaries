@@ -42,7 +42,7 @@ for prg in $DISTPRGS ; do
       exit 1
    fi
 done
-if [ "x$$DISTMISC" != "x" ] ; then
+if [ "x$DISTMISC" != "x" ] ; then
    cp -f $DISTMISC bin/
 fi
 tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2

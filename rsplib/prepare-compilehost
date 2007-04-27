@@ -29,11 +29,11 @@ for SERVER in $SERVER_LIST; do
       if [ $first -eq 0 ] ; then
          cmd="$cmd ; sudo yum -y install $i"
       else
-         cmd="$cmd ; sudo yum -y -C install $i"
+         cmd="$cmd ; sudo yum -y install $i"
       fi
       first=1
    done
-   cmd="sudo yum -y update ; sudo yum -y -C upgrade ; $cmd ; sudo /sbin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
+   cmd="sudo yum -y update ; sudo yum -y upgrade ; $cmd ; sudo updatedb ; echo \"\`date\`: $SERVER is ready!\""
    #echo $cmd
 
    ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
