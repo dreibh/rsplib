@@ -54,7 +54,7 @@ tar xzf /tmp/$DISTNAME.tar.gz && \
 rm -f /tmp/$DISTNAME.tar.gz && \
 echo \"\`date\`: Configuring archive on $SERVER ...\" && \
 cd $DISTNAME && \
-./configure --disable-shared --enable-static $DISTCONFOPT && \
+./configure --disable-shared --enable-static --with-glib=/usr $DISTCONFOPT && \
 echo \"\`date\`: Compiling archive on $SERVER ...\" && \
 make && \
 echo \"\`date\`: Packaging binaries on $SERVER ...\" && \

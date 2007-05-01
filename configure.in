@@ -165,12 +165,12 @@ if test x$with_glib = x ; then
     AC_MSG_ERROR([
 *** GLIB 1.2.8 or better is required. The latest version of GLIB
 *** is always available from ftp://ftp.gtk.org/.]),
-    glib gthread)
+    gmodule gthread)
 
   # we do not want to make all gtk progs to link to thread libraries.
-  glib_cflags=`$GLIB_CONFIG glib glib --cflags`
+  glib_cflags=`$GLIB_CONFIG glib gmodule --cflags`
   glib_thread_cflags="$GLIB_CFLAGS"
-  glib_libs=`$GLIB_CONFIG glib glib --libs`
+  glib_libs=`$GLIB_CONFIG glib gmodule --libs`
   glib_thread_libs="$GLIB_LIBS"
   glib_LIBS="$glib_libs"
   GLIB_LIBS="$glib_libs"
@@ -178,7 +178,7 @@ if test x$with_glib = x ; then
 else
   # Use uninstalled glib (assume they got the version right)
 
-  GLIB_CONFIG=$with_glib/glib-config
+  GLIB_CONFIG=$with_glib/bin/glib-config
   if test -x $GLIB_CONFIG ; then
     :
   else
@@ -186,10 +186,10 @@ else
   fi
 
   # For use in gtk-config
-  glib_cflags=`$GLIB_CONFIG --cflags glib`
-  glib_thread_cflags=`$GLIB_CONFIG --cflags glib gthread`
-  glib_libs=`$GLIB_CONFIG --libs glib`
-  glib_thread_libs=`$GLIB_CONFIG --libs glib gthread`
+  glib_cflags=`$GLIB_CONFIG --cflags gmodule`
+  glib_thread_cflags=`$GLIB_CONFIG --cflags gthread`
+  glib_libs=`$GLIB_CONFIG --libs gmodule`
+  glib_thread_libs=`$GLIB_CONFIG --libs gthread`
 
   glib_release=`$GLIB_CONFIG --version | sed 's%\\.[[0-9]]*$%%'`
 
@@ -204,8 +204,8 @@ else
   esac
 
   glib_LIBS="$glib_libs"
-  GLIB_CFLAGS="-I$glib_dir -I$glib_dir/glib"
-  GLIB_LIBS="$glib_dir/libglib.la"
+  GLIB_CFLAGS="-I$glib_dir/include"
+  GLIB_LIBS="$glib_dir/lib/libglib.a"
   GLIB_DEPLIBS=
 
   AC_SUBST(GLIB_CFLAGS)
