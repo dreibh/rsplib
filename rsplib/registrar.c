@@ -7,7 +7,7 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium fr Bildung und
+ * This work was partially funded by the Bundesministerium für Bildung und
  * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
@@ -144,6 +144,18 @@ struct Registrar
    unsigned long long                         MentorHuntTimeout;
    unsigned long long                         TakeoverExpiryInterval;
 
+   FILE*                                      StatsFile;
+   struct Timer                               StatsTimer;
+   unsigned long long                         StatsLine;
+   unsigned long long                         StatsStartTime;
+   int                                        StatsInterval;
+   unsigned long long                         RegistrationCount;
+   unsigned long long                         ReregistrationCount;
+   unsigned long long                         DeregistrationCount;
+   unsigned long long                         HandleResolutionCount;
+   unsigned long long                         FailureReportCount;
+   unsigned long long                         SynchronizationCount;
+
 #ifdef ENABLE_CSP
    struct CSPReporter                         CSPReporter;
    unsigned int                               CSPReportInterval;
@@ -175,7 +187,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const union sockaddr_union*    asapAnnounceAddress,
                                const bool                     enrpUseMulticast,
                                const bool                     enrpAnnounceViaMulticast,
-                               const union sockaddr_union*    enrpMulticastAddress
+                               const union sockaddr_union*    enrpMulticastAddress,
+                               FILE*                          statsFile,
+                               unsigned int                   statsInterval
 #ifdef ENABLE_CSP
                                , const unsigned int           cspReportInterval,
                                const union sockaddr_union*    cspReportAddress
@@ -193,6 +207,9 @@ static void sendInitTakeoverAck(struct Registrar*       registrar,
                                 const sctp_assoc_t       assocID,
                                 const RegistrarIdentifierType receiverID,
                                 const RegistrarIdentifierType targetID);
+static void statisticsCallback(struct Dispatcher* dispatcher,
+                               struct Timer*      timer,
+                               void*              userData);
 static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData);
@@ -241,7 +258,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const union sockaddr_union*    asapAnnounceAddress,
                                const bool                     enrpUseMulticast,
                                const bool                     enrpAnnounceViaMulticast,
-                               const union sockaddr_union*    enrpMulticastAddress
+                               const union sockaddr_union*    enrpMulticastAddress,
+                               FILE*                          statsFile,
+                               unsigned int                   statsInterval
 #ifdef ENABLE_CSP
                                , const unsigned int           cspReportInterval,
                                const union sockaddr_union*    cspReportAddress
@@ -335,6 +354,17 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->MentorHuntTimeout                     = REGISTRAR_DEFAULT_MENTOR_HUNT_TIMEOUT;
       registrar->TakeoverExpiryInterval                = REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
 
+      registrar->StatsFile             = statsFile;
+      registrar->StatsInterval         = statsInterval;
+      registrar->StatsStartTime        = 0;
+      registrar->StatsLine             = 0;
+      registrar->RegistrationCount     = 0;
+      registrar->ReregistrationCount   = 0;
+      registrar->DeregistrationCount   = 0;
+      registrar->HandleResolutionCount = 0;
+      registrar->FailureReportCount    = 0;
+      registrar->SynchronizationCount  = 0;
+
       autoCloseTimeout = (registrar->AutoCloseTimeout / 1000000);
       if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
          LOG_ERROR
@@ -409,6 +439,14 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                         registrar);
       }
 #endif
+
+      if(registrar->StatsFile) {
+         timerNew(&registrar->StatsTimer,
+                  &registrar->StateMachine,
+                  statisticsCallback,
+                  (void*)registrar);
+         timerStart(&registrar->StatsTimer, 0);
+      }
    }
 
    return(registrar);
@@ -419,6 +457,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 void registrarDelete(struct Registrar* registrar)
 {
    if(registrar) {
+      if(registrar->StatsFile) {
+         timerDelete(&registrar->StatsTimer);
+      }
       fdCallbackDelete(&registrar->ENRPUnicastSocketFDCallback);
       fdCallbackDelete(&registrar->ASAPSocketFDCallback);
       ST_CLASS(peerListManagementDelete)(&registrar->Peers);
@@ -479,6 +520,37 @@ void registrarDumpPeers(struct Registrar* registrar)
    fputs("*************** Peers ************************\n", stdlog);
    ST_CLASS(peerListManagementPrint)(&registrar->Peers, stdlog, PLPO_FULL);
    fputs("**********************************************\n", stdlog);
+}
+
+
+/* ###### Statistics dump callback ########################################## */
+static void statisticsCallback(struct Dispatcher* dispatcher,
+                               struct Timer*      timer,
+                               void*              userData)
+{
+   struct Registrar*        registrar = (struct Registrar*)userData;
+   const unsigned long long now       = getMicroTime();
+
+   if(registrar->StatsLine == 0) {
+      fputs("AbsTime RelTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations\n",
+            registrar->StatsFile);
+      registrar->StatsLine      = 1;
+      registrar->StatsStartTime = now;
+   }
+
+   fprintf(registrar->StatsFile,
+           "%06llu %1.6f %1.6f   %llu %llu %llu %llu %llu %llu\n",
+           registrar->StatsLine++,
+           now / 1000000.0,
+           (now - registrar->StatsStartTime) / 1000000.0,
+           registrar->RegistrationCount,
+           registrar->ReregistrationCount,
+           registrar->DeregistrationCount,
+           registrar->HandleResolutionCount,
+           registrar->FailureReportCount,
+           registrar->SynchronizationCount);
+
+   timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
 }
 
 
@@ -1462,6 +1534,11 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
                   ST_CLASS(poolHandlespaceNodeDeactivateTimer)(
                      &registrar->Handlespace.Handlespace,
                      poolElementNode);
+
+                  registrar->ReregistrationCount++;   /* We have a re-registration here */
+               }
+               else {
+                  registrar->RegistrationCount++;   /* We have a new registration here */
                }
                ST_CLASS(poolHandlespaceNodeActivateTimer)(
                   &registrar->Handlespace.Handlespace,
@@ -1602,6 +1679,8 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
             fputs("Handlespace content:\n", stdlog);
             registrarDumpHandlespace(registrar);
             LOG_END
+
+            registrar->DeregistrationCount++;
          }
          else {
             LOG_WARNING
@@ -1666,6 +1745,8 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
+
+   registrar->HandleResolutionCount++;
 
    message->Type  = AHT_HANDLE_RESOLUTION_RESPONSE;
    message->Flags = 0x00;
@@ -1783,6 +1864,8 @@ static void handleEndpointUnreachable(struct Registrar*       registrar,
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
+
+   registrar->FailureReportCount++;
 
    poolElementNode = ST_CLASS(poolHandlespaceManagementFindPoolElement)(
                         &registrar->Handlespace,
@@ -2727,6 +2810,8 @@ static void handleHandleTableRequest(struct Registrar*       registrar,
            message->SenderID);
    LOG_END
 
+   registrar->SynchronizationCount++;
+
    peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                      &registrar->Peers,
                      message->SenderID,
@@ -3467,6 +3552,9 @@ int main(int argc, char** argv)
    unsigned long long            cspReportInterval = 0;
 #endif
 
+   FILE*                         statsFile     = NULL;
+   int                           statsInterval = -1;
+
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];
    unsigned int                  nfds;
@@ -3527,6 +3615,25 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-multicast=off"))) {
          enrpUseMulticast = false;
       }
+      else if(!(strncmp(argv[i], "-statsfile=", 11))) {
+         if(statsFile) {
+            fclose(statsFile);
+         }
+         statsFile = fopen((const char*)&argv[i][11], "w");
+         if(statsFile == NULL) {
+            fprintf(stderr, "ERROR: Unable to create statistics file \"%s\"!\n",
+                    (char*)&argv[i][11]);
+         }
+      }
+      else if(!(strncmp(argv[i], "-statsinterval=", 15))) {
+         statsInterval = atol((const char*)&argv[i][15]);
+         if(statsInterval < 10) {
+            statsInterval = 10;
+         }
+         else if(statsInterval > 3600000) {
+            statsInterval = 36000000;
+         }
+      }
       else if(!(strncmp(argv[i], "-log",4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
@@ -3565,7 +3672,8 @@ int main(int argc, char** argv)
             "{-maxbadpereports=reports} "
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
-            "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds}"
+            "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
+            "{-statsfile=file} {-statsinterval=millisecs}"
             "\n",argv[0]);
          exit(1);
       }
@@ -3614,7 +3722,8 @@ int main(int argc, char** argv)
                             enrpMulticastInputSocket,
                             enrpMulticastOutputSocket,
                             asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
-                            enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0]
+                            enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
+                            statsFile, statsInterval
 #ifdef ENABLE_CSP
                             , cspReportInterval, &cspReportAddress
 #endif
@@ -3782,6 +3891,9 @@ int main(int argc, char** argv)
    }
 #endif
    printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
+   if(statsFile) {
+      printf("Statistics Interval:    %ums\n", statsInterval);
+   }
 
    puts("\nASAP Parameters:");
    printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
@@ -3831,6 +3943,9 @@ int main(int argc, char** argv)
    /* ====== Clean up ==================================================== */
    registrarDelete(registrar);
    finishLogging();
+   if(statsFile) {
+      fclose(statsFile);
+   }
    puts("\nTerminated!");
    return(0);
 }

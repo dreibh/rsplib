@@ -143,10 +143,10 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
 EXTRA_DIST = registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
 else
-noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm
+noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
 EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
 endif
 
@@ -180,6 +180,9 @@ testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 
 terminal_SOURCES = terminal.c
 terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
+
+hrestest_SOURCES = hrestest.c
+hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm
 
 pingpong_SOURCES = pingpong.c
 pingpong_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(GLIB_LIBS) -lm

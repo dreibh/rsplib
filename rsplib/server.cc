@@ -88,8 +88,8 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
          reregInterval = atol((char*)&argv[i][15]);
-         if(reregInterval < 250) {
-            reregInterval = 250;
+         if(reregInterval < 10) {
+            reregInterval = 10;
          }
       }
       else if(!(strncmp(argv[i], "-policy=" ,8))) {
