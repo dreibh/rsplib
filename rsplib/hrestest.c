@@ -46,6 +46,7 @@ int main(int argc, char** argv)
    unsigned long long   responseTimeStamp;
    unsigned long long   successCount = 0;
    unsigned long long   failureCount = 0;
+   bool                 quiet        = false;
 
    rsp_initinfo(&info);
    for(i = 1;i < argc;i++) {
@@ -57,6 +58,9 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-pause=" ,7))) {
          pause = atol((char*)&argv[i][7]);
+      }
+      else if(!(strcmp(argv[i], "-quiet"))) {
+         quiet = true;
       }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile != stdout) {
@@ -84,12 +88,14 @@ int main(int argc, char** argv)
    }
 
 
-   puts("RSerPool Handle Resolution Tester - Version 1.0");
-   puts("===============================================\n");
-   printf("Pool Handle         = %s\n", poolHandle);
-   printf("Pause               = %uus\n", pause);
-   printf("Statistics Interval = %ums\n", statsInterval);
-   puts(""); 
+   if(!quiet) {
+      puts("RSerPool Handle Resolution Tester - Version 1.0");
+      puts("===============================================\n");
+      printf("Pool Handle         = %s\n", poolHandle);
+      printf("Pause               = %uus\n", pause);
+      printf("Statistics Interval = %ums\n", statsInterval);
+      puts(""); 
+   }
 
 
    if(rsp_initialize(&info) < 0) {
@@ -123,6 +129,7 @@ int main(int argc, char** argv)
                  responseTimeStamp / 1000000.0,
                  (responseTimeStamp - startTimeStamp) / 1000000.0,
                  successCount, failureCount);
+         fflush(statsFile);
          updateTimeStamp = responseTimeStamp;
       }
       if(pause > 0) {
