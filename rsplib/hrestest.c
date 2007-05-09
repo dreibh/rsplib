@@ -82,7 +82,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-pause=microsecs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[i]);
+         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-pause=microsecs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
          exit(1);
       }
    }
