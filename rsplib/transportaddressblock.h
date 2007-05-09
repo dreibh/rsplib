@@ -70,7 +70,8 @@ void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBloc
                               const uint16_t                port,
                               const uint16_t                flags,
                               const union sockaddr_union*   addressArray,
-                              const size_t                  addresses);
+                              const size_t                  addresses,
+                              const size_t                  maxAddresses);
 
 /**
   * Invalidate.

@@ -483,7 +483,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
                             protocol, port,
                             (hasControlChannel == true) ? TABF_CONTROLCHANNEL : 0,
                             (union sockaddr_union*)&addressArray,
-                            addresses);
+                            addresses, MAX_PE_TRANSPORTADDRESSES);
 
    LOG_VERBOSE3
    fprintf(stdlog, "New TransportAddressBlock: ");
@@ -1429,7 +1429,7 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
                             IPPROTO_SCTP,
                             getPort(&message->SourceAddress.sa),
                             0,
-                            &message->SourceAddress, 1);
+                            &message->SourceAddress, 1, 1);
    message->TransportAddressBlockListPtr = transportAddressBlockDuplicate(transportAddressBlock);
    if(message->TransportAddressBlockListPtr == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;

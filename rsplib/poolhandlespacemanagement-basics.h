@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 
-#define MAX_PE_TRANSPORTADDRESSES 32
+#define MAX_PE_TRANSPORTADDRESSES 64
 
 
 typedef uint32_t RegistrarIdentifierType;

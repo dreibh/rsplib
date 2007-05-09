@@ -243,7 +243,7 @@ static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
                                   getPort((struct sockaddr*)&addressArray[0]),
                                   0,
                                   addressArray,
-                                  registrarInfo->rri_addrs);
+                                  registrarInfo->rri_addrs, MAX_PE_TRANSPORTADDRESSES);
          result = (registrarTableAddStaticEntry(registrarTable, transportAddressBlock) == RSPERR_OKAY);
          free(addressArray);
       }
@@ -427,7 +427,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
                                   getPort((struct sockaddr*)rspAddrInfo->ai_addr),
                                   (flags & REGF_CONTROLCHANNEL) ? TABF_CONTROLCHANNEL : 0,
                                   unpackedAddrs,
-                                  rspAddrInfo->ai_addrs);
+                                  rspAddrInfo->ai_addrs, MAX_PE_TRANSPORTADDRESSES);
          ST_CLASS(poolElementNodeNew)(
             &myPoolElementNode,
             rspAddrInfo->ai_pe_id,

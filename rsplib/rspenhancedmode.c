@@ -514,7 +514,6 @@ int rsp_register_tags(int                        sd,
          threadSafetyUnlock(&rserpoolSocket->Mutex);
          return(-1);
       }
-
    }
 
    if(poolHandleSize > MAX_POOLHANDLESIZE) {

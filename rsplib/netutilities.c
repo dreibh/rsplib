@@ -2255,12 +2255,14 @@ size_t getladdrsplus(const int              fd,
 #endif
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
-   uint16_t port;
-   size_t   addrs2;
-   size_t   j;
+   union sockaddr_union socketName;
+   socklen_t            socketNameLen;
+   uint16_t             port;
+   size_t               addrs2;
+   size_t               j;
 #endif
 #endif
-   int    i;
+   int i;
 
    if(addrs > 0) {
 #ifdef LINUX
@@ -2287,6 +2289,21 @@ size_t getladdrsplus(const int              fd,
 
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
+
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+#warning Using getladdrs port 0 bugfix for lksctp!
+      if(getPort(&(*addressArray)[0].sa) == 0) {
+         socketNameLen = sizeof(socketName);
+         if(ext_getsockname(fd, (struct sockaddr*)&socketName, &socketNameLen) == 0) {
+            port = getPort(&socketName.sa);
+            for(i = 0;i < addrs;i++) {
+               setPort(&(*addressArray)[i].sa, port);
+            }
+         }
+      }
+#endif
+#endif
 
       LOG_VERBOSE5
       fprintf(stdlog, "getladdrsplus() - Number of addresses: %u\n", (unsigned int)addrs);

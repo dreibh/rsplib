@@ -408,7 +408,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
                                      IPPROTO_SCTP,
                                      getPort(&peerAddressArray[0].sa),
                                      0,
-                                     peerAddressArray, n);
+                                     peerAddressArray, n, n);
             peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                               &registrarTable->RegistrarList,
                               0,

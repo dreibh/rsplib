@@ -549,6 +549,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
            registrar->HandleResolutionCount,
            registrar->FailureReportCount,
            registrar->SynchronizationCount);
+   fflush(registrar->StatsFile);
 
    timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
 }
@@ -2098,7 +2099,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
                                getPort(&message->SourceAddress.sa),
                                0,
                                &message->SourceAddress,
-                               1);
+                               1, MAX_PE_TRANSPORTADDRESSES);
    }
    else {
       if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
@@ -3349,7 +3350,7 @@ static void addPeer(struct Registrar* registrar, char* arg)
                             getPort((struct sockaddr*)&addressArray[0]),
                             0,
                             (union sockaddr_union*)&addressArray,
-                            addresses);
+                            addresses, MAX_PE_TRANSPORTADDRESSES);
    if(registrarAddStaticPeer(registrar, 0, transportAddressBlock) != RSPERR_OKAY) {
       fputs("ERROR: Unable to add static peer ", stderr);
       transportAddressBlockPrint(transportAddressBlock, stderr);
@@ -3506,13 +3507,13 @@ static void getSocketPair(const char*                   sctpAddressParameter,
                             getPort((struct sockaddr*)&sctpAddressArray[0]),
                             0,
                             (union sockaddr_union*)&sctpAddressArray,
-                            sctpAddresses);
+                            sctpAddresses, MAX_PE_TRANSPORTADDRESSES);
    transportAddressBlockNew(udpGroupTransportAddress,
                             IPPROTO_UDP,
                             getPort((struct sockaddr*)&groupAddress),
                             0,
                             (union sockaddr_union*)&groupAddress,
-                            1);
+                            1, 1);
 }
 
 

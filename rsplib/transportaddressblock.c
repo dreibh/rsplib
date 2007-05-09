@@ -107,16 +107,17 @@ void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBloc
                               const uint16_t                port,
                               const uint16_t                flags,
                               const union sockaddr_union*   addressArray,
-                              const size_t                  addresses)
+                              const size_t                  addresses,
+                              const size_t                  maxAddresses)
 {
    size_t i;
    transportAddressBlock->Next      = NULL;
    transportAddressBlock->Flags     = flags;
    transportAddressBlock->Port      = port;
    transportAddressBlock->Protocol  = protocol;
-   transportAddressBlock->Addresses = addresses;
+   transportAddressBlock->Addresses = min(maxAddresses, addresses);
 
-   for(i = 0;i < addresses;i++) {
+   for(i = 0;i < transportAddressBlock->Addresses;i++) {
       memcpy((void*)&transportAddressBlock->AddressArray[i],
              (void*)&addressArray[i],
              sizeof(union sockaddr_union));
@@ -405,7 +406,7 @@ size_t transportAddressBlockGetAddressesFromSCTPSocket(
                                getPort((struct sockaddr*)&sctpAddressArray[0]),
                                0,
                                (union sockaddr_union*)&sctpAddressArray,
-                               sctpAddresses);
+                               sctpAddresses,maxAddresses);
    }
    return(sctpAddresses);
 }

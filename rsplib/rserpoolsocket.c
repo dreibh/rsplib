@@ -214,11 +214,6 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
                 (IN6_IS_ADDR_UNSPECIFIED(&sctpLocalAddressArray[0].in6.sin6_addr)))) ) ) {
             LOG_ERROR
             fputs("getladdrsplus() replied INADDR_ANY or port 0\n", stdlog);
-            for(i = 0;i < rspAddrInfo->ai_addrs;i++) {
-               fprintf(stdlog, "Address[%d] = ", i);
-               fputaddress((struct sockaddr*)&rspAddrInfo->ai_addr[i], true, stdlog);
-               fputs("\n", stdlog);
-            }
             LOG_END_FATAL
          }
          /* --------------------------------------------- */
