@@ -93,6 +93,7 @@ class TCPLikeServer : public TDThread
                            size_t               maxThreads,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                            void                 (*printParameters)(const void* userData),
+                           double               (*loadUpdateHook)(const double load),
                            void*                userData,
                            unsigned int         reregInterval = 30000,
                            unsigned int         runtimeLimit  = 0,

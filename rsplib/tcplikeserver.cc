@@ -219,6 +219,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 size_t               maxThreads,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                                 void                 (*printParameters)(const void* userData),
+                                double               (*loadUpdateHook)(const double load),
                                 void*                userData,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
@@ -296,8 +297,13 @@ void TCPLikeServer::poolElement(const char*          programTitle,
 
             // ====== Do reregistration on load changes =====================
             if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
-               const double newLoad = serverSet.getTotalLoad();
+               double newLoad = serverSet.getTotalLoad();
+               if(loadUpdateHook) {
+                  newLoad = loadUpdateHook(newLoad);
+                  CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+               }
                if(fabs(newLoad - oldLoad) >= 0.01) {
+                  // printf("NEW LOAD = %1.6f\n", newLoad);
                   oldLoad = newLoad;
                   loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
                   rsp_register_tags(rserpoolSocket,
