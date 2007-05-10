@@ -1,9 +1,10 @@
 # ###########################################################################
 #             Thomas Dreibholz's R Simulation Scripts Collection
-#                 Copyright (C) 2005-2006 Thomas Dreibholz
+#                  Copyright (C) 2005-2007 Thomas Dreibholz
 #
 #           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 # ###########################################################################
+# $Id: plotter.R 1614 2007-05-09 09:38:16Z dreibh $
 
 
 # Get array of gray tones (equivalent of rainbow() for b/w laser printing)
@@ -77,28 +78,28 @@ checkSets <- function(data,
                       runNoSet=c())
 {
    if(length(xSet) < 1) {
-      stop("checkSets: xSet is empty!")
+      stop("ERROR: checkSets: xSet is empty!")
    }
    if( (length(xSet) != length(ySet)) ) {
-      stop("checkSets: xSet and ySet length differ!")
+      stop("ERROR: checkSets: xSet and ySet lengths differ!")
    }
    if( (length(zSet) > 0) && (length(xSet) != length(zSet)) ) {
-      stop("checkSets: xSet and zSet length differ!")
+      stop("ERROR: checkSets: xSet and zSet length differ!")
    }
    if( (length(vSet) > 0) && (length(xSet) != length(vSet)) ) {
-      stop("checkSets: xSet and vSet length differ!")
+      stop("ERROR: checkSets: xSet and vSet length differ!")
    }
    if( (length(wSet) > 0) && (length(xSet) != length(wSet)) ) {
-      stop("checkSets: xSet and wSet length differ!")
+      stop("ERROR: checkSets: xSet and wSet length differ!")
    }
    if( (length(aSet) > 0) && (length(xSet) != length(aSet)) ) {
-      stop("checkSets: xSet and aSet length differ!")
+      stop("ERROR: checkSets: xSet and aSet length differ!")
    }
    if( (length(bSet) > 0) && (length(xSet) != length(bSet)) ) {
-      stop("checkSets: xSet and bSet length differ!")
+      stop("ERROR: checkSets: xSet and bSet length differ!")
    }
    if( (length(pSet) > 0) && (length(xSet) != length(pSet)) ) {
-      stop("checkSets: xSet and pSet length differ!")
+      stop("ERROR: checkSets: xSet and pSet length differ!")
    }
 
    if(length(runNoSet) > 0) {
@@ -130,12 +131,16 @@ checkSets <- function(data,
       }
 
       filter <- (xSet == xSet[1]) &
-               zFilter & vFilter & wFilter & aFilter & bFilter & pFilter
-      ySubset <- subset(data, filter)
+                zFilter & vFilter & wFilter & aFilter & bFilter & pFilter
+      ySubset <- subset(data$ValueNo, filter)
       n <- length(ySubset)
 
       if(n != runs) {
-         stop("checkSets: Number of value differs from number of runs!")
+         cat(sep="", "ERROR: checkSets: Number of values differs from number of runs!\n",
+                     "      n=", n, " expected=", runs, "\n",
+                     "      ySubset=")
+         print(ySubset)
+         stop("Aborted.")
       }
    }
 }
@@ -201,6 +206,8 @@ plotstd3 <- function(mainTitle,
                      zColorArray       = c(),
                      frameColor        = par("fg"),
                      legendSizeFactor  = 0.8,
+                     xValueFilter      = "%s",
+                     yValueFilter      = "%s",
                      zValueFilter      = "%s",
                      vValueFilter      = "%s",
                      wValueFilter      = "%s")
@@ -1408,7 +1415,7 @@ getIntegerTicks <- function(set, count = 10)
 
 
 # Read table from results file
-loadResults <- function(name, customFilter="")
+loadResults <- function(name, customFilter="", quiet=FALSE)
 {
    filter <- "cat"
    if(any(grep(".bz2", name))) {
@@ -1423,7 +1430,236 @@ loadResults <- function(name, customFilter="")
    }
 
    dataInputCommand <- filter
-   cat(sep="", "Loading from pipe [", dataInputCommand, "] ...\n")
+   if(!quiet) {
+      cat(sep="", "Loading from pipe [", dataInputCommand, "] ...\n")
+   }
    data <- read.table(pipe(dataInputCommand))
    return(data)
+}
+
+
+
+# ###########################################################################
+# #### Plotting Toolkit                                                  ####
+# ###########################################################################
+
+
+# ====== Apply manipulator ==================================================
+# A manipulator is an expression string which is evaluated in the return
+# clause. It may use the variables data1 (containing the first results vector),
+# data2 (containing the second), etc. in order to return any calculated result
+# line. If manipulator is NA, the function returns the requested table column.
+applyManipulator <- function(manipulator, inputDataTable, columnName)
+{
+   data1  <- unlist(inputDataTable[1], recursive=FALSE)
+   data2  <- unlist(inputDataTable[2], recursive=FALSE)
+   data3  <- unlist(inputDataTable[3], recursive=FALSE)
+   data4  <- unlist(inputDataTable[4], recursive=FALSE)
+   data5  <- unlist(inputDataTable[5], recursive=FALSE)
+   data6  <- unlist(inputDataTable[6], recursive=FALSE)
+   data7  <- unlist(inputDataTable[7], recursive=FALSE)
+   data8  <- unlist(inputDataTable[8], recursive=FALSE)
+   data9  <- unlist(inputDataTable[9], recursive=FALSE)
+   data10 <- unlist(inputDataTable[10], recursive=FALSE)
+
+   if(is.na(manipulator)) {
+      return(eval(parse(text=paste(sep="", "data1$", columnName))))
+   }
+   return(eval(parse(text=manipulator)))
+}
+
+
+# ====== Create plots =======================================================
+createPlots <- function(simulationDirectory, plotConfigurations)
+{
+   if(!plotOwnOutput) {
+      pdf(paste(sep="", simulationDirectory, ".pdf"),
+          width=plotWidth, height=plotHeight, onefile=TRUE,
+          family=plotFontFamily, pointsize=plotFontPointsize)
+   }
+   for(i in 1:length(plotConfigurations)) {
+      plotConfiguration <- unlist(plotConfigurations[i], recursive=FALSE)
+
+      # ------ Get configuration --------------------------------------------
+      configLength <- length(plotConfiguration)
+      if(configLength < 8) {
+         stop(paste(sep="", "ERROR: Invalid plot configuration! Use order: sim.directory/pdf name/title/results name/xticks/yticks/legend pos/x/y/z/v/w/a/b/p."))
+      }
+      resultsNameSet      <- c()
+      simulationDirectory <- plotConfiguration[1]
+      pdfName             <- plotConfiguration[2]
+      title               <- plotConfiguration[3]
+      xAxisTicks          <- unlist(plotConfiguration[4])
+      yAxisTicks          <- unlist(plotConfiguration[5])
+      legendPos           <- unlist(plotConfiguration[6])
+      xColumn             <- as.character(plotConfiguration[7])
+      yColumn             <- as.character(plotConfiguration[8])
+
+      frameColor <- "black"
+      yManipulator <- "set"
+      xTitle <- "X-Axis" ; yTitle <- "Y-Axis" ; zTitle <- "Z-Axis"
+      xManipulator <- NA; yManipulator <- NA; zManipulator <- NA;
+      zColumn <- "" ; zSet <- c() ; zTitle <- "Z-Axis"
+      vColumn <- "" ; vSet <- c() ; vTitle <- "V-Axis"
+      wColumn <- "" ; wSet <- c() ; wTitle <- "W-Axis"
+      aColumn <- "" ; aSet <- c() ; aTitle <- "A-Axis"
+      bColumn <- "" ; bSet <- c() ; bTitle <- "B-Axis"
+      pColumn <- "" ; pSet <- c() ; pTitle <- "P-Axis"
+      if(configLength >= 9) {
+         zColumn <- as.character(plotConfiguration[9])
+      }
+      if(configLength >= 10) {
+         vColumn <- as.character(plotConfiguration[10])
+      }
+      if(configLength >= 11) {
+         wColumn <- as.character(plotConfiguration[11])
+      }
+      if(configLength >= 12) {
+         aColumn <- as.character(plotConfiguration[12])
+      }
+      if(configLength >= 13) {
+         bColumn <- as.character(plotConfiguration[13])
+      }
+      if(configLength >= 14) {
+         pColumn <- as.character(plotConfiguration[14])
+      }
+
+      # ------ Get titles and manipulators ----------------------------------
+      for(j in 1:length(plotVariables)) {
+         plotVariable <- unlist(plotVariables[j], recursive=FALSE)
+         variableName <- as.character(plotVariable[1])
+         if(xColumn == variableName) {
+            xTitle       <- as.character(plotVariable[2])
+            xManipulator <- plotVariable[3]
+         }
+         else if(yColumn == variableName) {
+            yTitle         <- as.character(plotVariable[2])
+            yManipulator   <- plotVariable[3]
+            frameColor     <- as.character(plotVariable[4])
+            resultsNameSet <- unlist(plotVariable[5], recursive=FALSE)
+         }
+         else if(zColumn == variableName) {
+            zTitle       <- as.character(plotVariable[2])
+            zManipulator <- plotVariable[3]
+         }
+         else if(vColumn == variableName) {
+            vTitle       <- as.character(plotVariable[2])
+            vManipulator <- plotVariable[3]
+         }
+         else if(wColumn == variableName) {
+            wTitle       <- as.character(plotVariable[2])
+            wManipulator <- plotVariable[3]
+         }
+         else if(aColumn == variableName) {
+            aTitle       <- as.character(plotVariable[2])
+            aManipulator <- plotVariable[3]
+         }
+         else if(bColumn == variableName) {
+            bTitle       <- as.character(plotVariable[2])
+            bManipulator <- plotVariable[3]
+         }
+         else if(pColumn == variableName) {
+            pTitle       <- as.character(plotVariable[2])
+            pManipulator <- plotVariable[3]
+         }
+      }
+
+      # ------ Fill data vectors (parse() transforms string to expression) --
+      data <- list()
+      for(resultsName in resultsNameSet) {
+         resultFileName  <- paste(sep="", simulationDirectory, "/Results/", resultsName, ".data.bz2")
+         cat(sep="", "  Loading results from ", resultFileName, " ...\n")
+         data <- append(data, list(loadResults(resultFileName, quiet=TRUE)))
+      }
+
+      cat(sep="", "* Plotting ", yColumn, " with:\n")
+
+      cat(sep="", "  + xSet = ", xColumn, "   ")
+      xSet <- applyManipulator(xManipulator, data, xColumn)
+      cat(sep="", "(", length(xSet), " lines)\n")
+
+      cat(sep="", "  + ySet = ", yColumn, "   ")
+      ySet <- applyManipulator(yManipulator, data, yColumn)
+      cat(sep="", "(", length(ySet), " lines)\n")
+
+      if(zColumn != "") {
+         cat(sep="", "  + zSet = ", zColumn, "   ")
+         zSet <- applyManipulator(zManipulator, data, zColumn)
+         cat(sep="", "(", length(zSet), " lines)\n")
+      }
+      if(vColumn != "") {
+         cat(sep="", "  + vSet = ", vColumn, "   ")
+         vSet <- applyManipulator(vManipulator, data, vColumn)
+         cat(sep="", "(", length(vSet), " lines)\n")
+      }
+      if(wColumn != "") {
+         cat(sep="", "  + wSet = ", wColumn, "   ")
+         wSet <- applyManipulator(wManipulator, data, wColumn)
+         cat(sep="", "(", length(wSet), " lines)\n")
+      }
+      if(aColumn != "") {
+         cat(sep="", "  + aSet = ", aColumn, "   ")
+         aSet <- applyManipulator(aManipulator, data, aColumn)
+         cat(sep="", "(", length(aSet), " lines)\n")
+      }
+      if(bColumn != "") {
+         cat(sep="", "  + bSet = ", bColumn, "   ")
+         bSet <- applyManipulator(bManipulator, data, bColumn)
+         cat(sep="", "(", length(bSet), " lines)\n")
+      }
+      if(pColumn != "") {
+         cat(sep="", "  + pSet = ", pColumn, "   ")
+         pSet <- applyManipulator(pManipulator, data, pColumn)
+         cat(sep="", "(", length(pSet), " lines)\n")
+      }
+      checkSets(data, xSet, ySet, zSet, vSet, wSet, aSet, bSet, pSet, data$ValueNo)
+
+
+      # ------ Set x/y-axis ticks -------------------------------------------
+      if((length(xAxisTicks) < 2) || (is.na(xAxisTicks))) {
+         xAxisTicks <- getUsefulTicks(xSet)
+      }
+      if((length(yAxisTicks) < 2) || (is.na(yAxisTicks))) {
+         yAxisTicks <- getUsefulTicks(ySet)
+      }
+      if((length(legendPos) < 2) || (is.na(legendPos))) {
+         legendPos <- c(1,1)
+      }
+
+
+      # ------ Plot ---------------------------------------------------------
+      if(plotOwnOutput) {
+         pdf(pdfName,
+            width=plotWidth, height=plotHeight, onefile=TRUE,
+            family=plotFontFamily, pointsize=plotFontPointsize)
+      }
+      if( (length(aSet) > 0) || (length(bSet) > 0) || (length(pSet) > 0)) {
+         plotstd6(title,
+                  pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
+                  pSet, aSet, bSet, xSet, ySet, zSet,
+                  vSet, wSet, vTitle, wTitle,
+                  xAxisTicks=xAxisTicks,yAxisTicks=yAxisTicks,
+                  type="l",
+                  frameColor=frameColor,
+                  legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,
+                  colorMode=plotColorMode, hideLegend=plotHideLegend, legendPos=legendPos)
+      }
+      else {
+         plotstd3(title,
+                  xTitle, yTitle, zTitle,
+                  xSet, ySet, zSet,
+                  vSet, wSet, vTitle, wTitle,
+                  xAxisTicks=xAxisTicks,yAxisTicks=yAxisTicks,
+                  type="l",
+                  frameColor=frameColor,
+                  legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,
+                  colorMode=plotColorMode, hideLegend=plotHideLegend, legendPos=legendPos)
+      }
+      if(plotOwnOutput) {
+         dev.off()
+      }
+   }
+   if(!plotOwnOutput) {
+      dev.off()
+   }
 }

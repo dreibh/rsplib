@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+# Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
 # $Id$
 #
@@ -22,17 +22,19 @@
 # Contact: dreibh@iem.uni-due.de
 #
 
-if [ $# -lt 5 ] ; then
-   echo "Usage: perftest [Prefix] [PEs] [PUs] [ReregInterval] [InterHResTime]" >&2
+if [ $# -lt 7 ] ; then
+   echo "Usage: perftest [Test Name] [Prefix] [PEs] [PUs] [ReregInterval] [InterHResTime] [Duration]" >&2
    exit 1
 fi
 
 
-PREFIX=$1
-PEs=$2
-PUs=$3
-REREGINTERVAL=$4
-INTERHRESTIME=$5
+TESTNAME="$1"
+PREFIX="$TESTNAME/$2"
+PEs="$3"
+PUs="$4"
+REREGINTERVAL="$5"
+INTERHRESTIME="$6"
+DURATION="$7"
 
 HOST_PR="localhost"
 HOST_LIST="localhost"
@@ -98,32 +100,43 @@ fetchfile ()
 
 
 # ====== Start scenario =====================================================
+if [ ! -e "$TESTNAME" ] ; then
+   mkdir "$TESTNAME"
+fi
 rm -rf "$PREFIX"
+if [ -e "$PREFIX" ] ; then
+   rm -rf "$PREFIX"
+fi
 mkdir "$PREFIX"
+
+# ------ Stop all -----------------------------------------------------------
+for HOST in $HOST_LIST ; do
+   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST "\
+      killall -KILL registrar hrestest server"
+done
+rm -f TestP?-*.pid
+
 # ------ Start PR -----------------------------------------------------------
-stopproc "TestPR-1" $HOST_PR
 startproc "TestPR-1" "./registrar -asap=[::]:9001 -enrp=[::]:9002 -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250" $HOST_PR
-sleep 5
+sleep 10
 
 # ------ Start PEs ----------------------------------------------------------
 i=1 ; while [ $i -le $PEs ] ; do
-   stopproc "TestPE-$i" localhost
-   startproc "TestPE-$i" "./server -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -echo -policy=RoundRobin" localhost
+   startproc "TestPE-$i" "./server -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin" localhost
    let i=$i+1
 done
 
-sleep 2
+sleep 10
 
 # ------ Start PUs ----------------------------------------------------------
 i=1 ; while [ $i -le $PUs ] ; do
-   stopproc "TestPU-$i" localhost
    startproc "TestPU-$i" "./hrestest -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250" localhost
    let i=$i+1
 done
 
 
 # ====== Run tests ==========================================================
-sleep 5
+sleep $DURATION
 
 
 # ====== Stop scenario ======================================================
@@ -145,6 +158,7 @@ sleep 2
 
 # ------ Stop PR ------------------------------------------------------------
 stopproc "TestPR-1" $HOST_PR
+fetchfile localhost "TestPR-1.data" "$PREFIX/TestPR-1.data"
 
 
 echo "Fertig!"
