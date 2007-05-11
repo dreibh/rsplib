@@ -70,8 +70,9 @@ segments      <- 2
 
 PEsSet           <- c(1, 10, 25)
 PUsSet           <- c(10)
-reregIntervalSet <- c(10)
-interHResTimeSet <- c(50)
+reregIntervalSet <- c(100, 500)
+interHResTimeSet <- c(100)
+maxHResItemsSet  <- c(3)
 
 # ###########################################################################
 
@@ -80,6 +81,7 @@ peColumn              <- c()
 puColumn              <- c()
 reregIntervalColumn   <- c()
 interHResTimeColumn   <- c()
+maxHResItemsColumn    <- c()
 
 registrationRates     <- c()
 reregistrationRates   <- c()
@@ -89,20 +91,23 @@ failureReportRates    <- c()
 synchronizationRates  <- c()
 
 
-cat(readLines(pc <- pipe(paste(sep="", "rm -rf ", testName))))
-close(pc)
+# cat(readLines(pc <- pipe(paste(sep="", "rm -rf ", testName))))
+# close(pc)
+dir.create(testName,showWarnings=FALSE)
+
 
 for(PEs in PEsSet) {
 for(PUs in PUsSet) {
 for(reregInterval in reregIntervalSet) {
 for(interHResTime in interHResTimeSet) {
+for(maxHResItems in maxHResItemsSet) { 
    # ------ Run performance test --------------------------------------------
-   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime)
+   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
    cmdLine <- paste(sep="", "./perftest ",
                             testName, " ", runPrefix,
                             " ",
                             PEs, " ", PUs, " ", 
-                            reregInterval, " ", interHResTime, " ",
+                            reregInterval, " ", interHResTime, " ", maxHResItems, " ",
                             minPreSkip + minPostSkip + (segments + 1) * segmentLength," ",
                             ">", runPrefix, ".log")
    cat(sep="", "Running ", cmdLine," ...\n")
@@ -138,7 +143,8 @@ for(interHResTime in interHResTimeSet) {
    puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
    reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
    interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
-}}}}
+   maxHResItemsColumn <- append(maxHResItemsColumn, rep(maxHResItems, length(registrationResults)))
+}}}}}
 
 
 cat("Writing results ...\n")
@@ -146,6 +152,7 @@ result <- data.frame(peColumn,
                      puColumn,
                      reregIntervalColumn,
                      interHResTimeColumn,
+                     maxHResItemsColumn,
 
                      registrationRates,
                      reregistrationRates,
@@ -153,11 +160,11 @@ result <- data.frame(peColumn,
                      handleResolutionRates,
                      failureReportRates,
                      synchronizationRates)
-colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime",
+colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime", "MaxHResItems",
                      "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
                      "HandleResolutionRate", "FailureReportRate", "SynchronizationRate")
 dir.create(paste(sep="", testName, "/Results"), showWarnings=FALSE)
 resultsName <- paste(sep="", testName, "/Results/Summary.data")
 write.table(result, resultsName)
-cat(readLines(pc <- pipe(paste(sep="", "bzip2 ", resultsName))))
+cat(readLines(pc <- pipe(paste(sep="", "rm -f ", resultsName, ".bz2 ; bzip2 ", resultsName))))
 close(pc)

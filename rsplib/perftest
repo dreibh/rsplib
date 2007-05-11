@@ -22,8 +22,8 @@
 # Contact: dreibh@iem.uni-due.de
 #
 
-if [ $# -lt 7 ] ; then
-   echo "Usage: perftest [Test Name] [Prefix] [PEs] [PUs] [ReregInterval] [InterHResTime] [Duration]" >&2
+if [ $# -lt 8 ] ; then
+   echo "Usage: perftest [Test Name] [Prefix] [PEs] [PUs] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
    exit 1
 fi
 
@@ -34,12 +34,13 @@ PEs="$3"
 PUs="$4"
 REREGINTERVAL="$5"
 INTERHRESTIME="$6"
-DURATION="$7"
+MAXHRESITEMS="$7"
+DURATION="$8"
 
 HOST_PR="localhost"
 HOST_LIST="localhost"
 
-PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME
+PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
 
 
 POOLHANDLE="EchoPool"
@@ -50,6 +51,30 @@ SSH_KEY=~/.ssh/id_dsa
 
 
 
+# ====== Choose host from HOST_LIST in round robin order ====================
+CHOOSE_HOST=""
+CHOOSE_HOST_LAST=0
+choose_host ()
+{
+   oldGetHostLast=$CHOOSE_HOST_LAST
+   CHOOSE_HOST_LAST=0
+   for myHost in $HOST_LIST ; do
+      if [ $CHOOSE_HOST_LAST -gt $oldGetHostLast ] ; then
+         CHOOSE_HOST=$myHost
+         return
+      fi 
+      let CHOOSE_HOST_LAST=$CHOOSE_HOST_LAST+1
+   done
+
+   for myHost in $HOST_LIST ; do
+      CHOOSE_HOST=$myHost
+      CHOOSE_HOST_LAST=0
+      return
+   done
+}
+
+
+# ====== Start process ======================================================
 startproc ()
 {
    PROCNAME=$1
@@ -68,6 +93,8 @@ startproc ()
    echo $! >$PIDFILE
 }
 
+
+# ====== Stop process =======================================================
 stopproc ()
 {
    PROCNAME=$1
@@ -79,16 +106,16 @@ stopproc ()
       if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
          echo "Processing $PIDFILE: sending SIGINT to $PID ..."
          kill $PID
-         # echo STOP $! -- $PID -- $PIDFILE >$RANDOM-$RANDOM.td0
       else
          echo "Processing $PIDFILE: process is already gone."
-         # echo DEAD $! -- $PIDFILE >$RANDOM-$RANDOM.td0
       fi
       rm $PIDFILE
    fi
 
 }
 
+
+# ====== Get file via scp ===================================================
 fetchfile ()
 {
    SERVER=$1
@@ -103,10 +130,13 @@ fetchfile ()
 if [ ! -e "$TESTNAME" ] ; then
    mkdir "$TESTNAME"
 fi
-rm -rf "$PREFIX"
-if [ -e "$PREFIX" ] ; then
-   rm -rf "$PREFIX"
+if [ -e "$PREFIX/completed.txt" ] ; then
+   echo "##################################################"
+   echo "$PREFIX is already there -> skipping!"
+   echo "##################################################"
+   exit 0
 fi
+rm -rf "$PREFIX"
 mkdir "$PREFIX"
 
 # ------ Stop all -----------------------------------------------------------
@@ -117,20 +147,24 @@ done
 rm -f TestP?-*.pid
 
 # ------ Start PR -----------------------------------------------------------
-startproc "TestPR-1" "./registrar -asap=[::]:9001 -enrp=[::]:9002 -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250" $HOST_PR
+startproc "TestPR-1" "./registrar -asap=[::]:9001 -enrp=[::]:9002 -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250" $HOST_PR
 sleep 10
 
 # ------ Start PEs ----------------------------------------------------------
+CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
-   startproc "TestPE-$i" "./server -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin" localhost
+   choose_host
+   startproc "TestPE-$i" "./server -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin" $CHOOSE_HOST
    let i=$i+1
 done
 
 sleep 10
 
 # ------ Start PUs ----------------------------------------------------------
+CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
-   startproc "TestPU-$i" "./hrestest -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250" localhost
+   choose_host
+   startproc "TestPU-$i" "./hrestest -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250" $CHOOSE_HOST
    let i=$i+1
 done
 
@@ -142,23 +176,28 @@ sleep $DURATION
 # ====== Stop scenario ======================================================
 
 # ------ Stop PUs -----------------------------------------------------------
+CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
-   stopproc "TestPU-$i" localhost
-   fetchfile localhost "TestPU-$i.data" "$PREFIX/TestPU-$i.data"
+   choose_host
+   stopproc "TestPU-$i" $CHOOSE_HOST
+   fetchfile $CHOOSE_HOST "TestPU-$i.data" "$PREFIX/TestPU-$i.data"
    let i=$i+1
 done
 sleep 1
 
 # ------ Stop PEs -----------------------------------------------------------
+CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
-   stopproc "TestPE-$i" localhost
+   choose_host
+   stopproc "TestPE-$i" $CHOOSE_HOST
    let i=$i+1
 done
 sleep 2
 
 # ------ Stop PR ------------------------------------------------------------
 stopproc "TestPR-1" $HOST_PR
-fetchfile localhost "TestPR-1.data" "$PREFIX/TestPR-1.data"
+fetchfile $HOST_PR "TestPR-1.data" "$PREFIX/TestPR-1.data"
 
 
+date >"$PREFIX/completed.txt"
 echo "Fertig!"
