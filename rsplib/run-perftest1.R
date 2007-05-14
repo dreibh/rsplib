@@ -70,7 +70,7 @@ segments      <- 2
 
 PEsSet           <- c(1,4,10,25,50,100)
 PUsSet           <- c(2)
-reregIntervalSet <- c(100)   # ,500
+reregIntervalSet <- c(100,500)
 interHResTimeSet <- c(100)
 maxHResItemsSet  <- c(3)
 
