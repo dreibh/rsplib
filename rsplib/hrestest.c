@@ -92,7 +92,7 @@ int main(int argc, char** argv)
       puts("RSerPool Handle Resolution Tester - Version 1.0");
       puts("===============================================\n");
       printf("Pool Handle         = %s\n", poolHandle);
-      printf("Pause               = %uus\n", pause);
+      printf("Pause               = %ums\n", pause);
       printf("Statistics Interval = %ums\n", statsInterval);
       puts(""); 
    }
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
          updateTimeStamp = responseTimeStamp;
       }
       if(pause > 0) {
-         usleep(pause);
+         usleep(1000 * pause);
       }
    }
 

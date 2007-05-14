@@ -32,11 +32,11 @@ plotConfigurations <- list(
    # ------------------------------------------------------------------------
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,1),
-        "PEs", "ReregistrationRate", "ReregInterval"),
+        "Provider's Perspective", NA, NA, list(1,1),
+        "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,0),
-        "PEs", "HandleResolutionRate", "ReregInterval")
+        "Provider's Perspective", NA, NA, list(1,1),
+        "PEs", "HandleResolutionRatePerPEandSecond", "ReregInterval")
 )
 
 
@@ -53,12 +53,14 @@ plotVariables <- list(
    #             (measurementDirectory/Results/....data.tar.bz2 is added!)
    # ------------------------------------------------------------------------
 
-   list("ReregistrationRate",
-           "Reregistration Rate[1/s]",
-           NA, "brown4", list("Summary")),
-   list("HandleResolutionRate",
-           "Handle Resolution Rate[1/s]",
-           NA, "gold4", list("Summary")),
+   list("ReregistrationRatePerPEandSecond",
+           "Reregistration Rate per PE and Second[1/PE*s]",
+           "data1$ReregistrationRate / data1$PEs",
+           "brown4", list("Summary")),
+   list("HandleResolutionRatePerPEandSecond",
+           "Handle Resolution Rate per PE and Second[1/PE*s]",
+           "data1$HandleResolutionRate / data1$PEs",
+           "gold4", list("Summary")),
 
    list("PEs",
            "Number of Pool Elements{e}[1]",

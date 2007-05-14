@@ -37,17 +37,16 @@ INTERHRESTIME="$6"
 MAXHRESITEMS="$7"
 DURATION="$8"
 
-HOST_PR="localhost"
-HOST_LIST="localhost"
-
-PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
-
-
 POOLHANDLE="EchoPool"
 
 
-SSH_USER="dreibh"
+HOST_PR="132.252.152.72"
+HOST_LIST="132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76"
+SSH_USER="student"
 SSH_KEY=~/.ssh/id_dsa
+
+
+PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
 
 
 
@@ -141,7 +140,7 @@ mkdir "$PREFIX"
 
 # ------ Stop all -----------------------------------------------------------
 for HOST in $HOST_LIST ; do
-   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST "\
+   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST_PR "\
       killall -KILL registrar hrestest server"
 done
 rm -f TestP?-*.pid

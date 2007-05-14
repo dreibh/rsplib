@@ -24,12 +24,12 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
    # ------ Cut off edges ---------------------------------------------------
    data <- subset(data, (data$RelTime >= timeLow + minPreSkip) &
                         (data$RelTime <= timeHigh - minPostSkip))
-
-   # ------
    if(timeHigh - (segmentLength * segments) < timeLow) {
       stop(paste(sep="", "ERROR: Data set is too short for ",
                  columnName , "; ", timeHigh - (segmentLength * segments), "s more required!"))
    }
+
+   # ------ Fetch segments --------------------------------------------------
    for(i in 1:segments) {
       start <- timeLow + minPreSkip + ((i - 1) * segmentLength)
       end   <- timeLow + minPreSkip + (i * segmentLength)
@@ -63,14 +63,14 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
 
 testName <- "P01"
 
-minPreSkip    <- 30
-minPostSkip   <- 30
-segmentLength <- 10
+minPreSkip    <- 15
+minPostSkip   <- 15
+segmentLength <- 30
 segments      <- 2
 
-PEsSet           <- c(1, 10, 25)
-PUsSet           <- c(10)
-reregIntervalSet <- c(100, 500)
+PEsSet           <- c(1,4,10,25,50,100)
+PUsSet           <- c(2)
+reregIntervalSet <- c(100)   # ,500
 interHResTimeSet <- c(100)
 maxHResItemsSet  <- c(3)
 
@@ -109,7 +109,7 @@ for(maxHResItems in maxHResItemsSet) {
                             PEs, " ", PUs, " ", 
                             reregInterval, " ", interHResTime, " ", maxHResItems, " ",
                             minPreSkip + minPostSkip + (segments + 1) * segmentLength," ",
-                            ">", runPrefix, ".log")
+                            ">", testName, "/", runPrefix, ".log")
    cat(sep="", "Running ", cmdLine," ...\n")
    cat(readLines(pc <- pipe(cmdLine)))
    close(pc)
