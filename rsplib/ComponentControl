@@ -1,0 +1,198 @@
+#!/bin/sh
+# $Id: ComponentControl 1327 2007-02-07 09:07:30Z dreibh $
+# ***************************************************************************
+# *   The RSerPool Demo System                                              *
+# *                                                                         *
+# *   Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de                *
+# *                                                                         *
+# *   This program is free software; you can redistribute it and/or modify  *
+# *   it under the terms of the GNU General Public License as published by  *
+# *   the Free Software Foundation; either version 2 of the License, or     *
+# *   (at your option) any later version.                                   *
+# *                                                                         *
+# *   This program is distributed in the hope that it will be useful,       *
+# *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+# *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+# *   GNU General Public License for more details.                          *
+# *                                                                         *
+# *   You should have received a copy of the GNU General Public License     *
+# *   along with this program; if not, write to the                         *
+# *   Free Software Foundation, Inc.,                                       *
+# *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+# ***************************************************************************
+
+if [ $# -lt 3 ] ; then
+   echo >&2 "Usage: ComponentControl [Scenario Configuration File] {Configuration File Options} [Identifier] [start|stop|kill|stopall|killall|restart|status|log|monitor] {Arguments ...}"
+   exit 1
+fi
+
+
+# ====== Get configuration ==================================================
+CC_CONFIGFILE=$1
+shift
+
+if [ ! -e "$CC_CONFIGFILE" ] ; then
+   echo >&2 "ERROR: Configuration file $CC_CONFIGFILE does not exist!"
+   exit 1
+fi
+
+CC_CONFIGMISCARGS=
+# The config file has to store miscellaneous arguments into CC_CONFIGMISCARGS.
+# ComponentControl only expects its own arguments after calling the
+# configuration file!
+. $CC_CONFIGFILE
+
+CC_IDENTIFIER=$1
+CC_COMMAND=$2
+shift ; shift
+CC_MISCARGS=$@
+
+
+# ====== Check directories and program ======================================
+if [ "x$CC_PROGRAM_DIRECTORY" = "x" ] ; then
+   echo >&2 "ERROR: Variable \$CC_PROGRAM_DIRECTORY has to be set to the program directory!"
+   exit 1
+fi
+if [ ! -e "$CC_PROGRAM_DIRECTORY" ] ; then
+   echo >&2 "ERROR: Program directory $CC_PROGRAM_DIRECTORY does not exist!"
+   exit 1
+fi
+if [ "x$CC_PID_DIRECTORY" = "x" ] ; then
+   echo >&2 "ERROR: Variable \$CC_PID_DIRECTORY has to be set to the PID directory!"
+   exit 1
+fi
+if [ ! -e "$CC_PID_DIRECTORY" ] ; then
+   echo >&2 "ERROR: PID directory $CC_PID_DIRECTORY does not exist!"
+   exit 1
+fi
+if [ "x$CC_OUTPUT_DIRECTORY" = "x" ] ; then
+   echo >&2 "ERROR: Variable \$CC_OUTPUT_DIRECTORY has to be set to the output directory!"
+   exit 1
+fi
+if [ ! -e "$CC_OUTPUT_DIRECTORY" ] ; then
+   echo >&2 "ERROR: Output directory $CC_OUTPUT_DIRECTORY does not exist!"
+   exit 1
+fi
+if [ "x$CC_PROGRAM" = "x" ] ; then
+   echo >&2 "ERROR: Variable \$CC_PROGRAM has to be set to the program name!"
+   exit 1
+fi
+if [ ! -x "$CC_PROGRAM_DIRECTORY/$CC_PROGRAM" ] ; then
+   echo >&2 "ERROR: Program $CC_PROGRAM_DIRECTORY/$CC_PROGRAM does not exist or is not executable!"
+   exit 1
+fi
+
+
+# ====== Check directories and program ======================================
+PROGFILE="$CC_PROGRAM_DIRECTORY/$CC_PROGRAM"
+PIDFILE="$CC_PID_DIRECTORY/$CC_PROGRAM-$CC_IDENTIFIER.pid"
+LOGFILE="$CC_PID_DIRECTORY/$CC_PROGRAM-$CC_IDENTIFIER.log"
+
+CC_ARGS="$CC_ARGS $CC_MISCARGS"
+if [ "x$CC_LOGARGS" != "x" ] ; then
+   CC_ARGS="$CC_ARGS $CC_LOGARGS$LOGFILE"
+fi
+
+
+
+# ====== Stop a program using its PID file ==================================
+# Args:
+#   $1 = Program name
+#   $2 = PID file
+#   $3 = SIGNAL
+stop_program_using_pid_file() {
+   if [ -e "$2" ] ; then
+      pid=`cat $2`
+      if ps -p $pid | grep $1 1>/dev/null 2>/dev/null ; then
+         echo "Sending SIG$3 to PID $pid"
+         kill -$3 $pid
+      else
+         echo "$pid is already gone, removing PID file only"
+         rm -f $2
+      fi
+   fi
+}
+
+
+
+# ====== Execute command ====================================================
+if [ "x$CC_COMMAND" = "xstart" ] ; then
+   if [ -e "$PIDFILE" ] ; then
+      PID=`cat $PIDFILE`
+      if ps -p $PID | grep $CC_PROGRAM 1>/dev/null 2>/dev/null ; then
+         echo >&2 "ERROR: Programm is already running, PID is $PID."
+         exit 1
+      fi
+      rm -f $PIDFILE
+   fi
+   echo "Starting:"
+   echo "   Program   = $PROGFILE"
+   echo "   Arguments = $CC_ARGS"
+   echo "   PID File  = $PIDFILE"
+   echo "   Log File  = $LOGFILE"
+   $PROGFILE $CC_ARGS &
+   PID=$!
+   if [ $? = 0 ] ; then
+      echo $PID > $PIDFILE
+      echo "Started, PID is $PID."
+   else
+      echo "ERROR: Running $PROGFILE failed!"
+      exit 1
+   fi
+
+elif [ "x$CC_COMMAND" = "xstop" ] ; then
+   echo "Stopping $CC_PROGRAM, identifier $CC_IDENTIFIER ..."
+   stop_program_using_pid_file $CC_PROGRAM $PIDFILE INT
+
+elif [ "x$CC_COMMAND" = "xkill" ] ; then
+   echo "Killing $CC_PROGRAM, identifier $CC_IDENTIFIER ..."
+   stop_program_using_pid_file $CC_PROGRAM $PIDFILE KILL
+
+elif [ "x$CC_COMMAND" = "xstopall" ] ; then
+   find $CC_PID_DIRECTORY -name "$CC_PROGRAM-*.pid" | (
+      while read pidfile ; do
+         stop_program_using_pid_file $CC_PROGRAM $pidfile INT
+      done
+   )
+
+elif [ "x$CC_COMMAND" = "xkillall" ] ; then
+   ps axwww|grep "[0-9]:[0-9][0-9] $CC_PROGRAM_DIRECTORY/$CC_PROGRAM" | (
+      while read pid tt stat time command ; do
+         if ps -p $pid | grep $CC_PROGRAM 1>/dev/null 2>/dev/null ; then
+            kill -KILL $pid
+         fi
+      done
+   )
+   rm -f "$CC_PROGRAM_DIRECTORY/$CC_PROGRAM-*.pid"
+
+elif [ "x$CC_COMMAND" = "xrestart" ] ; then
+   # IMPORTANT: ComponentControl expects arguments shifted-away in the
+   #            configuration file in CC_CONFIGMISCARGS. They are needed here.
+   $0 $CC_CONFIGFILE $CC_CONFIGMISCARGS $CC_IDENTIFIER stop $CC_MISCARGS
+   sleep 2
+   $0 $CC_CONFIGFILE $CC_CONFIGMISCARGS $CC_IDENTIFIER start $CC_MISCARGS
+
+elif [ "x$CC_COMMAND" = "xstatus" ] ; then
+   echo -n "Status of $CC_PROGRAM, identifier $CC_IDENTIFIER is: "
+   if [ ! -e "$PIDFILE" ] ; then
+      echo "not running."
+   else
+      PID=`cat $PIDFILE`
+      if ps -p $PID | grep $CC_PROGRAM   1> /dev/null 2> /dev/null ; then
+         echo "running (PID is $PID)."
+      else
+         echo "terminated - removing PID file."
+         rm -f $PIDFILE
+      fi
+   fi
+
+elif [ "x$CC_COMMAND" = "xlog" ] ; then
+   sh -c "konsole $CC_MISCARGS -e less $LOGFILE &"
+
+elif [ "x$CC_COMMAND" = "xmonitor" ] ; then
+   sh -c "konsole $CC_MISCARGS -e tail -f $LOGFILE &"
+
+else
+   echo >&2 "ERROR: Invalid command $CC_COMMAND!"
+   exit 1
+fi

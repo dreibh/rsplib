@@ -66,12 +66,12 @@ testName <- "P01"
 minPreSkip    <- 15
 minPostSkip   <- 15
 segmentLength <- 30
-segments      <- 2
+segments      <- 1
 
-PEsSet           <- c(1,4,10,25,50,100)
-PUsSet           <- c(2)
-reregIntervalSet <- c(100,500)
-interHResTimeSet <- c(100)
+PEsSet           <- c(1,2,4,10,25,50,100,250)
+PUsSet           <- c(1)
+reregIntervalSet <- c(5000)
+interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
 
 # ###########################################################################

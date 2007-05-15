@@ -1,0 +1,72 @@
+#!/bin/sh
+# $Id: RemoteComponentControl 1327 2007-02-07 09:07:30Z dreibh $
+# ***************************************************************************
+# *   The RSerPool Demo System                                              *
+# *                                                                         *
+# *   Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de                *
+# *                                                                         *
+# *   This program is free software; you can redistribute it and/or modify  *
+# *   it under the terms of the GNU General Public License as published by  *
+# *   the Free Software Foundation; either version 2 of the License, or     *
+# *   (at your option) any later version.                                   *
+# *                                                                         *
+# *   This program is distributed in the hope that it will be useful,       *
+# *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+# *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+# *   GNU General Public License for more details.                          *
+# *                                                                         *
+# *   You should have received a copy of the GNU General Public License     *
+# *   along with this program; if not, write to the                         *
+# *   Free Software Foundation, Inc.,                                       *
+# *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+# ***************************************************************************
+
+if [ $# -lt 5 ] ; then
+   echo >&2 "Usage: RemoteComponentControl [User Configuration File] [Host] [Scenario Configuration File] [Identifier] [start|stop|kill|stopall|killall|restart|status|log|monitor] {Arguments ...}"
+   exit 1
+fi
+
+
+# ====== Get configuration ==================================================
+CC_REMOTECONFIG=$1
+CC_HOST=$2
+CC_CONFIGFILE=$3
+CC_IDENTIFIER=$4
+CC_COMMAND=$5
+shift ; shift ; shift ; shift ; shift
+CC_MISCARGS=$@
+
+if [ ! -e "$CC_REMOTECONFIG" ] ; then
+   echo >&2 "ERROR: Configuration file $CC_REMOTECONFIG does not exist!"
+   exit 1
+fi
+
+. ./$CC_REMOTECONFIG
+CC_LOCALUSER="`whoami`"
+if [ "x$CC_PATH" = "x" ] ; then
+   CC_PATH="`pwd | sed -e \"s/$CC_LOCALUSER/$CC_REMOTEUSER/g\"`"
+fi
+
+eval CC_HOST=$CC_HOST
+if [ "x$CC_HOST" = "x" ] ; then
+   echo >&2 "ERROR: No host name specified! Check evaluation string!"
+   exit 1
+fi
+
+
+command="$CC_REMOTEPRECOMMAND nohup ./ComponentControl $CC_CONFIGFILE $CC_IDENTIFIER $CC_COMMAND $CC_MISCARGS >/dev/null 2>/dev/null &"
+
+
+echo "Contacting $CC_REMOTEUSER@$CC_HOST using key $CC_REMOTEKEY ..."
+ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$CC_HOST "
+if [ ! -e $CC_PATH ] ; then
+   echo \"ERROR: Directory $CC_PATH does not exist on host $CC_HOST!\"
+   exit 1
+fi &&
+cd $CC_PATH && \
+if [ ! -e ComponentControl ] ; then
+   echo \"ERROR: ComponentControl not found in directory $CC_PATH of host $CC_HOST!\"
+   exit 1
+fi &&
+echo \"$command\" &&
+$command"

@@ -1,2 +1,0 @@
-#!/bin/sh
-./nameserver -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -maxbadpereports=99999999 -logcolor=on -loglevel=3 $@

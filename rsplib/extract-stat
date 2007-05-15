@@ -1,9 +1,0 @@
-#!/bin/bash
-
-(
-while [ $# -gt 0 ] ; do
-   echo "--values=$1"
-   echo "--input=$1"
-   shift
-done
-) | ./combinesummaries x.vec.bz2 "Input"

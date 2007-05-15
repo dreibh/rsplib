@@ -39,90 +39,10 @@ DURATION="$8"
 
 POOLHANDLE="EchoPool"
 
-
-HOST_PR="132.252.152.70"
-HOST_LIST="132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.78 132.252.152.79"
-SSH_USER="student"
-SSH_KEY=~/.ssh/id_dsa
-
+HOST_PR="132.252.152.73"
+HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.78 132.252.152.79"
 
 PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
-
-
-
-# ====== Choose host from HOST_LIST in round robin order ====================
-CHOOSE_HOST=""
-CHOOSE_HOST_LAST=0
-choose_host ()
-{
-   oldGetHostLast=$CHOOSE_HOST_LAST
-   CHOOSE_HOST_LAST=0
-   for myHost in $HOST_LIST ; do
-      if [ $CHOOSE_HOST_LAST -gt $oldGetHostLast ] ; then
-         CHOOSE_HOST=$myHost
-         return
-      fi 
-      let CHOOSE_HOST_LAST=$CHOOSE_HOST_LAST+1
-   done
-
-   for myHost in $HOST_LIST ; do
-      CHOOSE_HOST=$myHost
-      CHOOSE_HOST_LAST=0
-      return
-   done
-}
-
-
-# ====== Start process ======================================================
-startproc ()
-{
-   PROCNAME=$1
-   PROCCALL=$2
-   SERVER=$3
-
-   PIDFILE=$PROCNAME-$SERVER.pid
-   if [ -e $PIDFILE ]; then
-      echo "ERROR: PID file $PIDFILE already exists!"
-      exit 1
-   fi
-
-   PIDFILE=$PROCNAME-$SERVER.pid
-   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$SERVER "\
-      cd src/rsplib2/rsplib && $PROCCALL" &
-   echo $! >$PIDFILE
-}
-
-
-# ====== Stop process =======================================================
-stopproc ()
-{
-   PROCNAME=$1
-   SERVER=$2
-
-   PIDFILE=$PROCNAME-$SERVER.pid
-   if [ -e $PIDFILE ] ; then
-      PID=`cat $PIDFILE`
-      if ps -p `cat $PIDFILE` | grep ssh 1>/dev/null 2>/dev/null ; then
-         echo "Processing $PIDFILE: sending SIGINT to $PID ..."
-         kill $PID
-      else
-         echo "Processing $PIDFILE: process is already gone."
-      fi
-      rm $PIDFILE
-   fi
-
-}
-
-
-# ====== Get file via scp ===================================================
-fetchfile ()
-{
-   SERVER=$1
-   INFILE=$2
-   OUTFILE=$3
-   scp -q -i $SSH_KEY $SSH_USER@$SERVER:"~/src/rsplib2/rsplib/$INFILE" $OUTFILE
-}
-
 
 
 # ====== Start scenario =====================================================
@@ -138,63 +58,88 @@ fi
 rm -rf "$PREFIX"
 mkdir "$PREFIX"
 
+echo "   + Preparing test for the following parameters:"
+echo "      - $PEs PEs, $PUs PUs"
+echo "      - ReregInterval: $REREGINTERVAL [ms]"
+echo "      - InterHResTime: $INTERHRESTIME [ms]"
+echo "      - MaxHResItems:  $MAXHRESITEMS"
+echo "      - Duration:      $DURATION [s]"
+echo "      - $PEs PEs, $PUs PUs"
+echo "      - $PEs PEs, $PUs PUs"
+
+
 # ------ Stop all -----------------------------------------------------------
-for HOST in $HOST_LIST ; do
-   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST_PR "\
+echo "   + Stopping all old stuff ..."
+ALL_HOSTS="`echo $HOST_LIST $HOST_PR | sort -u`"
+for HOST in $ALL_HOSTS ; do
+   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST "\
       killall -KILL registrar hrestest server"
 done
 rm -f TestP?-*.pid
+echo "   + Ready. Waiting 5 seconds ..."
+sleep 5
 
 # ------ Start PR -----------------------------------------------------------
-startproc "TestPR-1" "./registrar -asap=[::]:9001 -enrp=[::]:9002 -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250" $HOST_PR
+echo "   + Starting PR ..."
+./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 start \
+   -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250
 sleep 10
 
 # ------ Start PEs ----------------------------------------------------------
+echo "   + Starting $PEs PEs ..."
 CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
    choose_host
-   startproc "TestPE-$i" "./server -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin" $CHOOSE_HOST
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
+      -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 \
+      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
    let i=$i+1
 done
 
 sleep 10
 
 # ------ Start PUs ----------------------------------------------------------
+echo "   + Starting $PUs PUs ..."
 CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
    choose_host
-   startproc "TestPU-$i" "./hrestest -registrar=$HOST_PR:9001 -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250" $CHOOSE_HOST
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
+      -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250
    let i=$i+1
 done
 
 
 # ====== Run tests ==========================================================
+echo "   + Running test ..."
 sleep $DURATION
 
 
 # ====== Stop scenario ======================================================
 
 # ------ Stop PUs -----------------------------------------------------------
+echo "   + Stopping PUs ..."
 CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
    choose_host
-   stopproc "TestPU-$i" $CHOOSE_HOST
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop
    fetchfile $CHOOSE_HOST "TestPU-$i.data" "$PREFIX/TestPU-$i.data"
    let i=$i+1
 done
 sleep 1
-
+ 
 # ------ Stop PEs -----------------------------------------------------------
+echo "   + Stopping PEs ..."
 CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
    choose_host
-   stopproc "TestPE-$i" $CHOOSE_HOST
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop
    let i=$i+1
 done
 sleep 2
 
 # ------ Stop PR ------------------------------------------------------------
-stopproc "TestPR-1" $HOST_PR
+echo "   + Stopping PR ..."
+./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 stop
 fetchfile $HOST_PR "TestPR-1.data" "$PREFIX/TestPR-1.data"
 
 
