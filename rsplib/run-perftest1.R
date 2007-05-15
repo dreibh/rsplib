@@ -72,9 +72,9 @@ minPostSkip   <- 15
 segmentLength <- 30
 segments      <- 1
 
-PEsSet           <- c(1,10,100)
+PEsSet           <- c(10)
 PUsSet           <- c(1)
-reregIntervalSet <- c(1000,5000)
+reregIntervalSet <- c(1000)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
 
@@ -121,26 +121,30 @@ for(maxHResItems in maxHResItemsSet) {
    # ------ Collect results -------------------------------------------------
    cat("Collecting results ...\n")
    data <- loadResults(paste(sep="", testName, "/", runPrefix, "/TestPR-1.data"))
+   rtdata <- read.table(paste(sep="", testName, "/", runPrefix, "/runtimes.data"))
+   preSkip  <- minPreSkip + (mean(rtdata$MeasurementStart) - mean(rtdata$Startup))
+   postSkip <- minPostSkip
+   cat("=>",preSkip,postSkip,"\n")
 
-   registrationResults <- analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
-                                               "Registrations", ACRT_Normalized)
+   registrationResults <- analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                                "Registrations", ACRT_Normalized)
 
    registrationRates     <- append(registrationRates,
                                    registrationResults)
    reregistrationRates   <- append(reregistrationRates,
-                                   analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "Reregistrations", ACRT_Normalized))
    deregistrationRates   <- append(deregistrationRates,
-                                   analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "Deregistrations", ACRT_Normalized))
    handleResolutionRates <- append(handleResolutionRates,
-                                   analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "HandleResolutions", ACRT_Normalized))
    failureReportRates    <- append(failureReportRates,
-                                   analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "FailureReports", ACRT_Normalized))
    synchronizationRates  <- append(synchronizationRates,
-                                   analyseCounterResults(data, minPreSkip, minPostSkip, segmentLength, segments,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "Synchronizations", ACRT_Normalized))
 
    peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))

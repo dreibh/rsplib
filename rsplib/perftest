@@ -37,18 +37,17 @@ INTERHRESTIME="$6"
 MAXHRESITEMS="$7"
 DURATION="$8"
 
+MAX_SSH_PROCS=8
 POOLHANDLE="EchoPool"
-
-. ./Lab-User.config
 
 
 HOST_PR="132.252.152.73"
 HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.78 132.252.152.79"
+# HOST_PR="localhost"
+# HOST_LIST="localhost"
 
 CSPOPT="-cspserver=132.252.152.70:2960 -cspinterval=333"
 
-
-PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
 
 
 # ====== Choose host from HOST_LIST in round robin order ====================
@@ -84,11 +83,21 @@ fetchfile ()
 }
 
 
+# ====== Get uptime =========================================================
+get_uptime ()
+{
+   cat /proc/uptime | (
+      read up idle
+      echo $up
+   )
+}
+
+
 # ====== Start scenario =====================================================
 if [ ! -e "$TESTNAME" ] ; then
    mkdir "$TESTNAME"
 fi
-if [ -e "$PREFIX/completed.txt" ] ; then
+if [ -e "$PREFIX/runtimes.data" ] ; then
    echo "##################################################"
    echo "$PREFIX is already there -> skipping!"
    echo "##################################################"
@@ -96,6 +105,8 @@ if [ -e "$PREFIX/completed.txt" ] ; then
 fi
 rm -rf "$PREFIX"
 mkdir "$PREFIX"
+
+. ./Lab-User.config
 
 ALL_HOSTS="`echo $HOST_LIST $HOST_PR | sort -u`"
 echo "   + Preparing test for the following parameters:"
@@ -110,78 +121,113 @@ echo "      - $PEs PEs, $PUs PUs"
 
 
 # ------ Stop all -----------------------------------------------------------
-echo "   + Stopping all old stuff ..."
+echo "   + `date`: Stopping all old stuff ..."
 for HOST in $ALL_HOSTS ; do
    ssh -q -C -i $CC_REMOTEKEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $CC_REMOTEUSER@$HOST "\
       killall -KILL -q registrar hrestest server"
 done
 rm -f TestP?-*.pid
-echo "   + Ready. Waiting 5 seconds ..."
+echo "   + `date`: Ready. Waiting 5 seconds ..."
 sleep 5
 
+# ------ Remember current time ----------------------------------------------
+UPTIME_STARTUP=$(get_uptime)
+
 # ------ Start PR -----------------------------------------------------------
-echo "   + Starting PR ..."
+echo "   + `date`: Starting PR ..."
 ./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 start \
    -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 $CSPOPT
 sleep 10
 
 # ------ Start PEs ----------------------------------------------------------
-echo "   + Starting $PEs PEs ..."
+echo "   + `date`: Starting $PEs PEs ..."
 CHOOSE_HOST_LAST=0
-i=1 ; while [ $i -le $PEs ] ; do
+i=1 ; j=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
       -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 \
-      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
-   let i=$i+1
+      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin &
+   let i=$i+1 ; let j=$j+1
+   if [ $j -gt $MAX_SSH_PROCS ] ; then
+      wait
+      j=1
+   fi
 done
 
-sleep 10
+wait
+sleep 3
 
 # ------ Start PUs ----------------------------------------------------------
-echo "   + Starting $PUs PUs ..."
+echo "   + `date`: Starting $PUs PUs ..."
 CHOOSE_HOST_LAST=0
-i=1 ; while [ $i -le $PUs ] ; do
+i=1 ; j=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
-      -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250
-   let i=$i+1
+      -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250 &
+   let i=$i+1 ; let j=$j+1
+   if [ $j -gt $MAX_SSH_PROCS ] ; then
+      wait
+      j=1
+   fi
 done
+
+wait
 
 
 # ====== Run tests ==========================================================
-echo "   + Running test ..."
+echo "   + `date`: Running test for $DURATION seconds ..."
+UPTIME_MSTART=$(get_uptime)
 sleep $DURATION
+UPTIME_MEND=$(get_uptime)
 
 
 # ====== Stop scenario ======================================================
 
 # ------ Stop PUs -----------------------------------------------------------
-echo "   + Stopping PUs ..."
+echo "   + `date`: Stopping PUs ..."
 CHOOSE_HOST_LAST=0
-i=1 ; while [ $i -le $PUs ] ; do
+i=1 ; j=1 ; while [ $i -le $PUs ] ; do
    choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop
-   fetchfile $CHOOSE_HOST "TestPU-$i.data" "$PREFIX/TestPU-$i.data"
-   let i=$i+1
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop &
+   let i=$i+1 ; let j=$j+1
+   if [ $j -gt $MAX_SSH_PROCS ] ; then
+      wait
+      j=1
+   fi
 done
-sleep 1
- 
+wait
+i=1 ; j=1 ; while [ $i -le $PUs ] ; do
+   choose_host
+   fetchfile $CHOOSE_HOST "TestPU-$i.data" "$PREFIX/TestPU-$i.data" &
+   let i=$i+1 ; let j=$j+1
+   if [ $j -gt $MAX_SSH_PROCS ] ; then
+      wait
+      j=1
+   fi
+done
+wait
+
 # ------ Stop PEs -----------------------------------------------------------
-echo "   + Stopping PEs ..."
+echo "   + `date`: Stopping PEs ..."
 CHOOSE_HOST_LAST=0
-i=1 ; while [ $i -le $PEs ] ; do
+i=1 ; j=1 ; while [ $i -le $PEs ] ; do
    choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop
-   let i=$i+1
+   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop &
+   let i=$i+1 ; let j=$j+1
+   if [ $j -gt $MAX_SSH_PROCS ] ; then
+      wait
+      j=1
+   fi
 done
-sleep 2
+wait
 
 # ------ Stop PR ------------------------------------------------------------
-echo "   + Stopping PR ..."
+echo "   + `date`: Stopping PR ..."
 ./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 stop
 fetchfile $HOST_PR "TestPR-1.data" "$PREFIX/TestPR-1.data"
 
+UPTIME_SHUTDOWN=$(get_uptime)
 
-date >"$PREFIX/completed.txt"
-echo "Fertig!"
+
+echo "Startup MeasurementStart MeasurementEnd Shutdown" >$PREFIX/runtimes.data
+echo "1 $UPTIME_STARTUP $UPTIME_MSTART $UPTIME_MEND $UPTIME_SHUTDOWN" >>$PREFIX/runtimes.data
