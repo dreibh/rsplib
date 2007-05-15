@@ -39,10 +39,49 @@ DURATION="$8"
 
 POOLHANDLE="EchoPool"
 
+. ./Lab-User.config
+
+
 HOST_PR="132.252.152.73"
 HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.78 132.252.152.79"
 
+CSPOPT="-cspserver=132.252.152.70:2960 -cspinterval=333"
+
+
 PARAMS=$PREFIX-$PEs-$PUs-$REREGINTERVAL-$INTERHRESTIME-$MAXHRESITEMS-$DURATION
+
+
+# ====== Choose host from HOST_LIST in round robin order ====================
+CHOOSE_HOST=""
+CHOOSE_HOST_LAST=0
+choose_host ()
+{
+   oldGetHostLast=$CHOOSE_HOST_LAST
+   CHOOSE_HOST_LAST=0
+   for myHost in $HOST_LIST ; do
+      if [ $CHOOSE_HOST_LAST -gt $oldGetHostLast ] ; then
+         CHOOSE_HOST=$myHost
+         return
+      fi 
+      let CHOOSE_HOST_LAST=$CHOOSE_HOST_LAST+1
+   done
+
+   for myHost in $HOST_LIST ; do
+      CHOOSE_HOST=$myHost
+      CHOOSE_HOST_LAST=0
+      return
+   done
+}
+
+
+# ====== Get file via scp ===================================================
+fetchfile ()
+{
+   SERVER=$1
+   INFILE=$2
+   OUTFILE=$3
+   scp -q -i $CC_REMOTEKEY $CC_REMOTEUSER@$SERVER:"~/src/rsplib2/rsplib/$INFILE" $OUTFILE
+}
 
 
 # ====== Start scenario =====================================================
@@ -58,7 +97,9 @@ fi
 rm -rf "$PREFIX"
 mkdir "$PREFIX"
 
+ALL_HOSTS="`echo $HOST_LIST $HOST_PR | sort -u`"
 echo "   + Preparing test for the following parameters:"
+echo "      - Hosts: $ALL_HOSTS"
 echo "      - $PEs PEs, $PUs PUs"
 echo "      - ReregInterval: $REREGINTERVAL [ms]"
 echo "      - InterHResTime: $INTERHRESTIME [ms]"
@@ -70,10 +111,9 @@ echo "      - $PEs PEs, $PUs PUs"
 
 # ------ Stop all -----------------------------------------------------------
 echo "   + Stopping all old stuff ..."
-ALL_HOSTS="`echo $HOST_LIST $HOST_PR | sort -u`"
 for HOST in $ALL_HOSTS ; do
-   ssh -t -t -C -i $SSH_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $SSH_USER@$HOST "\
-      killall -KILL registrar hrestest server"
+   ssh -q -C -i $CC_REMOTEKEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $CC_REMOTEUSER@$HOST "\
+      killall -KILL -q registrar hrestest server"
 done
 rm -f TestP?-*.pid
 echo "   + Ready. Waiting 5 seconds ..."
@@ -82,7 +122,7 @@ sleep 5
 # ------ Start PR -----------------------------------------------------------
 echo "   + Starting PR ..."
 ./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 start \
-   -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250
+   -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 $CSPOPT
 sleep 10
 
 # ------ Start PEs ----------------------------------------------------------

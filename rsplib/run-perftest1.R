@@ -17,8 +17,12 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
                                   columnName,
                                   type)
 {
-   timeLow    <- min(data$RelTime)
-   timeHigh   <- max(data$RelTime)
+   recordedDuration <- max(data$RelTime) - min(data$RelTime)
+   skew <- (recordedDuration - (segmentLength * segments)) / 2
+
+   timeLow    <- skew + min(data$RelTime)
+   timeHigh   <- skew + max(data$RelTime)
+cat(timeLow, timeHigh,"\n")
    resultsSet <- c()
 
    # ------ Cut off edges ---------------------------------------------------
@@ -68,9 +72,9 @@ minPostSkip   <- 15
 segmentLength <- 30
 segments      <- 1
 
-PEsSet           <- c(1,2,4,10,25,50,100,250)
+PEsSet           <- c(1,10,100)
 PUsSet           <- c(1)
-reregIntervalSet <- c(5000)
+reregIntervalSet <- c(1000,5000)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
 
