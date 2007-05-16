@@ -67,12 +67,12 @@ cat(timeLow, timeHigh,"\n")
 
 testName <- "P01"
 
-minPreSkip    <- 15
-minPostSkip   <- 15
+minPreSkip    <- 30
+minPostSkip   <- 30
 segmentLength <- 30
-segments      <- 1
+segments      <- 2
 
-PEsSet           <- c(10)
+PEsSet           <- c(1,10,100,150,250,500)
 PUsSet           <- c(1)
 reregIntervalSet <- c(1000)
 interHResTimeSet <- c(1000)

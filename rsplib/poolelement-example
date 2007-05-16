@@ -10,4 +10,4 @@ if [ x$CSP_SERVER != "x" ] ; then
    fi
 fi
 
-./examplepe -logcolor=on -loglevel=3 $CSPCONFIG $@
+./server -echo -logcolor=on -loglevel=3 $CSPCONFIG $@

@@ -1498,7 +1498,9 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       frameColor <- "black"
       yManipulator <- "set"
       xTitle <- "X-Axis" ; yTitle <- "Y-Axis" ; zTitle <- "Z-Axis"
-      xManipulator <- NA; yManipulator <- NA; zManipulator <- NA;
+      xManipulator <- NA; yManipulator <- NA; zManipulator <- NA
+      vManipulator <- NA; wManipulator <- NA;
+      aManipulator <- NA; bManipulator <- NA; pManipulator <- NA
       zColumn <- "" ; zSet <- c() ; zTitle <- "Z-Axis"
       vColumn <- "" ; vSet <- c() ; vTitle <- "V-Axis"
       wColumn <- "" ; wSet <- c() ; wTitle <- "W-Axis"

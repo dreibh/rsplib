@@ -5,4 +5,4 @@ if [ x$CSP_SERVER != "x" -a $CSP_INTERVAL -gt 0 ] ; then
    CSPCONFIG="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL"
 fi
 
-./examplepu -logcolor=on -loglevel=3 $CSPCONFIG $@
+./terminal -logcolor=on -loglevel=3 $CSPCONFIG $@
