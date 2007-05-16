@@ -48,8 +48,8 @@ class CalcAppServer : public UDPLikeServer
    virtual ~CalcAppServer();
 
    protected:
-   virtual EventHandlingResult initialize();
-   virtual void finish(EventHandlingResult result);
+   virtual EventHandlingResult initialize(int sd);
+   virtual void finish(int sd, EventHandlingResult result);
    virtual void printParameters();
    virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
                                              const char*        buffer,

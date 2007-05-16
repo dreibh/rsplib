@@ -118,14 +118,14 @@ void UDPLikeServer::handleTimer()
 
 
 // ###### Startup ###########################################################
-EventHandlingResult UDPLikeServer::initialize()
+EventHandlingResult UDPLikeServer::initialize(int sd)
 {
    return(EHR_Okay);
 }
 
 
 // ###### Shutdown ##########################################################
-void UDPLikeServer::finish(EventHandlingResult result)
+void UDPLikeServer::finish(int sd, EventHandlingResult result)
 {
 }
 
@@ -184,16 +184,20 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       printf("      Weight               = %u\n", loadinfo->rli_weight);
       printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
       printParameters();
-      puts("\n");
 
       // ====== Register PE =================================================
       if(rsp_register_tags(RSerPoolSocketDescriptor,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
                            loadinfo, reregInterval, 0, tags) == 0) {
+         uint32_t identifier;
+         if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
+            puts("Registration");
+            printf("   Identifier              = $%08x\n\n", identifier);
+         }
          double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)PPV_MAX_LOAD);
 
          // ====== Startup ==================================================
-         const EventHandlingResult initializeResult = initialize();
+         const EventHandlingResult initializeResult = initialize(RSerPoolSocketDescriptor);
          if(initializeResult == EHR_Okay) {
 
             // ====== Main loop =============================================
@@ -284,7 +288,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          }
 
          // ====== Shutdown =================================================
-         finish(initializeResult);
+         finish(RSerPoolSocketDescriptor, initializeResult);
 
          // ====== Clean up =================================================
          rsp_deregister(RSerPoolSocketDescriptor, 0);

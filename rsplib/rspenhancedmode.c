@@ -485,6 +485,20 @@ int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt)
 }
 
 
+/* ###### Put PE socket into listening mode ############################## */
+int rsp_listen(int sd, int backlog)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+
+   if(rserpoolSocket->PoolElement) {
+      return(ext_listen(rserpoolSocket->Socket, backlog));
+   }
+   errno = EBADF;
+   return(-1);
+}
+
+
 /* ###### Register pool element ########################################## */
 int rsp_register_tags(int                        sd,
                       const unsigned char*       poolHandle,
@@ -1468,6 +1482,70 @@ int rsp_setsockopt(int sd, int level, int optname, const void* optval, socklen_t
       return(result);
    }
    return(ext_setsockopt(rserpoolSocket->Socket, level, optname, optval, optlen));
+}
+
+
+/* ###### Get PE's pool handle and identifier ############################ */
+int rsp_getsockname(int            sd,
+                    unsigned char* poolHandle,
+                    size_t*        poolHandleSize,
+                    uint32_t*      identifier)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+
+   if(rserpoolSocket->PoolElement == NULL) {
+      errno = EBADF;
+      return(-1);
+   }
+   if(poolHandleSize) {
+      if(*poolHandleSize >= rserpoolSocket->PoolElement->Handle.Size) {
+         memcpy(poolHandle,
+               rserpoolSocket->PoolElement->Handle.Handle,
+               rserpoolSocket->PoolElement->Handle.Size);
+         *poolHandleSize = rserpoolSocket->PoolElement->Handle.Size;
+      }
+      else {
+         errno = ENOBUFS;
+         return(-1);
+      }
+   }
+   if(identifier) {
+      *identifier = rserpoolSocket->PoolElement->Identifier;
+   }
+   return(0);
+}
+
+
+/* ###### Get peer PE's pool handle and identifier ####################### */
+int rsp_getpeername(int            sd,
+                    unsigned char* poolHandle,
+                    size_t*        poolHandleSize,
+                    uint32_t*      identifier)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+
+   if(rserpoolSocket->ConnectedSession == NULL) {
+      errno = EBADF;
+      return(-1);
+   }
+   if(poolHandleSize) {
+      if(*poolHandleSize >= rserpoolSocket->ConnectedSession->Handle.Size) {
+         memcpy(poolHandle,
+               rserpoolSocket->ConnectedSession->Handle.Handle,
+               rserpoolSocket->ConnectedSession->Handle.Size);
+         *poolHandleSize = rserpoolSocket->ConnectedSession->Handle.Size;
+      }
+      else {
+         errno = ENOBUFS;
+         return(-1);
+      }
+   }
+   if(identifier) {
+      *identifier = rserpoolSocket->ConnectedSession->ConnectedPE;
+   }
+   return(0);
 }
 
 

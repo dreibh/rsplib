@@ -274,6 +274,50 @@ int rsp_socket(int domain, int type, int protocol);
 int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt);
 
 /**
+  * Put RSerPool socket (PE only) into listening mode.
+  *
+  * @param sd Socket descriptor.
+  * @param backlog Backlog.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_listen(int sd, int backlog);
+
+/**
+  * Get PE's pool handle and identifier.
+  *
+  * @param sd Socket descriptor.
+  * @param poolHandle Buffer to store pool handle.
+  * @param poolHandleSize Pointer to variable containing maximum pool handle size. In case of success, the actual pool handle size will be stored there.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_getsockname(int            sd,
+                    unsigned char* poolHandle,
+                    size_t*        poolHandleSize,
+                    uint32_t*      identifier);
+
+/**
+  * Get peer PE's pool handle and identifier.
+  *
+  * @param sd Socket descriptor.
+  * @param poolHandle Buffer to store pool handle.
+  * @param poolHandleSize Pointer to variable containing maximum pool handle size. In case of success, the actual pool handle size will be stored there.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_getpeername(int            sd,
+                    unsigned char* poolHandle,
+                    size_t*        poolHandleSize,
+                    uint32_t*      identifier);
+
+/**
+  *
+  *
+  * @param
+  * @param
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_();
+
+/**
   * Close RSerPool socket.
   *
   * @param sd Socket descriptor.

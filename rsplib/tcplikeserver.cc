@@ -265,12 +265,16 @@ void TCPLikeServer::poolElement(const char*          programTitle,
       if(printParameters) {
          printParameters(userData);
       }
-      puts("\n");
 
       // ====== Register PE =================================================
       if(rsp_register_tags(rserpoolSocket,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
                            loadinfo, reregInterval, 0, tags) == 0) {
+         uint32_t identifier;
+         if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+            puts("Registration");
+            printf("   Identifier              = $%08x\n\n", identifier);
+         }
 
          // ====== Main loop ================================================
          TCPLikeServerList        serverSet(maxThreads);

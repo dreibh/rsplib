@@ -79,15 +79,15 @@ CalcAppServer::~CalcAppServer()
 void CalcAppServer::printParameters()
 {
    puts("CalcApp Parameters:");
-   printf("   Object Name              = %s\n", ObjectName.c_str());
-   printf("   Vector File Name         = %s\n", VectorFileName.c_str());
-   printf("   Scalar File Name         = %s\n", ScalarFileName.c_str());
-   printf("   Max Jobs                 = %u\n", (unsigned int)MaxJobs);
-   printf("   Capacity                 = %1.1f [Calculations/s]\n",Capacity);
-   printf("   KA Transmission Interval = %llu [us]\n", KeepAliveTransmissionInterval);
-   printf("   KA Timeout Interval      = %llu [us]\n", KeepAliveTimeoutInterval);
-   printf("   Cookie Max Time          = %llu [us]\n", CookieMaxTime);
-   printf("   Cookie Max Calculations  = %1.0f [Calculations]\n", CookieMaxCalculations);
+   printf("   Object Name             = %s\n", ObjectName.c_str());
+   printf("   Vector File Name        = %s\n", VectorFileName.c_str());
+   printf("   Scalar File Name        = %s\n", ScalarFileName.c_str());
+   printf("   Max Jobs                = %u\n", (unsigned int)MaxJobs);
+   printf("   Capacity                = %1.1f [Calculations/s]\n",Capacity);
+   printf("   KA Transmission Interv. = %llu [us]\n", KeepAliveTransmissionInterval);
+   printf("   KA Timeout Interval     = %llu [us]\n", KeepAliveTimeoutInterval);
+   printf("   Cookie Max Time         = %llu [us]\n", CookieMaxTime);
+   printf("   Cookie Max Calculations = %1.0f [Calculations]\n", CookieMaxCalculations);
 }
 
 
@@ -263,7 +263,7 @@ void CalcAppServer::scheduleNextTimerEvent()
 
 
 // ###### Initialize ########################################################
-EventHandlingResult CalcAppServer::initialize()
+EventHandlingResult CalcAppServer::initialize(int sd)
 {
    VectorFH = fopen(VectorFileName.c_str(), "w");
    if(VectorFH == NULL) {
@@ -284,7 +284,7 @@ EventHandlingResult CalcAppServer::initialize()
 
 
 // ###### Shutdown ##########################################################
-void CalcAppServer::finish(EventHandlingResult initializeResult)
+void CalcAppServer::finish(int sd, EventHandlingResult initializeResult)
 {
    removeAllJobs();
 
