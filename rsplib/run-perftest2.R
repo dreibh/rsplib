@@ -65,17 +65,17 @@ cat(timeLow, timeHigh,"\n")
 
 # ###########################################################################
 
-testName <- "P01"
+testName <- "P02"
 
 minPreSkip    <- 30
 minPostSkip   <- 30
 segmentLength <- 60
-segments      <- 5
+segments      <- 10
 
-PEsSet           <- c(1,10,50,100,175,250,375,500,625,750,1000)
-PUsSet           <- c(1)
-reregIntervalSet <- c(1000,5000,250)
-interHResTimeSet <- c(1000)
+PEsSet           <- c(50)
+PUsSet           <- c(1,10,50,100,175,250,375,500,625,750,1000)
+reregIntervalSet <- c(1000,5000)
+interHResTimeSet <- c(1000,5000,250)
 maxHResItemsSet  <- c(3)
 
 # ###########################################################################
@@ -106,13 +106,14 @@ for(reregInterval in reregIntervalSet) {
 for(interHResTime in interHResTimeSet) {
 for(maxHResItems in maxHResItemsSet) { 
    # ------ Run performance test --------------------------------------------
-   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
+   duration <- minPreSkip + minPostSkip + (segments + 1) * segmentLength
+   runPrefix <- paste(sep="", testName, "-", duration, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
    cmdLine <- paste(sep="", "./perftest ",
                             testName, " ", runPrefix,
                             " ",
                             PEs, " ", PUs, " ", 
                             reregInterval, " ", interHResTime, " ", maxHResItems, " ",
-                            minPreSkip + minPostSkip + (segments + 1) * segmentLength," ",
+                            duration," ",
                             ">", testName, "/", runPrefix, ".log")
    cat(sep="", "Running ", cmdLine," ...\n")
    cat(readLines(pc <- pipe(cmdLine)))

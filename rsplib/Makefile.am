@@ -144,10 +144,10 @@ endif
 
 if BUILD_QT_PROGRAMS
 noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
+EXTRA_DIST = registrar-example poolelement-example pooluser-example
 else
 noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example examplens examplepe examplepu daytimeserver discardserver echoserver fractalserver nameserver pingpongserver pingpongclient client
+EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example
 endif
 
 
