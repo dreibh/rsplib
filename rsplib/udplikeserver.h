@@ -41,18 +41,19 @@ class UDPLikeServer
    virtual EventHandlingResult initialize(int sd);
    virtual void finish(int sd, EventHandlingResult initializeResult);
 
-   void poolElement(const char*          programTitle,
-                    const char*          poolHandle,
-                    struct rsp_info*     info,
-                    struct rsp_loadinfo* loadinfo,
-                    unsigned int         reregInterval = 30000,
-                    unsigned int         runtimeLimit  = 0,
-                    struct TagItem*      tags          = NULL);
+   virtual void poolElement(const char*          programTitle,
+                            const char*          poolHandle,
+                            struct rsp_info*     info,
+                            struct rsp_loadinfo* loadinfo,
+                            unsigned int         reregInterval = 30000,
+                            unsigned int         runtimeLimit  = 0,
+                            struct TagItem*      tags          = NULL);
 
    double getLoad() const;
    void setLoad(double load);
 
    protected:
+   virtual void waitForAction(unsigned long long timeout);
    virtual void printParameters();
    void startTimer(unsigned long long timeStamp);
    void stopTimer();

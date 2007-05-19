@@ -593,6 +593,23 @@ ssize_t rsp_send(int sd, const void* data, size_t dataLength, int flags);
    ####################################################################### */
 
 /**
+  * Map system socket to RSerPool socket.
+  *
+  * @param sd System socket descriptor.
+  * @param toSD Desired RSerPool socket descriptor (-1 for automatic allocation).
+  * @return RSerPool socket descriptor or -1 in case of error.
+  */
+int rsp_mapsocket(int sd, int toSD);
+
+/**
+  * Unmap system socket from RSerPool socket.
+  *
+  * @param sd System socket descriptor.
+  * @return 0 in case of success; -1 in case of error.
+  */
+int rsp_unmapsocket(int sd);
+
+/**
   * Print contents of RSerPool notification.
   *
   * @param notification RSerPool notification.

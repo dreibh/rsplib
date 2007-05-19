@@ -136,6 +136,17 @@ void UDPLikeServer::printParameters()
 }
 
 
+// ###### Wait for action on RSerPool socket ################################
+void UDPLikeServer::waitForAction(unsigned long long timeout)
+{
+   struct pollfd pollfds[1];
+   pollfds[0].fd      = RSerPoolSocketDescriptor;
+   pollfds[0].events  = POLLIN;
+   pollfds[0].revents = 0;
+   rsp_poll((struct pollfd*)&pollfds, 1, (int)(timeout / 1000));
+}
+
+
 // ###### Implementation of a simple UDP-like server ########################
 void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
@@ -219,9 +230,14 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                      timeout = min(timeout, NextTimerTimeStamp - now);
                   }
                }
+
+               // ====== Wait for action on RSerPool socket =================
+               waitForAction(timeout);
+
+               // ====== Read from socket ===================================
                ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                                   (char*)&buffer, sizeof(buffer),
-                                                  &rinfo, &flags, (int)(timeout / 1000));
+                                                  &rinfo, &flags, 0);
 
                // ====== Handle data ========================================
                if(received > 0) {

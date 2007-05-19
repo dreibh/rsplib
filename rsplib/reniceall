@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -ne 1 ] ; then
+   echo "reniceall [Program]"
+   exit 1
+fi
+
+ps ax -o "%p %c" | grep $1 | awk '{print $1}' | tee | xargs --no-run-if-empty sudo renice 10

@@ -96,10 +96,6 @@ int rsp_forcefailover_tags(int             sd,
                            struct TagItem* tags);
 
 
-int rsp_mapsocket(int sd, int toSD);
-int rsp_unmapsocket(int sd);
-
-
 #ifdef __cplusplus
 }
 #endif
