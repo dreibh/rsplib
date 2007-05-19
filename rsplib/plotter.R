@@ -4,7 +4,7 @@
 #
 #           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 # ###########################################################################
-# $Id: plotter.R 1614 2007-05-09 09:38:16Z dreibh $
+# $Id: plotter.R 1625 2007-05-18 14:10:37Z dreibh $
 
 
 # Get array of gray tones (equivalent of rainbow() for b/w laser printing)
@@ -1487,7 +1487,7 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       }
       resultsNameSet      <- c()
       simulationDirectory <- plotConfiguration[1]
-      pdfName             <- plotConfiguration[2]
+      pdfName             <- as.character(plotConfiguration[2])
       title               <- plotConfiguration[3]
       xAxisTicks          <- unlist(plotConfiguration[4])
       yAxisTicks          <- unlist(plotConfiguration[5])
@@ -1664,4 +1664,57 @@ createPlots <- function(simulationDirectory, plotConfigurations)
    if(!plotOwnOutput) {
       dev.off()
    }
+}
+
+
+# ====== Analyse results of a counter vector ================================
+ACRT_Duration   <- 1
+ACRT_Difference <- 2
+ACRT_Normalized <- 3
+analyseCounterResults <- function(data, minPreSkip, minPostSkip,
+                                  segmentLength, segments,
+                                  columnName,
+                                  type)
+{
+   recordedDuration <- max(data$RelTime) - min(data$RelTime)
+   skew <- (recordedDuration - (segmentLength * segments)) / 2
+
+   timeLow    <- min(data$RelTime) + minPreSkip
+   timeHigh   <- max(data$RelTime) - minPostSkip
+   # cat(timeLow, timeHigh,"\n")
+   resultsSet <- c()
+
+   # ------ Cut off edges ---------------------------------------------------
+   if(timeHigh - (segmentLength * segments) < timeLow) {
+      stop(paste(sep="", "ERROR: Data set is too short for ",
+                 columnName , "; ", timeHigh - (segmentLength * segments), "s more required!"))
+   }
+
+   # ------ Fetch segments --------------------------------------------------
+   for(i in 1:segments) {
+      start <- timeLow + ((i - 1) * segmentLength)
+      end   <- timeLow + (i * segmentLength)
+      subData <- subset(data,
+                        (data$RelTime >= start) &
+                        (data$RelTime < end))
+
+      xSet <- subData$RelTime
+      ySet <- eval(parse(text=paste(sep="", "subData$", columnName)))
+
+      duration   <- max(xSet) - min(xSet)
+      difference <- max(ySet) - min(ySet)
+      normalized <- difference / duration
+      # cat(start,end, "  ->  ", duration, difference, normalized, "\n")
+
+      if(type == ACRT_Duration) {
+         resultsSet <- append(resultsSet, c(duration))
+      }
+      else if(type == ACRT_Difference) {
+         resultsSet <- append(resultsSet, c(difference))
+      }
+      else {
+         resultsSet <- append(resultsSet, c(normalized))
+      }
+   }
+   return(resultsSet)
 }

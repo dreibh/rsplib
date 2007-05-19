@@ -1,77 +1,120 @@
+# ###########################################################################
+# Name:        run-perftest1
+# Description:
+# Revision:    $Id: run-perftest1.R 1375 2007-05-18 17:00:15Z dreibh $
+# ###########################################################################
+
 source("plotter.R")
 
-handlingTimeStat <- function(data, start, end)
-{
-   queuingTime <- (data$QueuingTimeStamp - min(data$QueuingTimeStamp)) / 60
-   f <- (queuingTime >= start) &
-        (queuingTime <= end)
-   htSubset <- subset(data$HandlingTime, f)
-   htMin  <- min(htSubset)
-   htMax  <- max(htSubset)
-   htMean <- mean(htSubset)
-   htTest <- t.test(htSubset)
-   cat(sep="", start, "-", end, ":   mean=", htMean,
-       " +/- ", htMean - htTest$conf.int[1], "   ",
-       "min=", htMin, " max=", htMax,
-       "\n")
-}
 
-#d1 <- loadResults("messung1/pu-vectors.vec.bz2")
-#cat("LU-DPF\n")
-#handlingTimeStat(d1, 2, 58)
-#d2 <- loadResults("messung2/pu-vectors.vec.bz2")
-#cat("LU\n")
-#handlingTimeStat(d2, 2, 58)
+testName <- "P01"
 
-#cat("-----\n")
+minPreSkip    <- 30
+minPostSkip   <- 30
+segmentLength <- 60
+segments      <- 5
 
-#d3 <- loadResults("messung3/pu-vectors.vec.bz2")
-#cat("LU-DPF\n")
-#handlingTimeStat(d3, 1, 14)
-#handlingTimeStat(d3, 16, 29)
-#handlingTimeStat(d3, 31, 45)
-#handlingTimeStat(d3, 46, 49)
-#handlingTimeStat(d3, 51, 64)
+PEsSet           <- c(1,10,50,100,175,250,375,500,625,750,1000)
+PUsSet           <- c(1)
+reregIntervalSet <- c(1000,5000,250)
+interHResTimeSet <- c(1000)
+maxHResItemsSet  <- c(3)
 
-d4 <- loadResults("messung3h/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
-d4 <- loadResults("messung3i/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
-d4 <- loadResults("messung3j/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
-d4 <- loadResults("messung3k/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
-d4 <- loadResults("messung3l/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
-d4 <- loadResults("messung4e/pu-vectors.vec.bz2")
-cat("Results:\n")
-handlingTimeStat(d4, 1, 14)
-handlingTimeStat(d4, 16, 29)
-handlingTimeStat(d4, 31, 45)
-handlingTimeStat(d4, 46, 49)
-handlingTimeStat(d4, 51, 64)
+# ###########################################################################
+
+
+peColumn              <- c()
+puColumn              <- c()
+reregIntervalColumn   <- c()
+interHResTimeColumn   <- c()
+maxHResItemsColumn    <- c()
+
+registrationRates     <- c()
+reregistrationRates   <- c()
+deregistrationRates   <- c()
+handleResolutionRates <- c()
+failureReportRates    <- c()
+synchronizationRates  <- c()
+
+
+# cat(readLines(pc <- pipe(paste(sep="", "rm -rf ", testName))))
+# close(pc)
+dir.create(testName,showWarnings=FALSE)
+
+
+for(PEs in PEsSet) {
+for(PUs in PUsSet) {
+for(reregInterval in reregIntervalSet) {
+for(interHResTime in interHResTimeSet) {
+for(maxHResItems in maxHResItemsSet) { 
+   # ------ Run performance test --------------------------------------------
+   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
+   cmdLine <- paste(sep="", "./perftest ",
+                            testName, " ", runPrefix,
+                            " ",
+                            PEs, " ", PUs, " ", 
+                            reregInterval, " ", interHResTime, " ", maxHResItems, " ",
+                            minPreSkip + minPostSkip + (segments + 1) * segmentLength," ",
+                            ">", testName, "/", runPrefix, ".log")
+   cat(sep="", "Running ", cmdLine," ...\n")
+   cat(readLines(pc <- pipe(cmdLine)))
+   close(pc)
+
+   # ------ Collect results -------------------------------------------------
+   cat("Collecting results ...\n")
+   data <- loadResults(paste(sep="", testName, "/", runPrefix, "/TestPR-1.data"))
+   rtdata <- read.table(paste(sep="", testName, "/", runPrefix, "/runtimes.data"))
+   preSkip  <- minPreSkip + (mean(rtdata$MeasurementStart) - mean(rtdata$Startup))
+   postSkip <- minPostSkip
+   cat("=>",preSkip,postSkip,"\n")
+
+   registrationResults <- analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                                "Registrations", ACRT_Normalized)
+
+   registrationRates     <- append(registrationRates,
+                                   registrationResults)
+   reregistrationRates   <- append(reregistrationRates,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                   "Reregistrations", ACRT_Normalized))
+   deregistrationRates   <- append(deregistrationRates,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                   "Deregistrations", ACRT_Normalized))
+   handleResolutionRates <- append(handleResolutionRates,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                   "HandleResolutions", ACRT_Normalized))
+   failureReportRates    <- append(failureReportRates,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                   "FailureReports", ACRT_Normalized))
+   synchronizationRates  <- append(synchronizationRates,
+                                   analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                                   "Synchronizations", ACRT_Normalized))
+
+   peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))
+   puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
+   reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
+   interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
+   maxHResItemsColumn <- append(maxHResItemsColumn, rep(maxHResItems, length(registrationResults)))
+}}}}}
+
+
+cat("Writing results ...\n")
+result <- data.frame(peColumn,
+                     puColumn,
+                     reregIntervalColumn,
+                     interHResTimeColumn,
+                     maxHResItemsColumn,
+
+                     registrationRates,
+                     reregistrationRates,
+                     deregistrationRates,
+                     handleResolutionRates,
+                     failureReportRates,
+                     synchronizationRates)
+colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime", "MaxHResItems",
+                     "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
+                     "HandleResolutionRate", "FailureReportRate", "SynchronizationRate")
+dir.create(paste(sep="", testName, "/Results"), showWarnings=FALSE)
+resultsName <- paste(sep="", testName, "/Results/Summary.data")
+write.table(result, resultsName)
+cat(readLines(pc <- pipe(paste(sep="", "rm -f ", resultsName, ".bz2 ; bzip2 ", resultsName))))
+close(pc)

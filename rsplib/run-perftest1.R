@@ -1,69 +1,11 @@
 # ###########################################################################
-# Name:        test34
+# Name:        run-perftest1
 # Description:
 # Revision:    $Id$
 # ###########################################################################
 
 source("plotter.R")
 
-
-
-# ====== Analyse results of a counter vector ================================
-ACRT_Duration   <- 1
-ACRT_Difference <- 2
-ACRT_Normalized <- 3
-analyseCounterResults <- function(data, minPreSkip, minPostSkip,
-                                  segmentLength, segments,
-                                  columnName,
-                                  type)
-{
-   recordedDuration <- max(data$RelTime) - min(data$RelTime)
-   skew <- (recordedDuration - (segmentLength * segments)) / 2
-
-   timeLow    <- skew + min(data$RelTime)
-   timeHigh   <- skew + max(data$RelTime)
-cat(timeLow, timeHigh,"\n")
-   resultsSet <- c()
-
-   # ------ Cut off edges ---------------------------------------------------
-   data <- subset(data, (data$RelTime >= timeLow + minPreSkip) &
-                        (data$RelTime <= timeHigh - minPostSkip))
-   if(timeHigh - (segmentLength * segments) < timeLow) {
-      stop(paste(sep="", "ERROR: Data set is too short for ",
-                 columnName , "; ", timeHigh - (segmentLength * segments), "s more required!"))
-   }
-
-   # ------ Fetch segments --------------------------------------------------
-   for(i in 1:segments) {
-      start <- timeLow + minPreSkip + ((i - 1) * segmentLength)
-      end   <- timeLow + minPreSkip + (i * segmentLength)
-      subData <- subset(data,
-                        (data$RelTime >= start) &
-                        (data$RelTime < end))
-
-      xSet <- subData$RelTime
-      ySet <- eval(parse(text=paste(sep="", "subData$", columnName)))
-
-      duration   <- max(xSet) - min(xSet)
-      difference <- max(ySet) - min(ySet)
-      normalized <- difference / duration
-      # cat(start,end, "  ->  ", duration, difference, normalized, "\n")
-
-      if(type == ACRT_Duration) {
-         resultsSet <- append(resultsSet, c(duration))
-      }
-      else if(type == ACRT_Difference) {
-         resultsSet <- append(resultsSet, c(difference))
-      }
-      else {
-         resultsSet <- append(resultsSet, c(normalized))
-      }
-   }
-   return(resultsSet)
-}
-
-
-# ###########################################################################
 
 testName <- "P01"
 
