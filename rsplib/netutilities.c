@@ -1265,34 +1265,10 @@ size_t getPadding(const size_t size, const size_t alignment)
 }
 
 
-/* ###### Convert 24-bit value to host byte-order ######################## */
-uint32_t ntoh24(const uint32_t value)
-{
-#if BYTE_ORDER == LITTLE_ENDIAN
-   const uint32_t a = ((uint8_t*)&value)[0];
-   const uint32_t b = ((uint8_t*)&value)[1];
-   const uint32_t c = ((uint8_t*)&value)[2];
-   const uint32_t result = (a << 16) | (b << 8) | c;
-#elif BYTE_ORDER == BIG_ENDIAN
-   const uint32_t result = value;
-#else
-#error Byte order is not defined!
-#endif
-   return(result);
-}
-
-
-/* ###### Convert 24-bit value to network byte-order ##################### */
-uint32_t hton24(const uint32_t value)
-{
-   return(ntoh24(value));
-}
-
-
 /* ###### Check for support of IPv6 ###################################### */
 bool checkIPv6()
 {
-   int sd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
+   int sd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
    if(sd >= 0) {
       close(sd);
       return(true);

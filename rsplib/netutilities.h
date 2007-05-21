@@ -242,23 +242,6 @@ const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
   */
 size_t getPadding(const size_t size, const size_t alignment);
 
-/**
-  * Convert 24-bit value to host byte-order.
-  *
-  * @param value Value.
-  * @return Value in host byte-order.
-  */
-uint32_t ntoh24(const uint32_t value);
-
-/**
-  * Convert 24-bit value to network byte-order.
-  *
-  * @param value Value.
-  * @return Value in network byte-order.
-  */
-uint32_t hton24(const uint32_t value);
-
-
 
 /**
   * Check, if IPv6 is available.
@@ -266,7 +249,6 @@ uint32_t hton24(const uint32_t value);
   * @return true if IPv6 is available; false otherwise.
   */
 bool checkIPv6();
-
 
 
 /**

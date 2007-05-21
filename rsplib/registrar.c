@@ -3439,6 +3439,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
       }
       else {
          setPort((struct sockaddr*)&udpAddress, configuredPort);
+         trials = 1024;
       }
       *sctpSocket = ext_socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(*sctpSocket < 0) {
