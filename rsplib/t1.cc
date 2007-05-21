@@ -20,13 +20,13 @@ int main(int argc, char** argv)
 
    struct sctp_event_subscribe sctpEvents;
    memset(&sctpEvents, 0, sizeof(sctpEvents));
-   sctpEvents.sctp_data_io_event          = 1;
+//    sctpEvents.sctp_data_io_event          = 1;
    sctpEvents.sctp_association_event      = 1;
-   sctpEvents.sctp_address_event          = 1;
+/*   sctpEvents.sctp_address_event          = 1;
    sctpEvents.sctp_send_failure_event     = 1;
    sctpEvents.sctp_peer_error_event       = 1;
    sctpEvents.sctp_shutdown_event         = 1;
-   sctpEvents.sctp_partial_delivery_event = 1;
+   sctpEvents.sctp_partial_delivery_event = 1;*/
    /* sctpEvents.sctp_adaptation_layer_event = 1; */
    if(ext_setsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {
       perror("setsockopt() for SCTP_EVENTS failed");
@@ -50,12 +50,23 @@ int main(int argc, char** argv)
    printf("read=%d\n", r);
 //    if(r != sizeof(union sctp_notification)) { puts("NOTF"); exit(1); }
 
+   printf("Read NOTIF2...\n");
+   r = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0);
+   printf("read=%d\n", r);
+
+
    union sctp_notification* n = (union sctp_notification*)&buffer;
    printf("A=%d\n",n->sn_assoc_change.sac_assoc_id);
 
 
    printf("Write...\n");
-   int w = sendtoplus(sd, "TEST", 4, MSG_NOSIGNAL|MSG_EOR, NULL, 0, 0x1234, n->sn_assoc_change.sac_assoc_id, 0, 0, 0);
+   struct sctp_sndrcvinfo sri;
+   memset(&sri, 0, sizeof(sri));
+   sri.sinfo_assoc_id = n->sn_assoc_change.sac_assoc_id;
+   sri.sinfo_stream   = 0;
+   sri.sinfo_ppid     = htonl(0x1234);
+   int w = sctp_send(sd, "TEST", 4, &sri, MSG_NOSIGNAL|MSG_EOR);
+//    int w = sendtoplus(sd, "TEST", 4, MSG_NOSIGNAL|MSG_EOR, NULL, 0, 0x1234, n->sn_assoc_change.sac_assoc_id, 0, 0, 0);
 printf("w=%d\n", w);
    if(w < 0) { perror("send"); exit(1); }
 
