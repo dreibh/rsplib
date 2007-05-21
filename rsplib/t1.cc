@@ -71,10 +71,26 @@ printf("w=%d\n", w);
    if(w < 0) { perror("send"); exit(1); }
 
 
-   printf("Read...\n");
-   setBlocking(sd);
-   r = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0);
-   printf("read=%d\n", r);
+   int newSD = sctp_peeloff(sd, n->sn_assoc_change.sac_assoc_id);
+   if(newSD >= 0) {
+      printf("PEELOFF: %d\n", newSD);
 
+      puts("poll...");
+      fd_set ws;
+      FD_ZERO(&ws);
+      FD_SET(newSD, &ws);
+      int result = ext_select(newSD + 1, NULL, &ws, NULL, NULL);
+      printf("result=%d\n", result);
+
+      w = ext_send(newSD, "YYYY", 4, MSG_NOSIGNAL|MSG_EOR);
+      printf("write2=%d\n", w);
+
+      printf("Read...\n");
+      setBlocking(newSD);
+      r = ext_recv(newSD, (char*)&buffer, sizeof(buffer), 0);
+      printf("read=%d\n", r);
+
+      ext_close(newSD);
+   }
    ext_close(sd);
 }
