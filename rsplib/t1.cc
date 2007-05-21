@@ -12,7 +12,7 @@ int main(int argc, char** argv)
    puts("Start ...");
 
 
-   int sd = ext_socket(AF_INET6, SOCK_STREAM, IPPROTO_SCTP);
+   int sd = ext_socket(AF_INET6, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd<0) { perror("socket"); exit(1); }
 
    puts("NonBlock...");
@@ -48,13 +48,20 @@ int main(int argc, char** argv)
    char buffer[1024];
    int r = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0);
    printf("read=%d\n", r);
+//    if(r != sizeof(union sctp_notification)) { puts("NOTF"); exit(1); }
+
+   union sctp_notification* n = (union sctp_notification*)&buffer;
+   printf("A=%d\n",n->sn_assoc_change.sac_assoc_id);
+
 
    printf("Write...\n");
-   int w = ext_send(sd, "TEST", 4, MSG_NOSIGNAL);
+   int w = sendtoplus(sd, "TEST", 4, MSG_NOSIGNAL|MSG_EOR, NULL, 0, 0x1234, n->sn_assoc_change.sac_assoc_id, 0, 0, 0);
 printf("w=%d\n", w);
    if(w < 0) { perror("send"); exit(1); }
 
+
    printf("Read...\n");
+   setBlocking(sd);
    r = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0);
    printf("read=%d\n", r);
 
