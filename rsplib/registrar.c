@@ -3603,15 +3603,29 @@ int main(int argc, char** argv)
          asapUnicastAddressParameter = (const char*)&argv[i][6];
       }
       else if(!(strncmp(argv[i], "-asapannounce=", 14))) {
-         asapAnnounceAddressParameter = (const char*)&argv[i][14];
-         asapSendAnnounces = true;
+         if( (!(strcasecmp((const char*)&argv[i][14], "off"))) ||
+             (!(strcasecmp((const char*)&argv[i][14], "none"))) ) {
+            asapAnnounceAddressParameter = "0.0.0.0:0";
+            asapSendAnnounces            = false;
+         }
+         else {
+            asapAnnounceAddressParameter = (const char*)&argv[i][14];
+            asapSendAnnounces            = true;
+         }
       }
       else if(!(strncmp(argv[i], "-enrp=",6))) {
          enrpUnicastAddressParameter = (const char*)&argv[i][6];
       }
       else if(!(strncmp(argv[i], "-enrpmulticast=", 15))) {
-         enrpMulticastAddressParameter = (const char*)&argv[i][15];
-         enrpAnnounceViaMulticast = true;
+         if( (!(strcasecmp((const char*)&argv[i][15], "off"))) ||
+             (!(strcasecmp((const char*)&argv[i][15], "none"))) ) {
+            enrpMulticastAddressParameter = "0.0.0.0:0";
+            enrpAnnounceViaMulticast      = false;
+         }
+         else {
+            enrpMulticastAddressParameter = (const char*)&argv[i][15];
+            enrpAnnounceViaMulticast      = true;
+         }
       }
       else if(!(strcmp(argv[i], "-multicast=on"))) {
          enrpUseMulticast = true;

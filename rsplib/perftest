@@ -41,12 +41,13 @@ MAX_SSH_PROCS=50
 POOLHANDLE="EchoPool"
 
 
-HOST_PR="132.252.151.157"
-HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
-# HOST_PR="localhost"
-# HOST_LIST="localhost"
+# HOST_PR="132.252.151.157"
+# HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
+HOST_PR="localhost"
+HOST_LIST="localhost"
 
-CSPOPT="-cspserver=132.252.152.70:2960 -cspinterval=333"
+# CSPOPT="-cspserver=132.252.152.70:2960 -cspinterval=333"
+CSPOPT="-cspserver=127.0.0.1:2960 -cspinterval=333"
 
 
 
@@ -107,8 +108,12 @@ rm -rf "$PREFIX"
 mkdir "$PREFIX"
 
 . ./Lab-User.config
+. ./ComponentControl.config PR
 
-ALL_HOSTS="`echo $HOST_LIST $HOST_PR | sort -u`"
+ALL_HOSTS="`( for HOST in $HOST_LIST $HOST_PR ; do
+                 echo $HOST
+              done ) | sort -u`"
+
 echo "   + Preparing test for the following parameters:"
 echo "      - Hosts: $ALL_HOSTS"
 echo "      - $PEs PEs, $PUs PUs"
@@ -129,12 +134,13 @@ for p in $KILL_PROCS ; do
 done
 for HOST in $ALL_HOSTS ; do
    ssh -q -C $CC_SSHOPT -i $CC_REMOTEKEY $CC_REMOTEUSER@$HOST "\
-      cd ~/src/rsplib2/rsplib && hostname $KILL_CMDS" &
+      cd ~/src/rsplib2/rsplib $KILL_CMDS ; echo \"      - \`hostname\` (\`uname -a\`)\"" &
 done
 wait
 rm -f TestP?-*.pid
 echo "   + `date`: Ready. Waiting 5 seconds ..."
 sleep 5
+
 
 # ------ Remember current time ----------------------------------------------
 UPTIME_STARTUP=$(get_uptime)
@@ -151,6 +157,7 @@ CHOOSE_HOST_LAST=0
 i=1 ; j=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
+      -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
       -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 \
       -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin &
    let i=$i+1 ; let j=$j+1
@@ -169,6 +176,7 @@ CHOOSE_HOST_LAST=0
 i=1 ; j=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
+      -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
       -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250 &
    let i=$i+1 ; let j=$j+1
    if [ $j -gt $MAX_SSH_PROCS ] ; then
