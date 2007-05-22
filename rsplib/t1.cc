@@ -65,7 +65,8 @@ int main(int argc, char** argv)
    sri.sinfo_assoc_id = n->sn_assoc_change.sac_assoc_id;
    sri.sinfo_stream   = 0;
    sri.sinfo_ppid     = htonl(0x1234);
-   int w = sctp_send(sd, "TEST", 4, &sri, MSG_NOSIGNAL|MSG_EOR);
+//    int w = sctp_send(sd, "TEST", 4, &sri, MSG_NOSIGNAL|MSG_EOR);
+   int w = ext_sendto(sd, "TEST", 4, 0, &dst.sa, getSocklen(&dst.sa));
 //    int w = sendtoplus(sd, "TEST", 4, MSG_NOSIGNAL|MSG_EOR, NULL, 0, 0x1234, n->sn_assoc_change.sac_assoc_id, 0, 0, 0);
 printf("w=%d\n", w);
    if(w < 0) { perror("send"); exit(1); }

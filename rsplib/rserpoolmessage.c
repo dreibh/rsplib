@@ -216,9 +216,9 @@ bool rserpoolMessageSend(int                      protocol,
       sent = sendtoplus(fd,
                         message->Buffer, messageLength,
 #ifdef MSG_NOSIGNAL
-                        flags|MSG_NOSIGNAL,
+                        flags|MSG_EOR|MSG_NOSIGNAL,
 #else
-                        flags,
+                        flags|MSG_EOR,
 #endif
                         message->AddressArray, message->Addresses,
                         myPPID,
