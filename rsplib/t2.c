@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 
 int main(int argc, char** argv)
@@ -21,6 +22,7 @@ int main(int argc, char** argv)
    int w,r;
    int sd;
    int newSD;
+   int flags;
    fd_set rs;
    fd_set ws;
 
@@ -37,6 +39,14 @@ int main(int argc, char** argv)
    puts("Socket ...");
    sd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd<0) { perror("socket"); exit(1); }
+
+
+   puts("Non blocking ...");
+   flags = fcntl(sd,F_GETFL,0);
+   if(flags < 0) { perror("GETFL"); exit(1); }
+   flags |= O_NONBLOCK;
+   if(fcntl(sd,F_SETFL, flags) < 0) { perror("SETFL"); exit(1); }
+
 
    puts("Events ...");
    memset(&sctpEvents, 0, sizeof(sctpEvents));
@@ -77,22 +87,22 @@ int main(int argc, char** argv)
    printf("New association: %d\n",assoc);
 
 
-   printf("Write ...\n");
-   memset(&sri, 0, sizeof(sri));
-   sri.sinfo_assoc_id = assoc;
-   sri.sinfo_stream   = 0;
-   sri.sinfo_ppid     = htonl(0x1234);
-   w = sctp_send(sd, "TEST", 4, &sri, MSG_NOSIGNAL|MSG_EOR);
-   if(w < 0) { perror("send"); exit(1); }
+//    printf("Write ...\n");
+//    memset(&sri, 0, sizeof(sri));
+//    sri.sinfo_assoc_id = assoc;
+//    sri.sinfo_stream   = 0;
+//    sri.sinfo_ppid     = htonl(0x1234);
+//    w = sctp_send(sd, "TEST", 4, &sri, MSG_NOSIGNAL|MSG_EOR);
+//    if(w < 0) { perror("send"); exit(1); }
+// 
+// 
+//    printf("Read ...\n");
+//    r = recv(sd, (char*)&buffer, sizeof(buffer), 0);
+//    printf("read=%d\n", r);
 
 
-   printf("Read ...\n");
-   r = recv(sd, (char*)&buffer, sizeof(buffer), 0);
-   printf("read=%d\n", r);
 
-
-/*
-   int newSD = sctp_peeloff(sd, n->sn_assoc_change.sac_assoc_id);
+   newSD = sctp_peeloff(sd, assoc);
    if(newSD >= 0) {
       printf("PEELOFF: %d\n", newSD);
 
@@ -113,7 +123,8 @@ int main(int argc, char** argv)
 
       close(newSD);
    }
-*/
+
+
    close(sd);
    return(0);
 }

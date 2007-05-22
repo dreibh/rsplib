@@ -1,3 +1,22 @@
+lksctp-Problem bei Kernel 2.6.17:
+
+Server <-> Router (nur IP4!) <-> Client
+
+Server: Nur IPv4 + IPv6 Link Local
+sctp_test -l -H :: -P 1203
+Client: IPv4 + IPv6 (mit globaler Adresse)
+sctp_test -s -H :: -h 132.252.152.81 -p 1203
+
+FUNKTIONIERT.
+
+
+Server: IPv4 + IPv6 (mit globaler Adresse)
+sctp_test -l -H :: -P 1203
+Client: Nur IPv4 + IPv6 Link Local
+sctp_test -s -H :: -h 132.252.151.157 -p 1203
+
+------
+
 PR:   -> OK
 - PRs mit statischen Peers konfiguriert
 - stat. Peer wird beendet

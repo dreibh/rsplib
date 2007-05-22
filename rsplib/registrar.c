@@ -3367,7 +3367,8 @@ static void getSocketPair(const char*                   sctpAddressParameter,
                           const bool                    requiresUDPSocket,
                           const char*                   udpGroupAddressParameter,
                           struct TransportAddressBlock* udpGroupTransportAddress,
-                          int*                          udpSocket)
+                          int*                          udpSocket,
+                          const bool                    useIPv6)
 {
    union sockaddr_union        sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
    union sockaddr_union        groupAddress;
@@ -3383,7 +3384,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    size_t                      trials;
 
    sctpAddresses = 0;
-   family        = checkIPv6() ? AF_INET6 : AF_INET;
+   family        = useIPv6 ? AF_INET6 : AF_INET;
 
    if(string2address(udpGroupAddressParameter, &groupAddress) == false) {
       fprintf(stderr, "ERROR: Bad multicast group address <%s>\n", udpGroupAddressParameter);
@@ -3548,6 +3549,7 @@ int main(int argc, char** argv)
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;
    bool                          enrpUseMulticast              = false;
+   bool                          useIPv6                       = checkIPv6();
 
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
@@ -3617,6 +3619,9 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-multicast=off"))) {
          enrpUseMulticast = false;
       }
+      else if(!(strcmp(argv[i], "-disable-ipv6"))) {
+         useIPv6 = false;
+      }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile) {
             fclose(statsFile);
@@ -3670,6 +3675,7 @@ int main(int argc, char** argv)
             "{-cspserver=address} {-cspinterval=microseconds} "
 #endif
             "{-identifier=registrar identifier} "
+            "{-disable-ipv6} "
             "{-autoclosetimeout=seconds} {-serverannouncecycle=milliseconds} "
             "{-maxbadpereports=reports} "
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
@@ -3692,10 +3698,10 @@ int main(int argc, char** argv)
    }
    getSocketPair(asapUnicastAddressParameter, asapUnicastAddress, &asapUnicastSocket,
                  asapSendAnnounces,
-                 asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket);
+                 asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket, useIPv6);
    getSocketPair(enrpUnicastAddressParameter, enrpUnicastAddress, &enrpUnicastSocket,
                  enrpUseMulticast || enrpAnnounceViaMulticast,
-                 enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket);
+                 enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket, useIPv6);
 
    if(enrpAnnounceViaMulticast || enrpUseMulticast) {
       enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
