@@ -5,17 +5,17 @@ SCTPLIB_OPT="--enable-shared --enable-static --disable-maintainer-mode --enable-
 SOCKETAPI_OPT="--enable-shared --enable-static --disable-maintainer-mode --enable-sctp-over-udp"
 RSPLIB_OPT="--enable-shared --disable-static --disable-maintainer-mode --enable-csp --enable-qt --disable-kernel-sctp --disable-hsmgtverify"
 
-ENV_CC="g++"
+ENV_CC="gcc"
 ENV_CFLAGS="$CPU_OPT"
 ENV_CXXLAGS="$CPU_OPT"
 
 
-# cd ~/src/sctplib1 && \
-# ./bootstrap && ./configure $SCTPLIB_OPT && make clean && make && sudo rm -f /usr/local/lib/libsctplib* && sudo make install && \
-# \
-# cd ~/src/socketapi && \
-# ./bootstrap && ./configure $SOCKETAPI_OPT && make clean && make && sudo rm -f /usr/local/lib/libsctpsocket* /usr/local/lib/libcppsocket* && sudo make install && \
-# \
+cd ~/src/sctplib1 && \
+./bootstrap && ./configure $SCTPLIB_OPT && make clean && make && sudo rm -f /usr/local/lib/libsctplib* && sudo make install && \
+\
+cd ~/src/socketapi && \
+./bootstrap && ./configure $SOCKETAPI_OPT && make clean && make && sudo rm -f /usr/local/lib/libsctpsocket* /usr/local/lib/libcppsocket* && sudo make install && \
+\
 cd ~/src/rsplib2 && \
 ./bootstrap && env CC="$ENV_CC" CFLAGS="$ENV_CFLAGS" CXXFLAGS="$CXXFLAGS" ./configure $RSPLIB_OPT && make clean && make && sudo rm -f /usr/local/lib/librsplib* && sudo make install && \
 sudo ldconfig
