@@ -263,7 +263,7 @@ void CalcAppServer::scheduleNextTimerEvent()
 
 
 // ###### Initialize ########################################################
-EventHandlingResult CalcAppServer::initialize(int sd)
+EventHandlingResult CalcAppServer::initializeService(int sd)
 {
    VectorFH = fopen(VectorFileName.c_str(), "w");
    if(VectorFH == NULL) {
@@ -284,7 +284,7 @@ EventHandlingResult CalcAppServer::initialize(int sd)
 
 
 // ###### Shutdown ##########################################################
-void CalcAppServer::finish(int sd, EventHandlingResult initializeResult)
+void CalcAppServer::finishService(int sd, EventHandlingResult initializeResult)
 {
    removeAllJobs();
 

@@ -93,6 +93,8 @@ class TCPLikeServer : public TDThread
                            size_t               maxThreads,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                            void                 (*printParameters)(const void* userData),
+                           bool                 (*initializeService)(void* userData),
+                           void                 (*finishService)(void* userData),
                            double               (*loadUpdateHook)(const double load),
                            void*                userData,
                            unsigned int         reregInterval = 30000,
@@ -104,8 +106,8 @@ class TCPLikeServer : public TDThread
    TCPLikeServerList* ServerList;
 
    protected:
-   virtual EventHandlingResult initialize();
-   virtual void finish(EventHandlingResult result);
+   virtual EventHandlingResult initializeSession();
+   virtual void finishSession(EventHandlingResult result);
    virtual EventHandlingResult handleMessage(const char* buffer,
                                              size_t      bufferSize,
                                              uint32_t    ppid,

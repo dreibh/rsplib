@@ -58,14 +58,14 @@ TCPLikeServer::~TCPLikeServer()
 
 
 // ###### Startup of thread #################################################
-EventHandlingResult TCPLikeServer::initialize()
+EventHandlingResult TCPLikeServer::initializeSession()
 {
    return(EHR_Okay);
 }
 
 
 // ###### Finish of thread ##################################################
-void TCPLikeServer::finish(EventHandlingResult result)
+void TCPLikeServer::finishSession(EventHandlingResult result)
 {
 }
 
@@ -150,7 +150,7 @@ void TCPLikeServer::run()
    int                   flags;
    EventHandlingResult   eventHandlingResult;
 
-   eventHandlingResult = initialize();
+   eventHandlingResult = initializeSession();
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
          flags     = 0;
@@ -205,7 +205,7 @@ void TCPLikeServer::run()
                   0, 0, 0, 0, 0);
    }
 
-   finish(eventHandlingResult);
+   finishSession(eventHandlingResult);
 
    Finished = true;
 }
@@ -219,6 +219,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 size_t               maxThreads,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData),
                                 void                 (*printParameters)(const void* userData),
+                                bool                 (*initializeService)(void* userData),
+                                void                 (*finishService)(void* userData),
                                 double               (*loadUpdateHook)(const double load),
                                 void*                userData,
                                 unsigned int         reregInterval,
@@ -240,94 +242,109 @@ void TCPLikeServer::poolElement(const char*          programTitle,
          loadinfo->rli_policy = PPT_ROUNDROBIN;
       }
 
-      // ====== Print program title =========================================
-      puts(programTitle);
-      for(size_t i = 0;i < strlen(programTitle);i++) {
-         printf("=");
-      }
-      const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
-      puts("\n\nGeneral Parameters:");
-      printf("   Pool Handle             = %s\n", poolHandle);
-      printf("   Reregistration Interval = %u [ms]\n", reregInterval);
-      printf("   Runtime Limit           = ");
-      if(runtimeLimit > 0) {
-         printf("%u [s]\n", runtimeLimit);
-      }
-      else {
-         puts("off");
-      }
-      puts("   Policy Settings");
-      printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-      printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
-      printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
-      printf("      Weight               = %u\n", loadinfo->rli_weight);
-      printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
-      if(printParameters) {
-         printParameters(userData);
-      }
-
-      // ====== Register PE =================================================
-      if(rsp_register_tags(rserpoolSocket,
-                           (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, reregInterval, 0, tags) == 0) {
-         uint32_t identifier;
-         if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
-            puts("Registration");
-            printf("   Identifier              = $%08x\n\n", identifier);
-         }
-
-         // ====== Main loop ================================================
-         TCPLikeServerList        serverSet(maxThreads);
-         double                   oldLoad = 0.0;
-         const unsigned long long autoStopTimeStamp =
-            (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
-         installBreakDetector();
-         while(!breakDetected()) {
-            // ====== Clean-up session list =================================
-            serverSet.removeFinished();
-
-            // ====== Wait for incoming sessions ============================
-            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25);
-            if(newRSerPoolSocket >= 0) {
-               TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
-               if((serviceThread) && (serverSet.add(serviceThread))) {
-                  serviceThread->start();
-               }
-               else {
-                  puts("Rejected new session");
-                  rsp_close(newRSerPoolSocket);
-               }
-            }
-
-            // ====== Do reregistration on load changes =====================
-            if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
-               double newLoad = serverSet.getTotalLoad();
-               if(loadUpdateHook) {
-                  newLoad = loadUpdateHook(newLoad);
-                  CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
-               }
-               if(fabs(newLoad - oldLoad) >= 0.01) {
-                  // printf("NEW LOAD = %1.6f\n", newLoad);
-                  oldLoad = newLoad;
-                  loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
-                  rsp_register_tags(rserpoolSocket,
-                                    (const unsigned char*)poolHandle, strlen(poolHandle),
-                                    loadinfo, reregInterval, REGF_DONTWAIT,
-                                    tags);
-               }
-            }
-
-            // ====== Auto-stop =============================================
-            if((autoStopTimeStamp > 0) &&
-               (getMicroTime() > autoStopTimeStamp)) {
-               puts("Auto-stop reached!");
-               break;
+      // ====== Server startup ==============================================
+      if((initializeService == NULL) || (initializeService(userData))) {
+         double oldLoad = 0.0;
+         if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+            if(loadUpdateHook) {
+               double newLoad = loadUpdateHook(0.0);
+               CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+               loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
+               oldLoad = newLoad;
             }
          }
 
-         // ====== Clean up =================================================
-         serverSet.removeAll();
-         rsp_deregister(rserpoolSocket, DEREGF_DONTWAIT);
+         // ====== Print program title ======================================
+         puts(programTitle);
+         for(size_t i = 0;i < strlen(programTitle);i++) {
+            printf("=");
+         }
+         const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
+         puts("\n\nGeneral Parameters:");
+         printf("   Pool Handle             = %s\n", poolHandle);
+         printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+         printf("   Runtime Limit           = ");
+         if(runtimeLimit > 0) {
+            printf("%u [s]\n", runtimeLimit);
+         }
+         else {
+            puts("off");
+         }
+         puts("   Policy Settings");
+         printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+         printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+         printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
+         printf("      Weight               = %u\n", loadinfo->rli_weight);
+         printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
+         if(printParameters) {
+            printParameters(userData);
+         }
+
+         // ====== Register PE ==============================================
+         if(rsp_register_tags(rserpoolSocket,
+                              (const unsigned char*)poolHandle, strlen(poolHandle),
+                              loadinfo, reregInterval, 0, tags) == 0) {
+            uint32_t identifier;
+            if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+               puts("Registration");
+               printf("   Identifier              = $%08x\n\n", identifier);
+            }
+
+            // ====== Main loop =============================================
+            TCPLikeServerList        serverSet(maxThreads);
+            const unsigned long long autoStopTimeStamp =
+               (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
+            installBreakDetector();
+            while(!breakDetected()) {
+               // ====== Clean-up session list ==============================
+               serverSet.removeFinished();
+
+               // ====== Wait for incoming sessions =========================
+               int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25);
+               if(newRSerPoolSocket >= 0) {
+                  TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
+                  if((serviceThread) && (serverSet.add(serviceThread))) {
+                     serviceThread->start();
+                  }
+                  else {
+                     puts("Rejected new session");
+                     rsp_close(newRSerPoolSocket);
+                  }
+               }
+
+               // ====== Do reregistration on load changes ==================
+               if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+                  double newLoad = serverSet.getTotalLoad();
+                  if(loadUpdateHook) {
+                     newLoad = loadUpdateHook(newLoad);
+                     CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+                  }
+                  if(fabs(newLoad - oldLoad) >= 0.01) {
+                     // printf("NEW LOAD = %1.6f\n", newLoad);
+                     oldLoad = newLoad;
+                     loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
+                     rsp_register_tags(rserpoolSocket,
+                                       (const unsigned char*)poolHandle, strlen(poolHandle),
+                                       loadinfo, reregInterval, REGF_DONTWAIT,
+                                       tags);
+                  }
+               }
+
+               // ====== Auto-stop ==========================================
+               if((autoStopTimeStamp > 0) &&
+                  (getMicroTime() > autoStopTimeStamp)) {
+                  puts("Auto-stop reached!");
+                  break;
+               }
+            }
+
+            // ====== Clean up ==============================================
+            serverSet.removeAll();
+            rsp_deregister(rserpoolSocket, DEREGF_DONTWAIT);
+         }
+         if(finishService != NULL) {
+            finishService(userData);
+         }
       }
       else {
          printf("ERROR: Failed to register PE to pool %s\n", poolHandle);

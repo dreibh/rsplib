@@ -118,14 +118,14 @@ void UDPLikeServer::handleTimer()
 
 
 // ###### Startup ###########################################################
-EventHandlingResult UDPLikeServer::initialize(int sd)
+EventHandlingResult UDPLikeServer::initializeService(int sd)
 {
    return(EHR_Okay);
 }
 
 
 // ###### Shutdown ##########################################################
-void UDPLikeServer::finish(int sd, EventHandlingResult result)
+void UDPLikeServer::finishService(int sd, EventHandlingResult result)
 {
 }
 
@@ -208,7 +208,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)PPV_MAX_LOAD);
 
          // ====== Startup ==================================================
-         const EventHandlingResult initializeResult = initialize(RSerPoolSocketDescriptor);
+         const EventHandlingResult initializeResult = initializeService(RSerPoolSocketDescriptor);
          if(initializeResult == EHR_Okay) {
 
             // ====== Main loop =============================================
@@ -304,7 +304,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          }
 
          // ====== Shutdown =================================================
-         finish(RSerPoolSocketDescriptor, initializeResult);
+         finishService(RSerPoolSocketDescriptor, initializeResult);
 
          // ====== Clean up =================================================
          rsp_deregister(RSerPoolSocketDescriptor, 0);

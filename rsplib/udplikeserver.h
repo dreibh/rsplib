@@ -38,8 +38,8 @@ class UDPLikeServer
    UDPLikeServer();
    virtual ~UDPLikeServer();
 
-   virtual EventHandlingResult initialize(int sd);
-   virtual void finish(int sd, EventHandlingResult initializeResult);
+   virtual EventHandlingResult initializeService(int sd);
+   virtual void finishService(int sd, EventHandlingResult initializeResult);
 
    virtual void poolElement(const char*          programTitle,
                             const char*          poolHandle,

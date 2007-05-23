@@ -163,7 +163,7 @@ CharGenServer::~CharGenServer()
 
 
 // ###### Handle notification ###############################################
-EventHandlingResult CharGenServer::initialize()
+EventHandlingResult CharGenServer::initializeSession()
 {
    unsigned char buffer[1024];
    size_t        i;

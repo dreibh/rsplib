@@ -260,7 +260,7 @@ int main(int argc, char** argv)
                                   &info, &loadInfo,
                                   maxThreads,
                                   CharGenServer::charGenServerFactory,
-                                  NULL, NULL, NULL,
+                                  NULL, NULL, NULL, NULL, NULL,
                                   reregInterval, runtimeLimit,
                                   (struct TagItem*)&tags);
    }
@@ -282,7 +282,7 @@ int main(int argc, char** argv)
                                  &info, &loadInfo,
                                  maxThreads,
                                  PingPongServer::pingPongServerFactory,
-                                 NULL, NULL,
+                                 NULL, NULL, NULL, NULL,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
                                  maxThreads,
                                  FractalGeneratorServer::fractalGeneratorServerFactory,
                                  FractalGeneratorServer::fractalGeneratorPrintParameters,
-                                 NULL,
+                                 NULL, NULL, NULL,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit,
                                  (struct TagItem*)&tags);
