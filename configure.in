@@ -282,8 +282,15 @@ if test "$enable_kernel_sctp" = "no"; then
    if test ! -e $ac_socketapi_libraries/libsctpsocket.a ; then
       AC_MSG_ERROR([No socketapi installation found ($ac_socketapi_libraries/libsctpsocket.a)!])
    fi
-   sctplib_LIBS="$ac_sctplib_libraries/libsctplib.a"
-   socketapi_LIBS="$ac_socketapi_libraries/libsctpsocket.a -lstdc++"
+
+   # In maintainer mode, use static linking for sctplib/socketapi!
+   if test "$enable_maintainer_mode" = "yes"; then
+      sctplib_LIBS="$ac_sctplib_libraries/libsctplib.a"
+      socketapi_LIBS="$ac_socketapi_libraries/libsctpsocket.a -lstdc++"
+   else
+      sctplib_LIBS="-L$ac_sctplib_libraries -lsctplib"
+      socketapi_LIBS="-L$ac_socketapi_libraries -lsctpsocket -lstdc++"
+   fi
 
    AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.])
 else
@@ -448,8 +455,8 @@ fi
 
 
 # ###### Version information ################################################
-RSPLIB_CURRENT=2
-RSPLIB_REVISION=2
+RSPLIB_CURRENT=0
+RSPLIB_REVISION=0
 RSPLIB_AGE=0
 RSPLIB_RELEASE=2200
 
