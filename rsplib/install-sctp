@@ -41,8 +41,7 @@ rm -rf rsplib* && \
 sudo rm -f /usr/local/libsctpsocket* && \
 sudo rm -f /usr/local/libcppsocket* && \
 sudo rm -f /usr/local/librsplib* && \
-sudo /sbin/ldconfig"
-
+sudo /sbin/ldconfig" || exit 1
 
 echo -e "\x1b[34m`date`: Preparing sctplib/socketapi distributions ...\x1b[0m"
 if [ ! -e "$SCTPLIB_DIRECTORY" ] ; then
@@ -52,7 +51,7 @@ fi
 cd "$SCTPLIB_DIRECTORY"
 rm -f *.tar.gz
 make dist
-scp -i $PLANETLAB_KEY -oPasswordAuthentication=no sctplib*.tar.gz $PLANETLAB_USER@$SERVER:
+scp -i $PLANETLAB_KEY -oPasswordAuthentication=no sctplib*.tar.gz $PLANETLAB_USER@$SERVER: || exit 1
 
 
 if [ ! -e "$SOCKETAPI_DIRECTORY" ] ; then
@@ -62,11 +61,11 @@ fi
 cd "$SOCKETAPI_DIRECTORY"
 rm -f *.tar.gz
 make dist
-scp -i $PLANETLAB_KEY -oPasswordAuthentication=no socketapi*.tar.gz $PLANETLAB_USER@$SERVER:
+scp -i $PLANETLAB_KEY -oPasswordAuthentication=no socketapi*.tar.gz $PLANETLAB_USER@$SERVER: || exit 1
 
 
 echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-cat ../$DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
 tar xzvf sctplib*.tar.gz && \
 tar xzvf socketapi*.tar.gz && \
 cd sctplib* && \\
@@ -78,4 +77,4 @@ cd socketapi* && \\
 ./configure $SOCKETAPI_OPT && \
 make && \
 sudo make install && \
-sudo /sbin/ldconfig"
+sudo /sbin/ldconfig" || exit 1
