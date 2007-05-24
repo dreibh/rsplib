@@ -15,17 +15,13 @@ SUIDPRGS="registrar server calcappclient hsdump rootshell"
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000"
 
 
+SCTPLIB_DIRECTORY="/home/dreibh/src/sctplib1"
+SCTPLIB_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode"
+SOCKETAPI_DIRECTORY="/home/dreibh/src/socketapi"
+SOCKETAPI_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode"
+
+
 # Auf dem Server zum Test ausführen
 # Ping + 16 MBytes /dev/urandom + SHA1 => 9s auf Athlon 1.3GHz
 SERVER_TEST_TIMEOUT=36
 SERVER_TEST="ping -W5 -c1 www.planet-lab.org && dd if=/dev/urandom of=test.data count=16000 bs=1000 && sha1sum test.data && rm -f test.data"
-
-
-#PLANETLAB_KEY=~/.ssh/lupo
-#PLANETLAB_USER=dreibh
-#PLANETLAB_COMPILEHOST="localhost"
-
-#DISTPRGS="fork"
-#DISTSTRIP=1
-#DISTMISC="*.hosts filter-hosts pingpongclient pingpongserver fractalserver discardserver nameserver daytimeserver echoserver"
-#SUIDPRGS="fork"
