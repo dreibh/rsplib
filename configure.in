@@ -316,14 +316,19 @@ AC_SUBST(sctplib_LIBS)
 AC_SUBST(socketapi_LIBS)
 
 
-# ###### glib Library #######################################################
-if test "$enable_kernel_sctp" = "no"; then
-   PKG_CHECK_MODULES(GLIB, glib-2.0)
-   CFLAGS="$CFLAGS $GLIB_CFLAGS"
-   CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
-   glib_LIBS="$GLIB_LIBS"
-   AC_SUBST(glib_LIBS)
+# ###### Check for glib #####################################################
+AM_PATH_GLIB_2_0(2.0.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
+if test "x$glib_is_okay" = "xno"; then
+   AM_PATH_GLIB(1.2.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
 fi
+if test "x$glib_is_okay" = "xno"; then
+   AC_MSG_ERROR(GLib distribution not found.)
+fi
+
+CFLAGS="$CFLAGS $GLIB_CFLAGS"
+CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
+glib_LIBS="$GLIB_LIBS"
+AC_SUBST(glib_LIBS)
 
 
 # ###### Check for IEEE-754 complient float-point handling ##################
