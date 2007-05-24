@@ -318,47 +318,10 @@ AC_SUBST(socketapi_LIBS)
 
 # ###### glib Library #######################################################
 if test "$enable_kernel_sctp" = "no"; then
-   if test x$with_glib = xyes ; then
-      AC_MSG_ERROR([
-      *** Directory must be specified for --with-glib])
-   fi
-   if test x$with_glib = x ; then
-      # ====== Look for separately installed glib ===========================
-      AM_PATH_GLIB(1.2.8,,
-         AC_MSG_ERROR([
-      *** GLIB 1.2.8 or better is required. The latest version of GLIB
-      *** is always available from ftp://ftp.gtk.org/.]), )
-
-      # we do not want to make all gtk progs to link to thread libraries.
-      glib_CFLAGS=`$GLIB_CONFIG glib --cflags`
-      glib_LIBS=`$GLIB_CONFIG glib --libs`
-   else
-      # ====== Use uninstalled glib (assume they got the version right) =====
-      GLIB_CONFIG=$with_glib/bin/glib-config
-      if test -x $GLIB_CONFIG ; then
-         :
-      else
-         AC_MSG_ERROR([GLIB directory ($with_glib) not present or not configured])
-      fi
-
-      glib_CFLAGS=`$GLIB_CONFIG --cflags`
-      glib_LIBS=`$GLIB_CONFIG --libs`
-
-      # canonicalize relative paths
-      case $with_glib in
-         /*)
-            glib_dir=$with_glib
-            ;;
-         *)
-            glib_dir="\$(top_builddir)/$with_glib"
-            ;;
-      esac
-
-      glib_LIBS="$glib_libs"
-      glib_CFLAGS="-I$glib_dir/include"
-   fi
-
-   AC_SUBST(glib_CFLAGS)
+   PKG_CHECK_MODULES(GLIB, glib-2.0)
+   CFLAGS="$CFLAGS $GLIB_CFLAGS"
+   CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
+   glib_LIBS="$GLIB_LIBS"
    AC_SUBST(glib_LIBS)
 fi
 
@@ -446,11 +409,11 @@ fi
 
 # ###### Maintainer mode ####################################################
 if test "$enable_maintainer_mode" = "yes"; then
-   CFLAGS="$CFLAGS -Wall -g3 -O0 -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
-   CXXFLAGS="$CXXFLAGS -Wall -g3 -O0 -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
+   CFLAGS="$CFLAGS -Wall -g3 -O0 -D_REENTRANT -D_THREAD_SAFE -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
+   CXXFLAGS="$CXXFLAGS -Wall -g3 -O0 -D_REENTRANT -D_THREAD_SAFE -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
 else
-   CFLAGS="$CFLAGS -Wall -O3 -g0 -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
-   CXXFLAGS="$CXXFLAGS -Wall -O3 -g0 -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
+   CFLAGS="$CFLAGS -Wall -O3 -g0 -D_REENTRANT -D_THREAD_SAFE -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
+   CXXFLAGS="$CXXFLAGS -Wall -O3 -g0 -D_REENTRANT -D_THREAD_SAFE -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
 fi
 
 
