@@ -1676,13 +1676,17 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
                                   columnName,
                                   type)
 {
-   recordedDuration <- max(data$RelTime) - min(data$RelTime)
-   skew <- (recordedDuration - (segmentLength * segments)) / 2
+#    recordedDuration <- max(data$RelTime) - min(data$RelTime)
+#    skew <- (recordedDuration - (segmentLength * segments)) / 2
 
    timeLow    <- min(data$RelTime) + minPreSkip
    timeHigh   <- max(data$RelTime) - minPostSkip
-   cat(timeLow, timeHigh,"\n")
    resultsSet <- c()
+
+   cat("Take from: ", timeLow, "\n")
+   cat("Take to:   ", timeHigh, "\n")
+   cat("Duration:  ", segmentLength * segments, "\n")
+
 
    # ------ Cut off edges ---------------------------------------------------
    if(timeHigh - (segmentLength * segments) < timeLow) {
