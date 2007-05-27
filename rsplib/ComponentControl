@@ -105,7 +105,7 @@ stop_program_using_pid_file() {
       pid=`cat $2`
       if ps -p $pid | grep $1 1>/dev/null 2>/dev/null ; then
          echo "Sending SIG$3 to PID $pid"
-         kill -$3 $pid
+         $CC_PRESTART /bin/kill -$3 $pid
       else
          echo "$pid is already gone, removing PID file only"
          rm -f $2
