@@ -11,8 +11,8 @@ testName <- "P01"
 
 minPreSkip    <- 30
 minPostSkip   <- 30
-segmentLength <- 60
-segments      <- 10
+segmentLength <- 30
+segments      <- 5
 
 PEsSet           <- c(100, 1000, 1500, 2000)
 PUsSet           <- c(1)
