@@ -126,11 +126,12 @@ if [ "x$CC_COMMAND" = "xstart" ] ; then
       rm -f $PIDFILE
    fi
    echo "Starting:"
+   echo "   Prestart  = $CC_PRESTART"
    echo "   Program   = $PROGFILE"
    echo "   Arguments = $CC_ARGS"
    echo "   PID File  = $PIDFILE"
    echo "   Log File  = $LOGFILE"
-   $PROGFILE $CC_ARGS &
+   $CC_PRESTART $PROGFILE $CC_ARGS &
    PID=$!
    if [ $? = 0 ] ; then
       echo $PID > $PIDFILE
