@@ -1681,7 +1681,7 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
 
    timeLow    <- min(data$RelTime) + minPreSkip
    timeHigh   <- max(data$RelTime) - minPostSkip
-   # cat(timeLow, timeHigh,"\n")
+   cat(timeLow, timeHigh,"\n")
    resultsSet <- c()
 
    # ------ Cut off edges ---------------------------------------------------

@@ -48,13 +48,14 @@ for(reregInterval in reregIntervalSet) {
 for(interHResTime in interHResTimeSet) {
 for(maxHResItems in maxHResItemsSet) { 
    # ------ Run performance test --------------------------------------------
+   duration <- minPreSkip + minPostSkip + (segments + 1) * segmentLength
    runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
    cmdLine <- paste(sep="", "./perftest ",
                             testName, " ", runPrefix,
                             " ",
                             PEs, " ", PUs, " ", 
                             reregInterval, " ", interHResTime, " ", maxHResItems, " ",
-                            minPreSkip + minPostSkip + (segments + 1) * segmentLength," ",
+                            duration, " ",
                             ">", testName, "/", runPrefix, ".log")
    cat(sep="", "Running ", cmdLine," ...\n")
    cat(readLines(pc <- pipe(cmdLine)))
@@ -65,8 +66,12 @@ for(maxHResItems in maxHResItemsSet) {
    data <- loadResults(paste(sep="", testName, "/", runPrefix, "/TestPR-1.data"))
    rtdata <- read.table(paste(sep="", testName, "/", runPrefix, "/runtimes.data"))
    preSkip  <- minPreSkip + (mean(rtdata$MeasurementStart) - mean(rtdata$Startup))
-   postSkip <- minPostSkip
-   cat("=>",preSkip,postSkip,"\n")
+   postSkip <- minPostSkip + (mean(rtdata$MeasurementEnd) - mean(rtdata$Shutdown))
+   cat("=> Startup:           0.0\n")
+   cat("   Measurement Start: ", mean(rtdata$MeasurementStart) - mean(rtdata$Startup), "\n")
+   cat("   Measurement End:   ", mean(rtdata$MeasurementEnd)   - mean(rtdata$Startup), "\n")
+   cat("   Shutdown:          ", mean(rtdata$Shutdown)         - mean(rtdata$Startup), "\n")
+   cat("=> ", duration,preSkip,postSkip,"\n")
 
    registrationResults <- analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                                 "Registrations", ACRT_Normalized)
@@ -93,7 +98,7 @@ for(maxHResItems in maxHResItemsSet) {
    puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
    reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
    interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
-   maxHResItemsColumn <- append(maxHResItemsColumn, rep(maxHResItems, length(registrationResults)))
+   maxHResItemsColumn  <- append(maxHResItemsColumn, rep(maxHResItems, length(registrationResults)))
 }}}}}
 
 
