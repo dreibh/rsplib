@@ -37,11 +37,12 @@ INTERHRESTIME="$6"
 MAXHRESITEMS="$7"
 DURATION="$8"
 
-MAX_SSH_PROCS=50
+MAX_SSH_PROCS=10
 POOLHANDLE="EchoPool"
 
 
 HOST_PR="132.252.151.157"
+#HOST_LIST="132.252.152.78"
 HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
 CSPOPT="-cspserver=132.252.151.157:2960 -cspinterval=333"
 
@@ -131,7 +132,9 @@ echo "   + `date`: Stopping all old stuff ..."
 KILL_PROCS="registrar server hrestest"
 KILL_CMDS=""
 for p in $KILL_PROCS ; do
+   KILL_CMDS="$KILL_CMDS ; killall -KILL $p 2>/dev/null ; killall -q -KILL lt-$p 2>/dev/null"
    KILL_CMDS="$KILL_CMDS ; killall -KILL $p 2>/dev/null ; killall -q -KILL .libs/lt-$p 2>/dev/null"
+   KILL_CMDS="$KILL_CMDS ; ./rootshell /usr/bin/killall -KILL $p 2>/dev/null ; ./rootshell /usr/bin/killall -q -KILL lt-$p 2>/dev/null"
 done
 for HOST in $ALL_HOSTS ; do
    ssh -q -C $CC_SSHOPT -i $CC_REMOTEKEY $CC_REMOTEUSER@$HOST "\
@@ -159,7 +162,7 @@ i=1 ; j=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
       -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
-      -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 \
+      -loglevel=3 \
       -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin &
    let i=$i+1 ; let j=$j+1
    if [ $j -gt $MAX_SSH_PROCS ] ; then
