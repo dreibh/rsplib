@@ -37,12 +37,12 @@ INTERHRESTIME="$6"
 MAXHRESITEMS="$7"
 DURATION="$8"
 
-MAX_SSH_PROCS=10
+LAUNCH_DELAY="sleep 0.1"
 POOLHANDLE="EchoPool"
 
 
 HOST_PR="132.252.151.157"
-HOST_LIST="132.252.152.78 132.252.152.79"
+HOST_LIST="132.252.152.78 132.252.152.74"
 #HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
 CSPOPT="-cspserver=132.252.151.157:2960 -cspinterval=333"
 
@@ -143,52 +143,67 @@ done
 wait
 rm -f TestP?-*.pid
 echo "   + `date`: Ready. Waiting 5 seconds ..."
-sleep 5
+# sleep 5
 
 
 # ------ Remember current time ----------------------------------------------
 UPTIME_STARTUP=$(get_uptime)
 
+
 # ------ Start PR -----------------------------------------------------------
 echo "   + `date`: Starting PR ..."
 ./RemoteComponentControl ./Lab-User.config $HOST_PR ./ComponentControl.config PR TestPR-1 start \
    -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-1.data -statsinterval=250 $CSPOPT
-sleep 10
+# sleep 10
+
 
 # ------ Start PEs ----------------------------------------------------------
 echo "   + `date`: Starting $PEs PEs ..."
+for HOST in $ALL_HOSTS ; do
+   rm -f $PREFIX/PE-start-$HOST.sh
+done
 CHOOSE_HOST_LAST=0
-i=1 ; j=1 ; while [ $i -le $PEs ] ; do
+i=1 ; while [ $i -le $PEs ] ; do
    choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
+   ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
       -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
       -loglevel=3 \
-      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin &
-   let i=$i+1 ; let j=$j+1
-   if [ $j -gt $MAX_SSH_PROCS ] ; then
-      wait
-      j=1
+      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
+   echo $LAUNCH_DELAY >>$PREFIX/PE-start-$HOST.sh
+   let i=$i+1
+done
+for HOST in $ALL_HOSTS ; do
+   if [ -e $PREFIX/PE-start-$HOST.sh ] ; then
+      echo "Contacting $CC_REMOTEUSER@$HOST ..."
+      echo "wait" >>$PREFIX/PE-start-$HOST.sh
+      cat $PREFIX/PE-start-$HOST.sh | ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$HOST &
    fi
 done
-
 wait
-sleep 3
+# sleep 10
+
 
 # ------ Start PUs ----------------------------------------------------------
 echo "   + `date`: Starting $PUs PUs ..."
+for HOST in $ALL_HOSTS ; do
+   rm -f $PREFIX/PU-start-$HOST.sh
+done
 CHOOSE_HOST_LAST=0
-i=1 ; j=1 ; while [ $i -le $PUs ] ; do
+i=1 ; while [ $i -le $PUs ] ; do
    choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
+   ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
       -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
-      -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250 &
-   let i=$i+1 ; let j=$j+1
-   if [ $j -gt $MAX_SSH_PROCS ] ; then
-      wait
-      j=1
+      -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250
+   echo $LAUNCH_DELAY >>$PREFIX/PU-start-$HOST.sh
+   let i=$i+1
+done
+for HOST in $ALL_HOSTS ; do
+   if [ -e $PREFIX/PU-start-$HOST.sh ] ; then
+      echo "Contacting $CC_REMOTEUSER@$HOST ..."
+      echo "wait" >>$PREFIX/PU-start-$HOST.sh
+      cat $PREFIX/PU-start-$HOST.sh | ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$HOST &
    fi
 done
-
 wait
 
 
@@ -203,38 +218,42 @@ UPTIME_MEND=$(get_uptime)
 
 # ------ Stop PUs -----------------------------------------------------------
 echo "   + `date`: Stopping PUs ..."
-CHOOSE_HOST_LAST=0
-i=1 ; j=1 ; while [ $i -le $PUs ] ; do
-   choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop &
-   let i=$i+1 ; let j=$j+1
-   if [ $j -gt $MAX_SSH_PROCS ] ; then
-      wait
-      j=1
-   fi
+for HOST in $ALL_HOSTS ; do
+   rm -f $PREFIX/PU-stop-$HOST.sh
 done
-wait
-i=1 ; j=1 ; while [ $i -le $PUs ] ; do
+CHOOSE_HOST_LAST=0
+i=1 ; while [ $i -le $PUs ] ; do
    choose_host
-   fetchfile $CHOOSE_HOST "TestPU-$i.data" "$PREFIX/TestPU-$i.data" &
-   let i=$i+1 ; let j=$j+1
-   if [ $j -gt $MAX_SSH_PROCS ] ; then
-      wait
-      j=1
+   ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop
+   let i=$i+1
+   echo $LAUNCH_DELAY >>$PREFIX/PU-stop-$HOST.sh
+done
+for HOST in $ALL_HOSTS ; do
+   if [ -e $PREFIX/PU-stop-$HOST.sh ] ; then
+      echo "Contacting $CC_REMOTEUSER@$HOST ..."
+      echo "wait" >>$PREFIX/PU-stop-$HOST.sh
+      cat $PREFIX/PU-stop-$HOST.sh | ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$HOST &
    fi
 done
 wait
 
 # ------ Stop PEs -----------------------------------------------------------
 echo "   + `date`: Stopping PEs ..."
+for HOST in $ALL_HOSTS ; do
+   rm -f $PREFIX/PE-stop-$HOST.sh
+done
 CHOOSE_HOST_LAST=0
-i=1 ; j=1 ; while [ $i -le $PEs ] ; do
+i=1 ; while [ $i -le $PEs ] ; do
    choose_host
-   ./RemoteComponentControl ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop &
-   let i=$i+1 ; let j=$j+1
-   if [ $j -gt $MAX_SSH_PROCS ] ; then
-      wait
-      j=1
+   ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop
+   let i=$i+1
+   echo $LAUNCH_DELAY >>$PREFIX/PE-stop-$HOST.sh
+done
+for HOST in $ALL_HOSTS ; do
+   if [ -e $PREFIX/PE-stop-$HOST.sh ] ; then
+      echo "Contacting $CC_REMOTEUSER@$HOST ..."
+      echo "wait" >>$PREFIX/PE-stop-$HOST.sh
+      cat $PREFIX/PE-stop-$HOST.sh | ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$HOST &
    fi
 done
 wait

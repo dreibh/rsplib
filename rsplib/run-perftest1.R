@@ -66,7 +66,7 @@ for(maxHResItems in maxHResItemsSet) {
    data <- loadResults(paste(sep="", testName, "/", runPrefix, "/TestPR-1.data"))
    rtdata <- read.table(paste(sep="", testName, "/", runPrefix, "/runtimes.data"))
    preSkip  <- minPreSkip + (mean(rtdata$MeasurementStart) - mean(rtdata$Startup))
-   postSkip <- minPostSkip + (mean(rtdata$MeasurementEnd) - mean(rtdata$Shutdown))
+   postSkip <- minPostSkip + (mean(rtdata$Shutdown) - mean(rtdata$MeasurementEnd))
    cat("=> Startup:            0.0\n")
    cat("   Measurement Start: ", mean(rtdata$MeasurementStart) - mean(rtdata$Startup), "\n")
    cat("   Measurement End:   ", mean(rtdata$MeasurementEnd)   - mean(rtdata$Startup), "\n")

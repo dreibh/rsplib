@@ -22,12 +22,22 @@
 # ***************************************************************************
 
 if [ $# -lt 5 ] ; then
-   echo >&2 "Usage: RemoteComponentControl [User Configuration File] [Host] [Scenario Configuration File] [Identifier] [start|stop|kill|stopall|killall|restart|status|log|monitor] {Arguments ...}"
+   echo >&2 "Usage: RemoteComponentControl {WriteCmdOnly CmdFile} [User Configuration File] [Host] [Scenario Configuration File] [Identifier] [start|stop|kill|stopall|killall|restart|status|log|monitor] {Arguments ...}"
    exit 1
 fi
 
 
 # ====== Get configuration ==================================================
+if [ "$1" = "WriteCmdOnly" ] ; then
+   if [ $# -lt 7 ] ; then
+      echo >&2 "Usage: Too few arguments!"
+      exit
+   fi
+   CC_WRITECMD=$2
+   shift ; shift
+else
+   CC_WRITECMD=""
+fi
 CC_REMOTECONFIG=$1
 CC_HOST=$2
 CC_CONFIGFILE=$3
@@ -54,11 +64,8 @@ if [ "x$CC_HOST" = "x" ] ; then
 fi
 
 
-command="$CC_REMOTEPRECOMMAND nohup ./ComponentControl $CC_CONFIGFILE $CC_IDENTIFIER $CC_COMMAND $CC_MISCARGS >/dev/null 2>/dev/null &"
-
-
-echo "Contacting $CC_REMOTEUSER@$CC_HOST using key $CC_REMOTEKEY ..."
-ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$CC_HOST "
+progCall="$CC_REMOTEPRECOMMAND nohup ./ComponentControl $CC_CONFIGFILE $CC_IDENTIFIER $CC_COMMAND $CC_MISCARGS"
+command="\
 if [ ! -e $CC_PATH ] ; then
    echo \"ERROR: Directory $CC_PATH does not exist on host $CC_HOST!\"
    exit 1
@@ -68,5 +75,13 @@ if [ ! -e ComponentControl ] ; then
    echo \"ERROR: ComponentControl not found in directory $CC_PATH of host $CC_HOST!\"
    exit 1
 fi &&
-echo \"$command\" &&
-$command"
+echo \"$progCall\" &&
+$progCall >/dev/null 2>/dev/null &"
+
+
+if [ "x$CC_WRITECMD" = "x" ] ; then
+   echo "Contacting $CC_REMOTEUSER@$CC_HOST using key $CC_REMOTEKEY ..."
+   ssh -i $CC_REMOTEKEY $CC_SSHOPT $CC_REMOTEUSER@$CC_HOST "$command"
+else
+   echo "$command" >>$CC_WRITECMD
+fi
