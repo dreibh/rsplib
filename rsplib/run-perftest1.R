@@ -20,6 +20,8 @@ reregIntervalSet <- c(250)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
 
+interMeasurementDelay <- 60
+
 
 # ###########################################################################
 
@@ -43,14 +45,22 @@ synchronizationRates  <- c()
 dir.create(testName,showWarnings=FALSE)
 
 
+firstStart <- TRUE
 for(PEs in PEsSet) {
 for(PUs in PUsSet) {
 for(reregInterval in reregIntervalSet) {
 for(interHResTime in interHResTimeSet) {
-for(maxHResItems in maxHResItemsSet) { 
+for(maxHResItems in maxHResItemsSet) {
+   if(!firstStart) {
+      cat(sep="", "Waiting ", interMeasurementDelay, " seconds ...\n")
+      readLines(pc <- pipe(paste(sep="", "sleep ", interMeasurementDelay)))
+      close(pc)
+   }
+   firstStart <- FALSE
+
    # ------ Run performance test --------------------------------------------
    duration <- minPreSkip + minPostSkip + (segments + 1) * segmentLength
-   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems)
+   runPrefix <- paste(sep="", testName, "-", PEs, "-", PUs, "-", reregInterval, "-", interHResTime, "-", maxHResItems, "-", duration)
    cmdLine <- paste(sep="", "./perftest ",
                             testName, " ", runPrefix,
                             " ",
