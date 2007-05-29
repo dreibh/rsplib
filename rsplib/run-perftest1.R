@@ -14,11 +14,12 @@ minPostSkip   <- 30
 segmentLength <- 30
 segments      <- 5
 
-PEsSet           <- c(100, 1000, 1500)
+PEsSet           <- c(1000, 2500, 2750, 3000)
 PUsSet           <- c(1)
-reregIntervalSet <- c(250, 1000)
+reregIntervalSet <- c(250)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
+
 
 # ###########################################################################
 

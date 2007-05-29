@@ -37,13 +37,13 @@ INTERHRESTIME="$6"
 MAXHRESITEMS="$7"
 DURATION="$8"
 
-LAUNCH_DELAY="sleep 0.1"
+LAUNCH_DELAY=""   # sleep 0.1"
 POOLHANDLE="EchoPool"
 
 
 HOST_PR="132.252.151.157"
-HOST_LIST="132.252.152.78 132.252.152.74"
-#HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
+# HOST_LIST="132.252.152.78"
+HOST_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
 CSPOPT="-cspserver=132.252.151.157:2960 -cspinterval=333"
 
 # HOST_PR="localhost"
@@ -169,7 +169,7 @@ i=1 ; while [ $i -le $PEs ] ; do
       -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
       -loglevel=3 \
       -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
-   echo $LAUNCH_DELAY >>$PREFIX/PE-start-$HOST.sh
+   echo $LAUNCH_DELAY >>$PREFIX/PE-start-$CHOOSE_HOST.sh
    let i=$i+1
 done
 for HOST in $ALL_HOSTS ; do
@@ -194,7 +194,7 @@ i=1 ; while [ $i -le $PUs ] ; do
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
       -registrar=$HOST_PR:$SYSTEM_PR_ASAP_PORT \
       -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250
-   echo $LAUNCH_DELAY >>$PREFIX/PU-start-$HOST.sh
+   echo $LAUNCH_DELAY >>$PREFIX/PU-start-$CHOOSE_HOST.sh
    let i=$i+1
 done
 for HOST in $ALL_HOSTS ; do
@@ -226,7 +226,7 @@ i=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop
    let i=$i+1
-   echo $LAUNCH_DELAY >>$PREFIX/PU-stop-$HOST.sh
+   # echo $LAUNCH_DELAY >>$PREFIX/PU-stop-$CHOOSE_HOST.sh
 done
 for HOST in $ALL_HOSTS ; do
    if [ -e $PREFIX/PU-stop-$HOST.sh ] ; then
@@ -247,7 +247,7 @@ i=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop
    let i=$i+1
-   echo $LAUNCH_DELAY >>$PREFIX/PE-stop-$HOST.sh
+   # echo $LAUNCH_DELAY >>$PREFIX/PE-stop-$CHOOSE_HOST.sh
 done
 for HOST in $ALL_HOSTS ; do
    if [ -e $PREFIX/PE-stop-$HOST.sh ] ; then
