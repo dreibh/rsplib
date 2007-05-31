@@ -1704,6 +1704,9 @@ analyseCounterResults <- function(data, minPreSkip, minPostSkip,
 
       xSet <- subData$RelTime
       ySet <- eval(parse(text=paste(sep="", "subData$", columnName)))
+      if(length(ySet) < 1) {
+         stop(paste(sep="", "ERROR: Column \"", columnName, "\" is empty from ", start, " to ", end, "!\n"))
+      }
 
       duration   <- max(xSet) - min(xSet)
       difference <- max(ySet) - min(ySet)

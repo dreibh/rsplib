@@ -9,13 +9,13 @@ source("plotter.R")
 
 testName <- "P01"
 
-minPreSkip    <- 30
-minPostSkip   <- 30
-segmentLength <- 30
-segments      <- 5
+minPreSkip      <- 30
+minPostSkip     <- 30
+segmentLength   <- 30
+segments        <- 2
 
 PEsSet           <- c(1000, 2500, 2750, 3000)
-PUsSet           <- c(1)
+puToPERatioSet   <- c(0)
 reregIntervalSet <- c(250)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
@@ -39,6 +39,10 @@ handleResolutionRates <- c()
 failureReportRates    <- c()
 synchronizationRates  <- c()
 
+runtimeDiffs          <- c()
+userTimeDiffs         <- c()
+systemTimeDiffs       <- c()
+
 
 # cat(readLines(pc <- pipe(paste(sep="", "rm -rf ", testName))))
 # close(pc)
@@ -47,7 +51,8 @@ dir.create(testName,showWarnings=FALSE)
 
 firstStart <- TRUE
 for(PEs in PEsSet) {
-for(PUs in PUsSet) {
+for(puToPERatio in puToPERatioSet) {
+PUs <- PEs * puToPERatio
 for(reregInterval in reregIntervalSet) {
 for(interHResTime in interHResTimeSet) {
 for(maxHResItems in maxHResItemsSet) {
@@ -105,11 +110,21 @@ for(maxHResItems in maxHResItemsSet) {
                                    analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
                                    "Synchronizations", ACRT_Normalized))
 
+   runtimeDiffs <- append(runtimeDiffs,
+                          analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                         "Runtime", ACRT_Difference))
+   userTimeDiffs <- append(userTimeDiffs,
+                          analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                         "UserTime", ACRT_Difference))
+   systemTimeDiffs <- append(systemTimeDiffs,
+                          analyseCounterResults(data, preSkip, postSkip, segmentLength, segments,
+                         "SystemTime", ACRT_Difference))
+
    peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))
    puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
    reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
    interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
-   maxHResItemsColumn  <- append(maxHResItemsColumn, rep(maxHResItems, length(registrationResults)))
+   maxHResItemsColumn  <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
 }}}}}
 
 
@@ -120,6 +135,10 @@ result <- data.frame(peColumn,
                      interHResTimeColumn,
                      maxHResItemsColumn,
 
+                     runtimeDiffs,
+                     userTimeDiffs,
+                     systemTimeDiffs,
+
                      registrationRates,
                      reregistrationRates,
                      deregistrationRates,
@@ -127,6 +146,7 @@ result <- data.frame(peColumn,
                      failureReportRates,
                      synchronizationRates)
 colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime", "MaxHResItems",
+                      "Runtime", "UserTime", "SystemTime",
                      "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
                      "HandleResolutionRate", "FailureReportRate", "SynchronizationRate")
 dir.create(paste(sep="", testName, "/Results"), showWarnings=FALSE)

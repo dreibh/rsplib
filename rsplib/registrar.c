@@ -523,26 +523,121 @@ void registrarDumpPeers(struct Registrar* registrar)
 }
 
 
+#ifdef LINUX
+/* ###### Get system uptime (in microseconds) ############################ */
+static unsigned long long getUptime()
+{
+   double             dblUptime;
+   unsigned long long uptime = 0;
+
+   FILE* fh = fopen("/proc/uptime", "r");
+   if(fh != NULL) {
+      if(fscanf(fh, "%lf", &dblUptime) == 1) {
+         uptime = (unsigned long long)floor(dblUptime * 1000000.0);
+      }
+      fclose(fh);
+   }
+   return(uptime);
+}
+
+
+/* ###### Get process times (in microseconds) ############################ */
+static bool getProcessTimes(unsigned long long* startupTime,
+                            unsigned long long* userTime,
+                            unsigned long long* systemTime)
+{
+   char          statusFile[256];
+   int           pid;
+   char          tcomm[128];
+   char          state[16];
+   int           ppid;
+   int           pgid;
+   int           sid;
+   int           tty_nr;
+   int           tty_pgrp;
+   unsigned long flags;
+   unsigned long min_flt;
+   unsigned long cmin_flt;
+   unsigned long maj_flt;
+   unsigned long cmaj_flt;
+   long          priority;
+   long          nice;
+   int           num_threads;
+   unsigned long long start_time;
+
+   unsigned long utime;
+   unsigned long stime;
+   long          cutime;
+   long          cstime;
+   bool          success = false;
+
+   snprintf((char*)&statusFile, sizeof(statusFile), "/proc/%u/stat", getpid());
+
+   FILE* fh = fopen(statusFile, "r");
+   if(fh != NULL) {
+      int result = fscanf(fh, "%d %127s %1s   %d %d %d %d %d   %lu %lu %lu %lu %lu   %lu %lu %ld %ld   %ld %ld %d 0 %llu",
+                          &pid, (char*)&tcomm, (char*)&state,
+                          &ppid, &pgid, &sid, &tty_nr, &tty_pgrp,
+                          &flags, &min_flt, &cmin_flt, &maj_flt, &cmaj_flt,
+                          &utime, &stime, &cutime, &cstime,
+                          &priority, &nice, &num_threads, &start_time);
+
+      if(result == 21) {
+         *startupTime = start_time * 10000ULL;
+         *userTime    = utime * 10000ULL;
+         *systemTime  = stime * 10000ULL;
+         success = true;
+      }
+      fclose(fh);
+   }
+   return(success);
+}
+#endif
+
+
 /* ###### Statistics dump callback ########################################## */
 static void statisticsCallback(struct Dispatcher* dispatcher,
                                struct Timer*      timer,
                                void*              userData)
 {
-   struct Registrar*        registrar = (struct Registrar*)userData;
-   const unsigned long long now       = getMicroTime();
+   struct Registrar*        registrar   = (struct Registrar*)userData;
+   const unsigned long long now         = getMicroTime();
+   unsigned long long       runtime     = 0;
+   unsigned long long       startupTime = 0;
+   unsigned long long       userTime    = 0;
+   unsigned long long       systemTime  = 0;
+   unsigned long long       uptime;
 
    if(registrar->StatsLine == 0) {
-      fputs("AbsTime RelTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations\n",
+      fputs("AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations\n",
             registrar->StatsFile);
       registrar->StatsLine      = 1;
       registrar->StatsStartTime = now;
    }
 
+#ifdef LINUX
+   if( (getProcessTimes(&startupTime, &userTime, &systemTime)) &&
+       ( (uptime = getUptime()) > 0 ) ) {
+
+      runtime = uptime - startupTime;
+   }
+   else {
+      LOG_WARNING
+      fputs("Unable to obtain process performance data!\n", stdlog);
+      LOG_END
+   }
+#endif
+
    fprintf(registrar->StatsFile,
-           "%06llu %1.6f %1.6f   %llu %llu %llu %llu %llu %llu\n",
+           "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu\n",
            registrar->StatsLine++,
            now / 1000000.0,
            (now - registrar->StatsStartTime) / 1000000.0,
+
+           runtime / 1000000.0,
+           userTime / 1000000.0,
+           systemTime / 1000000.0,
+
            registrar->RegistrationCount,
            registrar->ReregistrationCount,
            registrar->DeregistrationCount,

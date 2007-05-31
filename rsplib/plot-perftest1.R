@@ -36,7 +36,10 @@ plotConfigurations <- list(
         "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
-        "PEs", "HandleResolutionRatePerPEandSecond", "ReregInterval")
+        "PEs", "HandleResolutionRatePerPEandSecond", "ReregInterval"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
+        "Provider's Perspective", NA, NA, list(1,1),
+        "PEs", "CPUUtilization", "ReregInterval")
 )
 
 
@@ -61,6 +64,11 @@ plotVariables <- list(
            "Handle Resolution Rate per PE and Second[1/PE*s]",
            "data1$HandleResolutionRate / data1$PEs",
            "gold4", list("Summary")),
+
+   list("CPUUtilization",
+           "CPU Utilization [%]",
+           "100.0 * (data1$SystemTime + data1$UserTime) / data1$Runtime",
+           "orange3", list("Summary")),
 
    list("PEs",
            "Number of Pool Elements{e}[1]",
