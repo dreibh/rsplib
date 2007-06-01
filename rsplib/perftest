@@ -38,6 +38,7 @@ MAXHRESITEMS="$7"
 DURATION="$8"
 
 LAUNCH_DELAY=""   # sleep 0.1"
+SHUTDOWN_DELAY="sleep 60"
 POOLHANDLE="EchoPool"
 
 
@@ -268,3 +269,6 @@ UPTIME_SHUTDOWN=$(get_uptime)
 
 echo "Startup MeasurementStart MeasurementEnd Shutdown" >$PREFIX/runtimes.data
 echo "1 $UPTIME_STARTUP $UPTIME_MSTART $UPTIME_MEND $UPTIME_SHUTDOWN" >>$PREFIX/runtimes.data
+
+
+$SHUTDOWN_DELAY
