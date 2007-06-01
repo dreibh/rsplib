@@ -7,7 +7,7 @@
 source("plotter.R")
 
 # ------ Plotter Settings ---------------------------------------------------
-measurementDirectory  <- "P01"
+measurementDirectory  <- "P02"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
