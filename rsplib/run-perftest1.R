@@ -11,9 +11,9 @@ testName         <- "P01"
 minPreSkip       <- 30
 minPostSkip      <- 30
 segmentLength    <- 30
-segments         <- 2
+segments         <- 5
 
-PEsSet           <- c(1000, 2500, 2750, 3000)
+PEsSet           <- c(10, 1000, 2500, 2750, 3000, 3250, 3500)
 puToPERatioSet   <- c(0)
 reregIntervalSet <- c(250)
 interHResTimeSet <- c(1000)
