@@ -4,7 +4,7 @@
 # Revision:    $Id$
 # ###########################################################################
 
-source("plotter.R")
+source("perftest-version1.R")
 
 # ------ Plotter Settings ---------------------------------------------------
 measurementDirectory  <- "P02"
@@ -33,18 +33,21 @@ plotConfigurations <- list(
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
-        "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval"),
+        "PUs", "ReregistrationRatePerPEandSecond",
+        "PEs", "InterHResTime", "ReregInterval"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
-        "PEs", "HandleResolutionRatePerPEandSecond", "ReregInterval"),
+        "PUs", "HandleResolutionRatePerPEandSecond",
+        "PEs", "InterHResTime", "ReregInterval"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Provider's Perspective", NA, NA, list(1,1),
-        "PEs", "CPUUtilization", "ReregInterval")
+        "Provider's Perspective", NA, NA, list(0,1),
+        "PUs", "CPUUtilization",
+        "PEs", "InterHResTime", "ReregInterval")
 )
 
 
 # ------ Variable templates -------------------------------------------------
-plotVariables <- list(
+plotVariables <- append(perftestPlotVariables, list(
    # ------ Format example --------------------------------------------------
    # list("Variable",
    #         "Unit[x]{v]"
@@ -56,33 +59,7 @@ plotVariables <- list(
    #             (measurementDirectory/Results/....data.tar.bz2 is added!)
    # ------------------------------------------------------------------------
 
-   list("ReregistrationRatePerPEandSecond",
-           "Reregistration Rate per PE and Second[1/PE*s]",
-           "data1$ReregistrationRate / data1$PEs",
-           "brown4", list("Summary")),
-   list("HandleResolutionRatePerPEandSecond",
-           "Handle Resolution Rate per PE and Second[1/PE*s]",
-           "data1$HandleResolutionRate / data1$PEs",
-           "gold4", list("Summary")),
-
-   list("CPUUtilization",
-           "CPU Utilization [%]",
-           "100.0 * (data1$SystemTime + data1$UserTime) / data1$Runtime",
-           "orange3", list("Summary")),
-
-   list("PEs",
-           "Number of Pool Elements{e}[1]",
-           NA, "brown4", list("Summary")),
-   list("PUs",
-           "Number of Pool Users{u}[1]",
-           NA, "brown4", list("Summary")),
-   list("ReregInterval",
-           "Inter Reregistration Time{r}[s]",
-           NA, "brown4", list("Summary")),
-   list("InterHResTime",
-           "Inter Handle Resolution Time{h}[s]",
-           NA, "brown4", list("Summary"))
-)
+))
 
 # ###########################################################################
 
