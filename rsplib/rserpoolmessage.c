@@ -129,7 +129,7 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
       }
       message->TransportAddressBlockListPtr = NULL;
       if(message->PoolElementPtrArrayAutoDelete) {
-         CHECK(message->PoolElementPtrArraySize < MAX_MAX_HANDLE_RESOLUTION_ITEMS);
+         CHECK(message->PoolElementPtrArraySize <= MAX_MAX_HANDLE_RESOLUTION_ITEMS);
          for(i = 0;i < message->PoolElementPtrArraySize;i++) {
             if(message->PoolElementPtrArray[i]) {
                ST_CLASS(poolElementNodeDelete)(message->PoolElementPtrArray[i]);

@@ -163,9 +163,33 @@ unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
 unsigned int rsp_pe_failure(const unsigned char* poolHandle,
                             const size_t         poolHandleSize,
                             const uint32_t       identifier);
+
+
+#define RSPGETADDRS_MIN     (size_t)1
+#define RSPGETADDRS_MAX     (size_t)0xffffffff
+#define RSPGETADDRS_DEFAULT (size_t)0
+
+/**
+  * Perform handle resolution.
+  *
+  * @param poolHandle Pool handle.
+  * @param poolHandleSize Pool handle size.
+  * @param rserpoolAddrInfo Pointer to variable to store pointer to first rsp_addrinfo to.
+  * @param items Desired number of PE entries to obtain.
+  * @return Number of PE entries obtained in case of success; -1 in case of an error.
+  *
+  * @see rsp_freeaddrinfo
+  */
 int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     const size_t          poolHandleSize,
-                    struct rsp_addrinfo** rserpoolAddrInfo);
+                    struct rsp_addrinfo** rserpoolAddrInfo,
+                    const size_t          items);
+
+/**
+  * Free rsp_addrinfo structure.
+  *
+  * @param rserpoolAddrInfo Pointer to rsp_addrinfo to be freed.
+  */
 void rsp_freeaddrinfo(struct rsp_addrinfo* rserpoolAddrInfo);
 
 

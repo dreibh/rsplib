@@ -33,6 +33,7 @@ int main(int argc, char** argv)
 {
    struct rsp_info      info;
    struct rsp_addrinfo* rspAddrInfo;
+   struct rsp_addrinfo* r;
    char*                poolHandle = "EchoPool";
    unsigned int         pause      = 0;
    int                  i;
@@ -46,7 +47,11 @@ int main(int argc, char** argv)
    unsigned long long   responseTimeStamp;
    unsigned long long   successCount = 0;
    unsigned long long   failureCount = 0;
+   unsigned long long   runs         = 0;
+   unsigned long long   maxRuns      = 0;
    bool                 quiet        = false;
+   bool                 printResults = false;
+   size_t               items        = 0;
 
    rsp_initinfo(&info);
    for(i = 1;i < argc;i++) {
@@ -59,8 +64,17 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-pause=" ,7))) {
          pause = atol((char*)&argv[i][7]);
       }
+      else if(!(strncmp(argv[i], "-items=" ,7))) {
+         items = atol((char*)&argv[i][7]);
+      }
+      else if(!(strncmp(argv[i], "-maxruns=" ,9))) {
+         maxRuns = atol((char*)&argv[i][9]);
+      }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
+      }
+      else if(!(strcmp(argv[i], "-printresults"))) {
+         printResults = true;
       }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile != stdout) {
@@ -82,7 +96,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-pause=microsecs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-items=Items} {-printresults} {-pause=microsecs} {-maxruns=Runs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
          exit(1);
       }
    }
@@ -91,8 +105,10 @@ int main(int argc, char** argv)
    if(!quiet) {
       puts("RSerPool Handle Resolution Tester - Version 1.0");
       puts("===============================================\n");
-      printf("Pool Handle         = %s\n", poolHandle);
+      printf("Pool Handle         = %s\n",   poolHandle);
+      printf("Items               = %ums\n", items);
       printf("Pause               = %ums\n", pause);
+      printf("Max Runs            = %llu\n", maxRuns);
       printf("Statistics Interval = %ums\n", statsInterval);
       puts(""); 
    }
@@ -111,11 +127,23 @@ int main(int argc, char** argv)
    updateTimeStamp = 0;
    while(!breakDetected()) {
       requestTimeStamp = getMicroTime();
-      result = rsp_getaddrinfo((const unsigned char*)poolHandle, strlen(poolHandle), &rspAddrInfo);
+      result = rsp_getaddrinfo((const unsigned char*)poolHandle, strlen(poolHandle),
+                               &rspAddrInfo, items);
       responseTimeStamp = getMicroTime();
+      runs++;
 
-      if(result == 0) {
-         successCount++;
+      if(result > 0) {
+         successCount += (size_t)result;
+
+         if(printResults) {
+            printf("#%llu: Selected %d items\n", runs, result);
+            r = rspAddrInfo;
+            while(r != NULL) {
+               printf("   ID $%08x\n", r->ai_pe_id);
+               r = r->ai_next;
+            }
+         }
+
          rsp_freeaddrinfo(rspAddrInfo);
       }
       else {
@@ -132,6 +160,11 @@ int main(int argc, char** argv)
          fflush(statsFile);
          updateTimeStamp = responseTimeStamp;
       }
+
+      if((maxRuns > 0) && (runs >= maxRuns)) {
+         break;
+      }
+
       if(pause > 0) {
          usleep(1000 * pause);
       }

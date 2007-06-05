@@ -37,7 +37,7 @@ startNetwork ()
    number=1
    for pr in $localPRs ; do
       echo "Starting PR on $pr ..."
-      ./start-process "Registrar-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
+      ./start-process "Registrar-$number" "./rootshell ./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP >$TESTID-pr$number-$pr.log 2>&1" $pr &
       let number=$number+1
    done
 
@@ -48,7 +48,7 @@ startNetwork ()
    number=1
    for pe in $localPEs ; do
       echo "Starting PE on $pe ..."
-      ./start-process "PoolElement-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
+      ./start-process "PoolElement-$number" "./rootshell ./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP >$TESTID-pe$number-$pe.log 2>&1" $pe &
       let number=$number+1
    done
 }

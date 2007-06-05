@@ -83,7 +83,7 @@ for SERVER in $SERVER_LIST; do
       cd .. && \
       echo \"\`date\`: $SERVER is ready!\""
 
-   cat $DISTNAME-bin.tar.bz2 | nice ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER $cmd &
+   cat $DISTNAME-bin.tar.bz2 | nice ssh -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER $cmd &
 done
 
 wait

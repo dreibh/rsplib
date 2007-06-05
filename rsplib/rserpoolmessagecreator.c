@@ -40,6 +40,7 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "rserpoolmessagecreator.h"
+#include "rserpool.h"
 
 #include <netinet/in.h>
 #include <ext_socket.h>
@@ -646,6 +647,33 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
 }
 
 
+/* ###### Create handle resolution parameter ############################# */
+static bool createHandleResolutionParameter(
+               struct RSerPoolMessage* message,
+               const size_t            items)
+{
+   struct rserpool_handleresolutionparameter* hrp;
+   size_t                                     tlvPosition = 0;
+
+   if(beginTLV(message, &tlvPosition, ATT_HANDLE_RESOLUTION|ATT_ACTION_CONTINUE) == false) {
+      return(false);
+   }
+
+   hrp = (struct rserpool_handleresolutionparameter*)getSpace(message, sizeof(struct rserpool_handleresolutionparameter));
+   if(hrp == NULL) {
+      return(false);
+   }
+   if(items == RSPGETADDRS_MAX) {
+      hrp->hrp_items = 0xffffffff;
+   }
+   else {
+      hrp->hrp_items = htonl((uint32_t)items);
+   }
+
+   return(finishTLV(message, tlvPosition));
+}
+
+
 /* ###### Create endpoint keepalive message ############################## */
 static bool createEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
@@ -822,6 +850,11 @@ static bool createHandleResolutionMessage(struct RSerPoolMessage* message)
    if(createPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
+   if(message->Addresses != 0) {
+      if(createHandleResolutionParameter(message, message->Addresses) == false) {
+         return(false);
+      }
+   }
    return(finishMessage(message));
 }
 
@@ -831,7 +864,7 @@ static bool createHandleResolutionResponseMessage(struct RSerPoolMessage* messag
 {
    size_t i;
 
-   CHECK(message->PoolElementPtrArraySize < MAX_MAX_HANDLE_RESOLUTION_ITEMS);
+   CHECK(message->PoolElementPtrArraySize <= MAX_MAX_HANDLE_RESOLUTION_ITEMS);
    if(beginMessage(message, AHT_HANDLE_RESOLUTION_RESPONSE, message->Flags & 0x00, PPID_ASAP) == NULL) {
       return(false);
    }

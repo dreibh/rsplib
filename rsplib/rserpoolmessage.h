@@ -106,20 +106,20 @@ struct rserpool_tlv_header
 #define ATT_ACTION_CONTINUE_AND_REPORT 0xc0
 #define PURE_ATT_TYPE(type)            (type & (~ATT_ACTION_MASK))
 
-#define ATT_IPv4_ADDRESS            0x01
-#define ATT_IPv6_ADDRESS            0x02
-#define ATT_SCTP_TRANSPORT          0x03
-#define ATT_TCP_TRANSPORT           0x04
-#define ATT_UDP_TRANSPORT           0x05
-#define ATT_POOL_POLICY             0x06
-#define ATT_POOL_HANDLE             0x07
-#define ATT_POOL_ELEMENT            0x08
-#define ATT_SERVER_INFORMATION      0x09
-#define ATT_OPERATION_ERROR         0x0a
-#define ATT_COOKIE                  0x0b
-#define ATT_POOL_ELEMENT_IDENTIFIER 0x0c
-#define ATT_POOL_ELEMENT_CHECKSUM   0x0d
-
+#define ATT_IPv4_ADDRESS               0x01
+#define ATT_IPv6_ADDRESS               0x02
+#define ATT_SCTP_TRANSPORT             0x03
+#define ATT_TCP_TRANSPORT              0x04
+#define ATT_UDP_TRANSPORT              0x05
+#define ATT_POOL_POLICY                0x06
+#define ATT_POOL_HANDLE                0x07
+#define ATT_POOL_ELEMENT               0x08
+#define ATT_SERVER_INFORMATION         0x09
+#define ATT_OPERATION_ERROR            0x0a
+#define ATT_COOKIE                     0x0b
+#define ATT_POOL_ELEMENT_IDENTIFIER    0x0c
+#define ATT_POOL_ELEMENT_CHECKSUM      0x0d
+#define ATT_HANDLE_RESOLUTION          0x3f   /* Custom */
 
 struct rserpool_poolelementparameter
 {
@@ -258,6 +258,11 @@ struct rserpool_errorcause
    char     aec_data[0];
 };
 
+
+struct rserpool_handleresolutionparameter
+{
+   uint32_t hrp_items;
+};
 
 
 #define EHT_ENRP_MODIFIER         0xee00

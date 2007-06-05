@@ -40,6 +40,7 @@
 #include "loglevel.h"
 #include "netutilities.h"
 #include "rserpoolmessageparser.h"
+#include "rserpool.h"
 
 #include <netinet/in.h>
 #include <ext_socket.h>
@@ -1249,6 +1250,45 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
 }
 
 
+/* ###### Scan pool element checksum parameter ########################### */
+static bool scanHandleResolutionParameter(struct RSerPoolMessage* message)
+{
+   struct rserpool_handleresolutionparameter* hrp;
+   size_t    tlvPosition = 0;
+   size_t    tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_HANDLE_RESOLUTION, true);
+   if(tlvLength < sizeof(struct rserpool_tlv_header)) {
+      return(false);
+   }
+
+   tlvLength -= sizeof(struct rserpool_tlv_header);
+   if(tlvLength < sizeof(struct rserpool_handleresolutionparameter)) {
+      LOG_WARNING
+      fputs("Handle resolution parameter too short!\n", stdlog);
+      LOG_END
+      message->Error = RSPERR_INVALID_VALUES;
+      return(false);
+   }
+
+   hrp = (struct rserpool_handleresolutionparameter*)getSpace(message, sizeof(struct rserpool_handleresolutionparameter));
+   if(hrp == NULL) {
+      return(false);
+   }
+   if(hrp->hrp_items == 0xffffffff) {
+      message->Addresses = RSPGETADDRS_MAX;
+   }
+   else {
+      message->Addresses = ntohl(hrp->hrp_items);
+   }
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Scanned handle resolution parameter, items=%u\n",
+           (unsigned int)message->Addresses);
+   LOG_END
+
+   return(checkFinishTLV(message, tlvPosition));
+}
+
+
 /* ###### Scan endpoint keepalive message ################################ */
 static bool scanEndpointKeepAliveMessage(struct RSerPoolMessage* message)
 {
@@ -1374,6 +1414,9 @@ static bool scanHandleResolutionMessage(struct RSerPoolMessage* message)
 {
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
+   }
+   if(scanHandleResolutionParameter(message) == false) {
+      message->Addresses = 0;
    }
    return(true);
 }

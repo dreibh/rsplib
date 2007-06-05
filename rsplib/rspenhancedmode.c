@@ -855,7 +855,6 @@ int rsp_forcefailover_tags(int             sd,
 {
    struct RSerPoolSocket*   rserpoolSocket;
    struct rsp_addrinfo*     rspAddrInfo;
-   struct rsp_addrinfo*     rspAddrInfo2;
    struct NotificationNode* notificationNode;
    int                      result;
    bool                     success = false;
@@ -928,29 +927,22 @@ int rsp_forcefailover_tags(int             sd,
       LOG_END
       result = rsp_getaddrinfo_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
                                     rserpoolSocket->ConnectedSession->Handle.Size,
-                                    &rspAddrInfo,
+                                    &rspAddrInfo, 1,
                                     tags);
-      if(result == 0) {
+      if(result > 0) {
          if(rspAddrInfo->ai_protocol == rserpoolSocket->SocketProtocol) {
             /* ====== Establish connection ================================== */
-            rspAddrInfo2 = rspAddrInfo;
-            while((rspAddrInfo2 != NULL) && (success == false)) {
-
-               rserpoolSocket->Socket = connectToPE(rserpoolSocket,
-                                                   rspAddrInfo->ai_pe_id,
-                                                   rspAddrInfo->ai_addr,
-                                                   rspAddrInfo->ai_addrs);
-               if(rserpoolSocket->Socket >= 0) {
-                  success = true;
-                  rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
-                  rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo2->ai_pe_id;
-                  sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
-                                              rserpoolSocket->ConnectedSession,
-                                              0);
-                  break;
-               }
-
-               rspAddrInfo2 = rspAddrInfo2->ai_next;
+            rserpoolSocket->Socket = connectToPE(rserpoolSocket,
+                                                rspAddrInfo->ai_pe_id,
+                                                rspAddrInfo->ai_addr,
+                                                rspAddrInfo->ai_addrs);
+            if(rserpoolSocket->Socket >= 0) {
+               success = true;
+               rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
+               rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo->ai_pe_id;
+               sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
+                                             rserpoolSocket->ConnectedSession,
+                                             0);
             }
 
             /* ====== Free handle resolution result ====================== */

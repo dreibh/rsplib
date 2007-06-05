@@ -33,7 +33,10 @@ performMeasurement <- function()
 
    for(PEs in PEsSet) {
    for(puToPERatio in puToPERatioSet) {
-   PUs <- PEs * puToPERatio
+   for(PUs in PUsSet) {
+   if((length(PUsSet) == 1) && (PUs < 0)) {
+      PUs <- PEs * puToPERatio
+   }
    for(reregInterval in reregIntervalSet) {
    for(interHResTime in interHResTimeSet) {
    for(maxHResItems in maxHResItemsSet) {
@@ -101,7 +104,7 @@ performMeasurement <- function()
       reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
       interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
       maxHResItemsColumn  <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
-   }}}}}
+   }}}}}}
 
 
    cat("Writing results ...\n")

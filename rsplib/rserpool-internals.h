@@ -72,6 +72,7 @@ unsigned int rsp_pe_failure_tags(const unsigned char* poolHandle,
 int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          poolHandleSize,
                          struct rsp_addrinfo** rserpoolAddrInfo,
+                         const size_t          items,
                          struct TagItem*       tags);
 
 

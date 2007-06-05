@@ -260,85 +260,110 @@ static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
 }
 
 
+/* ###### Convert pool element node to rsp_addrinfo structure ############ */
+static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                     struct rsp_addrinfo**                   rspAddrInfo)
+{
+   int    result = EAI_MEMORY;
+   char*  ptr;
+   size_t i;
+
+   *rspAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
+   if(rspAddrInfo != NULL) {
+      (*rspAddrInfo)->ai_next     = NULL;
+      (*rspAddrInfo)->ai_pe_id    = poolElementNode->Identifier;
+      (*rspAddrInfo)->ai_family   = poolElementNode->UserTransport->AddressArray[0].sa.sa_family;
+      (*rspAddrInfo)->ai_protocol = poolElementNode->UserTransport->Protocol;
+      switch(poolElementNode->UserTransport->Protocol) {
+         case IPPROTO_SCTP:
+            (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
+            break;
+         case IPPROTO_TCP:
+            (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
+            break;
+         default:
+            (*rspAddrInfo)->ai_socktype = SOCK_DGRAM;
+            break;
+      }
+      (*rspAddrInfo)->ai_addrlen = sizeof(union sockaddr_union);
+      (*rspAddrInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
+      (*rspAddrInfo)->ai_addr    = (struct sockaddr*)malloc((*rspAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
+      if((*rspAddrInfo)->ai_addr != NULL) {
+         result = 0;
+         ptr = (char*)(*rspAddrInfo)->ai_addr;
+         for(i = 0;i < poolElementNode->UserTransport->Addresses;i++) {
+            memcpy((void*)ptr, (void*)&poolElementNode->UserTransport->AddressArray[i],
+                     sizeof(union sockaddr_union));
+            if (poolElementNode->UserTransport->AddressArray[i].sa.sa_family == AF_INET6)
+               (*rspAddrInfo)->ai_family = AF_INET6;
+            switch(poolElementNode->UserTransport->AddressArray[i].sa.sa_family) {
+               case AF_INET:
+                  ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_in));
+                break;
+               case AF_INET6:
+                  ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_in6));
+                break;
+               default:
+                  LOG_ERROR
+                  fprintf(stdlog, "Bad address type #%d\n",
+                           poolElementNode->UserTransport->AddressArray[i].sa.sa_family);
+                  LOG_END_FATAL
+                  result = EAI_ADDRFAMILY;
+                break;
+            }
+         }
+      }
+      else {
+         free(*rspAddrInfo);
+         *rspAddrInfo = NULL;
+         result = EAI_MEMORY;
+      }
+   }
+   return(result);
+}
+
 
 /* ###### Handle resolution ############################################## */
 int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          poolHandleSize,
                          struct rsp_addrinfo** rspAddrInfo,
+                         const size_t          items,
                          struct TagItem*       tags)
 {
    struct PoolHandle                 myPoolHandle;
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
    size_t                            poolElementNodes;
+   struct rsp_addrinfo**             lastAddrInfo;
    unsigned int                      hresResult;
    int                               result;
-   char*                             ptr;
-   size_t                            i;
+   size_t                            n;
 
+   *rspAddrInfo = NULL;
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
 
-      poolElementNodes = 1;
+      poolElementNodes = min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS);
       hresResult = asapInstanceHandleResolution(
                       gAsapInstance,
                       &myPoolHandle,
-                      (struct ST_CLASS(PoolElementNode)**)&poolElementNode,
+                      (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
                       &poolElementNodes);
       if(hresResult == RSPERR_OKAY) {
-         *rspAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
-         if(rspAddrInfo != NULL) {
-            (*rspAddrInfo)->ai_next     = NULL;
-            (*rspAddrInfo)->ai_pe_id    = poolElementNode->Identifier;
-            (*rspAddrInfo)->ai_family   = poolElementNode->UserTransport->AddressArray[0].sa.sa_family;
-            (*rspAddrInfo)->ai_protocol = poolElementNode->UserTransport->Protocol;
-            switch(poolElementNode->UserTransport->Protocol) {
-               case IPPROTO_SCTP:
-                  (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
-                break;
-               case IPPROTO_TCP:
-                  (*rspAddrInfo)->ai_socktype = SOCK_STREAM;
-                break;
-               default:
-                  (*rspAddrInfo)->ai_socktype = SOCK_DGRAM;
-                break;
+         lastAddrInfo = rspAddrInfo;
+         for(n = 0;n < poolElementNodes;n++) {
+            result = poolElementNodeToAddrInfo(poolElementNodeArray[n], lastAddrInfo);
+            if(result != 0) {
+               break;
             }
-            (*rspAddrInfo)->ai_addrlen = sizeof(union sockaddr_union);
-            (*rspAddrInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
-            (*rspAddrInfo)->ai_addr    = (struct sockaddr*)malloc((*rspAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
-            if((*rspAddrInfo)->ai_addr != NULL) {
-               result = 0;
-               ptr = (char*)(*rspAddrInfo)->ai_addr;
-               for(i = 0;i < poolElementNode->UserTransport->Addresses;i++) {
-                  memcpy((void*)ptr, (void*)&poolElementNode->UserTransport->AddressArray[i],
-                         sizeof(union sockaddr_union));
-                  if (poolElementNode->UserTransport->AddressArray[i].sa.sa_family == AF_INET6)
-                    (*rspAddrInfo)->ai_family = AF_INET6;
-                  switch(poolElementNode->UserTransport->AddressArray[i].sa.sa_family) {
-                     case AF_INET:
-                        ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_in));
-                      break;
-                     case AF_INET6:
-                        ptr = (char*)((long)ptr + (long)sizeof(struct sockaddr_in6));
-                      break;
-                     default:
-                        LOG_ERROR
-                        fprintf(stdlog, "Bad address type #%d\n",
-                                poolElementNode->UserTransport->AddressArray[i].sa.sa_family);
-                        LOG_END_FATAL
-                        result = EAI_ADDRFAMILY;
-                      break;
-                  }
-               }
-            }
-            else {
-               free(*rspAddrInfo);
-               *rspAddrInfo = NULL;
-               result = EAI_MEMORY;
+            if(*rspAddrInfo != NULL) {
+               lastAddrInfo = &(*lastAddrInfo)->ai_next;
             }
          }
-         else {
-            result = EAI_MEMORY;
+         if(result == 0) {
+            return(n);
          }
+         rsp_freeaddrinfo(*rspAddrInfo);
+         *rspAddrInfo = NULL;
       }
       else {
          if(hresResult == RSPERR_NOT_FOUND) {
@@ -363,9 +388,10 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
 /* ###### Handle resolution ############################################## */
 int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     const size_t          poolHandleSize,
-                    struct rsp_addrinfo** rspAddrInfo)
+                    struct rsp_addrinfo** rspAddrInfo,
+                    const size_t          items)
 {
-   return(rsp_getaddrinfo_tags(poolHandle, poolHandleSize, rspAddrInfo, NULL));
+   return(rsp_getaddrinfo_tags(poolHandle, poolHandleSize, rspAddrInfo, items, NULL));
 }
 
 

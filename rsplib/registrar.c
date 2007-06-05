@@ -1826,21 +1826,29 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
 
 
 /* ###### Handle handle resolution request ################################# */
-#define HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS 1024
 static void handleHandleResolutionRequest(struct Registrar*       registrar,
                                           int                     fd,
                                           sctp_assoc_t            assocID,
                                           struct RSerPoolMessage* message)
 {
-   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS];
-   size_t                            poolElementNodes = HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS;
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
+   size_t                            poolElementNodes = MAX_MAX_HANDLE_RESOLUTION_ITEMS;
+   size_t                            items;
    size_t                            i;
 
+   items = message->Addresses;
+   if(items == 0) {
+      items = registrar->MaxHandleResolutionItems;
+   }
+   items = min(items, MAX_MAX_HANDLE_RESOLUTION_ITEMS);
+
    LOG_ACTION
-   fprintf(stdlog, "Handle Resolution request for pool ");
+   fputs("Handle Resolution request for pool ", stdlog);
    poolHandlePrint(&message->Handle, stdlog);
-   fputs("\n", stdlog);
+   fprintf(stdlog, " for %u items (%u requested)\n",
+           (unsigned int)items, (unsigned int)message->Addresses);
    LOG_END
+
 
    registrar->HandleResolutionCount++;
 
@@ -1851,7 +1859,7 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
                        &message->Handle,
                        (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
                        &poolElementNodes,
-                       min(HANDLERESOLUTION_MAX_HANDLE_RESOLUTION_ITEMS, registrar->MaxHandleResolutionItems),
+                       items,
                        registrar->MaxIncrement);
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE1
