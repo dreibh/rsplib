@@ -1671,33 +1671,36 @@ createPlots <- function(simulationDirectory, plotConfigurations)
 ACRT_Duration   <- 1
 ACRT_Difference <- 2
 ACRT_Normalized <- 3
-analyseCounterResults <- function(data, minPreSkip, minPostSkip,
+analyseCounterResults <- function(data, lowerLimit, upperLimit,
                                   segmentLength, segments,
                                   columnName,
                                   type)
 {
-#    recordedDuration <- max(data$RelTime) - min(data$RelTime)
-#    skew <- (recordedDuration - (segmentLength * segments)) / 2
+   lowestTimeStamp  <- min(data$RelTime)
+   highestTimeStamp <- max(data$RelTime)
+   resultsSet       <- c()
 
-   timeLow    <- min(data$RelTime) + minPreSkip
-   timeHigh   <- max(data$RelTime) - minPostSkip
-   resultsSet <- c()
-
-   cat("Take from: ", timeLow, "\n")
-   cat("Take to:   ", timeHigh, "\n")
+   cat("Take from: ", lowerLimit, "\n")
+   cat("Take to:   ", upperLimit, "\n")
    cat("Duration:  ", segmentLength * segments, "\n")
 
+   if(lowestTimeStamp > lowerLimit) {
+      stop(paste(sep="", "ERROR: Data set underflow - to data before t=", lowerLimit, "!\n"))
+   }
+   if(highestTimeStamp < upperLimit) {
+      stop(paste(sep="", "ERROR: Data set underflow - to data after t=", highestTimeStamp, "!\n"))
+   }
 
    # ------ Cut off edges ---------------------------------------------------
-   if(timeHigh - (segmentLength * segments) < timeLow) {
+   if(upperLimit - (segmentLength * segments) < lowerLimit) {
       stop(paste(sep="", "ERROR: Data set is too short for ",
-                 columnName , "; ", timeHigh - (segmentLength * segments), "s more required!"))
+                 columnName , "; ", ceiling(lowerLimit - (upperLimit - (segmentLength * segments))), "s more required!"))
    }
 
    # ------ Fetch segments --------------------------------------------------
    for(i in 1:segments) {
-      start <- timeLow + ((i - 1) * segmentLength)
-      end   <- timeLow + (i * segmentLength)
+      start <- lowerLimit + ((i - 1) * segmentLength)
+      end   <- lowerLimit + (i * segmentLength)
       subData <- subset(data,
                         (data$RelTime >= start) &
                         (data$RelTime < end))
