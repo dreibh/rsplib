@@ -342,7 +342,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
 
-      poolElementNodes = min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS);
+      poolElementNodes = max(1, min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS));
       hresResult = asapInstanceHandleResolution(
                       gAsapInstance,
                       &myPoolHandle,

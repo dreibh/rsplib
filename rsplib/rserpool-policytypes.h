@@ -28,24 +28,27 @@
 
 #define PPT_UNDEFINED                                 0x00000000
 
-#define PPT_ROUNDROBIN                                0x01000000
-#define PPT_WEIGHTED_ROUNDROBIN                       0x02000000
-#define PPT_RANDOM                                    0x03000000
-#define PPT_WEIGHTED_RANDOM                           0x04000000
 
-#define PPT_LEASTUSED                                 0x05000000
-#define PPT_LEASTUSED_DEGRADATION                     0x06000000
-#define PPT_RANDOMIZED_LEASTUSED                      0x07000000
-#define PPT_RANDOMIZED_LEASTUSED_DEGRADATION          0x08000000
+#define PPT_ROUNDROBIN                                0x00000001
+#define PPT_WEIGHTED_ROUNDROBIN                       0x00000002
+#define PPT_RANDOM                                    0x00000003
+#define PPT_WEIGHTED_RANDOM                           0x00000004
+#define PPT_PRIORITY                                  0x00000005
 
-#define PPT_PRIORITY_LEASTUSED                        0x09000000
-#define PPT_PRIORITY_LEASTUSED_DEGRADATION            0x0a000000
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0x0b000000
-#define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0x0c000000
+#define PPT_LEASTUSED                                 0x40000001
+#define PPT_LEASTUSED_DEGRADATION                     0x40000002
+#define PPT_PRIORITY_LEASTUSED                        0x40000003
+#define PPT_RANDOMIZED_LEASTUSED                      0x40000004
 
-#define PPT_WEIGHTED_RANDOM_DPF                       0x20000000
-#define PPT_LEASTUSED_DPF                             0x21000000
-#define PPT_LEASTUSED_DEGRADATION_DPF                 0x22000000
+
+#define PPT_RANDOMIZED_PRIORITY_LEASTUSED             0xb0001001
+#define PPT_RANDOMIZED_LEASTUSED_DEGRADATION          0xb0001002
+#define PPT_PRIORITY_LEASTUSED_DEGRADATION            0xb0001003
+#define PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION 0xb0001004
+
+#define PPT_WEIGHTED_RANDOM_DPF                       0xb0002001
+#define PPT_LEASTUSED_DPF                             0xb0002002
+#define PPT_LEASTUSED_DEGRADATION_DPF                 0xb0002003
 
 
 #define PPT_IS_ADAPTIVE(p) \

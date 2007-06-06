@@ -162,6 +162,9 @@ int main(int argc, char** argv)
          else if(sscanf((const char*)&argv[i][8], "WeightedRoundRobin:%u", &loadInfo.rli_weight) == 1) {
             loadInfo.rli_policy = PPT_WEIGHTED_ROUNDROBIN;
          }
+         else if(sscanf((const char*)&argv[i][8], "Priority:%u", &loadInfo.rli_weight) == 1) {
+            loadInfo.rli_policy = PPT_PRIORITY;
+         }
          else if(sscanf((const char*)&argv[i][8], "WeightedRandom:%u", &loadInfo.rli_weight) == 1) {
             loadInfo.rli_policy = PPT_WEIGHTED_RANDOM;
          }

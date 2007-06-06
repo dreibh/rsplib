@@ -294,6 +294,7 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
    size_t                                                            tlvPosition = 0;
    struct rserpool_policy_roundrobin*                                rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
+   struct rserpool_policy_priority*                                  p;
    struct rserpool_policy_leastused*                                 lu;
    struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
@@ -359,6 +360,14 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           }
           wrr->pp_wrr_policy = htonl(poolPolicySettings->PolicyType);
           wrr->pp_wrr_weight = htonl(poolPolicySettings->Weight);
+       break;
+      case PPT_PRIORITY:
+          p = (struct rserpool_policy_priority*)getSpace(message, sizeof(struct rserpool_policy_priority));
+          if(p == NULL) {
+             return(false);
+          }
+          p->pp_p_policy   = htonl(poolPolicySettings->PolicyType);
+          p->pp_p_priority = htonl(poolPolicySettings->Weight);
        break;
       case PPT_LEASTUSED:
           lu = (struct rserpool_policy_leastused*)getSpace(message, sizeof(struct rserpool_policy_leastused));

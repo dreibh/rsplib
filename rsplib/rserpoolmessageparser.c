@@ -503,8 +503,9 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
 static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                                 struct PoolPolicySettings* poolPolicySettings)
 {
-   struct rserpool_policy_roundrobin*                                rr;
+   const struct rserpool_policy_roundrobin*                                rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
+   struct rserpool_policy_priority*                                  p;
    struct rserpool_policy_leastused*                                 lu;
    struct rserpool_policy_leastused_dpf*                             ludpf;
    struct rserpool_policy_leastused_degradation*                     lud;
@@ -797,6 +798,28 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          else {
             LOG_WARNING
             fputs("WRR TLV too short\n", stdlog);
+            LOG_END
+            message->Error = RSPERR_INVALID_VALUES;
+            return(false);
+         }
+       break;
+      case PPT_PRIORITY:
+         if(tlvLength >= sizeof(struct rserpool_policy_priority)) {
+            p = (struct rserpool_policy_priority*)getSpace(message, sizeof(struct rserpool_policy_priority));
+            if(p == NULL) {
+               message->Error = RSPERR_INVALID_VALUES;
+               return(false);
+            }
+            poolPolicySettings->PolicyType = ntohl(p->pp_p_policy);
+            poolPolicySettings->Weight     = ntohl(p->pp_p_priority);
+            poolPolicySettings->Load       = 0;
+            LOG_VERBOSE3
+            fprintf(stdlog, "Scanned policy PRI, priority=%u\n",poolPolicySettings->Weight);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fputs("PRI TLV too short\n", stdlog);
             LOG_END
             message->Error = RSPERR_INVALID_VALUES;
             return(false);

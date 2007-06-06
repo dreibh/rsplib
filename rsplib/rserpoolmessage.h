@@ -8,7 +8,7 @@
  *
  * Acknowledgement
  * This work was partially funded by the Bundesministerium fr Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (F�derkennzeichen 01AK045).
+ * Forschung (BMBF) of the Federal Republic of Germany (Förderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -99,27 +99,27 @@ struct rserpool_tlv_header
 };
 
 
-#define ATT_ACTION_MASK                0xc0
-#define ATT_ACTION_STOP                0x00
-#define ATT_ACTION_STOP_AND_REPORT     0x40
-#define ATT_ACTION_CONTINUE            0x80
-#define ATT_ACTION_CONTINUE_AND_REPORT 0xc0
+#define ATT_ACTION_MASK                0xc000
+#define ATT_ACTION_STOP                0x0000
+#define ATT_ACTION_STOP_AND_REPORT     0x4000
+#define ATT_ACTION_CONTINUE            0x8000
+#define ATT_ACTION_CONTINUE_AND_REPORT 0xc000
 #define PURE_ATT_TYPE(type)            (type & (~ATT_ACTION_MASK))
 
-#define ATT_IPv4_ADDRESS               0x01
-#define ATT_IPv6_ADDRESS               0x02
-#define ATT_SCTP_TRANSPORT             0x03
-#define ATT_TCP_TRANSPORT              0x04
-#define ATT_UDP_TRANSPORT              0x05
-#define ATT_POOL_POLICY                0x06
-#define ATT_POOL_HANDLE                0x07
-#define ATT_POOL_ELEMENT               0x08
-#define ATT_SERVER_INFORMATION         0x09
-#define ATT_OPERATION_ERROR            0x0a
-#define ATT_COOKIE                     0x0b
-#define ATT_POOL_ELEMENT_IDENTIFIER    0x0c
-#define ATT_POOL_ELEMENT_CHECKSUM      0x0d
-#define ATT_HANDLE_RESOLUTION          0x3f   /* Custom */
+#define ATT_IPv4_ADDRESS               0x0001
+#define ATT_IPv6_ADDRESS               0x0002
+#define ATT_SCTP_TRANSPORT             0x0003
+#define ATT_TCP_TRANSPORT              0x0004
+#define ATT_UDP_TRANSPORT              0x0005
+#define ATT_POOL_POLICY                0x0006
+#define ATT_POOL_HANDLE                0x0007
+#define ATT_POOL_ELEMENT               0x0008
+#define ATT_SERVER_INFORMATION         0x0009
+#define ATT_OPERATION_ERROR            0x000a
+#define ATT_COOKIE                     0x000b
+#define ATT_POOL_ELEMENT_IDENTIFIER    0x000c
+#define ATT_POOL_ELEMENT_CHECKSUM      0x000d
+#define ATT_HANDLE_RESOLUTION          0x003f   /* Custom */
 
 struct rserpool_poolelementparameter
 {
@@ -160,6 +160,12 @@ struct rserpool_policy_weighted_roundrobin
 {
    uint32_t pp_wrr_policy;
    uint32_t pp_wrr_weight;
+};
+
+struct rserpool_policy_priority
+{
+   uint32_t pp_p_policy;
+   uint32_t pp_p_priority;
 };
 
 struct rserpool_policy_leastused
