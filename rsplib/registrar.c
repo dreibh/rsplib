@@ -3810,7 +3810,7 @@ int main(int argc, char** argv)
       asapSendAnnounces = true;
    }
    if(!strcmp(enrpMulticastAddressParameter, "auto")) {
-      enrpMulticastAddressParameter = "239.0.0.1:3864";
+      enrpMulticastAddressParameter = "239.0.0.1:9901";
       enrpAnnounceViaMulticast = true;
    }
    getSocketPair(asapUnicastAddressParameter, asapUnicastAddress, &asapUnicastSocket,

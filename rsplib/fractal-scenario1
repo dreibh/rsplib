@@ -32,12 +32,12 @@ startNetwork ()
 
    optPeers=""
    for peer in $PR_ALL ; do
-      optPeers="$optPeers -peer=$peer:3864"
+      optPeers="$optPeers -peer=$peer:9901"
    done
    number=1
    for pr in $localPRs ; do
       echo "Starting PR on $pr ..."
-      ./start-process "Registrar-$number" "./rootshell ./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:3864 $optPeers $OPT_CSP >$TESTID-pr$number-$pr.log 2>&1" $pr &
+      ./start-process "Registrar-$number" "./rootshell ./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers $OPT_CSP >$TESTID-pr$number-$pr.log 2>&1" $pr &
       let number=$number+1
    done
 

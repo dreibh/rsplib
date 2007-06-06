@@ -56,10 +56,10 @@ extern "C" {
 
 
 #define PORT_ASAP 3863
-#define PORT_ENRP 3864
+#define PORT_ENRP 9901  /* old value: 3864 */
 
-#define PPID_ASAP 11 /* old value: 0xFAEEB5D1 */
-#define PPID_ENRP 12 /* old value: 0xFAEEB5D2 */
+#define PPID_ASAP 11    /* old value: 0xFAEEB5D1 */
+#define PPID_ENRP 12    /* old value: 0xFAEEB5D2 */
 
 
 #define AHT_ASAP_MODIFIER              0xaa00
