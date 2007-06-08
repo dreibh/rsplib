@@ -34,15 +34,15 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PUs", "ReregistrationRatePerPEandSecond",
-        "PEs", "InterHResTime", "ReregInterval"),
+        "PEs", "InterHResTime", "MaxHResItems"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PUs", "HandleResolutionRatePerPEandSecond",
-        "PEs", "InterHResTime", "ReregInterval"),
+        "PEs", "InterHResTime", "MaxHResItems"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Provider's Perspective", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
-        "PEs", "InterHResTime", "ReregInterval")
+        "PEs", "InterHResTime", "MaxHResItems")
 )
 
 

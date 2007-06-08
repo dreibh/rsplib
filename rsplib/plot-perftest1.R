@@ -4,7 +4,7 @@
 # Revision:    $Id$
 # ###########################################################################
 
-source("plotter.R")
+source("perftest-version1.R")
 
 # ------ Plotter Settings ---------------------------------------------------
 measurementDirectory  <- "P01"
