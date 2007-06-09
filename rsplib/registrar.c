@@ -155,6 +155,7 @@ struct Registrar
    unsigned long long                         HandleResolutionCount;
    unsigned long long                         FailureReportCount;
    unsigned long long                         SynchronizationCount;
+   unsigned long long                         UpdateCount;
 
 #ifdef ENABLE_CSP
    struct CSPReporter                         CSPReporter;
@@ -364,6 +365,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->HandleResolutionCount = 0;
       registrar->FailureReportCount    = 0;
       registrar->SynchronizationCount  = 0;
+      registrar->UpdateCount           = 0;
 
       autoCloseTimeout = (registrar->AutoCloseTimeout / 1000000);
       if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
@@ -609,7 +611,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    unsigned long long       uptime;
 
    if(registrar->StatsLine == 0) {
-      fputs("AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations\n",
+      fputs("AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n",
             registrar->StatsFile);
       registrar->StatsLine      = 1;
       registrar->StatsStartTime = now;
@@ -629,7 +631,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
 #endif
 
    fprintf(registrar->StatsFile,
-           "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu\n",
+           "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu %llu\n",
            registrar->StatsLine++,
            now / 1000000.0,
            (now - registrar->StatsStartTime) / 1000000.0,
@@ -643,7 +645,8 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
            registrar->DeregistrationCount,
            registrar->HandleResolutionCount,
            registrar->FailureReportCount,
-           registrar->SynchronizationCount);
+           registrar->SynchronizationCount,
+           registrar->UpdateCount);
    fflush(registrar->StatsFile);
 
    timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
@@ -2044,6 +2047,8 @@ static void handleHandleUpdate(struct Registrar*       registrar,
       LOG_END
       return;
    }
+
+   registrar->UpdateCount++;
 
    LOG_VERBOSE
    fputs("Got HandleUpdate for ", stdlog);
