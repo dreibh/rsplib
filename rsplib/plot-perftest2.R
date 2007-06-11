@@ -4,7 +4,7 @@
 # Revision:    $Id$
 # ###########################################################################
 
-source("perftest-version1.R")
+source("perftest-version2.R")
 
 # ------ Plotter Settings ---------------------------------------------------
 measurementDirectory  <- "P02"
@@ -21,6 +21,8 @@ plotConfidence        <- 0.95
 # ###########################################################################
 
 # ------ Plots --------------------------------------------------------------
+filterRule <- "data1$MaxHResItems == 1"
+
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
    # list(measurementDirectory, "output.pdf",
@@ -28,21 +30,20 @@ plotConfigurations <- list(
    #      list(xAxisTicks) or NA, list(yAxisTicks) or NA, list(legendPos) or NA,
    #      "x-Axis Variable", "y-Axis Variable",
    #      "z-Axis Variable", "v-Axis Variable", "w-Axis Variable",
-   #      "a-Axis Variable", "b-Axis Variable", "p-Axis Variable")
+   #      "a-Axis Variable", "b-Axis Variable", "p-Axis Variable",
+   #      "(data1$XY == xy) && (data1$YZ = yz)")
    # ------------------------------------------------------------------------
 
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
-        "Provider's Perspective", NA, NA, list(1,1),
-        "PUs", "ReregistrationRatePerPEandSecond",
-        "PEs", "InterHResTime", "MaxHResItems"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
-        "Provider's Perspective", NA, NA, list(1,1),
-        "PUs", "HandleResolutionRatePerPEandSecond",
-        "PEs", "InterHResTime", "MaxHResItems"),
+        "Provider's Perspective", NA, NA, list(0,1),
+        "PUs", "HandleResolutionRatePerPUandSecond",
+        "PEs", "InterHResTime", "MaxHResItems",
+        "", "", "", filterRule),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Provider's Perspective", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
-        "PEs", "InterHResTime", "MaxHResItems")
+        "PEs", "InterHResTime", "MaxHResItems",
+        "", "", "", filterRule)
 )
 
 

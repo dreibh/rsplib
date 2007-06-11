@@ -1449,7 +1449,9 @@ loadResults <- function(name, customFilter="", quiet=FALSE)
 # clause. It may use the variables data1 (containing the first results vector),
 # data2 (containing the second), etc. in order to return any calculated result
 # line. If manipulator is NA, the function returns the requested table column.
-applyManipulator <- function(manipulator, inputDataTable, columnName)
+# filter is a string giving an expression for subset(). The resulting vector
+# is subsetted using this filter expression.
+applyManipulator <- function(manipulator, inputDataTable, columnName, filter)
 {
    data1  <- unlist(inputDataTable[1], recursive=FALSE)
    data2  <- unlist(inputDataTable[2], recursive=FALSE)
@@ -1462,10 +1464,15 @@ applyManipulator <- function(manipulator, inputDataTable, columnName)
    data9  <- unlist(inputDataTable[9], recursive=FALSE)
    data10 <- unlist(inputDataTable[10], recursive=FALSE)
 
+   result <- c()
    if(is.na(manipulator)) {
-      return(eval(parse(text=paste(sep="", "data1$", columnName))))
+      result <- eval(parse(text=paste(sep="", "data1$", columnName)))
    }
-   return(eval(parse(text=manipulator)))
+   else {
+      result <- eval(parse(text=manipulator))
+   }
+   result <- subset(result, eval(filter))
+   return(result)
 }
 
 
@@ -1507,6 +1514,7 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       aColumn <- "" ; aSet <- c() ; aTitle <- "A-Axis"
       bColumn <- "" ; bSet <- c() ; bTitle <- "B-Axis"
       pColumn <- "" ; pSet <- c() ; pTitle <- "P-Axis"
+      filter <- TRUE
       if(configLength >= 9) {
          zColumn <- as.character(plotConfiguration[9])
       }
@@ -1524,6 +1532,9 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       }
       if(configLength >= 14) {
          pColumn <- as.character(plotConfiguration[14])
+      }
+      if(configLength >= 15) {
+         filter <- parse(text=as.character(plotConfiguration[15]))
       }
 
       # ------ Get titles and manipulators ----------------------------------
@@ -1577,41 +1588,41 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       cat(sep="", "* Plotting ", yColumn, " with:\n")
 
       cat(sep="", "  + xSet = ", xColumn, "   ")
-      xSet <- applyManipulator(xManipulator, data, xColumn)
+      xSet <- applyManipulator(xManipulator, data, xColumn, filter)
       cat(sep="", "(", length(xSet), " lines)\n")
 
       cat(sep="", "  + ySet = ", yColumn, "   ")
-      ySet <- applyManipulator(yManipulator, data, yColumn)
+      ySet <- applyManipulator(yManipulator, data, yColumn, filter)
       cat(sep="", "(", length(ySet), " lines)\n")
 
       if(zColumn != "") {
          cat(sep="", "  + zSet = ", zColumn, "   ")
-         zSet <- applyManipulator(zManipulator, data, zColumn)
+         zSet <- applyManipulator(zManipulator, data, zColumn, filter)
          cat(sep="", "(", length(zSet), " lines)\n")
       }
       if(vColumn != "") {
          cat(sep="", "  + vSet = ", vColumn, "   ")
-         vSet <- applyManipulator(vManipulator, data, vColumn)
+         vSet <- applyManipulator(vManipulator, data, vColumn, filter)
          cat(sep="", "(", length(vSet), " lines)\n")
       }
       if(wColumn != "") {
          cat(sep="", "  + wSet = ", wColumn, "   ")
-         wSet <- applyManipulator(wManipulator, data, wColumn)
+         wSet <- applyManipulator(wManipulator, data, wColumn, filter)
          cat(sep="", "(", length(wSet), " lines)\n")
       }
       if(aColumn != "") {
          cat(sep="", "  + aSet = ", aColumn, "   ")
          aSet <- applyManipulator(aManipulator, data, aColumn)
-         cat(sep="", "(", length(aSet), " lines)\n")
+         cat(sep="", "(", length(aSet), " lines)\n", filter)
       }
       if(bColumn != "") {
          cat(sep="", "  + bSet = ", bColumn, "   ")
          bSet <- applyManipulator(bManipulator, data, bColumn)
-         cat(sep="", "(", length(bSet), " lines)\n")
+         cat(sep="", "(", length(bSet), " lines)\n", filter)
       }
       if(pColumn != "") {
          cat(sep="", "  + pSet = ", pColumn, "   ")
-         pSet <- applyManipulator(pManipulator, data, pColumn)
+         pSet <- applyManipulator(pManipulator, data, pColumn, filter)
          cat(sep="", "(", length(pSet), " lines)\n")
       }
       checkSets(data, xSet, ySet, zSet, vSet, wSet, aSet, bSet, pSet, data$ValueNo)
