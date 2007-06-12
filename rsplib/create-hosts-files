@@ -109,5 +109,5 @@ echo "Testing *all* nodes sequentially. This will take a long time ..."
 . ./planetlab-config
 IN_HOSTS="`cat all-planetlab.hosts`"
 OUT_HOSTS=good-planetlab.hosts
-let SERVER_TEST_TIMEOUT=20*$SERVER_TEST_TIMEOUT
+let SERVER_TEST_TIMEOUT=32*$SERVER_TEST_TIMEOUT
 get-all-good-hosts

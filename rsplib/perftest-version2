@@ -44,7 +44,7 @@ POOLHANDLE="EchoPool"
 
 
 HOST_PR_LIST="132.252.151.157 132.252.151.178"
-HOST_PE_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
+HOST_PE_LIST="132.252.152.70 132.252.152.71" # 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
 HOST_PU_LIST="$HOST_PE_LIST"
 OPT_CSP="-cspserver=132.252.151.157:2960 -cspinterval=333"
 
@@ -335,12 +335,13 @@ UPTIME_SHUTDOWN=$(get_uptime)
 
 
 # ====== Get results ========================================================
-# for HOST in $HOST_PU_LIST ; do
-#    fetchfile $HOST "TestPU-*.data" "$PREFIX/" &
-# done
-# wait
-for HOST in $HOST_PR_LIST ; do
-   fetchfile $HOST "TestPR-*.data" "$PREFIX/" &
+CHOOSE_HOST_LIST="$HOST_PR_LIST"
+echo "   + `date`: Fetching PR results ..."
+CHOOSE_HOST_LAST=0
+i=1 ; while [ $i -le $PRs ] ; do
+   choose_host
+   fetchfile $CHOOSE_HOST "TestPR-$i.data" "$PREFIX/" &
+   let i=$i+1
 done
 wait
 
@@ -350,3 +351,4 @@ echo "1 $UPTIME_STARTUP $UPTIME_MSTART $UPTIME_MEND $UPTIME_SHUTDOWN" >>$PREFIX/
 
 
 $SHUTDOWN_DELAY
+echo "   + `date`: Done!"

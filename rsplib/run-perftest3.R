@@ -14,7 +14,7 @@ segmentLength    <- 30
 segments         <- 2
 
 PRsSet           <- c(2)
-PEsSet           <- c(5, 25)
+PEsSet           <- c(5, 25, 50)
 PUsSet           <- c(5)
 puToPERatioSet   <- c(0)
 reregIntervalSet <- c(1000)
