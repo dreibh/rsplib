@@ -4,7 +4,7 @@
 #
 #           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 # ###########################################################################
-# $Id: plotter.R 1625 2007-05-18 14:10:37Z dreibh $
+# $Id: plotter.R 33 2007-06-13 11:45:32Z dreibh $
 
 
 # Get array of gray tones (equivalent of rainbow() for b/w laser printing)
@@ -1514,7 +1514,7 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       aColumn <- "" ; aSet <- c() ; aTitle <- "A-Axis"
       bColumn <- "" ; bSet <- c() ; bTitle <- "B-Axis"
       pColumn <- "" ; pSet <- c() ; pTitle <- "P-Axis"
-      filter <- TRUE
+      filter <- parse(text="TRUE")
       if(configLength >= 9) {
          zColumn <- as.character(plotConfiguration[9])
       }
@@ -1612,13 +1612,13 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       }
       if(aColumn != "") {
          cat(sep="", "  + aSet = ", aColumn, "   ")
-         aSet <- applyManipulator(aManipulator, data, aColumn)
-         cat(sep="", "(", length(aSet), " lines)\n", filter)
+         aSet <- applyManipulator(aManipulator, data, aColumn, filter)
+         cat(sep="", "(", length(aSet), " lines)\n")
       }
       if(bColumn != "") {
          cat(sep="", "  + bSet = ", bColumn, "   ")
-         bSet <- applyManipulator(bManipulator, data, bColumn)
-         cat(sep="", "(", length(bSet), " lines)\n", filter)
+         bSet <- applyManipulator(bManipulator, data, bColumn, filter)
+         cat(sep="", "(", length(bSet), " lines)\n")
       }
       if(pColumn != "") {
          cat(sep="", "  + pSet = ", pColumn, "   ")
