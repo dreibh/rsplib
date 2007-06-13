@@ -43,7 +43,7 @@ SHUTDOWN_DELAY="sleep 60"
 POOLHANDLE="EchoPool"
 
 
-HOST_PR_LIST="132.252.151.157 132.252.151.178"
+HOST_PR_LIST="132.252.151.178 132.252.151.157"   # 2. Host wird primärer PR!
 HOST_PE_LIST="132.252.152.70 132.252.152.71 132.252.152.72 132.252.152.73 132.252.152.74 132.252.152.75 132.252.152.76 132.252.152.77 132.252.152.78 132.252.152.79"
 HOST_PU_LIST="$HOST_PE_LIST"
 OPT_CSP="-cspserver=132.252.151.157:2960 -cspinterval=333"
@@ -119,16 +119,18 @@ mkdir "$PREFIX"
 
 ALL_HOSTS="`( for HOST in $HOST_PR_LIST $HOST_PE_LIST $HOST_PU_LIST ; do
                  echo $HOST
-              done ) | sort -u`"
+              done ) | sort -u | xargs echo`"
 OPT_PEERS=""
 OPT_REGISTRAR=""
 OPT_PR_ASAP_PORT=4000
 OPT_PR_ENRP_PORT=5000
 CHOOSE_HOST_LIST="$HOST_PR_LIST"
+CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PRs ] ; do
    let asapPort=$OPT_PR_ASAP_PORT+i
    let enrpPort=$OPT_PR_ENRP_PORT+i
    choose_host
+echo "C=$CHOOSE_HOST"
    OPT_PEERS="$OPT_PEERS -peer=$CHOOSE_HOST:$enrpPort"
    if [ $i -eq 1 ] ; then
       OPT_REGISTRAR="-registrar=$CHOOSE_HOST:$asapPort"
@@ -180,18 +182,19 @@ UPTIME_STARTUP=$(get_uptime)
 
 # ------ Start PR -----------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PR_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Starting $PRs PRs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PR-start-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PRs ] ; do
    let enrpPort=$OPT_PR_ENRP_PORT+i
    let asapPort=$OPT_PR_ASAP_PORT+i
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PR-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PR TestPR-$i start \
+      -disable-ipv6 \
       $OPT_PEERS -enrp=[0.0.0.0]:$enrpPort -asap=[0.0.0.0]:$asapPort \
-     -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-$i.data -statsinterval=250 $OPT_CSP
+      -maxhresitems=$MAXHRESITEMS -loglevel=3 -statsfile=TestPR-$i.data -statsinterval=250 $OPT_CSP
    echo $LAUNCH_DELAY >>$PREFIX/PR-start-$CHOOSE_HOST.sh
    let i=$i+1
 done
@@ -208,11 +211,11 @@ sleep 10
 
 # ------ Start PEs ----------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PE_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Starting $PEs PEs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PE-start-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
@@ -234,11 +237,11 @@ sleep 10
 
 # ------ Start PUs ----------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PU_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Starting $PUs PUs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PU-start-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
@@ -268,11 +271,11 @@ UPTIME_MEND=$(get_uptime)
 
 # ------ Stop PUs -----------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PU_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Stopping PUs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PU-stop-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i stop
@@ -290,11 +293,11 @@ wait
 
 # ------ Stop PEs -----------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PE_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Stopping PEs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PE-stop-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i stop
@@ -312,11 +315,11 @@ wait
 
 # ------ Stop PR ------------------------------------------------------------
 CHOOSE_HOST_LIST="$HOST_PR_LIST"
+CHOOSE_HOST_LAST=0
 echo "   + `date`: Stopping PRs ..."
 for HOST in $ALL_HOSTS ; do
    rm -f $PREFIX/PR-stop-$HOST.sh
 done
-CHOOSE_HOST_LAST=0
 i=1 ; while [ $i -le $PRs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PR-stop-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PR TestPR-$i stop
@@ -336,8 +339,8 @@ UPTIME_SHUTDOWN=$(get_uptime)
 
 # ====== Get results ========================================================
 CHOOSE_HOST_LIST="$HOST_PR_LIST"
-echo "   + `date`: Fetching PR results ..."
 CHOOSE_HOST_LAST=0
+echo "   + `date`: Fetching PR results ..."
 i=1 ; while [ $i -le $PRs ] ; do
    choose_host
    fetchfile $CHOOSE_HOST "TestPR-$i.data" "$PREFIX/" &

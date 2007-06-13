@@ -11,13 +11,13 @@ testName         <- "P03"
 minPreSkip       <- 30
 minPostSkip      <- 30
 segmentLength    <- 30
-segments         <- 2
+segments         <- 5
 
 PRsSet           <- c(2)
-PEsSet           <- c(5, 25, 50)
-PUsSet           <- c(5)
+PEsSet           <- c(10, 100, 500, 1000, 1500, 2000, 2500, 2750, 3000, 3250, 3500)
+PUsSet           <- c(-1)   # Calculated from puToPERatio
 puToPERatioSet   <- c(0)
-reregIntervalSet <- c(1000)
+reregIntervalSet <- c(1000, 250)
 interHResTimeSet <- c(1000)
 maxHResItemsSet  <- c(3)
 

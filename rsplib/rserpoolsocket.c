@@ -299,7 +299,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
                rserpoolSocket->PoolElement->Handle.Size,
                rspAddrInfo,
                &rserpoolSocket->PoolElement->LoadInfo,
-               (unsigned int)(rserpoolSocket->PoolElement->RegistrationLife / 1000ULL),
+               rserpoolSocket->PoolElement->RegistrationLife,
                flags);
    if(result == RSPERR_OKAY) {
       rserpoolSocket->PoolElement->Identifier = rspAddrInfo->ai_pe_id;
