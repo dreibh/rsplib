@@ -3,7 +3,7 @@ PLANETLAB_USER=due_test
 PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planetlab2.unineuchatel.ch" "freedom.informatik.rwth-aachen.de" "planet-lab-1.csse.monash.edu.au" "planet5.cs.huji.ac.il"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate"
 
-DISTNAME="rsplib-2.2.0"
+DISTNAME="rsplib-2.2.1"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--enable-csp"
 DISTPRGS="registrar server calcappclient hsdump rootshell"

@@ -32,13 +32,10 @@ plotConfigurations <- list(
    # ------------------------------------------------------------------------
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,0),
+        "Pool Element's Perspective", NA, NA, list(0,0),
         "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval"),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,1),
-        "PEs", "HandleResolutionRatePerPEandSecond", "ReregInterval"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Provider's Perspective", NA, list(seq(0, 100, 20)), list(0,1),
+        "Registrar's Perspective", NA, list(seq(0, 100, 20)), list(0,1),
         "PEs", "CPUUtilization", "ReregInterval")
 )
 

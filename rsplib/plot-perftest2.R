@@ -35,12 +35,12 @@ plotConfigurations <- list(
    # ------------------------------------------------------------------------
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,1),
+        "Pool User's Perspective", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
         "PEs", "InterHResTime", "MaxHResItems",
         "", "", "", filterRule),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Provider's Perspective", NA, NA, list(0,1),
+        "Registrar's Perspective", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
         "PEs", "InterHResTime", "MaxHResItems",
         "", "", "", filterRule)

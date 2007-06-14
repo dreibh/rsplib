@@ -286,9 +286,9 @@ plotstd3 <- function(mainTitle,
       grid(20, 20, lty=1)
       box(col=frameColor)
       xLabel <- getVariable(xTitle)
-      if(getAbbreviation(xTitle) != getVariable(xTitle)) {
-         xLabel <- paste(sep="", xLabel, " ", getAbbreviation(xTitle), "")
-      }
+      # if(getAbbreviation(xTitle) != getVariable(xTitle)) {
+      #    xLabel <- paste(sep="", xLabel, " ", getAbbreviation(xTitle), "")
+      # }
       if(getUnit(xTitle) != "") {
          xLabel <- paste(sep="", xLabel, " [", getUnit(xTitle), "]")
       }
