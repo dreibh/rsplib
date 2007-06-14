@@ -175,7 +175,7 @@ int main(int argc, char** argv)
          memcpy(&ping->Data, str, dataLength);
 
          sent = rsp_sendmsg(sd, (char*)ping, sizeof(struct Ping) + dataLength, 0,
-                            0, htonl(PPID_PPP), 0, 0, 0);
+                            0, htonl(PPID_PPP), 0, 0, 0, 0);
          if(sent > 0) {
             printf("Message #%Ld sent\n", (unsigned long long)messageNo);
             messageNo++;

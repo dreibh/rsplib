@@ -472,7 +472,7 @@ bool FractalCalculationThread::sendParameterMessage()
    parameter.N             = doubleToNetwork(Master->Parameter.N);
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                      0, htonl(PPID_FGP), 0, 0, Master->SendTimeout);
+                      0, htonl(PPID_FGP), 0, 0, 0, Master->SendTimeout);
    if(sent < 0) {
       logerror("rsp_sendmsg() failed");
       return(false);

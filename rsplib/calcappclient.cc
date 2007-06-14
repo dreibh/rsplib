@@ -215,7 +215,7 @@ void sendCalcAppRequest(struct Process* process)
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, htonl(PPID_CALCAPP), 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0, 0,
                                 0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppRequest" << endl;
@@ -238,7 +238,7 @@ void sendCalcAppKeepAlive(struct Process* process)
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, htonl(PPID_CALCAPP), 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0, 0,
                                 0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAlive" << endl;
@@ -260,7 +260,7 @@ void sendCalcAppKeepAliveAck(struct Process* process)
 
    ssize_t result = rsp_sendmsg(process->RSerPoolSocketDescriptor,
                                 (void*)&message, sizeof(message), 0,
-                                0, htonl(PPID_CALCAPP), 0, 0,
+                                0, htonl(PPID_CALCAPP), 0, 0, 0,
                                 0);
    if(result <= 0) {
       cerr << "WARNING: Unable to send CalcAppKeepAliveAck" << endl;

@@ -1396,6 +1396,7 @@ int sendtoplus(int                      sockfd,
                const sctp_assoc_t       assocID,
                const uint16_t           streamID,
                const uint32_t           timeToLive,
+               const uint16_t           sctpFlags,
                const unsigned long long timeout)
 {
    union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
@@ -1413,13 +1414,13 @@ int sendtoplus(int                      sockfd,
    LOG_END
 
    setNonBlocking(sockfd);
-   if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+   if((assocID != 0) || (ppid != 0) || (streamID != 0) || (timeToLive != 0) || (sctpFlags != 0)) {
       memset(&sri, 0, sizeof(sri));
       sri.sinfo_assoc_id = assocID;
       sri.sinfo_stream   = streamID;
       sri.sinfo_ppid     = htonl(ppid);
+      sri.sinfo_flags    = sctpFlags;
       /* --- Already resetted to 0 ---
-      sri.sinfo_flags    = 0;
       sri.sinfo_ssn      = 0;
       sri.sinfo_tsn      = 0;
       sri.sinfo_context  = 0;
@@ -2320,13 +2321,13 @@ int sendabort(int sockfd, sctp_assoc_t assocID)
 {
    return(sendtoplus(sockfd, NULL, 0,
 #ifdef MSG_NOSIGNAL
-                     SCTP_ABORT|MSG_NOSIGNAL,
+                     MSG_NOSIGNAL,
 #else
-                     SCTP_ABORT,
+                     0,
 #endif
 
                      NULL, 0,
-                     0, assocID, 0, 0, 0));
+                     0, assocID, 0, 0, SCTP_ABORT, 0));
 }
 
 
@@ -2335,12 +2336,12 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID)
 {
    return(sendtoplus(sockfd, NULL, 0,
 #ifdef MSG_NOSIGNAL
-                     SCTP_EOF|MSG_NOSIGNAL,
+                     MSG_NOSIGNAL,
 #else
-                     SCTP_EOF,
+                     0,
 #endif
                      NULL, 0,
-                     0, assocID, 0, 0, 0));
+                     0, assocID, 0, 0, SCTP_EOF, 0));
 }
 
 

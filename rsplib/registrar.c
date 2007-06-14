@@ -820,7 +820,7 @@ static void sendPeerPresence(struct Registrar*             registrar,
             }
             else {
                if(rserpoolMessageSend(IPPROTO_SCTP,
-                                      sd, assocID, msgSendFlags, 0, message) == false) {
+                                      sd, assocID, msgSendFlags, 0, 0, message) == false) {
                   LOG_WARNING
                   fputs("Sending PeerPresence via unicast failed\n", stdlog);
                   LOG_END
@@ -860,7 +860,7 @@ static void sendListRequest(struct Registrar*           registrar,
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = receiverID;
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                             sd, assocID, msgSendFlags, 0, message) == false) {
+                             sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
          fputs("Sending ListRequest failed\n", stdlog);
          LOG_END
@@ -893,7 +893,7 @@ static void sendHandleTableRequest(struct Registrar*           registrar,
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = receiverID;
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                             sd, assocID, msgSendFlags, 0, message) == false) {
+                             sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
          fputs("Sending HandleTableRequest failed\n", stdlog);
          LOG_END
@@ -1013,7 +1013,7 @@ static void sendEndpointKeepAlive(struct Registrar*                 registrar,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       poolElementNode->ConnectionSocketDescriptor,
                                       poolElementNode->ConnectionAssocID,
-                                      0, 0,
+                                      0, 0, 0,
                                       message);
       }
       else {
@@ -1026,7 +1026,7 @@ static void sendEndpointKeepAlive(struct Registrar*                 registrar,
          LOG_END
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       registrar->ASAPSocket, 0,
-                                      0, 0,
+                                      0, 0, 0,
                                       message);
       }
       if(result == false) {
@@ -1301,7 +1301,7 @@ static void sendInitTakeover(struct Registrar*             registrar,
          message->Addresses     = 1;
          if(rserpoolMessageSend(IPPROTO_UDP,
                                 registrar->ENRPMulticastOutputSocket,
-                                0, 0, 0,
+                                0, 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
             fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
@@ -1321,7 +1321,7 @@ static void sendInitTakeover(struct Registrar*             registrar,
             LOG_END
             rserpoolMessageSend(IPPROTO_SCTP,
                                 registrar->ENRPUnicastSocket,
-                                0, 0, 0,
+                                0, 0, 0, 0,
                                 message);
          }
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
@@ -1358,7 +1358,7 @@ static void sendInitTakeoverAck(struct Registrar*             registrar,
               message->ReceiverID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                             sd, assocID, 0, 0, message) == false) {
+                             sd, assocID, 0, 0, 0, message) == false) {
          LOG_WARNING
          fputs("Sending InitTakeoverAck failed\n", stdlog);
          LOG_END
@@ -1409,7 +1409,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
          message->Addresses     = 1;
          if(rserpoolMessageSend(IPPROTO_UDP,
                                 registrar->ENRPMulticastOutputSocket,
-                                0, 0, 0,
+                                0, 0, 0, 0,
                                 message) == false) {
             LOG_WARNING
             fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
@@ -1430,7 +1430,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
             LOG_END
             rserpoolMessageSend(IPPROTO_SCTP,
                                 registrar->ENRPUnicastSocket,
-                                0, 0, 0,
+                                0, 0, 0, 0,
                                 message);
          }
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
@@ -1442,7 +1442,7 @@ static void sendHandleUpdate(struct Registrar*                 registrar,
       rserpoolMessageSend(IPPROTO_SCTP,
                           registrar->ENRPUnicastSocket,
                           0,
-                          MSG_SEND_TO_ALL, 0, message);
+                          MSG_SEND_TO_ALL, 0, 0, message);
 #endif
 
       rserpoolMessageDelete(message);
@@ -1703,7 +1703,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
       if(message->Error) {
          message->Flags |= AHF_REGISTRATION_REJECT;
       }
-      if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
+      if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
          LOG_WARNING
          logerror("Sending RegistrationResponse failed");
          LOG_END
@@ -1820,7 +1820,7 @@ static void handleDeregistrationRequest(struct Registrar*       registrar,
       LOG_END
    }
 
-   if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
+   if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
       LOG_WARNING
       logerror("Sending DeregistrationResponse failed");
       LOG_END
@@ -1900,7 +1900,7 @@ static void handleHandleResolutionRequest(struct Registrar*       registrar,
       LOG_END
    }
 
-   if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, message) == false) {
+   if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
       LOG_WARNING
       logerror("Sending handle resolution response failed");
       LOG_END
@@ -2549,7 +2549,7 @@ static void sendTakeoverServer(struct Registrar*             registrar,
       message->RegistrarIdentifier = targetID;
 
       if(rserpoolMessageSend((sd == registrar->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
-                             sd, assocID, msgSendFlags, 0, message) == false) {
+                             sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
          fputs("Sending TakeoverServer failed\n", stdlog);
          LOG_END
@@ -2794,7 +2794,7 @@ static void handleListRequest(struct Registrar*       registrar,
               message->SenderID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                             fd, assocID, 0, 0, response) == false) {
+                             fd, assocID, 0, 0, 0, response) == false) {
          LOG_WARNING
          fputs("Sending ListResponse failed\n", stdlog);
          LOG_END
@@ -2955,7 +2955,7 @@ static void handleHandleTableRequest(struct Registrar*       registrar,
               message->SenderID);
       LOG_END
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                             fd, assocID, 0, 0, response) == false) {
+                             fd, assocID, 0, 0, 0, response) == false) {
          LOG_WARNING
          fputs("Sending HandleTableResponse failed\n", stdlog);
          LOG_END
@@ -3265,7 +3265,7 @@ static void registrarSocketCallback(struct Dispatcher* dispatcher,
                         message->Type = EHT_ERROR;
                      }
                      rserpoolMessageSend(IPPROTO_SCTP,
-                                         fd, assocID, 0, 0, message);
+                                         fd, assocID, 0, 0, 0, message);
                   }
                }
                rserpoolMessageDelete(message);

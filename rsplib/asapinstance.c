@@ -1006,7 +1006,7 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_END
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                     asapInstance->RegistrarSocket,
-                                    0, 0, 0,
+                                    0, 0, 0, 0,
                                     message);
       }
    }
@@ -1025,7 +1025,7 @@ static void asapInstanceHandleEndpointKeepAlive(
             LOG_END
             result = rserpoolMessageSend(IPPROTO_SCTP,
                                          asapInstance->RegistrarSocket,
-                                         0, 0, 0,
+                                         0, 0, 0, 0,
                                          message);
 
             poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
@@ -1302,7 +1302,7 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
             LOG_END
             result = rserpoolMessageSend(IPPROTO_SCTP,
                                          asapInstance->RegistrarSocket,
-                                         0, 0,
+                                         0, 0, 0,
                                          asapInstance->RegistrarRequestTimeout,
                                          aitm->Request);
             if(result == false) {

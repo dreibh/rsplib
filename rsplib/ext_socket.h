@@ -2,7 +2,7 @@
  *  $Id$
  *
  * SocketAPI implementation for the sctplib.
- * Copyright (C) 1999-2007 by Thomas Dreibholz
+ * Copyright (C) 1999-2006 by Thomas Dreibholz
  *
  * Realized in co-operation between
  * - Siemens AG
@@ -56,24 +56,29 @@
 #endif
 
 
-#define SOCKETAPI_MAJOR_VERSION  1
-#define SOCKETAPI_MINOR_VERSION  9000
+#define SOCKETAPI_MAJOR_VERSION  2
+#define SOCKETAPI_MINOR_VERSION  0000
 
 
-#define MSG_UNORDERED    (1 << 31)
-#define MSG_UNBUNDLED    (1 << 30)
+/*
+   The socketapi library internally combines the
+   flags and sinfo_flags fields! Here, it is
+   ensured to define unique value.
+*/
+#define MSG_UNORDERED     MSG_DONTROUTE
+#define MSG_UNBUNDLED     MSG_CTRUNC
 #ifndef MSG_NOTIFICATION
-#define MSG_NOTIFICATION (1 << 29)
+#define MSG_NOTIFICATION  MSG_OOB
 #endif
-#define MSG_ABORT        (1 << 28)
+#define MSG_ABORT         MSG_RST
 #ifndef MSG_EOF
-#define MSG_EOF          (1 << 27)
+#define MSG_EOF           MSG_FIN
 #endif
-#define MSG_SHUTDOWN     MSG_EOF
-#define MSG_PR_SCTP_TTL  (1 << 26)
-#define MSG_ADDR_OVER    (1 << 25)
-#define MSG_SEND_TO_ALL  (1 << 24)
-#define MSG_MULTIADDRS   (1 << 23)
+#define MSG_SHUTDOWN      MSG_EOF
+#define MSG_PR_SCTP_TTL   MSG_ERRQUEUE
+#define MSG_ADDR_OVER     MSG_MORE
+#define MSG_SEND_TO_ALL   MSG_PROXY
+#define MSG_MULTIADDRS    MSG_TRUNC
 
 #define SCTP_UNORDERED    MSG_UNORDERED
 #define SCTP_UNBUNDLED    MSG_UNBUNDLED
@@ -383,6 +388,7 @@ struct sctp_assoc_value {
 extern "C" {
 #endif
 
+unsigned int socketAPIGetVersion();
 int ext_socket(int domain, int type, int protocol);
 int ext_open(const char* pathname, int flags, mode_t mode);
 int ext_creat(const char* pathname, mode_t mode);

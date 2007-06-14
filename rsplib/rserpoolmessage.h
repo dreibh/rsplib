@@ -437,14 +437,16 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message);
   * @param fd File descriptor to write packet to.
   * @param assocID Association ID.
   * @param flags Flags for sendmsg().
+  * @param sctpFlags SCTP flags.
   * @param timeout Timeout in microseconds.
   * @param message RSerPoolMessage.
   * @return true in case of success; false otherwise.
   */
 bool rserpoolMessageSend(int                      protocol,
                          int                      fd,
-                         sctp_assoc_t             assocID,
-                         int                      flags,
+                         const sctp_assoc_t       assocID,
+                         const int                flags,
+                         const uint16_t           sctpFlags,
                          const unsigned long long timeout,
                          struct RSerPoolMessage*  message);
 

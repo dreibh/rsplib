@@ -201,8 +201,9 @@ void rserpoolMessageClearBuffer(struct RSerPoolMessage* message)
 /* ###### Send RSerPoolMessage ########################################### */
 bool rserpoolMessageSend(int                      protocol,
                          int                      fd,
-                         sctp_assoc_t             assocID,
-                         int                      flags,
+                         const sctp_assoc_t       assocID,
+                         const int                flags,
+                         const uint16_t           sctpFlags,
                          const unsigned long long timeout,
                          struct RSerPoolMessage*  message)
 {
@@ -216,14 +217,14 @@ bool rserpoolMessageSend(int                      protocol,
       sent = sendtoplus(fd,
                         message->Buffer, messageLength,
 #ifdef MSG_NOSIGNAL
-                        flags|MSG_EOR|MSG_NOSIGNAL,
+                        flags|MSG_NOSIGNAL,
 #else
-                        flags|MSG_EOR,
+                        flags,
 #endif
                         message->AddressArray, message->Addresses,
                         myPPID,
                         assocID,
-                        0, 0, timeout);
+                        0, 0, sctpFlags, timeout);
       if(sent == (ssize_t)messageLength) {
          LOG_VERBOSE2
          fprintf(stdlog, "Successfully sent ASAP message: "

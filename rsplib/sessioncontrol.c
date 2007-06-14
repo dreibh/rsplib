@@ -52,7 +52,7 @@ bool sendCookieEcho(struct RSerPoolSocket* rserpoolSocket,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
-                                      0, 0,
+                                      0, 0, 0,
                                       message);
          rserpoolMessageDelete(message);
       }

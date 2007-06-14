@@ -1035,6 +1035,7 @@ ssize_t rsp_sendmsg(int                sd,
                     uint32_t           sctpPPID,
                     uint16_t           sctpStreamID,
                     uint32_t           sctpTimeToLive,
+                    uint16_t           sctpFlags,
                     int                timeout)
 {
    struct RSerPoolSocket*   rserpoolSocket;
@@ -1060,7 +1061,7 @@ ssize_t rsp_sendmsg(int                sd,
                              msg_flags,
 #endif
                              NULL, 0,
-                             ntohl(sctpPPID), session->AssocID, sctpStreamID, sctpTimeToLive,
+                             ntohl(sctpPPID), session->AssocID, sctpStreamID, sctpTimeToLive, sctpFlags,
                              (timeout >= 0) ? (1000ULL * timeout) : 0);
          if((result < 0) && (errno != EAGAIN)) {
             LOG_ACTION
@@ -1379,7 +1380,7 @@ ssize_t rsp_send(int sd, const void* buffer, size_t bufferLength, int flags)
    flags |= MSG_NOSIGNAL;
 #endif
    if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_sendmsg(sd, buffer, bufferLength, flags, 0, 0, 0, 0, -1));
+      return(rsp_sendmsg(sd, buffer, bufferLength, flags, 0, 0, 0, 0, 0, -1));
    }
    return(ext_send(rserpoolSocket->Socket, buffer, bufferLength, flags));
 }
@@ -1391,7 +1392,7 @@ ssize_t rsp_write(int fd, const char* buffer, size_t bufferLength)
    struct RSerPoolSocket* rserpoolSocket;
    GET_RSERPOOL_SOCKET(rserpoolSocket, fd);
    if(rserpoolSocket->SessionAllocationBitmap != NULL) {
-      return(rsp_sendmsg(fd, buffer, bufferLength, 0, 0, 0, 0, 0, -1));
+      return(rsp_sendmsg(fd, buffer, bufferLength, 0, 0, 0, 0, 0, 0, -1));
    }
    return(ext_write(rserpoolSocket->Socket, buffer, bufferLength));
 }
@@ -1429,7 +1430,7 @@ ssize_t rsp_send_cookie(int                  sd,
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
-                                      0,
+                                      0, 0,
                                       (1000ULL * timeout),
                                       message);
          threadSafetyUnlock(&rserpoolSocket->Mutex);

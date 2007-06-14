@@ -133,7 +133,7 @@ int main(int argc, char** argv)
       message->ReceiverID                = 0;
       message->Checksum                  = ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(&handlespace);
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                              sd, 0, 0, 0, message) == false) {
+                              sd, 0, 0, 0, 0, message) == false) {
          fputs("ERROR: Sending Presence failed\n", stderr);
          rserpoolMessageDelete(message);
          ext_close(sd);
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
       message->SenderID     = registrarID;
       message->ReceiverID   = UNDEFINED_REGISTRAR_IDENTIFIER;
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                              sd, 0, 0, 0, message) == false) {
+                              sd, 0, 0, 0, 0, message) == false) {
          fputs("ERROR: Sending ListRequest failed\n", stderr);
          rserpoolMessageDelete(message);
          ext_close(sd);
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
       message->SenderID     = registrarID;
       message->ReceiverID   = UNDEFINED_REGISTRAR_IDENTIFIER;
       if(rserpoolMessageSend(IPPROTO_SCTP,
-                              sd, 0, 0, 0, message) == false) {
+                              sd, 0, 0, 0, 0, message) == false) {
          fputs("ERROR: Sending HandleTableRequest failed\n", stderr);
          rserpoolMessageDelete(message);
          ext_close(sd);

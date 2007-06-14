@@ -494,6 +494,7 @@ int rsp_forcefailover(int sd);
   * @param sctpPPID SCTP payload protocol identifier.
   * @param sctpStreamID SCTP stream ID.
   * @param sctpTimeToLive SCTP time to live (ignored, if Pr-SCTP is not available).
+  * @param sctpFlags SCTP flags.
   * @param timeout Timeout in milliseconds; -1 for infinite.
   * @return length of the sent data in case of success; -1 in case of an error.
   */
@@ -505,6 +506,7 @@ ssize_t rsp_sendmsg(int                sd,
                     uint32_t           sctpPPID,
                     uint16_t           sctpStreamID,
                     uint32_t           sctpTimeToLive,
+                    uint16_t           sctpFlags,
                     int                timeout);
 
 /**

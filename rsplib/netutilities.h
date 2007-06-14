@@ -316,6 +316,7 @@ int connectplus(int                   sockfd,
   * @param assocID SCTP Association ID or 0 for connection-oriented socket.
   * @param streamID SCTP Stream ID.
   * @param timeToLive SCTP Time To Live.
+  * @param sctpFlags SCTP Flags.
   * @param timeout Timeout for sending data.
   * @param Bytes sent or -1 in case of error.
   */
@@ -329,6 +330,7 @@ int sendtoplus(int                      sockfd,
                const sctp_assoc_t       assocID,
                const uint16_t           streamID,
                const uint32_t           timeToLive,
+               const uint16_t           sctpFlags,
                const unsigned long long timeout);
 
 /**

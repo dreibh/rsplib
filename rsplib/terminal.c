@@ -121,8 +121,10 @@ int main(int argc, char** argv)
                   if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                      (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
                      puts("FAILOVER...");
-                     usleep(200000);
+                     /* usleep(200000); */
                      rsp_forcefailover(sd);
+/*static int yyy=0;yyy++;
+if(yyy>=2) exit(1);*/
                   }
                }
                else {

@@ -379,7 +379,7 @@ void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
    message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
-                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppAccept");
       removeJob(job);
    }
@@ -398,7 +398,7 @@ void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t job
    message.JobID  = htonl(jobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
-                  sessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+                  sessionID, htonl(PPID_CALCAPP), 0, 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppReject");
    }
 }
@@ -428,7 +428,7 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
    message.Completed = hton64((unsigned long long)rint(job->Completed));
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
-                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppAccept");
    }
 
@@ -481,7 +481,7 @@ void CalcAppServer::sendCalcAppKeepAliveAck(CalcAppServer::CalcAppServerJob* job
    message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
-                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
       return;
@@ -501,7 +501,7 @@ void CalcAppServer::sendCalcAppKeepAlive(CalcAppServer::CalcAppServerJob* job)
    message.JobID  = htonl(job->JobID);
    if(rsp_sendmsg(RSerPoolSocketDescriptor,
                   (void*)&message, sizeof(message), 0,
-                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0) < 0) {
+                  job->SessionID, htonl(PPID_CALCAPP), 0, 0, 0, 0) < 0) {
       logerror("Unable to send CalcAppKeepAlive");
       removeJob(job);
       return;

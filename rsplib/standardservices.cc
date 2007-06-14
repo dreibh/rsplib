@@ -61,7 +61,7 @@ EventHandlingResult EchoServer::handleMessage(rserpool_session_t sessionID,
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                       buffer, bufferSize, 0,
                       sessionID, ppid, streamID,
-                      0, 0);
+                      0, 0, 0);
    return((sent == (ssize_t)bufferSize) ? EHR_Okay : EHR_Abort);
 }
 
@@ -134,10 +134,15 @@ void DaytimeServer::handleNotification(const union rserpool_notification* notifi
 
       ssize_t sent;
       sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                         (char*)&daytime, strlen(daytime), SCTP_EOF,
+                         (char*)&daytime, strlen(daytime), 0,
                          notification->rn_session_change.rsc_session,
                          0x00000000, 0,
-                         0, 0);
+                         0, 0, 0);
+      rsp_sendmsg(RSerPoolSocketDescriptor,
+                  NULL, 0, 0,
+                  notification->rn_session_change.rsc_session,
+                  0x00000000, 0,
+                  0, SCTP_EOF, 0);
    }
 }
 
@@ -173,7 +178,7 @@ EventHandlingResult CharGenServer::initializeSession()
    }
    while(rsp_sendmsg(RSerPoolSocketDescriptor,
                      (char*)&buffer, sizeof(buffer), 0,
-                     0, 0, 0, 0, 3600000000ULL) > 0) {
+                     0, 0, 0, 0, 0, 3600000000ULL) > 0) {
       puts("sent data!");
    }
 
@@ -263,7 +268,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (char*)pong, sizeof(Pong) + dataLength, 0,
-                               0, htonl(PPID_PPP), 0, 0, 0);
+                               0, htonl(PPID_PPP), 0, 0, 0, 0);
             if(sent > 0) {
                ReplyNo++;
                Replies++;
