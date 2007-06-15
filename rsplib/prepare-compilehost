@@ -49,7 +49,7 @@ for SERVER in $SERVER_LIST; do
    for i in $PLANETLAB_COMPILEPKGS ; do
       cmd="$cmd ; sudo yum -y install $i"
    done
-   cmd="sudo yum makecache ; sudo yum -y update ; sudo yum -y upgrade ; $cmd ; sudo /sbin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
+   cmd="sudo yum makecache ; sudo yum -y update ; sudo yum -y upgrade ; $cmd ; sudo /usr/bin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
    echo $cmd
 
    ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
