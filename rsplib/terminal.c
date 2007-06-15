@@ -43,6 +43,7 @@ int main(int argc, char** argv)
    struct pollfd                ufds[2];
    ssize_t                      received;
    ssize_t                      sent;
+   size_t                       failovers = 0;
    int                          result;
    int                          flags;
    int                          sd;
@@ -120,11 +121,11 @@ int main(int argc, char** argv)
                   puts("\x1b[0m");
                   if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                      (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                     puts("FAILOVER...");
-                     /* usleep(200000); */
-                     rsp_forcefailover(sd);
+                     printf("FAILOVER #%u...\n", ++failovers);
 /*static int yyy=0;yyy++;
 if(yyy>=2) exit(1);*/
+                     /* usleep(200000); */
+                     rsp_forcefailover(sd);
                   }
                }
                else {

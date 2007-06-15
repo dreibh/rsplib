@@ -143,11 +143,11 @@ if BUILD_QT_PROGRAMS
 endif
 
 if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = registrar-example poolelement-example pooluser-example
+noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest t3
+EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-route
 else
 noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example
+EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-route
 endif
 
 
@@ -214,3 +214,6 @@ cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIB
 
 # t2_SOURCES = t2.c
 # t2_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+t3_SOURCES = t3.cc
+t3_LDADD   = $(thread_LIBS)

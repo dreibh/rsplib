@@ -1463,8 +1463,7 @@ int sendtoplus(int                      sockfd,
          LOG_VERBOSE5
          fputs("Calling sctp_send() with AssocID...\n", stdlog);
          LOG_END
-         result = sctp_send(sockfd, buffer, length,
-                            &sri, flags);
+         result = sctp_send(sockfd, buffer, length, &sri, flags);
       }
    }
    else {

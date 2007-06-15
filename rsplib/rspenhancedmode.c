@@ -1065,8 +1065,8 @@ ssize_t rsp_sendmsg(int                sd,
                              (timeout >= 0) ? (1000ULL * timeout) : 0);
          if((result < 0) && (errno != EAGAIN)) {
             LOG_ACTION
-            fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u. Failover necessary\n",
-                    rserpoolSocket->Descriptor, session->SessionID);
+            fprintf(stdlog, "Session failure during send on RSerPool socket %d, session %u: %s. Failover necessary\n",
+                    rserpoolSocket->Descriptor, session->SessionID, strerror(errno));
             LOG_END
 
             /* ====== Terminate association and notify application ======= */

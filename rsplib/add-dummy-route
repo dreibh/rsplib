@@ -1,30 +1,43 @@
 #!/bin/sh
+# The rsplib Prototype -- An RSerPool Implementation.
+# Copyright (C) 2005-2007 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+#
+# $Id$
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+# Contact: rsplib-discussion@sctp.de
+#          dreibh@iem.uni-due.de
+#
 
-if [ -e /etc/init.d/shorewall ] ; then
-   /etc/init.d/shorewall stop
-fi
-if [ -e /etc/init.d/iptables ] ; then
-   /etc/init.d/iptables stop
-fi
-if [ -e /etc/init.d/ip6tables ] ; then
-   /etc/init.d/ip6tables stop
-fi
+# dummy0 abschalten
+ip link set dummy0 down
+ip addr flush dev dummy0
 
-iptables -L
-ip6tables -L
+# Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
+#          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
+ip link set dummy0 up multicast on
 
-if [ ! -e /etc/sysconfig/network-scripts/ifcfg-dummy0 ] ; then
-   echo "Manual ifconfig..."
-   ifconfig dummy0 down
-   # Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
-   #          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
-   ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 up multicast
-   ip addr add 3ffe:1:2:3:4:5:6:7/64 dev dummy0
-   # ip addr add fec0:1:2:3:4:5:6:7/64 dev dummy0
-   # ip addr add fec1:9:8:7:6:5:4:3/64 dev dummy0
-else
-   ifup dummy0
-fi
+# IPv4-Adresse und Route; Default-Metrik: 0
+ip addr add 10.255.255.1/24 dev dummy0
+ip route add metric 0xffff default via 10.255.255.2
 
-route add default gw 10.255.255.200
-route --inet6 add default gw 3ffe:1:2:3:4:5:6:7777
+# IPv6-Adresse und Route; Default-Metrik: 1024
+# ip addr add 3ffe:ab:cd:ef:123:45:67:89a/64 dev dummy0
+# ip route add metric 0xffff default via 3ffe:ab:cd:ef:aabb:ccdd:dead:beef
+
+
+# Zeige Routingtabellen
+ip -f link route

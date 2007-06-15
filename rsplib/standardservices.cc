@@ -174,12 +174,12 @@ EventHandlingResult CharGenServer::initializeSession()
    size_t        i;
 
    for(i = 0;i < sizeof(buffer);i++) {
-      buffer[i] = (unsigned char)(30 + (i % (256 - 30)));
+      buffer[i] = (unsigned char)(30 + (i % (128 - 30)));
    }
    while(rsp_sendmsg(RSerPoolSocketDescriptor,
                      (char*)&buffer, sizeof(buffer), 0,
                      0, 0, 0, 0, 0, 3600000000ULL) > 0) {
-      puts("sent data!");
+      // puts("sent data!");
    }
 
    return(EHR_Shutdown);

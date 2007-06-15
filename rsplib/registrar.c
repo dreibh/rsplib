@@ -62,7 +62,7 @@
 /* #define FAST_BREAK */
 
 
-#define MAX_NS_TRANSPORTADDRESSES                                          16
+#define MAX_PE_TRANSPORTADDRESSES                                          16
 #define MIN_ENDPOINT_ADDRESS_SCOPE                                          6
 #define RSERPOOL_MESSAGE_BUFFER_SIZE                                    65536
 #define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
@@ -268,8 +268,11 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 #endif
                                )
 {
-   struct Registrar* registrar;
-   int               autoCloseTimeout;
+   struct Registrar*       registrar;
+   int                     autoCloseTimeout;
+#ifdef SCTP_DELAYED_ACK_TIME
+   struct sctp_assoc_value sctpAssocValue;
+#endif
 
    registrar = (struct Registrar*)malloc(sizeof(struct Registrar));
    if(registrar != NULL) {
@@ -378,6 +381,23 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
          logerror("setsockopt() for SCTP_AUTOCLOSE failed");
          LOG_END
       }
+#ifdef SCTP_DELAYED_ACK_TIME
+      /* ====== Tune SACK handling ======================================= */
+      /* Without this tuning, the PE would wait 200ms to acknowledge a
+         Endpoint Unreachable. The usually immediately following
+         Handle Resolution transmission would also be delayed ... */
+      sctpAssocValue.assoc_id    = 0;
+      sctpAssocValue.assoc_value = 1;
+      if(ext_setsockopt(registrar->ASAPSocket,
+                        IPPROTO_SCTP, SCTP_DELAYED_ACK_TIME,
+                        &sctpAssocValue, sizeof(sctpAssocValue)) < 0) {
+         LOG_WARNING
+         logerror("Unable to set SCTP_DELAYED_ACK_TIME");
+         LOG_END
+      }
+#else
+#warning SCTP_DELAYED_ACK_TIME is not defined - Unable to tune SACK handling!
+#endif
 
       memcpy(&registrar->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(registrar->ASAPAnnounceAddress));
       if(registrar->ASAPAnnounceSocket >= 0) {
@@ -769,7 +789,7 @@ static void sendPeerPresence(struct Registrar*             registrar,
    struct RSerPoolMessage*       message;
    size_t                        messageLength;
    struct ST_CLASS(PeerListNode) peerListNode;
-   char                          localAddressArrayBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                          localAddressArrayBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* localAddressArray = (struct TransportAddressBlock*)&localAddressArrayBuffer;
 
    message = rserpoolMessageNew(NULL, 65536);
@@ -789,7 +809,7 @@ static void sendPeerPresence(struct Registrar*             registrar,
       if(transportAddressBlockGetAddressesFromSCTPSocket(localAddressArray,
                                                          registrar->ENRPUnicastSocket,
                                                          assocID,
-                                                         MAX_NS_TRANSPORTADDRESSES,
+                                                         MAX_PE_TRANSPORTADDRESSES,
                                                          true) > 0) {
          ST_CLASS(peerListNodeNew)(&peerListNode,
                                    registrar->ServerID,
@@ -1522,11 +1542,11 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
                                       struct RSerPoolMessage* message)
 {
 
-   char                              remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                              remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
-   char                              asapTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                              asapTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     asapTransportAddressBlock = (struct TransportAddressBlock*)&asapTransportAddressBlockBuffer;
-   char                              userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                              userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*     userTransportAddressBlock = (struct TransportAddressBlock*)&userTransportAddressBlockBuffer;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct PoolPolicySettings         updatedPolicySettings;
@@ -1546,7 +1566,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
    /* ====== Get peer addresses ========================================== */
    if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
                                                       fd, assocID,
-                                                      MAX_NS_TRANSPORTADDRESSES,
+                                                      MAX_PE_TRANSPORTADDRESSES,
                                                       false) > 0) {
       LOG_VERBOSE2
       fputs("SCTP association's valid peer addresses: ", stdlog);
@@ -1558,7 +1578,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
       if(transportAddressBlockFilter(message->PoolElementPtr->UserTransport,
                                      remoteAddressBlock,
                                      userTransportAddressBlock,
-                                     MAX_NS_TRANSPORTADDRESSES, false, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
+                                     MAX_PE_TRANSPORTADDRESSES, false, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
          LOG_VERBOSE2
          fputs("Filtered user transport addresses: ", stdlog);
          transportAddressBlockPrint(userTransportAddressBlock, stdlog);
@@ -1567,7 +1587,7 @@ static void handleRegistrationRequest(struct Registrar*       registrar,
          if(transportAddressBlockFilter(remoteAddressBlock,
                                         NULL,
                                         asapTransportAddressBlock,
-                                        MAX_NS_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
+                                        MAX_PE_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
             LOG_VERBOSE2
             fputs("Filtered ASAP transport addresses: ", stdlog);
             transportAddressBlockPrint(asapTransportAddressBlock, stdlog);
@@ -2175,9 +2195,9 @@ static void handlePeerPresence(struct Registrar*       registrar,
 {
    HandlespaceChecksumType        checksum;
    struct ST_CLASS(PeerListNode)* peerListNode;
-   char                           remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                           remoteAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*  remoteAddressBlock = (struct TransportAddressBlock*)&remoteAddressBlockBuffer;
-   char                           enrpTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                           enrpTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*  enrpTransportAddressBlock = (struct TransportAddressBlock*)&enrpTransportAddressBlockBuffer;
    int                            result;
 
@@ -2212,7 +2232,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
    else {
       if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
                                                          fd, assocID,
-                                                         MAX_NS_TRANSPORTADDRESSES,
+                                                         MAX_PE_TRANSPORTADDRESSES,
                                                          false) > 0) {
          LOG_VERBOSE3
          fputs("SCTP association's valid peer addresses: ", stdlog);
@@ -2224,7 +2244,7 @@ static void handlePeerPresence(struct Registrar*       registrar,
          if(transportAddressBlockFilter(message->PeerListNodePtr->AddressBlock,
                                         remoteAddressBlock,
                                         enrpTransportAddressBlock,
-                                        MAX_NS_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) == 0) {
+                                        MAX_PE_TRANSPORTADDRESSES, true, MIN_ENDPOINT_ADDRESS_SCOPE) == 0) {
             LOG_WARNING
             fprintf(stdlog, "PeerPresence from peer $%08x contains no usable ENRP endpoint addresses\n",
                     message->PeerListNodePtr->Identifier);
@@ -3393,13 +3413,13 @@ unsigned int registrarAddStaticPeer(
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
    int                            result;
-   char                           localAddressBlockBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                           localAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock*  localAddressBlock = (struct TransportAddressBlock*)&localAddressBlockBuffer;
 
    /* ====== Skip own address ============================================ */
    if(transportAddressBlockGetAddressesFromSCTPSocket(localAddressBlock,
                                                       registrar->ENRPUnicastSocket, 0,
-                                                      MAX_NS_TRANSPORTADDRESSES,
+                                                      MAX_PE_TRANSPORTADDRESSES,
                                                       true) > 0) {
       if(transportAddressBlockOverlapComparison(localAddressBlock, transportAddressBlock) == 0) {
          return(RSPERR_OKAY);
@@ -3424,14 +3444,14 @@ static void addPeer(struct Registrar* registrar, char* arg)
 {
    char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
-   union sockaddr_union          addressArray[MAX_NS_TRANSPORTADDRESSES];
+   union sockaddr_union          addressArray[MAX_PE_TRANSPORTADDRESSES];
    size_t                        addresses;
    char*                         address;
    char*                         idx;
 
    addresses = 0;
    address = arg;
-   while(addresses < MAX_NS_TRANSPORTADDRESSES) {
+   while(addresses < MAX_PE_TRANSPORTADDRESSES) {
       idx = strindex(address, ',');
       if(idx) {
          *idx = 0x00;
@@ -3478,7 +3498,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
                           int*                          udpSocket,
                           const bool                    useIPv6)
 {
-   union sockaddr_union        sctpAddressArray[MAX_NS_TRANSPORTADDRESSES];
+   union sockaddr_union        sctpAddressArray[MAX_PE_TRANSPORTADDRESSES];
    union sockaddr_union        groupAddress;
    union sockaddr_union        udpAddress;
    uint16_t                    localPort;
@@ -3508,7 +3528,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    }
    else {
       address = sctpAddressParameter;
-      while(sctpAddresses < MAX_NS_TRANSPORTADDRESSES) {
+      while(sctpAddresses < MAX_PE_TRANSPORTADDRESSES) {
          idx = strindex((char*)address, ',');
          if(idx) {
             *idx = 0x00;
@@ -3634,7 +3654,7 @@ int main(int argc, char** argv)
    struct Registrar*             registrar;
    uint32_t                      serverID                      = 0;
 
-   char                          asapUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                          asapUnicastAddressBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapUnicastAddress            = (struct TransportAddressBlock*)&asapUnicastAddressBuffer;
    const char*                   asapUnicastAddressParameter   = "auto";
    int                           asapUnicastSocket             = -1;
@@ -3645,7 +3665,7 @@ int main(int argc, char** argv)
    int                           asapAnnounceSocket            = -1;
    bool                          asapSendAnnounces             = false;
 
-   char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_NS_TRANSPORTADDRESSES)];
+   char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* enrpUnicastAddress            = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
    const char*                   enrpUnicastAddressParameter   = "auto";
    int                           enrpUnicastSocket             = -1;
