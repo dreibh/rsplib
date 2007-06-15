@@ -1,9 +1,33 @@
+#!/bin/bash
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+#
+# $Id: install-binaries 1435 2007-06-05 13:20:58Z dreibh $
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planetlab2.unineuchatel.ch" "freedom.informatik.rwth-aachen.de" "planet-lab-1.csse.monash.edu.au" "planet5.cs.huji.ac.il"
+PLANETLAB_COMPILEHOST="planetlab2.ucsd.edu"   # "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate"
 
-DISTNAME="rsplib-2.2.1"
+DISTNAME="rsplib-2.3"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--enable-csp"
 DISTPRGS="registrar server calcappclient hsdump rootshell"
