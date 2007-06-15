@@ -6,7 +6,7 @@
 AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.2.0)
+AM_INIT_AUTOMAKE(rsplib, 2.3)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -293,6 +293,50 @@ if test "$enable_kernel_sctp" = "no"; then
    fi
 
    AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.])
+
+   # ====== Check for glib ==================================================
+   AM_PATH_GLIB_2_0(2.0.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
+   if test "x$glib_is_okay" = "xno"; then
+      AM_PATH_GLIB(1.2.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
+   fi
+   if test "x$glib_is_okay" = "xno"; then
+      AC_MSG_ERROR(GLib distribution not found.)
+   fi
+
+   CFLAGS="$CFLAGS $GLIB_CFLAGS"
+   CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
+   glib_LIBS="$GLIB_LIBS"
+
+   # ====== Version compatibility test ======================================
+   oldLIBS=$LIBS
+   LIBS="$LIBS $socketapi_LIBS $sctplib_LIBS $glib_LIBS $thread_LIBS"
+   AC_MSG_CHECKING([socketapi library version])
+   AC_TRY_RUN([
+#include <stdio.h>
+#include "ext_socket.h"
+
+int main(int argc, char** argv)
+{
+   unsigned int version = socketAPIGetVersion();
+   printf("Version is %u.%04x\n", (version >> 16), version & 0xffff);
+   if(version >= 0x20000) {
+      return(0);
+   }
+   return(1);
+}
+], socketapi_version=good, socketapi_version=bad, socketapi_version=cross)
+
+   case $socketapi_version in
+   good)
+      ;;
+   bad|*)
+      AC_MSG_ERROR([You need at least version 2.000 of the socketapi library!])
+      ;;
+   esac
+
+   LIBS=$oldLIBS
+   # ========================================================================
+
 else
    # ====== Kernel SCTP =====================================================
    AC_CHECK_FUNCS(sctp_sendmsg, ,  AC_CHECK_LIB(sctp, sctp_sendmsg))
@@ -300,34 +344,21 @@ else
    AC_CHECK_FUNCS(sctp_send, ,     AC_CHECK_LIB(sctp, sctp_send))
    AC_CHECK_FUNCS(sctp_sendx, ,    AC_CHECK_LIB(sctp, sctp_sendx))
    AC_CHECK_MEMBER(struct sctp_paddrparams.spp_flags,
-                  AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.]),,
-                  [#ifdef HAVE_SYS_TYPES_H
-                  #include <sys/types.h>
-                  #endif
-                  #ifdef HAVE_NETINET_SCTP_H
-                  #include <netinet/sctp.h>
-                  #endif])
+                   AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.]),,
+                   [#ifdef HAVE_SYS_TYPES_H
+                   #include <sys/types.h>
+                   #endif
+                   #ifdef HAVE_NETINET_SCTP_H
+                   #include <netinet/sctp.h>
+                   #endif])
    sctplib_LIBS=""
    socketapi_LIBS=""
+   glib_LIBS=""
    CFLAGS="$CFLAGS -DHAVE_KERNEL_SCTP"
    CXXFLAGS="$CXXFLAGS -DHAVE_KERNEL_SCTP"
 fi
 AC_SUBST(sctplib_LIBS)
 AC_SUBST(socketapi_LIBS)
-
-
-# ###### Check for glib #####################################################
-AM_PATH_GLIB_2_0(2.0.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
-if test "x$glib_is_okay" = "xno"; then
-   AM_PATH_GLIB(1.2.0, [ glib_is_okay=yes ], [ glib_is_okay=no ])
-fi
-if test "x$glib_is_okay" = "xno"; then
-   AC_MSG_ERROR(GLib distribution not found.)
-fi
-
-CFLAGS="$CFLAGS $GLIB_CFLAGS"
-CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
-glib_LIBS="$GLIB_LIBS"
 AC_SUBST(glib_LIBS)
 
 

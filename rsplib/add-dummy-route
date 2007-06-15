@@ -23,8 +23,8 @@
 #
 
 # dummy0 abschalten
-ip link set dummy0 down
 ip addr flush dev dummy0
+ip link set dummy0 down
 
 # Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
 #          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
