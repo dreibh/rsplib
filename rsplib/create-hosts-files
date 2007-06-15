@@ -98,10 +98,10 @@ IN_HOSTS="`grep ".cn$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="china"
 test-hosts
 
-IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
-let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
-HOSTSFILEMIDDLE="australia"
-test-hosts
+# IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
+# let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
+# HOSTSFILEMIDDLE="australia"
+# test-hosts
 
 
 
