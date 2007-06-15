@@ -406,7 +406,7 @@ size_t transportAddressBlockGetAddressesFromSCTPSocket(
                                getPort((struct sockaddr*)&sctpAddressArray[0]),
                                0,
                                (union sockaddr_union*)&sctpAddressArray,
-                               sctpAddresses,maxAddresses);
+                               sctpAddresses, maxAddresses);
    }
    return(sctpAddresses);
 }
@@ -448,24 +448,26 @@ size_t transportAddressBlockFilter(
          }
       }
    }
-
-   if(selected > 0) {
-      filteredAddressBlock->Next      = NULL;
-      filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
-      filteredAddressBlock->Port      = originalAddressBlock->Port;
-      filteredAddressBlock->Flags     = originalAddressBlock->Flags;
-      filteredAddressBlock->Addresses = selected;
-      j = 0;
-      for(i = 0;i < originalAddressBlock->Addresses;i++) {
-         if(selectionArray[i]) {
-            memcpy(&filteredAddressBlock->AddressArray[j],
-                   (const struct sockaddr*)&originalAddressBlock->AddressArray[i],
-                   sizeof(filteredAddressBlock->AddressArray[j]));
-            j++;
-         }
-      }
+   if(selected == 0) {
+      return(0);
    }
 
-   return(selected);
+   filteredAddressBlock->Next      = NULL;
+   filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
+   filteredAddressBlock->Port      = originalAddressBlock->Port;
+   filteredAddressBlock->Flags     = originalAddressBlock->Flags;
+   filteredAddressBlock->Addresses = 0;
+   for(i = 0;i < originalAddressBlock->Addresses;i++) {
+      if(filteredAddressBlock->Addresses >= maxAddresses) {
+         break;
+      }
+      if(selectionArray[i]) {
+         memcpy(&filteredAddressBlock->AddressArray[filteredAddressBlock->Addresses],
+                  (const struct sockaddr*)&originalAddressBlock->AddressArray[i],
+                  sizeof(filteredAddressBlock->AddressArray[filteredAddressBlock->Addresses]));
+         filteredAddressBlock->Addresses++;
+      }
+   }
+   return(filteredAddressBlock->Addresses);
 }
 #endif
