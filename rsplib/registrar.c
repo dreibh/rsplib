@@ -62,7 +62,6 @@
 /* #define FAST_BREAK */
 
 
-#define MAX_PE_TRANSPORTADDRESSES                                          16
 #define MIN_ENDPOINT_ADDRESS_SCOPE                                          6
 #define RSERPOOL_MESSAGE_BUFFER_SIZE                                    65536
 #define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
