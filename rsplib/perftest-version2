@@ -22,8 +22,8 @@
 # Contact: dreibh@iem.uni-due.de
 #
 
-if [ $# -lt 9 ] ; then
-   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
+if [ $# -lt 10 ] ; then
+   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [Primary PR] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
    exit 1
 fi
 
@@ -33,10 +33,11 @@ PREFIX="$TESTNAME/$2"
 PRs="$3"
 PEs="$4"
 PUs="$5"
-REREGINTERVAL="$6"
-INTERHRESTIME="$7"
-MAXHRESITEMS="$8"
-DURATION="$9"
+PRIMARY_PR="$6"
+REREGINTERVAL="$7"
+INTERHRESTIME="$8"
+MAXHRESITEMS="$9"
+DURATION="$10"
 
 LAUNCH_DELAY=""   # sleep 0.1"
 SHUTDOWN_DELAY="sleep 60"
@@ -130,13 +131,16 @@ i=1 ; while [ $i -le $PRs ] ; do
    let asapPort=$OPT_PR_ASAP_PORT+i
    let enrpPort=$OPT_PR_ENRP_PORT+i
    choose_host
-echo "C=$CHOOSE_HOST"
    OPT_PEERS="$OPT_PEERS -peer=$CHOOSE_HOST:$enrpPort"
-   if [ $i -eq 1 ] ; then
+   if [ $i -eq $PRIMARY_PR ] ; then
       OPT_REGISTRAR="-registrar=$CHOOSE_HOST:$asapPort"
    fi
    let i=$i+1
 done
+if [ "x$OPT_REGISTRAR" = "x" ] ; then
+   echo "ERROR: Invalid number of primary PR given!"
+   exit 1
+fi
 
 
 # ====== Print information ==================================================
@@ -154,6 +158,8 @@ echo "      - MaxHResItems:  $MAXHRESITEMS"
 echo "      - Duration:      $DURATION [s]"
 echo "      - $PEs PEs, $PUs PUs"
 echo "      - $PEs PEs, $PUs PUs"
+
+exit
 
 
 # ====== Start components ===================================================
