@@ -34,9 +34,32 @@ performMeasurement <- function()
    systemTimeDiffs          <- c()
 
 
+   # ------ Create directory and hosts files --------------------------------
    dir.create(testName,showWarnings=FALSE)
 
+   prHostsFile <- paste(sep="", testName, "/PR.hosts")
+   fh <- file(prHostsFile, "w")
+   for(host in prHosts) {
+      cat(sep="", host, "\n", file=fh)
+   }
+   close(fh)
 
+   peHostsFile <- paste(sep="", testName, "/PE.hosts")
+   fh <- file(peHostsFile, "w")
+   for(host in peHosts) {
+      cat(sep="", host, "\n", file=fh)
+   }
+   close(fh)
+
+   puHostsFile <- paste(sep="", testName, "/PU.hosts")
+   fh <- file(puHostsFile, "w")
+   for(host in puHosts) {
+      cat(sep="", host, "\n", file=fh)
+   }
+   close(fh)
+
+
+   # ------ Create measurement sets -----------------------------------------
    for(PRs in PRsSet) {
    for(PEs in PEsSet) {
    for(puToPERatio in puToPERatioSet) {
@@ -199,6 +222,9 @@ perftestPlotVariables <- list(
            "100.0 * (data1$SystemTime + data1$UserTime) / data1$Runtime",
            "orange3", list("Summary")),
 
+   list("PRs",
+           "Registrars{G}[1]",
+           NA, "brown4", list("Summary")),
    list("PEs",
            "Pool Elements{e}[1]",
            NA, "brown4", list("Summary")),
