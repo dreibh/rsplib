@@ -22,8 +22,8 @@
 # Contact: dreibh@iem.uni-due.de
 #
 
-if [ $# -lt 10 ] ; then
-   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [Primary PR] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
+if [ $# -lt 11 ] ; then
+   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [PEs' Primary PR] [PUs' Primary PR] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
    exit 1
 fi
 
@@ -33,11 +33,12 @@ PREFIX="$TESTNAME/$2"
 PRs="$3"
 PEs="$4"
 PUs="$5"
-PRIMARY_PR="$6"
-REREGINTERVAL="$7"
-INTERHRESTIME="$8"
-MAXHRESITEMS="$9"
-shift ; DURATION="$9"   # $10 funktioniert nicht!!!
+PRIMARY_PE_PR="$6"
+PRIMARY_PU_PR="$7"
+REREGINTERVAL="$8"
+INTERHRESTIME="$9"
+shift ; MAXHRESITEMS="$9" # $10 funktioniert nicht!!!
+shift ; DURATION="$9"     # $11 funktioniert nicht!!!
 
 LAUNCH_DELAY=""   # sleep 0.1"
 SHUTDOWN_DELAY="sleep 60"
@@ -122,7 +123,8 @@ ALL_HOSTS="`( for HOST in $HOST_PR_LIST $HOST_PE_LIST $HOST_PU_LIST ; do
                  echo $HOST
               done ) | sort -u | xargs echo`"
 OPT_PEERS=""
-OPT_REGISTRAR=""
+OPT_PE_REGISTRAR=""
+OPT_PU_REGISTRAR=""
 OPT_PR_ASAP_PORT=4000
 OPT_PR_ENRP_PORT=5000
 CHOOSE_HOST_LIST="$HOST_PR_LIST"
@@ -132,33 +134,40 @@ i=1 ; while [ $i -le $PRs ] ; do
    let enrpPort=$OPT_PR_ENRP_PORT+i
    choose_host
    OPT_PEERS="$OPT_PEERS -peer=$CHOOSE_HOST:$enrpPort"
-   if [ $i -eq $PRIMARY_PR ] ; then
-      OPT_REGISTRAR="-registrar=$CHOOSE_HOST:$asapPort"
+   if [ $i -eq $PRIMARY_PE_PR ] ; then
+      OPT_PE_REGISTRAR="-registrar=$CHOOSE_HOST:$asapPort"
+   fi
+   if [ $i -eq $PRIMARY_PU_PR ] ; then
+      OPT_PU_REGISTRAR="-registrar=$CHOOSE_HOST:$asapPort"
    fi
    let i=$i+1
 done
-if [ "x$OPT_REGISTRAR" = "x" ] ; then
-   echo "ERROR: Invalid number of primary PR given!"
+if [ "x$OPT_PE_REGISTRAR" = "x" ] ; then
+   echo "ERROR: Invalid number of PEs' primary PR given!"
+   exit 1
+fi
+if [ "x$OPT_PU_REGISTRAR" = "x" ] ; then
+   echo "ERROR: Invalid number of PUs' primary PR given!"
    exit 1
 fi
 
 
 # ====== Print information ==================================================
 echo "   + Preparing test for the following parameters:"
-echo "      - All: $ALL_HOSTS"
-echo "      - PRs: $HOST_PR_LIST"
-echo "      - PEs: $HOST_PE_LIST"
-echo "      - PUs: $HOST_PU_LIST"
-echo "      - $PRs PRs, $PEs PEs, $PUs PUs"
-echo "      - Primary PR:    $PRIMARY_PR"
-echo "      - Peer Opts:    $OPT_PEERS"
-echo "      - Registrar Opt: $OPT_REGISTRAR"
-echo "      - ReregInterval: $REREGINTERVAL [ms]"
-echo "      - InterHResTime: $INTERHRESTIME [ms]"
-echo "      - MaxHResItems:  $MAXHRESITEMS"
-echo "      - Duration:      $DURATION [s]"
-echo "      - $PEs PEs, $PUs PUs"
-echo "      - $PEs PEs, $PUs PUs"
+echo "      - All:              $ALL_HOSTS"
+echo "      - PRs:              $HOST_PR_LIST"
+echo "      - PEs:              $HOST_PE_LIST"
+echo "      - PUs:              $HOST_PU_LIST"
+echo "      - Elements:         $PRs PRs, $PEs PEs, $PUs PUs"
+echo "      - PEs' Primary PR:  $PRIMARY_PE_PR"
+echo "      - PUs' Primary PR:  $PRIMARY_PU_PR"
+echo "      - Peer Opts:       $OPT_PEERS"
+echo "      - PE Registrar Opt: $OPT_PE_REGISTRAR"
+echo "      - PU Registrar Opt: $OPT_PU_REGISTRAR"
+echo "      - ReregInterval:    $REREGINTERVAL [ms]"
+echo "      - InterHResTime:    $INTERHRESTIME [ms]"
+echo "      - MaxHResItems:     $MAXHRESITEMS"
+echo "      - Duration:         $DURATION [s]"
 
 
 # ====== Start components ===================================================
@@ -224,7 +233,7 @@ done
 i=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
-      $OPT_REGISTRAR -loglevel=3 \
+      $OPT_PE_REGISTRAR -loglevel=3 \
       -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
    echo $LAUNCH_DELAY >>$PREFIX/PE-start-$CHOOSE_HOST.sh
    let i=$i+1
@@ -250,7 +259,7 @@ done
 i=1 ; while [ $i -le $PUs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PU-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PU TestPU-$i start \
-      $OPT_REGISTRAR -loglevel=3 \
+      $OPT_PU_REGISTRAR -loglevel=3 \
       -poolhandle=$POOLHANDLE -pause=$INTERHRESTIME -quiet -statsfile=TestPU-$i.data -statsinterval=250
    echo $LAUNCH_DELAY >>$PREFIX/PU-start-$CHOOSE_HOST.sh
    let i=$i+1

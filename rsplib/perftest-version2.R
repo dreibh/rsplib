@@ -10,27 +10,27 @@ source("plotter.R")
 # ====== Perform handlespace management performance measurement =============
 performMeasurement <- function()
 {
-   prColumn              <- c()
-   peColumn              <- c()
-   puColumn              <- c()
-   primaryPRColumn       <- c()
-   reregIntervalColumn   <- c()
-   interHResTimeColumn   <- c()
-   maxHResItemsColumn    <- c()
+   prColumn                 <- c()
+   peColumn                 <- c()
+   puColumn                 <- c()
+   primaryPxRegistrarColumn <- c()
+   reregIntervalColumn      <- c()
+   interHResTimeColumn      <- c()
+   maxHResItemsColumn       <- c()
 
-   prNumberColumn        <- c()
+   prNumberColumn           <- c()
 
-   registrationRates     <- c()
-   reregistrationRates   <- c()
-   deregistrationRates   <- c()
-   handleResolutionRates <- c()
-   failureReportRates    <- c()
-   synchronizationRates  <- c()
-   updateRates           <- c()
+   registrationRates        <- c()
+   reregistrationRates      <- c()
+   deregistrationRates      <- c()
+   handleResolutionRates    <- c()
+   failureReportRates       <- c()
+   synchronizationRates     <- c()
+   updateRates              <- c()
 
-   runtimeDiffs          <- c()
-   userTimeDiffs         <- c()
-   systemTimeDiffs       <- c()
+   runtimeDiffs             <- c()
+   userTimeDiffs            <- c()
+   systemTimeDiffs          <- c()
 
 
    dir.create(testName,showWarnings=FALSE)
@@ -43,18 +43,19 @@ performMeasurement <- function()
    if((length(PUsSet) == 1) && (PUs < 0)) {
       PUs <- PEs * puToPERatio
    }
-   for(primaryPR in primaryPRSet) {
+   for(primaryPERegistrar in primaryPERegistrarSet) {
+   for(primaryPURegistrar in primaryPURegistrarSet) {
    for(reregInterval in reregIntervalSet) {
    for(interHResTime in interHResTimeSet) {
    for(maxHResItems in maxHResItemsSet) {
 
       # ------ Run performance test --------------------------------------------
       duration <- minPreSkip + minPostSkip + (segments + 1) * segmentLength
-      runPrefix <- paste(sep="", testName, "-", PRs, "-", PEs, "-", PUs, "-", primaryPR, "-", reregInterval, "-", interHResTime, "-", maxHResItems, "-", duration)
+      runPrefix <- paste(sep="", testName, "-", PRs, "-", PEs, "-", PUs, "-", primaryPERegistrar, "-", primaryPURegistrar, "-", reregInterval, "-", interHResTime, "-", maxHResItems, "-", duration)
       cmdLine <- paste(sep="", "./perftest-version2 ",
                               testName, " ", runPrefix,
                               " ",
-                              PRs, " ", PEs, " ", PUs, " ", primaryPR, " ",
+                              PRs, " ", PEs, " ", PUs, " ", primaryPERegistrar, " ", primaryPURegistrar, " ",
                               reregInterval, " ", interHResTime, " ", maxHResItems, " ",
                               duration, " ",
                               ">", testName, "/", runPrefix, ".log")
@@ -113,13 +114,14 @@ performMeasurement <- function()
          prColumn            <- append(prColumn, rep(PRs, length(registrationResults)))
          peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))
          puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
-         primaryPRColumn     <- append(primaryPRColumn, rep(PRs, length(registrationResults)))
+         primaryPERegistrarColumn     <- append(primaryPERegistrarColumn, rep(PRs, length(registrationResults)))
+         primaryPURegistrarColumn     <- append(primaryPURegistrarColumn, rep(PRs, length(registrationResults)))
          reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
          interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
          maxHResItemsColumn  <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
          prNumberColumn      <- append(prNumberColumn, rep(i, length(registrationResults)))
       }
-   }}}}}}}}
+   }}}}}}}}}
 
 
    cat("Writing results ...\n")
@@ -129,7 +131,8 @@ performMeasurement <- function()
                         interHResTimeColumn,
                         maxHResItemsColumn,
                         prNumberColumn,
-                        primaryPRColumn,
+                        primaryPERegistrarColumn,
+                        primaryPURegistrarColumn,
 
                         runtimeDiffs,
                         userTimeDiffs,
@@ -143,8 +146,7 @@ performMeasurement <- function()
                         synchronizationRates,
                         updateRates)
    colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime", "MaxHResItems",
-                         "RegistrarNumber",
-                         "PrimaryRegistrar",
+                         "RegistrarNumber", "PrimaryPERegistrar", "PrimaryPURegistrar",
                          "Runtime", "UserTime", "SystemTime",
                          "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
                          "HandleResolutionRate", "FailureReportRate",
