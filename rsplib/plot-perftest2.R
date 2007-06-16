@@ -21,7 +21,7 @@ plotConfidence        <- 0.95
 # ###########################################################################
 
 # ------ Plots --------------------------------------------------------------
-filterRule <- "data1$MaxHResItems == 1"
+filterRule <- "TRUE"
 
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
@@ -37,12 +37,12 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Pool User's Perspective", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
-        "PEs", "InterHResTime", "MaxHResItems",
+        "PEs", "RegistrarNumber", "InterHResTime",
         "", "", "", filterRule),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Registrar's Perspective", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
-        "PEs", "InterHResTime", "MaxHResItems",
+        "PEs", "RegistrarNumber", "InterHResTime",
         "", "", "", filterRule)
 )
 

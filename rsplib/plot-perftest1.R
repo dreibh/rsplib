@@ -4,7 +4,7 @@
 # Revision:    $Id$
 # ###########################################################################
 
-source("perftest-version1.R")
+source("perftest-version2.R")
 
 # ------ Plotter Settings ---------------------------------------------------
 measurementDirectory  <- "P01"
@@ -33,10 +33,10 @@ plotConfigurations <- list(
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Pool Element's Perspective", NA, NA, list(0,0),
-        "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval"),
+        "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval", "RegistrarNumber"),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Registrar's Perspective", NA, list(seq(0, 100, 20)), list(0,1),
-        "PEs", "CPUUtilization", "ReregInterval")
+        "PEs", "CPUUtilization", "ReregInterval", "RegistrarNumber")
 )
 
 
