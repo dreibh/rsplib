@@ -21,7 +21,8 @@ plotConfidence        <- 0.95
 # ###########################################################################
 
 # ------ Plots --------------------------------------------------------------
-filterRule <- "TRUE"
+filterRulePR1 <- "(data1$PrimaryPURegistrar == 1)"
+filterRulePR2 <- "(data1$PrimaryPURegistrar == 2)"
 
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
@@ -35,15 +36,26 @@ plotConfigurations <- list(
    # ------------------------------------------------------------------------
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
-        "Pool User's Perspective", NA, NA, list(0.2,0.0),
+        "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
         "PEs", "RegistrarNumber", "InterHResTime",
-        "", "", "", filterRule),
+        "", "", "", filterRulePR1),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Registrar's Perspective", NA, NA, list(0,1),
+        "Registrar's Perspective using PR #1", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
         "PEs", "RegistrarNumber", "InterHResTime",
-        "", "", "", filterRule)
+        "", "", "", filterRulePR1),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
+        "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
+        "PUs", "HandleResolutionRatePerPUandSecond",
+        "PEs", "RegistrarNumber", "InterHResTime",
+        "", "", "", filterRulePR2),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
+        "Registrar's Perspective using PR #2", NA, NA, list(0,1),
+        "PUs", "CPUUtilization",
+        "PEs", "RegistrarNumber", "InterHResTime",
+        "", "", "", filterRulePR2)
 )
 
 

@@ -13,7 +13,8 @@ performMeasurement <- function()
    prColumn                 <- c()
    peColumn                 <- c()
    puColumn                 <- c()
-   primaryPxRegistrarColumn <- c()
+   primaryPERegistrarColumn <- c()
+   primaryPURegistrarColumn <- c()
    reregIntervalColumn      <- c()
    interHResTimeColumn      <- c()
    maxHResItemsColumn       <- c()
@@ -81,7 +82,7 @@ performMeasurement <- function()
                                                       "Registrations", ACRT_Normalized)
 
          registrationRates     <- append(registrationRates,
-                                       registrationResults)
+                                         registrationResults)
          reregistrationRates   <- append(reregistrationRates,
                                        analyseCounterResults(data, lowerLimit, upperLimit, segmentLength, segments,
                                        "Reregistrations", ACRT_Normalized))
@@ -114,8 +115,8 @@ performMeasurement <- function()
          prColumn            <- append(prColumn, rep(PRs, length(registrationResults)))
          peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))
          puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
-         primaryPERegistrarColumn     <- append(primaryPERegistrarColumn, rep(PRs, length(registrationResults)))
-         primaryPURegistrarColumn     <- append(primaryPURegistrarColumn, rep(PRs, length(registrationResults)))
+         primaryPERegistrarColumn     <- append(primaryPERegistrarColumn, rep(primaryPERegistrar, length(registrationResults)))
+         primaryPURegistrarColumn     <- append(primaryPURegistrarColumn, rep(primaryPURegistrar, length(registrationResults)))
          reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
          interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
          maxHResItemsColumn  <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
@@ -207,10 +208,15 @@ perftestPlotVariables <- list(
    list("RegistrarNumber",
            "Registrar{R}",
            NA, "brown4", list("Summary")),
+   list("PrimaryPERegistrar",
+           "PEs' Registrar{E}",
+           NA, "brown4", list("Summary")),
+   list("PrimaryPURegistrar",
+           "PUs' Registrar{U}",
+           NA, "brown4", list("Summary")),
    list("puToPERatio",
            "PU:PE Ratio{r}[1]",
-           "data1$PUs / data1$PEs",
-           "brown4", list("Summary")),
+           NA, "brown4", list("Summary")),
    list("ReregInterval",
            "Inter Reregistration Time{g}[s]",
            NA, "brown4", list("Summary")),
