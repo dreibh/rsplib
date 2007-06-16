@@ -159,8 +159,6 @@ echo "      - Duration:      $DURATION [s]"
 echo "      - $PEs PEs, $PUs PUs"
 echo "      - $PEs PEs, $PUs PUs"
 
-exit
-
 
 # ====== Start components ===================================================
 # ------ Stop all -----------------------------------------------------------
