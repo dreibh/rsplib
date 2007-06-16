@@ -149,7 +149,8 @@ performMeasurement <- function()
 
 
    cat("Writing results ...\n")
-   result <- data.frame(peColumn,
+   result <- data.frame(prColumn,
+                        peColumn,
                         puColumn,
                         reregIntervalColumn,
                         interHResTimeColumn,
@@ -169,7 +170,8 @@ performMeasurement <- function()
                         failureReportRates,
                         synchronizationRates,
                         updateRates)
-   colnames(result) <- c("PEs", "PUs", "ReregInterval", "InterHResTime", "MaxHResItems",
+   colnames(result) <- c("PRs", "PEs", "PUs",
+                         "ReregInterval", "InterHResTime", "MaxHResItems",
                          "RegistrarNumber", "PrimaryPERegistrar", "PrimaryPURegistrar",
                          "Runtime", "UserTime", "SystemTime",
                          "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
