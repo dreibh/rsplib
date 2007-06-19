@@ -33,10 +33,10 @@ plotConfigurations <- list(
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Pool Element's Perspective", NA, NA, list(0,0),
-        "PEs", "ReregistrationRatePerPEandSecond", "ReregInterval", "RegistrarNumber"),
+        "PEs", "ReregistrationRatePerPEandSecond",  "RegistrarNumber", "ReregInterval", ""),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Registrar's Perspective", NA, list(seq(0, 100, 20)), list(0,1),
-        "PEs", "CPUUtilization", "ReregInterval", "RegistrarNumber")
+        "PEs", "CPUUtilization",  "RegistrarNumber", "ReregInterval", "")
 )
 
 

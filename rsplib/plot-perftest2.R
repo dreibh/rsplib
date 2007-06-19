@@ -38,23 +38,23 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
-        "PEs", "RegistrarNumber", "InterHResTime",
+        "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR1),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Registrar's Perspective using PR #1", NA, NA, list(0,1),
-        "PUs", "CPUUtilization",
-        "PEs", "RegistrarNumber", "InterHResTime",
-        "", "", "", filterRulePR1),
-
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
-        "PEs", "RegistrarNumber", "InterHResTime",
+        "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR2),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
+        "Registrar's Perspective using PR #1", NA, NA, list(0,1),
+        "PUs", "CPUUtilization",
+        "RegistrarNumber", "InterHResTime", "PEs",
+        "", "", "", filterRulePR1),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Registrar's Perspective using PR #2", NA, NA, list(0,1),
         "PUs", "CPUUtilization",
-        "PEs", "RegistrarNumber", "InterHResTime",
+        "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR2)
 )
 

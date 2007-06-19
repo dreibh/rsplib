@@ -20,6 +20,8 @@ plotConfidence        <- 0.95
 
 # ###########################################################################
 
+filter <- "(data1$RegistrarNumber == 1) | (data1$RegistrarNumber == 2)"
+
 # ------ Plots --------------------------------------------------------------
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
@@ -33,13 +35,16 @@ plotConfigurations <- list(
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Provider's Perspective", NA, NA, list(0,0),
-        "PRs", "ReregistrationRatePerPEandSecond", "ReregInterval", "RegistrarNumber"),
+        "PRs", "ReregistrationRatePerPEandSecond", "RegistrarNumber", "ReregInterval", "",
+        "", "", "", filter),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
         "Provider's Perspective", NA, NA, list(0,1),
-        "PRs", "HandleResolutionRatePerPEandSecond", "ReregInterval", "RegistrarNumber"),
+        "PRs", "HandleResolutionRatePerPEandSecond", "RegistrarNumber", "ReregInterval", "",
+        "", "", "", filter),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Provider's Perspective", NA, list(seq(0, 100, 20)), list(0,1),
-        "PRs", "CPUUtilization", "ReregInterval", "RegistrarNumber")
+        "PRs", "CPUUtilization", "RegistrarNumber", "ReregInterval", "",
+        "", "", "", filter)
 )
 
 
