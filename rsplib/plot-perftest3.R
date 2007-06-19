@@ -11,7 +11,7 @@ measurementDirectory  <- "P03"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- FALSE
+plotOwnOutput         <- TRUE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
@@ -36,10 +36,6 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-ReregistrationRate.pdf"),
         "Provider's Perspective", NA, NA, list(0,0),
         "PRs", "ReregistrationRatePerPEandSecond", "RegistrarNumber", "ReregInterval", "",
-        "", "", "", filter),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
-        "Provider's Perspective", NA, NA, list(0,1),
-        "PRs", "HandleResolutionRatePerPEandSecond", "RegistrarNumber", "ReregInterval", "",
         "", "", "", filter),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
         "Provider's Perspective", NA, list(seq(0, 100, 20)), list(0,1),

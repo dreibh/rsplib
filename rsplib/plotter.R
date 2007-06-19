@@ -4,7 +4,7 @@
 #
 #           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 # ###########################################################################
-# $Id: plotter.R 33 2007-06-13 11:45:32Z dreibh $
+# $Id$
 
 
 # Get array of gray tones (equivalent of rainbow() for b/w laser printing)

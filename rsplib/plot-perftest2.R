@@ -11,7 +11,7 @@ measurementDirectory  <- "P02"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- FALSE
+plotOwnOutput         <- TRUE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
@@ -35,24 +35,24 @@ plotConfigurations <- list(
    #      "(data1$XY == xy) && (data1$YZ = yz)")
    # ------------------------------------------------------------------------
 
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
         "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR1),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandleResolutionRate.pdf"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
         "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR2),
 
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Registrar's Perspective using PR #1", NA, NA, list(0,1),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1CPUUtilization.pdf"),
+        "Registrar's Perspective using PR #1", NA, list(seq(0, 100, 20)), list(0,1),
         "PUs", "CPUUtilization",
         "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR1),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-CPUUtilization.pdf"),
-        "Registrar's Perspective using PR #2", NA, NA, list(0,1),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2CPUUtilization.pdf"),
+        "Registrar's Perspective using PR #2", NA, list(seq(0, 100, 20)), list(0,1),
         "PUs", "CPUUtilization",
         "RegistrarNumber", "InterHResTime", "PEs",
         "", "", "", filterRulePR2)

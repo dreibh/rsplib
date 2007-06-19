@@ -11,7 +11,7 @@ measurementDirectory  <- "P01"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- FALSE
+plotOwnOutput         <- TRUE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
