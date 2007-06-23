@@ -26,7 +26,7 @@ PUsSet                <- c(-1)   # Calculated from puToPERatio
 primaryPERegistrarSet <- c(1)
 primaryPURegistrarSet <- c(1)
 puToPERatioSet        <- c(0)
-reregIntervalSet      <- c(1000, 250)
+reregIntervalSet      <- c(1000, 500, 250)
 interHResTimeSet      <- c(1000)
 maxHResItemsSet       <- c(3)
 

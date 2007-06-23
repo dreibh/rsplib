@@ -27,7 +27,7 @@ primaryPERegistrarSet <- c(1)
 primaryPURegistrarSet <- c(1, 2)
 puToPERatioSet        <- c(-1)   # Set PUs directly
 reregIntervalSet      <- c(1000)
-interHResTimeSet      <- c(100, 250)  # , 1000)
+interHResTimeSet      <- c(100, 250, 500)
 maxHResItemsSet       <- c(1)
 
 
