@@ -15,6 +15,7 @@ performMeasurement <- function()
    puColumn                 <- c()
    primaryPERegistrarColumn <- c()
    primaryPURegistrarColumn <- c()
+   policyColumn             <- c()
    reregIntervalColumn      <- c()
    interHResTimeColumn      <- c()
    maxHResItemsColumn       <- c()
@@ -69,17 +70,18 @@ performMeasurement <- function()
    }
    for(primaryPERegistrar in primaryPERegistrarSet) {
    for(primaryPURegistrar in primaryPURegistrarSet) {
+   for(policy in policySet) {
    for(reregInterval in reregIntervalSet) {
    for(interHResTime in interHResTimeSet) {
    for(maxHResItems in maxHResItemsSet) {
 
       # ------ Run performance test --------------------------------------------
       duration <- minPreSkip + minPostSkip + (segments + 1) * segmentLength
-      runPrefix <- paste(sep="", testName, "-", PRs, "-", PEs, "-", PUs, "-", primaryPERegistrar, "-", primaryPURegistrar, "-", reregInterval, "-", interHResTime, "-", maxHResItems, "-", duration)
+      runPrefix <- paste(sep="", testName, "-", PRs, "-", PEs, "-", PUs, "-", primaryPERegistrar, "-", primaryPURegistrar, "-", policy, "-", reregInterval, "-", interHResTime, "-", maxHResItems, "-", duration)
       cmdLine <- paste(sep="", "./perftest-version2 ",
                               testName, " ", runPrefix,
                               " ",
-                              PRs, " ", PEs, " ", PUs, " ", primaryPERegistrar, " ", primaryPURegistrar, " ",
+                              PRs, " ", PEs, " ", PUs, " ", primaryPERegistrar, " ", primaryPURegistrar, " ", policy, " ",
                               reregInterval, " ", interHResTime, " ", maxHResItems, " ",
                               duration, " ",
                               ">", testName, "/", runPrefix, ".log")
@@ -135,17 +137,18 @@ performMeasurement <- function()
                               analyseCounterResults(data, lowerLimit, upperLimit, segmentLength, segments,
                               "SystemTime", ACRT_Difference))
 
-         prColumn            <- append(prColumn, rep(PRs, length(registrationResults)))
-         peColumn            <- append(peColumn, rep(PEs, length(registrationResults)))
-         puColumn            <- append(puColumn, rep(PUs, length(registrationResults)))
+         prColumn                     <- append(prColumn, rep(PRs, length(registrationResults)))
+         peColumn                     <- append(peColumn, rep(PEs, length(registrationResults)))
+         puColumn                     <- append(puColumn, rep(PUs, length(registrationResults)))
          primaryPERegistrarColumn     <- append(primaryPERegistrarColumn, rep(primaryPERegistrar, length(registrationResults)))
          primaryPURegistrarColumn     <- append(primaryPURegistrarColumn, rep(primaryPURegistrar, length(registrationResults)))
-         reregIntervalColumn <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
-         interHResTimeColumn <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
-         maxHResItemsColumn  <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
-         prNumberColumn      <- append(prNumberColumn, rep(i, length(registrationResults)))
+         policyColumn                 <- append(policyColumn, rep(policy, length(registrationResults)))
+         reregIntervalColumn          <- append(reregIntervalColumn, rep(reregInterval, length(registrationResults)))
+         interHResTimeColumn          <- append(interHResTimeColumn, rep(interHResTime, length(registrationResults)))
+         maxHResItemsColumn           <- append(maxHResItemsColumn,  rep(maxHResItems, length(registrationResults)))
+         prNumberColumn               <- append(prNumberColumn, rep(i, length(registrationResults)))
       }
-   }}}}}}}}}
+   }}}}}}}}}}
 
 
    cat("Writing results ...\n")
@@ -158,6 +161,7 @@ performMeasurement <- function()
                         prNumberColumn,
                         primaryPERegistrarColumn,
                         primaryPURegistrarColumn,
+                        policyColumn,
 
                         runtimeDiffs,
                         userTimeDiffs,
@@ -172,7 +176,7 @@ performMeasurement <- function()
                         updateRates)
    colnames(result) <- c("PRs", "PEs", "PUs",
                          "ReregInterval", "InterHResTime", "MaxHResItems",
-                         "RegistrarNumber", "PrimaryPERegistrar", "PrimaryPURegistrar",
+                         "RegistrarNumber", "PrimaryPERegistrar", "PrimaryPURegistrar", "Policy",
                          "Runtime", "UserTime", "SystemTime",
                          "RegistrationRate", "ReregistrationRate", "DeregistrationRate",
                          "HandleResolutionRate", "FailureReportRate",

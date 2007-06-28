@@ -22,8 +22,8 @@
 # Contact: dreibh@iem.uni-due.de
 #
 
-if [ $# -lt 11 ] ; then
-   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [PEs' Primary PR] [PUs' Primary PR] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
+if [ $# -lt 12 ] ; then
+   echo "Usage: perftest [Test Name] [Prefix] [PRs] [PEs] [PUs] [PEs' Primary PR] [PUs' Primary PR] [Policy] [ReregInterval] [InterHResTime] [MaxHResItems] [Duration]" >&2
    exit 1
 fi
 
@@ -35,10 +35,11 @@ PEs="$4"
 PUs="$5"
 PRIMARY_PE_PR="$6"
 PRIMARY_PU_PR="$7"
-REREGINTERVAL="$8"
-INTERHRESTIME="$9"
-shift ; MAXHRESITEMS="$9" # $10 funktioniert nicht!!!
-shift ; DURATION="$9"     # $11 funktioniert nicht!!!
+POLICY="$8"
+REREGINTERVAL="$9"
+shift ; INTERHRESTIME="$9"   # $10 funktioniert nicht!!!
+shift ; MAXHRESITEMS="$9"    # $10 funktioniert nicht!!!
+shift ; DURATION="$9"        # $12 funktioniert nicht!!!
 
 LAUNCH_DELAY=""   # sleep 0.1"
 SHUTDOWN_DELAY="sleep 60"
@@ -238,7 +239,7 @@ i=1 ; while [ $i -le $PEs ] ; do
    choose_host
    ./RemoteComponentControl WriteCmdOnly $PREFIX/PE-start-$CHOOSE_HOST.sh ./Lab-User.config $CHOOSE_HOST ./ComponentControl.config PE TestPE-$i start \
       $OPT_PE_REGISTRAR -loglevel=3 \
-      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=RoundRobin
+      -poolhandle=$POOLHANDLE -rereginterval=$REREGINTERVAL -echo -policy=$POLICY
    echo $LAUNCH_DELAY >>$PREFIX/PE-start-$CHOOSE_HOST.sh
    let i=$i+1
 done

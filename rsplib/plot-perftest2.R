@@ -11,7 +11,7 @@ measurementDirectory  <- "P02"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- TRUE
+plotOwnOutput         <- FALSE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
@@ -38,23 +38,23 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
-        "RegistrarNumber", "InterHResTime", "PEs",
+        "RegistrarNumber", "Policy", "InterHResTime",
         "", "", "", filterRulePR1),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2HandleResolutionRate.pdf"),
         "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
         "PUs", "HandleResolutionRatePerPUandSecond",
-        "RegistrarNumber", "InterHResTime", "PEs",
+        "RegistrarNumber", "Policy", "InterHResTime",
         "", "", "", filterRulePR2),
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1CPUUtilization.pdf"),
         "Registrar's Perspective using PR #1", NA, list(seq(0, 100, 20)), list(0,1),
         "PUs", "CPUUtilization",
-        "RegistrarNumber", "InterHResTime", "PEs",
+        "RegistrarNumber", "Policy", "InterHResTime",
         "", "", "", filterRulePR1),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2CPUUtilization.pdf"),
         "Registrar's Perspective using PR #2", NA, list(seq(0, 100, 20)), list(0,1),
         "PUs", "CPUUtilization",
-        "RegistrarNumber", "InterHResTime", "PEs",
+        "RegistrarNumber", "Policy", "InterHResTime",
         "", "", "", filterRulePR2)
 )
 
