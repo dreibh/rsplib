@@ -20,7 +20,7 @@ peHosts               <- c("132.252.152.73", "132.252.152.74", "132.252.152.75",
                            "132.252.152.79")
 puHosts               <- peHosts
 
-PRsSet                <- c(1, 2, 3, 4, 5, 6)
+PRsSet                <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 PEsSet                <- c(1000)
 PUsSet                <- c(-1)   # Calculated from puToPERatio
 primaryPERegistrarSet <- c(1)
