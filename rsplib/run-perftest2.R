@@ -22,13 +22,13 @@ puHosts               <- peHosts
 
 PRsSet                <- c(2)
 PEsSet                <- c(1000)
-PUsSet                <- c(100, 1000) # !!! c(100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000)
+PUsSet                <- c(100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000)
 primaryPERegistrarSet <- c(1)
 primaryPURegistrarSet <- c(1, 2)
 policySet             <- c("RoundRobin", "Random")
 puToPERatioSet        <- c(-1)   # Set PUs directly
 reregIntervalSet      <- c(1000)
-interHResTimeSet      <- c(100, 500)   # !!!! c(100, 250, 500)
+interHResTimeSet      <- c(500, 250, 100)
 maxHResItemsSet       <- c(1)
 
 

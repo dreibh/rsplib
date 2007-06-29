@@ -25,6 +25,7 @@ PEsSet                <- c(10, 100, 500, 1000, 1500, 2000, 2500, 2750, 3000)
 PUsSet                <- c(-1)   # Calculated from puToPERatio
 primaryPERegistrarSet <- c(1)
 primaryPURegistrarSet <- c(1)
+policySet             <- c("RoundRobin")
 puToPERatioSet        <- c(0)
 reregIntervalSet      <- c(1000, 500, 250)
 interHResTimeSet      <- c(1000)

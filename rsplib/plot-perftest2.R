@@ -21,8 +21,8 @@ plotConfidence        <- 0.95
 # ###########################################################################
 
 # ------ Plots --------------------------------------------------------------
-filterRulePR1 <- "(data1$PrimaryPURegistrar == 1)"
-filterRulePR2 <- "(data1$PrimaryPURegistrar == 2)"
+filterRulePR1 <- "( (data1$PrimaryPURegistrar == 1) & ((data1$RegistrarNumber == 1) | ((data1$Policy == \"Random\") & (data1$InterHResTime == 100)) ) )"
+filterRulePR2 <- "( (data1$PrimaryPURegistrar == 2) & ((data1$RegistrarNumber == 2) | ((data1$Policy == \"Random\") & (data1$InterHResTime == 100)) ) )"
 
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
