@@ -1477,7 +1477,7 @@ applyManipulator <- function(manipulator, inputDataTable, columnName, filter)
 
 
 # ====== Create plots =======================================================
-createPlots <- function(simulationDirectory, plotConfigurations)
+createPlots <- function(simulationDirectory, plotConfigurations, customFilter="")
 {
    if(!plotOwnOutput) {
       pdf(paste(sep="", simulationDirectory, ".pdf"),
@@ -1582,7 +1582,7 @@ createPlots <- function(simulationDirectory, plotConfigurations)
       for(resultsName in resultsNameSet) {
          resultFileName  <- paste(sep="", simulationDirectory, "/Results/", resultsName, ".data.bz2")
          cat(sep="", "  Loading results from ", resultFileName, " ...\n")
-         data <- append(data, list(loadResults(resultFileName, quiet=TRUE)))
+         data <- append(data, list(loadResults(resultFileName, quiet=FALSE, customFilter=customFilter)))
       }
 
       cat(sep="", "* Plotting ", yColumn, " with:\n")

@@ -21,8 +21,10 @@ plotConfidence        <- 0.95
 # ###########################################################################
 
 # ------ Plots --------------------------------------------------------------
-filterRulePR1 <- "( (data1$PrimaryPURegistrar == 1) & ((data1$RegistrarNumber == 1) | ((data1$Policy == \"Random\") & (data1$InterHResTime == 100)) ) )"
-filterRulePR2 <- "( (data1$PrimaryPURegistrar == 2) & ((data1$RegistrarNumber == 2) | ((data1$Policy == \"Random\") & (data1$InterHResTime == 100)) ) )"
+sed <- "sed -e \"s/\\\"RoundRobin\\\"/\\\"deterministic\\\"/g\" -e \"s/\\\"Random\\\"/\\\"randomized\\\"/g\""
+
+filterRulePR1 <- "( (data1$PrimaryPURegistrar == 1) & ((data1$RegistrarNumber == 1) | ((data1$Policy == \"deterministic\") & (data1$InterHResTime == 100)) ) )"
+filterRulePR2 <- "( (data1$PrimaryPURegistrar == 2) & ((data1$RegistrarNumber == 2) | ((data1$Policy == \"deterministic\") & (data1$InterHResTime == 100)) ) )"
 
 plotConfigurations <- list(
    # ------ Format example --------------------------------------------------
@@ -35,16 +37,16 @@ plotConfigurations <- list(
    #      "(data1$XY == xy) && (data1$YZ = yz)")
    # ------------------------------------------------------------------------
 
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1HandleResolutionRate.pdf"),
-        "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
-        "PUs", "HandleResolutionRatePerPUandSecond",
-        "RegistrarNumber", "Policy", "InterHResTime",
-        "", "", "", filterRulePR1),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2HandleResolutionRate.pdf"),
-        "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
-        "PUs", "HandleResolutionRatePerPUandSecond",
-        "RegistrarNumber", "Policy", "InterHResTime",
-        "", "", "", filterRulePR2),
+#    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1HandleResolutionRate.pdf"),
+#         "Pool User's Perspective using PR #1", NA, NA, list(0.2,0.0),
+#         "PUs", "HandleResolutionRatePerPUandSecond",
+#         "RegistrarNumber", "Policy", "InterHResTime",
+#         "", "", "", filterRulePR1),
+#    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR2HandleResolutionRate.pdf"),
+#         "Pool User's Perspective using PR #2", NA, NA, list(0.2,0.0),
+#         "PUs", "HandleResolutionRatePerPUandSecond",
+#         "RegistrarNumber", "Policy", "InterHResTime",
+#         "", "", "", filterRulePR2),
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-PR1CPUUtilization.pdf"),
         "Registrar's Perspective using PR #1", NA, list(seq(0, 100, 20)), list(0,1),
@@ -76,4 +78,4 @@ plotVariables <- append(perftestPlotVariables, list(
 
 # ###########################################################################
 
-createPlots(measurementDirectory, plotConfigurations)
+createPlots(measurementDirectory, plotConfigurations, sed)
