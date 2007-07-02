@@ -16,6 +16,19 @@ graybow <- function(n)
 }
 
 
+# Modified rainbow() with colors improved for readability
+rainbow2 <- function(n)
+{
+   if(n == 2) {
+      return(c("red", "blue"))   # rot/blau statt rot/türkis!
+   }
+   else if(n <= 4) {
+      return(rainbow(n))
+   }
+   return(rainbow(n, gamma=2))
+}
+
+
 # Get background color
 cmColor <- 2
 cmGrayScale <- 1
@@ -162,6 +175,7 @@ hbarDefaultAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
 }
 
 
+# Handling Speed aggregator
 hbarHandlingSpeedAggregator <- function(xSet, ySet, hbarSet, zValue, confidence)
 {
    handlingTime  <- 60 * (xSet - hbarSet)
@@ -197,12 +211,14 @@ plotstd3 <- function(mainTitle,
                      hbarAggregator    = hbarDefaultAggregator,
                      xSeparatorsSet    = c(),
                      xSeparatorsTitles = c(),
-                     xSeparatorsColors  = c(),
+                     xSeparatorsColors = c(),
+                     rangeSet          = c(),
+                     rangeColors       = c(),
                      type              = "lines",
                      hideLegend        = FALSE,
                      legendOnly        = FALSE,
                      legendPos         = c(0,1),
-                     colorMode         = FALSE,
+                     colorMode         = cmColor,
                      zColorArray       = c(),
                      frameColor        = par("fg"),
                      legendSizeFactor  = 0.8,
@@ -238,12 +254,7 @@ plotstd3 <- function(mainTitle,
 
    if(length(zColorArray) == 0) {
       if(colorMode == cmColor) {
-         if(length(zLevels) <= 4) {
-            zColorArray <- rainbow(length(zLevels))
-         }
-         else {
-            zColorArray <- rainbow(length(zLevels), gamma=2)
-         }
+         zColorArray <- rainbow2(length(zLevels))
       }
       else if(colorMode == cmGrayScale) {
          zColorArray <- graybow(length(zLevels))
@@ -283,12 +294,30 @@ plotstd3 <- function(mainTitle,
       }
       axis(2, yAxisTicks, col=frameColor, col.axis=frameColor)
 
+      # ------ Range colors -------------------------------------------------
+      if(colorMode == cmColor) {
+         if(length(rangeSet) >= 2) {
+            colorNumber <- 1
+            xLow <- rangeSet[1]
+            for(r in rangeSet[2:length(rangeSet)]) {
+               rangeColor <- rangeColors[colorNumber %% (length(rangeColors) + 1)]
+               rect(min(xRange) - (max(xRange) - min(xRange)), xLow,
+                    max(xRange) + (max(xRange) - min(xRange)), r,
+                    col=rangeColor ,border=FALSE)
+               xLow <- r
+
+               colorNumber <- colorNumber + 1
+            }
+         }
+      }
+
+      # ------ Axis and labels ----------------------------------------------
       grid(20, 20, lty=1)
       box(col=frameColor)
       xLabel <- getVariable(xTitle)
-      # if(getAbbreviation(xTitle) != getVariable(xTitle)) {
-      #    xLabel <- paste(sep="", xLabel, " ", getAbbreviation(xTitle), "")
-      # }
+      if(getAbbreviation(xTitle) != getVariable(xTitle)) {
+         xLabel <- paste(sep="", xLabel, " ", getAbbreviation(xTitle), "")
+      }
       if(getUnit(xTitle) != "") {
          xLabel <- paste(sep="", xLabel, " [", getUnit(xTitle), "]")
       }
@@ -566,7 +595,7 @@ plotstd3 <- function(mainTitle,
    if(length(xSeparatorsSet) > 0) {
       if(length(xSeparatorsColors) < 1) {
          if(colorMode == cmColor) {
-            xSeparatorsColors <- rainbow(length(xSeparatorsSet))
+            xSeparatorsColors <- rainbow2(length(xSeparatorsSet))
          }
          else if(colorMode == cmGrayScale) {
             xSeparatorsColors <- graybow(length(xSeparatorsSet))
@@ -643,22 +672,24 @@ plotstd3 <- function(mainTitle,
 plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
                      aSet, xSet, ySet, zSet,
                      vSet=c(), wSet=c(),
-                     vTitle     = "??vTitle??",
-                     wTitle     = "??wTitle??",
-                     aAxisTicks = length(levels(factor(aSet))) > 1,
-                     xAxisTicks = c(),
-                     yAxisTicks = c(),
-                     confidence = 0.95,
-                     hbarSet           = c(),
-                     hbarMeanSteps     = 10,
-                     xSeparatorsSet    = c(),
-                     xSeparatorsTitles = c(),
+                     vTitle             = "??vTitle??",
+                     wTitle             = "??wTitle??",
+                     aAxisTicks         = length(levels(factor(aSet))) > 1,
+                     xAxisTicks         = c(),
+                     yAxisTicks         = c(),
+                     confidence         = 0.95,
+                     hbarSet            = c(),
+                     hbarMeanSteps      = 10,
+                     xSeparatorsSet     = c(),
+                     xSeparatorsTitles  = c(),
                      xSeparatorsColors  = c(),
-                     type       = "lines",
-                     hideLegend = FALSE,
-                     legendPos  = c(0,1),
-                     colorMode  = cmColor,
-                     frameColor = par("fg"))
+                     rangeSet           = c(),
+                     rangeColors        = c(),
+                     type               = "lines",
+                     hideLegend         = FALSE,
+                     legendPos          = c(0,1),
+                     colorMode          = cmColor,
+                     frameColor         = par("fg"))
 {
    aLevels <- levels(factor(aSet))
    aLevelsCount <- length(aLevels)
@@ -772,6 +803,7 @@ plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
                xSeparatorsSet = xSeparatorsSet,
                xSeparatorsTitles = xSeparatorsTitles,
                xSeparatorsColors = xSeparatorsColors,
+               rangeSet=rangeSet, rangeColors=rangeColors,
                type = type,
                hideLegend = hideLegend,
                legendPos = legendPos,
@@ -805,7 +837,9 @@ plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      hbarMeanSteps     = 10,
                      xSeparatorsSet    = c(),
                      xSeparatorsTitles = c(),
-                     xSeparatorsColors  = c(),
+                     xSeparatorsColors = c(),
+                     rangeSet          = c(),
+                     rangeColors       = c(),
                      type              = "lines",
                      hideLegend        = FALSE,
                      legendPos         = c(0,1),
@@ -973,6 +1007,7 @@ plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                   xSeparatorsSet = xSeparatorsSet,
                   xSeparatorsTitles = xSeparatorsTitles,
                   xSeparatorsColors = xSeparatorsColors,
+                  rangeSet=rangeSet, rangeColors=rangeColors,
                   type = type,
                   hideLegend=hideLegend,
                   legendPos=legendPos,
@@ -1015,12 +1050,14 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      hbarMeanSteps     = 10,
                      xSeparatorsSet    = c(),
                      xSeparatorsTitles = c(),
-                     xSeparatorsColors  = c(),
+                     xSeparatorsColors = c(),
+                     rangeSet          = c(),
+                     rangeColors       = c(),
                      type              = "lines",
                      pStart            = 0,
                      hideLegend        = FALSE,
                      legendPos         = c(0,1),
-                     colorMode         = FALSE,
+                     colorMode         = cmColor,
                      frameColor        = par("fg"),
                      simulationName    = "")
 {
@@ -1068,6 +1105,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      xSeparatorsSet = xSeparatorsSet,
                      xSeparatorsTitles = xSeparatorsTitles,
                      xSeparatorsColors = xSeparatorsColors,
+                     rangeSet=rangeSet, rangeColors=rangeColors,
                      type = type,
                      hideLegend = hideLegend,
                      legendPos = legendPos,
@@ -1088,6 +1126,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      xSeparatorsSet = xSeparatorsSet,
                      xSeparatorsTitles = xSeparatorsTitles,
                      xSeparatorsColors = xSeparatorsColors,
+                     rangeSet=rangeSet, rangeColors=rangeColors,
                      type = type,
                      hideLegend = hideLegend,
                      legendPos = legendPos,
@@ -1110,6 +1149,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                   xSeparatorsSet = xSeparatorsSet,
                   xSeparatorsTitles = xSeparatorsTitles,
                   xSeparatorsColors = xSeparatorsColors,
+                  rangeSet=rangeSet, rangeColors=rangeColors,
                   type = type,
                   hideLegend = hideLegend,
                   legendPos = legendPos,
@@ -1155,7 +1195,7 @@ plothist <- function(mainTitle,
                      freq             = TRUE,
                      hideLegend       = FALSE,
                      legendPos        = c(1,1),
-                     colorMode        = FALSE,
+                     colorMode        = cmColor,
                      zColorArray      = c(),
                      frameColor       = par("fg"),
                      legendSizeFactor = 0.8,
@@ -1169,12 +1209,7 @@ plothist <- function(mainTitle,
    zLevels <- levels(factor(zSet))
    if(length(zColorArray) == 0) {
       if(colorMode == cmColor) {
-         if(length(zLevels) <= 4) {
-            zColorArray <- rainbow(length(zLevels))
-         }
-         else {
-            zColorArray <- rainbow(length(zLevels), gamma=2)
-         }
+         zColorArray <- rainbow2(length(zLevels))
       }
       else if(colorMode == cmGrayScale) {
          zColorArray <- graybow(length(zLevels))
@@ -1514,6 +1549,8 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
       aColumn <- "" ; aSet <- c() ; aTitle <- "A-Axis"
       bColumn <- "" ; bSet <- c() ; bTitle <- "B-Axis"
       pColumn <- "" ; pSet <- c() ; pTitle <- "P-Axis"
+      rangeSet <- c()
+      rangeColors <- c()
       filter <- parse(text="TRUE")
       if(configLength >= 9) {
          zColumn <- as.character(plotConfiguration[9])
@@ -1550,6 +1587,8 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
             yManipulator   <- plotVariable[3]
             frameColor     <- as.character(plotVariable[4])
             resultsNameSet <- unlist(plotVariable[5], recursive=FALSE)
+            rangeSet       <- unlist(plotVariable[6], recursive=FALSE)
+            rangeColors    <- unlist(plotVariable[7], recursive=FALSE)
          }
          else if(zColumn == variableName) {
             zTitle       <- as.character(plotVariable[2])
@@ -1652,6 +1691,7 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
                   pSet, aSet, bSet, xSet, ySet, zSet,
                   vSet, wSet, vTitle, wTitle,
                   xAxisTicks=xAxisTicks,yAxisTicks=yAxisTicks,
+                  rangeSet=rangeSet, rangeColors=rangeColors,
                   type="l",
                   frameColor=frameColor,
                   legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,
@@ -1663,6 +1703,7 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
                   xSet, ySet, zSet,
                   vSet, wSet, vTitle, wTitle,
                   xAxisTicks=xAxisTicks,yAxisTicks=yAxisTicks,
+                  rangeSet=rangeSet, rangeColors=rangeColors,
                   type="l",
                   frameColor=frameColor,
                   legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,

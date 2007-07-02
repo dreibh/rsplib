@@ -200,6 +200,8 @@ perftestPlotVariables <- list(
    #          "myColor",
    #          list("InputFile1", "InputFile2", ...))
    #             (measurementDirectory/Results/....data.tar.bz2 is added!)
+   #          rangeSet: c(minimum, step1, ..., stepN),
+   #          rangeColor: c("step1Color", "step2Color", ..., "stepNColor"))
    # ------------------------------------------------------------------------
 
    list("ReregistrationRatePerPEandSecond",
@@ -226,7 +228,9 @@ perftestPlotVariables <- list(
    list("CPUUtilization",
            "CPU Utilization [%]",
            "100.0 * (data1$SystemTime + data1$UserTime) / data1$Runtime",
-           "orange3", list("Summary")),
+           "orange3", list("Summary"),
+           c(-10, 50, 85, 110), c("#f0fff0", "#ffffd0", "#fff0f0")
+           ),
 
    list("PRs",
            "Registrars{G}[1]",
