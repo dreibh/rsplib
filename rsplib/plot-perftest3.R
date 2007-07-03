@@ -20,7 +20,9 @@ plotConfidence        <- 0.95
 
 # ###########################################################################
 
-filter <- "(data1$RegistrarNumber == 1) | (data1$RegistrarNumber == 2)"
+filter <- "((data1$RegistrarNumber == 1) | (data1$RegistrarNumber == 2)) &
+           (!( (data1$PRs == 7) & (data1$ReregInterval == 250) & (data1$RegistrarNumber == 1) )) &
+           (!( (data1$PRs == 8) & (data1$ReregInterval == 250) & (data1$RegistrarNumber == 2) ))"
 
 # ------ Plots --------------------------------------------------------------
 plotConfigurations <- list(
