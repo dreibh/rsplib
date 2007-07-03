@@ -229,7 +229,7 @@ perftestPlotVariables <- list(
            "CPU Utilization [%]",
            "100.0 * (data1$SystemTime + data1$UserTime) / data1$Runtime",
            "orange3", list("Summary"),
-           c(-10, 50, 85, 110), c("#f0fff0", "#ffffd0", "#fff0f0")
+           c(-10, 50, 85, 110), c("#e0ffe0", "#ffffd0", "#ffe0e0")
            ),
 
    list("PRs",
