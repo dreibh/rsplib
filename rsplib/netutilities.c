@@ -1684,16 +1684,11 @@ static bool multicastGroupMgt(int              sockfd,
 
    if(address->sa_family == AF_INET) {
       mreq.imr_multiaddr = ((struct sockaddr_in*)address)->sin_addr;
-      if(interface != NULL) {
-         strcpy(ifr.ifr_name, interface);
-         if(ext_ioctl(sockfd, SIOCGIFADDR, &ifr) != 0) {
-            return(false);
-         }
-         mreq.imr_interface = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
+      strcpy(ifr.ifr_name, interface);
+      if(ext_ioctl(sockfd, SIOCGIFADDR, &ifr) != 0) {
+         return(false);
       }
-      else {
-         memset((char*)&mreq.imr_interface, 0, sizeof(mreq.imr_interface));
-      }
+      mreq.imr_interface = ((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr;
       /* BSD sets errno to EADDRINUSE if socket has already been joined to
          the multicast group. This is no real error. */
       result = ext_setsockopt(sockfd,IPPROTO_IP,
@@ -1705,12 +1700,7 @@ static bool multicastGroupMgt(int              sockfd,
       memcpy((char*)&mreq6.ipv6mr_multiaddr,
              (char*)&((struct sockaddr_in6*)address)->sin6_addr,
              sizeof(((struct sockaddr_in6*)address)->sin6_addr));
-      if(interface != NULL) {
-         mreq6.ipv6mr_interface = if_nametoindex(interface);
-      }
-      else {
-         mreq6.ipv6mr_interface = 0;
-      }
+      mreq6.ipv6mr_interface = if_nametoindex(interface);
       result = ext_setsockopt(sockfd,IPPROTO_IPV6,
                               add ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP,
                               &mreq6, sizeof(mreq6));
@@ -1770,167 +1760,6 @@ bool joinOrLeaveMulticastGroup(int                         sd,
    fprintf(stdlog, " has succeeded on %u interfaces\n", successes);
    LOG_END
 
-   return(successes);
-}
-
-
-/* ###### Send multicast message over each possible interface ############ */
-size_t sendMulticastOverAllInterfaces(int                    sd,
-                                      int                    family,
-                                      const void*            buffer,
-                                      const size_t           length,
-                                      const int              flags,
-                                      const struct sockaddr* to,
-                                      socklen_t              tolen)
-{
-   char                lastIFName[IFNAMSIZ];
-   char                ifcbuffer[4096];
-   struct ifconf       ifc;
-   const struct ifreq* ifr;
-   const struct ifreq* ifrbase;
-   int                 offset;
-   struct in_addr      inaddr;
-   unsigned int        outif;
-   bool                ready;
-   size_t              successes = 0;
-
-#ifdef LINUX
-   FILE*               v6list;
-   unsigned int        dummy;
-   char                addrBuffer[36];
-   char                ifName[IFNAMSIZ];
-
-   if(family == AF_INET6) {
-      v6list = fopen(LINUX_PROC_IPV6_FILE, "r");
-      if (v6list != NULL) {
-         lastIFName[0] = 0x00;
-          while(fscanf(v6list, "%32s %02x %02x %02x %02x %32s\n",
-                       (char*)&addrBuffer, &dummy, &dummy, &dummy, &dummy,
-                       (char*)&ifName) == 6) {
-             if(strcmp(lastIFName, ifName)) {
-                strcpy((char*)&lastIFName, ifName);
-                LOG_VERBOSE4
-                fprintf(stdlog, "Trying to send multicast via interface %s...\n",
-                        ifName);
-                LOG_END
-                outif = if_nametoindex(ifName);
-                if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
-                   if(ext_sendto(sd, buffer, length, flags, to, tolen) > 0) {
-                      LOG_VERBOSE
-                      fprintf(stdlog, "Successfully sent multicast via interface %s\n",
-                              ifName);
-                      LOG_END
-                      successes++;
-                   }
-                }
-             }
-          }
-          fclose(v6list);
-      }
-   }
-   else {
-#endif
-
-   /* ====== Get all interfaces ========================================== */
-   ifc.ifc_len = sizeof(ifcbuffer);
-   ifc.ifc_buf = ifcbuffer;
-   if(ext_ioctl(sd, SIOCGIFCONF, (char*)&ifc) >= 0) {
-      /* ====== Loop over all interfaces ================================= */
-      lastIFName[0] = 0x00;
-      ifrbase = ifc.ifc_req;
-      for(offset = 0;offset < ifc.ifc_len; ) {
-         ifr = (const struct ifreq*)(&((char*)ifrbase)[offset]);
-#ifdef HAVE_SIN_LEN
-         /* The ifreq structure is overwritten by the following ioctl
-            calls -> calculate the new offset here! */
-         offset += sizeof(ifr->ifr_name) +
-                      (ifr->ifr_addr.sa_len > sizeof(struct sockaddr) ?
-                         ifr->ifr_addr.sa_len : sizeof(struct sockaddr));
-#else
-         offset += sizeof(struct ifreq);
-#endif
-
-         /* Is the interface's address type the right one? */
-         if(ifr->ifr_addr.sa_family != family) {
-           /* No! */
-           continue;
-         }
-
-         if(strcmp(lastIFName, ifr->ifr_name)) {
-            strcpy((char*)&lastIFName, ifr->ifr_name);
-
-            if(ext_ioctl(sd, SIOCGIFFLAGS, (char*)ifr) >= 0) {
-               if( (ifr->ifr_flags & IFF_UP) &&
-                   (ifr->ifr_flags & IFF_MULTICAST) ) {
-
-                  /* ====== This interface is usable ===================== */
-                  LOG_VERBOSE4
-                  fprintf(stdlog, "Trying to send multicast via interface %s...\n",
-                          ifr->ifr_name);
-                  LOG_END
-
-                  /* ====== Set the interface for multicast output ======= */
-                  ready = false;
-                  if(family == AF_INET) {
-                     if(ext_ioctl(sd, SIOCGIFADDR, (char*)ifr) >= 0) {
-                        memcpy(&inaddr, &((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr, sizeof(struct in_addr));
-                        if(ext_setsockopt(sd, IPPROTO_IP, IP_MULTICAST_IF, &inaddr, sizeof(inaddr)) == 0) {
-                           ready = true;
-                        }
-                        else {
-                           LOG_ERROR
-                           logerror("Cannot set interface using IP_MULTICAST_IF");
-                           LOG_END
-                        }
-                     }
-                     else {
-                        LOG_ERROR
-                        logerror("ioctl SIOCGIFADDR failed - unable to set multicast interface");
-                        fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);
-                        LOG_END
-                     }
-                  }
-#ifndef LINUX
-                  else if(family == AF_INET6) {
-                     outif = if_nametoindex(ifr->ifr_name);
-                     if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
-                        ready = true;
-                     }
-                  }
-#endif
-
-                  /* ====== Actually send the multicast message ========== */
-                  if(ready) {
-                     if(ext_sendto(sd, buffer, length, flags, to, tolen) > 0) {
-                        LOG_VERBOSE5
-                        fprintf(stdlog, "Successfully sent multicast via interface %s\n",
-                                ifr->ifr_name);
-                        LOG_END
-                        successes++;
-                     }
-                  }
-               }
-            }
-         }
-         /*
-         else {
-            LOG_ERROR
-            logerror("ioctl SIOCGIFFLAGS failed - unable to obtain interfaces details");
-            fprintf(stdlog, "Interface is %s\n", ifr->ifr_name);
-            LOG_END
-         }
-         */
-      }
-   }
-   else {
-      LOG_ERROR
-      logerror("ioctl SIOCGIFCONF failed - unable to obtain network interfaces");
-      LOG_END
-   }
-
-#ifdef LINUX
-   }
-#endif
    return(successes);
 }
 
