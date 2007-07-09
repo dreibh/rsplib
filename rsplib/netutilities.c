@@ -753,13 +753,16 @@ bool address2string(const struct sockaddr* address,
                     const size_t           length,
                     const bool             port)
 {
-   struct sockaddr_in*  ipv4address;
-   struct sockaddr_in6* ipv6address;
-   char                 str[128];
+   const struct sockaddr_in*  ipv4address;
+   const struct sockaddr_in6* ipv6address;
+   char                       str[128];
+   char                       scope[IFNAMSIZ + 16];
+   char                       ifnamebuffer[IFNAMSIZ];
+   const char*                ifname;
 
    switch(address->sa_family) {
       case AF_INET:
-         ipv4address = (struct sockaddr_in*)address;
+         ipv4address = (const struct sockaddr_in*)address;
          if(port) {
             snprintf(buffer, length,
                      "%s:%d", inet_ntoa(ipv4address->sin_addr), ntohs(ipv4address->sin_port));
@@ -770,15 +773,29 @@ bool address2string(const struct sockaddr* address,
          return(true);
        break;
       case AF_INET6:
-         ipv6address = (struct sockaddr_in6*)address;
-         ipv6address->sin6_scope_id = 0;
+         ipv6address = (const struct sockaddr_in6*)address;
+         if( IN6_IS_ADDR_LINKLOCAL(&ipv6address->sin6_addr) ||
+             IN6_IS_ADDR_MC_LINKLOCAL(&ipv6address->sin6_addr) ) {
+            ifname = if_indextoname(ipv6address->sin6_scope_id, (char*)&ifnamebuffer);
+            if(ifname == NULL) {
+               safestrcpy((char*)&ifnamebuffer, "(BAD!)", sizeof(ifnamebuffer));
+               ifname = (const char*)&ifnamebuffer;
+               LOG_ERROR
+               fputs("Missing scope ID for IPv6 link-local address!\n", stdlog);
+               LOG_END
+            }
+            snprintf((char*)&scope, sizeof(scope), "%%%s", ifname);
+         }
+         else {
+            scope[0] = 0x00;
+         }
          if(inet_ntop(AF_INET6, &ipv6address->sin6_addr, str, sizeof(str)) != NULL) {
             if(port) {
                snprintf(buffer, length,
-                        "[%s]:%d", str, ntohs(ipv6address->sin6_port));
+                        "[%s%s]:%d", str, scope, ntohs(ipv6address->sin6_port));
             }
             else {
-               snprintf(buffer, length, "%s", str);
+               snprintf(buffer, length, "%s%s", str, scope);
             }
             return(true);
          }
@@ -1718,7 +1735,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add)
 {
-   struct if_nameindex* ifindex   = if_nameindex();
+   struct if_nameindex* ifindex;
    size_t               successes = 0;
    size_t               i;
 
@@ -1728,6 +1745,8 @@ bool joinOrLeaveMulticastGroup(int                         sd,
    fputaddress(&groupAddress->sa, true, stdlog);
    fputs(" ...\n", stdlog);
    LOG_END
+
+   ifindex = if_nameindex();
    if(ifindex) {
       i = 0;
       while(ifindex[i].if_index != 0) {
@@ -1751,6 +1770,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
 
          i++;
       }
+      if_freenameindex(ifindex);
    }
 
    LOG_VERBOSE3
@@ -1773,7 +1793,7 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                                       const struct sockaddr* to,
                                       socklen_t              tolen)
 {
-   struct if_nameindex* ifindex = if_nameindex();
+   struct if_nameindex* ifindex;
    size_t               i;
    struct ifreq         ifr;
    struct in_addr       inaddr;
@@ -1781,6 +1801,7 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
    bool                 ready;
    size_t               successes = 0;
 
+   ifindex = if_nameindex();
    if(ifindex) {
       i = 0;
       while(ifindex[i].if_index != 0) {
@@ -1838,6 +1859,7 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
          }
          i++;
       }
+      if_freenameindex(ifindex);
    }
    else {
       LOG_ERROR
