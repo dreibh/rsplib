@@ -1728,7 +1728,49 @@ bool joinOrLeaveMulticastGroup(int                         sd,
                                const union sockaddr_union* groupAddress,
                                const bool                  add)
 {
-   return(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, NULL, add));
+   struct if_nameindex* ifindex   = if_nameindex();
+   size_t               successes = 0;
+   size_t               i;
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Trying multicast group %s for ",
+           add ? "join" : "leave");
+   fputaddress(&groupAddress->sa, true, stdlog);
+   fputs(" ...\n", stdlog);
+   LOG_END
+   if(ifindex) {
+      i = 0;
+      while(ifindex[i].if_index != 0) {
+         LOG_VERBOSE4
+         fprintf(stdlog, "Trying multicast group %s on %s for ",
+                 add ? "join" : "leave", ifindex[i].if_name);
+         fputaddress(&groupAddress->sa, true, stdlog);
+         fputs(" ...\n", stdlog);
+         LOG_END
+         if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, ifindex[i].if_name, add)) {
+            LOG_VERBOSE4
+            fputs("Succeeded\n", stdlog);
+            LOG_END
+            successes++;
+         }
+         else {
+            LOG_VERBOSE4
+            fputs("Failed\n", stdlog);
+            LOG_END
+         }
+
+         i++;
+      }
+   }
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Multicast group %s for ",
+           add ? "join" : "leave");
+   fputaddress(&groupAddress->sa, true, stdlog);
+   fprintf(stdlog, " has succeeded on %u interfaces\n", successes);
+   LOG_END
+
+   return(successes);
 }
 
 
