@@ -691,12 +691,14 @@ static void asapAnnounceTimerCallback(struct Dispatcher* dispatcher,
       message->RegistrarIdentifier = registrar->ServerID;
       messageLength = rserpoolMessage2Packet(message);
       if(messageLength > 0) {
-         if(ext_sendto(registrar->ASAPAnnounceSocket,
-                       message->Buffer,
-                       messageLength,
-                       0,
-                       (struct sockaddr*)&registrar->ASAPAnnounceAddress,
-                       getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress)) <= 0) {
+         if(sendMulticastOverAllInterfaces(
+               registrar->ASAPAnnounceSocket,
+               registrar->ASAPAnnounceSocketFamily,
+               message->Buffer,
+               messageLength,
+               0,
+               (struct sockaddr*)&registrar->ASAPAnnounceAddress,
+               getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress)) <= 0) {
             LOG_WARNING
             logerror("Unable to send announce");
             LOG_END
@@ -822,12 +824,14 @@ static void sendPeerPresence(struct Registrar*             registrar,
          messageLength = rserpoolMessage2Packet(message);
          if(messageLength > 0) {
             if(sd == registrar->ENRPMulticastOutputSocket) {
-               if(ext_sendto(registrar->ENRPMulticastOutputSocket,
-                             message->Buffer,
-                             messageLength,
-                             0,
-                             &destinationAddressList->sa,
-                             getSocklen(&destinationAddressList->sa)) <= 0) {
+               if(sendMulticastOverAllInterfaces(
+                     registrar->ENRPMulticastOutputSocket,
+                     registrar->ENRPMulticastOutputSocketFamily,
+                     message->Buffer,
+                     messageLength,
+                     0,
+                     &destinationAddressList->sa,
+                     getSocklen(&destinationAddressList->sa)) <= 0) {
                   LOG_WARNING
                   fputs("Sending PeerPresence via multicast failed\n", stdlog);
                   LOG_END
