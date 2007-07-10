@@ -189,14 +189,17 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
             poolNode->GlobalSeqNumber++;
          poolElementNodeArray[poolElementNodes]->SelectionCounter++;
 
-         /* Policy-specifc pool element node updates (e.g. counter changes) */
-         if(poolNode->Policy->UpdatePoolElementNodeFunction) {
-            poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNodeArray[poolElementNodes]);
+         /* Update PE entries with respect to maxIncrement setting. */
+         if(poolElementNodes < maxIncrement) {
+            /* Policy-specifc pool element node updates (e.g. counter changes) */
+            if(poolNode->Policy->UpdatePoolElementNodeFunction) {
+               poolNode->Policy->UpdatePoolElementNodeFunction(poolElementNodeArray[poolElementNodes]);
+            }
          }
 
-         if(poolElementNodes < maxIncrement) {
-            ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(poolNode, poolElementNodeArray[poolElementNodes]);
-         }
+         /* Unlinking *must* be done for all PEs
+               -> otherwise, multiple selections of the same PE possible! */
+         ST_CLASS(poolNodeUnlinkPoolElementNodeFromSelection)(poolNode, poolElementNodeArray[poolElementNodes]);
          poolElementNodes++;
       }
       else {
@@ -204,7 +207,8 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesByValueTree)(
       }
    }
 
-   for(i = 0;i < min(poolElementNodes, maxIncrement);i++) {
+   /* Re-linking of all previously unlinked nodes */
+   for(i = 0;i < poolElementNodes;i++) {
       ST_CLASS(poolNodeLinkPoolElementNodeToSelection)(poolNode, poolElementNodeArray[i]);
    }
 
@@ -223,23 +227,6 @@ static int ST_CLASS(roundRobinComparison)(
    const struct ST_CLASS(PoolElementNode)* poolElementNode1,
    const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
-   COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
-   return(0);
-}
-
-
-/*
-   #######################################################################
-   #### Priority Policy                                               ####
-   #######################################################################
-*/
-
-/* ###### Sorting Order ################################################## */
-static int ST_CLASS(priorityComparison)(
-   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
-   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
-{
-   COMPARE_KEY_DESCENDING(poolElementNode1->PolicySettings.Weight, poolElementNode2->PolicySettings.Weight);
    COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
    return(0);
 }
@@ -768,15 +755,6 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
       &ST_CLASS(weightedRandomDPFUpdatePoolElementNode),
-      NULL
-   },
-   {
-      PPT_PRIORITY, "Priority",
-      1,
-      &ST_CLASS(priorityComparison),
-      &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
-      NULL,
-      NULL,
       NULL
    },
 

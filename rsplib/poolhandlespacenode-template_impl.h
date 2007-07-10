@@ -768,6 +768,7 @@ void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
                                     &poolElementNode->PoolElementOwnershipStorageNode);
          CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
       }
+      poolElementNode->Flags |= PENF_UPDATED;
       poolElementNode->HomeRegistrarIdentifier = newHomeRegistrarIdentifier;
       result = ST_METHOD(Insert)(&poolHandlespaceNode->PoolElementOwnershipStorage,
                                  &poolElementNode->PoolElementOwnershipStorageNode);

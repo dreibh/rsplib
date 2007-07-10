@@ -395,6 +395,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolNodeAddPoolElementNode)(
          poolNode->GlobalSeqNumber) {
          ST_CLASS(poolNodeResequence)(poolNode);
       }
+      poolElementNode->Flags |= PENF_UPDATED;
       poolElementNode->SeqNumber        = poolNode->GlobalSeqNumber++;
       poolElementNode->VirtualCounter   = 0;
       poolElementNode->RoundCounter     = 0;

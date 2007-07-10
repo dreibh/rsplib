@@ -121,6 +121,9 @@ void ST_CLASS(poolElementNodeGetDescription)(
    if(poolElementNode->Flags & PENF_MARKED) {
       safestrcat(buffer, " [marked]", bufferSize);
    }
+   if(poolElementNode->Flags & PENF_UPDATED) {
+      safestrcat(buffer, " [updated]", bufferSize);
+   }
    if(fields & (PENPO_CONNECTION|PENPO_CHECKSUM|PENPO_HOME_PR|PENPO_REGLIFE|PENPO_UR_REPORTS|PENPO_LASTUPDATE)) {
       safestrcat(buffer, "\n     ", bufferSize);
    }
@@ -255,8 +258,10 @@ int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       pool
       if(poolElementNode->VirtualCounter > poolElementNode->PolicySettings.Weight) {
          poolElementNode->VirtualCounter = poolElementNode->PolicySettings.Weight;
       }
+      poolElementNode->Flags |= PENF_UPDATED;
       return(1);
    }
+   poolElementNode->Flags &= ~PENF_UPDATED;
    return(0);
 }
 

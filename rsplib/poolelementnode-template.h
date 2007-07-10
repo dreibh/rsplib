@@ -41,7 +41,8 @@ extern "C" {
 #define PENT_KEEPALIVE_TIMEOUT      1002
 
 /* Pool Element flags */
-#define PENF_MARKED (1 << 0)
+#define PENF_MARKED  (1 << 0)
+#define PENF_UPDATED (1 << 1)
 
 
 /* ====== Pool Element Node ============================================== */
