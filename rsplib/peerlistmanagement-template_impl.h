@@ -175,6 +175,14 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerLis
 }
 
 
+/* ###### Get random PeerListNode ######################################## */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetRandomPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetRandomPeerListNode)(&peerListManagement->List));
+}
+
+
 /* ###### Get next timer time stamp ###################################### */
 unsigned long long ST_CLASS(peerListManagementGetNextTimerTimeStamp)(
                       struct ST_CLASS(PeerListManagement)* peerListManagement)

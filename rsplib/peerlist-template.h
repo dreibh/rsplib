@@ -81,7 +81,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
                                   struct ST_CLASS(PeerList)*      peerList,
                                   struct ST_CLASS(PeerListNode)** peerListNode,
                                   unsigned int*                   errorCode);
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerListNode)(
                                   struct ST_CLASS(PeerList)* peerList);
 struct ST_CLASS(PeerListNode)* ST_CLASS(peerListFindPeerListNode)(
                                   struct ST_CLASS(PeerList)*          peerList,

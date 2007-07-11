@@ -657,7 +657,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
    registrarTable->OutstandingConnects = 0;
 
-   peerListNode = ST_CLASS(peerListGetRandomPeerNode)(&registrarTable->RegistrarList.List);
+   peerListNode = ST_CLASS(peerListManagementGetRandomPeerListNode)(&registrarTable->RegistrarList);
    if(peerListNode) {
       lastRegistrarIdentifier   = peerListNode->Identifier;
       lastTransportAddressBlock = transportAddressBlockDuplicate(peerListNode->AddressBlock);

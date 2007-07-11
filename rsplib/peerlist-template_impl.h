@@ -465,7 +465,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListRemovePeerListNode)(
 
 
 /* ###### Get random PeerListNode from Index ############################# */
-struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerNode)(
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetRandomPeerListNode)(
                                   struct ST_CLASS(PeerList)* peerList)
 {
    unsigned long long       value;

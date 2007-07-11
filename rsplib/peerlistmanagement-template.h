@@ -82,6 +82,8 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementFindNearestNextPeerLis
                                   struct ST_CLASS(PeerListManagement)* peerListManagement,
                                   const RegistrarIdentifierType        registrarIdentifier,
                                   const struct TransportAddressBlock*  transportAddressBlock);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetRandomPeerListNode)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement);
 unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 struct ST_CLASS(PeerListNode)*       peerListNode);
