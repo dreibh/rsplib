@@ -7,8 +7,8 @@
  * and University of Essen, Institute of Computer Networking Technology.
  *
  * Acknowledgement
- * This work was partially funded by the Bundesministerium fuer Bildung und
- * Forschung (BMBF) of the Federal Republic of Germany (Foerderkennzeichen 01AK045).
+ * This work was partially funded by the Bundesministerium f�r Bildung und
+ * Forschung (BMBF) of the Federal Republic of Germany (F�rderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
  * This program is free software; you can redistribute it and/or
@@ -53,9 +53,6 @@ struct sockaddr_testaddr {
    struct sockaddr _sockaddr;
    unsigned int     ta_addr;
    uint16_t         ta_port;
-   double           ta_pos_x;
-   double           ta_pos_y;
-   double           ta_pos_z;
 };
 
 #define ta_family _sockaddr.sa_family

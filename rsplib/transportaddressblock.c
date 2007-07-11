@@ -80,12 +80,9 @@ static int address2string(const struct sockaddr* address,
 #ifdef HAVE_TEST
       case AF_TEST:
          testaddress = (struct sockaddr_testaddr*)address;
-         snprintf(buffer, length, "%u:%u-(x=%1.2f/y=%1.2f/z=%1.2f)",
+         snprintf(buffer, length, "%u:%u",
                   testaddress->ta_addr,
-                  testaddress->ta_port,
-                  testaddress->ta_pos_x,
-                  testaddress->ta_pos_y,
-                  testaddress->ta_pos_z);
+                  testaddress->ta_port);
          return(1);
        break;
 #endif
@@ -107,17 +104,16 @@ void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBloc
                               const uint16_t                port,
                               const uint16_t                flags,
                               const union sockaddr_union*   addressArray,
-                              const size_t                  addresses,
-                              const size_t                  maxAddresses)
+                              const size_t                  addresses)
 {
    size_t i;
    transportAddressBlock->Next      = NULL;
    transportAddressBlock->Flags     = flags;
    transportAddressBlock->Port      = port;
    transportAddressBlock->Protocol  = protocol;
-   transportAddressBlock->Addresses = min(maxAddresses, addresses);
+   transportAddressBlock->Addresses = addresses;
 
-   for(i = 0;i < transportAddressBlock->Addresses;i++) {
+   for(i = 0;i < addresses;i++) {
       memcpy((void*)&transportAddressBlock->AddressArray[i],
              (void*)&addressArray[i],
              sizeof(union sockaddr_union));
@@ -406,7 +402,7 @@ size_t transportAddressBlockGetAddressesFromSCTPSocket(
                                getPort((struct sockaddr*)&sctpAddressArray[0]),
                                0,
                                (union sockaddr_union*)&sctpAddressArray,
-                               sctpAddresses, maxAddresses);
+                               sctpAddresses);
    }
    return(sctpAddresses);
 }
@@ -448,26 +444,24 @@ size_t transportAddressBlockFilter(
          }
       }
    }
-   if(selected == 0) {
-      return(0);
+
+   if(selected > 0) {
+      filteredAddressBlock->Next      = NULL;
+      filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
+      filteredAddressBlock->Port      = originalAddressBlock->Port;
+      filteredAddressBlock->Flags     = originalAddressBlock->Flags;
+      filteredAddressBlock->Addresses = selected;
+      j = 0;
+      for(i = 0;i < originalAddressBlock->Addresses;i++) {
+         if(selectionArray[i]) {
+            memcpy(&filteredAddressBlock->AddressArray[j],
+                   (const struct sockaddr*)&originalAddressBlock->AddressArray[i],
+                   sizeof(filteredAddressBlock->AddressArray[j]));
+            j++;
+         }
+      }
    }
 
-   filteredAddressBlock->Next      = NULL;
-   filteredAddressBlock->Protocol  = originalAddressBlock->Protocol;
-   filteredAddressBlock->Port      = originalAddressBlock->Port;
-   filteredAddressBlock->Flags     = originalAddressBlock->Flags;
-   filteredAddressBlock->Addresses = 0;
-   for(i = 0;i < originalAddressBlock->Addresses;i++) {
-      if(filteredAddressBlock->Addresses >= maxAddresses) {
-         break;
-      }
-      if(selectionArray[i]) {
-         memcpy(&filteredAddressBlock->AddressArray[filteredAddressBlock->Addresses],
-                  (const struct sockaddr*)&originalAddressBlock->AddressArray[i],
-                  sizeof(filteredAddressBlock->AddressArray[filteredAddressBlock->Addresses]));
-         filteredAddressBlock->Addresses++;
-      }
-   }
-   return(filteredAddressBlock->Addresses);
+   return(selected);
 }
 #endif
