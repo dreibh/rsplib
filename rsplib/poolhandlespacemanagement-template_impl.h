@@ -291,91 +291,6 @@ void ST_CLASS(poolHandlespaceManagementVerify)(
 }
 
 
-/* ###### Get number of pools ############################################ */
-size_t ST_CLASS(poolHandlespaceManagementGetPools)(
-          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
-{
-   return(ST_CLASS(poolHandlespaceNodeGetPoolNodes)(&poolHandlespaceManagement->Handlespace));
-}
-
-
-/* ###### Get number of pool elements #################################### */
-size_t ST_CLASS(poolHandlespaceManagementGetPoolElements)(
-          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
-{
-   return(ST_CLASS(poolHandlespaceNodeGetPoolElementNodes)(&poolHandlespaceManagement->Handlespace));
-}
-
-
-/* ###### Get number of owned pool elements ############################## */
-size_t ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(
-          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
-{
-   return(ST_CLASS(poolHandlespaceNodeGetOwnedPoolElementNodes)(&poolHandlespaceManagement->Handlespace));
-}
-
-
-/* ###### Get number of pool elements of given pool ###################### */
-size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfPool)(
-          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-          const struct PoolHandle*                    poolHandle)
-{
-   return(ST_CLASS(poolHandlespaceNodeGetPoolElementNodesOfPool)(
-             &poolHandlespaceManagement->Handlespace,
-             poolHandle));
-}
-
-
-/* ###### Get number of pool elements of given connection ################ */
-size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfConnection)(
-          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-          const int                                   socketDescriptor,
-          const sctp_assoc_t                          assocID)
-{
-   return(ST_CLASS(poolHandlespaceNodeGetConnectionNodesForConnection)(
-             &poolHandlespaceManagement->Handlespace,
-             socketDescriptor, assocID));
-}
-
-
-/* ###### Registration ################################################### */
-unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElementByPtr)(
-                struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
-                const struct PoolHandle*                    poolHandle,
-                const struct ST_CLASS(PoolElementNode)*     originalPoolElementNode,
-                const unsigned long long                    currentTimeStamp,
-                struct ST_CLASS(PoolElementNode)**          poolElementNode)
-{
-   return(ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-             poolHandlespaceManagement,
-             poolHandle,
-             originalPoolElementNode->HomeRegistrarIdentifier,
-             originalPoolElementNode->Identifier,
-             originalPoolElementNode->RegistrationLife,
-             &originalPoolElementNode->PolicySettings,
-             originalPoolElementNode->UserTransport,
-             originalPoolElementNode->RegistratorTransport,
-             originalPoolElementNode->ConnectionSocketDescriptor,
-             originalPoolElementNode->ConnectionAssocID,
-             currentTimeStamp,
-             poolElementNode));
-}
-
-
-/* ###### Get next timer time stamp ###################################### */
-unsigned long long ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
-                      struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
-{
-   const struct ST_CLASS(PoolElementNode)* nextTimer =
-      ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(
-         &poolHandlespaceManagement->Handlespace);
-   if(nextTimer != NULL) {
-      return(nextTimer->TimerTimeStamp);
-   }
-   return(~0);
-}
-
-
 /* ###### Find pool element ############################################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementFindPoolElement)(
                                      struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
@@ -411,6 +326,30 @@ unsigned int ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
       ST_CLASS(poolHandlespaceNodeVerify)(&poolHandlespaceManagement->Handlespace);
 #endif
    return(RSPERR_OKAY);
+}
+
+
+/* ###### Registration ################################################### */
+unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElementByPtr)(
+                struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                const struct PoolHandle*                    poolHandle,
+                const struct ST_CLASS(PoolElementNode)*     originalPoolElementNode,
+                const unsigned long long                    currentTimeStamp,
+                struct ST_CLASS(PoolElementNode)**          poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+             poolHandlespaceManagement,
+             poolHandle,
+             originalPoolElementNode->HomeRegistrarIdentifier,
+             originalPoolElementNode->Identifier,
+             originalPoolElementNode->RegistrationLife,
+             &originalPoolElementNode->PolicySettings,
+             originalPoolElementNode->UserTransport,
+             originalPoolElementNode->RegistratorTransport,
+             originalPoolElementNode->ConnectionSocketDescriptor,
+             originalPoolElementNode->ConnectionAssocID,
+             currentTimeStamp,
+             poolElementNode));
 }
 
 
@@ -732,4 +671,233 @@ size_t ST_CLASS(poolHandlespaceManagementPurgeMarkedPoolElementNodes)(
       poolElementNode = nextPoolElementNode;
    }
    return(count);
+}
+
+
+/* ###### Get number of pools ############################################ */
+size_t ST_CLASS(poolHandlespaceManagementGetPools)(
+          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPoolNodes)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get number of pool elements #################################### */
+size_t ST_CLASS(poolHandlespaceManagementGetPoolElements)(
+          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPoolElementNodes)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get number of owned pool elements ############################## */
+size_t ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(
+          const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetOwnedPoolElementNodes)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get number of pool elements of given pool ###################### */
+size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfPool)(
+          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+          const struct PoolHandle*                    poolHandle)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPoolElementNodesOfPool)(
+             &poolHandlespaceManagement->Handlespace,
+             poolHandle));
+}
+
+
+/* ###### Get number of pool elements of given connection ################ */
+size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfConnection)(
+          struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+          const int                                   socketDescriptor,
+          const sctp_assoc_t                          assocID)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetConnectionNodesForConnection)(
+             &poolHandlespaceManagement->Handlespace,
+             socketDescriptor, assocID));
+}
+
+
+/* ###### Get first timer ################################################ */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolElementTimerNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get last timer ################################################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetLastPoolElementTimerNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetLastPoolElementTimerNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get next timer ################################################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolElementTimerNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPrevPoolElementTimerNode)(&poolHandlespaceManagement->Handlespace,
+                                                                   poolElementNode));
+}
+
+
+/* ###### Get previous timer ############################################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolElementTimerNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetNextPoolElementTimerNode)(&poolHandlespaceManagement->Handlespace,
+                                                                   poolElementNode));
+}
+
+
+/* ###### Get next timer time stamp ###################################### */
+unsigned long long ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
+                      struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   const struct ST_CLASS(PoolElementNode)* nextTimer =
+      ST_CLASS(poolHandlespaceNodeGetFirstPoolElementTimerNode)(
+         &poolHandlespaceManagement->Handlespace);
+   if(nextTimer != NULL) {
+      return(nextTimer->TimerTimeStamp);
+   }
+   return(~0);
+}
+
+
+/* ###### Get first connection ############################################ */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetFirstPoolElementConnectionNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get last connection ############################################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetLastPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetLastPoolElementConnectionNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get next connection ############################################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNode)(&poolHandlespaceManagement->Handlespace,
+                                                                        poolElementNode));
+}
+
+
+/* ###### Get previous connection ######################################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolElementConnectionNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNode)(&poolHandlespaceManagement->Handlespace,
+                                                                        poolElementNode));
+}
+
+
+/* ###### Get first ownership node of given home PR identifier ########### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolElementOwnershipNodeForIdentifier)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     const RegistrarIdentifierType               homeRegistrarIdentifier)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(&poolHandlespaceManagement->Handlespace,
+                                                                                     homeRegistrarIdentifier));
+}
+
+
+/* ###### Get last ownership node of given home PR identifier ############ */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetLastPoolElementOwnershipNodeForIdentifier)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     const RegistrarIdentifierType               homeRegistrarIdentifier)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(&poolHandlespaceManagement->Handlespace,
+                                                                                     homeRegistrarIdentifier));
+}
+
+
+/* ###### Get prev connection of same home PR identifier ################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolElementConnectionNodeForSameConnection)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNodeForSameConnection)(&poolHandlespaceManagement->Handlespace,
+                                                                                         poolElementNode));
+}
+
+
+/* ###### Get next connection of same home PR identifier ################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolElementConnectionNodeForSameConnection)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetNextPoolElementConnectionNodeForSameConnection)(&poolHandlespaceManagement->Handlespace,
+                                                                                         poolElementNode));
+}
+
+
+/* ###### Get first ownership ############################################ */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolElementOwnershipNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get last ownership ############################################# */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetLastPoolElementOwnershipNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNode)(&poolHandlespaceManagement->Handlespace));
+}
+
+
+/* ###### Get next ownership ############################################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolElementOwnershipNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNode)(&poolHandlespaceManagement->Handlespace,
+                                                                       poolElementNode));
+}
+
+
+/* ###### Get previous ownership ######################################### */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolElementOwnershipNode)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(&poolHandlespaceManagement->Handlespace,
+                                                                       poolElementNode));
+}
+
+
+/* ###### Get prev ownership of same home PR identifier ################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolElementOwnershipNodeForSameIdentifier)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(&poolHandlespaceManagement->Handlespace,
+                                                                                        poolElementNode));
+}
+
+
+/* ###### Get next ownership of same home PR identifier ################## */
+struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolElementOwnershipNodeForSameIdentifier)(
+                                     struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                                     struct ST_CLASS(PoolElementNode)*           poolElementNode)
+{
+   return(ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(&poolHandlespaceManagement->Handlespace,
+                                                                                        poolElementNode));
 }
