@@ -40,13 +40,13 @@ struct TakeoverProcess* takeoverProcessNew(
    takeoverProcess = (struct TakeoverProcess*)malloc(sizeof(struct TakeoverProcess) +
                                                      sizeof(RegistrarIdentifierType) * peers);
    if(takeoverProcess != NULL) {
-      takeoverProcess->OutstandingAcknowledgements = 0;
+      takeoverProcess->OutstandingAcks = 0;
       peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerList->List);
       while(peerListNode != NULL) {
          if((peerListNode->Identifier != targetID) &&
             (peerListNode->Identifier != peerList->List.OwnIdentifier) &&
             (peerListNode->Identifier != 0)) {
-            takeoverProcess->PeerIDArray[takeoverProcess->OutstandingAcknowledgements++] =
+            takeoverProcess->PeerIDArray[takeoverProcess->OutstandingAcks++] =
                peerListNode->Identifier;
          }
          peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerList->List, peerListNode);
@@ -64,6 +64,13 @@ void takeoverProcessDelete(struct TakeoverProcess* takeoverProcess)
 }
 
 
+/* ###### Get number of outstanding acknowledgements ##################### */
+size_t takeoverProcessGetOutstandingAcks(const struct TakeoverProcess* takeoverProcess)
+{
+   return(takeoverProcess->OutstandingAcks);
+}
+
+
 /* ###### Acknowledge takeover process ################################### */
 size_t takeoverProcessAcknowledge(struct TakeoverProcess*       takeoverProcess,
                                   const RegistrarIdentifierType targetID,
@@ -71,13 +78,13 @@ size_t takeoverProcessAcknowledge(struct TakeoverProcess*       takeoverProcess,
 {
    size_t i;
 
-   for(i = 0;i < takeoverProcess->OutstandingAcknowledgements;i++) {
+   for(i = 0;i < takeoverProcess->OutstandingAcks;i++) {
       if(takeoverProcess->PeerIDArray[i] == acknowledgerID) {
-         for(   ;i < takeoverProcess->OutstandingAcknowledgements - 1;i++) {
+         for(   ;i < takeoverProcess->OutstandingAcks - 1;i++) {
             takeoverProcess->PeerIDArray[i] = takeoverProcess->PeerIDArray[i + 1];
          }
-         takeoverProcess->OutstandingAcknowledgements--;
+         takeoverProcess->OutstandingAcks--;
       }
    }
-   return(takeoverProcess->OutstandingAcknowledgements);
+   return(takeoverProcess->OutstandingAcks);
 }

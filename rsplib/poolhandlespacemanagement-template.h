@@ -64,6 +64,10 @@ void ST_CLASS(poolHandlespaceManagementNew)(
         void* disposerUserData);
 void ST_CLASS(poolHandlespaceManagementDelete)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+void ST_CLASS(poolHandlespaceManagementGetDescription)(
+        const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        char*                                             buffer,
+        const size_t                                      bufferSize);
 void ST_CLASS(poolHandlespaceManagementPrint)(
         const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
         FILE*                                             fd,
@@ -72,6 +76,7 @@ void ST_CLASS(poolHandlespaceManagementVerify)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementClear)(
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+
 HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetHandlespaceChecksum)(
                            const struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 HandlespaceChecksumType ST_CLASS(poolHandlespaceManagementGetOwnershipChecksum)(
@@ -89,6 +94,17 @@ size_t ST_CLASS(poolHandlespaceManagementGetPoolElementsOfConnection)(
           struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
           const int                                   socketDescriptor,
           const sctp_assoc_t                          assocID);
+
+struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolNode)(
+                              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceManagementGetLastPoolNode)(
+                              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceManagementGetNextPoolNode)(
+                              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                              struct ST_CLASS(PoolNode)*                  poolNode);
+struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceManagementGetPrevPoolNode)(
+                              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+                              struct ST_CLASS(PoolNode)*                  poolNode);
 
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceManagementGetFirstPoolElementTimerNode)(
                                      struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
@@ -154,6 +170,17 @@ unsigned int ST_CLASS(poolHandlespaceManagementRegisterPoolElementByPtr)(
                 const struct ST_CLASS(PoolElementNode)*     originalPoolElementNode,
                 const unsigned long long                    currentTimeStamp,
                 struct ST_CLASS(PoolElementNode)**          poolElementNode);
+
+void ST_CLASS(poolHandlespaceManagementUpdateOwnershipOfPoolElementNode)(
+              struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+              struct ST_CLASS(PoolElementNode)*           poolElementNode,
+              const RegistrarIdentifierType               newHomeRegistrarIdentifier);
+void ST_CLASS(poolHandlespaceManagementUpdateConnectionOfPoolElementNode)(
+        struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement,
+        struct ST_CLASS(PoolElementNode)*           poolElementNode,
+        const int                                   connectionSocketDescriptor,
+        const sctp_assoc_t                          connectionAssocID);
+
 unsigned long long ST_CLASS(poolHandlespaceManagementGetNextTimerTimeStamp)(
                       struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
 void ST_CLASS(poolHandlespaceManagementRestartPoolElementExpiryTimer)(

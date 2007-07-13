@@ -34,7 +34,7 @@ extern "C" {
 
 struct TakeoverProcess
 {
-   size_t                  OutstandingAcknowledgements;
+   size_t                  OutstandingAcks;
    RegistrarIdentifierType PeerIDArray[0];
 };
 
@@ -44,6 +44,7 @@ struct TakeoverProcess* takeoverProcessNew(
                            struct ST_CLASS(PeerListManagement)* peerList);
 void takeoverProcessDelete(struct TakeoverProcess* takeoverProcess);
 
+size_t takeoverProcessGetOutstandingAcks(const struct TakeoverProcess* takeoverProcess);
 size_t takeoverProcessAcknowledge(struct TakeoverProcess*       takeoverProcess,
                                   const RegistrarIdentifierType targetID,
                                   const RegistrarIdentifierType acknowledgerID);

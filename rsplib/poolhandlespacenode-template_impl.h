@@ -243,14 +243,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
 }
 
 
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const RegistrarIdentifierType         homeRegistrarIdentifier);
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const RegistrarIdentifierType         homeRegistrarIdentifier);
-
-
 /* ###### Get prev ownership of same home PR identifier ################## */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,

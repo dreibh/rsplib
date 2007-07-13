@@ -1166,6 +1166,7 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
    struct Registrar*              registrar = (struct Registrar*)userData;
    struct ST_CLASS(PeerListNode)* peerListNode;
    struct ST_CLASS(PeerListNode)* nextPeerListNode;
+   size_t                         outstandingAcks;
    size_t                         i;
 
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(
@@ -1259,11 +1260,12 @@ static void peerActionTimerCallback(struct Dispatcher* dispatcher,
       else if(peerListNode->TimerCode == PLNT_TAKEOVER_EXPIRY) {
          CHECK(peerListNode->TakeoverProcess != NULL);
 
+         outstandingAcks = takeoverProcessGetOutstandingAcks(peerListNode->TakeoverProcess);
          LOG_WARNING
          fprintf(stdlog, "Takeover of peer $%08x has expired, %u outstanding acknowledgements:\n",
                  peerListNode->Identifier,
-                 (unsigned int)peerListNode->TakeoverProcess->OutstandingAcknowledgements);
-         for(i = 0;i < peerListNode->TakeoverProcess->OutstandingAcknowledgements;i++) {
+                 (unsigned int)outstandingAcks);
+         for(i = 0;i < outstandingAcks;i++) {
             fprintf(stdlog, "- $%08x (%s)\n",
                     peerListNode->TakeoverProcess->PeerIDArray[i],
                     (ST_CLASS(peerListManagementFindPeerListNode)(
@@ -2702,7 +2704,7 @@ static void handleInitTakeoverAck(struct Registrar*       registrar,
          fprintf(stdlog, "Peer $%08x acknowledges takeover of target $%08x. %u acknowledges to go.\n",
                message->SenderID,
                message->RegistrarIdentifier,
-               (unsigned int)peerListNode->TakeoverProcess->OutstandingAcknowledgements);
+               (unsigned int)takeoverProcessGetOutstandingAcks(peerListNode->TakeoverProcess));
          LOG_END
       }
       else {
