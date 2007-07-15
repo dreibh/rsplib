@@ -306,6 +306,7 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
                 struct ST_CLASS(PeerListNode)*       peerListNode)
 {
    unsigned int errorCode;
+   void*        userDataBackup;
 
    if(STN_METHOD(IsLinked)(&peerListNode->PeerListTimerStorageNode)) {
       ST_CLASS(peerListDeactivateTimer)(&peerListManagement->List,
@@ -318,10 +319,12 @@ unsigned int ST_CLASS(peerListManagementDeregisterPeerListNodeByPtr)(
       ST_CLASS(peerListRemovePeerListNode)(&peerListManagement->List, peerListNode);
       ST_CLASS(peerListNodeDelete)(peerListNode);
       /* Note: AddressBlock and Flags remain valid here! */
+      userDataBackup = peerListNode->UserData;   /* Preserve user data! */
       ST_CLASS(peerListNodeNew)(peerListNode,
                                 0,
                                 peerListNode->Flags,
                                 peerListNode->AddressBlock);
+      peerListNode->UserData = userDataBackup;
       ST_CLASS(peerListAddPeerListNode)(&peerListManagement->List, peerListNode, &errorCode);
       CHECK(errorCode == RSPERR_OKAY);
    }
