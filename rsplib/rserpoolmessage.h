@@ -80,7 +80,7 @@ extern "C" {
 
 
 #define AHF_REGISTRATION_REJECT        (1 << 0)
-
+#define AHF_HANDLE_RESOLUTION_REJECT   (1 << 0)
 #define AHF_ENDPOINT_KEEP_ALIVE_HOME   (1 << 0)
 
 

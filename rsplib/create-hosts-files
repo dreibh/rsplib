@@ -100,9 +100,9 @@ get-all-good-hosts ()
 
 
 
-IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
-HOSTSFILEMIDDLE="essen"
-test-hosts
+# IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
+# HOSTSFILEMIDDLE="essen"
+# test-hosts
 
 IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="europe"
