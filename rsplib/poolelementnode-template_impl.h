@@ -117,12 +117,15 @@ void ST_CLASS(poolElementNodeGetDescription)(
    char poolPolicySettingsDescription[512];
    char transportAddressDescription[1024];
 
-   snprintf(buffer, bufferSize, "$%08x", poolElementNode->Identifier);
-   if(poolElementNode->Flags & PENF_MARKED) {
-      safestrcat(buffer, " [marked]", bufferSize);
+   snprintf(buffer, bufferSize, "$%08x flags=", poolElementNode->Identifier);
+   if(poolElementNode->Flags & PENF_NEW) {
+      safestrcat(buffer, "[new]", bufferSize);
    }
    if(poolElementNode->Flags & PENF_UPDATED) {
-      safestrcat(buffer, " [updated]", bufferSize);
+      safestrcat(buffer, "[updated]", bufferSize);
+   }
+   if(poolElementNode->Flags & PENF_MARKED) {
+      safestrcat(buffer, "[marked]", bufferSize);
    }
    if(fields & (PENPO_CONNECTION|PENPO_CHECKSUM|PENPO_HOME_PR|PENPO_REGLIFE|PENPO_UR_REPORTS|PENPO_LASTUPDATE)) {
       safestrcat(buffer, "\n     ", bufferSize);

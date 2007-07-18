@@ -57,12 +57,49 @@ void ST_CLASS(peerListManagementPrint)(
         struct ST_CLASS(PeerListManagement)* peerListManagement,
         FILE*                                fd,
         const unsigned int                   fields);
+void ST_CLASS(peerListManagementGetDescription)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        char*                                buffer,
+        const size_t                         bufferSize);
+
 void ST_CLASS(peerListManagementVerify)(
         struct ST_CLASS(PeerListManagement)* peerListManagement);
 void ST_CLASS(peerListManagementClear)(
         struct ST_CLASS(PeerListManagement)* peerListManagement);
 size_t ST_CLASS(peerListManagementGetPeers)(
           const struct ST_CLASS(PeerListManagement)* peerListManagement);
+
+void ST_CLASS(peerListManagementActivateTimer)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        struct ST_CLASS(PeerListNode)*       peerListNode,
+        const unsigned int                   timerCode,
+        const unsigned long long             timerTimeStamp);
+void ST_CLASS(peerListManagementDeactivateTimer)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        struct ST_CLASS(PeerListNode)*       peerListNode);
+
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetLastPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetPrevPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode);
+
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetFirstPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetLastPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetNextPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetPrevPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode);
+
 unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                 struct ST_CLASS(PeerListManagement)* peerListManagement,
                 const RegistrarIdentifierType        registrarIdentifier,

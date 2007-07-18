@@ -65,7 +65,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromIndexSto
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
    }
    return(NULL);
-};
+}
 
 
 /* ###### Get last PeerListNode from Index ############################### */
@@ -77,7 +77,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromIndexStor
       return(ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)(node));
    }
    return(NULL);
-};
+}
 
 
 /* ###### Get next PeerListNode from Index ############################### */
@@ -117,7 +117,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetFirstPeerListNodeFromTimerSto
       return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
    }
    return(NULL);
-};
+}
 
 
 /* ###### Get last PeerListNode from Timer ############################### */
@@ -129,7 +129,7 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListGetLastPeerListNodeFromTimerStor
       return(ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)(node));
    }
    return(NULL);
-};
+}
 
 
 /* ###### Get next PeerListNode from Timer ############################### */
@@ -274,8 +274,7 @@ unsigned int ST_CLASS(peerListCheckPeerListNodeCompatibility)(
                 const struct ST_CLASS(PeerList)*     peerList,
                 const struct ST_CLASS(PeerListNode)* peerListNode)
 {
-   /* It does not make sense to insert its one's own ID into the
-      peer list! */
+   /* It does not make sense to insert its own ID into the peer list! */
    if((peerList->OwnIdentifier != UNDEFINED_REGISTRAR_IDENTIFIER) &&
       (peerListNode->Identifier == peerList->OwnIdentifier)) {
       return(RSPERR_OWN_ID);
@@ -336,6 +335,7 @@ void ST_CLASS(peerListUpdatePeerListNode)(
          CHECK(result == &peerListNode->PeerListIndexStorageNode);
       }
       ST_CLASS(peerListNodeUpdate)(peerListNode, source);
+      peerListNode->Flags &= ~PLNF_NEW;
    }
 }
 
@@ -357,12 +357,12 @@ struct ST_CLASS(PeerListNode)* ST_CLASS(peerListAddOrUpdatePeerListNode)(
    struct ST_CLASS(PeerListNode)* newPeerListNode;
 
    newPeerListNode = ST_CLASS(peerListAddPeerListNode)(peerList, *peerListNode, errorCode);
-
    if(newPeerListNode != NULL) {
       if(newPeerListNode != *peerListNode) {
          ST_CLASS(peerListUpdatePeerListNode)(peerList, newPeerListNode, *peerListNode, errorCode);
       }
       else {
+         newPeerListNode->Flags |= PLNF_NEW;
          *peerListNode = NULL;
       }
    }

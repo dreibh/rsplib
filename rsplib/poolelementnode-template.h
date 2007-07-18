@@ -42,7 +42,8 @@ extern "C" {
 
 /* Pool Element flags */
 #define PENF_MARKED  (1 << 0)
-#define PENF_UPDATED (1 << 1)
+#define PENF_UPDATED (1 << 14)   /* Indicates that reregistration updated entry */
+#define PENF_NEW     (1 << 15)   /* Indicates that registration added new node  */
 
 
 /* ====== Pool Element Node ============================================== */

@@ -179,17 +179,20 @@ void ST_CLASS(peerListNodeGetDescription)(
             peerListNode->Identifier,
             peerListNode->LastUpdateTimeStamp,
             (unsigned int)handlespaceChecksumFinish(peerListNode->OwnershipChecksum));
+   if(peerListNode->Flags & PENF_NEW) {
+      safestrcat(buffer, "[new]", bufferSize);
+   }
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {
-      safestrcat(buffer, "static", bufferSize);
+      safestrcat(buffer, "(static)", bufferSize);
    }
    else {
-      safestrcat(buffer, "dynamic", bufferSize);
+      safestrcat(buffer, "[dynamic]", bufferSize);
    }
    if(peerListNode->Flags & PLNF_FROM_PEER) {
-      safestrcat(buffer, "+fromPeer", bufferSize);
+      safestrcat(buffer, "[fromPeer]", bufferSize);
    }
    if(peerListNode->Flags & PLNF_MULTICAST) {
-      safestrcat(buffer, "+multicast", bufferSize);
+      safestrcat(buffer, "[multicast]", bufferSize);
    }
 
    if(peerListNode->Status & PLNS_LISTSYNC) {

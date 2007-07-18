@@ -766,6 +766,9 @@ void ST_CLASS(poolHandlespaceNodeUpdateOwnershipOfPoolElementNode)(
                                  &poolElementNode->PoolElementOwnershipStorageNode);
       CHECK(result == &poolElementNode->PoolElementOwnershipStorageNode);
    }
+   else {
+      poolElementNode->Flags &= ~PENF_UPDATED;
+   }
 
    /* ====== Update handlespace checksum ================================= */
    poolHandlespaceNode->HandlespaceChecksum = handlespaceChecksumSub(
@@ -838,7 +841,6 @@ void ST_CLASS(poolHandlespaceNodeUpdatePoolElementNode)(
    ST_CLASS(poolNodeUpdatePoolElementNode)(poolElementNode->OwnerPoolNode,
                                            poolElementNode, source, errorCode);
    if(*errorCode == RSPERR_OKAY) {
-
       /* ====== Change connection ======================================== */
       ST_CLASS(poolHandlespaceNodeUpdateConnectionOfPoolElementNode)(
          poolHandlespaceNode, poolElementNode,
@@ -852,6 +854,7 @@ void ST_CLASS(poolHandlespaceNodeUpdatePoolElementNode)(
          poolHandlespaceNode, poolElementNode,
          source->HomeRegistrarIdentifier);
 
+      poolElementNode->Flags &= ~PENF_NEW;
    }
 
 #ifdef VERIFY
@@ -909,6 +912,7 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeAddOrUpdatePoolEle
                                                             UNDEFINED_REGISTRAR_IDENTIFIER,
                                                             poolHandlespaceNode->NotificationUserData);
          }
+         newPoolElementNode->Flags |= PENF_NEW;
       }
    }
    if(newPoolNode == *poolNode) {

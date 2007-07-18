@@ -41,11 +41,12 @@ struct TakeoverProcess;
 #define PLNF_DYNAMIC   (1 << 0)
 #define PLNF_FROM_PEER (1 << 1)
 #define PLNF_MULTICAST (1 << 2)
+#define PLNF_NEW       (1 << 15)  /* Indicates that registration added new node */
 
 /* Status */
-#define PLNS_LISTSYNC  (1 << 0)   /* Peer List synchronization in progress    */
-#define PLNS_HTSYNC    (1 << 1)   /* Handle Table synchronization in progress */
-#define PLNS_MENTOR    (1 << 2)   /* Synchronization with mentor PR           */
+#define PLNS_LISTSYNC  (1 << 0)   /* Peer List synchronization in progress      */
+#define PLNS_HTSYNC    (1 << 1)   /* Handle Table synchronization in progress   */
+#define PLNS_MENTOR    (1 << 2)   /* Synchronization with mentor PR             */
 
 /* Timer Codes */
 #define PLNT_MAX_TIME_LAST_HEARD  3000

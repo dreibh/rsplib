@@ -120,6 +120,39 @@ void ST_CLASS(peerListManagementPrint)(
 }
 
 
+/* ###### Insert PeerListNode into timer storage ######################### */
+void ST_CLASS(peerListManagementActivateTimer)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        struct ST_CLASS(PeerListNode)*       peerListNode,
+        const unsigned int                   timerCode,
+        const unsigned long long             timerTimeStamp)
+{
+   return(ST_CLASS(peerListActivateTimer)(
+             &peerListManagement->List, peerListNode,
+             timerCode, timerTimeStamp));
+}
+
+
+/* ###### Remove PeerListNode from timer storage ######################### */
+void ST_CLASS(peerListManagementDeactivateTimer)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        struct ST_CLASS(PeerListNode)*       peerListNode)
+{
+   return(ST_CLASS(peerListDeactivateTimer)(
+             &peerListManagement->List, peerListNode));
+}
+
+
+/* ###### Get textual description ######################################## */
+void ST_CLASS(peerListManagementGetDescription)(
+        struct ST_CLASS(PeerListManagement)* peerListManagement,
+        char*                                buffer,
+        const size_t                         bufferSize)
+{
+   return(ST_CLASS(peerListGetDescription)(&peerListManagement->List, buffer, bufferSize));
+}
+
+
 /* ###### Verify structures ############################################## */
 void ST_CLASS(peerListManagementVerify)(
         struct ST_CLASS(PeerListManagement)* peerListManagement)
@@ -133,6 +166,74 @@ size_t ST_CLASS(peerListManagementGetPeers)(
                  const struct ST_CLASS(PeerListManagement)* peerListManagement)
 {
    return(ST_CLASS(peerListGetPeerListNodes)(&peerListManagement->List));
+}
+
+
+/* ###### Get first PeerListNode from Index ############################## */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerListManagement->List));
+}
+
+
+/* ###### Get last PeerListNode from Index ############################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetLastPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetLastPeerListNodeFromIndexStorage)(&peerListManagement->List));
+}
+
+
+/* ###### Get next PeerListNode from Index ############################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode)
+{
+   return(ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerListManagement->List, peerListNode));
+}
+
+
+/* ###### Get previous PeerListNode from Index ########################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetPrevPeerListNodeFromIndexStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode)
+{
+   return(ST_CLASS(peerListGetPrevPeerListNodeFromIndexStorage)(&peerListManagement->List, peerListNode));
+}
+
+
+/* ###### Get first PeerListNode from Timer ############################## */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetFirstPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetFirstPeerListNodeFromTimerStorage)(&peerListManagement->List));
+}
+
+
+/* ###### Get last PeerListNode from Timer ############################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetLastPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement)
+{
+   return(ST_CLASS(peerListGetLastPeerListNodeFromTimerStorage)(&peerListManagement->List));
+}
+
+
+/* ###### Get next PeerListNode from Timer ############################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetNextPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode)
+{
+   return(ST_CLASS(peerListGetNextPeerListNodeFromTimerStorage)(&peerListManagement->List, peerListNode));
+}
+
+
+/* ###### Get previous PeerListNode from Timer ########################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetPrevPeerListNodeFromTimerStorage)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  struct ST_CLASS(PeerListNode)*       peerListNode)
+{
+   return(ST_CLASS(peerListGetPrevPeerListNodeFromTimerStorage)(&peerListManagement->List, peerListNode));
 }
 
 
@@ -209,6 +310,7 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
    struct ST_CLASS(PeerListNode) updatedPeerListNode;
    struct TransportAddressBlock* userTransport;
    unsigned int                  errorCode;
+   bool                          newPeer;
 
    /* ====== Handle dynamic entry ======================================== */
    if(flags & PLNF_DYNAMIC) {
@@ -224,12 +326,17 @@ unsigned int ST_CLASS(peerListManagementRegisterPeerListNode)(
                                                                            transportAddressBlock)) != NULL)
           ) && (!((*peerListNode)->Flags & PLNF_DYNAMIC)) ) {
          /* ====== Update of static entry ================================ */
+         newPeer = ((*peerListNode)->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER);
          ST_CLASS(peerListNodeNew)(&updatedPeerListNode,
                                     registrarIdentifier,
                                     (*peerListNode)->Flags, /* PLNF_DYNAMIC is never set here! */
                                     (*peerListNode)->AddressBlock);
          ST_CLASS(peerListUpdatePeerListNode)(&peerListManagement->List, *peerListNode,
                                               &updatedPeerListNode, &errorCode);
+         if(newPeer) {
+            /* New peer, because ID 0 changed to actual ID! */
+            (*peerListNode)->Flags |= PLNF_NEW;
+         }
          if(peerListManagement->Handlespace) {
             (*peerListNode)->OwnershipChecksum =
                ST_CLASS(poolHandlespaceNodeComputeOwnershipChecksum)(
