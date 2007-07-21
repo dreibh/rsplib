@@ -1060,7 +1060,6 @@ static void sendASAPEndpointKeepAlive(struct Registrar*                 registra
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
          fputs(" failed\n", stdlog);
          LOG_END
-         return;
       }
 
       rserpoolMessageDelete(message);

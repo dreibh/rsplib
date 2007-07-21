@@ -33,7 +33,7 @@
 
 #define MAX_PROCESSES           64
 #define MAX_ARGS               128
-#define MIN_RUNTIME        3000000
+#define MIN_RUNTIME         500000
 #define INTERRUPT_TIMEOUT  5000000
 
 
@@ -54,9 +54,26 @@ struct ForkProcess
 };
 
 
-unsigned long long vary(const unsigned long long timeout)
+#define DIST_UNIFORM 0
+#define DIST_NEGEXP  1
+
+
+/* ###### Get new random interval ######################################## */
+unsigned long long getRandomInterval(const unsigned int       distribution,
+                                     const unsigned long long timeout)
 {
-   unsigned long long newTimeout = random64() % timeout;
+   unsigned long long newTimeout = 0;
+
+   switch(distribution) {
+      case DIST_UNIFORM:
+         newTimeout = random64() % timeout;
+       break;
+      case DIST_NEGEXP:
+         newTimeout = (unsigned long long)rint(randomExpDouble((double)timeout));
+printf("%llu\n",newTimeout);
+       break;
+    }
+
    if(newTimeout < MIN_RUNTIME) {
       newTimeout = MIN_RUNTIME;
    }
@@ -64,27 +81,29 @@ unsigned long long vary(const unsigned long long timeout)
 }
 
 
+/* ###### Check whether process has terminated ########################### */
 bool isExisting(pid_t pid)
 {
-   const int result = waitpid(pid,NULL,WNOHANG);
+   const int result = waitpid(pid, NULL, WNOHANG);
    return(result == 0);
 }
 
 
-
+/* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
    struct ForkProcess process[MAX_PROCESSES];
    char*              argcopy[MAX_ARGS];
    pid_t              mainProgramPID;
-   unsigned long long             now;
-   unsigned long      timeout;
+   unsigned long long now;
+   unsigned long long timeout;
+   unsigned int       distribution = DIST_UNIFORM;
    size_t             count;
    size_t             progarg;
    size_t             i, j;
 
    if(argc < 3) {
-      printf("Usage: %s [Count] [Timeout (s)] [Program] {Parameter} ...\n",argv[0]);
+      printf("Usage: %s [Count] [{exp|uniform}:Timeout(Microseconds)] [Program] {Parameter} ...\n",argv[0]);
       exit(1);
    }
 
@@ -92,9 +111,15 @@ int main(int argc, char** argv)
    if(count > MAX_PROCESSES) {
       count = MAX_PROCESSES;
    }
-   timeout = atol(argv[2]) * 1000000;
-   if(timeout < 1000000) {
-      timeout = 1000000;
+   if(sscanf(argv[2], "uniform:%llu", &timeout) == 1) {
+      distribution = DIST_UNIFORM;
+   }
+   else if(sscanf(argv[2], "exp:%llu", &timeout) == 1) {
+      distribution = DIST_NEGEXP;
+   }
+   else {
+      fputs("ERROR: Invalid timeout specified!\n", stderr);
+      exit(1);
    }
    progarg = 3;
 
@@ -102,7 +127,7 @@ int main(int argc, char** argv)
    mainProgramPID = getpid();
    for(i = 0;i < count;i++) {
       process[i].Start  = now;
-      process[i].End    = process[i].Start + vary(timeout);
+      process[i].End    = process[i].Start + getRandomInterval(distribution,timeout);
       process[i].Kill   = process[i].End + INTERRUPT_TIMEOUT;
       process[i].PID    = 0;
       process[i].Status = FPS_Waiting;
@@ -163,7 +188,7 @@ int main(int argc, char** argv)
                else {
                   printf("Process #%d has terminated.\n", (int)process[i].PID);
                   process[i].Start  = now;
-                  process[i].End    = now + vary(timeout);
+                  process[i].End    = now + getRandomInterval(distribution,timeout);
                   process[i].Kill   = process[i].End + INTERRUPT_TIMEOUT;
                   process[i].PID    = 0;
                   process[i].Status = FPS_Waiting;

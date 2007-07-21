@@ -1831,12 +1831,6 @@ size_t sendMulticastOverAllInterfaces(int                    sd,
                         LOG_END
                      }
                   }
-                  else {
-                     LOG_ERROR
-                     logerror("ioctl SIOCGIFADDR failed - unable to set multicast interface");
-                     fprintf(stdlog, "Interface is %s\n", ifr.ifr_name);
-                     LOG_END
-                  }
                }
                else if(family == AF_INET6) {
                   outif = ifindex[i].if_index;
@@ -2201,7 +2195,7 @@ size_t getladdrsplus(const int              fd,
                      const sctp_assoc_t     assocID,
                      union sockaddr_union** addressArray)
 {
-   struct sockaddr* packedAddresses;
+   struct sockaddr* packedAddresses = NULL;
 #ifdef SOLARIS
    int addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
 #else
@@ -2278,7 +2272,7 @@ size_t getpaddrsplus(const int              fd,
                      const sctp_assoc_t     assocID,
                      union sockaddr_union** addressArray)
 {
-   struct sockaddr* packedAddresses;
+   struct sockaddr* packedAddresses = NULL;
 #ifdef SOLARIS
    int addrs = sctp_getpaddrs(fd, assocID, (void **)&packedAddresses);
 #else

@@ -78,6 +78,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -114,6 +115,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -151,6 +153,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -188,6 +191,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -225,6 +229,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -262,6 +267,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -299,6 +305,7 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "takeoverprocess.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"

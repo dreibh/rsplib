@@ -1,3 +1,10 @@
+INTERESSANT:
+Alte Dynamic-Entries werden nicht verworfen wenn MTBF sehr klein:
+ Übertragung per Peer List:
+    toter Eintrag -> PL an Peer -> PL an nächsten Peer -> ...
+
+======
+
 lksctp-Problem bei Kernel 2.6.17:
 
 Server <-> Router (nur IP4!) <-> Client
