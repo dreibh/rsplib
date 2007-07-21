@@ -60,6 +60,10 @@ struct TakeoverProcess* takeoverProcessNew(
 /* ###### Destructor ##################################################### */
 void takeoverProcessDelete(struct TakeoverProcess* takeoverProcess)
 {
+   /* IMPORTANT:
+      If more than free(takeoverProcess) is done here,
+      peerListManagementPeerListNodeDisposer() needs a review, since it
+      only calls free()! */
    free(takeoverProcess);
 }
 

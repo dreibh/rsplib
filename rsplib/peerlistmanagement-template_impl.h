@@ -74,7 +74,7 @@ static void ST_CLASS(peerListManagementPeerListNodeDisposer)(void* arg1,
       peerListNode->UserData = NULL;
    }
    if(peerListNode->TakeoverProcess) {
-      takeoverProcessDelete(peerListNode->TakeoverProcess);
+      free(peerListNode->TakeoverProcess);
       peerListNode->TakeoverProcess = NULL;
    }
    transportAddressBlockDelete(peerListNode->AddressBlock);
