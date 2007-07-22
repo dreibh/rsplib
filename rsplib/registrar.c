@@ -121,7 +121,6 @@ struct Registrar
    struct FDCallback                          ENRPUnicastSocketFDCallback;
    struct MessageBuffer*                      ENRPUnicastMessageBuffer;
    bool                                       ENRPAnnounceViaMulticast;
-   bool                                       ENRPUseMulticast;
    struct Timer                               ENRPAnnounceTimer;
 
    bool                                       InStartupPhase;
@@ -185,7 +184,6 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                int                            enrpMulticastInputSocket,
                                const bool                     asapSendAnnounces,
                                const union sockaddr_union*    asapAnnounceAddress,
-                               const bool                     enrpUseMulticast,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress,
                                FILE*                          statsFile,
@@ -256,7 +254,6 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                int                            enrpMulticastInputSocket,
                                const bool                     asapSendAnnounces,
                                const union sockaddr_union*    asapAnnounceAddress,
-                               const bool                     enrpUseMulticast,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress,
                                FILE*                          statsFile,
@@ -337,7 +334,6 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->ENRPUnicastSocket         = enrpUnicastSocket;
       registrar->ENRPMulticastInputSocket  = enrpMulticastOutputSocket;
       registrar->ENRPMulticastOutputSocket = enrpMulticastInputSocket;
-      registrar->ENRPUseMulticast          = enrpUseMulticast;
       registrar->ENRPAnnounceViaMulticast  = enrpAnnounceViaMulticast;
 
 
@@ -430,7 +426,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->ENRPMulticastOutputSocketFamily = getFamily(&registrar->ENRPMulticastAddress.sa);
 
       timerStart(&registrar->ENRPAnnounceTimer, getMicroTime() + registrar->MentorDiscoveryTimeout);
-      if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
+      if(registrar->ENRPAnnounceViaMulticast) {
          if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
                                       &registrar->ENRPMulticastAddress,
                                       true) == false) {
@@ -811,8 +807,7 @@ static void sendENRPPresence(struct Registrar*             registrar,
                                                          MAX_PE_TRANSPORTADDRESSES,
                                                          true) > 0) {
          ST_CLASS(peerListNodeNew)(&peerListNode,
-                                   registrar->ServerID,
-                                   registrar->ENRPUseMulticast ? PLNF_MULTICAST : 0,
+                                   registrar->ServerID, 0,
                                    localAddressArray);
 
          LOG_VERBOSE3
@@ -854,6 +849,44 @@ static void sendENRPPresence(struct Registrar*             registrar,
          LOG_END
       }
    }
+}
+
+
+/* ###### Send ENRP peer presence message to all peers ################### */
+static void sendENRPPresenceToAllPeers(struct Registrar* registrar)
+{
+   struct ST_CLASS(PeerListNode)* peerListNode;
+
+   peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
+   while(peerListNode != NULL) {
+      /* If MSG_SEND_TO_ALL is available, unicast messages must only be sent
+         to static peers not yet connected. That is, their ID is 0. */
+#ifdef MSG_SEND_TO_ALL
+      if(peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) {
+#else
+      {
+#endif
+         LOG_VERBOSE2
+         fprintf(stdlog, "Sending Presence to unicast peer $%08x...\n",
+                 peerListNode->Identifier);
+         LOG_END
+         sendENRPPresence(registrar,
+                          registrar->ENRPUnicastSocket, 0, 0,
+                          peerListNode->AddressBlock->AddressArray,
+                          peerListNode->AddressBlock->Addresses,
+                          peerListNode->Identifier,
+                          false);
+      }
+      peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
+                        &registrar->Peers, peerListNode);
+   }
+#ifdef MSG_SEND_TO_ALL
+#warning Using MSG_SEND_TO_ALL!
+   sendENRPPresence(registrar,
+                    registrar->ENRPUnicastSocket, 0,
+                    MSG_SEND_TO_ALL,
+                    NULL, 0, 0, false);
+#endif
 }
 
 
@@ -949,14 +982,15 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
                                       void*              userData)
 {
-   struct ST_CLASS(PeerListNode)* peerListNode;
-   struct Registrar*              registrar = (struct Registrar*)userData;
+   struct Registrar* registrar = (struct Registrar*)userData;
 
+   /* ====== Leave startup phase ========================================= */
    if(registrar->InStartupPhase) {
       beginNormalOperation(registrar, false);
    }
 
-   if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
+   /* ====== Send Presence as multicast announce ========================= */
+   if(registrar->ENRPAnnounceViaMulticast) {
       if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
                                    &registrar->ENRPMulticastAddress,
                                    true) == false) {
@@ -971,37 +1005,10 @@ static void enrpAnnounceTimerCallback(struct Dispatcher* dispatcher,
                        0, false);
    }
 
-   peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
-   while(peerListNode != NULL) {
-      /* If MSG_SEND_TO_ALL is available, unicast messages must only be sent
-         to static peers not yet connected. That is, their ID is 0. */
-      if( (!(peerListNode->Flags & PLNF_MULTICAST))
-#ifdef MSG_SEND_TO_ALL
-          && (peerListNode->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)
-#endif
-        ) {
-         LOG_VERBOSE2
-         fprintf(stdlog, "Sending Presence to unicast peer $%08x...\n",
-                 peerListNode->Identifier);
-         LOG_END
-         sendENRPPresence(registrar,
-                          registrar->ENRPUnicastSocket, 0, 0,
-                          peerListNode->AddressBlock->AddressArray,
-                          peerListNode->AddressBlock->Addresses,
-                          peerListNode->Identifier,
-                          false);
-      }
-      peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
-                        &registrar->Peers, peerListNode);
-   }
-#ifdef MSG_SEND_TO_ALL
-#warning Using MSG_SEND_TO_ALL!
-   sendENRPPresence(registrar,
-                    registrar->ENRPUnicastSocket, 0,
-                    MSG_SEND_TO_ALL,
-                    NULL, 0, 0, false);
-#endif
+   /* ====== Send Presence to peers ====================================== */
+   sendENRPPresenceToAllPeers(registrar);
 
+   /* ====== Restart heartbeat cycle timer =============================== */
    unsigned long long n = getMicroTime() + randomizeCycle(registrar->PeerHeartbeatCycle);
    timerStart(timer, n);
 }
@@ -1311,38 +1318,19 @@ static void sendENRPInitTakeover(struct Registrar*             registrar,
       message->ReceiverID   = 0;
       message->RegistrarIdentifier = targetID;
 
-      if(registrar->ENRPUseMulticast) {
-         LOG_VERBOSE2
-         fputs("Sending InitTakeover via ENRP multicast socket...\n", stdlog);
-         LOG_END
-         message->ReceiverID    = 0;
-         message->AddressArray  = &registrar->ENRPMulticastAddress;
-         message->Addresses     = 1;
-         if(rserpoolMessageSend(IPPROTO_UDP,
-                                registrar->ENRPMulticastOutputSocket,
-                                0, 0, 0, 0,
-                                message) == false) {
-            LOG_WARNING
-            fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
-            LOG_END
-         }
-      }
-
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
       while(peerListNode != NULL) {
-         if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-            message->ReceiverID   = peerListNode->Identifier;
-            message->AddressArray = peerListNode->AddressBlock->AddressArray;
-            message->Addresses    = peerListNode->AddressBlock->Addresses;
-            LOG_VERBOSE
-            fprintf(stdlog, "Sending InitTakeover to unicast peer $%08x...\n",
-                    peerListNode->Identifier);
-            LOG_END
-            rserpoolMessageSend(IPPROTO_SCTP,
-                                registrar->ENRPUnicastSocket,
-                                0, 0, 0, 0,
-                                message);
-         }
+         message->ReceiverID   = peerListNode->Identifier;
+         message->AddressArray = peerListNode->AddressBlock->AddressArray;
+         message->Addresses    = peerListNode->AddressBlock->Addresses;
+         LOG_VERBOSE
+         fprintf(stdlog, "Sending InitTakeover to unicast peer $%08x...\n",
+                 peerListNode->Identifier);
+         LOG_END
+         rserpoolMessageSend(IPPROTO_SCTP,
+                             registrar->ENRPUnicastSocket,
+                             0, 0, 0, 0,
+                             message);
          peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
                            &registrar->Peers, peerListNode);
       }
@@ -1354,10 +1342,10 @@ static void sendENRPInitTakeover(struct Registrar*             registrar,
 
 /* ###### Send peer init takeover acknowledgement ######################## */
 static void sendENRPInitTakeoverAck(struct Registrar*             registrar,
-                                const int                     sd,
-                                const sctp_assoc_t            assocID,
-                                const RegistrarIdentifierType receiverID,
-                                const RegistrarIdentifierType targetID)
+                                    const int                     sd,
+                                    const sctp_assoc_t            assocID,
+                                    const RegistrarIdentifierType receiverID,
+                                    const RegistrarIdentifierType targetID)
 {
    struct RSerPoolMessage* message;
 
@@ -1418,39 +1406,20 @@ static void sendENRPHandleUpdate(struct Registrar*                 registrar,
       fputs("\n", stdlog);
       LOG_END
 
-      if(registrar->ENRPUseMulticast) {
-         LOG_VERBOSE2
-         fputs("Sending HandleUpdate via ENRP multicast socket...\n", stdlog);
-         LOG_END
-         message->ReceiverID    = 0;
-         message->AddressArray  = &registrar->ENRPMulticastAddress;
-         message->Addresses     = 1;
-         if(rserpoolMessageSend(IPPROTO_UDP,
-                                registrar->ENRPMulticastOutputSocket,
-                                0, 0, 0, 0,
-                                message) == false) {
-            LOG_WARNING
-            fputs("Sending HandleUpdate via ENRP multicast socket failed\n", stdlog);
-            LOG_END
-         }
-      }
-
 #ifndef MSG_SEND_TO_ALL
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
       while(peerListNode != NULL) {
-         if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-            message->ReceiverID   = peerListNode->Identifier;
-            message->AddressArray = peerListNode->AddressBlock->AddressArray;
-            message->Addresses    = peerListNode->AddressBlock->Addresses;
-            LOG_VERBOSE
-            fprintf(stdlog, "Sending HandleUpdate to unicast peer $%08x...\n",
-                    peerListNode->Identifier);
-            LOG_END
-            rserpoolMessageSend(IPPROTO_SCTP,
-                                registrar->ENRPUnicastSocket,
-                                0, 0, 0, 0,
-                                message);
-         }
+         message->ReceiverID   = peerListNode->Identifier;
+         message->AddressArray = peerListNode->AddressBlock->AddressArray;
+         message->Addresses    = peerListNode->AddressBlock->Addresses;
+         LOG_VERBOSE
+         fprintf(stdlog, "Sending HandleUpdate to unicast peer $%08x...\n",
+                 peerListNode->Identifier);
+         LOG_END
+         rserpoolMessageSend(IPPROTO_SCTP,
+                             registrar->ENRPUnicastSocket,
+                             0, 0, 0, 0,
+                             message);
          peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
                            &registrar->Peers, peerListNode);
       }
@@ -2271,14 +2240,10 @@ static void handleENRPPresence(struct Registrar*       registrar,
 
    /* ====== Add/update peer ============================================= */
    if(message->PeerListNodePtr) {
-      int flags = PLNF_DYNAMIC;
-      if((registrar->ENRPUseMulticast) && (fd == registrar->ENRPMulticastOutputSocket)) {
-         flags |= PLNF_MULTICAST;
-      }
       result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                   &registrar->Peers,
                   message->PeerListNodePtr->Identifier,
-                  flags,
+                  PLNF_DYNAMIC,
                   enrpTransportAddressBlock,
                   getMicroTime(),
                   &peerListNode);
@@ -2388,7 +2353,7 @@ static void handleENRPPresence(struct Registrar*       registrar,
 
          if((message->Flags & EHF_PRESENCE_REPLY_REQUIRED) &&
             (fd != registrar->ENRPMulticastOutputSocket) &&
-            (message->SenderID != 0)) {
+            (message->SenderID != UNDEFINED_REGISTRAR_IDENTIFIER)) {
             LOG_VERBOSE
             fputs("Presence with ReplyRequired flag set -> Sending reply...\n", stdlog);
             LOG_END
@@ -2447,32 +2412,17 @@ static void handleENRPInitTakeover(struct Registrar*       registrar,
       fprintf(stdlog, "Peer $%08x has initiated takeover -> trying to stop this by Presences\n",
               message->SenderID);
       LOG_END
-      if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
+      /* ====== Send presence as multicast announce ====================== */
+      if(registrar->ENRPAnnounceViaMulticast) {
          sendENRPPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
                           (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
                           0, false);
       }
-
-      peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
-      while(peerListNode != NULL) {
-         if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-            LOG_VERBOSE
-            fprintf(stdlog, "Sending Presence to unicast peer $%08x...\n",
-                     peerListNode->Identifier);
-            LOG_END
-            sendENRPPresence(registrar,
-                             registrar->ENRPUnicastSocket, 0, 0,
-                             peerListNode->AddressBlock->AddressArray,
-                             peerListNode->AddressBlock->Addresses,
-                             peerListNode->Identifier,
-                             false);
-         }
-         peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
-                           &registrar->Peers, peerListNode);
-      }
+      /* ====== Send presence to all peers =============================== */
+      sendENRPPresenceToAllPeers(registrar);
    }
 
-   /* ====== Another peer is the takeover target ========================== */
+   /* ====== Another peer is the takeover target ========================= */
    else {
       peerListNode = ST_CLASS(peerListManagementFindPeerListNode)(
                               &registrar->Peers, message->RegistrarIdentifier, NULL);
@@ -2540,7 +2490,7 @@ static void handleENRPInitTakeover(struct Registrar*       registrar,
 }
 
 
-/* ###### Send ENRP peer takeover server message ######################### */
+/* ###### Send ENRP takeover server message ############################## */
 static void sendENRPTakeoverServer(struct Registrar*             registrar,
                                    int                           sd,
                                    const sctp_assoc_t            assocID,
@@ -2564,7 +2514,7 @@ static void sendENRPTakeoverServer(struct Registrar*             registrar,
       message->ReceiverID          = receiverID;
       message->RegistrarIdentifier = targetID;
 
-      if(rserpoolMessageSend((sd == registrar->ENRPMulticastOutputSocket) ? IPPROTO_UDP : IPPROTO_SCTP,
+      if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
          fputs("Sending TakeoverServer failed\n", stdlog);
@@ -2576,12 +2526,42 @@ static void sendENRPTakeoverServer(struct Registrar*             registrar,
 }
 
 
+/* ###### Send ENRP takeover server message to all peers ################# */
+static void sendENRPTakeoverServerToAllPeers(struct Registrar*             registrar,
+                                             const RegistrarIdentifierType targetID)
+{
+#ifndef MSG_SEND_TO_ALL
+   struct ST_CLASS(PeerListNode)* peerListNode;
+
+   peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
+   while(peerListNode != NULL) {
+      if(peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+         sendENRPTakeoverServer(registrar,
+                                registrar->ENRPUnicastSocket, 0, 0,
+                                NULL, 0,
+                                peerListNode->Identifier,
+                                targetID);
+      }
+      peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
+                        &registrar->Peers, peerListNode);
+   }
+#else
+#warning Using MSG_SEND_TO_ALL!
+   sendENRPTakeoverServer(registrar,
+                          registrar->ENRPUnicastSocket, 0,
+                          MSG_SEND_TO_ALL,
+                          NULL, 0,
+                          UNDEFINED_REGISTRAR_IDENTIFIER,
+                          targetID);
+#endif
+}
+
+
 /* ###### Do takeover of peer server ##################################### */
 static void finishTakeover(struct Registrar*             registrar,
                            const RegistrarIdentifierType targetID,
                            struct TakeoverProcess*       takeoverProcess)
 {
-   struct ST_CLASS(PeerListNode)*    peerListNode;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
 
@@ -2589,31 +2569,8 @@ static void finishTakeover(struct Registrar*             registrar,
    fprintf(stdlog, "Taking over peer $%08x...\n", targetID);
    LOG_END
 
-   /* ====== Report takeover to peers ==================================== */
-   if((registrar->ENRPUseMulticast) || (registrar->ENRPAnnounceViaMulticast)) {
-      sendENRPTakeoverServer(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
-                             (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
-                             0,
-                             targetID);
-   }
-
-   peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
-   while(peerListNode != NULL) {
-      if(!(peerListNode->Flags & PLNF_MULTICAST)) {
-         LOG_VERBOSE
-         fprintf(stdlog, "Sending TakeoverServer to unicast peer $%08x...\n",
-                  peerListNode->Identifier);
-         LOG_END
-         sendENRPTakeoverServer(registrar,
-                                registrar->ENRPUnicastSocket, 0, 0,
-                                peerListNode->AddressBlock->AddressArray,
-                                peerListNode->AddressBlock->Addresses,
-                                peerListNode->Identifier,
-                                targetID);
-      }
-      peerListNode = ST_CLASS(peerListManagementGetNextPeerListNodeFromIndexStorage)(
-                        &registrar->Peers, peerListNode);
-   }
+   /* ====== Send Takeover Servers ======================================= */
+   sendENRPTakeoverServerToAllPeers(registrar, targetID);
 
    /* ====== Update PEs' home PR identifier ============================== */
    poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
@@ -3371,9 +3328,6 @@ static size_t registrarGetReportFunction(
    if(*caeArray) {
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
       while(peerListNode != NULL) {
-         if( (peerListNode->Identifier != 0) &&
-             (!(peerListNode->Flags & PLNF_MULTICAST)) ) {
-         }
 
          (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_REGISTRAR, peerListNode->Identifier);
          (*caeArray)[caeArraySize].Duration   = ~0;
@@ -3662,7 +3616,6 @@ int main(int argc, char** argv)
    int                           enrpMulticastOutputSocket     = -1;
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;
-   bool                          enrpUseMulticast              = false;
    bool                          useIPv6                       = checkIPv6();
 
 #ifdef ENABLE_CSP
@@ -3740,12 +3693,6 @@ int main(int argc, char** argv)
             enrpMulticastAddressParameter = (const char*)&argv[i][15];
             enrpAnnounceViaMulticast      = true;
          }
-      }
-      else if(!(strcmp(argv[i], "-multicast=on"))) {
-         enrpUseMulticast = true;
-      }
-      else if(!(strcmp(argv[i], "-multicast=off"))) {
-         enrpUseMulticast = false;
       }
       else if(!(strcmp(argv[i], "-disable-ipv6"))) {
          useIPv6 = false;
@@ -3828,10 +3775,10 @@ int main(int argc, char** argv)
                  asapSendAnnounces,
                  asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket, useIPv6);
    getSocketPair(enrpUnicastAddressParameter, enrpUnicastAddress, &enrpUnicastSocket,
-                 enrpUseMulticast || enrpAnnounceViaMulticast,
+                 enrpAnnounceViaMulticast,
                  enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket, useIPv6);
 
-   if(enrpAnnounceViaMulticast || enrpUseMulticast) {
+   if(enrpAnnounceViaMulticast) {
       enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
                                             SOCK_DGRAM, IPPROTO_UDP);
       if(enrpMulticastInputSocket < 0) {
@@ -3858,7 +3805,7 @@ int main(int argc, char** argv)
                             enrpMulticastInputSocket,
                             enrpMulticastOutputSocket,
                             asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
-                            enrpUseMulticast, enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
+                            enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
                             statsFile, statsInterval
 #ifdef ENABLE_CSP
                             , cspReportInterval, &cspReportAddress
@@ -4000,23 +3947,13 @@ int main(int argc, char** argv)
    else {
       puts("(none)");
    }
-   printf("ENRP Multicast Address: ");
+   printf("ENRP Announce Address:  ");
    if(enrpAnnounceViaMulticast) {
       transportAddressBlockPrint(enrpMulticastAddress, stdout);
       puts("");
    }
    else {
       puts("(none)");
-   }
-   printf("ENRP Use Multicast:     ");
-   if((enrpAnnounceViaMulticast) && !(enrpUseMulticast)) {
-      printf("Announcements Only\n");
-   }
-   else if(enrpUseMulticast) {
-      printf("Full Mutlicast\n");
-   }
-   else {
-      printf("Off\n");
    }
 #ifdef ENABLE_CSP
    if(cspReportInterval > 0) {
