@@ -227,6 +227,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 void*                userData,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
+                                const bool           quiet,
                                 struct TagItem*      tags)
 {
    if(rsp_initialize(info) < 0) {
@@ -257,39 +258,43 @@ void TCPLikeServer::poolElement(const char*          programTitle,
          }
 
          // ====== Print program title ======================================
-         puts(programTitle);
-         for(size_t i = 0;i < strlen(programTitle);i++) {
-            printf("=");
-         }
-         const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
-         puts("\n\nGeneral Parameters:");
-         printf("   Pool Handle             = %s\n", poolHandle);
-         printf("   Reregistration Interval = %u [ms]\n", reregInterval);
-         printf("   Runtime Limit           = ");
-         if(runtimeLimit > 0) {
-            printf("%u [s]\n", runtimeLimit);
-         }
-         else {
-            puts("off");
-         }
-         puts("   Policy Settings");
-         printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-         printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
-         printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
-         printf("      Weight               = %u\n", loadinfo->rli_weight);
-         printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
-         if(printParameters) {
-            printParameters(userData);
+         if(!quiet) {
+            puts(programTitle);
+            for(size_t i = 0;i < strlen(programTitle);i++) {
+               printf("=");
+            }
+            const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
+            puts("\n\nGeneral Parameters:");
+            printf("   Pool Handle             = %s\n", poolHandle);
+            printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+            printf("   Runtime Limit           = ");
+            if(runtimeLimit > 0) {
+               printf("%u [s]\n", runtimeLimit);
+            }
+            else {
+               puts("off");
+            }
+            puts("   Policy Settings");
+            printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+            printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+            printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
+            printf("      Weight               = %u\n", loadinfo->rli_weight);
+            printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
+            if(printParameters) {
+               printParameters(userData);
+            }
          }
 
          // ====== Register PE ==============================================
          if(rsp_register_tags(rserpoolSocket,
                               (const unsigned char*)poolHandle, strlen(poolHandle),
                               loadinfo, reregInterval, 0, tags) == 0) {
-            uint32_t identifier;
-            if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
-               puts("Registration");
-               printf("   Identifier              = $%08x\n\n", identifier);
+            if(!quiet) {
+               uint32_t identifier;
+               if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+                  puts("Registration");
+                  printf("   Identifier              = $%08x\n\n", identifier);
+               }
             }
 
             // ====== Main loop =============================================

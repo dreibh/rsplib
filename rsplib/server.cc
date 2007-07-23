@@ -56,6 +56,7 @@ int main(int argc, char** argv)
    unsigned int        runtimeLimit  = 0;
    unsigned int        service       = SERVICE_ECHO;
    const char*         poolHandle    = NULL;
+   bool                quiet         = false;
 
    /* ====== Read parameters ============================================= */
    rsp_initinfo(&info);
@@ -205,24 +206,29 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-calcapp"))) {
          service = SERVICE_CALCAPP;
       }
+      else if(!(strcmp(argv[i], "-quiet"))) {
+         quiet = true;
+      }
    }
 
 
    /* ====== Print startup message ======================================= */
-   printf("Starting service ");
-   if(service == SERVICE_ECHO) {
-      printf("Echo");
+   if(!quiet) {
+      printf("Starting service ");
+      if(service == SERVICE_ECHO) {
+         printf("Echo");
+      }
+      else if(service == SERVICE_DISCARD) {
+         printf("Discard");
+      }
+      else if(service == SERVICE_DAYTIME) {
+         printf("Daytime");
+      }
+      else if(service == SERVICE_CHARGEN) {
+         printf("Character Generator");
+      }
+      puts("...");
    }
-   else if(service == SERVICE_DISCARD) {
-      printf("Discard");
-   }
-   else if(service == SERVICE_DAYTIME) {
-      printf("Daytime");
-   }
-   else if(service == SERVICE_CHARGEN) {
-      printf("Character Generator");
-   }
-   puts("...");
 
 
    /* ====== Start requested service ===================================== */
@@ -231,7 +237,7 @@ int main(int argc, char** argv)
       echoServer.poolElement("Echo Server - Version 1.0",
                              (poolHandle != NULL) ? poolHandle : "EchoPool",
                              &info, &loadInfo,
-                             reregInterval, runtimeLimit,
+                             reregInterval, runtimeLimit, quiet,
                              (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DISCARD) {
@@ -239,7 +245,7 @@ int main(int argc, char** argv)
       discardServer.poolElement("Discard Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DiscardPool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit,
+                                reregInterval, runtimeLimit, quiet,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
@@ -247,7 +253,7 @@ int main(int argc, char** argv)
       daytimeServer.poolElement("Daytime Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DaytimePool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit,
+                                reregInterval, runtimeLimit, quiet,
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
@@ -264,7 +270,7 @@ int main(int argc, char** argv)
                                   maxThreads,
                                   CharGenServer::charGenServerFactory,
                                   NULL, NULL, NULL, NULL, NULL,
-                                  reregInterval, runtimeLimit,
+                                  reregInterval, runtimeLimit, quiet,
                                   (struct TagItem*)&tags);
    }
    else if(service == SERVICE_PINGPONG) {
@@ -287,7 +293,7 @@ int main(int argc, char** argv)
                                  PingPongServer::pingPongServerFactory,
                                  NULL, NULL, NULL, NULL,
                                  (void*)&settings,
-                                 reregInterval, runtimeLimit,
+                                 reregInterval, runtimeLimit, quiet,
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_FRACTAL) {
@@ -315,7 +321,7 @@ int main(int argc, char** argv)
                                  FractalGeneratorServer::fractalGeneratorPrintParameters,
                                  NULL, NULL, NULL,
                                  (void*)&settings,
-                                 reregInterval, runtimeLimit,
+                                 reregInterval, runtimeLimit, quiet,
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CALCAPP) {
@@ -383,7 +389,7 @@ int main(int argc, char** argv)
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit,
+                                reregInterval, runtimeLimit, quiet,
                                 (struct TagItem*)&tags);
    }
 

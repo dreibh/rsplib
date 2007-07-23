@@ -252,6 +252,7 @@ int main(int argc, char** argv)
 {
    struct Registrar*             registrar;
    uint32_t                      serverID                      = 0;
+   bool                          quiet                         = false;
 
    char                          asapUnicastAddressBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapUnicastAddress            = (struct TransportAddressBlock*)&asapUnicastAddressBuffer;
@@ -315,6 +316,7 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-serverannouncecycle=", 21))) ||
                (!(strncmp(argv[i], "-endpointkeepalivetransmissioninterval=", 39))) ||
                (!(strncmp(argv[i], "-endpointkeepalivetimeoutinterval=", 34))) ||
+               (!(strncmp(argv[i], "-minaddressscope=", 17))) ||
                (!(strncmp(argv[i], "-peerheartbeatcycle=", 20))) ||
                (!(strncmp(argv[i], "-peermaxtimelastheard=", 22))) ||
                (!(strncmp(argv[i], "-peermaxtimenoresponse=", 23))) ||
@@ -342,7 +344,19 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-enrp=",6))) {
          enrpUnicastAddressParameter = (const char*)&argv[i][6];
       }
+      else if(!(strncmp(argv[i], "-enrpannounce=", 14))) {
+         if( (!(strcasecmp((const char*)&argv[i][14], "off"))) ||
+             (!(strcasecmp((const char*)&argv[i][14], "none"))) ) {
+            enrpMulticastAddressParameter = "0.0.0.0:0";
+            enrpAnnounceViaMulticast      = false;
+         }
+         else {
+            enrpMulticastAddressParameter = (const char*)&argv[i][14];
+            enrpAnnounceViaMulticast      = true;
+         }
+      }
       else if(!(strncmp(argv[i], "-enrpmulticast=", 15))) {
+         fputs("WARNING: -enrpmulticast is deprecated, use -enrpannounce!\n", stderr);
          if( (!(strcasecmp((const char*)&argv[i][15], "off"))) ||
              (!(strcasecmp((const char*)&argv[i][15], "none"))) ) {
             enrpMulticastAddressParameter = "0.0.0.0:0";
@@ -352,6 +366,9 @@ int main(int argc, char** argv)
             enrpMulticastAddressParameter = (const char*)&argv[i][15];
             enrpAnnounceViaMulticast      = true;
          }
+      }
+      else if(!(strcmp(argv[i], "-quiet"))) {
+         quiet = true;
       }
       else if(!(strcmp(argv[i], "-disable-ipv6"))) {
          useIPv6 = false;
@@ -404,15 +421,16 @@ int main(int argc, char** argv)
 #endif
       else {
          fprintf(stderr, "ERROR: Invalid argument <%s>!\n", argv[i]);
-         fprintf(stderr, "Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpmulticast=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
+         fprintf(stderr, "Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpannounce=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
             "{-cspserver=address} {-cspinterval=microseconds} "
 #endif
             "{-identifier=registrar identifier} "
-            "{-disable-ipv6} "
+            "{-disable-ipv6} {-quiet} "
             "{-autoclosetimeout=seconds} {-serverannouncecycle=milliseconds} "
             "{-maxbadpereports=reports} "
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
+            "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
             "{-statsfile=file} {-statsinterval=millisecs}"
@@ -538,6 +556,21 @@ int main(int argc, char** argv)
             registrar->EndpointKeepAliveTimeoutInterval = 60000000;
          }
       }
+      else if(!(strncmp(argv[i], "-minaddressscope=", 17))) {
+         if(!(strcmp((const char*)&argv[i][17], "loopback"))) {
+            registrar->MinEndpointAddressScope = AS_LOOPBACK;
+         }
+         else if(!(strcmp((const char*)&argv[i][17], "sitelocal"))) {
+            registrar->MinEndpointAddressScope = AS_UNICAST_SITELOCAL;
+         }
+         else if(!(strcmp((const char*)&argv[i][17], "global"))) {
+            registrar->MinEndpointAddressScope = AS_UNICAST_GLOBAL;
+         }
+         else {
+            fputs("ERROR: Bad argument for -minaddressscope!\n", stderr);
+            exit(1);
+         }
+      }
       else if(!(strncmp(argv[i], "-peerheartbeatcycle=", 20))) {
          registrar->PeerHeartbeatCycle = 1000 * atol((char*)&argv[i][20]);
          if(registrar->PeerHeartbeatCycle < 1000000) {
@@ -589,61 +622,73 @@ int main(int argc, char** argv)
 #endif
 
    /* ====== Print information =========================================== */
-   puts("The rsplib Registrar - Version 1.00");
-   puts("===================================\n");
-   printf("Server ID:              $%08x\n", registrar->ServerID);
-   printf("ASAP Address:           ");
-   transportAddressBlockPrint(asapUnicastAddress, stdout);
-   puts("");
-   printf("ENRP Address:           ");
-   transportAddressBlockPrint(enrpUnicastAddress, stdout);
-   puts("");
-   printf("ASAP Announce Address:  ");
-   if(asapSendAnnounces) {
-      transportAddressBlockPrint(asapAnnounceAddress, stdout);
+   if(!quiet) {
+      puts("The rsplib Registrar - Version 1.00");
+      puts("===================================\n");
+      printf("Server ID:              $%08x\n", registrar->ServerID);
+      printf("ASAP Address:           ");
+      transportAddressBlockPrint(asapUnicastAddress, stdout);
       puts("");
-   }
-   else {
-      puts("(none)");
-   }
-   printf("ENRP Announce Address:  ");
-   if(enrpAnnounceViaMulticast) {
-      transportAddressBlockPrint(enrpMulticastAddress, stdout);
+      printf("ENRP Address:           ");
+      transportAddressBlockPrint(enrpUnicastAddress, stdout);
       puts("");
-   }
-   else {
-      puts("(none)");
-   }
-#ifdef ENABLE_CSP
-   if(cspReportInterval > 0) {
-      printf("CSP Report Address:     ");
-      fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
-      puts("");
-      printf("CSP Report Interval:    %lldms\n", cspReportInterval / 1000);
-   }
-#endif
-   printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
-   if(statsFile) {
-      printf("Statistics Interval:    %ums\n", statsInterval);
-   }
+      printf("ASAP Announce Address:  ");
+      if(asapSendAnnounces) {
+         transportAddressBlockPrint(asapAnnounceAddress, stdout);
+         puts("");
+      }
+      else {
+         puts("(none)");
+      }
+      printf("ENRP Announce Address:  ");
+      if(enrpAnnounceViaMulticast) {
+         transportAddressBlockPrint(enrpMulticastAddress, stdout);
+         puts("");
+      }
+      else {
+         puts("(none)");
+      }
+   #ifdef ENABLE_CSP
+      if(cspReportInterval > 0) {
+         printf("CSP Report Address:     ");
+         fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
+         puts("");
+         printf("CSP Report Interval:    %lldms\n", cspReportInterval / 1000);
+      }
+   #endif
+      printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
+      printf("Min Address Scope:      ");
+      if(registrar->MinEndpointAddressScope <= AS_LOOPBACK) {
+         puts("loopback");
+      }
+      else if(registrar->MinEndpointAddressScope <= AS_UNICAST_SITELOCAL) {
+         puts("site-local");
+      }
+      else {
+         puts("global");
+      }
+      if(statsFile) {
+         printf("Statistics Interval:    %ums\n", statsInterval);
+      }
 
-   puts("\nASAP Parameters:");
-   printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
-   printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)registrar->MaxBadPEReports);
-   printf("   Server Announce Cycle:                       %lldms\n", registrar->ServerAnnounceCycle / 1000);
-   printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
-   printf("   Endpoint Keep Alive Transmission Interval:   %lldms\n", registrar->EndpointKeepAliveTransmissionInterval / 1000);
-   printf("   Endpoint Keep Alive Timeout Interval:        %lldms\n", registrar->EndpointKeepAliveTimeoutInterval / 1000);
-   printf("   Max Increment:                               %u\n",     (unsigned int)registrar->MaxIncrement);
-   printf("   Max Handle Resolution Items (MaxHResItems):  %u\n",     (unsigned int)registrar->MaxHandleResolutionItems);
-   puts("ENRP Parameters:");
-   printf("   Peer Heartbeat Cylce:                        %lldms\n", registrar->PeerHeartbeatCycle / 1000);
-   printf("   Peer Max Time Last Heard:                    %lldms\n", registrar->PeerMaxTimeLastHeard / 1000);
-   printf("   Peer Max Time No Response:                   %lldms\n", registrar->PeerMaxTimeNoResponse / 1000);
-   printf("   Max Elements per Handle Table Request:       %u\n",     (unsigned int)registrar->MaxElementsPerHTRequest);
-   printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorDiscoveryTimeout / 1000);
-   printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
-   puts("");
+      puts("\nASAP Parameters:");
+      printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
+      printf("   Max Bad PE Reports:                          %u\n",     (unsigned int)registrar->MaxBadPEReports);
+      printf("   Server Announce Cycle:                       %lldms\n", registrar->ServerAnnounceCycle / 1000);
+      printf("   Endpoint Monitoring SCTP Heartbeat Interval: %lldms\n", registrar->EndpointMonitoringHeartbeatInterval / 1000);
+      printf("   Endpoint Keep Alive Transmission Interval:   %lldms\n", registrar->EndpointKeepAliveTransmissionInterval / 1000);
+      printf("   Endpoint Keep Alive Timeout Interval:        %lldms\n", registrar->EndpointKeepAliveTimeoutInterval / 1000);
+      printf("   Max Increment:                               %u\n",     (unsigned int)registrar->MaxIncrement);
+      printf("   Max Handle Resolution Items (MaxHResItems):  %u\n",     (unsigned int)registrar->MaxHandleResolutionItems);
+      puts("ENRP Parameters:");
+      printf("   Peer Heartbeat Cylce:                        %lldms\n", registrar->PeerHeartbeatCycle / 1000);
+      printf("   Peer Max Time Last Heard:                    %lldms\n", registrar->PeerMaxTimeLastHeard / 1000);
+      printf("   Peer Max Time No Response:                   %lldms\n", registrar->PeerMaxTimeNoResponse / 1000);
+      printf("   Max Elements per Handle Table Request:       %u\n",     (unsigned int)registrar->MaxElementsPerHTRequest);
+      printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorDiscoveryTimeout / 1000);
+      printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
+      puts("");
+   }
 
 
    /* ====== We are ready! =============================================== */
@@ -678,6 +723,8 @@ int main(int argc, char** argv)
    if(statsFile) {
       fclose(statsFile);
    }
-   puts("\nTerminated!");
+   if(!quiet) {
+      puts("\nTerminated!");
+   }
    return(0);
 }

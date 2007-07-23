@@ -47,6 +47,7 @@ class UDPLikeServer
                             struct rsp_loadinfo* loadinfo,
                             unsigned int         reregInterval = 30000,
                             unsigned int         runtimeLimit  = 0,
+                            const bool           quiet         = false,
                             struct TagItem*      tags          = NULL);
 
    double getLoad() const;

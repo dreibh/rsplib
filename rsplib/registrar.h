@@ -51,7 +51,7 @@
 
 
 #define REGISTRAR_RSERPOOL_MESSAGE_BUFFER_SIZE                          65536
-#define REGISTRAR_DEFAULT_MIN_ENDPOINT_ADDRESS_SCOPE                        6
+#define REGISTRAR_DEFAULT_MIN_ENDPOINT_ADDRESS_SCOPE     AS_UNICAST_SITELOCAL
 #define REGISTRAR_DEFAULT_DISTANCE_STEP                                    50
 #define REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS                                3
 #define REGISTRAR_DEFAULT_SERVER_ANNOUNCE_CYCLE                       1000000
@@ -111,6 +111,7 @@ struct Registrar
    unsigned long long                         EndpointMonitoringHeartbeatInterval;
    unsigned long long                         EndpointKeepAliveTransmissionInterval;
    unsigned long long                         EndpointKeepAliveTimeoutInterval;
+   unsigned int                               MinEndpointAddressScope;
    size_t                                     MaxElementsPerHTRequest;
    size_t                                     MaxIncrement;
    size_t                                     MaxHandleResolutionItems;
@@ -298,8 +299,8 @@ void registrarHandleENRPInitTakeover(struct Registrar*       registrar,
                                      int                     fd,
                                      sctp_assoc_t            assocID,
                                      struct RSerPoolMessage* message);
-void registrarSendENRPInitTakeover(struct Registrar*             registrar,
-                          const RegistrarIdentifierType targetID);
+void registrarSendENRPInitTakeoverToAllPeers(struct Registrar*             registrar,
+                                             const RegistrarIdentifierType targetID);
 void registrarHandleENRPInitTakeoverAck(struct Registrar*       registrar,
                                         int                     fd,
                                         sctp_assoc_t            assocID,

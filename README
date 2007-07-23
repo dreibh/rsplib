@@ -1,6 +1,6 @@
 A. FIRST STEPS
 
-How to set up a simple test of the rsplib-2.1.0 release:
+How to set up a simple test of the rsplib-2.3.0 release:
 
 1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
    implementation, do the following two steps first:
@@ -67,7 +67,7 @@ How to set up a simple test of the rsplib-2.1.0 release:
    (You can start multiple registrars; they may also run on different hosts, of course)
 
    Alternatively, start the registrar directly:
-   ./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto
+   ./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpannounce=auto
    See also chapter D for registrar parameters.
 
 5. Start at least one pool element
@@ -133,6 +133,8 @@ B.1 Common Parameters
 
 -runtime=seconds: After the configured amount of seconds, the service is
                   shut down.
+
+-quiet: Do not print startup and shutdown messages.
 
 -policy=Policy...: Sets the pool policy and its parameters:
  Valid Settings:
@@ -276,6 +278,13 @@ D.2 ASAP Parameters
 
 -autoclosetimeout=seconds: Sets the SCTP autoclose timeout for idle ASAP associations.
 
+-minaddressscope: Sets the minimum address scope acceptable for registered PEs:
+                  * loopback: Loopback address (only valid on the same node!)
+                  * site-local: Site-local addresses (e.g. 192.168.1.1, etc.)
+                  * global: Global addresses
+
+-quiet: Do not print startup and shutdown messages.
+
 
 D.3 ENRP Parameters
 
@@ -285,10 +294,10 @@ D.3 ENRP Parameters
                                              -enrp=1.2.3.4:3864
                                              -enrp=1.2.3.4:3864,[2000::1:2:3],9.8.7.6
 
--enrpmulticast=auto|address:port: Sets the ENRP multicast address and UDP port for ENRP.
-                                  Use "auto" for default.
-                                  Examples: -enrpmulticast=auto
-                                            -enrpmulticast=239.0.0.1:3864
+-enrpannounce=auto|address:port: Sets the multicast address and UDP port to send
+                                 the ENRP Announces to. Use "auto" for default.
+                                 Examples: -enrpannounce=auto
+                                           -enrpannounce=239.0.0.1:3864
 
 -peerheartbeatcycle=milliseconds: Sets the ENRP peer heartbeat interval.
 
@@ -328,4 +337,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-23.02.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+23.07.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de

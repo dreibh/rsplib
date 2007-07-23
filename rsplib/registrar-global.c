@@ -141,6 +141,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->EndpointMonitoringHeartbeatInterval   = REGISTRAR_DEFAULT_ENDPOINT_MONITORING_HEARTBEAT_INTERVAL;
       registrar->EndpointKeepAliveTransmissionInterval = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TRANSMISSION_INTERVAL;
       registrar->EndpointKeepAliveTimeoutInterval      = REGISTRAR_DEFAULT_ENDPOINT_KEEP_ALIVE_TIMEOUT_INTERVAL;
+      registrar->MinEndpointAddressScope               = REGISTRAR_DEFAULT_MIN_ENDPOINT_ADDRESS_SCOPE;
       registrar->AutoCloseTimeout                      = REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT;
       registrar->MaxIncrement                          = REGISTRAR_DEFAULT_MAX_INCREMENT;
       registrar->MaxHandleResolutionItems              = REGISTRAR_DEFAULT_MAX_HANDLE_RESOLUTION_ITEMS;

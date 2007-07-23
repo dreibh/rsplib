@@ -946,7 +946,7 @@ void fputaddress(const struct sockaddr* address, const bool port, FILE* fd)
 
 
 /* ###### Get IPv4 address scope ######################################### */
-static unsigned int scopeIPv4(const uint32_t* address)
+static unsigned int getScopeIPv4(const uint32_t* address)
 {
     uint32_t a;
     uint8_t  b1;
@@ -966,67 +966,67 @@ static unsigned int scopeIPv4(const uint32_t* address)
     /* Class A private */
     b1 = (uint8_t)(a >> 24);
     if(b1 == 10) {
-       return(6);
+       return(AS_UNICAST_SITELOCAL);
     }
 
     /* Class B private */
     b2 = (uint8_t)((a >> 16) & 0x00ff);
     if((b1 == 172) && (b2 >= 16) && (b2 <= 31)) {
-       return(6);
+       return(AS_UNICAST_SITELOCAL);
     }
 
     /* Class C private */
     if((b1 == 192) && (b2 == 168)) {
-       return(6);
+       return(AS_UNICAST_SITELOCAL);
     }
 
     if(IN_MULTICAST(ntohl(*address))) {
-       return(8);
+       return(AS_MULTICAST_GLOBAL);
     }
-    return(10);
+    return(AS_UNICAST_GLOBAL);
 }
 
 
 /* ###### Get IPv6 address scope ######################################### */
-static unsigned int scopeIPv6(const struct in6_addr* address)
+static unsigned int getScopeIPv6(const struct in6_addr* address)
 {
    if(IN6_IS_ADDR_V4MAPPED(address)) {
 #if defined SOLARIS
-      return(scopeIPv4(&address->_S6_un._S6_u32[3]));
+      return(getScopeIPv4(&address->_S6_un._S6_u32[3]));
 #elif defined LINUX
-      return(scopeIPv4(&address->s6_addr32[3]));
+      return(getScopeIPv4(&address->s6_addr32[3]));
 #else
-      return(scopeIPv4(&address->__u6_addr.__u6_addr32[3]));
+      return(getScopeIPv4(&address->__u6_addr.__u6_addr32[3]));
 #endif
    }
    if(IN6_IS_ADDR_UNSPECIFIED(address)) {
-      return(0);
+      return(AS_UNSPECIFIED);
    }
    else if(IN6_IS_ADDR_MC_NODELOCAL(address)) {
-      return(1);
+      return(AS_MULTICAST_NODELOCAL);
    }
    else if(IN6_IS_ADDR_LOOPBACK(address)) {
-      return(2);
+      return(AS_LOOPBACK);
    }
    else if(IN6_IS_ADDR_MC_LINKLOCAL(address)) {
-      return(3);
+      return(AS_MULTICAST_LINKLOCAL);
    }
    else if(IN6_IS_ADDR_LINKLOCAL(address)) {
-      return(4);
+      return(AS_UNICAST_LINKLOCAL);
    }
    else if(IN6_IS_ADDR_MC_SITELOCAL(address)) {
-      return(5);
+      return(AS_MULTICAST_SITELOCAL);
    }
    else if(IN6_IS_ADDR_SITELOCAL(address)) {
-      return(6);
+      return(AS_UNICAST_SITELOCAL);
    }
    else if(IN6_IS_ADDR_MC_ORGLOCAL(address)) {
-      return(7);
+      return(AS_MULTICAST_ORGLOCAL);
    }
    else if(IN6_IS_ADDR_MC_GLOBAL(address)) {
-      return(8);
+      return(AS_MULTICAST_GLOBAL);
    }
-   return(10);
+   return(AS_UNICAST_GLOBAL);
 }
 
 
@@ -1034,10 +1034,10 @@ static unsigned int scopeIPv6(const struct in6_addr* address)
 unsigned int getScope(const struct sockaddr* address)
 {
    if(address->sa_family == AF_INET) {
-      return(scopeIPv4((uint32_t*)&((struct sockaddr_in*)address)->sin_addr));
+      return(getScopeIPv4((uint32_t*)&((struct sockaddr_in*)address)->sin_addr));
    }
    else if(address->sa_family == AF_INET6) {
-      return(scopeIPv6(&((struct sockaddr_in6*)address)->sin6_addr));
+      return(getScopeIPv6(&((struct sockaddr_in6*)address)->sin6_addr));
    }
    else {
       LOG_ERROR

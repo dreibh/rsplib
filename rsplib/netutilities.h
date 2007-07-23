@@ -213,6 +213,18 @@ bool setPort(struct sockaddr* address, const uint16_t port);
   */
 int getFamily(const struct sockaddr* address);
 
+
+#define AS_UNSPECIFIED          0
+#define AS_MULTICAST_NODELOCAL  1
+#define AS_LOOPBACK             2
+#define AS_MULTICAST_LINKLOCAL  3
+#define AS_UNICAST_LINKLOCAL    4
+#define AS_MULTICAST_SITELOCAL  5
+#define AS_UNICAST_SITELOCAL    6
+#define AS_MULTICAST_ORGLOCAL   7
+#define AS_MULTICAST_GLOBAL     8
+#define AS_UNICAST_GLOBAL      10
+
 /**
   * Get relative scope of address. This function supports IPv4 and IPv6
   * addresses. The higher the returned value, the higher the address scope.

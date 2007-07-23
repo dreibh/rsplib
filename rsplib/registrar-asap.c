@@ -223,7 +223,7 @@ void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar,
 }
 
 
-/* ###### Handle registration request #################################### */
+/* ###### Handle ASAP Registration ####################################### */
 void registrarHandleASAPRegistration(struct Registrar*       registrar,
                                      int                     fd,
                                      sctp_assoc_t            assocID,
@@ -266,7 +266,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
       if(transportAddressBlockFilter(message->PoolElementPtr->UserTransport,
                                      remoteAddressBlock,
                                      userTransportAddressBlock,
-                                     MAX_PE_TRANSPORTADDRESSES, false, REGISTRAR_DEFAULT_MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
+                                     MAX_PE_TRANSPORTADDRESSES, false, registrar->MinEndpointAddressScope) > 0) {
          LOG_VERBOSE2
          fputs("Filtered user transport addresses: ", stdlog);
          transportAddressBlockPrint(userTransportAddressBlock, stdlog);
@@ -275,7 +275,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
          if(transportAddressBlockFilter(remoteAddressBlock,
                                         NULL,
                                         asapTransportAddressBlock,
-                                        MAX_PE_TRANSPORTADDRESSES, true, REGISTRAR_DEFAULT_MIN_ENDPOINT_ADDRESS_SCOPE) > 0) {
+                                        MAX_PE_TRANSPORTADDRESSES, true, registrar->MinEndpointAddressScope) > 0) {
             LOG_VERBOSE2
             fputs("Filtered ASAP transport addresses: ", stdlog);
             transportAddressBlockPrint(asapTransportAddressBlock, stdlog);
@@ -426,7 +426,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle deregistration request ################################## */
+/* ###### Handle ASAP Deregistration ##################################### */
 void registrarHandleASAPDeregistration(struct Registrar*       registrar,
                                        int                     fd,
                                        sctp_assoc_t            assocID,
@@ -534,7 +534,7 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle handle resolution request ################################# */
+/* ###### Handle ASAP Handle Resolution ################################## */
 void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
                                          int                     fd,
                                          sctp_assoc_t            assocID,
@@ -614,7 +614,7 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
 }
 
 
-/* ###### Handle endpoint keepalive acknowledgement ###################### */
+/* ###### Handle ASAP Endpoint Keep-Alive Ack ############################ */
 void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
                                              int                     fd,
                                              sctp_assoc_t            assocID,
@@ -662,7 +662,7 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
 }
 
 
-/* ###### Send Endpoint Keep Alive ####################################### */
+/* ###### Send ASAP Endpoint Keep-Alive ################################## */
 void registrarSendASAPEndpointKeepAlive(struct Registrar*                 registrar,
                                         struct ST_CLASS(PoolElementNode)* poolElementNode,
                                         const bool                        newHomeRegistrar)
@@ -722,7 +722,7 @@ void registrarSendASAPEndpointKeepAlive(struct Registrar*                 regist
 }
 
 
-/* ###### Handle endpoint unreachable #################################### */
+/* ###### Handle ASAP Endpoint Unreachable ############################### */
 void registrarHandleASAPEndpointUnreachable(struct Registrar*       registrar,
                                             int                     fd,
                                             sctp_assoc_t            assocID,
