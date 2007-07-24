@@ -1,3 +1,12 @@
+UserSet:
+ FD/AssocID
+ Set(PH) für registrierte Notifications
+
+PoolNode:
+ Rückverlinkung auf User
+
+======
+
 INTERESSANT:
 Alte Dynamic-Entries werden nicht verworfen wenn MTBF sehr klein:
  Übertragung per Peer List:

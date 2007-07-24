@@ -252,10 +252,13 @@ int ST_CLASS(poolElementNodeUpdate)(struct ST_CLASS(PoolElementNode)*       pool
                                     const struct ST_CLASS(PoolElementNode)* source)
 {
    poolElementNode->Flags &= ~PENF_MARKED;
-   if(poolPolicySettingsComparison(&poolElementNode->PolicySettings,
-                                   &source->PolicySettings) != 0) {
+   if( (poolPolicySettingsComparison(&poolElementNode->PolicySettings, &source->PolicySettings) != 0) ||
+       (poolElementNode->Degradation != 0) ) {
       /* ====== Update policy information ================================ */
       poolElementNode->PolicySettings = source->PolicySettings;
+
+      /* ====== Reset of degradation ===================================== */
+      poolElementNode->Degradation = 0;
 
       /* ====== Reduce virtual nodes counter, if necessary =============== */
       if(poolElementNode->VirtualCounter > poolElementNode->PolicySettings.Weight) {
