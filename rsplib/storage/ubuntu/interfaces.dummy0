@@ -1,0 +1,6 @@
+auto dummy0
+iface dummy0 inet static
+address 172.31.249.1
+netmask 255.255.255.252
+post-up  ip link set dummy0 up multicast on
+pre-down ip link set dummy0 up multicast off

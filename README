@@ -32,6 +32,11 @@ How to set up a simple test of the rsplib-2.3.0 release:
       Optional "configure" Parameters:
       --enable-qt: Enables Qt usage; this is necessary for the Fractal Generator
                    client! Without Qt, the client's compilation will be skipped.
+                   The ./configure script expects the environment variable QTDIR
+                   set to the Qt directory. You may need to set it appropriately,
+                   e.g. "export QTDIR=/usr/share/qt3" for Ubuntu Linux!
+                   This settings depends on your distribution; use
+                   "locate qwidget.h" to find out the directory!
       --disable-qt: Disables Qt usage; the Fractal Generator client will *not*
                     be available. (DEFAULT)
 
@@ -52,15 +57,16 @@ How to set up a simple test of the rsplib-2.3.0 release:
       --disable-csp: Turns the Component Status Protocol support off.
 
 3. Ensure that multicast is working!
-   - You need a configured network interface AND a default route to use multicast,
-     even if you want to make tests only via loopback! Multicast does not work
-     correctly otherwise, at least under Linux and Darwin.
-     Alternative:
-     If you have a dummy device, configure it and set a default route to it:
+   - You need a configured network interface with:
+        + at least a private address (192.168.x.y; 10.a.b.c; 172.16.n.m - 172.31.i.j)
+        + having the multicast flag set (e.g. "ifconfig <dev> multicast")
+     even if you want to make tests only via loopback! Multicast-announces do not
+     work correctly otherwise!
+     If you have a dummy device, configure it appropriately:
      root# ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 broadcast 10.255.255.255 up multicast
-     root# route add default gw 10.255.255.254
    - Ensure that your firewall settings for the ethernet interface allow
-     UDP packets from the registrar (Server Announce).
+     UDP packets to/from the registrar (ASAP Announce/ENRP Presence) as well
+     as ASAP/ENRP traffic over SCTP.
 
 4. Start at least one registrar
    ./registrar-example

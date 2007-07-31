@@ -32,4 +32,4 @@ if [ x$CSP_SERVER != "x" ] ; then
    fi
 fi
 
-./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -maxbadpereports=99999999 -logcolor=on -loglevel=3 $CSPCONFIG $@
+./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpannounce=auto -maxbadpereports=99999999 -logcolor=on -loglevel=3 $CSPCONFIG $@
