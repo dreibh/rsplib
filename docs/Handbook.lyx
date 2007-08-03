@@ -1,0 +1,921 @@
+#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{a4wide}
+
+\usepackage{url}
+\urlstyle{rm}
+
+\usepackage[pdftex=true,
+pdftitle={Evaluation of a Simple Load Balancing Improvement for Reliable Server Pooling with Heterogeneous Server Pools},
+pdfauthor={Thomas Dreibholz},
+pdfsubject={Reliable Server Pooling},
+pdfkeywords={Reliable Server Pooling, Redundancy, Load Balancing, Heterogeneous Pools, Performance Evaluation},
+pdfpagemode=UseOutlines,
+plainpages=false,
+hypertexnames=true,
+pdfpagelabels=true,
+hyperindex=true,
+colorlinks=true]{hyperref}
+
+\usepackage{color}
+\definecolor{darkred}{rgb}{0.5,0,0}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\definecolor{black}{rgb}{0,0,0}
+\hypersetup{colorlinks
+,linkcolor=darkblue
+,urlcolor=blue
+,citecolor=darkblue,
+,filecolor=darkgreen}
+\end_preamble
+\language english
+\inputencoding auto
+\fontscheme times
+\graphics default
+\paperfontsize 11
+\spacing single
+\papersize a4paper
+\use_geometry false
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Title
+The 
+\noun on
+rsplib
+\noun default
+ RSerPool Prototype Handbook
+\end_layout
+
+\begin_layout Author
+Thomas Dreibholz
+\newline
+Institute for Experimental Mathematics
+\newline
+Ellernstraﬂe 29, 45326
+ Essen
+\newline
+Mail: 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Date
+August 03, 2007
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \tableofcontents{}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+This is the documentation for the 
+\noun on
+rsplib
+\noun default
+ RSerPool package.
+ It contains information how to install and make use of 
+\noun on
+rsplib
+\noun default
+.
+ For a detailed introduction to RSerPool and its concepts itself, see\InsetSpace ~
+
+\begin_inset LatexCommand \cite{Dre2006}
+
+\end_inset
+
+.
+ For questions about RSerPool and rsplib, see our mailing lists at\InsetSpace ~
+
+\begin_inset LatexCommand \cite{RSerPoolPage}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+What is RSerPool?
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename EN-RSerPool-Scenario-with-PPE.pdf
+	width 80col%
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{cap:The-RSerPool-Architecture}
+
+\end_inset
+
+The RSerPool Architecture
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename EN-RSerPool-ProtocolStack.pdf
+	width 80col%
+	keepAspectRatio
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{cap:The-RSerPool-Protocol-Stack}
+
+\end_inset
+
+The RSerPool Protocol Stack
+\end_layout
+
+\end_inset
+
+Figure\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cap:The-RSerPool-Architecture}
+
+\end_inset
+
+ provides an illustration of the Reliable Server Pooling\InsetSpace ~
+(RSerPool) architecture
+ as defined by the Internet Draft\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-arch}
+
+\end_inset
+
+; the protocol stack of RSerPool is shown in figure\InsetSpace ~
+
+\begin_inset LatexCommand \ref{cap:The-RSerPool-Protocol-Stack}
+
+\end_inset
+
+.
+ An RSerPool scenario consists of three component classes\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-overview}
+
+\end_inset
+
+: servers of a pool are called 
+\emph on
+pool elements
+\emph default
+\InsetSpace ~
+(PE).
+ Each pool is identified by a unique 
+\emph on
+pool handle
+\emph default
+\InsetSpace ~
+(PH) in the handlespace, which is the set of all pools.
+ The handlespace is managed by 
+\emph on
+pool registrars
+\emph default
+~(PR).
+ PRs of an 
+\emph on
+operation scope
+\emph default
+ synchronize their view of the handlespace using the Endpoint haNdlespace
+ Redundancy Protocol (ENRP\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-enrp,draft-ietf-rserpool-common-param}
+
+\end_inset
+
+), transported via SCTP\InsetSpace ~
+
+\begin_inset LatexCommand \cite{RFC2960,Jun2005,JST2000b,SCI2002a}
+
+\end_inset
+
+.
+ An operation scope has a limited range, e.g.\InsetSpace ~
+a company or organization; RSerPool
+ does not intend to scale to the whole Internet.
+ Nevertheless, it is assumed that PEs can be distributed globally, for their
+ service to survive localized disasters\InsetSpace ~
+
+\begin_inset LatexCommand \cite{KiVS2007}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+PEs choose an arbitrary PR to register into a pool by using the Aggregate
+ Server Access Protocol (ASAP\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param}
+
+\end_inset
+
+), again transported via SCTP.
+ Upon registration at a PR, the chosen PR becomes the Home-PR\InsetSpace ~
+(PR-H) of the
+ newly registered PE.
+ A PR-H is responsible for monitoring its PEs' availability by using ASAP
+ Endpoint Keep-Alive messages (to be acknowledged by the PE within a given
+ timeout) and propagates the information about its PEs to the other PRs
+ of the operation scope via ENRP Update messages.
+\end_layout
+
+\begin_layout Standard
+A client is called
+\emph on
+ pool user
+\emph default
+\InsetSpace ~
+(PU) in RSerPool terminology.
+ To access the service of a pool given by its PH, a PE has to be selected.
+ This selection procedure -- called 
+\backslash
+emph{handle resolution} -- is performed by an arbitrary PR of the operation
+ scope.
+ A PU can request a handle resolution from a PR using the ASAP protocol.
+ The PR selects PE identities by using a pool-specific server selection
+ rule, denoted as 
+\backslash
+emph{pool policy}.
+ A set of adaptive and non-adaptive pool policies is defined in\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-policies}
+
+\end_inset
+
+; for a detailed discussion of these policies, see\InsetSpace ~
+
+\begin_inset LatexCommand \cite{Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Installation
+\end_layout
+
+\begin_layout Standard
+In this section, the installation of the 
+\emph on
+\noun on
+rsplib
+\emph default
+\noun default
+ package is described.
+\end_layout
+
+\begin_layout Subsection
+Installation of the SCTP Protocol
+\end_layout
+
+\begin_layout Standard
+The first step is to decide which SCTP implementation should be used.
+ You have the choice between kernel SCTP and userland SCTP.
+ In most cases, you probably want kernel SCTP.
+ It is most efficient and the implementation should be sufficiently stable.
+\end_layout
+
+\begin_layout Subsubsection
+Installation of Kernel SCTP for Linux
+\end_layout
+
+\begin_layout Standard
+A SCTP kernel module is already provided by all major Linux distributions.
+ To load it into the kernel, call:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+sudo modprobe sctp
+\end_layout
+
+\begin_layout Standard
+\noindent
+In order to load it permanently, add a line 
+\begin_inset Quotes eld
+\end_inset
+
+sctp
+\begin_inset Quotes erd
+\end_inset
+
+ to /etc/modules.
+ After that, the module will be loaded automatically at boot time.
+ Also make sure that the SCTP include files are installed (in particular:
+ /usr/include/netinet/sctp.h).
+ If they are not installed, install the package libsctp-dev (or similar
+ name).
+ For Debian/Ubuntu Linux, you can use:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+apt-get install libsctp-dev
+\end_layout
+
+\begin_layout Subsubsection
+Installation of Userland SCTP 
+\noun on
+sctplib/socketapi
+\end_layout
+
+\begin_layout Standard
+If you decide to use our userland SCTP implementation 
+\noun on
+sctplib
+\noun default
+\InsetSpace ~
+
+\begin_inset LatexCommand \cite{sctplib}
+
+\end_inset
+
+, the following steps have to be performed.
+ The 
+\noun on
+sctplib
+\noun default
+ userland SCTP implementation consists of two packages: 
+\noun on
+sctplib
+\noun default
+ containing the actual SCTP implementation and 
+\noun on
+socketapi
+\noun default
+ containing a BSD sockets API for 
+\noun on
+sctplib
+\noun default
+.
+ You need both.
+ Get the latest versions from\InsetSpace ~
+
+\begin_inset LatexCommand \cite{RSerPoolPage}
+
+\end_inset
+
+ (
+\begin_inset LatexCommand \htmlurl[http://tdrwww.iem.uni-due.de/dreibholz/rserpool]{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
+
+\end_inset
+
+).
+ First, unpack, configure and install 
+\noun on
+sctplib
+\noun default
+:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+tar xzf sctplib-<version>.tar.gz
+\end_layout
+
+\begin_layout Standard
+cd 
+\family typewriter
+sctplib-<version>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+./configure <Options>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+make
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+sudo make install
+\end_layout
+
+\begin_layout Standard
+\noindent
+Useful options are 
+\begin_inset Quotes eld
+\end_inset
+
+--enable-static --disable-shared --enable-maintainer-mode
+\begin_inset Quotes erd
+\end_inset
+
+ to generate a static library with debug symbols.
+ This is useful for debugging purposes (e.g.\InsetSpace ~
+memory leak detection using Valgrind\InsetSpace ~
+
+\begin_inset LatexCommand \cite{Valgrind}
+
+\end_inset
+
+).
+ To use SCTP over UDP (defined in\InsetSpace ~
+
+\begin_inset LatexCommand \cite{draft-tuexen-sctp-udp-encaps}
+
+\end_inset
+
+), use 
+\begin_inset Quotes eld
+\end_inset
+
+--enable-sctp-over-udp
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The next step is to install the socketapi package:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+tar xzf socketapi-<version>.tar.gz
+\end_layout
+
+\begin_layout Standard
+cd 
+\family typewriter
+socketapi-<version>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+./configure <Options>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+make
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+sudo make install
+\end_layout
+
+\begin_layout Standard
+\noindent
+Again, you can use 
+\begin_inset Quotes eld
+\end_inset
+
+--enable-static --disable-shared --enable-maintainer-mode
+\begin_inset Quotes erd
+\end_inset
+
+ to generate a static library with debug symbols.
+ If you want to use kernel SCTP and SCTP over UDP simultaneously, add 
+\begin_inset Quotes eld
+\end_inset
+
+--enable-sctp-over-udp
+\begin_inset Quotes erd
+\end_inset
+
+.
+ In this case, the socketapi will not abort if it finds a loaded kernel
+ SCTP module.
+\end_layout
+
+\begin_layout Subsection
+Installation of the 
+\noun on
+rsplib
+\noun default
+ Package
+\end_layout
+
+\begin_layout Standard
+After installing SCTP support, the 
+\noun on
+rsplib
+\noun default
+ package can be installed.
+\end_layout
+
+\begin_layout Subsubsection
+Preparation Work
+\end_layout
+
+\begin_layout Standard
+In order to prepare your system for the installation of the rsplib package,
+ it is recommended to do the following tasks:
+\end_layout
+
+\begin_layout Itemize
+Add the environment variable QTDIR, setting the path to the installation
+ of Qt.
+ Qt is a GUI library and required for the Fractal PU example.
+ Without Qt and properly set QTDIR, the client's compilation can be skipped.
+ The ./configure script expects the environment variable QTDIR set to the
+ Qt directory.
+ You may need to set it appropriately, e.g.\InsetSpace ~
+"export QTDIR=/usr/share/qt3" for
+ Ubuntu Linux.
+ This setting depends on your distribution; use "locate qwidget.h" to find
+ out the directory.
+\end_layout
+
+\begin_layout Itemize
+The Component Status Protocol\InsetSpace ~
+(CSP) can be used to send status messages of
+ PRs, PEs and PUs to a central monitoring program (cspmonitor, to be explained
+ later).
+ This is a helpful feature to keep an overview of large, distributed test
+ setups.
+ You can set a default address and report interval for CSP by defining two
+ environment variables:
+\newline
+CSP_SERVER=<Address>:<Port>
+\newline
+CSP_INTERVAL=<Report interval
+ in milliseconds>
+\newline
+Useful settings are CSP_SERVER=127.0.0.1:2960 and CSP_INTERVAL=333.
+\end_layout
+
+\begin_layout Itemize
+For debugging, it is useful to turn on the generation of core dumps.
+ Under the bash shell, this can be done by 
+\begin_inset Quotes eld
+\end_inset
+
+ulimit -c unlimited
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+To make all settings above permanent, you can append them to your shell
+ configuration (usually ~/.bashrc).
+ Example (your settings may be different!):
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+...
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+export QTDIR=/usr/share/qt3
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+export CSP_SERVER=127.0.0.1:2960
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+export CSP_INTERVAL=333
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+ulimit -c unlimited
+\end_layout
+
+\begin_layout Standard
+In order to use RSerPool, your host needs at least one multicast-capable
+ network interface with at least a private IP address (i.e.\InsetSpace ~
+192.168.x.y; 10.a.b.c;
+ 172.16.n.m - 172.31.i.j).
+ If your host is already connected to a network and has an IP address, everythin
+g should be fine.
+ For testing with a non-connected host, you can just set up a dummy interface:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+sudo ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 broadcast 10.255.255.255
+ up multicast
+\end_layout
+
+\begin_layout Standard
+In order to permanently set up a dummy interface, you can add the following
+ lines to /etc/network/interfaces (Debian/Ubuntu Linux; may be different
+ for other distributions!):
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+auto dummy0
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+iface dummy0
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+inet static address 172.31.249.1 netmask 255.255.255.252\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+
+\family default
+(You may need to change this!)
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+post-up ip link set dummy0 up multicast on
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+pre-down ip link set dummy0 up multicast off
+\end_layout
+
+\begin_layout Standard
+After appending these lines, they will be loaded automatically each time
+ a new bash shell is started.
+ Your system should now be ready to install the 
+\noun on
+rsplib
+\noun default
+ package.
+\end_layout
+
+\begin_layout Subsubsection
+Configuration and Installation
+\end_layout
+
+\begin_layout Standard
+In order to install 
+\noun on
+rsplib
+\noun default
+, get the latest version from\InsetSpace ~
+
+\begin_inset LatexCommand \cite{RSerPoolPage}
+
+\end_inset
+
+ (
+\begin_inset LatexCommand \htmlurl[http://tdrwww.iem.uni-due.de/dreibholz/rserpool]{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
+
+\end_inset
+
+), unpack, configure and compile it:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+tar xzf rsplib-<version>.tar.gz
+\end_layout
+
+\begin_layout Standard
+cd 
+\family typewriter
+rsplib-<version>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+./configure <Options>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+make
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+sudo make install\InsetSpace ~
+\InsetSpace ~
+\InsetSpace ~
+
+\family default
+(This step is optional and not needed to run the examples!)
+\end_layout
+
+\begin_layout Standard
+\noindent
+You may use the following options:
+\end_layout
+
+\begin_layout Description
+--enable-qt Enables Qt usage; this is necessary for the Fractal Generator
+ client.
+ Without Qt, the client's compilation will be skipped.
+ The ./configure script expects the environment variable QTDIR set to the
+ Qt directory.
+ You may need to set it appropriately, e.g.\InsetSpace ~
+"export QTDIR=/usr/share/qt3" for
+ Ubuntu Linux.
+ This setting depends on your distribution; use "locate qwidget.h" to find
+ out the directory.
+ It is recommended to add the setting of QTDIR to your shell configuration
+ (usually ~/.bashrc).
+\end_layout
+
+\begin_layout Description
+--disable-qt: Disables Qt usage; the Fractal Generator client will *not*
+ be available.
+ (
+\series bold
+default
+\series default
+)
+\end_layout
+
+\begin_layout Description
+--enable-shared: Create a shared library.
+\end_layout
+
+\begin_layout Description
+--disable-shared: Disable the creation of a shared library (recommended
+ for debugging).
+\end_layout
+
+\begin_layout Description
+--enable-static: Create a static library (recommended for debugging).
+\end_layout
+
+\begin_layout Description
+--disable-static: Disable the creation of a static library.
+\end_layout
+
+\begin_layout Description
+--enable-maintainer-mode: Enable the creation of debug symbols (-g) and
+ turn off compiler optimization.
+ Necessary for debugging, but makes programs much larger and slower.
+ (
+\series bold
+default
+\series default
+) 
+\end_layout
+
+\begin_layout Description
+--disable-maintainer-mode: Disables maintainer mode.
+ The code will be optimized and without debugging symbols.
+ Node: Please turn on the maintainer mode if you discover any problems and
+ report bugs to us!
+\end_layout
+
+\begin_layout Description
+--enable-hsmgtverify: Enable Handlespace Management verification.
+ This is useful for debugging only; it makes the very PR slow!
+\end_layout
+
+\begin_layout Description
+--disable-hsmgtverify: Turns off Handlespace Management verification.
+ (
+\series bold
+default
+\series default
+)
+\end_layout
+
+\begin_layout Description
+--enable-csp: Enable the Component Status Protocol support (strongly recommended
+!) (
+\series bold
+default
+\series default
+)
+\end_layout
+
+\begin_layout Description
+--disable-csp: Turns the Component Status Protocol support off.
+ 
+\end_layout
+
+\begin_layout Standard
+For learning how to work with 
+\noun on
+rsplib
+\noun default
+, the following options are highly recommended:
+\end_layout
+
+\begin_layout Standard
+--disable-shared --enable-static --enable-qt --enable-csp --enable-maintainer-mo
+de
+\end_layout
+
+\begin_layout Section
+The 
+\noun on
+rsplib
+\noun default
+ API
+\end_layout
+
+\begin_layout Standard
+[TBD]
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[bibtotoc,acm]{Referenzarchiv}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
