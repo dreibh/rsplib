@@ -1,25 +1,30 @@
-/*
- * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2007 by Thomas Dreibholz
+/* $Id$
+ * --------------------------------------------------------------------------
  *
- * $Id$
+ *              //===//   //=====   //===//   //=====  //   //      //
+ *             //    //  //        //    //  //       //   //=/  /=//
+ *            //===//   //=====   //===//   //====   //   //  //  //
+ *           //   \\         //  //             //  //   //  //  //
+ *          //     \\  =====//  //        =====//  //   //      //  Version V
  *
- * This program is free software; you can redistribute it and/or modify
+ * ------------- An Open Source RSerPool Simulation for OMNeT++ -------------
+ *
+ * Copyright (C) 2003-2007 by Thomas Dreibholz
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Contact: dreibh@exp-math.uni-essen.de
- *
+ * Contact: dreibh@iem.uni-due.de
  */
 
 /* ###### Initialize ##################################################### */
@@ -151,32 +156,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
 }
 
 
-/* ###### Get last timer ################################################# */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementTimerNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolHandlespaceNode->PoolElementTimerStorage);
-   if(node != NULL) {
-      return(ST_CLASS(getPoolElementNodeFromTimerStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get next timer ################################################# */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementTimerNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     struct ST_CLASS(PoolElementNode)*     poolElementNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolElementTimerStorage,
-                                                   &poolElementNode->PoolElementTimerStorageNode);
-   if(node != NULL) {
-      return(ST_CLASS(getPoolElementNodeFromTimerStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
 /* ###### Get previous timer ############################################# */
 struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElementTimerNode)(
                                      struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
@@ -203,22 +182,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
 }
 
 
-/* ###### Get last ownership ############################################# */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolHandlespaceNode->PoolElementOwnershipStorage);
-   if(node != NULL) {
-      return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
 /* ###### Get next ownership ############################################## */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     struct ST_CLASS(PoolElementNode)*     poolElementNode)
+static struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNode)(
+                                            struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+                                            struct ST_CLASS(PoolElementNode)*     poolElementNode)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolElementOwnershipStorage,
                                                    &poolElementNode->PoolElementOwnershipStorageNode);
@@ -238,24 +205,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
                                                    &poolElementNode->PoolElementOwnershipStorageNode);
    if(node != NULL) {
       return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get prev ownership of same home PR identifier ################## */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     struct ST_CLASS(PoolElementNode)*     poolElementNode)
-{
-   struct ST_CLASS(PoolElementNode)* prevPoolElementNode;
-   struct STN_CLASSNAME*             node = ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolElementOwnershipStorage,
-                                               &poolElementNode->PoolElementOwnershipStorageNode);
-   if(node != NULL) {
-      prevPoolElementNode = ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(node);
-      if(prevPoolElementNode->HomeRegistrarIdentifier == poolElementNode->HomeRegistrarIdentifier) {
-         return(prevPoolElementNode);
-      }
    }
    return(NULL);
 }
@@ -299,22 +248,10 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
 }
 
 
-/* ###### Get last connection ############################################# */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementConnectionNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolHandlespaceNode->PoolElementConnectionStorage);
-   if(node != NULL) {
-      return(ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
 /* ###### Get next connection ############################################## */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     struct ST_CLASS(PoolElementNode)*     poolElementNode)
+static struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNode)(
+                                            struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
+                                            struct ST_CLASS(PoolElementNode)*     poolElementNode)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolElementConnectionStorage,
                                                    &poolElementNode->PoolElementConnectionStorageNode);
@@ -334,25 +271,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolElement
                                                    &poolElementNode->PoolElementConnectionStorageNode);
    if(node != NULL) {
       return(ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get prev connection of same home PR identifier ################## */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolElementConnectionNodeForSameConnection)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     struct ST_CLASS(PoolElementNode)*     poolElementNode)
-{
-   struct ST_CLASS(PoolElementNode)* prevPoolElementNode;
-   struct STN_CLASSNAME*             node = ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolElementConnectionStorage,
-                                               &poolElementNode->PoolElementConnectionStorageNode);
-   if(node != NULL) {
-      prevPoolElementNode = ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(node);
-      if((prevPoolElementNode->ConnectionSocketDescriptor == poolElementNode->ConnectionSocketDescriptor) &&
-         (prevPoolElementNode->ConnectionAssocID          == poolElementNode->ConnectionAssocID)) {
-         return(prevPoolElementNode);
-      }
    }
    return(NULL);
 }
@@ -409,29 +327,12 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(
 }
 
 
-/* ###### Get last PoolNode ############################################## */
-struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolNode)(
-                              struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode)
-{
-   return((struct ST_CLASS(PoolNode)*)ST_METHOD(GetLast)(&poolHandlespaceNode->PoolIndexStorage));
-}
-
-
 /* ###### Get next PoolNode ############################################## */
 struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeGetNextPoolNode)(
                               struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                               struct ST_CLASS(PoolNode)*            poolNode)
 {
    return((struct ST_CLASS(PoolNode)*)ST_METHOD(GetNext)(&poolHandlespaceNode->PoolIndexStorage, &poolNode->PoolIndexStorageNode));
-}
-
-
-/* ###### Get previous PoolNode ########################################## */
-struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeGetPrevPoolNode)(
-                              struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                              struct ST_CLASS(PoolNode)*            poolNode)
-{
-   return((struct ST_CLASS(PoolNode)*)ST_METHOD(GetPrev)(&poolHandlespaceNode->PoolIndexStorage, &poolNode->PoolIndexStorageNode));
 }
 
 
@@ -563,21 +464,6 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeFindPoolNode)(
 
 
 /* ###### Find PoolNode ################################################## */
-struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolNode)(
-                              struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                              const struct PoolHandle*              poolHandle)
-{
-   struct ST_CLASS(PoolNode)* poolNode;
-   struct ST_CLASS(PoolNode)  cmpPoolNode;
-
-   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
-   poolNode = (struct ST_CLASS(PoolNode)*)ST_METHOD(GetNearestPrev)(&poolHandlespaceNode->PoolIndexStorage,
-                                                                    &cmpPoolNode.PoolIndexStorageNode);
-   return(poolNode);
-}
-
-
-/* ###### Find PoolNode ################################################## */
 struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeFindNearestNextPoolNode)(
                               struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
                               const struct PoolHandle*              poolHandle)
@@ -589,31 +475,6 @@ struct ST_CLASS(PoolNode)* ST_CLASS(poolHandlespaceNodeFindNearestNextPoolNode)(
    poolNode = (struct ST_CLASS(PoolNode)*)ST_METHOD(GetNearestNext)(&poolHandlespaceNode->PoolIndexStorage,
                                                                     &cmpPoolNode.PoolIndexStorageNode);
    return(poolNode);
-}
-
-
-/* ###### Find nearest prev ownership #################################### */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolElementOwnershipNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const RegistrarIdentifierType         homeRegistrarIdentifier,
-                                     const struct PoolHandle*              poolHandle,
-                                     const PoolElementIdentifierType       poolElementIdentifier)
-{
-   struct ST_CLASS(PoolNode)        cmpPoolNode;
-   struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
-   struct STN_CLASSNAME*            ownershipNode;
-
-   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
-   cmpPoolElementNode.OwnerPoolNode    = &cmpPoolNode;
-   cmpPoolElementNode.Identifier       = poolElementIdentifier;
-   cmpPoolElementNode.HomeRegistrarIdentifier = homeRegistrarIdentifier;
-
-   ownershipNode = ST_METHOD(GetNearestPrev)(&poolHandlespaceNode->PoolElementOwnershipStorage,
-                                             &cmpPoolElementNode.PoolElementOwnershipStorageNode);
-   if(ownershipNode) {
-      return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(ownershipNode));
-   }
-   return(NULL);
 }
 
 
@@ -637,33 +498,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindNearestNextPoo
                                              &cmpPoolElementNode.PoolElementOwnershipStorageNode);
    if(ownershipNode) {
       return(ST_CLASS(getPoolElementNodeFromOwnershipStorageNode)(ownershipNode));
-   }
-   return(NULL);
-}
-
-
-/* ###### Find nearest prev connection #################################### */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolElementConnectionNode)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const int                             connectionSocketDescriptor,
-                                     const sctp_assoc_t                    assocID,
-                                     const struct PoolHandle*              poolHandle,
-                                     const PoolElementIdentifierType       poolElementIdentifier)
-{
-   struct ST_CLASS(PoolNode)        cmpPoolNode;
-   struct ST_CLASS(PoolElementNode) cmpPoolElementNode;
-   struct STN_CLASSNAME*            connectionNode;
-
-   poolHandleNew(&cmpPoolNode.Handle, poolHandle->Handle, poolHandle->Size);
-   cmpPoolElementNode.OwnerPoolNode               = &cmpPoolNode;
-   cmpPoolElementNode.ConnectionSocketDescriptor = connectionSocketDescriptor;
-   cmpPoolElementNode.ConnectionAssocID          = assocID;
-   cmpPoolElementNode.Identifier                  = poolElementIdentifier;
-
-   connectionNode = ST_METHOD(GetNearestPrev)(&poolHandlespaceNode->PoolElementConnectionStorage,
-                                              &cmpPoolElementNode.PoolElementConnectionStorageNode);
-   if(connectionNode) {
-      return(ST_CLASS(getPoolElementNodeFromConnectionStorageNode)(connectionNode));
    }
    return(NULL);
 }
@@ -1220,48 +1054,6 @@ struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetFirstPoolElemen
 }
 
 
-/* ###### Get last ownership node of given home PR identifier ########### */
-struct ST_CLASS(PoolElementNode)* ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
-                                     struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
-                                     const RegistrarIdentifierType         homeRegistrarIdentifier)
-{
-   struct ST_CLASS(PoolElementNode)* poolElementNode;
-   struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
-   struct PoolHandle                 lastPoolHandle;
-
-   poolHandleNew(&lastPoolHandle, (unsigned char*)"\x00", 1);
-   if(homeRegistrarIdentifier == 0xffffffff) {
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNode)(poolHandlespaceNode);
-   }
-   else {
-      poolElementNode = ST_CLASS(poolHandlespaceNodeFindNearestPrevPoolElementOwnershipNode)(
-                           poolHandlespaceNode,
-                           homeRegistrarIdentifier + 1,
-                           &lastPoolHandle,
-                           0);
-   }
-   if(poolElementNode) {
-      nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(
-                               poolHandlespaceNode, poolElementNode);
-      while(nextPoolElementNode) {
-         if(nextPoolElementNode->HomeRegistrarIdentifier == homeRegistrarIdentifier) {
-            poolElementNode = nextPoolElementNode;
-         }
-         else {
-            break;
-         }
-         nextPoolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(
-                                 poolHandlespaceNode, nextPoolElementNode);
-      }
-   }
-   if((poolElementNode != NULL) &&
-      (poolElementNode->HomeRegistrarIdentifier == homeRegistrarIdentifier)) {
-      return(poolElementNode);
-   }
-   return(NULL);
-}
-
-
 /* ###### Get number of ownership nodes ################################## */
 size_t ST_CLASS(poolHandlespaceNodeGetOwnershipNodesForIdentifier)(
          struct ST_CLASS(PoolHandlespaceNode)* poolHandlespaceNode,
@@ -1270,11 +1062,11 @@ size_t ST_CLASS(poolHandlespaceNodeGetOwnershipNodesForIdentifier)(
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    size_t                            nodes = 0;
 
-   poolElementNode = ST_CLASS(poolHandlespaceNodeGetLastPoolElementOwnershipNodeForIdentifier)(
+   poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                         poolHandlespaceNode, homeRegistrarIdentifier);
    while(poolElementNode != NULL) {
       nodes++;
-      poolElementNode = ST_CLASS(poolHandlespaceNodeGetPrevPoolElementOwnershipNodeForSameIdentifier)(
+      poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNodeForSameIdentifier)(
                            poolHandlespaceNode, poolElementNode);
    }
    return(nodes);

@@ -26,9 +26,28 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-if [ x$CSP_SERVER != "x" -a $CSP_INTERVAL -gt 0 ] ; then
-   echo "Using CSP server $CSP_SERVER with interval $CSP_INTERVAL ms..."
-   CSPCONFIG="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL"
-fi
 
-./terminal -logcolor=on -loglevel=3 $CSPCONFIG $@
+# dummy0 abschalten
+ip addr flush dev dummy0
+ip link set dummy0 down
+
+# Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
+#          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
+ip link set dummy0 up multicast on
+
+
+# IPv4-Adresse
+ip addr add 10.255.255.1/24 dev dummy0
+
+# IPv6-Adresse
+# ip addr add 3ffe:ab:cd:ef:123:45:67:89a/64 dev dummy0
+
+
+# IPv4-Adresse und Route; Default-Metrik: 0
+# ip route add metric 0xffff default via 10.255.255.2
+
+# IPv6-Adresse und Route; Default-Metrik: 1024
+# ip route add metric 0xffff default via 3ffe:ab:cd:ef:aabb:ccdd:dead:beef
+
+# Zeige Routingtabellen
+# ip -f link route

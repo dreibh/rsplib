@@ -1,25 +1,30 @@
-/*
- * An Efficient RSerPool Pool Handlespace Management Implementation
- * Copyright (C) 2004-2007 by Thomas Dreibholz
+/* $Id$
+ * --------------------------------------------------------------------------
  *
- * $Id$
+ *              //===//   //=====   //===//   //=====  //   //      //
+ *             //    //  //        //    //  //       //   //=/  /=//
+ *            //===//   //=====   //===//   //====   //   //  //  //
+ *           //   \\         //  //             //  //   //  //  //
+ *          //     \\  =====//  //        =====//  //   //      //  Version V
  *
- * This program is free software; you can redistribute it and/or modify
+ * ------------- An Open Source RSerPool Simulation for OMNeT++ -------------
+ *
+ * Copyright (C) 2003-2007 by Thomas Dreibholz
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Contact: dreibh@exp-math.uni-essen.de
- *
+ * Contact: dreibh@iem.uni-due.de
  */
 
 #ifndef POOLNAMESPACEMANAGEMENT_H
@@ -78,6 +83,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -88,6 +95,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -114,6 +123,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -124,6 +135,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -151,6 +164,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -161,6 +176,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -188,6 +205,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -198,6 +217,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -225,6 +246,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -235,6 +258,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -262,6 +287,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -272,6 +299,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME
@@ -299,6 +328,8 @@
 #include "peerlistnode-template.h"
 #include "peerlist-template.h"
 #include "peerlistmanagement-template.h"
+#include "poolusernode-template.h"
+#include "pooluserlist-template.h"
 
 #ifdef INTERNAL_POOLTEMPLATE_IMPLEMENT_IT
 #include "poolpolicy-template_impl.h"
@@ -309,6 +340,8 @@
 #include "peerlistnode-template_impl.h"
 #include "peerlist-template_impl.h"
 #include "peerlistmanagement-template_impl.h"
+#include "poolusernode-template_impl.h"
+#include "pooluserlist-template_impl.h"
 #endif
 
 #undef STN_CLASSNAME

@@ -62,6 +62,10 @@ poolpolicysettings.c \
 poolpolicysettings.h \
 poolpolicy-template.h \
 poolpolicy-template_impl.h \
+pooluserlist-template.h \
+pooluserlist-template_impl.h \
+poolusernode-template.h \
+poolusernode-template_impl.h \
 randomizer.c \
 randomizer.h \
 redblacktree.h \
@@ -144,10 +148,10 @@ endif
 
 if BUILD_QT_PROGRAMS
 noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-route
+EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
 else
 noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-route
+EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
 endif
 
 
