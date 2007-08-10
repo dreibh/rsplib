@@ -186,6 +186,12 @@ B.7 Fractal Generator Service
 
 -fractal: Selects the Fractal Generator service. The default PH will be "FractalGeneratorPool".
 
+-fgpcookiemaxtime: Send cookie after given number of milliseconds.
+
+-fgpcookiemaxpackets: Send cookie after given number of Data messages.
+
+-fgptransmittimeout: Set transmit timeout in milliseconds (timeout for rsp_sendmsg()).
+
 -fgptestmode: Generate simple test pattern instead of calculating a fractal
               graphics (useful to conserve CPU power).
 

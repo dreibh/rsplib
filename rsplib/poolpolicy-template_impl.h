@@ -407,6 +407,23 @@ static void ST_CLASS(weightedRandomDPFUpdatePoolElementNode)(
 
 /*
    #######################################################################
+   #### Priority Policy                                               ####
+   #######################################################################
+*/
+
+/* ###### Sorting Order ################################################## */
+static int ST_CLASS(priorityComparison)(
+   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
+   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
+{
+   COMPARE_KEY_DESCENDING(poolElementNode1->PolicySettings.Weight, poolElementNode2->PolicySettings.Weight);
+   COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
+   return(0);
+}
+
+
+/*
+   #######################################################################
    #### Least Used Policy                                             ####
    #######################################################################
 */
@@ -760,6 +777,15 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
       &ST_CLASS(poolPolicySelectPoolElementNodesByValueTree),
       NULL,
       &ST_CLASS(weightedRandomDPFUpdatePoolElementNode),
+      NULL
+   },
+   {
+      PPT_PRIORITY, "Priority",
+      1,
+      &ST_CLASS(priorityComparison),
+      &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
+      NULL,
+      NULL,
       NULL
    },
 

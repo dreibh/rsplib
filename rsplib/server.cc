@@ -303,11 +303,29 @@ int main(int argc, char** argv)
    else if(service == SERVICE_FRACTAL) {
       size_t maxThreads = 4;
       FractalGeneratorServer::FractalGeneratorServerSettings settings;
-      settings.TestMode     = false;
-      settings.FailureAfter = 0;
+      settings.TestMode         = false;
+      settings.FailureAfter     = 0;
+      settings.TransmitTimeout  = 2500;
+      settings.CookieMaxTime    = 1000000;
+      settings.CookieMaxPackets = 10;
       for(int i = 1;i < argc;i++) {
          if(!(strcmp(argv[i], "-fgptestmode"))) {
             settings.TestMode = true;
+         }
+         else if(!(strncmp(argv[i], "-fgptransmittimeout=", 20))) {
+            settings.TransmitTimeout = atol((const char*)&argv[i][20]);
+         }
+         else if(!(strncmp(argv[i], "-fgpcookiemaxtime=", 18))) {
+            settings.CookieMaxTime = 1000ULL * atol((const char*)&argv[i][18]);
+            if(settings.CookieMaxTime < 100000) {
+               settings.CookieMaxTime = 100000;
+            }
+         }
+         else if(!(strncmp(argv[i], "-fgpcookiemaxpackets=", 21))) {
+            settings.CookieMaxPackets = atol((const char*)&argv[i][21]);
+            if(settings.CookieMaxPackets < 1) {
+               settings.CookieMaxPackets = 1;
+            }
          }
          else if(!(strncmp(argv[i], "-fgpmaxthreads=", 15))) {
             maxThreads = atol((const char*)&argv[i][15]);

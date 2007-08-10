@@ -36,13 +36,15 @@
 
 
 // ###### Constructor #######################################################
-FractalGeneratorServer::FractalGeneratorServer(int rserpoolSocketDescriptor,
-                                               FractalGeneratorServer::FractalGeneratorServerSettings* settings)
+FractalGeneratorServer::FractalGeneratorServer(
+   int                                                     rserpoolSocketDescriptor,
+   FractalGeneratorServer::FractalGeneratorServerSettings* settings)
    : TCPLikeServer(rserpoolSocketDescriptor)
 {
-   Settings            = *settings;
-   LastSendTimeStamp   = 0;
-   LastCookieTimeStamp = 0;
+   Settings                   = *settings;
+   LastSendTimeStamp          = 0;
+   LastCookieTimeStamp        = 0;
+   DataPacketsAfterLastCookie = 0;
 }
 
 
@@ -65,6 +67,9 @@ void FractalGeneratorServer::fractalGeneratorPrintParameters(const void* userDat
    const FractalGeneratorServerSettings* settings = (const FractalGeneratorServerSettings*)userData;
 
    puts("Fractal Generator Parameters:");
+   printf("   Cookie Max Time         = %u [ms]\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
+   printf("   Cookie Max Packets      = %u [Packets]\n", (unsigned int)settings->CookieMaxPackets);
+   printf("   Transmit Timeout        = %u [ms]\n", (unsigned int)settings->TransmitTimeout);
    printf("   Failure After           = %u [Packets]\n", (unsigned int)settings->FailureAfter);
    printf("   Test Mode               = %s\n", (settings->TestMode == true) ? "on" : "off");
 }
@@ -93,10 +98,11 @@ bool FractalGeneratorServer::sendCookie()
    cookie.CurrentY                = htonl(Status.CurrentY);
 
    sent = rsp_send_cookie(RSerPoolSocketDescriptor,
-                          (unsigned char*)&cookie, sizeof(cookie),
-                          0, 0);
+                          (unsigned char*)&cookie, sizeof(cookie), 0,
+                          Settings.TransmitTimeout);
 
-   LastCookieTimeStamp = getMicroTime();
+   LastCookieTimeStamp        = getMicroTime();
+   DataPacketsAfterLastCookie = 0;
    return(sent == sizeof(cookie));
 }
 
@@ -119,12 +125,14 @@ bool FractalGeneratorServer::sendData(FGPData* data)
 
    sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                       data, dataSize, 0,
-                      0, htonl(PPID_FGP), 0, 0, 0, 0);
+                      0, htonl(PPID_FGP), 0, 0, 0,
+                      Settings.TransmitTimeout);
 
    data->Points = 0;
    data->StartX = 0;
    data->StartY = 0;
    LastSendTimeStamp = getMicroTime();
+   DataPacketsAfterLastCookie++;
 
    return(sent == (ssize_t)dataSize);
 }
@@ -335,7 +343,8 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
       Status.CurrentY++;
 
       // ====== Send cookie =================================================
-      if(LastCookieTimeStamp + 1000000 < getMicroTime()) {
+      if( (LastCookieTimeStamp + Settings.CookieMaxTime < getMicroTime()) ||
+          (DataPacketsAfterLastCookie >=  Settings.CookieMaxPackets) ) {
          if(!sendCookie()) {
             printTimeStamp(stdout);
             printf("Sending cookie (start) on RSerPool socket %u failed!\n",

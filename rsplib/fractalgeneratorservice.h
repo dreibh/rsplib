@@ -40,8 +40,11 @@ class FractalGeneratorServer : public TCPLikeServer
    public:
    struct FractalGeneratorServerSettings
    {
-      size_t FailureAfter;
-      bool   TestMode;
+      unsigned long long CookieMaxTime;
+      size_t             CookieMaxPackets;
+      size_t             TransmitTimeout;
+      size_t             FailureAfter;
+      bool               TestMode;
    };
 
    FractalGeneratorServer(int                             rserpoolSocketDescriptor,
@@ -70,6 +73,7 @@ class FractalGeneratorServer : public TCPLikeServer
    unsigned long long             LastCookieTimeStamp;
    unsigned long long             LastSendTimeStamp;
    FractalGeneratorServerSettings Settings;
+   size_t                         DataPacketsAfterLastCookie;
 };
 
 
