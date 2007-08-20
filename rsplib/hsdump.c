@@ -70,7 +70,7 @@ int main(int argc, char** argv)
    bool                                       moreData;
 
    if(argc < 2) {
-      fprintf(stderr, "Usage: %s [Registrar]\n", argv[0]);
+      fprintf(stderr, "Usage: %s [Registrar] {-loglevel=Level} {-logfile=File} {-logappend=File} {-logcolor=on|off}\n", argv[0]);
       exit(1);
    }
 
@@ -78,6 +78,17 @@ int main(int argc, char** argv)
       fprintf(stderr, "ERROR: Bad registrar address <%s>\n", argv[1]);
       exit(1);
    }
+   for(int i = 2;i < argc;i++) {
+      if(!(strncmp(argv[i], "-log" ,4))) {
+         if(initLogging(argv[i]) == false) {
+            exit(1);
+         }
+      }
+      else {
+         fprintf("ERROR: Bad argument <%s>\n", argv[i]);
+      }
+   }
+   beginLogging();
 
    sd = ext_socket((checkIPv6() == true) ? AF_INET6 : AF_INET, SOCK_STREAM, IPPROTO_SCTP);
    if(sd < 0) {
@@ -188,65 +199,79 @@ int main(int argc, char** argv)
                                       received, sizeof(buffer), &message) == RSPERR_OKAY) {
                if(message->PPID == PPID_ENRP) {
                   if(message->Type == EHT_LIST_RESPONSE) {
-                     if( (!(message->Flags & EHF_LIST_RESPONSE_REJECT)) &&
-                         (message->PeerListPtr)) {
-                        peerListNodePtr = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
-                                          &message->PeerListPtr->List);
-                        while(peerListNodePtr) {
-                           if(peerListNodePtr->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
-                              result = ST_CLASS(peerListManagementRegisterPeerListNode)(
-                                          &peerList,
-                                          peerListNodePtr->Identifier,
-                                          peerListNodePtr->Flags,
-                                          peerListNodePtr->AddressBlock,
-                                          getMicroTime(),
-                                          &newPeerListNode);
-                              if(result != RSPERR_OKAY) {
-                                 fputs("Failed to add peer ", stderr);
-                                 ST_CLASS(peerListNodePrint)(peerListNodePtr, stderr, ~0);
-                                 fputs(" to peer list\n", stderr);
+                     if(!(message->Flags & EHF_LIST_RESPONSE_REJECT)) {
+                        if(message->PeerListPtr) {
+                           peerListNodePtr = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
+                                             &message->PeerListPtr->List);
+                           while(peerListNodePtr) {
+                              if(peerListNodePtr->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) {
+                                 result = ST_CLASS(peerListManagementRegisterPeerListNode)(
+                                             &peerList,
+                                             peerListNodePtr->Identifier,
+                                             peerListNodePtr->Flags,
+                                             peerListNodePtr->AddressBlock,
+                                             getMicroTime(),
+                                             &newPeerListNode);
+                                 if(result != RSPERR_OKAY) {
+                                    fputs("Failed to add peer ", stderr);
+                                    ST_CLASS(peerListNodePrint)(peerListNodePtr, stderr, ~0);
+                                    fputs(" to peer list\n", stderr);
+                                 }
                               }
+                              peerListNodePtr = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
+                                                   &message->PeerListPtr->List, peerListNodePtr);
                            }
-                           peerListNodePtr = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(
-                                                &message->PeerListPtr->List, peerListNodePtr);
                         }
+                        else {
+                           puts("--- No peers ---");
+                        }
+                     }
+                     else {
+                        puts("--- ListRequest has been rejected ---");
                      }
                   }
                   else if(message->Type == EHT_HANDLE_TABLE_RESPONSE) {
-                     if( (!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) &&
-                         (message->HandlespacePtr)) {
-                        poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
-                        while(poolElementNode != NULL) {
-                           result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                                       &handlespace,
-                                       &poolElementNode->OwnerPoolNode->Handle,
-                                       poolElementNode->HomeRegistrarIdentifier,
-                                       poolElementNode->Identifier,
-                                       poolElementNode->RegistrationLife,
-                                       &poolElementNode->PolicySettings,
-                                       poolElementNode->UserTransport,
-                                       poolElementNode->RegistratorTransport,
-                                       -1, 0,
-                                       0,
-                                       &newPoolElementNode);
-                           if(result != RSPERR_OKAY) {
-                              fputs("Failed to register to pool ", stderr);
-                              poolHandlePrint(&message->Handle, stderr);
-                              fputs(" pool element ", stderr);
-                              ST_CLASS(poolElementNodePrint)(poolElementNode, stderr, PENPO_FULL);
-                              fputs(": ", stderr);
-                              rserpoolErrorPrint(result, stderr);
-                              fputs("\n", stderr);
+                     if(!(message->Flags & EHF_HANDLE_TABLE_RESPONSE_REJECT)) {
+                        if(message->HandlespacePtr) {
+                           poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace);
+                           while(poolElementNode != NULL) {
+                              result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+                                          &handlespace,
+                                          &poolElementNode->OwnerPoolNode->Handle,
+                                          poolElementNode->HomeRegistrarIdentifier,
+                                          poolElementNode->Identifier,
+                                          poolElementNode->RegistrationLife,
+                                          &poolElementNode->PolicySettings,
+                                          poolElementNode->UserTransport,
+                                          poolElementNode->RegistratorTransport,
+                                          -1, 0,
+                                          0,
+                                          &newPoolElementNode);
+                              if(result != RSPERR_OKAY) {
+                                 fputs("Failed to register to pool ", stderr);
+                                 poolHandlePrint(&message->Handle, stderr);
+                                 fputs(" pool element ", stderr);
+                                 ST_CLASS(poolElementNodePrint)(poolElementNode, stderr, PENPO_FULL);
+                                 fputs(": ", stderr);
+                                 rserpoolErrorPrint(result, stderr);
+                                 fputs("\n", stderr);
+                              }
+                              poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace, poolElementNode);
                            }
-                           poolElementNode = ST_CLASS(poolHandlespaceNodeGetNextPoolElementOwnershipNode)(&message->HandlespacePtr->Handlespace, poolElementNode);
-                        }
 
-                        moreData = (message->Flags & EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND);
-                        printf("Got %u pools, %u PEs => now having %u pools, %u PEs\n",
-                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(message->HandlespacePtr),
-                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(message->HandlespacePtr),
-                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(&handlespace),
-                           (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(&handlespace));
+                           moreData = (message->Flags & EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND);
+                           printf("Got %u pools, %u PEs => now having %u pools, %u PEs\n",
+                              (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(message->HandlespacePtr),
+                              (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(message->HandlespacePtr),
+                              (unsigned int)ST_CLASS(poolHandlespaceManagementGetPools)(&handlespace),
+                              (unsigned int)ST_CLASS(poolHandlespaceManagementGetPoolElements)(&handlespace));
+                        }
+                        else {
+                           puts("--- No PEs ---");
+                        }
+                     }
+                     else {
+                        puts("--- HandleTableRequest has been rejected ---");
                      }
                      break;
                   }
@@ -285,5 +310,6 @@ int main(int argc, char** argv)
    ST_CLASS(peerListManagementDelete)(&peerList);
    ST_CLASS(poolHandlespaceManagementDelete)(&handlespace);
    ext_close(sd);
+   finishLogging();
    return(0);
 }
