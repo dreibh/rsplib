@@ -868,7 +868,7 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
    if(fd == registrar->ENRPMulticastInputSocket) {
       transportAddressBlockNew(enrpTransportAddressBlock,
                                IPPROTO_SCTP,
-                               getPort(&message->SourceAddress.sa),
+                               (message->PeerListNodePtr->AddressBlock) ? message->PeerListNodePtr->AddressBlock->Port : getPort(&message->SourceAddress.sa),
                                0,
                                &message->SourceAddress,
                                1, MAX_PE_TRANSPORTADDRESSES);
