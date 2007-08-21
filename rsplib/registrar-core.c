@@ -79,55 +79,77 @@ void registrarHandleMessage(struct Registrar*       registrar,
                             struct RSerPoolMessage* message,
                             int                     sd)
 {
-   switch(message->Type) {
-      case AHT_REGISTRATION:
-         registrarHandleASAPRegistration(registrar, sd, message->AssocID, message);
-       break;
-      case AHT_HANDLE_RESOLUTION:
-         registrarHandleASAPHandleResolution(registrar, sd, message->AssocID, message);
-       break;
-      case AHT_DEREGISTRATION:
-         registrarHandleASAPDeregistration(registrar, sd, message->AssocID, message);
-       break;
-      case AHT_ENDPOINT_KEEP_ALIVE_ACK:
-         registrarHandleASAPEndpointKeepAliveAck(registrar, sd, message->AssocID, message);
-       break;
-      case AHT_ENDPOINT_UNREACHABLE:
-         registrarHandleASAPEndpointUnreachable(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_PRESENCE:
-         registrarHandleENRPPresence(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_HANDLE_UPDATE:
-         registrarHandleENRPHandleUpdate(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_LIST_REQUEST:
-         registrarHandleENRPListRequest(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_LIST_RESPONSE:
-         registrarHandleENRPListResponse(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_HANDLE_TABLE_REQUEST:
-         registrarHandleENRPHandleTableRequest(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_HANDLE_TABLE_RESPONSE:
-         registrarHandleENRPHandleTableResponse(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_INIT_TAKEOVER:
-         registrarHandleENRPInitTakeover(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_INIT_TAKEOVER_ACK:
-         registrarHandleENRPInitTakeoverAck(registrar, sd, message->AssocID, message);
-       break;
-      case EHT_TAKEOVER_SERVER:
-         registrarHandleENRPTakeoverServer(registrar, sd, message->AssocID, message);
-       break;
-      default:
+   if(sd == registrar->ENRPMulticastInputSocket) {
+      if(message->Type == EHT_PRESENCE) {
+         registrarHandleENRPPresence(registrar, sd, 0, message);
+      }
+      else {
          LOG_WARNING
-         fprintf(stdlog, "Unsupported message type $%02x\n",
-                 message->Type);
+         fprintf(stdlog, "Got unsupported message type $%02x on ENRP multicast socket\n", message->Type);
          LOG_END
-       break;
+      }
+   }
+   else if(sd == registrar->ASAPSocket) {
+      switch(message->Type) {
+         case AHT_REGISTRATION:
+            registrarHandleASAPRegistration(registrar, sd, message->AssocID, message);
+          break;
+         case AHT_HANDLE_RESOLUTION:
+            registrarHandleASAPHandleResolution(registrar, sd, message->AssocID, message);
+          break;
+         case AHT_DEREGISTRATION:
+            registrarHandleASAPDeregistration(registrar, sd, message->AssocID, message);
+          break;
+         case AHT_ENDPOINT_KEEP_ALIVE_ACK:
+            registrarHandleASAPEndpointKeepAliveAck(registrar, sd, message->AssocID, message);
+          break;
+         case AHT_ENDPOINT_UNREACHABLE:
+            registrarHandleASAPEndpointUnreachable(registrar, sd, message->AssocID, message);
+          break;
+         default:
+            LOG_WARNING
+            fprintf(stdlog, "Got unsupported message type $%02x on ASAP unicast socket\n",
+                    message->Type);
+            LOG_END
+          break;
+      }
+   }
+   else if(sd == registrar->ENRPUnicastSocket) {
+      switch(message->Type) {
+         case EHT_PRESENCE:
+            registrarHandleENRPPresence(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_HANDLE_UPDATE:
+            registrarHandleENRPHandleUpdate(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_LIST_REQUEST:
+            registrarHandleENRPListRequest(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_LIST_RESPONSE:
+            registrarHandleENRPListResponse(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_HANDLE_TABLE_REQUEST:
+            registrarHandleENRPHandleTableRequest(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_HANDLE_TABLE_RESPONSE:
+            registrarHandleENRPHandleTableResponse(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_INIT_TAKEOVER:
+            registrarHandleENRPInitTakeover(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_INIT_TAKEOVER_ACK:
+            registrarHandleENRPInitTakeoverAck(registrar, sd, message->AssocID, message);
+          break;
+         case EHT_TAKEOVER_SERVER:
+            registrarHandleENRPTakeoverServer(registrar, sd, message->AssocID, message);
+          break;
+         default:
+            LOG_WARNING
+            fprintf(stdlog, "Got unsupported message type $%02x on ENRP unicast socket\n",
+                    message->Type);
+            LOG_END
+          break;
+      }
    }
 }
 
