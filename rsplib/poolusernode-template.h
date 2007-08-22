@@ -37,18 +37,16 @@ extern "C" {
 #endif
 
 
-struct ST_CLASS(PoolUserList);
-struct TakeoverProcess;
-
-
 struct ST_CLASS(PoolUserNode)
 {
-   struct STN_CLASSNAME  PoolUserListStorageNode;
+   struct STN_CLASSNAME       PoolUserListStorageNode;
 
-   int                   ConnectionSocketDescriptor;
-   sctp_assoc_t          ConnectionAssocID;
+   int                        ConnectionSocketDescriptor;
+   sctp_assoc_t               ConnectionAssocID;
+   unsigned long long         LastUpdateTimeStamp;
 
-   unsigned long long    LastUpdateTimeStamp;
+   struct TimeStampHashTable* HandleResolutionHash;
+   struct TimeStampHashTable* EndpointUnreachableHash;
 };
 
 
@@ -70,6 +68,17 @@ void ST_CLASS(poolUserNodeGetDescription)(
 void ST_CLASS(poolUserNodePrint)(const struct ST_CLASS(PoolUserNode)* poolUserNode,
                                  FILE*                                fd,
                                  const unsigned int                   fields);
+
+double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)* poolUserNode,
+                                                  const struct PoolHandle*       poolHandle,
+                                                  const unsigned long long       now,
+                                                  const size_t                   buckets,
+                                                  const size_t                   maxEntries);
+double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)* poolUserNode,
+                                                     const struct PoolHandle*       poolHandle,
+                                                     const unsigned long long       now,
+                                                     const size_t                   buckets,
+                                                     const size_t                   maxEntries);
 
 
 #ifdef __cplusplus

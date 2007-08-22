@@ -71,6 +71,8 @@ void ST_CLASS(poolUserNodeNew)(struct ST_CLASS(PoolUserNode)* poolUserNode,
 
    poolUserNode->ConnectionSocketDescriptor = connectionSocketDescriptor;
    poolUserNode->ConnectionAssocID          = connectionAssocID;
+   poolUserNode->HandleResolutionHash       = NULL;
+   poolUserNode->EndpointUnreachableHash    = NULL;
 }
 
 
@@ -81,6 +83,15 @@ void ST_CLASS(poolUserNodeDelete)(struct ST_CLASS(PoolUserNode)* poolUserNode)
 
    poolUserNode->ConnectionSocketDescriptor = -1;
    poolUserNode->ConnectionAssocID          = 0;
+
+   if(poolUserNode->HandleResolutionHash) {
+      timeStampHashTableDelete(poolUserNode->HandleResolutionHash);
+      poolUserNode->HandleResolutionHash = NULL;
+   }
+   if(poolUserNode->EndpointUnreachableHash) {
+      timeStampHashTableDelete(poolUserNode->EndpointUnreachableHash);
+      poolUserNode->EndpointUnreachableHash = NULL;
+   }
 }
 
 
@@ -118,4 +129,58 @@ void ST_CLASS(poolUserNodePrint)(const struct ST_CLASS(PoolUserNode)* poolUserNo
                                         sizeof(poolUserNodeDescription),
                                         fields);
    fputs(poolUserNodeDescription, fd);
+}
+
+
+/* ###### Compute a hash from PH and PE ID ############################### */
+static unsigned int computePHPEHash(const struct PoolHandle*        poolHandle,
+                                    const PoolElementIdentifierType identifier)
+{
+   return(0);
+}
+
+
+/* ###### Note a handle resolution into the hash table ################### */
+double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)* poolUserNode,
+                                                  const struct PoolHandle*       poolHandle,
+                                                  const unsigned long long       now,
+                                                  const size_t                   buckets,
+                                                  const size_t                   maxEntries)
+{
+   unsigned int hash;
+
+   if(poolUserNode->HandleResolutionHash == NULL) {
+      poolUserNode->HandleResolutionHash = timeStampHashTableNew(buckets, maxEntries);
+      if(poolUserNode->HandleResolutionHash == NULL) {
+         return(+9e9);
+      }
+   }
+
+   hash = computePHPEHash(poolHandle, 0);
+   timeStampHashTableAddTimeStamp(poolUserNode->HandleResolutionHash, hash, now);
+   /* timeStampHashTablePrint(poolUserNode->HandleResolutionHash,stdout); */
+   return(timeStampHashTableGetRate(poolUserNode->HandleResolutionHash, hash));
+}
+
+
+/* ###### Note a handle resolution into the hash table ################### */
+double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)* poolUserNode,
+                                                     const struct PoolHandle*       poolHandle,
+                                                     const unsigned long long       now,
+                                                     const size_t                   buckets,
+                                                     const size_t                   maxEntries)
+{
+   unsigned int hash;
+
+   if(poolUserNode->EndpointUnreachableHash == NULL) {
+      poolUserNode->EndpointUnreachableHash = timeStampHashTableNew(buckets, maxEntries);
+      if(poolUserNode->EndpointUnreachableHash == NULL) {
+         return(+9e9);
+      }
+   }
+
+   hash = computePHPEHash(poolHandle, 0);
+   timeStampHashTableAddTimeStamp(poolUserNode->EndpointUnreachableHash, hash, now);
+   /* timeStampHashTablePrint(poolUserNode->EndpointUnreachableHash,stdout); */
+   return(timeStampHashTableGetRate(poolUserNode->EndpointUnreachableHash, hash));
 }

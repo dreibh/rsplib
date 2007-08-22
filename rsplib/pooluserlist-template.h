@@ -39,7 +39,7 @@ extern "C" {
 
 struct ST_CLASS(PoolUserList)
 {
-   struct ST_CLASSNAME     PoolUserListStorage;
+   struct ST_CLASSNAME PoolUserListStorage;
 };
 
 
@@ -48,13 +48,8 @@ void ST_CLASS(poolUserListDelete)(struct ST_CLASS(PoolUserList)* poolUserList);
 size_t ST_CLASS(poolUserListGetPoolUserNodes)(
           const struct ST_CLASS(PoolUserList)* poolUserList);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetFirstPoolUserNode)(
-                                      struct ST_CLASS(PoolUserList)* poolUserList);
-struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetLastPoolUserNode)(
-                                      struct ST_CLASS(PoolUserList)* poolUserList);
+                                  struct ST_CLASS(PoolUserList)* poolUserList);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetNextPoolUserNode)(
-                                  struct ST_CLASS(PoolUserList)* poolUserList,
-                                  struct ST_CLASS(PoolUserNode)* poolUserListNode);
-struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetPrevPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
                                   struct ST_CLASS(PoolUserNode)* poolUserListNode);
 void ST_CLASS(poolUserListGetDescription)(struct ST_CLASS(PoolUserList)* poolUserList,
@@ -64,13 +59,10 @@ void ST_CLASS(poolUserListVerify)(struct ST_CLASS(PoolUserList)* poolUserList);
 void ST_CLASS(poolUserListPrint)(struct ST_CLASS(PoolUserList)* poolUserList,
                                  FILE*                          fd,
                                  const unsigned int             fields);
-void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList,
-                                 void                           (*poolUserListNodeDisposer)(void* poolUserListNode, void* userData),
-                                 void*                          userData);
+void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
-                                  struct ST_CLASS(PoolUserNode)* poolUserListNode,
-                                  unsigned int*                  errorCode);
+                                  struct ST_CLASS(PoolUserNode)* poolUserListNode);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListFindPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
                                   const int                      connectionSocketDescriptor,

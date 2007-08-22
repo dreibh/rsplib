@@ -39,6 +39,7 @@ void ST_CLASS(poolUserListNew)(struct ST_CLASS(PoolUserList)* poolUserList)
 /* ###### Invalidate ##################################################### */
 void ST_CLASS(poolUserListDelete)(struct ST_CLASS(PoolUserList)* poolUserList)
 {
+   ST_CLASS(poolUserListClear)(poolUserList);
    ST_METHOD(Delete)(&poolUserList->PoolUserListStorage);
 }
 
@@ -63,38 +64,12 @@ struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetFirstPoolUserNode)(
 }
 
 
-/* ###### Get last PoolUserNode ########################################## */
-struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetLastPoolUserNode)(
-                                      struct ST_CLASS(PoolUserList)* poolUserList)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetLast)(&poolUserList->PoolUserListStorage);
-   if(node) {
-      return(ST_CLASS(getPoolUserNodeFromPoolUserListStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
 /* ###### Get next PoolUserNode ########################################## */
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetNextPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
                                   struct ST_CLASS(PoolUserNode)* poolUserNode)
 {
    struct STN_CLASSNAME* node = ST_METHOD(GetNext)(&poolUserList->PoolUserListStorage,
-                                                   &poolUserNode->PoolUserListStorageNode);
-   if(node) {
-      return(ST_CLASS(getPoolUserNodeFromPoolUserListStorageNode)(node));
-   }
-   return(NULL);
-}
-
-
-/* ###### Get previous PoolUserNode ###################################### */
-struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListGetPrevPoolUserNode)(
-                                  struct ST_CLASS(PoolUserList)* poolUserList,
-                                  struct ST_CLASS(PoolUserNode)* poolUserNode)
-{
-   struct STN_CLASSNAME* node = ST_METHOD(GetPrev)(&poolUserList->PoolUserListStorage,
                                                    &poolUserNode->PoolUserListStorageNode);
    if(node) {
       return(ST_CLASS(getPoolUserNodeFromPoolUserListStorageNode)(node));
@@ -149,15 +124,12 @@ void ST_CLASS(poolUserListPrint)(struct ST_CLASS(PoolUserList)* poolUserList,
 
 
 /* ###### Clear ########################################################## */
-void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList,
-                                 void                           (*poolUserNodeDisposer)(void* poolUserNode, void* userData),
-                                 void*                          userData)
+void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList)
 {
    struct ST_CLASS(PoolUserNode)* poolUserNode = ST_CLASS(poolUserListGetFirstPoolUserNode)(poolUserList);
    while(poolUserNode != NULL) {
       ST_CLASS(poolUserListRemovePoolUserNode)(poolUserList, poolUserNode);
       ST_CLASS(poolUserNodeDelete)(poolUserNode);
-      poolUserNodeDisposer(poolUserNode, userData);
       poolUserNode = ST_CLASS(poolUserListGetFirstPoolUserNode)(poolUserList);
    }
 }
@@ -166,8 +138,7 @@ void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList,
 /* ###### Add PoolUserNode ############################################### */
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
-                                  struct ST_CLASS(PoolUserNode)* poolUserNode,
-                                  unsigned int*                  errorCode)
+                                  struct ST_CLASS(PoolUserNode)* poolUserNode)
 {
    struct STN_CLASSNAME* result;
 
@@ -177,10 +148,8 @@ struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddPoolUserNode)(
    result = ST_METHOD(Insert)(&poolUserList->PoolUserListStorage,
                               &poolUserNode->PoolUserListStorageNode);
    if(result == &poolUserNode->PoolUserListStorageNode) {
-      *errorCode = RSPERR_OKAY;
       return(poolUserNode);
    }
-   *errorCode = RSPERR_DUPLICATE_ID;
    return(ST_CLASS(getPoolUserNodeFromPoolUserListStorageNode)(result));
 }
 

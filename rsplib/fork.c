@@ -50,9 +50,9 @@ enum ForkProcessStatus
 
 struct ForkProcess
 {
-   unsigned long long                 Start;
-   unsigned long long                 End;
-   unsigned long long                 Kill;
+   unsigned long long     Start;
+   unsigned long long     End;
+   unsigned long long     Kill;
    pid_t                  PID;
    enum ForkProcessStatus Status;
 };
@@ -74,7 +74,6 @@ unsigned long long getRandomInterval(const unsigned int       distribution,
        break;
       case DIST_NEGEXP:
          newTimeout = (unsigned long long)rint(randomExpDouble((double)timeout));
-printf("%llu\n",newTimeout);
        break;
     }
 
@@ -102,12 +101,13 @@ int main(int argc, char** argv)
    unsigned long long now;
    unsigned long long timeout;
    unsigned int       distribution = DIST_UNIFORM;
+   int                termSignal   = SIGINT;
    size_t             count;
    size_t             progarg;
    size_t             i, j;
 
    if(argc < 3) {
-      printf("Usage: %s [Count] [{exp|uniform}:Timeout(Microseconds)] [Program] {Parameter} ...\n",argv[0]);
+      printf("Usage: %s [Count] [{exp|uniform}:Timeout(Microseconds)] {-int|-kill} [Program] {Parameter} ...\n",argv[0]);
       exit(1);
    }
 
@@ -125,7 +125,39 @@ int main(int argc, char** argv)
       fputs("ERROR: Invalid timeout specified!\n", stderr);
       exit(1);
    }
-   progarg = 3;
+   for(progarg = 3;progarg < argc;progarg++) {
+      if(argv[progarg][0] != '-') {
+         break;
+      }
+      else if(!(strcmp(argv[progarg], "-int"))) {
+         termSignal = SIGINT;
+      }
+      else if(!(strcmp(argv[progarg], "-kill"))) {
+         termSignal = SIGKILL;
+      }
+   }
+
+
+   puts("Fork - Version 1.0");
+   puts("==================\n");
+   printf("Term Signal   = %s\n", (termSignal == SIGINT) ? "SIGINT" : "SIGKILL");
+   printf("Timeout       = %llu [us]\n", timeout);
+   printf("Timeout Dist. = ");
+   switch(distribution) {
+      case DIST_UNIFORM:
+         puts("uniform");
+       break;
+      case DIST_NEGEXP:
+         puts("negative-exponential");
+       break;
+   }
+   printf("Program       = %s\n", argv[progarg]);
+   printf("Arguments     = ");
+   for(i = progarg + 1;i < (size_t)min(MAX_ARGS, argc);i++) {
+      printf("%s ", argv[i]);
+   }
+   puts("\n");
+
 
    now            = getMicroTime();
    mainProgramPID = getpid();
@@ -146,7 +178,7 @@ int main(int argc, char** argv)
                   process[i].Status = FPS_Running;
                   process[i].PID = fork();
                   if(process[i].PID == 0) {
-                     for(j = progarg;j < (size_t)min(MAX_ARGS,argc);j++) {
+                     for(j = progarg;j < (size_t)min(MAX_ARGS, argc);j++) {
                         argcopy[j - progarg] = argv[j];
                      }
                      argcopy[j - progarg] = NULL;
@@ -161,7 +193,7 @@ int main(int argc, char** argv)
 
                      execvp(argv[progarg],argcopy);
                      perror("Unable to start program -> exiting! Reason");
-                     kill(mainProgramPID,SIGINT);
+                     kill(mainProgramPID, SIGINT);
                      exit(1);
                   }
                   else {
@@ -173,7 +205,7 @@ int main(int argc, char** argv)
                if(isExisting(process[i].PID)) {
                   if(process[i].End <= now) {
                      printf("Interrupting process #%d.\n", (int)process[i].PID);
-                     kill(process[i].PID,SIGINT);
+                     kill(process[i].PID, termSignal);
                      process[i].Status = FPS_Interrupted;
                   }
                }
@@ -186,7 +218,7 @@ int main(int argc, char** argv)
                if(isExisting(process[i].PID)) {
                   if(process[i].Kill <= now) {
                      printf("Killing process #%d.\n", (int)process[i].PID);
-                     kill(process[i].PID,SIGKILL);
+                     kill(process[i].PID, SIGKILL);
                   }
                }
                else {

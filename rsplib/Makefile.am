@@ -109,6 +109,8 @@ threadsignal.c \
 threadsignal.h \
 timer.c \
 timer.h \
+timestamphashtable.c \
+timestamphashtable.h \
 transportaddressblock.c \
 transportaddressblock.h \
 netdouble.c \
