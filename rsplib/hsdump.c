@@ -68,7 +68,8 @@ int main(int argc, char** argv)
    ssize_t                                    received;
    struct ST_CLASS(PeerListNode)              peerListNode;
    bool                                       moreData;
-
+   int                                        i;
+   
    if(argc < 2) {
       fprintf(stderr, "Usage: %s [Registrar] {-loglevel=Level} {-logfile=File} {-logappend=File} {-logcolor=on|off}\n", argv[0]);
       exit(1);
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
       fprintf(stderr, "ERROR: Bad registrar address <%s>\n", argv[1]);
       exit(1);
    }
-   for(int i = 2;i < argc;i++) {
+   for(i = 2;i < argc;i++) {
       if(!(strncmp(argv[i], "-log" ,4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
