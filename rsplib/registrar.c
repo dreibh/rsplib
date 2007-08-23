@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 
    char                          asapAnnounceAddressBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* asapAnnounceAddress           = (struct TransportAddressBlock*)&asapAnnounceAddressBuffer;
-   const char*                   asapAnnounceAddressParameter  = "0.0.0.0:0";
+   const char*                   asapAnnounceAddressParameter  = "auto";
    int                           asapAnnounceSocket            = -1;
    bool                          asapSendAnnounces             = false;
 
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
 
    char                          enrpMulticastAddressBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* enrpMulticastAddress          = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
-   const char*                   enrpMulticastAddressParameter = "0.0.0.0:0";
+   const char*                   enrpMulticastAddressParameter = "auto";
    int                           enrpMulticastOutputSocket     = -1;
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;

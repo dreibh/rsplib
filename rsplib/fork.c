@@ -87,7 +87,7 @@ unsigned long long getRandomInterval(const unsigned int       distribution,
 /* ###### Check whether process has terminated ########################### */
 bool isExisting(pid_t pid)
 {
-   const int result = waitpid(pid, NULL, WNOHANG);
+   const pid_t result = waitpid(pid, NULL, WNOHANG);
    return(result == 0);
 }
 
