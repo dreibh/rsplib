@@ -31,6 +31,8 @@
 #error Do not include this file directly, use poolUsermanagement.h
 #endif
 
+#include "timestamphashtable.h"
+
 
 #ifdef __cplusplus
 extern "C" {

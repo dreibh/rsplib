@@ -69,7 +69,7 @@ int main(int argc, char** argv)
    struct ST_CLASS(PeerListNode)              peerListNode;
    bool                                       moreData;
    int                                        i;
-   
+
    if(argc < 2) {
       fprintf(stderr, "Usage: %s [Registrar] {-loglevel=Level} {-logfile=File} {-logappend=File} {-logcolor=on|off}\n", argv[0]);
       exit(1);
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         fprintf("ERROR: Bad argument <%s>\n", argv[i]);
+         fprintf(stderr, "ERROR: Bad argument <%s>\n", argv[i]);
       }
    }
    beginLogging();
