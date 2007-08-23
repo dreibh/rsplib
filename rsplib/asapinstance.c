@@ -293,7 +293,7 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
-#ifdef SCTP_DELAYED_ACK_TIME
+#ifdef SCTP_DELAYED_SACK
    struct sctp_assoc_value sctpAssocValue;
 #endif
 
@@ -332,19 +332,19 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
       fprintf(stdlog, "Connected to registrar $%08x\n", asapInstance->RegistrarIdentifier);
       LOG_END
 
-#ifdef SCTP_DELAYED_ACK_TIME
+#ifdef SCTP_DELAYED_SACK
       /* ====== Tune SACK handling ======================================= */
       sctpAssocValue.assoc_id    = 0;
       sctpAssocValue.assoc_value = 0;
       if(ext_setsockopt(asapInstance->RegistrarSocket,
-                        IPPROTO_SCTP, SCTP_DELAYED_ACK_TIME,
+                        IPPROTO_SCTP, SCTP_DELAYED_SACK,
                         &sctpAssocValue, sizeof(sctpAssocValue)) < 0) {
          LOG_WARNING
-         logerror("Unable to set SCTP_DELAYED_ACK_TIME");
+         logerror("Unable to set SCTP_DELAYED_SACK");
          LOG_END
       }
 #else
-#warning SCTP_DELAYED_ACK_TIME is not defined - Unable to tune SACK handling for DPF policies!
+#warning SCTP_DELAYED_SACK is not defined - Unable to tune SACK handling for DPF policies!
 #endif
    }
    return(true);

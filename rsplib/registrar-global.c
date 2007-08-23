@@ -69,7 +69,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 {
    struct Registrar*       registrar;
    int                     autoCloseTimeout;
-#ifdef SCTP_DELAYED_ACK_TIME
+#ifdef SCTP_DELAYED_SACK
    struct sctp_assoc_value sctpAssocValue;
 #endif
 
@@ -180,7 +180,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
          logerror("setsockopt() for SCTP_AUTOCLOSE failed");
          LOG_END
       }
-#ifdef SCTP_DELAYED_ACK_TIME
+#ifdef SCTP_DELAYED_SACK
       /* ====== Tune SACK handling ======================================= */
       /* Without this tuning, the PE would wait 200ms to acknowledge a
          Endpoint Unreachable. The usually immediately following
@@ -188,14 +188,14 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       sctpAssocValue.assoc_id    = 0;
       sctpAssocValue.assoc_value = 1;
       if(ext_setsockopt(registrar->ASAPSocket,
-                        IPPROTO_SCTP, SCTP_DELAYED_ACK_TIME,
+                        IPPROTO_SCTP, SCTP_DELAYED_SACK,
                         &sctpAssocValue, sizeof(sctpAssocValue)) < 0) {
          LOG_WARNING
-         logerror("Unable to set SCTP_DELAYED_ACK_TIME");
+         logerror("Unable to set SCTP_DELAYED_SACK");
          LOG_END
       }
 #else
-#warning SCTP_DELAYED_ACK_TIME is not defined - Unable to tune SACK handling!
+#warning SCTP_DELAYED_SACK is not defined - Unable to tune SACK handling!
 #endif
 
       memcpy(&registrar->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(registrar->ASAPAnnounceAddress));

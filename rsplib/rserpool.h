@@ -45,8 +45,8 @@ extern "C" {
 #endif
 
 
-#define RSPLIB_VERSION  1
-#define RSPLIB_REVISION 9
+#define RSPLIB_VERSION  2
+#define RSPLIB_REVISION 3
 
 
 /*

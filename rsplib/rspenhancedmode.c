@@ -809,7 +809,11 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
                  rserpoolSocket->ConnectedSession->SessionID);
          LOG_END
 
+#ifdef HAVE_CONNECTX_WITH_ID
+         result = sctp_connectx(sd, (struct sockaddr*)destinationAddressArray, destinationAddresses, NULL);
+#else
          result = sctp_connectx(sd, (struct sockaddr*)destinationAddressArray, destinationAddresses);
+#endif
          if((result == 0) || (errno == EINPROGRESS)) {
             ufds.fd     = sd;
             ufds.events = POLLIN;

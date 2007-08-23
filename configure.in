@@ -131,11 +131,11 @@ AC_SUBST(LIB_IPV6)
 if test "$cv_ipv6" = yes; then
    AC_MSG_CHECKING(whether struct sockaddr_in6 has a sin6_scope_id field)
    AC_TRY_COMPILE([#include <sys/types.h>
-#include <netinet/in.h>
-],[static struct sockaddr_in6 ac_i;int ac_j = sizeof(ac_i.sin6_scope_id);],
-[AC_MSG_RESULT(yes)
- AC_DEFINE(HAVE_SIN6_SCOPE_ID, 1, "Define to 1 if sin6_scope_id is supported.")],
- AC_MSG_RESULT(no))
+                   #include <netinet/in.h>],
+                  [static struct sockaddr_in6 ac_i;int ac_j = sizeof(ac_i.sin6_scope_id);],
+                  [AC_MSG_RESULT(yes)
+                   AC_DEFINE(HAVE_SIN6_SCOPE_ID, 1, "Define to 1 if sin6_scope_id is supported.")],
+                  AC_MSG_RESULT(no))
 fi
 
 
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 {
    unsigned int version = socketAPIGetVersion();
    printf("Version is %u.%04x\n", (version >> 16), version & 0xffff);
-   if(version >= 0x20000) {
+   if(version >= 0x21000) {
       return(0);
    }
    return(1);
@@ -330,9 +330,16 @@ int main(int argc, char** argv)
    good)
       ;;
    bad|*)
-      AC_MSG_ERROR([You need at least version 2.000 of the socketapi library!])
+      AC_MSG_ERROR([You need at least version 2.100 of the socketapi library!])
       ;;
    esac
+
+   AC_DEFINE(HAVE_SCTP_SENDMSG, 1, [Define to 1 if you have the `sctp_sendmsg' function.])
+   AC_DEFINE(HAVE_SCTP_CONNECTX, 1, [Define to 1 if you have the `sctp_connectx' function.])
+   AC_DEFINE(HAVE_SCTP_SEND, 1, [Define to 1 if you have the `sctp_send' function.])
+   AC_DEFINE(HAVE_SCTP_SENDX, 1, [Define to 1 if you have the `sctp_sendx' function.])
+   AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.])
+   AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])
 
    LIBS=$oldLIBS
    # ========================================================================
@@ -351,6 +358,16 @@ else
                    #ifdef HAVE_NETINET_SCTP_H
                    #include <netinet/sctp.h>
                    #endif])
+   AC_MSG_CHECKING(whether sctp_connectx has an associd parameter)
+   AC_TRY_COMPILE([#include <sys/types.h>
+                   #include <netinet/sctp.h>],
+                  [sctp_assoc_t id;
+                   int result = sctp_connectx(0, NULL, 0, &id);],
+                  [AC_MSG_RESULT(yes)
+                   AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])],
+                  AC_MSG_RESULT(no))
+
+
    sctplib_LIBS=""
    socketapi_LIBS=""
    glib_LIBS=""
@@ -457,7 +474,7 @@ fi
 RSPLIB_CURRENT=0
 RSPLIB_REVISION=0
 RSPLIB_AGE=0
-RSPLIB_RELEASE=2200
+RSPLIB_RELEASE=2300
 
 AC_SUBST(RSPLIB_CURRENT)
 AC_SUBST(RSPLIB_REVISION)

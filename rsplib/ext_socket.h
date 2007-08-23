@@ -57,7 +57,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  2
-#define SOCKETAPI_MINOR_VERSION  0000
+#define SOCKETAPI_MINOR_VERSION  1000
 
 
 /*
@@ -376,7 +376,7 @@ struct sctp_assoc_value {
 #define SCTP_NODELAY                1018
 #define SCTP_SET_DEFAULT_SEND_PARAM 1019
 #define SCTP_EVENTS                 1020
-#define SCTP_DELAYED_ACK_TIME       1021
+#define SCTP_DELAYED_SACK           1021
 #define SCTP_FRAGMENT_INTERLEAVE    1022
 #define SCTP_PARTIAL_DELIVERY_POINT 1023
 #define SCTP_MAXSEG                 1024
@@ -448,7 +448,8 @@ int sctp_bindx(int              sockfd,
 
 int ext_connectx(int                    sockfd,
                  const struct sockaddr* addrs,
-                 int                    addrcnt);
+                 int                    addrcnt,
+                 sctp_assoc_t*          id);
 #define sctp_connectx ext_connectx
 
 int sctp_peeloff(int sockfd, sctp_assoc_t id);
@@ -595,41 +596,9 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #include <sys/uio.h>
 #include <netinet/sctp.h>
 
-/*
-#ifndef SCTP_UNORDERED
-#define SCTP_UNORDERED MSG_UNORDERED
+#ifndef SCTP_DELAYED_SACK
+#define SCTP_DELAYED_SACK SCTP_DELAYED_ACK_TIME
 #endif
-#ifndef SCTP_ADDR_OVER
-#define SCTP_ADDR_OVER MSG_ADDR_OVER
-#endif
-#ifndef SCTP_ABORT
-#define SCTP_ABORT MSG_ABORT
-#endif
-#ifndef MSG_EOF
-#define SCTP_EOF MSG_EOF
-#endif
-*/
-
-/*
-#ifndef SPP_HB_ENABLE
-#define SPP_HB_ENABLE SPP_HB_ENABLED
-#endif
-#ifndef SPP_HB_DISABLE
-#define SPP_HB_DISABLE SPP_HB_DISABLED
-#endif
-#ifndef SPP_PMTUD_ENABLE
-#define SPP_PMTUD_ENABLE SPP_PMTUD_ENABLED
-#endif
-#ifndef SPP_PMTUD_DISABLE
-#define SPP_PMTUD_DISABLE SPP_PMTUD_DISABLED
-#endif
-#ifndef SPP_SACKDELAY_ENABLE
-#define SPP_SACKDELAY_ENABLE SPP_SACKDELAY_ENABLED
-#endif
-#ifndef SPP_SACKDELAY_DISABLE
-#define SPP_SACKDELAY_DISABLE SPP_SACKDELAY_DISABLED
-#endif
-*/
 
 #endif
 
