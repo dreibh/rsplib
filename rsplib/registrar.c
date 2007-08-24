@@ -651,7 +651,7 @@ int main(int argc, char** argv)
          printf("CSP Report Interval:    %lldms\n", cspReportInterval / 1000);
       }
    #endif
-      printf("Auto-Close Timeout:     %Lus\n", registrar->AutoCloseTimeout / 1000000);
+      printf("Auto-Close Timeout:     %llus\n", registrar->AutoCloseTimeout / 1000000);
       printf("Min Address Scope:      ");
       if(registrar->MinEndpointAddressScope <= AS_LOOPBACK) {
          puts("loopback");

@@ -90,7 +90,7 @@ int main(int argc, char** argv)
    puts("Ping Pong Pool User - Version 1.0");
    puts("=================================\n");
    printf("Pool Handle   = %s\n", poolHandle);
-   printf("Ping Interval = %Lums\n\n", pingInterval / 1000);
+   printf("Ping Interval = %llums\n\n", pingInterval / 1000);
 
 
    if(rsp_initialize(&info) < 0) {

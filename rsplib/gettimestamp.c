@@ -57,14 +57,14 @@ int main(int argc, char** argv)
 
    timeStamp = getMicroTime() + offset;
    if(!textOutput) {
-      printf("%Lu\n", timeStamp);
+      printf("%llu\n", timeStamp);
    }
    else {
       const time_t     timeValue = timeStamp / 1000000;
       const struct tm* timePtr   = localtime(&timeValue);
       strftime((char*)&str, sizeof(str), "%d-%b-%Y %H:%M:%S", timePtr);
       printf(str);
-      printf(".%06Lu, offset is %Luus\n", timeStamp % 1000000ULL, offset);
+      printf(".%06Lu, offset is %lluus\n", timeStamp % 1000000ULL, offset);
    }
 
    return(0);
