@@ -2,6 +2,7 @@ SUBDIRS = fgpconfig wireshark
 
 lib_LTLIBRARIES = librsplib.la libcpprspserver.la
 
+# ###### rsplib library #####################################################
 librsplibincludedir      = $(prefix)/include
 librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h rserpool-internals.h tagitem.h
 librsplib_la_SOURCES = \
@@ -121,6 +122,7 @@ librsplib_la_LDFLAGS = \
    $(thread_LIBS) -lm
 
 
+# ###### cpprspserver library ###############################################
 libcpprspserverincludedir      = $(prefix)/include/rserpool
 libcpprspserverinclude_HEADERS = mutex.h thread.h cpprspserver.h udplikeserver.h tcplikeserver.h
 libcpprspserver_la_SOURCES     = \
@@ -140,6 +142,15 @@ libcpprspserver_la_LDFLAGS = \
    $(thread_LIBS) -lm
 
 
+# ###### Main programs ######################################################
+if BUILD_QT_PROGRAMS
+bin_PROGRAMS = fractalpooluser registrar server terminal hsdump hrestest testregistrator pingpongclient calcappclient cspmonitor
+EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
+else
+bin_PROGRAMS = registrar server terminal hsdump hrestest testregistrator pingpongclient calcappclient cspmonitor
+EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
+endif
+
 if BUILD_QT_PROGRAMS
 %.moc.cc: %.h
 	$(MOC) -o $@ $<
@@ -151,14 +162,32 @@ if BUILD_QT_PROGRAMS
 	$(UIC) -o $@ -impl $*.h $<
 endif
 
-if BUILD_QT_PROGRAMS
-noinst_PROGRAMS = fractalpooluser registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator fractalpooluser calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
-else
-noinst_PROGRAMS = registrar terminal pingpong server fork gettimestamp cspmonitor testregistrator calcappclient hsdump subnetcalc rootshell combinesummaries exectime execalarm hrestest
-EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
-endif
+registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c takeoverprocess.c takeoverprocess.h
+registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
+server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h
+server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+terminal_SOURCES = terminal.c
+terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+hsdump_SOURCES = hsdump.c
+hsdump_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+hrestest_SOURCES = hrestest.c
+hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+testregistrator_SOURCES = testregistrator.c
+testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+pingpongclient_SOURCES = pingpongclient.c
+pingpongclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
+calcappclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+cspmonitor_SOURCES = cspmonitor.c
+cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 if BUILD_QT_PROGRAMS
 fractalpooluser_MOC      = fractalpooluser.moc.cc
@@ -169,38 +198,11 @@ fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_
 endif
 
 
-registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-subnetcalc_SOURCES = subnetcalc.cc
-subnetcalc_LDADD   =
+# ###### Test programs ######################################################
+noinst_PROGRAMS = combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell
 
 combinesummaries_SOURCES = combinesummaries.cc
 combinesummaries_LDADD   = -lbz2
-
-rootshell_SOURCES = rootshell.c
-rootshell_LDADD   =
-
-testregistrator_SOURCES = testregistrator.c
-testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-terminal_SOURCES = terminal.c
-terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-hrestest_SOURCES = hrestest.c
-hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-pingpong_SOURCES = pingpong.c
-pingpong_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h
-server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 fork_SOURCES = fork.c
 fork_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
@@ -214,15 +216,12 @@ execalarm_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_
 gettimestamp_SOURCES = gettimestamp.c
 gettimestamp_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
-cspmonitor_SOURCES = cspmonitor.c
-cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+subnetcalc_SOURCES = subnetcalc.cc
+subnetcalc_LDADD   =
+
+rootshell_SOURCES = rootshell.c
+rootshell_LDADD   =
 
 
 # t1_SOURCES = t1.cc
 # t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-# t2_SOURCES = t2.c
-# t2_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-# t3_SOURCES = t3.cc
-# t3_LDADD   = $(thread_LIBS)
