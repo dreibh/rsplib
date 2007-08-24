@@ -351,7 +351,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
 
             // ====== Clean up ==============================================
             serverSet.removeAll();
-            rsp_deregister(rserpoolSocket, DEREGF_DONTWAIT);
+            rsp_deregister(rserpoolSocket, 0);
          }
          if(finishService != NULL) {
             finishService(userData);
