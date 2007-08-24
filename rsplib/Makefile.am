@@ -117,7 +117,8 @@ netdouble.c \
 netdouble.h
 librsplib_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   -release $(RSPLIB_RELEASE)
+   -release $(RSPLIB_RELEASE) \
+   $(thread_LIBS) -lm
 
 
 libcpprspserverincludedir      = $(prefix)/include/rserpool
@@ -132,9 +133,11 @@ thread.cc \
 thread.h \
 udplikeserver.cc \
 udplikeserver.h
+libcpprspserver_la_LIBADD  = librsplib.la
 libcpprspserver_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   -release $(RSPLIB_RELEASE)
+   -release $(RSPLIB_RELEASE) \
+   $(thread_LIBS) -lm
 
 
 if BUILD_QT_PROGRAMS

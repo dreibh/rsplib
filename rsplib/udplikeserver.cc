@@ -141,13 +141,16 @@ void UDPLikeServer::printParameters()
 
 
 // ###### Wait for action on RSerPool socket ################################
-void UDPLikeServer::waitForAction(unsigned long long timeout)
+bool UDPLikeServer::waitForAction(unsigned long long timeout)
 {
    struct pollfd pollfds[1];
    pollfds[0].fd      = RSerPoolSocketDescriptor;
    pollfds[0].events  = POLLIN;
    pollfds[0].revents = 0;
-   rsp_poll((struct pollfd*)&pollfds, 1, (int)(timeout / 1000));
+   if(rsp_poll((struct pollfd*)&pollfds, 1, (int)(timeout / 1000)) > 0) {
+      return(pollfds[0].revents & POLLIN);
+   }
+   return(false);
 }
 
 
@@ -225,6 +228,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
             installBreakDetector();
             while(!breakDetected()) {
+
                // ====== Read from socket ===================================
                char                     buffer[65536];
                int                      flags = 0;
@@ -241,44 +245,45 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                }
 
                // ====== Wait for action on RSerPool socket =================
-               waitForAction(timeout);
+               if(waitForAction(timeout)) {
 
-               // ====== Read from socket ===================================
-               ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
-                                                  (char*)&buffer, sizeof(buffer),
-                                                  &rinfo, &flags, 0);
+                  // ====== Read from socket ================================
+                  ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
+                                                     (char*)&buffer, sizeof(buffer),
+                                                     &rinfo, &flags, 0);
 
-               // ====== Handle data ========================================
-               if(received > 0) {
-                  // ====== Handle event ====================================
-                  EventHandlingResult eventHandlingResult;
-                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                     handleNotification((const union rserpool_notification*)&buffer);
-                     /*
-                        We cannot shutdown or abort, since the session ID is not
-                        inserted into rinfo!
-                        Should we dissect the notification for the ID here?
-                     */
-                     eventHandlingResult = EHR_Okay;
-                  }
-                  else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-                     eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
-                                                            (char*)&buffer, received);
-                  }
-                  else {
-                     eventHandlingResult = handleMessage(rinfo.rinfo_session,
-                                                         (char*)&buffer, received,
-                                                         rinfo.rinfo_ppid,
-                                                         rinfo.rinfo_stream);
-                  }
+                  // ====== Handle data =====================================
+                  if(received > 0) {
+                     // ====== Handle event =================================
+                     EventHandlingResult eventHandlingResult;
+                     if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                        handleNotification((const union rserpool_notification*)&buffer);
+                        /*
+                           We cannot shutdown or abort, since the session ID is not
+                           inserted into rinfo!
+                           Should we dissect the notification for the ID here?
+                        */
+                        eventHandlingResult = EHR_Okay;
+                     }
+                     else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+                        eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
+                                                               (char*)&buffer, received);
+                     }
+                     else {
+                        eventHandlingResult = handleMessage(rinfo.rinfo_session,
+                                                            (char*)&buffer, received,
+                                                            rinfo.rinfo_ppid,
+                                                            rinfo.rinfo_stream);
+                     }
 
-                  // ====== Check for problems ==============================
-                  if((eventHandlingResult == EHR_Abort) ||
-                     (eventHandlingResult == EHR_Shutdown)) {
-                     rsp_sendmsg(RSerPoolSocketDescriptor,
-                                 NULL, 0, 0,
-                                 rinfo.rinfo_session, 0, 0, 0,
-                                 ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF), 0);
+                     // ====== Check for problems ===========================
+                     if((eventHandlingResult == EHR_Abort) ||
+                        (eventHandlingResult == EHR_Shutdown)) {
+                        rsp_sendmsg(RSerPoolSocketDescriptor,
+                                    NULL, 0, 0,
+                                    rinfo.rinfo_session, 0, 0, 0,
+                                    ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF), 0);
+                     }
                   }
                }
 

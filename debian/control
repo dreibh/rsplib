@@ -1,0 +1,17 @@
+Source: rsplib
+Section: unknown
+Priority: extra
+Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Build-Depends: debhelper (>= 5), autotools-dev
+Standards-Version: 3.7.2
+
+Package: rsplib
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: rsplib-doc
+Architecture: all
+Description: Documentation for rsplib
+ <insert long description, indented with spaces>

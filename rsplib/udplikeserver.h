@@ -58,7 +58,7 @@ class UDPLikeServer
    void setLoad(double load);
 
    protected:
-   virtual void waitForAction(unsigned long long timeout);
+   virtual bool waitForAction(unsigned long long timeout);
    virtual void printParameters();
    void startTimer(unsigned long long timeStamp);
    void stopTimer();

@@ -163,6 +163,9 @@ static void getSocketPair(const char*                   sctpAddressParameter,
       }
       *sctpSocket = ext_socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(*sctpSocket < 0) {
+         if(errno == ESOCKTNOSUPPORT) {
+            break;
+         }
          continue;
       }
       if(bindplus(*sctpSocket,
