@@ -369,7 +369,7 @@ else
 
 
    sctplib_LIBS=""
-   socketapi_LIBS=""
+   socketapi_LIBS="-lsctp"
    glib_LIBS=""
    CFLAGS="$CFLAGS -DHAVE_KERNEL_SCTP"
    CXXFLAGS="$CXXFLAGS -DHAVE_KERNEL_SCTP"
@@ -483,7 +483,7 @@ AC_SUBST(RSPLIB_RELEASE)
 
 
 # ###### Makefiles ##########################################################
-AC_OUTPUT(Makefile rsplib/Makefile rsplib/wireshark/Makefile rsplib/fgpconfig/Makefile )
+AC_OUTPUT(Makefile rsplib/Makefile rsplib/wireshark/Makefile rsplib/fgpconfig/Makefile docs/Makefile )
 
 
 # ###### Configuration results ##############################################
@@ -505,5 +505,6 @@ echo "   CFLAGS                          : $CFLAGS"
 echo "   CXXFLAGS                        : $CXXFLAGS"
 echo "   LDFLAGS                         : $LDFLAGS"
 echo "   glib_CFLAGS                     : $glib_CFLAGS"
+echo "   QTDIR                           : $QTDIR"
 echo "   QT_CXXFLAGS                     : $QT_CXXFLAGS"
 echo "   QT_LDFLAGS                      : $QT_LDADD"

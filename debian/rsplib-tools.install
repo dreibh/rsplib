@@ -1,0 +1,8 @@
+debian/tmp/usr/bin/cspmonitor
+debian/tmp/usr/bin/testregistrator
+debian/tmp/usr/bin/pingpongclient
+debian/tmp/usr/bin/terminal
+debian/tmp/usr/bin/hsdump
+debian/tmp/usr/bin/server
+debian/tmp/usr/bin/calcappclient
+debian/tmp/usr/bin/hrestest

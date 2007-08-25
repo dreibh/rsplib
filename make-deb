@@ -28,12 +28,26 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-VERSION=2.3
+# ---------------------------------------------------------
+INPUT=~/src/rsplib2
+PACKAGE=rsplib
+CONFOPT=--enable-kernel-sctp --enable-csp --disable-qt
+# ---------------------------------------------------------
 
-rm -rf rsplib-$VERSION && \
-tar xzf ~/src/rsplib2/rsplib-$VERSION.tar.gz && \
-cd rsplib-$VERSION && \
-cp -r ~/src/rsplib2/debian . && \
+
+# Nur einmalig erforderlich!
+# dh_make -c gpl -n -e dreibh@iem.uni-due.de -m
+
+rm -f rsplib-*.gz
+
+./bootstrap && \
+./configure $CONFOPT && \
+make dist && \
+VERSION=`ls $PACKAGE-*.gz|sed -e "s/$PACKAGE-//g" -e "s/.tar.gz//g"` && \
+rm -rf $PACKAGE-$VERSION && \
+tar xzf $INPUT/$PACKAGE-$VERSION.tar.gz && \
+cd $PACKAGE-$VERSION && \
+cp -r $INPUT/debian . && \
 rm -rf debian/.svn && \
 debuild -us -uc
 

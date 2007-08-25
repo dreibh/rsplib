@@ -119,7 +119,7 @@ netdouble.h
 librsplib_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
    -release $(RSPLIB_RELEASE) \
-   $(thread_LIBS) -lm
+   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
 
 
 # ###### cpprspserver library ###############################################
@@ -139,7 +139,7 @@ libcpprspserver_la_LIBADD  = librsplib.la
 libcpprspserver_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
    -release $(RSPLIB_RELEASE) \
-   $(thread_LIBS) -lm
+   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
 
 
 # ###### Main programs ######################################################

@@ -8,7 +8,9 @@ AC_MSG_CHECKING([QTDIR])
 AC_ARG_WITH([qtdir], [  --with-qtdir=DIR        Qt installation directory [default=$QTDIR]], QTDIR=$withval)
 # Check that QTDIR is defined or that --with-qtdir given
 if test x"$QTDIR" = x ; then
-    QT_SEARCH="/usr/lib/qt31 /usr/local/qt31 /usr/lib/qt3 /usr/local/qt3 /usr/lib/qt2 /usr/local/qt2 /usr/lib/qt /usr/local/qt"
+    AC_MSG_RESULT([QTDIR not set.])
+    AC_MSG_CHECKING([Trying some common Qt installation locations])
+    QT_SEARCH="/usr/lib/qt31 /usr/local/qt31 /usr/lib/qt3 /usr/local/qt3 /usr/lib/qt2 /usr/local/qt2 /usr/lib/qt /usr/local/qt /usr/share/qt /usr/share/qt3"
     for i in $QT_SEARCH; do
         if test -f $i/include/qglobal.h -a x$QTDIR = x; then QTDIR=$i; fi
     done
@@ -71,7 +73,7 @@ case "${host}" in
             QT_IS_STATIC="yes"
             QT_IS_MT="no"
         elif test -f "$QTDIR/lib/qt-mt.lib" ; then
-            QT_LIB="qt-mt.lib" 
+            QT_LIB="qt-mt.lib"
             QT_IS_STATIC="yes"
             QT_IS_MT="yes"
         elif test -f "$QTDIR/lib/qt$QT_VER.lib" ; then
@@ -93,7 +95,7 @@ case "${host}" in
             QT_IS_STATIC="yes"
         fi
         if test x$QT_IS_STATIC = xno ; then
-            QT_IS_DYNAMIC=`ls $QTDIR/lib/*.so 2> /dev/null` 
+            QT_IS_DYNAMIC=`ls $QTDIR/lib/*.so 2> /dev/null`
             if test "x$QT_IS_DYNAMIC" = x;  then
                 AC_MSG_ERROR([*** Couldn't find any Qt libraries])
             fi
@@ -141,7 +143,7 @@ case "${host}" in
         ;;
 
 
-    *osf*) 
+    *osf*)
         # Digital Unix (aka DGUX aka Tru64)
         QT_LIBS="$QT_LIB"
         if test $QT_IS_STATIC = yes ; then
@@ -175,7 +177,7 @@ case "${host}" in
                 QT_LIBS="$QT_LIBS qtmain.lib"
             fi
         else
-            QT_LIBS="$QT_LIBS $QT_LIB"        
+            QT_LIBS="$QT_LIBS $QT_LIB"
             if test $QT_MAJOR = "3" ; then
                 QT_CXXFLAGS="$QT_CXXFLAGS -DQT_DLL"
                 QT_LIBS="$QT_LIBS qtmain.lib qui.lib user32.lib netapi32.lib"

@@ -1,3 +1,3 @@
-SUBDIRS = rsplib
+SUBDIRS = rsplib docs
 
 EXTRA_DIST = AUTHORS BUGS COPYING ChangeLog INSTALL NEWS README bootstrap
