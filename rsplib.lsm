@@ -1,0 +1,30 @@
+Begin4
+Title:          rsplib
+Version:        2.2.0
+Entered-date:   2007-08-25
+Description:    rsplib is the Open Source implementation of the IETF Reliable
+                Server Pooling (RSerPool) architecture, a novel framework for
+                pool and session management.
+                The Reliable Server Pooling (RSerPool) architecture which is
+                currently under standardization by the IETF RSerPool WG is an
+                overlay network framework to provide server replication and
+                session failover capabilities to its applications. Server
+                redundancy leads to load distribution and load balancing, which
+                are also covered by RSerPool. But in strong contrast to other
+                solutions in the area of GRID and high-performance computing,
+                the fundamental property of RSerPool is to be "lightweight",
+                i.e. it can also be used on devices providing only meagre
+                memory and CPU resources (e.g. embedded systems like
+                telecommunications equipment or routers).
+Keywords:       Reliable Server Pooling, RSerPool, High Availability,
+                Server Pools, Pool Management, Session Management
+Author:         dreibh@iem.uni-due.de (Thomas Dreibholz)
+Maintained-by:  dreibh@iem.uni-due.de (Thomas Dreibholz)
+Primary-site:   http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool
+                720 kB download/rsplib-2.2.0.tar.gz
+Alternate-site: http://www.sctp.de
+                720 kB rsplib-2.2.0.tar.gz
+Original-site:  http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool
+Platforms:      Linux, FreeBSD, MacOS, Solaris
+Copying-policy: GPL
+End
