@@ -442,6 +442,12 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
       LOG_END
       removeRegistrarAssocID(registrarTable, registrarHuntFD, assocID);
    }
+   else {
+      LOG_ERROR
+      fprintf(stdlog, "Assoc %u peel-off failed: %s\n", assocID, strerror(errno));
+      LOG_END
+      sendabort(registrarHuntFD, assocID);
+   }
    return(sd);
 }
 
@@ -801,6 +807,8 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                   }
 
                   /* ====== Is there a connection to a registrar? ======== */
+                  /* This function will randomly chose a registrar from the
+                     registrar list. */
                   sd = selectRegistrar(registrarTable, registrarHuntFD, registrarHuntMessageBuffer,
                                        registrarIdentifier);
                   if(sd >= 0) {
@@ -825,15 +833,6 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                      LOG_END
                      return(sd);
                   }
-
-                  LOG_WARNING
-                  fprintf(stdlog, "Got crap via assoc %u -> aborting it\n", (unsigned int)assocID);
-                  LOG_END
-                  flags = 0;
-                  messageBufferRead(registrarHuntMessageBuffer, registrarHuntFD, &flags,
-                                    NULL, 0,
-                                    NULL, &assocID, NULL, 0);
-                  sendabort(registrarHuntFD, assocID);
                }
             }
          }
