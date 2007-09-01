@@ -34,18 +34,20 @@
 #include "standardservices.h"
 #include "fractalgeneratorservice.h"
 #include "calcappservice.h"
+#include "scriptingservice.h"
 #ifdef ENABLE_CSP
 #include "componentstatuspackets.h"
 #endif
 
 
-#define SERVICE_ECHO     1
-#define SERVICE_DISCARD  2
-#define SERVICE_DAYTIME  3
-#define SERVICE_CHARGEN  4
-#define SERVICE_PINGPONG 5
-#define SERVICE_FRACTAL  6
-#define SERVICE_CALCAPP  7
+#define SERVICE_ECHO      1
+#define SERVICE_DISCARD   2
+#define SERVICE_DAYTIME   3
+#define SERVICE_CHARGEN   4
+#define SERVICE_PINGPONG  5
+#define SERVICE_FRACTAL   6
+#define SERVICE_CALCAPP   7
+#define SERVICE_SCRIPTING 8
 
 
 /* ###### Main program ################################################### */
@@ -209,6 +211,9 @@ int main(int argc, char** argv)
       }
       else if(!(strcmp(argv[i], "-calcapp"))) {
          service = SERVICE_CALCAPP;
+      }
+      else if(!(strcmp(argv[i], "-scripting"))) {
+         service = SERVICE_SCRIPTING;
       }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
@@ -413,6 +418,25 @@ int main(int argc, char** argv)
                                 &info, &loadInfo,
                                 reregInterval, runtimeLimit, quiet,
                                 (struct TagItem*)&tags);
+   }
+   else if(service == SERVICE_SCRIPTING) {
+      size_t maxThreads = 1;
+      ScriptingServer::ScriptingServerSettings settings;
+      for(int i = 1;i < argc;i++) {
+         if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
+            maxThreads = atol((const char*)&argv[i][14]);
+         }
+      }
+
+      TCPLikeServer::poolElement("Scripting Server - Version 1.0",
+                                 (poolHandle != NULL) ? poolHandle : "ScriptingPool",
+                                 &info, &loadInfo,
+                                 maxThreads,
+                                 ScriptingServer::scriptingServerFactory,
+                                 NULL, NULL, NULL, NULL,
+                                 (void*)&settings,
+                                 reregInterval, runtimeLimit, quiet,
+                                 (struct TagItem*)&tags);
    }
 
    rsp_freeinfo(&info);

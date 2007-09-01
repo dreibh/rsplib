@@ -144,10 +144,10 @@ libcpprspserver_la_LDFLAGS = \
 
 # ###### Main programs ######################################################
 if BUILD_QT_PROGRAMS
-bin_PROGRAMS = fractalpooluser registrar server terminal hsdump hrestest testregistrator pingpongclient calcappclient cspmonitor
+bin_PROGRAMS = fractalpooluser registrar server terminal hsdump hrestest testregistrator pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
 else
-bin_PROGRAMS = registrar server terminal hsdump hrestest testregistrator pingpongclient calcappclient cspmonitor
+bin_PROGRAMS = registrar server terminal hsdump hrestest testregistrator pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
 endif
 
@@ -165,7 +165,7 @@ endif
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c takeoverprocess.c takeoverprocess.h
 registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
-server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h
+server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
 server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 terminal_SOURCES = terminal.c
@@ -182,6 +182,9 @@ testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(threa
 
 pingpongclient_SOURCES = pingpongclient.c
 pingpongclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+scriptingclient_SOURCES = scriptingclient.c
+scriptingclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
 calcappclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
