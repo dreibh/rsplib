@@ -34,12 +34,17 @@
 #include "tcplikeserver.h"
 #include "scriptingpackets.h"
 
+#include <unistd.h>
+#include <sys/wait.h>
+
 
 class ScriptingServer : public TCPLikeServer
 {
    public:
    struct ScriptingServerSettings
    {
+      char*  ScriptBuffer;  // ??????
+      size_t ScriptSize;
    };
 
    ScriptingServer(int                      rserpoolSocketDescriptor,
@@ -56,7 +61,10 @@ class ScriptingServer : public TCPLikeServer
                                      uint16_t    streamID);
 
    private:
+   virtual void finishSession(EventHandlingResult result);
+   virtual EventHandlingResult timerEvent(const unsigned long long now);
    EventHandlingResult startWorking();
+   bool hasFinishedWork() const;
    EventHandlingResult performDownload();
    EventHandlingResult handleUploadMessage(const char* buffer,
                                            size_t      bufferSize);
@@ -71,7 +79,11 @@ class ScriptingServer : public TCPLikeServer
    ScriptingState          State;
    ScriptingServerSettings Settings;
    char*                   Directory;
+   char                    InputName[256];
+   char                    OutputName[256];
+   char                    StatusName[256];
    FILE*                   UploadFile;
+   pid_t                   ChildProcess;
 };
 
 

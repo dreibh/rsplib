@@ -79,6 +79,9 @@ class TCPLikeServer : public TDThread
    inline bool isShuttingDown() const {
       return(Shutdown);
    }
+   inline void setTimer(const unsigned long long timeStamp) {
+      TimerTimeStamp = timeStamp;
+   }
    inline TCPLikeServerList* getServerList() const {
       return(ServerList);
    }
@@ -113,6 +116,7 @@ class TCPLikeServer : public TDThread
    protected:
    virtual EventHandlingResult initializeSession();
    virtual void finishSession(EventHandlingResult result);
+   virtual EventHandlingResult timerEvent(const unsigned long long now);
    virtual EventHandlingResult handleMessage(const char* buffer,
                                              size_t      bufferSize,
                                              uint32_t    ppid,
@@ -123,10 +127,11 @@ class TCPLikeServer : public TDThread
    private:
    void run();
 
-   unsigned int Load;
-   bool         IsNewSession;
-   bool         Shutdown;
-   bool         Finished;
+   unsigned int       Load;
+   bool               IsNewSession;
+   bool               Shutdown;
+   bool               Finished;
+   unsigned long long TimerTimeStamp;
 };
 
 

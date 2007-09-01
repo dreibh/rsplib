@@ -428,6 +428,7 @@ int main(int argc, char** argv)
          }
       }
 
+printf("MT=%d\n",maxThreads);
       TCPLikeServer::poolElement("Scripting Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "ScriptingPool",
                                  &info, &loadInfo,

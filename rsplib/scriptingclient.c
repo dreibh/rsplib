@@ -61,7 +61,6 @@ static bool upload(int sd, const char* inputName)
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                             0, htonl(PPID_SP), 0, 0, 0, 0);
-printf("sent: %d\n", sent);
          if(sent <= 0) {
             success = false;
             printf("Upload error: %s\n", strerror(errno));
@@ -92,6 +91,7 @@ int main(int argc, char** argv)
    union rserpool_notification*        notification;
    const struct ScriptingCommonHeader* header;
    const struct Download*              download;
+   struct KeepAlive                    keepAlive;
    unsigned long long                  keepAliveInterval = 2000000;
    unsigned long long                  keepAliveTimeout  = 2000000;
    bool                                keepAliveTransmitted;
@@ -99,6 +99,7 @@ int main(int argc, char** argv)
    unsigned long long                  nextTimer;
    unsigned long long                  now;
    ssize_t                             received;
+   ssize_t                             sent;
    size_t                              length;
    bool                                success;
    int                                 result;
@@ -157,9 +158,10 @@ int main(int argc, char** argv)
       exit(1);
    }
 
-//    installBreakDetector();
+
+   installBreakDetector();
    success = false;
-   for(;;) {
+   while(!breakDetected()) {
       keepAliveTransmitted = false;
 
       /* ====== Upload input file ======================================== */
@@ -189,7 +191,6 @@ int main(int argc, char** argv)
                      puts("\x1b[0m");
                      if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                         (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                        puts("FAILOVER...");
                         break;
                      }
                   }
@@ -197,37 +198,39 @@ int main(int argc, char** argv)
                   /* ====== Message ====================================== */
                   else {
                      header = (const struct ScriptingCommonHeader*)buffer;
-                  printf("%d %d   %08x\n",ntohs(header->Length),received,rinfo.rinfo_ppid);
                      if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
                          (received >= sizeof(struct ScriptingCommonHeader)) &&
                          (ntohs(header->Length) == received) ) {
                         switch(header->Type) {
                            /* ====== Download message ==================== */
                            case SPT_DOWNLOAD:
-                               download = (const struct Download*)&buffer;
-                               if(!outputFile) {
-                                  outputFile = fopen(outputName, "w");
-                                  if(outputFile == NULL) {
-                                     fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
-                                     goto finish;
-                                  }
-                               }
-                               length = received - sizeof(struct ScriptingCommonHeader);
-                               if(length > 0) {
-printf("w: %d\n",length);
-                                  if(fwrite(&download->Data, length, 1, outputFile) != 1) {
-                                     fprintf(stderr, "ERROR: Writing to output file failed!\n");
-                                     goto finish;
-                                  }
-                               }
-                               else {
-                                  success = true;
-                                  puts("Operation completed!");
-                                  goto finish;
-                               }
+                              download = (const struct Download*)&buffer;
+                              if(!outputFile) {
+                                 outputFile = fopen(outputName, "w");
+                                 if(outputFile == NULL) {
+                                    fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
+                                    goto finish;
+                                 }
+                              }
+                              length = received - sizeof(struct ScriptingCommonHeader);
+                              if(length > 0) {
+                                 if(fwrite(&download->Data, length, 1, outputFile) != 1) {
+                                    fprintf(stderr, "ERROR: Writing to output file failed!\n");
+                                    goto finish;
+                                 }
+                              }
+                              else {
+                                 success = true;
+                                 puts("Operation completed!");
+                                 goto finish;
+                              }
+                            break;
+                           case SPT_KEEPALIVE_ACK:
+                              keepAliveTransmitted = false;
+                              lastKeepAlive        = getMicroTime();
                             break;
                            default:
-puts("?????");exit(1);
+                              printf("Received unexpected message type #%u!\n", header->Type);
                             break;
                         }
                      }
@@ -243,23 +246,33 @@ puts("?????");exit(1);
             if(nextTimer <= now) {
                /* ====== KeepAlive transmission ========================== */
                if(!keepAliveTransmitted) {
-
+                  keepAlive.Header.Type   = SPT_KEEPALIVE;
+                  keepAlive.Header.Flags  = 0x00;
+                  keepAlive.Header.Length = htons(sizeof(keepAlive));
+                  sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
+                                     0, htonl(PPID_SP), 0, 0, 0, 0);
+                  if(sent <= 0) {
+                     printf("Keep-Alive transmission error: %s\n", strerror(errno));
+                     break;
+                  }
                   keepAliveTransmitted = true;
+                  lastKeepAlive        = getMicroTime();
                }
 
                /* ====== KeepAlive timeout =============================== */
                else {
-puts("TIMEOUT!!!");
+                  printf("Keep-Alive timeout");
                   break;
                }
             }
          }
       }
-puts("FO!!!!");
+      puts("FAILOVER ...");
       if(outputFile) {
          fclose(outputFile);
          outputFile = NULL;
       }
+      unlink(outputName);
       rsp_forcefailover(sd);
    }
 

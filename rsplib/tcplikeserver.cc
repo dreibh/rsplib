@@ -38,11 +38,12 @@
 TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
 {
    RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
-   ServerList   = NULL;
-   IsNewSession = true;
-   Shutdown     = false;
-   Finished     = false;
-   Load         = 0;
+   ServerList     = NULL;
+   IsNewSession   = true;
+   Shutdown       = false;
+   Finished       = false;
+   Load           = 0;
+   TimerTimeStamp = 0;
    printTimeStamp(stdout);
    printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
 }
@@ -136,6 +137,15 @@ EventHandlingResult TCPLikeServer::handleNotification(
 
 
 // ###### Handle message ####################################################
+EventHandlingResult TCPLikeServer::timerEvent(const unsigned long long now)
+{
+   printTimeStamp(stdout);
+   puts("TIMER");
+   return(EHR_Okay);
+}
+
+
+// ###### Handle message ####################################################
 EventHandlingResult TCPLikeServer::handleMessage(const char* buffer,
                                                  size_t      bufferSize,
                                                  uint32_t    ppid,
@@ -153,14 +163,24 @@ void TCPLikeServer::run()
    ssize_t               received;
    int                   flags;
    EventHandlingResult   eventHandlingResult;
+   unsigned long long    now;
 
    eventHandlingResult = initializeSession();
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
-         flags     = 0;
+         flags    = 0;
+         unsigned long long nextTimerEvent;
+         if(TimerTimeStamp > 0) {
+            now = getMicroTime();
+            nextTimerEvent = (TimerTimeStamp <= now) ? 0 : TimerTimeStamp - now;
+         }
+         else {
+            nextTimerEvent = 5000000;
+         }
+         now      = getMicroTime();
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
-                                    &rinfo, &flags, 5000);
+                                    &rinfo, &flags, (int)(nextTimerEvent / 1000));
          if(received > 0) {
             /*
             for(int i = 0;i < received;i++) {
@@ -198,6 +218,14 @@ void TCPLikeServer::run()
          }
          else if(received == 0) {
             break;
+         }
+
+         // ====== Handle timer event =======================================
+         if(TimerTimeStamp > 0) {
+            now = getMicroTime();
+            if(TimerTimeStamp <= now) {
+               timerEvent(now);
+            }
          }
       }
    }
@@ -278,6 +306,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             else {
                puts("off");
             }
+            printf("   Max Threads             = %u\n", maxThreads);
             puts("   Policy Settings");
             printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
             printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));

@@ -28,27 +28,54 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-# dummy0 abschalten
-ip addr flush dev dummy0
-ip link set dummy0 down
+# ====== Preparation ========================================================
+if [ $# -lt 4 ] ; then
+   echo "Usage: scriptingservice.sh [run|status] [Directory] [Input] [Output] [Status]"
+   exit 1
+fi
 
-# Achtung: Multicast-Flag muß gesetzt werden, sonst wird das
-#          Interface für sendMulticastOverAllInterfaces() nicht genutzt!
-ip link set dummy0 up multicast on
+MODE="$1"
+DIRECTORY="$2"
+INPUT_NAME="$3"
+OUTPUT_NAME="$4"
+STATUS_NAME="$5"
+
+cd $DIRECTORY || exit 1
 
 
-# IPv4-Adresse
-ip addr add 10.255.255.1/24 dev dummy0
+# ====== Work mode ==========================================================
+if [ "$MODE" = "run" ] ; then
 
-# IPv6-Adresse
-# ip addr add 3ffe:ab:cd:ef:123:45:67:89a/64 dev dummy0
+   # ====== Extract input ===================================================
+   tar xzf $INPUT_NAME || exit 1
 
 
-# IPv4-Adresse und Route; Default-Metrik: 0
-# ip route add metric 0xffff default via 10.255.255.2
+   # ====== Do the actual work ==============================================
+   x=0 ; while [ $x -lt 10 ] ; do
+      echo "x=$x $DIRECTORY"
+      sleep 1
+      let x=$x+1
+   done
 
-# IPv6-Adresse und Route; Default-Metrik: 1024
-# ip route add metric 0xffff default via 3ffe:ab:cd:ef:aabb:ccdd:dead:beef
+   ls -l /tmp >a
+   cp a b
+   cp b c
 
-# Zeige Routingtabellen
-# ip -f link route
+
+   # ====== Archive output ==================================================
+   tar czf $OUTPUT_NAME a b c
+
+
+# ====== Obtain status ======================================================
+elif [ "$MODE" = "status" ] ; then
+
+   echo "???" >$STATUS_NAME
+
+
+# ====== Bad mode ===========================================================
+else
+   echo "ERROR: Bad mode setting $MODE!"
+   exit 1
+fi
+
+exit 0

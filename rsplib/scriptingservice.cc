@@ -33,6 +33,12 @@
 #include "stringutilities.h"
 
 #include <sys/stat.h>
+#include <assert.h>
+
+
+#define INPUT_NAME  "input.data"
+#define OUTPUT_NAME "output.data"
+#define STATUS_NAME "status.txt"
 
 
 // ###### Constructor #######################################################
@@ -45,6 +51,7 @@ ScriptingServer::ScriptingServer(
    State        = SS_Upload;
    Directory    = NULL;
    UploadFile   = NULL;
+   ChildProcess = 0;
 }
 
 
@@ -62,10 +69,27 @@ ScriptingServer::~ScriptingServer()
 }
 
 
-// ###### Create a Scripting thread ##################################
+// ###### Create a Scripting thread #########################################
 TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData)
 {
    return(new ScriptingServer(sd, (ScriptingServerSettings*)userData));
+}
+
+
+// ###### Clean up session ##################################################
+void ScriptingServer::finishSession(EventHandlingResult result)
+{
+   if(ChildProcess) {
+      kill(ChildProcess, SIGKILL);
+      waitpid(ChildProcess, NULL, 0);
+   }
+   ChildProcess = 0;
+   if(Directory) {
+      printTimeStamp(stdout);
+      printf("Cleaning up directory \"%s\"...\n", Directory);
+
+
+   }
 }
 
 
@@ -89,35 +113,37 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
 {
    // ====== Create temporary directory =====================================
    if(UploadFile == NULL) {
-      Directory = strdup("/tmp/X0");
-//tempnam("/tmp", "rspSS");
+      // ====== Get directory and file names ================================
+      // Directory = strdup("/tmp/X0");
+      Directory = tempnam("/tmp", "rspSS");
       if(Directory == NULL) {
          printTimeStamp(stdout);
          puts("Unable to generate temporary directory name!");
          return(EHR_Abort);
       }
+      snprintf((char*)&InputName, sizeof(InputName), "%s/%s", Directory, INPUT_NAME);
+      snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
+      snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
+
+      // ====== Create directory ============================================
+      umask(S_IRWXG | S_IRWXO);   // Only access for myself!
       if(mkdir(Directory, S_IRUSR|S_IWUSR|S_IXUSR) != 0) {   // Only for myself!
          printTimeStamp(stdout);
          printf("Unable to create temporary directory \"%s\": %s!\n",
                 Directory, strerror(errno));
          return(EHR_Abort);
       }
-      if(chdir(Directory) != 0) {
-         printTimeStamp(stdout);
-         printf("Unable to change to temporary directory \"%s\": %s!\n",
-                Directory, strerror(errno));
-         return(EHR_Abort);
-      }
-      umask(S_IXUSR | S_IRWXG | S_IRWXO);   // Only read/write for myself!
 
-      UploadFile = fopen("input.dat", "w");
+      // ====== Create input file ===========================================
+      umask(S_IXUSR | S_IRWXG | S_IRWXO);   // Only read/write for myself!
+      UploadFile = fopen(InputName, "w");
       if(UploadFile == NULL) {
          printTimeStamp(stdout);
          printf("Unable to create input file in directory \"%s\": %s!\n",
                 Directory, strerror(errno));
          return(EHR_Abort);
       }
-printf("W=<%s>\n",Directory);
+      printf("Starting upload into directory \"%s\"...\n", Directory);
    }
 
    // ====== Write to input file ============================================
@@ -132,6 +158,8 @@ printf("W=<%s>\n",Directory);
       }
    }
    else {
+      fclose(UploadFile);
+      UploadFile = NULL;
       return(startWorking());
    }
 
@@ -146,13 +174,15 @@ EventHandlingResult ScriptingServer::performDownload()
    size_t   dataLength;
    ssize_t  sent;
 
-   FILE* fh = fopen("output.dat", "r");
+   FILE* fh = fopen(OutputName, "r");
    if(fh == NULL) {
       printTimeStamp(stdout);
       printf("There are no results in directory \"%s\"!\n", Directory);
       // Will send empty Download message now!
    }
 
+   printTimeStamp(stdout);
+   printf("Starting download of results in directory \"%s\"...\n", Directory);
    for(;;) {
       if(fh != NULL) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
@@ -167,7 +197,6 @@ EventHandlingResult ScriptingServer::performDownload()
          sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                             (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                             0, htonl(PPID_SP), 0, 0, 0, 0);
-printf("sent: %d\n", sent);
          if(sent <= 0) {
             fclose(fh);
             printTimeStamp(stdout);
@@ -179,7 +208,9 @@ printf("sent: %d\n", sent);
          break;
       }
    }
-   fclose(fh);
+   if(fh) {
+      fclose(fh);
+   }
 
    return(EHR_Shutdown);
 }
@@ -188,11 +219,48 @@ printf("sent: %d\n", sent);
 // ###### Start working script ##############################################
 EventHandlingResult ScriptingServer::startWorking()
 {
-puts("WORKING!!!");
-system("ls -al / >a ; cp a b ; cp a c ; tar czf output.dat a b c");
-return(performDownload());
+   assert(ChildProcess == 0);
 
+   printTimeStamp(stdout);
+   printf("Starting work in directory \"%s\"...\n", Directory);
+   ChildProcess = fork();
+   if(ChildProcess == 0) {
+      execlp("/home/dreibh/src/rsplib2/rsplib/scriptingservice.sh",
+             "scriptingservice.sh",
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
+      perror("Failed to start script");
+      exit(1);
+   }
+
+   setTimer(1);
    State = SS_Working;
+   return(EHR_Okay);
+}
+
+
+// ###### Check if child process has finished ###############################
+bool ScriptingServer::hasFinishedWork() const
+{
+   int status;
+
+   assert(ChildProcess != 0);
+   pid_t childFinished = waitpid(ChildProcess, &status, WNOHANG);
+   if(childFinished == ChildProcess) {
+      if(WIFEXITED(status) || WIFSIGNALED(status)) {
+         return(true);
+      }
+   }
+   return(false);
+}
+
+
+// ###### Check, if work is already complete ################################
+EventHandlingResult ScriptingServer::timerEvent(const unsigned long long now)
+{
+   if(hasFinishedWork()) {
+      performDownload();
+   }
+   setTimer(now + 1000000);
    return(EHR_Okay);
 }
 
@@ -206,10 +274,10 @@ EventHandlingResult ScriptingServer::handleKeepAliveMessage()
    keepAliveAck.Header.Length = htons(sizeof(keepAliveAck));
    keepAliveAck.Status        = htonl(0);
 
-puts("KEEP-ALIVE -> ACK");
    ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                               (const char*)&keepAliveAck, sizeof(keepAliveAck), 0,
                               0, htonl(PPID_SP), 0, 0, 0, 0);
+
    return( (sent == sizeof(keepAliveAck)) ? EHR_Okay : EHR_Abort );
 }
 
@@ -221,7 +289,6 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
                                                    uint16_t    streamID)
 {
    const ScriptingCommonHeader* header = (const ScriptingCommonHeader*)buffer;
-printf("%d %d   %08x\n",ntohs(header->Length),bufferSize,ppid);
    if( (ppid == ntohl(PPID_SP)) &&
        (bufferSize >= sizeof(ScriptingCommonHeader)) &&
        (ntohs(header->Length) == bufferSize) ) {
