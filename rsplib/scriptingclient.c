@@ -92,8 +92,8 @@ int main(int argc, char** argv)
    const struct ScriptingCommonHeader* header;
    const struct Download*              download;
    struct KeepAlive                    keepAlive;
-   unsigned long long                  keepAliveInterval = 2000000;
-   unsigned long long                  keepAliveTimeout  = 2000000;
+   unsigned long long                  keepAliveInterval = 5000000;
+   unsigned long long                  keepAliveTimeout  = 5000000;
    bool                                keepAliveTransmitted;
    unsigned long long                  lastKeepAlive;
    unsigned long long                  nextTimer;
@@ -138,9 +138,9 @@ int main(int argc, char** argv)
 
    puts("Scripting Pool User - Version 1.0");
    puts("=================================\n");
-   printf("Pool Handle   = %s\n", poolHandle);
-   printf("Input Name    = %s\n", inputName);
-   printf("Output Name   = %s\n\n", outputName);
+   printf("Pool Handle = %s\n", poolHandle);
+   printf("Input Name  = %s\n", inputName);
+   printf("Output Name = %s\n\n", outputName);
 
 
    if(rsp_initialize(&info) < 0) {
@@ -153,14 +153,15 @@ int main(int argc, char** argv)
       perror("Unable to create RSerPool socket");
       exit(1);
    }
-   if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle)) < 0) {
-      perror("Unable to connect to pool element");
-      exit(1);
-   }
 
 
    installBreakDetector();
    success = false;
+   while( (!breakDetected()) &&
+          (rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle)) < 0) ) {
+      perror("Unable to connect to pool element");
+      usleep(2500000);
+   }
    while(!breakDetected()) {
       keepAliveTransmitted = false;
 
@@ -268,6 +269,7 @@ int main(int argc, char** argv)
          }
       }
       puts("FAILOVER ...");
+      usleep(2500000);
       if(outputFile) {
          fclose(outputFile);
          outputFile = NULL;

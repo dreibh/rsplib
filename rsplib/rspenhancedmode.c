@@ -684,7 +684,7 @@ int rsp_connect_tags(int                  sd,
          rserpoolSocket->ConnectedSession = session;
          /* Session Change events are only useful for handling
             multiple incoming sessions. */
-         rserpoolSocket->Notifications.EventMask &= ~ NET_SESSION_CHANGE;
+         rserpoolSocket->Notifications.EventMask &= ~NET_SESSION_CHANGE;
 
          /* ====== Connect to a PE ======================================= */
          /* Do not signalize successful failover, since this is the first

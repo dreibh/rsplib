@@ -51,7 +51,7 @@ if [ "$MODE" = "run" ] ; then
 
 
    # ====== Do the actual work ==============================================
-   x=0 ; while [ $x -lt 10 ] ; do
+   x=0 ; while [ $x -lt 3 ] ; do
       echo "x=$x $DIRECTORY"
       sleep 1
       let x=$x+1

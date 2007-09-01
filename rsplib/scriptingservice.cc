@@ -34,6 +34,7 @@
 
 #include <sys/stat.h>
 #include <assert.h>
+#include <dirent.h>
 
 
 #define INPUT_NAME  "input.data"
@@ -88,7 +89,21 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       printTimeStamp(stdout);
       printf("Cleaning up directory \"%s\"...\n", Directory);
 
-
+      DIR* dir = opendir(Directory);
+      if(dir) {
+         dirent* entry = readdir(dir);
+         while(entry) {
+            char name[1024];
+            snprintf((char*)&name, sizeof(name), "%s/%s", Directory, entry->d_name);
+            unlink(name);
+            entry = readdir(dir);
+         }
+         closedir(dir);
+      }
+      if(rmdir(Directory) != 0) {
+         printTimeStamp(stdout);
+         printf("Unable to remove directory \"%s\": %s!\n", Directory, strerror(errno));
+      }
    }
 }
 
