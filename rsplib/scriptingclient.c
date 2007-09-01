@@ -91,9 +91,10 @@ int main(int argc, char** argv)
    union rserpool_notification*        notification;
    const struct ScriptingCommonHeader* header;
    const struct Download*              download;
-   struct KeepAlive                    keepAlive;
+   bool                                quiet             = false;
    unsigned long long                  keepAliveInterval = 5000000;
    unsigned long long                  keepAliveTimeout  = 5000000;
+   struct KeepAlive                    keepAlive;
    bool                                keepAliveTransmitted;
    unsigned long long                  lastKeepAlive;
    unsigned long long                  nextTimer;
@@ -121,9 +122,12 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-output=" ,8))) {
          outputName = (const char*)&argv[i][8];
       }
+      else if(!(strcmp(argv[i], "-quiet"))) {
+         quiet = true;
+      }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet}\n", argv[0]);
          exit(1);
       }
    }
@@ -136,11 +140,13 @@ int main(int argc, char** argv)
 #endif
 
 
-   puts("Scripting Pool User - Version 1.0");
-   puts("=================================\n");
-   printf("Pool Handle = %s\n", poolHandle);
-   printf("Input Name  = %s\n", inputName);
-   printf("Output Name = %s\n\n", outputName);
+   if(!quiet) {
+      puts("Scripting Pool User - Version 1.0");
+      puts("=================================\n");
+      printf("Pool Handle = %s\n", poolHandle);
+      printf("Input Name  = %s\n", inputName);
+      printf("Output Name = %s\n\n", outputName);
+   }
 
 
    if(rsp_initialize(&info) < 0) {
@@ -222,7 +228,9 @@ int main(int argc, char** argv)
                               }
                               else {
                                  success = true;
-                                 puts("Operation completed!");
+                                 if(!quiet) {
+                                    puts("Operation completed!");
+                                 }
                                  goto finish;
                               }
                             break;
@@ -279,7 +287,9 @@ int main(int argc, char** argv)
    }
 
 finish:
-   puts("\x1b[0m\nTerminated!");
+   if(!quiet) {
+      puts("\x1b[0m\nTerminated!");
+   }
    if(outputFile) {
       fclose(outputFile);
       outputFile = NULL;
@@ -287,5 +297,5 @@ finish:
    rsp_close(sd);
    rsp_cleanup();
    rsp_freeinfo(&info);
-   return (success == true);
+   return((success == true) ? 0 : 1);
 }

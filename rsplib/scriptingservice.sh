@@ -51,19 +51,9 @@ if [ "$MODE" = "run" ] ; then
 
 
    # ====== Do the actual work ==============================================
-   x=0 ; while [ $x -lt 3 ] ; do
-      echo "x=$x $DIRECTORY"
-      sleep 1
-      let x=$x+1
-   done
-
-   ls -l /tmp >a
-   cp a b
-   cp b c
-
-
-   # ====== Archive output ==================================================
-   tar czf $OUTPUT_NAME a b c
+   chmod 700 ssrun
+   ./ssrun $OUTPUT_NAME
+   ls -al
 
 
 # ====== Obtain status ======================================================
