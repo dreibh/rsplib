@@ -40,7 +40,7 @@
 
 
 /* ###### Upload input file ############################################## */
-bool upload(int sd, const char* inputName)
+static bool upload(int sd, const char* inputName)
 {
    struct Upload upload;
    size_t        dataLength;
@@ -81,30 +81,30 @@ printf("sent: %d\n", sent);
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   const char*                  poolHandle   = "ScriptingPool";
-   const char*                  inputName    = NULL;
-   const char*                  outputName   = NULL;
-   union rserpool_notification* notification;
-   struct rsp_info              info;
-   struct rsp_sndrcvinfo        rinfo;
-//    char                         buffer[65536 + 4];
-//    char                         str[128];
-//    struct pollfd                ufds;
-//    struct Ping*                 ping;
-//    const struct Pong*           pong;
-//    unsigned long long           now;
-//    unsigned long long           nextPing;
-//    uint64_t                     messageNo;
-//    uint64_t                     lastReplyNo;
-//    uint64_t                     recvMessageNo;
-//    uint64_t                     recvReplyNo;
-//    unsigned long long           lastPing;
-//    ssize_t                      received;
-//    ssize_t                      sent;
-//    int                          result;
-//    int                          flags;
-   int                          sd;
-   int                          i;
+   const char*                         poolHandle = "ScriptingPool";
+   const char*                         inputName  = NULL;
+   const char*                         outputName = NULL;
+   FILE*                               outputFile = NULL;
+   struct pollfd                       ufds;
+   char                                buffer[65536];
+   struct rsp_info                     info;
+   struct rsp_sndrcvinfo               rinfo;
+   union rserpool_notification*        notification;
+   const struct ScriptingCommonHeader* header;
+   const struct Download*              download;
+   unsigned long long                  keepAliveInterval = 2000000;
+   unsigned long long                  keepAliveTimeout  = 2000000;
+   bool                                keepAliveTransmitted;
+   unsigned long long                  lastKeepAlive;
+   unsigned long long                  nextTimer;
+   unsigned long long                  now;
+   ssize_t                             received;
+   size_t                              length;
+   bool                                success;
+   int                                 result;
+   int                                 flags;
+   int                                 sd;
+   int                                 i;
 
    rsp_initinfo(&info);
    for(i = 1;i < argc;i++) {
@@ -157,93 +157,120 @@ int main(int argc, char** argv)
       exit(1);
    }
 
-   upload(sd, inputName);
-
-//    messageNo =   1;
-//    lastReplyNo = 0;
-//    lastPing    = 0;
 //    installBreakDetector();
-//    while(!breakDetected()) {
-//       ufds.fd     = sd;
-//       ufds.events = POLLIN;
-//       nextPing = lastPing + pingInterval;
-//       now      = getMicroTime();
-//       result = rsp_poll(&ufds, 1,
-//                         (nextPing <= now) ? 0 : (int)((nextPing - now) / 1000));
-//
-//       /* ###### Handle Pong message ###################################### */
-//       if(result > 0) {
-//          if(ufds.revents & POLLIN) {
-//             flags = 0;
-//             received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
-//                                    &rinfo, &flags, 0);
-//             if(received > 0) {
-//                if(flags & MSG_RSERPOOL_NOTIFICATION) {
-//                   notification = (union rserpool_notification*)&buffer;
-//                   printf("\x1b[39;47mNotification: ");
-//                   rsp_print_notification(notification, stdout);
-//                   puts("\x1b[0m");
-//                   if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
-//                      (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-//                      puts("FAILOVER...");
-//                      rsp_forcefailover(sd);
-//                   }
-//                }
-//                else {
-//                   pong = (const struct Pong*)&buffer;
-//                   if((pong->Header.Type == PPPT_PONG) &&
-//                      (ntohs(pong->Header.Length) >= (ssize_t)sizeof(struct Pong))) {
-//                      recvMessageNo = ntoh64(pong->MessageNo);
-//                      recvReplyNo   = ntoh64(pong->ReplyNo);
-//
-//                      printf("\x1b[34m");
-//                      printTimeStamp(stdout);
-//                      printf("Ack #%llu from PE $%08x (reply #%llu)\x1b[0m\n",
-//                             (unsigned long long)recvMessageNo, rinfo.rinfo_pe_id, (unsigned long long)recvReplyNo);
-//
-//                      if(recvReplyNo - lastReplyNo != 1) {
-//                         printTimeStamp(stdout);
-//                         printf("*** Detected gap of %lld! ***\n",
-//                                (unsigned long long)recvReplyNo - (unsigned long long)lastReplyNo);
-//                      }
-//                      lastReplyNo = recvReplyNo;
-//                   }
-//                }
-//             }
-//          }
-//       }
-//
-//       /* ###### Send Ping message ###################################### */
-//       if(getMicroTime() - lastPing >= pingInterval) {
-//          lastPing = getMicroTime();
-//
-//          snprintf((char*)&str,sizeof(str),
-//                   "Nachricht: %llu, Zeitstempel: %llu",
-//                   (unsigned long long)messageNo, (unsigned long long)lastPing);
-//          size_t dataLength = strlen(str);
-//
-//          ping = (struct Ping*)&buffer;
-//          ping->Header.Type   = PPPT_PING;
-//          ping->Header.Flags  = 0x00;
-//          ping->Header.Length = htons(sizeof(struct Ping) + dataLength);
-//          ping->MessageNo     = hton64(messageNo);
-//          memcpy(&ping->Data, str, dataLength);
-//
-//          sent = rsp_sendmsg(sd, (char*)ping, sizeof(struct Ping) + dataLength, 0,
-//                             0, htonl(PPID_PPP), 0, 0, 0, 0);
-//          if(sent > 0) {
-//             printf("Message #%Ld sent\n", (unsigned long long)messageNo);
-//             messageNo++;
-//          }
-//       }
-//
-//    }
+   success = false;
+   for(;;) {
+      keepAliveTransmitted = false;
 
-usleep(5000000);
+      /* ====== Upload input file ======================================== */
+      if(upload(sd, inputName)) {
+         /* ====== Wait for results and regularly send keep-alives ======= */
+         lastKeepAlive = getMicroTime();
+         while(!breakDetected()) {
+            nextTimer     = lastKeepAlive + (keepAliveTransmitted ? keepAliveTimeout : keepAliveInterval);
+            ufds.fd       = sd;
+            ufds.events   = POLLIN;
+            now           = getMicroTime();
+            result = rsp_poll(&ufds, 1,
+                              (nextTimer <= now) ? 0 : (int)((nextTimer - now) / 1000));
 
+            /* ====== Handle results ===================================== */
+            if(result > 0) {
+               if(ufds.revents & POLLIN) {
+                  flags = 0;
+                  received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
+                                         &rinfo, &flags, 0);
+
+                  /* ====== Notification ================================= */
+                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                     notification = (union rserpool_notification*)&buffer;
+                     printf("\x1b[39;47mNotification: ");
+                     rsp_print_notification(notification, stdout);
+                     puts("\x1b[0m");
+                     if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                        (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                        puts("FAILOVER...");
+                        break;
+                     }
+                  }
+
+                  /* ====== Message ====================================== */
+                  else {
+                     header = (const struct ScriptingCommonHeader*)buffer;
+                  printf("%d %d   %08x\n",ntohs(header->Length),received,rinfo.rinfo_ppid);
+                     if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
+                         (received >= sizeof(struct ScriptingCommonHeader)) &&
+                         (ntohs(header->Length) == received) ) {
+                        switch(header->Type) {
+                           /* ====== Download message ==================== */
+                           case SPT_DOWNLOAD:
+                               download = (const struct Download*)&buffer;
+                               if(!outputFile) {
+                                  outputFile = fopen(outputName, "w");
+                                  if(outputFile == NULL) {
+                                     fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
+                                     goto finish;
+                                  }
+                               }
+                               length = received - sizeof(struct ScriptingCommonHeader);
+                               if(length > 0) {
+printf("w: %d\n",length);
+                                  if(fwrite(&download->Data, length, 1, outputFile) != 1) {
+                                     fprintf(stderr, "ERROR: Writing to output file failed!\n");
+                                     goto finish;
+                                  }
+                               }
+                               else {
+                                  success = true;
+                                  puts("Operation completed!");
+                                  goto finish;
+                               }
+                            break;
+                           default:
+puts("?????");exit(1);
+                            break;
+                        }
+                     }
+                     else {
+                        puts("Received invalid message!");
+                     }
+                  }
+               }
+            }
+
+            /* ====== Handle timers ====================================== */
+            now = getMicroTime();
+            if(nextTimer <= now) {
+               /* ====== KeepAlive transmission ========================== */
+               if(!keepAliveTransmitted) {
+
+                  keepAliveTransmitted = true;
+               }
+
+               /* ====== KeepAlive timeout =============================== */
+               else {
+puts("TIMEOUT!!!");
+                  break;
+               }
+            }
+         }
+      }
+puts("FO!!!!");
+      if(outputFile) {
+         fclose(outputFile);
+         outputFile = NULL;
+      }
+      rsp_forcefailover(sd);
+   }
+
+finish:
    puts("\x1b[0m\nTerminated!");
+   if(outputFile) {
+      fclose(outputFile);
+      outputFile = NULL;
+   }
    rsp_close(sd);
    rsp_cleanup();
    rsp_freeinfo(&info);
-   return 0;
+   return (success == true);
 }

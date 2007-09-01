@@ -56,6 +56,8 @@ class ScriptingServer : public TCPLikeServer
                                      uint16_t    streamID);
 
    private:
+   EventHandlingResult startWorking();
+   EventHandlingResult performDownload();
    EventHandlingResult handleUploadMessage(const char* buffer,
                                            size_t      bufferSize);
    EventHandlingResult handleKeepAliveMessage();
@@ -70,7 +72,6 @@ class ScriptingServer : public TCPLikeServer
    ScriptingServerSettings Settings;
    char*                   Directory;
    FILE*                   UploadFile;
-   FILE*                   DownloadFile;
 };
 
 
