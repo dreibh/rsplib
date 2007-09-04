@@ -85,7 +85,7 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       waitpid(ChildProcess, NULL, 0);
    }
    ChildProcess = 0;
-   if(Directory) {
+   if((Directory) && (!Settings.KeepTempDirs)) {
       printTimeStamp(stdout);
       printf("Cleaning up directory \"%s\"...\n", Directory);
 
@@ -114,6 +114,8 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
 
    puts("Scripting Parameters:");
+   printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
+
 /*   printf("   Cookie Max Time         = %u [ms]\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
    printf("   Cookie Max Packets      = %u [Packets]\n", (unsigned int)settings->CookieMaxPackets);
    printf("   Transmit Timeout        = %u [ms]\n", (unsigned int)settings->TransmitTimeout);

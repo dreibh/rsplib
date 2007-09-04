@@ -422,19 +422,23 @@ int main(int argc, char** argv)
    else if(service == SERVICE_SCRIPTING) {
       size_t maxThreads = 1;
       ScriptingServer::ScriptingServerSettings settings;
+      settings.KeepTempDirs = false;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
          }
+         else if(!(strcmp(argv[i], "-sskeeptempdirs"))) {
+            settings.KeepTempDirs = true;
+         }
       }
 
-printf("MT=%d\n",maxThreads);
       TCPLikeServer::poolElement("Scripting Server - Version 1.0",
                                  (poolHandle != NULL) ? poolHandle : "ScriptingPool",
                                  &info, &loadInfo,
                                  maxThreads,
                                  ScriptingServer::scriptingServerFactory,
-                                 NULL, NULL, NULL, NULL,
+                                 ScriptingServer::scriptingPrintParameters,
+                                 NULL, NULL, NULL,
                                  (void*)&settings,
                                  reregInterval, runtimeLimit, quiet,
                                  (struct TagItem*)&tags);

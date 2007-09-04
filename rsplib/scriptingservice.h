@@ -43,8 +43,7 @@ class ScriptingServer : public TCPLikeServer
    public:
    struct ScriptingServerSettings
    {
-      char*  ScriptBuffer;  // ??????
-      size_t ScriptSize;
+      bool KeepTempDirs;
    };
 
    ScriptingServer(int                      rserpoolSocketDescriptor,
