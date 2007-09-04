@@ -43,7 +43,8 @@ class ScriptingServer : public TCPLikeServer
    public:
    struct ScriptingServerSettings
    {
-      bool KeepTempDirs;
+      unsigned int TransmitTimeout;
+      bool         KeepTempDirs;
    };
 
    ScriptingServer(int                      rserpoolSocketDescriptor,

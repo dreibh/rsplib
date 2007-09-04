@@ -114,13 +114,8 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
 
    puts("Scripting Parameters:");
+   printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
    printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
-
-/*   printf("   Cookie Max Time         = %u [ms]\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
-   printf("   Cookie Max Packets      = %u [Packets]\n", (unsigned int)settings->CookieMaxPackets);
-   printf("   Transmit Timeout        = %u [ms]\n", (unsigned int)settings->TransmitTimeout);
-   printf("   Failure After           = %u [Packets]\n", (unsigned int)settings->FailureAfter);
-   printf("   Test Mode               = %s\n", (settings->TestMode == true) ? "on" : "off");*/
 }
 
 
@@ -213,7 +208,7 @@ EventHandlingResult ScriptingServer::performDownload()
          download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                             (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, 0);
+                            0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
          if(sent <= 0) {
             fclose(fh);
             printTimeStamp(stdout);
@@ -242,7 +237,7 @@ EventHandlingResult ScriptingServer::startWorking()
    printf("Starting work in directory \"%s\"...\n", Directory);
    ChildProcess = fork();
    if(ChildProcess == 0) {
-      execlp("/home/dreibh/src/rsplib2/rsplib/scriptingservice.sh",
+      execlp("./scriptingservice.sh",
              "scriptingservice.sh",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
       perror("Failed to start script");
@@ -293,7 +288,7 @@ EventHandlingResult ScriptingServer::handleKeepAliveMessage()
 
    ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                               (const char*)&keepAliveAck, sizeof(keepAliveAck), 0,
-                              0, htonl(PPID_SP), 0, 0, 0, 0);
+                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
 
    return( (sent == sizeof(keepAliveAck)) ? EHR_Okay : EHR_Abort );
 }

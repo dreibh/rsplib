@@ -422,13 +422,17 @@ int main(int argc, char** argv)
    else if(service == SERVICE_SCRIPTING) {
       size_t maxThreads = 1;
       ScriptingServer::ScriptingServerSettings settings;
-      settings.KeepTempDirs = false;
+      settings.KeepTempDirs    = false;
+      settings.TransmitTimeout = 60000;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
          }
          else if(!(strcmp(argv[i], "-sskeeptempdirs"))) {
             settings.KeepTempDirs = true;
+         }
+         else if(!(strncmp(argv[i], "-sstransmittimeout=", 19))) {
+            settings.TransmitTimeout = atol((const char*)&argv[i][19]);
          }
       }
 
