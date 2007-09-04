@@ -211,7 +211,7 @@ void registrarHandleSocketEvent(struct Dispatcher* dispatcher,
                                             &remoteAddress, assocID, ppid,
                                             received, messageBuffer->BufferSize, &message);
             if(message != NULL) {
-               if(result == RSPERR_OKAY) {
+               if((result == RSPERR_OKAY) && (message->Error == RSPERR_OKAY)) {
                   message->BufferAutoDelete = false;
                   LOG_VERBOSE3
                   fprintf(stdlog, "Got %u bytes message from ", (unsigned int)message->BufferSize);

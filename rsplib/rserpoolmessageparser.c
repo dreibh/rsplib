@@ -503,7 +503,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
 static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                                 struct PoolPolicySettings* poolPolicySettings)
 {
-   const struct rserpool_policy_roundrobin*                                rr;
+   const struct rserpool_policy_roundrobin*                          rr;
    struct rserpool_policy_weighted_roundrobin*                       wrr;
    struct rserpool_policy_priority*                                  p;
    struct rserpool_policy_leastused*                                 lu;
@@ -948,21 +948,21 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
       message->Error = RSPERR_INVALID_VALUES;
-      return(false);
+      return(NULL);
    }
 
    pep = (struct rserpool_poolelementparameter*)getSpace(message, sizeof(struct rserpool_poolelementparameter));
    if(pep == NULL) {
       message->Error = RSPERR_INVALID_VALUES;
-      return(false);
+      return(NULL);
    }
 
    if(scanTransportParameter(message, userTransportAddressBlock) == false) {
-      return(false);
+      return(NULL);
    }
 
    if(scanPolicyParameter(message, &poolPolicySettings) == false) {
-      return(false);
+      return(NULL);
    }
 
    if(registratorTransportRequired) {
@@ -972,19 +972,19 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
    }
 
    if(checkFinishTLV(message, tlvPosition) == false) {
-      return(false);
+      return(NULL);
    }
 
    poolElementNode = (struct ST_CLASS(PoolElementNode)*)malloc(sizeof(struct ST_CLASS(PoolElementNode)));
    if(poolElementNode == NULL) {
       message->Error = RSPERR_OUT_OF_MEMORY;
-      return(false);
+      return(NULL);
    }
    newUserTransportAddressBlock = transportAddressBlockDuplicate(userTransportAddressBlock);
    if(newUserTransportAddressBlock == NULL) {
       free(poolElementNode);
       message->Error = RSPERR_OUT_OF_MEMORY;
-      return(false);
+      return(NULL);
    }
    if(hasRegistratorTransportAddressBlock) {
       newRegistratorTransportAddressBlock = transportAddressBlockDuplicate(registratorTransportAddressBlock);
@@ -992,7 +992,7 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
          free(newUserTransportAddressBlock);
          free(poolElementNode);
          message->Error = RSPERR_OUT_OF_MEMORY;
-         return(false);
+         return(NULL);
       }
    }
    else {
