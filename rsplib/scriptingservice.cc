@@ -53,6 +53,8 @@ ScriptingServer::ScriptingServer(
    Directory    = NULL;
    UploadFile   = NULL;
    ChildProcess = 0;
+
+   setLoad(1.0 / ServerList->getMaxThreads());
 }
 
 

@@ -2196,7 +2196,6 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       LOG_END
 
       if(scanMessage(*message) == true) {
-         (*message)->Error = RSPERR_OKAY;
          LOG_VERBOSE3
          fputs("Message successfully scanned!\n", stdlog);
          LOG_END
