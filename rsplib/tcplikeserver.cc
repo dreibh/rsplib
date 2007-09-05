@@ -221,10 +221,13 @@ void TCPLikeServer::run()
          }
 
          // ====== Handle timer event =======================================
-         if(TimerTimeStamp > 0) {
+         if((TimerTimeStamp > 0) && (eventHandlingResult == EHR_Okay)) {
             now = getMicroTime();
             if(TimerTimeStamp <= now) {
-               timerEvent(now);
+               eventHandlingResult = timerEvent(now);
+               if(eventHandlingResult != EHR_Okay) {
+                  break;
+               }
             }
          }
       }

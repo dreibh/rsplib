@@ -51,9 +51,9 @@ if [ "$MODE" = "run" ] ; then
 
 
    # ====== Do the actual work ==============================================
-   chmod 700 ssrun
-   ./ssrun $OUTPUT_NAME
-   ls -al
+   chmod 700 ssrun && \
+   ./ssrun $OUTPUT_NAME || exit 1
+   # ls -l
 
 
 # ====== Obtain status ======================================================

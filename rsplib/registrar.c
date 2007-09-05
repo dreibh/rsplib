@@ -291,7 +291,15 @@ int main(int argc, char** argv)
 
    /* ====== Get arguments =============================================== */
 #ifdef ENABLE_CSP
-   string2address("127.0.0.1:2960", &cspReportAddress);
+   const char* cspServer   = getenv("CSP_SERVER");
+   const char* cspInterval = getenv("CSP_INTERVAL");
+   if(cspInterval) {
+      cspReportInterval = 1000ULL * atol(cspInterval);
+      if(cspReportInterval < 250000) {
+         cspReportInterval = 250000;
+      }
+   }
+   string2address( (cspServer == NULL) ? "127.0.0.1:2960" : cspServer, &cspReportAddress);
 #endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-identifier=", 12))) {

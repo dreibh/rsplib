@@ -92,6 +92,7 @@ int main(int argc, char** argv)
    const struct ScriptingCommonHeader* header;
    const struct Download*              download;
    bool                                quiet             = false;
+   unsigned long long                  retryDelay        = 1000000;
    unsigned long long                  keepAliveInterval = 5000000;
    unsigned long long                  keepAliveTimeout  = 5000000;
    struct KeepAlive                    keepAlive;
@@ -122,6 +123,12 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-output=" ,8))) {
          outputName = (const char*)&argv[i][8];
       }
+      else if(!(strncmp(argv[i], "-retrydelay=" ,12))) {
+         retryDelay = 1000ULL * atol((const char*)&argv[i][12]);
+         if(retryDelay < 100000) {
+            retryDelay = 100000;
+         }
+      }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
       }
@@ -143,9 +150,12 @@ int main(int argc, char** argv)
    if(!quiet) {
       puts("Scripting Pool User - Version 1.0");
       puts("=================================\n");
-      printf("Pool Handle = %s\n", poolHandle);
-      printf("Input Name  = %s\n", inputName);
-      printf("Output Name = %s\n\n", outputName);
+      printf("Pool Handle         = %s\n", poolHandle);
+      printf("Input Name          = %s\n", inputName);
+      printf("Output Name         = %s\n\n", outputName);
+      printf("Retry Delay         = %llu [ms]\n", retryDelay / 1000);
+      printf("Keep-Alive Interval = %llu [ms]\n", keepAliveInterval / 1000);
+      printf("Keep-Alive Timeout  = %llu [ms]\n", keepAliveTimeout / 1000);
    }
 
 
@@ -172,7 +182,10 @@ int main(int argc, char** argv)
       keepAliveTransmitted = false;
 
       /* ====== Upload input file ======================================== */
+      puts("Upload ...");
       if(upload(sd, inputName)) {
+         puts("Processing ...");
+
          /* ====== Wait for results and regularly send keep-alives ======= */
          lastKeepAlive = getMicroTime();
          while(!breakDetected()) {
@@ -211,6 +224,7 @@ int main(int argc, char** argv)
                         switch(header->Type) {
                            /* ====== Download message ==================== */
                            case SPT_DOWNLOAD:
+                              puts("Download ...");
                               download = (const struct Download*)&buffer;
                               if(!outputFile) {
                                  outputFile = fopen(outputName, "w");
@@ -275,6 +289,9 @@ int main(int argc, char** argv)
                }
             }
          }
+      }
+      if(breakDetected()) {
+         break;
       }
       puts("FAILOVER ...");
       usleep(2500000);

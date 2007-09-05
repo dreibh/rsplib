@@ -137,7 +137,28 @@ static bool initComponentStatusReporter(struct rsp_info* info,
 /* ###### Initialize rsp_info ############################################ */
 void rsp_initinfo(struct rsp_info* info)
 {
+#ifdef ENABLE_CSP
+   const char*                 cspServer   = getenv("CSP_SERVER");
+   const char*                 cspInterval = getenv("CSP_INTERVAL");
+   static union sockaddr_union cspServerAddress;
+#endif
    memset(info, 0, sizeof(struct rsp_info));
+#ifdef ENABLE_CSP
+   if(cspServer) {
+      if(!string2address(cspServer, &cspServerAddress)) {
+         fprintf(stderr,
+                  "ERROR: Bad CSP report address %s! Use format <address:port>.\n",
+                  cspServer);
+      }
+      info->ri_csp_server = &cspServerAddress.sa;
+   }
+   if(cspInterval) {
+      info->ri_csp_interval = atol(cspInterval);
+      if(info->ri_csp_interval < 250) {
+         info->ri_csp_interval = 250;
+      }
+   }
+#endif
 }
 
 

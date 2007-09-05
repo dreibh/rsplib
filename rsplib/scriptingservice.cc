@@ -187,41 +187,34 @@ EventHandlingResult ScriptingServer::performDownload()
    ssize_t  sent;
 
    FILE* fh = fopen(OutputName, "r");
-   if(fh == NULL) {
+   if(fh != NULL) {
       printTimeStamp(stdout);
-      printf("There are no results in directory \"%s\"!\n", Directory);
-      // Will send empty Download message now!
-   }
-
-   printTimeStamp(stdout);
-   printf("Starting download of results in directory \"%s\"...\n", Directory);
-   for(;;) {
-      if(fh != NULL) {
+      printf("Starting download of results in directory \"%s\"...\n", Directory);
+      for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
-      }
-      else {
-         dataLength = 0;
-      }
-      if(dataLength >= 0) {
-         download.Header.Type   = SPT_DOWNLOAD;
-         download.Header.Flags  = 0x00;
-         download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
-         sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                            (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-         if(sent <= 0) {
-            fclose(fh);
-            printTimeStamp(stdout);
-            printf("Download data transmission error: %s\n", strerror(errno));
-            return(EHR_Abort);
+         if(dataLength >= 0) {
+            download.Header.Type   = SPT_DOWNLOAD;
+            download.Header.Flags  = 0x00;
+            download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+            sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                               (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
+                               0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+            if(sent <= 0) {
+               fclose(fh);
+               printTimeStamp(stdout);
+               printf("Download data transmission error: %s\n", strerror(errno));
+               return(EHR_Abort);
+            }
+         }
+         if(dataLength <= 0) {
+            break;
          }
       }
-      if(dataLength <= 0) {
-         break;
-      }
-   }
-   if(fh) {
       fclose(fh);
+   } else {
+      printTimeStamp(stdout);
+      printf("There are no results in directory \"%s\"!\n", Directory);
+      return(EHR_Abort);
    }
 
    return(EHR_Shutdown);
@@ -270,7 +263,7 @@ bool ScriptingServer::hasFinishedWork() const
 EventHandlingResult ScriptingServer::timerEvent(const unsigned long long now)
 {
    if(hasFinishedWork()) {
-      performDownload();
+      return(performDownload());
    }
    setTimer(now + 1000000);
    return(EHR_Okay);
