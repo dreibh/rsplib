@@ -222,7 +222,16 @@ void registrarHandleSocketEvent(struct Dispatcher* dispatcher,
 
                   registrarHandleMessage(registrar, message, fd);
                }
-               else if(message->Error != RSPERR_UNRECOGNIZED_PARAMETER_SILENT) {
+               else if( (message->Error != RSPERR_UNRECOGNIZED_PARAMETER_SILENT) &&
+                        (message->Type != AHT_ERROR) &&
+                        (message->Type != EHT_ERROR) ) {
+                  LOG_WARNING
+                  fprintf(stdlog, "Sending %s Error message in reply to message type $%02x: ",
+                          (message->PPID == PPID_ASAP) ? "ASAP" : "ENRP",
+                          message->Type & 0xff);
+                  rserpoolErrorPrint(message->Error, stdlog);
+                  fputs("\n", stdlog);
+                  LOG_END
                   if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
                      /* For ASAP or ENRP messages, we can reply
                         error message */

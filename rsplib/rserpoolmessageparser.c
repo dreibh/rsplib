@@ -1138,8 +1138,8 @@ static bool scanErrorParameter(struct RSerPoolMessage* message)
    }
 
    aec = (struct rserpool_errorcause*)&message->Buffer[message->Position];
-   message->Error = ntohs(aec->aec_cause);
-   dataLength     = ntohs(aec->aec_length);
+   message->OperationErrorCode = ntohs(aec->aec_cause);
+   dataLength                  = ntohs(aec->aec_length);
 
    if(dataLength < sizeof(struct rserpool_errorcause)) {
       LOG_WARNING
@@ -1861,8 +1861,8 @@ static bool scanTakeoverServerMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan peer error message ######################################## */
-static bool scanENRPPeerErrorMessage(struct RSerPoolMessage* message)
+/* ###### Scan ENRP error message ######################################## */
+static bool scanENRPErrorMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1882,8 +1882,8 @@ static bool scanENRPPeerErrorMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan peer error message ######################################## */
-static bool scanASAPPeerErrorMessage(struct RSerPoolMessage* message)
+/* ###### Scan ASAP error message ######################################## */
+static bool scanASAPErrorMessage(struct RSerPoolMessage* message)
 {
    if(!scanErrorParameter(message)) {
       return(false);
@@ -2059,9 +2059,9 @@ static bool scanMessage(struct RSerPoolMessage* message)
         break;
       case AHT_ERROR:
           LOG_VERBOSE2
-          fputs("Scanning PeerError (ASAP) message...\n", stdlog);
+          fputs("Scanning Error (ASAP) message...\n", stdlog);
           LOG_END
-          if(scanASAPPeerErrorMessage(message) == false) {
+          if(scanASAPErrorMessage(message) == false) {
              return(false);
           }
        break;
@@ -2069,7 +2069,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
        /* ====== ENRP ==================================================== */
       case EHT_PRESENCE:
           LOG_VERBOSE2
-          fputs("Scanning PeerPresence message...\n", stdlog);
+          fputs("Scanning Presence message...\n", stdlog);
           LOG_END
           if(scanPresenceMessage(message) == false) {
              return(false);
@@ -2117,7 +2117,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
        break;
       case EHT_INIT_TAKEOVER:
           LOG_VERBOSE2
-          fputs("Scanning PeerInitTakeover message...\n", stdlog);
+          fputs("Scanning InitTakeover message...\n", stdlog);
           LOG_END
           if(scanInitTakeoverMessage(message) == false) {
              return(false);
@@ -2125,7 +2125,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
        break;
       case EHT_INIT_TAKEOVER_ACK:
           LOG_VERBOSE2
-          fputs("Scanning PeerInitTakeoverAck message...\n", stdlog);
+          fputs("Scanning InitTakeoverAck message...\n", stdlog);
           LOG_END
           if(scanInitTakeoverAckMessage(message) == false) {
              return(false);
@@ -2133,7 +2133,7 @@ static bool scanMessage(struct RSerPoolMessage* message)
        break;
       case EHT_TAKEOVER_SERVER:
           LOG_VERBOSE2
-          fputs("Scanning PeerTakeoverServer message...\n", stdlog);
+          fputs("Scanning TakeoverServer message...\n", stdlog);
           LOG_END
           if(scanTakeoverServerMessage(message) == false) {
              return(false);
@@ -2141,9 +2141,9 @@ static bool scanMessage(struct RSerPoolMessage* message)
        break;
       case EHT_ERROR:
           LOG_VERBOSE2
-          fputs("Scanning PeerError (ENRP) message...\n", stdlog);
+          fputs("Scanning Error (ENRP) message...\n", stdlog);
           LOG_END
-          if(scanENRPPeerErrorMessage(message) == false) {
+          if(scanENRPErrorMessage(message) == false) {
              return(false);
           }
        break;
@@ -2199,6 +2199,7 @@ unsigned int rserpoolPacket2Message(char*                       packet,
          LOG_VERBOSE3
          fputs("Message successfully scanned!\n", stdlog);
          LOG_END
+         (*message)->Error = (*message)->OperationErrorCode;
          return(RSPERR_OKAY);
       }
 

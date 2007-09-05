@@ -333,6 +333,7 @@ struct RSerPoolMessage
    union sockaddr_union*                       AddressArray;
    size_t                                      Addresses;
 
+   uint16_t                                    OperationErrorCode;
    char*                                       OperationErrorData;
    size_t                                      OperationErrorLength;
 
