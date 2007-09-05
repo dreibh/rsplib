@@ -41,7 +41,7 @@ class TDThread : public TDMutex
    TDThread();
    virtual ~TDThread();
 
-   bool start();
+   virtual bool start();
    void waitForFinish();
    static void delay(const unsigned int us);
 

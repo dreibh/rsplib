@@ -53,8 +53,6 @@ ScriptingServer::ScriptingServer(
    Directory    = NULL;
    UploadFile   = NULL;
    ChildProcess = 0;
-
-   setLoad(1.0 / ServerList->getMaxThreads());
 }
 
 
@@ -69,6 +67,15 @@ ScriptingServer::~ScriptingServer()
       free(Directory);
       Directory = NULL;
    }
+}
+
+
+// ###### Overloaded start() method #########################################
+bool ScriptingServer::start()
+{
+   // As soon as possible tell registrar the new load!
+   setLoad(1.0 / ServerList->getMaxThreads());
+   return(TDThread::start());
 }
 
 

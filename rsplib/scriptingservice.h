@@ -55,6 +55,7 @@ class ScriptingServer : public TCPLikeServer
    static void scriptingPrintParameters(const void* userData);
 
    protected:
+   virtual bool start();
    EventHandlingResult handleMessage(const char* buffer,
                                      size_t      bufferSize,
                                      uint32_t    ppid,
