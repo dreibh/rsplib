@@ -1,2 +1,3 @@
-debian/tmp/usr/lib/librsplib.*
-debian/tmp/usr/lib/libcpprspserver.*
+debian/tmp/usr/lib/lib*.so*
+debian/tmp/usr/lib/lib*.a
+debian/tmp/usr/lib/lib*.la

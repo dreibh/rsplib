@@ -1,14 +1,39 @@
-#! /bin/sh
+#!/bin/sh
+# $Id$
+# --------------------------------------------------------------------------
 #
-# skeleton	example file to build /etc/init.d/ scripts.
-#		This file should be used to construct scripts for /etc/init.d.
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
 #
-#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#		Modified for Debian
-#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+# ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+# Copyright (C) 2002-2007 by Thomas Dreibholz
 #
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+### BEGIN INIT INFO
+# Provides:          rsplib-registrar
+# Default-Start:     1 2 3 4 5
+# Default-Stop:      0 6
+# Short-Description: RSerPool registrar
+# Description:       This service provides a RSerPool registrar.
+### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/registrar
@@ -22,63 +47,44 @@ modprobe sctp > /dev/null 2>&1
 
 # Include rsplib defaults if available
 if [ -f /etc/default/rsplib ] ; then
-	. /etc/default/rsplib
+   . /etc/default/rsplib
 fi
 
 set -e
 
 case "$1" in
   start)
-	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON -- $DAEMON_OPTS
-	echo "$NAME."
-	;;
+   echo -n "Starting $DESC: "
+   start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+      --exec $DAEMON -- $DAEMON_OPTS
+   echo "$NAME."
+   ;;
   stop)
-	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON
-	echo "$NAME."
-	;;
-  #reload)
-	#
-	#	If the daemon can reload its config files on the fly
-	#	for example by sending it SIGHUP, do it here.
-	#
-	#	If the daemon responds to changes in its config file
-	#	directly anyway, make this a do-nothing entry.
-	#
-	# echo "Reloading $DESC configuration files."
-	# start-stop-daemon --stop --signal 1 --quiet --pidfile \
-	#	/var/run/$NAME.pid --exec $DAEMON
-  #;;
+   echo -n "Stopping $DESC: "
+   start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+      --exec $DAEMON
+   echo "$NAME."
+   ;;
   force-reload)
-	#
-	#	If the "reload" option is implemented, move the "force-reload"
-	#	option to the "reload" entry above. If not, "force-reload" is
-	#	just the same as "restart" except that it does nothing if the
-	#   daemon isn't already running.
-	# check wether $DAEMON is running. If so, restart
-	start-stop-daemon --stop --test --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON \
-	&& $0 restart \
-	|| exit 0
-	;;
+   start-stop-daemon --stop --test --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON \
+   && $0 restart \
+   || exit 0
+   ;;
   restart)
     echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON
-	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
-	echo "$NAME."
-	;;
+   start-stop-daemon --stop --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON
+   sleep 1
+   start-stop-daemon --start --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+   echo "$NAME."
+   ;;
   *)
-	N=/etc/init.d/$NAME
-	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
-	exit 1
-	;;
+   N=/etc/init.d/$NAME
+   echo "Usage: $N {start|stop|restart|force-reload}" >&2
+   exit 1
+   ;;
 esac
 
 exit 0

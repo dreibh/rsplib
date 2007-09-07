@@ -29,9 +29,9 @@
 
 
 # ---------------------------------------------------------
-INPUT=~/src/rsplib2
-PACKAGE=rsplib
-CONFOPT=--enable-kernel-sctp --enable-csp --disable-qt
+INPUT="$HOME/src/rsplib2"
+PACKAGE="rsplib"
+CONFOPT="--enable-kernel-sctp --enable-csp --disable-qt"
 # ---------------------------------------------------------
 
 

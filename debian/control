@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.6), libbz2-d
 Standards-Version: 3.7.2
 
 
-Package: rsplib-core
+Package: librsplib
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
@@ -31,7 +31,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-core
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
@@ -55,7 +55,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-registrar
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-core
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the registrar.
@@ -78,7 +78,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-core
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains an example pool elements and pool
@@ -102,7 +102,6 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-doc
 Architecture: all
-Description: Documentation for rsplib
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains documentation files.
