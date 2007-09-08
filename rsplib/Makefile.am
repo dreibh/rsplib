@@ -231,4 +231,4 @@ rootshell_LDADD   =
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.8 server.8 terminal.8
+dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8

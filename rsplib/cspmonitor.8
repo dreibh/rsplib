@@ -28,29 +28,36 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt Terminal 8
-.Os RSerPool Terminal
+.Dt CSP Monitor 8
+.Os RSerPool CSP Monitor
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm terminal
-.Nd RSerPool terminal (PU) for services like Echo, Discard, Daytime, CharGen
+.Nm cspmonitor
+.Nd CSP monitor
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm terminal
-.Op Fl poolhandle=pool_handle
+.Nm cspmonitor
+.Op Fl localaddress=address:port
+.Op Fl compact
+.Op Fl full
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm terminal
-is an simple Reliable Server Pooling (RSerPool) pool user (PU) to use test
-services like Echo, Discard, Daytime, CharGen.
+.Nm cspmonitor
+is a simple simple Component Status Protocol (CSP) monitor server. It receives
+status messages from components via UDP and prints them on the screen. This
+program is useful to keep an overview of running RSerPool components.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl poolhandle=pool_handle
-Sets the PH to a non-default value; otherwise, the default setting is
-"EchoPool".
+.It Fl localaddress=address:port
+Sets the local UDP socket address and port number. By default, it listens on
+any address, port 2960.
+.It Fl compact
+Turns on compact status display mode.
+.It Fl compact
+Turns on full status display mode (default).
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -65,23 +72,10 @@ Write logging output to a file (default is stdout); given file will be overwritt
 .It Fl logappend=filename
 Write logging output to a file (default is stdout); output will be appended to given file.
 .El
-.\" ====== Component Status Protocol ========================================
-.It Component Status Protocol (CSP) Parameters:
-.Bl -tag -width indent
-.It Fl cspserver=address:port
-Sets the address of a CSP monitor server. By default, the content of the
-environment variable CSP_SERVER is used. If not defined, no CSP status reports
-will be sent.
-.It Fl cspinterval=milliseconds
-Sets the interval for the CSP status updates in milliseconds. By default, the
-content of the environment variable CSP_INTERVAL is used. If not defined, no
-CSP status reports will be sent.
-.El
-.El
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm terminal
+.Nm cspmonitor
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
