@@ -28,40 +28,55 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt CSPMonitor 8
-.Os CSP Monitor
+.Dt PingPongClient 8
+.Os PingPong Client
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm pingpongclient
+.Nd RSerPool Client (PU) for the PingPong service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl compact
-.Op Fl full
+.Nm pingpongclient
+.Op Fl poolhandle=pool_handle
+.Op Fl interval=milliseconds
+.Op Fl cspserver=address:port
+.Op Fl cspinterval=milliseconds
 .Op Fl loglevel=0-9
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
 .Op Fl logappend=filename
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm pingpongclient
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the PingPong
+service. It is a simple example service for testing RSerPool and its failover
+functionalities.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"PingPongPool".
+.\" ====== Service parameters ===============================================
+.It Service Parameters:
+.Bl -tag -width indent
+.It Fl interval=milliseconds
+Sets the request interval in milliseconds.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -80,7 +95,7 @@ Write logging output to a file (default is stdout); output will be appended to g
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm pingpongclient
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################

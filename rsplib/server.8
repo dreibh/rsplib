@@ -43,8 +43,14 @@
 .Op Fl registrar=address:port
 .Op Fl asapannounce=address:port
 .Op Fl rereginterval=milliseconds
-.Op Fl policy=policy
+.Op Fl policy=policy_specification
 .Op Fl runtime=milliseconds
+.Op Fl loglevel=0-9
+.Op Fl logcolor=on|off
+.Op Fl logfile=filename
+.Op Fl logappend=filename
+.Op Fl cspserver=address:port
+.Op Fl cspinterval=milliseconds
 .Nm server
 .Op Fl echo
 .Nm server
@@ -136,10 +142,24 @@ Sets the multicast address and port the ASAP instance
 listens for ASAP Server Announces on.
 .It Fl rereginterval=milliseconds
 Sets the PE's re-registration interval.
-.It Fl policy=RoundRobin|Random|WeightedRandom:weight|LeastUsed|LeastUsedDegradation:degradation|PriorityLeastUsed:increment|...
-Sets the pool policy and its parameters.
+.It Fl policy=policy_specification
+Sets the pool policy and its parameters (default is Round Robin).
+Supported policy specifications:
+.Bl -tag -width indent
+.It RoundRobin
+.It WeightedRoundRobin:weight
+.It Random
+.It WeightedRandom:weight
+.It LeastUsed
+.It LeastUsedDegradation:increment
+.It PriorityLeastUsed:increment
+.It LeastUsedDPF:dpf_value
+.It Priority:priority
+.It ...
+.El
 .It Fl runtime=seconds
 After the configured number of seconds, the service is shut down.
+Floating-point values (e.g. 30.125) are possible.
 .El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:

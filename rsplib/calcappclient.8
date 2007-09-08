@@ -28,40 +28,80 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt CSPMonitor 8
-.Os CSP Monitor
+.Dt CalcAppClient 8
+.Os CalcApp Client
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm calcappclient
+.Nd RSerPool Client (PU) for the CalcApp service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl compact
-.Op Fl full
+.Nm calcappclient
+.Op Fl poolhandle=pool_handle
+.Op Fl runtime=seconds
+.Op Fl object=name
+.Op Fl scalar=scalar_file
+.Op Fl vector=vector_file
+.Op Fl jobinterval=seconds
+.Op Fl jobsize=seconds
+.Op Fl keepalivetransmissioninterval=microseconds
+.Op Fl keepalivetimeoutinterval=microseconds
+.Op Fl cspserver=address:port
+.Op Fl cspinterval=milliseconds
 .Op Fl loglevel=0-9
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
 .Op Fl logappend=filename
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm calcappclient
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the CalcApp
+performance testing service. For a detailed description of the underlying
+protocol, see
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf .
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"CalcAppPool".
+.It Fl runtime=seconds
+After the configured number of seconds, the service is shut down.
+Floating-point values (e.g. 30.125) are possible.
+.\" ====== Service parameters ===============================================
+.It Service Parameters:
+.Bl -tag -width indent
+.It Fl object=name
+Sets the object name for scalar hierarchy.
+.It Fl scalar=scalar_file
+Sets the name of vector scalar file.
+.It Fl vector=vector_file
+Sets the name of vector output file.
+.It Fl jobinterval=seconds
+Sets the job interval in seconds.
+Floating-point values (e.g. 30.125) are possible.
+.It Fl jobsize=seconds
+Sets the job size in seconds.
+Floating-point values (e.g. 8.75) are possible.
+.It Fl keepalivetransmissioninterval=microseconds
+Sets the session keep-alive interval in microseconds.
+.It Fl keepalivetimeoutinterval=microseconds
+Sets the session keep-alive timeout in microseconds.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -80,7 +120,7 @@ Write logging output to a file (default is stdout); output will be appended to g
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm calcappclient
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################

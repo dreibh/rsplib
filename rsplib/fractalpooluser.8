@@ -28,40 +28,91 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt CSPMonitor 8
-.Os CSP Monitor
+.Dt FractalPoolUser 8
+.Os FractalGenerator Pool User
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm fractalpooluser
+.Nd RSerPool Client (PU) for the Fractal Generator service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl compact
-.Op Fl full
+.Nm fractalpooluser
+.Op Fl poolhandle=pool_handle
+.Op Fl identifier=PU_identifier
+.Op Fl configdir=directory
+.Op Fl caption=window_title
+.Op Fl width=pixels
+.Op Fl height=pixels
+.Op Fl threads=threads
+.Op Fl sendtimeout=milliseconds
+.Op Fl recvtimeout=milliseconds
+.Op Fl interimagetime=seconds
+.Op Fl imagestorageprefix=file_name_prefix
+.Op Fl colormarks
+.Op Fl nocolormarks
+.Op Fl cspserver=address:port
+.Op Fl cspinterval=milliseconds
 .Op Fl loglevel=0-9
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
 .Op Fl logappend=filename
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm fractalpooluser
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the FractalGenerator
+service. It uses a Qt-based X11 GUI.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"FractalGeneratorPool".
+.It Fl identifier=PU_identifier
+Sets a fixed PU identifier. Handle with care!
+.\" ====== Service parameters ===============================================
+.It Service Parameters:
+.Bl -tag -width indent
+.It Fl configdir=directory
+Sets a directory to look for FGP config files. The file scenario.conf in this
+directory has to contain a list of all FGP files to use. From this list,
+random FGP files are selected for calculation requests.
+.It Fl caption=window_title
+Sets the output window title.
+.It Fl width=pixels
+Sets the width of the window and the images to be calculated.
+.It Fl height=pixels
+Sets the height of the window and the images to be calculated.
+.It Fl threads=threads
+Sets the number of parallel sessions to use for processing of each image.
+.It Fl sendtimeout=milliseconds
+Sets the transmission timeout.
+.It Fl recvtimeout=milliseconds
+Sets the receive timeout.
+.It Fl interimagetime=seconds
+Sets the pause time between two image calculations in seconds.
+.It Fl imagestorageprefix=file_name_prefix
+Sets a file name prefix for saving the calculated images. If set, each
+successfully calculated image is stored to the given location as PNG file,
+with a 6-digit file number added.
+.It Fl colormarks
+Turns on color change on session failover.
+.It Fl nocolormarks
+Turns off color change on session failover.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -80,7 +131,7 @@ Write logging output to a file (default is stdout); output will be appended to g
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm fractalpooluser
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################

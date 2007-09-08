@@ -144,10 +144,10 @@ libcpprspserver_la_LDFLAGS = \
 
 # ###### Main programs ######################################################
 if BUILD_QT_PROGRAMS
-bin_PROGRAMS = fractalpooluser registrar server terminal hsdump hrestest testregistrator pingpongclient scriptingclient calcappclient cspmonitor
+bin_PROGRAMS = fractalpooluser registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
 else
-bin_PROGRAMS = registrar server terminal hsdump hrestest testregistrator pingpongclient scriptingclient calcappclient cspmonitor
+bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
 endif
 
@@ -174,12 +174,6 @@ terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
 hsdump_SOURCES = hsdump.c
 hsdump_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
-hrestest_SOURCES = hrestest.c
-hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-testregistrator_SOURCES = testregistrator.c
-testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
 pingpongclient_SOURCES = pingpongclient.c
 pingpongclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
@@ -202,7 +196,13 @@ endif
 
 
 # ###### Test programs ######################################################
-noinst_PROGRAMS = combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell
+noinst_PROGRAMS = hrestest testregistrator combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell
+
+hrestest_SOURCES = hrestest.c
+hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+testregistrator_SOURCES = testregistrator.c
+testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 combinesummaries_SOURCES = combinesummaries.cc
 combinesummaries_LDADD   = -lbz2
@@ -231,4 +231,4 @@ rootshell_LDADD   =
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8
+dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 fractalpooluser.8

@@ -28,40 +28,47 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt CSPMonitor 8
-.Os CSP Monitor
+.Dt HSDump 8
+.Os Handlespace Dump
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm hsdump
+.Nd Dumps the handlespace of a RSerPool Registrar.
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl compact
-.Op Fl full
+.Nm hsdump
+.Op Fl address:port
+.Op Fl cspserver=address:port
+.Op Fl cspinterval=milliseconds
 .Op Fl loglevel=0-9
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
 .Op Fl logappend=filename
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm hsdump
+dumps the handlespace of a Reliable Server Pooling (RSerPool) Registrar (PR).
+For this purpose, it claims to be a peer registrar and requests the handlespace
+via ENRP. Handle with care!
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
+.It address:port
+The ENRP address and port of the target registrar.
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -80,7 +87,7 @@ Write logging output to a file (default is stdout); output will be appended to g
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm hsdump
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
