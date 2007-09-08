@@ -36,7 +36,7 @@
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/registrar
+DAEMON=/usr/bin/registrar
 NAME=registrar
 DESC=registrar
 

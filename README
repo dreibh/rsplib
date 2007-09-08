@@ -303,13 +303,13 @@ D.3 ENRP Parameters
 -enrp=auto|address:port{,address}: Sets the ENRP endpoint address(es). Use "auto"
                                    to automatically set it (default).
                                    Examples: -enrp=auto
-                                             -enrp=1.2.3.4:3864
-                                             -enrp=1.2.3.4:3864,[2000::1:2:3],9.8.7.6
+                                             -enrp=1.2.3.4:9901
+                                             -enrp=1.2.3.4:9901,[2000::1:2:3],9.8.7.6
 
 -enrpannounce=auto|address:port: Sets the multicast address and UDP port to send
                                  the ENRP Announces to. Use "auto" for default.
                                  Examples: -enrpannounce=auto
-                                           -enrpannounce=239.0.0.1:3864
+                                           -enrpannounce=239.0.0.1:9901
 
 -peerheartbeatcycle=milliseconds: Sets the ENRP peer heartbeat interval.
 
