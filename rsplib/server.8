@@ -1,0 +1,199 @@
+.\" $Id$
+.\" --------------------------------------------------------------------------
+.\"
+.\"              //===//   //=====   //===//   //       //   //===//
+.\"             //    //  //        //    //  //       //   //    //
+.\"            //===//   //=====   //===//   //       //   //===<<
+.\"           //   \\         //  //        //       //   //    //
+.\"          //     \\  =====//  //        //=====  //   //===//    Version II
+.\"
+.\" ------------- An Efficient RSerPool Prototype Implementation -------------
+.\"
+.\" Copyright (C) 2002-2007 by Thomas Dreibholz
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" Contact: dreibh@iem.uni-due.de
+.\"
+.\" ###### Setup ############################################################
+.Dd September, 2007
+.Dt Server 8
+.Os RSerPool Server
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm server
+.Nd RSerPool Server (PE) for multiple example services
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm server
+.Op Fl quiet
+.Op Fl identifier=PE_identifier
+.Op Fl poolhandle=pool_handle
+.Op Fl rereginterval=milliseconds
+.Op Fl policy=policy
+.Op Fl runtime=milliseconds
+.Nm server
+.Op Fl echo
+.Nm server
+.Op Fl discard
+.Nm server
+.Op Fl daytime
+.Nm server
+.Op Fl chargen
+.Op Fl chargenmaxthreads=threads
+.Nm server
+.Op Fl calcapp
+.Op Fl capvector=vector file
+.Op Fl capscalar=scalae file
+.Op Fl capmaxjobs=max jobs
+.Op Fl capkeepalivetransmissioninterval=microseconds
+.Op Fl capkeepalivetimeoutinterval=microseconds
+.Op Fl capcookiemaxtime=microseconds
+.Op Fl capcookiemaxcalculations=calculations
+.Nm server
+.Op Fl pingpong
+.Op Fl pppmaxthreads=threads
+.Op Fl pppfailureafter=messages
+.Nm server
+.Op Fl fractal
+.Op Fl fgpmaxthreads=threads
+.Op Fl fgpfailureafter=messages
+.Op Fl fgptransmittimeout=milliseconds
+.Op Fl fgpcookiemaxtime=milliseconds
+.Op Fl fgptestmode
+.Nm server
+.Op Fl scripting
+.Op Fl ssmaxthreads=threads
+.Op Fl sskeeptempdirs=directory
+.Op Fl sstransmittimeout=milliseconds
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm server
+is an example Reliable Server Pooling (RSerPool) pool element (PE)
+that provides multiple services. Upon startup, one service has to be selected
+by the command-line parameters. To start multiple services, run multiple
+instances.
+.Nm server
+provides the following services:
+.Bl -tag -width indent
+.It Echo
+Echoing back incoming data.
+.It Discard
+Discarding incoming data.
+.It Daytime
+Sending back current time of day.
+.It CharGen
+Sending as much character data as possible.
+.It CalcApp
+Calculation application model for performance tests. See
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+for more information.
+.It PingPong
+Simple request-response example using cookies for failover.
+.br
+.It Fractal
+Fractal generator with cookie-based failover.
+.br
+.It Scripting
+Remote execution of scripts with upload/download of input/output data. Could
+for example be used for distributing simulation runs.
+.El
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options are available:
+.Bl -tag -width indent
+.It Fl asap=auto|address:port,address,...
+Sets the ASAP endpoint address(es). Use "auto" to automatically set it (default).
+.Pp
+.\" ====== Common parameters ================================================
+quiet
+identifier=PE identifier
+poolhandle=pool handle
+rereginterval=milliseconds
+policy=RoundRobin|WeightedRoundRobin:weight|Random|WeightedRandom:weight|LeastUsed|LeastUsedDPF:dpf|LeastUsedDegradation:degradation|PriorityLeastUsed:increment|...
+runtime=milliseconds
+echo
+discard
+daytime
+chargen
+-chargenmaxthreads=threads
+calcapp
+-capvector=vector file
+-capscalar=scalae file
+-capmaxjobs=max jobs
+-capkeepalivetransmissioninterval=microseconds
+-capkeepalivetimeoutinterval=microseconds
+-capcookiemaxtime=microseconds
+-capcookiemaxcalculations=calculations
+pingpong
+-pppmaxthreads=threads
+-pppfailureafter=messages
+fractal
+-fgpmaxthreads=threads
+-fgpfailureafter=messages
+-fgptransmittimeout=milliseconds
+-fgpcookiemaxtime=milliseconds
+-fgptestmode
+scripting
+-ssmaxthreads=threads
+-sskeeptempdirs=directory
+-sstransmittimeout=milliseconds
+
+.\" ====== Component Status Protocol ========================================
+.It Fl cspserver=address:port
+Sets the CSP monitor server's address and port.
+.Pp
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds.
+.Pp
+.\" ====== Logging ==========================================================
+.It Fl loglevel=0-9
+Sets the logging verbosity from 0 (none) to 9 (very verbose).
+.br
+It is recommended to use at least a value of 2 to see possibly
+important error messages and warnings.
+.It Fl logcolor=on|off
+Turns ANSI colorization of the logging output on or off.
+.It Fl logfile=filename
+Write logging output to a file (default is stdout); given file will be overwritten.
+.Pp
+.It Fl logappend=filename
+Write logging output to a file (default is stdout); output will be appended to given file.
+.El
+.\" ###### Environment ######################################################
+.Sh ENVIRONMENT
+.Nm server
+uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+server to send reports to in the specified interval.
+.\" ###### Diagnostics ######################################################
+.Sh DIAGNOSTICS
+If loglevel>0, messages will be sent to stdout or specified log file.
+.\" ###### See also #########################################################
+.Sh SEE ALSO
+For a detailed introduction to RSerPool, see:
+.br
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+.Pp
+Thomas Dreibholz's RSerPool Page:
+.br
+http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
+.\" ###### Authors ##########################################################
+.Sh AUTHORS
+Dr. Thomas Dreibholz
+.br
+http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
+.br
+mailto://dreibh@iem.uni-due.de
+.br

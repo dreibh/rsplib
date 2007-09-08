@@ -27,13 +27,17 @@
 #
 # Contact: dreibh@iem.uni-due.de
 #
+
 ### BEGIN INIT INFO
 # Provides:          rsplib-registrar
-# Default-Start:     1 2 3 4 5
-# Default-Stop:      0 6
-# Short-Description: RSerPool registrar
-# Description:       This service provides a RSerPool registrar.
+# Required-Start:    networking
+# Required-Stop:
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Short-Description: RSerPool Registrar
+# Description:       This service provides a RSerPool Registrar.
 ### END INIT INFO
+
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/bin/registrar

@@ -228,3 +228,7 @@ rootshell_LDADD   =
 
 # t1_SOURCES = t1.cc
 # t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+
+# ###### Manual pages #######################################################
+dist_man_MANS = registrar.8 server.8 terminal.8

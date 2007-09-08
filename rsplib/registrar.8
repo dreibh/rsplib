@@ -93,6 +93,10 @@ this address to learn the list of currently available PRs.
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
+.It Fl quiet
+Do not print startup and shutdown messages.
+.Pp
+.\" ====== ASAP Protocol ====================================================
 .It Fl asap=auto|address:port,address,...
 Sets the ASAP endpoint address(es). Use "auto" to automatically set it (default).
 .Pp
@@ -128,6 +132,7 @@ site-local: Site-local addresses (e.g. 192.168.1.1, etc.)
 .br
 global: Global addresses
 .Pp
+.\" ====== ENRP Protocol ====================================================
 .It Fl enrp=auto|address:port,address,...
 Sets the ENRP endpoint address(es). Use "auto" to automatically set it (default). Examples:
 .br
@@ -162,15 +167,14 @@ Sets the ENRP takeover timeout.
 .It Fl mentorhuntinterval=milliseconds
 Sets the mentor PR hunt interval.
 .Pp
+.\" ====== Component Status Protocol ========================================
 .It Fl cspserver=address:port
 Sets the CSP monitor server's address and port.
 .Pp
 .It Fl cspinterval=milliseconds
 Sets the interval for the CSP status updates in milliseconds.
 .Pp
-.It Fl quiet
-Do not print startup and shutdown messages.
-.Pp
+.\" ====== Logging ==========================================================
 .It Fl loglevel=0-9
 Sets the logging verbosity from 0 (none) to 9 (very verbose).
 .br
@@ -183,6 +187,12 @@ Write logging output to a file (default is stdout); given file will be overwritt
 .Pp
 .It Fl logappend=filename
 Write logging output to a file (default is stdout); output will be appended to given file.
+.El
+.\" ###### Environment ######################################################
+.Sh ENVIRONMENT
+.Nm registrar
+uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
 .Sh DIAGNOSTICS
 If loglevel>0, messages will be sent to stdout or specified log file.

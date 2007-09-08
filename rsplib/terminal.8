@@ -1,4 +1,4 @@
-.\" $Id$
+.\" $Id: terminal.8 1554 2007-09-08 07:15:50Z dreibh $
 .\" --------------------------------------------------------------------------
 .\"
 .\"              //===//   //=====   //===//   //       //   //===//
@@ -28,21 +28,21 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September, 2007
-.Dt Server 8
-.Os RSerPool Server
+.Dt Terminal 8
+.Os RSerPool Terminal
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm server
-.Nd RSerPool Server (PE) for multiple example services
+.Nm terminal
+.Nd RSerPool terminal (PU) for services like Echo, Discard, Daytime, CharGen
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm server
+.Nm terminal
 .Op Fl asap=auto|address:port,address,...
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm server
-is an example Reliable Server Pooling (RSerPool) pool element (PE)
-that provides multiple services.
+.Nm terminal
+is an simple Reliable Server Pooling (RSerPool) pool user (PU) to use test
+services like Echo, Discard, Daytime, CharGen.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
@@ -52,6 +52,11 @@ The following options are available:
 Sets the ASAP endpoint address(es). Use "auto" to automatically set it (default).
 .Pp
 .El
+.\" ###### Environment ######################################################
+.Sh ENVIRONMENT
+.Nm terminal
+uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
 .Sh DIAGNOSTICS
 If loglevel>0, messages will be sent to stdout or specified log file.
