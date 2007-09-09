@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.6), libbz2-d
 Standards-Version: 3.7.2
 
 
-Package: librsplib-2300-0
+Package: librsplib
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
@@ -31,7 +31,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: librsplib-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib-2300-0 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib (= ${Source-Version})
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
@@ -53,7 +53,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
  Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
-Package: libcpprspserver-2300-0
+Package: libcpprspserver
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
@@ -78,7 +78,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: libcpprspserver-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver-2300-0 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver (= ${Source-Version})
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
