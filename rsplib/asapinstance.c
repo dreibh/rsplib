@@ -263,6 +263,20 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 }
 
 
+/* ###### Lock ASAP Instance ############################################# */
+void asapInstanceLock(struct ASAPInstance* asapInstance)
+{
+   dispatcherLock(asapInstance->StateMachine);
+}
+
+
+/* ###### Unlock ASAP Instance ########################################### */
+void asapInstanceUnlock(struct ASAPInstance* asapInstance)
+{
+   dispatcherUnlock(asapInstance->StateMachine);
+}
+
+
 /* ###### Get configuration from file #################################### */
 static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
                                   struct TagItem*      tags)

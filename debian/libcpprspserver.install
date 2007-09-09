@@ -1,0 +1,3 @@
+debian/tmp/usr/lib/libcpprspserver*.so*
+debian/tmp/usr/lib/libcpprspserver*.a
+debian/tmp/usr/lib/libcpprspserver*.la

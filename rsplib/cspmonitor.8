@@ -40,10 +40,10 @@
 .Op Fl localaddress=address:port
 .Op Fl compact
 .Op Fl full
-.Op Fl loglevel=0-9
+.Op Fl logappend=filename
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
-.Op Fl logappend=filename
+.Op Fl loglevel=0-9
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm cspmonitor
@@ -65,16 +65,16 @@ Turns on full status display mode (default).
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
-.It Fl loglevel=0-9
-Sets the logging verbosity from 0 (none) to 9 (very verbose).
-It is recommended to use at least a value of 2 to see possibly
-important error messages and warnings.
+.It Fl logappend=filename
+Write logging output to a file (default is stdout); output will be appended to given file.
 .It Fl logcolor=on|off
 Turns ANSI colorization of the logging output on or off.
 .It Fl logfile=filename
 Write logging output to a file (default is stdout); given file will be overwritten.
-.It Fl logappend=filename
-Write logging output to a file (default is stdout); output will be appended to given file.
+.It Fl loglevel=0-9
+Sets the logging verbosity from 0 (none) to 9 (very verbose).
+It is recommended to use at least a value of 2 to see possibly
+important error messages and warnings.
 .El
 .El
 .Pp

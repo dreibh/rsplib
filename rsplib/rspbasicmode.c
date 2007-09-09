@@ -345,8 +345,10 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
    *rspAddrInfo = NULL;
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
-
       poolElementNodes = max(1, min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS));
+
+      asapInstanceLock(gAsapInstance);
+
       hresResult = asapInstanceHandleResolution(
                       gAsapInstance,
                       &myPoolHandle,
@@ -364,6 +366,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
             }
          }
          if(result == 0) {
+            asapInstanceUnlock(gAsapInstance);
             return(n);
          }
          rsp_freeaddrinfo(*rspAddrInfo);
@@ -377,6 +380,8 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
             result = EAI_SYSTEM;
          }
       }
+
+      asapInstanceUnlock(gAsapInstance);
    }
    else {
       LOG_ERROR

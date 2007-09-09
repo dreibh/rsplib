@@ -6,12 +6,12 @@ Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.6), libbz2-d
 Standards-Version: 3.7.2
 
 
-Package: librsplib
+Package: librsplib-2300-0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
- session management. This package contains the core libraries.
+ session management. This package contains the core library.
  .
  The Reliable Server Pooling (RSerPool) architecture which is currently under
  standardization by the IETF RSerPool WG is an overlay network framework to
@@ -29,13 +29,60 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
  Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
-Package: rsplib-dev
+Package: librsplib-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib-2300-0 (= ${Source-Version})
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
- core libraries.
+ core library.
+ .
+ The Reliable Server Pooling (RSerPool) architecture which is currently under
+ standardization by the IETF RSerPool WG is an overlay network framework to
+ provide server replication and session failover capabilities to its
+ applications. Server redundancy leads to load distribution and load balancing,
+ which are also covered by RSerPool. But in strong contrast to  other solutions
+ in the area of GRID and high-performance computing, the  fundamental property
+ of RSerPool is to be "lightweight", i.e. it can be used on devices providing
+ only meagre memory and CPU resources (e.g. embedded systems like
+ telecommunications equipment or routers). This property restricts the RSerPool
+ architecture to the management of only pools and sessions (no data
+ synchronization, user management, etc.), but on the other hand makes a very
+ efficient realization possible.
+ .
+ Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
+
+
+Package: libcpprspserver-2300-0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: rsplib is the Open Source implementation of the IETF Reliable
+ Server Pooling (RSerPool) architecture, a novel framework for pool and
+ session management. This package contains a C++ library for pool elements.
+ .
+ The Reliable Server Pooling (RSerPool) architecture which is currently under
+ standardization by the IETF RSerPool WG is an overlay network framework to
+ provide server replication and session failover capabilities to its
+ applications. Server redundancy leads to load distribution and load balancing,
+ which are also covered by RSerPool. But in strong contrast to  other solutions
+ in the area of GRID and high-performance computing, the  fundamental property
+ of RSerPool is to be "lightweight", i.e. it can be used on devices providing
+ only meagre memory and CPU resources (e.g. embedded systems like
+ telecommunications equipment or routers). This property restricts the RSerPool
+ architecture to the management of only pools and sessions (no data
+ synchronization, user management, etc.), but on the other hand makes a very
+ efficient realization possible.
+ .
+ Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
+
+
+Package: libcpprspserver-dev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver-2300-0 (= ${Source-Version})
+Description: rsplib is the Open Source implementation of the IETF Reliable
+ Server Pooling (RSerPool) architecture, a novel framework for pool and
+ session management. This package contains the development files for the
+ C++ library for pool elements.
  .
  The Reliable Server Pooling (RSerPool) architecture which is currently under
  standardization by the IETF RSerPool WG is an overlay network framework to
@@ -55,7 +102,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-registrar
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the registrar.
@@ -78,7 +125,7 @@ Description: rsplib is the Open Source implementation of the IETF Reliable
 
 Package: rsplib-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains an example pool elements and pool
