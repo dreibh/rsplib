@@ -40,9 +40,10 @@
 
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/bin/registrar
 NAME=registrar
-DESC=registrar
+DESC="RSerPool Registrar"
+DAEMON=/usr/bin/registrar
+DAEMON_OPTS="-quiet -daemonpidfile=/var/run/$NAME.pid"
 
 test -x $DAEMON || exit 0
 
@@ -50,8 +51,8 @@ test -x $DAEMON || exit 0
 modprobe sctp > /dev/null 2>&1
 
 # Include rsplib defaults if available
-if [ -f /etc/default/rsplib ] ; then
-   . /etc/default/rsplib
+if [ -f /etc/default/rsplib-registrar ] ; then
+   . /etc/default/rsplib-registrar
 fi
 
 set -e
@@ -59,7 +60,7 @@ set -e
 case "$1" in
   start)
    echo -n "Starting $DESC: "
-   start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+   start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
       --exec $DAEMON -- $DAEMON_OPTS
    echo "$NAME."
    ;;

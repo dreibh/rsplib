@@ -272,6 +272,9 @@ int main(int argc, char** argv)
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;
    bool                          useIPv6                       = checkIPv6();
+   const char*                   daemonPIDFile                 = NULL;
+   FILE*                         fh;
+   pid_t                         childProcess;
 
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
@@ -376,6 +379,9 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-disable-ipv6"))) {
          useIPv6 = false;
       }
+      else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
+         daemonPIDFile = (const char*)&argv[i][15];
+      }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile) {
             fclose(statsFile);
@@ -436,7 +442,8 @@ int main(int argc, char** argv)
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
-            "{-statsfile=file} {-statsinterval=millisecs}"
+            "{-statsfile=file} {-statsinterval=millisecs} "
+            "{-daemonpidfile=file}"
             "\n",argv[0]);
          exit(1);
       }
@@ -673,6 +680,7 @@ int main(int argc, char** argv)
       if(statsFile) {
          printf("Statistics Interval:    %ums\n", statsInterval);
       }
+      printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "" : daemonPIDFile);
 
       puts("\nASAP Parameters:");
       printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
@@ -699,6 +707,21 @@ int main(int argc, char** argv)
    fputs("Registrar started. Going into initialization phase...\n", stdlog);
    LOG_END
 
+
+   if(daemonPIDFile != NULL) {
+      childProcess = fork();
+      if(childProcess != 0) {
+         fh = fopen(daemonPIDFile, "w");
+         if(fh) {
+            fprintf(fh, "%d\n", childProcess);
+            fclose(fh);
+         }
+         else {
+            fprintf(stderr, "ERROR: Unable to create PID file \"%s\"!\n", daemonPIDFile);
+         }
+         exit(0);
+      }
+   }
 
    /* ====== Main loop =================================================== */
    while(!breakDetected()) {
