@@ -110,11 +110,11 @@ int main(int argc, char** argv)
       puts("RSerPool Handle Resolution Tester - Version 1.0");
       puts("===============================================\n");
       printf("Pool Handle         = %s\n",   poolHandle);
-      printf("Items               = %ums\n", (unsigned int)items);
+      printf("Items               = %u\n", (unsigned int)items);
       printf("Pause               = %ums\n", pause);
       printf("Max Runs            = %llu\n", maxRuns);
       printf("Statistics Interval = %ums\n", statsInterval);
-      puts(""); 
+      puts("");
    }
 
 

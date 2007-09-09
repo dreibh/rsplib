@@ -121,19 +121,6 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
   */
 void asapInstanceDelete(struct ASAPInstance* asapInstance);
 
-/**
-  * Lock ASAPInstance.
-  *
-  * @param asapInstance ASAPInstance.
-  */
-void asapInstanceLock(struct ASAPInstance* asapInstance);
-
-/**
-  * Unlock ASAPInstance.
-  *
-  * @param asapInstance ASAPInstance.
-  */
-void asapInstanceUnlock(struct ASAPInstance* asapInstance);
 
 /**
   * Register pool element.
@@ -176,25 +163,24 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
 
 /**
   * Do handle resolution of given pool handle. The result will contain
-  * an array of pointers to PoolElementNodes. These will be valid until
-  * the next ASAP operation. Therefore, it is necessary to use
-  * asapInstanceLock() and asapInstanceUnlock() in multi-threaded
-  * environments!
+  * an array of pointers to opaque data converted by the given conversion
+  * function from PoolElementNode structures. Conversion or at least copying
+  * is necessary, since other ASAP functions could modify the interal
+  * PoolElementNodes!
   *
   * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
-  * @param poolElementNodeArray Array to store pool element node pointers to.
-  * @param poolElementNodes Reference to variable containing maximum amount of pool element nodes to obtain. After function call, this variable contains actual amount of pool element nodes obtained.
+  * @param nodePtrArray Array to store pointers to converted PoolElementNodes to.
+  * @param nodePrts Reference to variable containing maximum amount of pool element nodes to obtain. After function call, this variable contains actual amount of pool element nodes obtained.
   * @return RSPERR_OKAY in case of success; error code otherwise.
-  *
-  * @see asapInstanceLock
-  * @see asapInstanceUnlock
   */
 unsigned int asapInstanceHandleResolution(
-                struct ASAPInstance*               asapInstanceInstance,
-                struct PoolHandle*                 poolHandle,
-                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
-                size_t*                            poolElementNodes);
+                struct ASAPInstance* asapInstance,
+                struct PoolHandle*   poolHandle,
+                void**               nodePtrArray,
+                size_t*              nodePrts,
+                unsigned int         (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                        void*                             ptr));
 
 
 #ifdef __cplusplus

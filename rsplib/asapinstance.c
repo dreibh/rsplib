@@ -263,20 +263,6 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 }
 
 
-/* ###### Lock ASAP Instance ############################################# */
-void asapInstanceLock(struct ASAPInstance* asapInstance)
-{
-   dispatcherLock(asapInstance->StateMachine);
-}
-
-
-/* ###### Unlock ASAP Instance ########################################### */
-void asapInstanceUnlock(struct ASAPInstance* asapInstance)
-{
-   dispatcherUnlock(asapInstance->StateMachine);
-}
-
-
 /* ###### Get configuration from file #################################### */
 static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
                                   struct TagItem*      tags)
@@ -684,10 +670,88 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
 }
 
 
+/* ###### Do name lookup from cache ###################################### */
+static unsigned int asapInstanceHandleResolutionFromCache(
+                       struct ASAPInstance*               asapInstance,
+                       struct PoolHandle*                 poolHandle,
+                       void**                             nodePtrArray,
+                       struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                       size_t*                            poolElementNodes,
+                       unsigned int                       (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                                             void*                             ptr),
+                       const bool                         purgeOutOfDateElements)
+{
+   unsigned int result;
+   size_t       i;
+
+   dispatcherLock(asapInstance->StateMachine);
+
+   LOG_VERBOSE
+   fprintf(stdlog, "Handle Resolution for pool ");
+   poolHandlePrint(poolHandle, stdlog);
+   fputs(":\n", stdlog);
+   ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->Cache,
+                                            stdlog, PENPO_ONLY_POLICY);
+   LOG_END
+
+   if(purgeOutOfDateElements) {
+      i = ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(
+            &asapInstance->Cache,
+            getMicroTime());
+      LOG_VERBOSE
+      fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
+      LOG_END
+   }
+
+   if(ST_CLASS(poolHandlespaceManagementHandleResolution)(
+         &asapInstance->Cache,
+         poolHandle,
+         poolElementNodeArray,
+         poolElementNodes,
+         *poolElementNodes,
+         1000000000) == RSPERR_OKAY) {
+
+      LOG_VERBOSE
+      fprintf(stdlog, "Got %u items:\n", (unsigned int)*poolElementNodes);
+      for(i = 0;i < *poolElementNodes;i++) {
+         fprintf(stdlog, "#%u: ", (unsigned int)i + 1);
+         ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
+                                        stdlog, PENPO_FULL);
+      }
+      fputs("\n", stdlog);
+      LOG_END
+
+      result = RSPERR_OKAY;
+      for(i = 0;i < *poolElementNodes;i++) {
+          if(convertFunction(poolElementNodeArray[i], &nodePtrArray[i]) != 0) {
+             result = RSPERR_NO_RESOURCES;
+          }
+      }
+      if(result != RSPERR_OKAY) {
+         for(i = 0;i < *poolElementNodes;i++) {
+            free(nodePtrArray[i]);
+            nodePtrArray[i] = 0;
+         }
+         *poolElementNodes = 0;
+      }
+   }
+   else {
+      result = RSPERR_NOT_FOUND;
+   }
+
+   dispatcherUnlock(asapInstance->StateMachine);
+   return(result);
+}
+
+
 /* ###### Do name lookup ################################################# */
-static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance* asapInstance,
-                                                            struct PoolHandle*   poolHandle,
-                                                            const size_t         items)
+static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*               asapInstance,
+                                                            struct PoolHandle*                 poolHandle,
+                                                            void**                             nodePtrArray,
+                                                            struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
+                                                            size_t*                            poolElementNodes,
+                                                            unsigned int                       (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                                                                                  void*                             ptr))
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
@@ -700,7 +764,7 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
       message->Type      = AHT_HANDLE_RESOLUTION;
       message->Flags     = 0x00;
       message->Handle    = *poolHandle;
-      message->Addresses = ((items != RSPGETADDRS_MAX) && (asapInstance->CacheElementTimeout > 0)) ? 0 : items;
+      message->Addresses = ((*poolElementNodes != RSPGETADDRS_MAX) && (asapInstance->CacheElementTimeout > 0)) ? 0 : *poolElementNodes;
 
       result = asapInstanceDoIO(asapInstance, message, &response);
       if(result == RSPERR_OKAY) {
@@ -710,8 +774,9 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
                     (unsigned int)response->PoolElementPtrArraySize);
             LOG_END
 
-            /* ====== Propagate results into PU-side cache =============== */
             dispatcherLock(asapInstance->StateMachine);
+
+            /* ====== Propagate results into PU-side cache =============== */
             for(i = 0;i < response->PoolElementPtrArraySize;i++) {
                LOG_VERBOSE2
                fputs("Adding pool element to cache: ", stdlog);
@@ -744,6 +809,14 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
                   newPoolElementNode,
                   asapInstance->CacheElementTimeout);
             }
+
+            /* ====== Select PEs from cache ============================== */
+            result = asapInstanceHandleResolutionFromCache(
+                        asapInstance, poolHandle,
+                        nodePtrArray,
+                        (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+                        poolElementNodes, convertFunction, false);
+
             dispatcherUnlock(asapInstance->StateMachine);
             /* =========================================================== */
 
@@ -779,82 +852,30 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
 }
 
 
-/* ###### Do name lookup from cache ###################################### */
-static unsigned int asapInstanceHandleResolutionFromCache(
-                       struct ASAPInstance*               asapInstance,
-                       struct PoolHandle*                 poolHandle,
-                       struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
-                       size_t*                            poolElementNodes,
-                       const bool                         purgeOutOfDateElements)
-{
-   unsigned int result;
-   size_t       i;
-
-   dispatcherLock(asapInstance->StateMachine);
-
-   LOG_VERBOSE
-   fprintf(stdlog, "Handle Resolution for pool ");
-   poolHandlePrint(poolHandle, stdlog);
-   fputs(":\n", stdlog);
-   ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->Cache,
-                                            stdlog, PENPO_ONLY_POLICY);
-   LOG_END
-
-   if(purgeOutOfDateElements) {
-      i = ST_CLASS(poolHandlespaceManagementPurgeExpiredPoolElements)(
-            &asapInstance->Cache,
-            getMicroTime());
-      LOG_VERBOSE
-      fprintf(stdlog, "Purged %u out-of-date elements\n", (unsigned int)i);
-      LOG_END
-   }
-
-   if(ST_CLASS(poolHandlespaceManagementHandleResolution)(
-         &asapInstance->Cache,
-         poolHandle,
-         poolElementNodeArray,
-         poolElementNodes,
-         *poolElementNodes,
-         1000000000) == RSPERR_OKAY) {
-      LOG_VERBOSE
-      fprintf(stdlog, "Got %u items:\n", (unsigned int)*poolElementNodes);
-      for(i = 0;i < *poolElementNodes;i++) {
-         fprintf(stdlog, "#%u: ", (unsigned int)i + 1);
-         ST_CLASS(poolElementNodePrint)(poolElementNodeArray[i],
-                                        stdlog, PENPO_FULL);
-      }
-      fputs("\n", stdlog);
-      LOG_END
-      result = RSPERR_OKAY;
-   }
-   else {
-      result = RSPERR_NOT_FOUND;
-   }
-
-   dispatcherUnlock(asapInstance->StateMachine);
-   return(result);
-}
-
-
 /* ###### Do handle resolution for given pool handle ##################### */
+#define HRES_POOL_ELEMENT_NODE_ARRAY_SIZE 1024
 unsigned int asapInstanceHandleResolution(
-                struct ASAPInstance*               asapInstance,
-                struct PoolHandle*                 poolHandle,
-                struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
-                size_t*                            poolElementNodes)
+                struct ASAPInstance* asapInstance,
+                struct PoolHandle*   poolHandle,
+                void**               nodePtrArray,
+                size_t*              nodePtrs,
+                unsigned int         (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                        void*                             ptr))
 {
-   unsigned int result;
-   const size_t originalPoolElementNodes = *poolElementNodes;
+   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[HRES_POOL_ELEMENT_NODE_ARRAY_SIZE];
+   const size_t                      originalPoolElementNodes = min(HRES_POOL_ELEMENT_NODE_ARRAY_SIZE, *nodePtrs);
+   unsigned int                      result;
 
    LOG_VERBOSE
    fputs("Trying handle resolution from cache...\n", stdlog);
    LOG_END
 
+   *nodePtrs = originalPoolElementNodes;
    result = asapInstanceHandleResolutionFromCache(
                asapInstance, poolHandle,
-               poolElementNodeArray,
-               poolElementNodes,
-               true);
+               nodePtrArray,
+               (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+               nodePtrs, convertFunction, true);
    if(result != RSPERR_OKAY) {
       LOG_VERBOSE
       fputs("No results in cache. Trying handle resolution at registrar...\n", stdlog);
@@ -862,17 +883,14 @@ unsigned int asapInstanceHandleResolution(
 
       /* The amount is now 0 (since handle resolution was not successful).
          Set it to its original value. */
-      *poolElementNodes = originalPoolElementNodes;
+      *nodePtrs = originalPoolElementNodes;
 
-      result = asapInstanceHandleResolutionAtRegistrar(asapInstance, poolHandle, *poolElementNodes);
-      if(result == RSPERR_OKAY) {
-         result = asapInstanceHandleResolutionFromCache(
-                     asapInstance, poolHandle,
-                     poolElementNodeArray,
-                     poolElementNodes,
-                     false);
-      }
-      else {
+      result = asapInstanceHandleResolutionAtRegistrar(
+                  asapInstance, poolHandle,
+                  nodePtrArray,
+                  (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+                  nodePtrs, convertFunction);
+      if(result != RSPERR_OKAY) {
          LOG_VERBOSE
          fputs("Handle resolution not succesful\n", stdlog);
          LOG_END

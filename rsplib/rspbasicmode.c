@@ -327,6 +327,13 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
 }
 
 
+// ###### Conversion function from PoolElementNode to rsp_addrinfo ####### */
+static unsigned int convertPoolElementNode(struct ST_CLASS(PoolElementNode)* poolElementNode, void* ptr)
+{
+   return(poolElementNodeToAddrInfo(poolElementNode, (struct rsp_addrinfo**)ptr));
+}
+
+
 /* ###### Handle resolution ############################################## */
 int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          poolHandleSize,
@@ -334,43 +341,32 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          items,
                          struct TagItem*       tags)
 {
-   struct PoolHandle                 myPoolHandle;
-   struct ST_CLASS(PoolElementNode)* poolElementNodeArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
-   size_t                            poolElementNodes;
-   struct rsp_addrinfo**             lastAddrInfo;
-   unsigned int                      hresResult;
-   int                               result;
-   size_t                            n;
+   struct PoolHandle    myPoolHandle;
+   struct rsp_addrinfo* addrInfoArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
+   size_t               addrInfos;
+   unsigned int         hresResult;
+   int                  result;
+   size_t               n;
 
    *rspAddrInfo = NULL;
    if(gAsapInstance) {
       poolHandleNew(&myPoolHandle, poolHandle, poolHandleSize);
-      poolElementNodes = max(1, min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS));
-
-      asapInstanceLock(gAsapInstance);
+      addrInfos = max(1, min((size_t)items, MAX_MAX_HANDLE_RESOLUTION_ITEMS));
 
       hresResult = asapInstanceHandleResolution(
                       gAsapInstance,
                       &myPoolHandle,
-                      (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
-                      &poolElementNodes);
+                      (void*)&addrInfoArray,
+                      &addrInfos,
+                      convertPoolElementNode);
       if(hresResult == RSPERR_OKAY) {
-         lastAddrInfo = rspAddrInfo;
-         for(n = 0;n < poolElementNodes;n++) {
-            result = poolElementNodeToAddrInfo(poolElementNodeArray[n], lastAddrInfo);
-            if(result != 0) {
-               break;
+         if(addrInfos > 0) {
+            for(n = 0;n < addrInfos - 1;n++) {
+               addrInfoArray[n]->ai_next = addrInfoArray[n + 1];
             }
-            if(*rspAddrInfo != NULL) {
-               lastAddrInfo = &(*lastAddrInfo)->ai_next;
-            }
+            *rspAddrInfo = addrInfoArray[0];
          }
-         if(result == 0) {
-            asapInstanceUnlock(gAsapInstance);
-            return(n);
-         }
-         rsp_freeaddrinfo(*rspAddrInfo);
-         *rspAddrInfo = NULL;
+         return(addrInfos);
       }
       else {
          if(hresResult == RSPERR_NOT_FOUND) {
@@ -380,8 +376,6 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
             result = EAI_SYSTEM;
          }
       }
-
-      asapInstanceUnlock(gAsapInstance);
    }
    else {
       LOG_ERROR
