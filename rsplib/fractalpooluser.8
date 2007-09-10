@@ -75,9 +75,9 @@ Sets the PH to a non-default value; otherwise, the default setting is
 .It Service Parameters:
 .Bl -tag -width indent
 .It Fl configdir=directory
-Sets a directory to look for FGP config files. The file scenario.conf in this
-directory has to contain a list of all FGP files to use. From this list,
-random FGP files are selected for calculation requests.
+Sets a directory to look for FGP config files. From all FGP files
+(pattern: *.fgp) in this directory, random files are selected for the
+calculation of requests.
 .It Fl caption=window_title
 Sets the output window title.
 .It Fl width=pixels

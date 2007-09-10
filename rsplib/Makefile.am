@@ -188,8 +188,7 @@ cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIB
 
 if BUILD_QT_PROGRAMS
 fractalpooluser_MOC      = fractalpooluser.moc.cc
-fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS)
-fractalpooluser_CXXADD   = $(QT_CXXFLAGS)
+fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h $(fractalpooluser_MOC)
 fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 endif

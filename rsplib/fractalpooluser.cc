@@ -65,7 +65,9 @@ using namespace std;
 
 #define DEFAULT_FPU_CAPTION     NULL
 #define DEFAULT_FPU_POOLHANDLE  "FractalGeneratorPool"
+#ifndef DEFAULT_FPU_CONFIGDIR
 #define DEFAULT_FPU_CONFIGDIR   "fgpconfig"
+#endif
 #define DEFAULT_FPU_IMAGEPREFIX ""
 #define DEFAULT_FPU_COLORMARKS  TRUE
 
@@ -109,25 +111,16 @@ FractalPU::FractalPU(const size_t       width,
    FileNumber         = 0;
 
    // ====== Initialize file and directory names ============================
-   ConfigDirectory = QDir(configDirName);
+   ConfigDirectory = QDir(configDirName, "*.fsf", QDir::Name, QDir::Files);
    if(ConfigDirectory.exists() != TRUE) {
       cerr << "WARNING: Configuration directory " << configDirName << " does not exist!" << endl;
       ConfigDirectory = QDir::current();
    }
-   const QString configFileName = ConfigDirectory.filePath("scenarios.conf");
-
-   // ====== Read configuration =============================================
-   QFile configFile(configFileName);
-   if(!configFile.open( IO_ReadOnly ) ) {
-      cerr << "WARNING: Unable to open configuration file "
-                << configFileName << "!" << endl;
-   }
    else {
-      QString buffer;
-      while(!configFile.atEnd()) {
-         configFile.readLine(buffer, 255);
-         buffer = buffer.stripWhiteSpace();
-         ConfigList.append(buffer);
+      QStringList contents = ConfigDirectory.entryList();
+      for(QStringList::Iterator iterator = contents.begin();iterator != contents.end();++iterator) {
+         // std::cout << *iterator << std::endl;
+         ConfigList.append(*iterator);
       }
    }
 
@@ -779,6 +772,7 @@ int main(int argc, char** argv)
    printf("Pool Handle          = %s\n", poolHandle);
    printf("Width                = %u\n", width);
    printf("Height               = %u\n", height);
+   printf("Config Directory     = %s\n", configDirName);
    printf("Send Timeout         = %u [ms]\n", sendTimeout);
    printf("Receive Timeout      = %u [ms]\n", recvTimeout);
    printf("Inter Image Time     = %u [s]\n", interImageTime);

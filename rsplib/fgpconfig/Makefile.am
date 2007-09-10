@@ -1,4 +1,5 @@
-EXTRA_DIST = \
+fgpconfigdir = $(datadir)/fgpconfig
+dist_fgpconfig_DATA = \
 input-100.fsf \
 input-101.fsf \
 input-10.fsf \
@@ -100,5 +101,4 @@ input-5.fsf \
 input-6.fsf \
 input-7.fsf \
 input-8.fsf \
-input-9.fsf \
-scenarios.conf
+input-9.fsf
