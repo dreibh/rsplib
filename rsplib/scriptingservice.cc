@@ -239,8 +239,8 @@ EventHandlingResult ScriptingServer::startWorking()
    printf("Starting work in directory \"%s\"...\n", Directory);
    ChildProcess = fork();
    if(ChildProcess == 0) {
-      execlp("./scriptingservice.sh",
-             "scriptingservice.sh",
+      execlp("scriptingcontrol",
+             "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
       perror("Failed to start script");
       exit(1);

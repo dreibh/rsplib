@@ -831,9 +831,9 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
          fprintf(stdlog, "Failed to establish connection to pool element $%08x (", peIdentifier);
          poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
          fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u)\n",
-               peIdentifier,
-               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-               rserpoolSocket->ConnectedSession->SessionID);
+                 peIdentifier,
+                 rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                 rserpoolSocket->ConnectedSession->SessionID);
          LOG_END
       }
       ext_close(sd);
@@ -949,8 +949,8 @@ int rsp_forcefailover_tags(int             sd,
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo->ai_pe_id;
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
-                                             rserpoolSocket->ConnectedSession,
-                                             0);
+                                           rserpoolSocket->ConnectedSession,
+                                           0);
             }
 
             /* ====== Free handle resolution result ====================== */

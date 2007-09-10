@@ -328,7 +328,9 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
 
 
 // ###### Conversion function from PoolElementNode to rsp_addrinfo ####### */
-static unsigned int convertPoolElementNode(struct ST_CLASS(PoolElementNode)* poolElementNode, void* ptr)
+static unsigned int convertPoolElementNode(
+                       const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                       void*                                   ptr)
 {
    return(poolElementNodeToAddrInfo(poolElementNode, (struct rsp_addrinfo**)ptr));
 }

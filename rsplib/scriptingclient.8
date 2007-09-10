@@ -28,40 +28,63 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd September 11, 2007
-.Dt CSPMonitor 8
-.Os CSP Monitor
+.Dt ScriptingClient 8
+.Os Scripting Client
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm scriptingclient
+.Nd RSerPool Client (PU) for the Scripting service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl compact
-.Op Fl full
+.Nm scriptingclient
+.Op Fl poolhandle=pool_handle
+.Op Fl input=file_name
+.Op Fl output=file_name
+.Op Fl retrydelay=milliseconds
+.Op Fl cspinterval=milliseconds
+.Op Fl cspserver=address:port
 .Op Fl logappend=filename
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
 .Op Fl loglevel=0-9
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm scriptingclient
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the Scripting
+service. The purpose of this service is to distribute input data to a
+scripting PE, execute a script doing some useful work on the input data and
+returning output data. For example, this service can be used for distributed
+simulation processing.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"ScriptingPool".
+.\" ====== Service parameters ===============================================
+.It Service Parameters:
+.Bl -tag -width indent
+.It Fl input=file_name
+Sets the name of the input file to upload to the PE.
+.It Fl output=file_name
+Sets the name of the output file to write the download from the PE to.
+.It Fl retrydelay=milliseconds
+Sets the retry delay upon failover in milliseconds.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -80,7 +103,7 @@ important error messages and warnings.
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm scriptingclient
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################

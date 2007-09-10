@@ -230,8 +230,8 @@ rootshell_LDADD   =
 
 
 # ###### Scripts ############################################################
-dist_bin_SCRIPTS = scriptingservice.sh
+dist_bin_SCRIPTS = scriptingcontrol
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 fractalpooluser.8
+dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 scriptingcontrol.8 scriptingclient.8 fractalpooluser.8

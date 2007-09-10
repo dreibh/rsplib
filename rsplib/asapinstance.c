@@ -677,8 +677,8 @@ static unsigned int asapInstanceHandleResolutionFromCache(
                        void**                             nodePtrArray,
                        struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
                        size_t*                            poolElementNodes,
-                       unsigned int                       (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                                             void*                             ptr),
+                       unsigned int                       (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                                             void*                                   ptr),
                        const bool                         purgeOutOfDateElements)
 {
    unsigned int result;
@@ -750,8 +750,8 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
                                                             void**                             nodePtrArray,
                                                             struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
                                                             size_t*                            poolElementNodes,
-                                                            unsigned int                       (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                                                                                  void*                             ptr))
+                                                            unsigned int                       (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                                                                                  void*                                   ptr))
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
@@ -859,8 +859,8 @@ unsigned int asapInstanceHandleResolution(
                 struct PoolHandle*   poolHandle,
                 void**               nodePtrArray,
                 size_t*              nodePtrs,
-                unsigned int         (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                        void*                             ptr))
+                unsigned int         (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                        void*                                   ptr))
 {
    struct ST_CLASS(PoolElementNode)* poolElementNodeArray[HRES_POOL_ELEMENT_NODE_ARRAY_SIZE];
    const size_t                      originalPoolElementNodes = min(HRES_POOL_ELEMENT_NODE_ARRAY_SIZE, *nodePtrs);

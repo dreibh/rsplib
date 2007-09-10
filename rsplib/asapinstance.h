@@ -179,8 +179,8 @@ unsigned int asapInstanceHandleResolution(
                 struct PoolHandle*   poolHandle,
                 void**               nodePtrArray,
                 size_t*              nodePrts,
-                unsigned int         (*convertFunction)(struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                        void*                             ptr));
+                unsigned int         (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                        void*                                   ptr));
 
 
 #ifdef __cplusplus
