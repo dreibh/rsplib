@@ -239,6 +239,10 @@ EventHandlingResult ScriptingServer::startWorking()
    printf("Starting work in directory \"%s\"...\n", Directory);
    ChildProcess = fork();
    if(ChildProcess == 0) {
+      execlp("./scriptingcontrol",
+             "scriptingcontrol",
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
+      // Try standard location ...
       execlp("scriptingcontrol",
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
