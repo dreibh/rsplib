@@ -91,7 +91,7 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-August 03, 2007
+September 12, 2007
 \end_layout
 
 \begin_layout Standard
@@ -236,11 +236,13 @@ pool handle
 \emph on
 pool registrars
 \emph default
-~(PR).
+ (PR).
  PRs of an 
 \emph on
 operation scope
 \emph default
+ (the domain which is covered by the handlespace, e.g.\InsetSpace ~
+an organization or building)
  synchronize their view of the handlespace using the Endpoint haNdlespace
  Redundancy Protocol (ENRP\InsetSpace ~
 
@@ -255,9 +257,34 @@ operation scope
 \end_inset
 
 .
- An operation scope has a limited range, e.g.\InsetSpace ~
-a company or organization; RSerPool
- does not intend to scale to the whole Internet.
+ 
+\end_layout
+
+\begin_layout Standard
+Unlike already available solutions in the area of GRID and high-performance
+ computing, the fundamental property of RSerPool is to be 
+\begin_inset Quotes eld
+\end_inset
+
+lightweight
+\begin_inset Quotes erd
+\end_inset
+
+, i.e.\InsetSpace ~
+it must also be usable low-performance devices like telecommunications
+ equipment or routers.
+ This property restricts the RSerPool architecture to the management of
+ pools and sessions only, but on the other hand makes a very efficient realizati
+on possible\InsetSpace ~
+
+\begin_inset LatexCommand \cite{FGCN2007-HsMgt,Contel2005}
+
+\end_inset
+
+.
+ In particular, an operation scope has a limited range, e.g.\InsetSpace ~
+a company or organizat
+ion; RSerPool does not intend to scale to the whole Internet.
  Nevertheless, it is assumed that PEs can be distributed globally, for their
  service to survive localized disasters\InsetSpace ~
 
@@ -272,7 +299,7 @@ a company or organization; RSerPool
 PEs choose an arbitrary PR to register into a pool by using the Aggregate
  Server Access Protocol (ASAP\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param}
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param,draft-dreibholz-rserpool-asap-hropt}
 
 \end_inset
 
@@ -295,9 +322,10 @@ A client is called
 (PU) in RSerPool terminology.
  To access the service of a pool given by its PH, a PE has to be selected.
  This selection procedure -- called 
-\backslash
-emph{handle resolution} -- is performed by an arbitrary PR of the operation
- scope.
+\emph on
+handle resolution
+\emph default
+ -- is performed by an arbitrary PR of the operation scope.
  A PU can request a handle resolution from a PR using the ASAP protocol.
  The PR selects PE identities by using a pool-specific server selection
  rule, denoted as 
@@ -305,13 +333,13 @@ emph{handle resolution} -- is performed by an arbitrary PR of the operation
 emph{pool policy}.
  A set of adaptive and non-adaptive pool policies is defined in\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-policies}
+\begin_inset LatexCommand \cite{draft-ietf-rserpool-policies,draft-dreibholz-rserpool-delay}
 
 \end_inset
 
 ; for a detailed discussion of these policies, see\InsetSpace ~
 
-\begin_inset LatexCommand \cite{Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005}
+\begin_inset LatexCommand \cite{Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005,ADCOM2007,FGCN2007-LoadBalancing}
 
 \end_inset
 
@@ -512,9 +540,9 @@ tar xzf socketapi-<version>.tar.gz
 \end_layout
 
 \begin_layout Standard
-cd 
+
 \family typewriter
-socketapi-<version>
+cd socketapi-<version>
 \end_layout
 
 \begin_layout Standard
@@ -576,6 +604,10 @@ rsplib
 \end_layout
 
 \begin_layout Subsubsection
+\begin_inset LatexCommand \label{sub:Preparation-Work}
+
+\end_inset
+
 Preparation Work
 \end_layout
 
@@ -608,10 +640,13 @@ The Component Status Protocol\InsetSpace ~
  You can set a default address and report interval for CSP by defining two
  environment variables:
 \newline
+
+\family typewriter
 CSP_SERVER=<Address>:<Port>
 \newline
-CSP_INTERVAL=<Report interval
- in milliseconds>
+CSP_INTERVAL=<Report interval in milliseconds>
+\family default
+
 \newline
 Useful settings are CSP_SERVER=127.0.0.1:2960 and CSP_INTERVAL=333.
 \end_layout
@@ -734,6 +769,10 @@ rsplib
 \end_layout
 
 \begin_layout Subsubsection
+\begin_inset LatexCommand \label{sub:Configuration-and-Installation}
+
+\end_inset
+
 Configuration and Installation
 \end_layout
 
@@ -749,7 +788,7 @@ rsplib
 \end_inset
 
  (
-\begin_inset LatexCommand \htmlurl[http://tdrwww.iem.uni-due.de/dreibholz/rserpool]{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
+\begin_inset LatexCommand \htmlurl{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
 
 \end_inset
 
@@ -809,16 +848,19 @@ You may use the following options:
  out the directory.
  It is recommended to add the setting of QTDIR to your shell configuration
  (usually ~/.bashrc).
-\end_layout
-
-\begin_layout Description
---disable-qt: Disables Qt usage; the Fractal Generator client will *not*
- be available.
  (
 \series bold
 default
 \series default
 )
+\end_layout
+
+\begin_layout Description
+--disable-qt: Disables Qt usage; the Fractal Generator client will 
+\series bold
+not
+\series default
+ be available.
 \end_layout
 
 \begin_layout Description
@@ -895,6 +937,283 @@ rsplib
 \begin_layout Standard
 --disable-shared --enable-static --enable-qt --enable-csp --enable-maintainer-mo
 de
+\end_layout
+
+\begin_layout Standard
+\noindent
+The 
+\noun on
+rsplib
+\noun default
+ package also provides filter and coloring rules for 
+\noun on
+Wireshark
+\noun default
+\InsetSpace ~
+
+\begin_inset LatexCommand \cite{WiresharkUsersGuide}
+
+\end_inset
+
+.
+ You can find them in the rsplib/wireshark/ subdirectory.
+ Just copy the files 
+\begin_inset Quotes eld
+\end_inset
+
+dfilters
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+colorfilters
+\begin_inset Quotes erd
+\end_inset
+
+ to your 
+\noun on
+Wireshark
+\noun default
+ settings directory: ~/.wireshark (Ubuntu/Debian) or /root/.wireshark (you
+ need root permission to do so, i.e.\InsetSpace ~
+use 
+\begin_inset Quotes eld
+\end_inset
+
+sudo
+\begin_inset Quotes erd
+\end_inset
+
+!).
+ Optionally, you can also copy the file 
+\begin_inset Quotes eld
+\end_inset
+
+preferences
+\begin_inset Quotes erd
+\end_inset
+
+ (if you do not have your own preferences configured yet, otherwise this
+ would overwrite them!).
+ You do 
+\series bold
+not
+\series default
+ need to install the provided dissectors, they have already contributed
+ to the 
+\noun on
+Wireshark
+\noun default
+ developers and are included already!
+\end_layout
+
+\begin_layout Subsection
+\begin_inset LatexCommand \label{sub:Testing-the-Installation}
+
+\end_inset
+
+Testing the Installation
+\end_layout
+
+\begin_layout Standard
+To perform a test of the installation, start the following programs in the
+ rsplib/ subdirectory of the 
+\noun on
+rsplib
+\noun default
+ package:
+\end_layout
+
+\begin_layout Enumerate
+Start the CSP monitor, it will print out useful information about the components
+ started:
+\family typewriter
+
+\newline
+./cspmonitor
+\end_layout
+
+\begin_layout Enumerate
+First, start a registrar:
+\family typewriter
+
+\newline
+./registrar
+\end_layout
+
+\begin_layout Enumerate
+Start a PE for the Fractal Generator service:
+\family typewriter
+
+\newline
+./server -fractal
+\newline
+
+\family default
+The PE should find the PR and show its PE\InsetSpace ~
+ID upon startup.
+ When it shows the ID, it has successfully registered.
+ If something does not work, use the parameter -loglevel=5 to increase the
+ verbosity of the log output.
+ Also refer to subsection\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sub:Preparation-Work}
+
+\end_inset
+
+ to check your system configuration.
+\newline
+Have a look at the CSP monitor output.
+ It should show the PR and PE.
+\end_layout
+
+\begin_layout Enumerate
+Start a PU for the Fractal Generator service:
+\family typewriter
+
+\newline
+./fractalpooluser
+\family default
+
+\newline
+You should now see the calculation progress in the PU's window.
+ Also have a look at the CSP monitor output; it should show the PU.
+\end_layout
+
+\begin_layout Enumerate
+Start more PEs, PUs and PRs.
+ You can turn on the 
+\begin_inset Quotes eld
+\end_inset
+
+unreliable mode
+\begin_inset Quotes erd
+\end_inset
+
+ of the PE using the parameter -fgpfailureafter=20.
+ When all PEs are in unreliable mode, you should see the failovers.
+ You can also abort and restart the PRs.
+ Also have a look at the CSP monitor output.
+\end_layout
+
+\begin_layout Enumerate
+Start 
+\noun on
+Wireshark
+\noun default
+, sniff on the 
+\begin_inset Quotes eld
+\end_inset
+
+lo
+\begin_inset Quotes erd
+\end_inset
+
+ (loopback, only local traffic) or the 
+\begin_inset Quotes erd
+\end_inset
+
+any
+\begin_inset Quotes erd
+\end_inset
+
+ interface.
+ If you have set up the filter and coloring rules (see subsection\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sub:Testing-the-Installation}
+
+\end_inset
+
+), you can select some useful filters and get the RSerPool traffic nicely
+ colorized.
+\end_layout
+
+\begin_layout Section
+The Programs
+\end_layout
+
+\begin_layout Standard
+All installable programs in the rsplib/ subdirectory also have a manual
+ page (suffix:\InsetSpace ~
+.8).
+ You can view the manual page in the rsplib/ directory using
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+man ./<program name>.8
+\end_layout
+
+\begin_layout Standard
+\noindent
+After installation (make install, see subsection\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sub:Configuration-and-Installation}
+
+\end_inset
+
+), the manual pages will also be available directly.
+\end_layout
+
+\begin_layout Standard
+The programs included in rsplib/ subdirectory have the following purposes:
+\end_layout
+
+\begin_layout Description
+registrar The PR implementation.
+\end_layout
+
+\begin_layout Description
+server A PE which provides multiple services.
+ The actual service started is given by command-line parameter.
+\end_layout
+
+\begin_layout Description
+cspmonitor The CSP monitor program to view status information of running
+ components.
+\end_layout
+
+\begin_layout Description
+terminal A simple PU for services like Echo, Discard, Daytime and CharGen.
+\end_layout
+
+\begin_layout Description
+hsdump A ENRP-based test utility to dump the handlespace of a PR.
+\end_layout
+
+\begin_layout Description
+pingpongclient A simple PU for a request-response example service with cookie-ba
+sed failover\InsetSpace ~
+
+\begin_inset LatexCommand \cite{LCN2002}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+calcappclient The PU for the CalcApp service used for performance measurements
+ (see\InsetSpace ~
+
+\begin_inset LatexCommand \cite{Dre2006,KiVS2007}
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Description
+fractalpooluser The PU for the FractalGenerator service.
+\end_layout
+
+\begin_layout Description
+scriptingclient The PU for the scripting service (remote script execution
+ with input/output data transfer).
 \end_layout
 
 \begin_layout Section
