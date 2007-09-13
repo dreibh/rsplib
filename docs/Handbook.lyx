@@ -408,7 +408,7 @@ sctp
 \begin_layout Standard
 
 \family typewriter
-apt-get install libsctp-dev
+sudo apt-get install libsctp-dev
 \end_layout
 
 \begin_layout Subsubsection
@@ -502,7 +502,11 @@ Useful options are
 \begin_inset Quotes eld
 \end_inset
 
+
+\family typewriter
 --enable-static --disable-shared --enable-maintainer-mode
+\family default
+
 \begin_inset Quotes erd
 \end_inset
 
@@ -525,7 +529,11 @@ memory leak detection using Valgrind\InsetSpace ~
 \begin_inset Quotes eld
 \end_inset
 
+
+\family typewriter
 --enable-sctp-over-udp
+\family default
+
 \begin_inset Quotes erd
 \end_inset
 
@@ -569,7 +577,11 @@ Again, you can use
 \begin_inset Quotes eld
 \end_inset
 
+
+\family typewriter
 --enable-static --disable-shared --enable-maintainer-mode
+\family default
+
 \begin_inset Quotes erd
 \end_inset
 
@@ -578,7 +590,11 @@ Again, you can use
 \begin_inset Quotes eld
 \end_inset
 
+
+\family typewriter
 --enable-sctp-over-udp
+\family default
+
 \begin_inset Quotes erd
 \end_inset
 
@@ -836,8 +852,20 @@ You may use the following options:
 \end_layout
 
 \begin_layout Description
---enable-qt Enables Qt usage; this is necessary for the Fractal Generator
- client.
+
+\family typewriter
+--enable-kernel-sctp
+\family default
+ Enables usage of kernel SCTP.
+ Otherwise, userland SCTP is used.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+--enable-qt
+\family default
+ Enables Qt usage; this is necessary for the Fractal Generator client.
  Without Qt, the client's compilation will be skipped.
  The ./configure script expects the environment variable QTDIR set to the
  Qt directory.
@@ -856,7 +884,11 @@ default
 \end_layout
 
 \begin_layout Description
---disable-qt: Disables Qt usage; the Fractal Generator client will 
+
+\family typewriter
+--disable-qt
+\family default
+ Disables Qt usage; the Fractal Generator client will 
 \series bold
 not
 \series default
@@ -864,25 +896,43 @@ not
 \end_layout
 
 \begin_layout Description
---enable-shared: Create a shared library.
+
+\family typewriter
+--enable-shared
+\family default
+ Create a shared library.
 \end_layout
 
 \begin_layout Description
---disable-shared: Disable the creation of a shared library (recommended
- for debugging).
+
+\family typewriter
+--disable-shared
+\family default
+ Disable the creation of a shared library (recommended for debugging).
 \end_layout
 
 \begin_layout Description
---enable-static: Create a static library (recommended for debugging).
+
+\family typewriter
+--enable-static
+\family default
+ Create a static library (recommended for debugging).
 \end_layout
 
 \begin_layout Description
---disable-static: Disable the creation of a static library.
+
+\family typewriter
+--disable-static
+\family default
+ Disable the creation of a static library.
 \end_layout
 
 \begin_layout Description
---enable-maintainer-mode: Enable the creation of debug symbols (-g) and
- turn off compiler optimization.
+
+\family typewriter
+--enable-maintainer-mode
+\family default
+ Enable the creation of debug symbols (-g) and turn off compiler optimization.
  Necessary for debugging, but makes programs much larger and slower.
  (
 \series bold
@@ -892,19 +942,31 @@ default
 \end_layout
 
 \begin_layout Description
---disable-maintainer-mode: Disables maintainer mode.
+
+\family typewriter
+--disable-maintainer-mode
+\family default
+ Disables maintainer mode.
  The code will be optimized and without debugging symbols.
  Node: Please turn on the maintainer mode if you discover any problems and
  report bugs to us!
 \end_layout
 
 \begin_layout Description
---enable-hsmgtverify: Enable Handlespace Management verification.
+
+\family typewriter
+--enable-hsmgtverify
+\family default
+ Enable Handlespace Management verification.
  This is useful for debugging only; it makes the very PR slow!
 \end_layout
 
 \begin_layout Description
---disable-hsmgtverify: Turns off Handlespace Management verification.
+
+\family typewriter
+--disable-hsmgtverify
+\family default
+ Turns off Handlespace Management verification.
  (
 \series bold
 default
@@ -913,8 +975,11 @@ default
 \end_layout
 
 \begin_layout Description
---enable-csp: Enable the Component Status Protocol support (strongly recommended
-!) (
+
+\family typewriter
+--enable-csp
+\family default
+ Enable the Component Status Protocol support (strongly recommended!) (
 \series bold
 default
 \series default
@@ -922,7 +987,11 @@ default
 \end_layout
 
 \begin_layout Description
---disable-csp: Turns the Component Status Protocol support off.
+
+\family typewriter
+--disable-csp
+\family default
+ Turns the Component Status Protocol support off.
  
 \end_layout
 
@@ -935,8 +1004,10 @@ rsplib
 \end_layout
 
 \begin_layout Standard
---disable-shared --enable-static --enable-qt --enable-csp --enable-maintainer-mo
-de
+
+\family typewriter
+--enable-kernel-sctp --disable-shared --enable-static --enable-qt --enable-csp
+ --enable-maintainer-mode
 \end_layout
 
 \begin_layout Standard
