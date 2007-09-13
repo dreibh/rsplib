@@ -224,10 +224,9 @@ C.3 Fractal Client (for the Fractal Generator service)
 
 ./fractalpooluser
 
--configdir=Directory: Sets the directory with the fractal graphics parameter
-                      files. The file scenarios.conf has to include a list of
-                      parameter files. The actual parameter file used for an
-                      image is randomly selected from this list.
+-configdir=Directory: Sets a directory to look for FGP config files. From all FGP files
+                      (pattern: *.fgp) in this directory, random files are selected for the
+                      calculation of requests.
 
 -threads=Count:       Sets the number of parallel sessions for the calculation
                       of an image.
@@ -349,4 +348,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-23.07.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+13.09.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
