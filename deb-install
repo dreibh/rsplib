@@ -28,9 +28,13 @@
 # Contact: dreibh@iem.uni-due.de
 
 sudo dpkg -i \
-   libcpprspserver_*.deb \
+   libcpprspserver2_*.deb \
    libcpprspserver-dev_*.deb \
-   librsplib_*.deb \
+   librsplib2_*.deb \
    librsplib-dev_*.deb \
    rsplib-registrar_*.deb \
-   rsplib-tools_*.deb
+   rsplib-tools_*.deb \
+   rsplib-pingpongservice_*.deb \
+   rsplib-fgpservice_*.deb \
+   rsplib-calcappservice_*.deb \
+   rsplib-scriptingservice_*.deb

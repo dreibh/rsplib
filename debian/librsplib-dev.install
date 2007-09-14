@@ -1,0 +1,7 @@
+debian/tmp/usr/lib/librsplib*.so
+debian/tmp/usr/lib/librsplib*.a
+debian/tmp/usr/lib/librsplib*.la
+debian/tmp/usr/include/rserpool/rserpool.h
+debian/tmp/usr/include/rserpool/rserpool-internals.h
+debian/tmp/usr/include/rserpool/rserpool-policytypes.h
+debian/tmp/usr/include/rserpool/tagitem.h

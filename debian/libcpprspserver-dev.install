@@ -1,3 +1,6 @@
+debian/tmp/usr/lib/libcpprspserver.so
+debian/tmp/usr/lib/libcpprspserver.a
+debian/tmp/usr/lib/libcpprspserver.la
 debian/tmp/usr/include/rserpool/cpprspserver.h
 debian/tmp/usr/include/rserpool/mutex.h
 debian/tmp/usr/include/rserpool/tcplikeserver.h

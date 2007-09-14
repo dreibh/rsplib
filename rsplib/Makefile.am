@@ -118,7 +118,6 @@ netdouble.c \
 netdouble.h
 librsplib_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   -release $(RSPLIB_RELEASE) \
    $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
 
 
@@ -138,7 +137,6 @@ udplikeserver.h
 libcpprspserver_la_LIBADD  = librsplib.la
 libcpprspserver_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   -release $(RSPLIB_RELEASE) \
    $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
 
 

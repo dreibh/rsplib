@@ -1,9 +1,4 @@
 debian/tmp/usr/share/man/man8/server.8
 debian/tmp/usr/share/man/man8/terminal.8
 debian/tmp/usr/share/man/man8/cspmonitor.8
-debian/tmp/usr/share/man/man8/calcappclient.8
-debian/tmp/usr/share/man/man8/pingpongclient.8
-debian/tmp/usr/share/man/man8/scriptingclient.8
-debian/tmp/usr/share/man/man8/scriptingcontrol.8
-debian/tmp/usr/share/man/man8/fractalpooluser.8
 debian/tmp/usr/share/man/man8/hsdump.8
