@@ -27,5 +27,9 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-sed -e "s/<MaxIterations>500<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" -e "s/<MaxIterations>100<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" -e "s/<MaxIterations>250<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" $1 >$1.new
+sed -e "s/<MaxIterations>100<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" \
+    -e "s/<MaxIterations>250<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" \
+    -e "s/<MaxIterations>400<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" \
+    -e "s/<MaxIterations>500<\/MaxIterations>/<MaxIterations>1000<\/MaxIterations>/g" \
+    $1 >$1.new
 mv $1.new $1

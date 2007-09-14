@@ -29,9 +29,11 @@
 
 FILES=`ls *.fsf`
 
-number=0
+number=1
 for filename in $FILES ; do
-   echo "svn move $filename input-$number.fsf"
-   svn --force move $filename input-$number.fsf
+   newNumber="`printf "%03d" "$number"`"
+   newName="input-$newNumber.fsf"
+   echo "svn move $filename input-$newNumber.fsf"
+   svn --force move $filename $newName
    let number=$number+1
 done
