@@ -202,7 +202,7 @@ testregistrator_SOURCES = testregistrator.c
 testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 combinesummaries_SOURCES = combinesummaries.cc
-combinesummaries_LDADD   = -lbz2
+combinesummaries_LDADD   = $(bz2_LIBS)
 
 fork_SOURCES = fork.c
 fork_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
@@ -227,8 +227,8 @@ rootshell_LDADD   =
 
 
 # ###### Scripts ############################################################
-dist_bin_SCRIPTS = scriptingcontrol
+dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 scriptingcontrol.8 scriptingclient.8 fractalpooluser.8
+dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 scriptingcontrol.8 scriptingserviceexample.8 scriptingclient.8 fractalpooluser.8

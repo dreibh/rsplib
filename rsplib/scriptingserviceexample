@@ -1,0 +1,106 @@
+#!/bin/bash
+# $Id$
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2007 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+if [ $# -lt 1 ] ; then
+   echo "Usage: ssdistribute [Unique ID]"
+   exit 1
+fi
+DIRECTORY="."
+UNIQUE_ID="$1"
+POOLHANDLE="ScriptingPool"
+
+
+SS_TEMPDIR="ssTEMP-$UNIQUE_ID"
+SS_IN_NAME="ssIN-$UNIQUE_ID.tar.gz"
+SS_OUT_NAME="ssOUT-$UNIQUE_ID.tar.gz"
+
+# This is the run script.
+SS_RUNSCRIPT=" \
+ OUTPUT_ARCHIVE=\$1
+ echo \"This is the run script!\" && \
+ echo \"   + Output will be written to \\\"\$OUTPUT_ARCHIVE\\\" ...\" && \
+ echo \"   + Input string is \\\"\`cat my-input.data\`\\\"\" && \
+ \
+ echo \"   + Simulating some work (your program may do something more useful here!)\" && \
+ date >my-output.data && \
+ sleep 0.5 && \
+ \
+ echo \"   + Writing results archive \\\"\$OUTPUT_ARCHIVE\\\" ...\" && \
+ tar czvf \$OUTPUT_ARCHIVE my-output.data && \
+ \
+ echo \"   + Script processing successfully finished!\"
+"
+
+
+echo "Preparing input ..." && \
+if [ -e "$DIRECTORY/$SS_TEMPDIR" ] ; then
+   rm -rf "$DIRECTORY/$SS_TEMPDIR"
+fi
+echo "   + Creating directory \"$DIRECTORY/$SS_TEMPDIR\"" && \
+mkdir "$DIRECTORY/$SS_TEMPDIR" && \
+echo "   + Changing to directory \"$DIRECTORY/$SS_TEMPDIR\" ..." && \
+cd "$DIRECTORY/$SS_TEMPDIR" &&  \
+\
+echo "   + Writing input file \"my-input.data\" ..." && \
+echo "This is an example input for ID $UNIQUE_ID" >my-input.data && \
+\
+echo "   + Writing runscript \"ssrun\" ..." && \
+echo "$SS_RUNSCRIPT" >ssrun && \
+\
+echo "   + Archiving \"ssrun\" and \"my-input.data\" into \"$SS_IN_NAME\" ..." && \
+tar chzf ../$SS_IN_NAME ssrun my-input.data && \
+cd .. || exit 1
+
+
+
+echo "Distributing and processing ..."
+echo "   + Input file is \"$SS_IN_NAME\""
+echo "   + Output will be written into \"$SS_OUT_NAME\""
+echo "   + Calling scriptingclient ..."
+echo ""
+
+env PATH=$PATH:. scriptingclient -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE || exit 1
+echo "   + scriptingclient has returned"
+
+
+
+echo "Extracting ..."
+if [ -s "$SS_OUT_NAME" ] ; then
+   echo "   + Unpacking output file \"$SS_OUT_NAME\" ..."
+   ( tar xzvf "$SS_OUT_NAME" | xargs touch ) || exit 1   # This will also update the time stamp!
+   echo "   + Results string is \"`cat my-output.data`\""
+   echo "   + Removing temporary files $SS_IN_NAME and $SS_OUT_NAME ..."
+   rm -f $SS_IN_NAME $SS_OUT_NAME
+   echo "   + Removing temporary directory $SS_TEMPDIR"
+   rm -rf $SS_TEMPDIR
+   exit 0
+else
+   echo "ERROR: No results have been created in directory $DIRECTORY!"
+   exit 1
+fi

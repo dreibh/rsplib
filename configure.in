@@ -1,8 +1,33 @@
-# ###########################################################################
-# rsplib package configuration
 # $Id$
-# ###########################################################################
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2007 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
 
+
+# ###### Basic setup ########################################################
 AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_HOST
@@ -460,6 +485,15 @@ else
 fi
 
 
+# ###### Check for BZip2 library ############################################
+oldLIBS=$LIBS
+LIBS=
+AC_SEARCH_LIBS([BZ2_bzReadOpen], [bz2])
+bz2_LIBS=$LIBS
+$LIBS=$oldLIBS
+AC_CHECK_HEADERS([bzlib.h])
+
+
 # ###### Maintainer mode ####################################################
 if test "$enable_maintainer_mode" = "yes"; then
    CFLAGS="$CFLAGS -Wall -g3 -O0 -D_REENTRANT -D_THREAD_SAFE -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE"
@@ -499,6 +533,7 @@ echo "   sctplib Libraries               : $sctplib_LIBS"
 echo "   socketapi Libraries             : $socketapi_LIBS"
 echo "   glib Libraries                  : $glib_LIBS"
 echo "   Thread Libraries                : $thread_LIBS"
+echo "   BZip2 Libraries                 : $bz2_LIBS"
 echo ""
 echo "   CFLAGS                          : $CFLAGS"
 echo "   CXXFLAGS                        : $CXXFLAGS"
