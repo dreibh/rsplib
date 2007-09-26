@@ -309,7 +309,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             else {
                puts("off");
             }
-            printf("   Max Threads             = %u\n", maxThreads);
+            printf("   Max Threads             = %u\n", (unsigned int)maxThreads);
             puts("   Policy Settings");
             printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
             printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
