@@ -358,7 +358,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
       hresResult = asapInstanceHandleResolution(
                       gAsapInstance,
                       &myPoolHandle,
-                      (void*)&addrInfoArray,
+                      (void**)&addrInfoArray,
                       &addrInfos,
                       convertPoolElementNode);
       if(hresResult == RSPERR_OKAY) {

@@ -102,8 +102,8 @@ int main(int argc, char** argv)
    unsigned long long timeout;
    unsigned int       distribution = DIST_UNIFORM;
    int                termSignal   = SIGINT;
+   int                progarg;
    size_t             count;
-   size_t             progarg;
    size_t             i, j;
 
    if(argc < 3) {

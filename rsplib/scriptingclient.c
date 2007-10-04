@@ -219,7 +219,7 @@ int main(int argc, char** argv)
                   else {
                      header = (const struct ScriptingCommonHeader*)buffer;
                      if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
-                         (received >= sizeof(struct ScriptingCommonHeader)) &&
+                         (received >= (ssize_t)sizeof(struct ScriptingCommonHeader)) &&
                          (ntohs(header->Length) == received) ) {
                         switch(header->Type) {
                            /* ====== Download message ==================== */
