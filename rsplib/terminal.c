@@ -125,7 +125,8 @@ int main(int argc, char** argv)
                   puts("\x1b[0m");
                   if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                      (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                     printf("FAILOVER #%u...\n", ++failovers);
+                     failovers++;
+                     printf("FAILOVER #%u ...\n", (unsigned int)failovers);
 /*static int yyy=0;yyy++;
 if(yyy>=2) exit(1);*/
                      /* usleep(200000); */

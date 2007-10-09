@@ -49,6 +49,7 @@
 #include <sys/time.h>
 #include <inttypes.h>
 #include <netinet/in.h>
+#include <poll.h>
 
 
 #ifndef IPPROTO_SCTP
@@ -57,7 +58,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  0x2
-#define SOCKETAPI_MINOR_VERSION  0x1000
+#define SOCKETAPI_MINOR_VERSION  0x1100
 
 
 /*
@@ -70,15 +71,23 @@
 #ifndef MSG_NOTIFICATION
 #define MSG_NOTIFICATION  MSG_OOB
 #endif
-#define MSG_ABORT         MSG_RST
 #ifndef MSG_EOF
 #define MSG_EOF           MSG_FIN
 #endif
 #define MSG_SHUTDOWN      MSG_EOF
+#define MSG_MULTIADDRS    MSG_TRUNC
+
+#ifdef MSG_RST
+#define MSG_ABORT         MSG_RST
 #define MSG_PR_SCTP_TTL   MSG_ERRQUEUE
 #define MSG_ADDR_OVER     MSG_MORE
 #define MSG_SEND_TO_ALL   MSG_PROXY
-#define MSG_MULTIADDRS    MSG_TRUNC
+#else
+#define MSG_ABORT         MSG_HOLD
+#define MSG_PR_SCTP_TTL   MSG_FLUSH
+#define MSG_ADDR_OVER     MSG_SEND
+#define MSG_SEND_TO_ALL   MSG_HAVEMORE
+#endif
 
 #define SCTP_UNORDERED    MSG_UNORDERED
 #define SCTP_UNBUNDLED    MSG_UNBUNDLED
@@ -413,23 +422,6 @@ ssize_t ext_sendmsg(int s, const struct msghdr* msg, int flags);
 ssize_t ext_read(int fd, void* buf, size_t count);
 ssize_t ext_write(int fd, const void* buf, size_t count);
 int ext_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout);
-
-#if defined(__APPLE__)
-#define POLLIN  0x001
-#define POLLPRI 0x002
-#define POLLOUT 0x004
-#define POLLERR 0x008
-#define POLLHUP 0x010
-
-struct pollfd {
-   int       fd;
-   short int events;
-   short int revents;
-};
-#else
-#include <sys/poll.h>
-#endif
-
 int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 
 
@@ -549,14 +541,7 @@ int sctp_enableCRC32(const unsigned int enable);
 #define ext_read(a,b,c) ::read(a,b,c)
 #define ext_write(a,b,c) ::write(a,b,c)
 #define ext_select(a,b,c,d,e) ::select(a,b,c,d,e)
-#ifdef USE_SELECT
-extern "C" {
-#include <poll.h>
-int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
-}
-#else
 #define ext_poll(a,b,c) ::poll(a,b,c)
-#endif
 #define ext_pipe(a) ::pipe(a)
 #else
 #define ext_socket(a,b,c) socket(a,b,c)
@@ -581,12 +566,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #define ext_read(a,b,c) read(a,b,c)
 #define ext_write(a,b,c) write(a,b,c)
 #define ext_select(a,b,c,d,e) select(a,b,c,d,e)
-#ifdef USE_SELECT
-#include <poll.h>
-int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
-#else
 #define ext_poll(a,b,c) poll(a,b,c)
-#endif
 #define ext_pipe(a) pipe(a)
 #endif
 

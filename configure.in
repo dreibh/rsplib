@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 {
    unsigned int version = socketAPIGetVersion();
    printf("Version is %u.%04x\n", (version >> 16), version & 0xffff);
-   if(version >= 0x21000) {
+   if(version >= 0x21100) {
       return(0);
    }
    return(1);
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
    good)
       ;;
    bad|*)
-      AC_MSG_ERROR([You need at least version 2.100 of the socketapi library!])
+      AC_MSG_ERROR([You need at least version 2.110 of the socketapi library!])
       ;;
    esac
 
