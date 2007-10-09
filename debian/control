@@ -35,7 +35,7 @@ Package: librsplib-dev
 Section: libdevel
 Priority: optional
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib2 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib2
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
@@ -86,7 +86,7 @@ Package: libcpprspserver-dev
 Section: libdevel
 Priority: optional
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver2 (= ${Source-Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver2
 Description: rsplib is the Open Source implementation of the IETF Reliable
  Server Pooling (RSerPool) architecture, a novel framework for pool and
  session management. This package contains the development files for the
