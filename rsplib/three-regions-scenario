@@ -72,7 +72,7 @@ startNetwork ()
    for pr in $localPRs ; do
       if [ ! $number -gt $localPRLimit ] ; then
          echo "Starting PR on $pr ..."
-         ./start-process "Registrar-$TESTID-$number" "./rootshell -c \"./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers $OPT_CSP\" >$TESTID-pr$number-$pr.log 2>&1" $pr &
+         ./start-process "Registrar-$TESTID-$number" "./registrar $PR_MISCOPT -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers $OPT_CSP >$TESTID-pr$number-$pr.log 2>&1" $pr &
          let number=$number+1
 #       else
 #          echo "Skipping PR $pr!"
@@ -91,7 +91,7 @@ startNetwork ()
       for pe in $localPEs ; do
          if [ ! $number -gt $localPELimit ] ; then
             echo "Starting PE on $pe ..."
-            ./start-process "PoolElement-$TESTID-$number" "./rootshell -c \"./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP\" >$TESTID-pe$number-$pe.log 2>&1" $pe &
+            ./start-process "PoolElement-$TESTID-$number" "./server $PE_MISCOPT $optRegistrars -capvector=$TESTID-pe$number-$pe.vec -capscalar=$TESTID-pe$number-$pe.sca -capobject=PE-$number-$pe $OPT_CSP >$TESTID-pe$number-$pe.log 2>&1" $pe &
             let number=$number+1
 #          else
 #             echo "Skipping PE $pe!"
@@ -109,7 +109,7 @@ startNetwork ()
       for pu in $localPUs ; do
          if [ ! $number -gt $localPULimit ] ; then
             echo "Starting PU on $pu ..."
-            ./start-process "PoolUser-$TESTID-$number" "./rootshell -c \"./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP\" >$TESTID-pu$number-$pu.log 2>&1" $pu &
+            ./start-process "PoolUser-$TESTID-$number" "./calcappclient $PU_MISCOPT $optRegistrars -vector=$TESTID-pu$number-$pu.vec -scalar=$TESTID-pu$number-$pu.sca -object=PU-$number-$pu $OPT_CSP >$TESTID-pu$number-$pu.log 2>&1" $pu &
             let number=$number+1
 #          else
 #             echo "Skipping PU $pu!"
@@ -271,7 +271,7 @@ elif [ "x$5" = "xresults" ] ; then
    echo "Fetching results!"
    echo $PU_ALL $PE_ALL $PR_ALL | sort -u | xargs ./get-results $TESTID
    ./combine-vectors $TESTID
-   tar czf $TESTID.tar.gz $TESTID p?-*.hosts test5
+   tar czf $TESTID.tar.gz $TESTID p?-*.hosts
 else
    echo "ERROR: Bad parameter!"
 fi
