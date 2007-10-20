@@ -149,6 +149,7 @@ ssize_t sctp_sendx(int                           sd,
 
 #ifdef USE_SELECT
 #warning Using poll() to select() wrapper. This is inefficient!
+#include <poll.h>
 int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 {
    // ====== Prepare timeout setting ========================================
