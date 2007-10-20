@@ -43,7 +43,7 @@ extern "C" {
 struct ThreadSafety
 {
    pthread_mutex_t Mutex;
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__) 
    pthread_t       MutexOwner;
    unsigned int    MutexRecursionLevel;
 #endif

@@ -39,7 +39,7 @@ static unsigned long long gMutexCounter = 0;
 void threadSafetyNew(struct ThreadSafety* threadSafety,
                      const char*          name)
 {
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
    pthread_mutexattr_t attr;
    pthread_mutexattr_init(&attr);
    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
