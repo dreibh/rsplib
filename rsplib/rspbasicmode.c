@@ -312,7 +312,7 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
                   fprintf(stdlog, "Bad address type #%d\n",
                            poolElementNode->UserTransport->AddressArray[i].sa.sa_family);
                   LOG_END_FATAL
-                  result = EAI_ADDRFAMILY;
+                  result = EAI_FAMILY;
                 break;
             }
          }
