@@ -35,6 +35,8 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <signal.h>
 
 
 #define INPUT_NAME  "input.data"
