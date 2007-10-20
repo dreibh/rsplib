@@ -53,13 +53,14 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+#ifdef HAVE_SYS_INTTYPES_H
+#include <sys/inttypes.h>
+#endif
 #ifdef FreeBSD
 #include <machine/endian.h>
-#include <sys/inttypes.h>
 #endif
 #ifdef DARWIN
 #include <machine/endian.h>
-#include <stdint.h>
 #endif
 
 
