@@ -8,6 +8,8 @@ if [ -e /usr/bin/glibtoolize ] ; then
     glibtoolize --force
 elif [ -e /usr/bin/libtoolize ] ; then
     libtoolize --force
+elif [ -e /usr/local/bin/libtoolize ] ; then
+    libtoolize --force
 else
    echo "ERROR: I cannot find libtoolize or glibtoolize!"
    exit 1
