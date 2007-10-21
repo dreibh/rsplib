@@ -49,10 +49,10 @@ tar xzf $INPUT/$PACKAGE-$VERSION.tar.gz && \
 cd $PACKAGE-$VERSION && \
 cp -r $INPUT/debian . && \
 rm -rf debian/.svn && \
-debuild -us -uc
+# debuild -us -uc
 
 # Wichtig: Diese Zeile verwenden für Signatur!
-# debuild -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
+debuild -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
 
 
 # Wichtig: In /etc/pbuilderrc COMPONENTS="main universe" setzen!
