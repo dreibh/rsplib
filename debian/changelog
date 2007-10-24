@@ -1,4 +1,4 @@
-rsplib (2.3+debian1) unstable; urgency=low
+rsplib (2.3-1) unstable; urgency=low
 
   * Fixed Debian package descriptions.
 
