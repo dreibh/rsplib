@@ -27,37 +27,4 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-
-# ---------------------------------------------------------
-INPUT="$HOME/src/rsplib2"
-PACKAGE="rsplib"
-CONFOPT="--enable-kernel-sctp --enable-csp --disable-qt"
-# ---------------------------------------------------------
-
-
-# Nur einmalig erforderlich!
-# dh_make -c gpl -n -e dreibh@iem.uni-due.de -m
-
-rm -f rsplib-*.gz
-
-./bootstrap && \
-./configure $CONFOPT && \
-make dist && \
-VERSION=`ls $PACKAGE-*.gz|sed -e "s/$PACKAGE-//g" -e "s/.tar.gz//g"` && \
-rm -rf $PACKAGE-$VERSION && \
-tar xzf $INPUT/$PACKAGE-$VERSION.tar.gz && \
-cd $PACKAGE-$VERSION && \
-cp -r $INPUT/debian . && \
-rm -rf debian/.svn || exit
-
-
-# Ohne Signatur!
-debuild -us -uc
-
-# Mit Signatur!
-# debuild -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
-
-
-# Wichtig: In /etc/pbuilderrc COMPONENTS="main universe" setzen!
-# Wichtig: Jetzt Update mit Option "--override-config"!
-# sudo pbuilder update --override-config
+rm -f *.deb *.dsc *.asc *.changes *.build *.upload *.tar.gz stamp-h* svn-commit* *~
