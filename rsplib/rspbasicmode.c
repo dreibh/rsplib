@@ -190,15 +190,6 @@ void rsp_cleanup()
    int i;
 
    if(gAsapInstance) {
-#ifdef ENABLE_CSP
-      /* ====== Remove Component Status Reporter ========================= */
-      if(gCSPReporter) {
-         cspReporterDelete(gCSPReporter);
-         free(gCSPReporter);
-         gCSPReporter = NULL;
-      }
-#endif
-
       /* ====== Clean-up RSerPool Socket descriptor storage ============== */
       CHECK(rsp_unmapsocket(STDOUT_FILENO) == 0);
       CHECK(rsp_unmapsocket(STDIN_FILENO) == 0);
@@ -215,9 +206,17 @@ void rsp_cleanup()
       identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
       gRSerPoolSocketAllocationBitmap = NULL;
 
-      /* ====== Clean-up ASAP instance and Dispatcher ==================== */
+      /* ====== Clean-up ASAP Instance, CSP Reported and Dispatcher ====== */
       asapInstanceDelete(gAsapInstance);
       gAsapInstance = NULL;
+#ifdef ENABLE_CSP
+      /* ====== Remove Component Status Reporter ========================= */
+      if(gCSPReporter) {
+         cspReporterDelete(gCSPReporter);
+         free(gCSPReporter);
+         gCSPReporter = NULL;
+      }
+#endif
       dispatcherDelete(&gDispatcher);
       threadSafetyDelete(&gRSerPoolSocketSetMutex);
       threadSafetyDelete(&gThreadSafety);

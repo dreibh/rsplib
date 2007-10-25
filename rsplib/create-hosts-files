@@ -24,7 +24,7 @@
 
 . ./planetlab-config
 
-MAX_GOOD=5
+MAX_GOOD=999
 PUs=15
 PEs=6
 PRs=1
@@ -104,26 +104,27 @@ get-all-good-hosts ()
 # HOSTSFILEMIDDLE="essen"
 # test-hosts
 
-IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".de$" all-planetlab.hosts` `grep ".at$" all-planetlab.hosts` `grep ".ch$" all-planetlab.hosts` `grep ".fr$" all-planetlab.hosts` `grep ".be$" all-planetlab.hosts` `grep ".nl$" all-planetlab.hosts` `grep ".pl$" all-planetlab.hosts` `grep ".cz$" all-planetlab.hosts` `grep ".dk$" all-planetlab.hosts` `grep ".se$" all-planetlab.hosts` `grep ".fi$" all-planetlab.hosts` `grep ".uk$" all-planetlab.hosts` `grep ".no$" all-planetlab.hosts` `grep ".it$" all-planetlab.hosts` `grep ".es$" all-planetlab.hosts` `grep ".pt$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="europe"
 test-hosts
 
-IN_HOSTS="`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".edu$" all-planetlab.hosts`"
+# "`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="america"
 test-hosts
 
-IN_HOSTS="`grep ".jp$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".jp$" all-planetlab.hosts` `grep ".cn$" all-planetlab.hosts` `grep ".th$" all-planetlab.hosts` `grep ".sg$" all-planetlab.hosts` `grep ".kr$" all-planetlab.hosts` `grep ".tw$" all-planetlab.hosts` `grep ".in$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="asia"
+test-hosts
+
+IN_HOSTS="`grep ".au$" all-planetlab.hosts` `grep ".nz$" all-planetlab.hosts`"
+let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
+HOSTSFILEMIDDLE="australia"
 test-hosts
 
 IN_HOSTS="`grep ".cn$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="china"
 test-hosts
-
-# IN_HOSTS="`grep ".au$" all-planetlab.hosts`"
-# let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
-# HOSTSFILEMIDDLE="australia"
-# test-hosts
 
 
 
@@ -131,5 +132,5 @@ echo "Testing *all* nodes sequentially. This will take a long time ..."
 . ./planetlab-config
 IN_HOSTS="`cat all-planetlab.hosts`"
 OUT_HOSTS=good-planetlab.hosts
-let SERVER_TEST_TIMEOUT=25*$SERVER_TEST_TIMEOUT
+let SERVER_TEST_TIMEOUT=100*$SERVER_TEST_TIMEOUT
 get-all-good-hosts
