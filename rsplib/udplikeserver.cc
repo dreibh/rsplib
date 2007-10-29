@@ -178,6 +178,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          loadinfo = &dummyLoadinfo;
          loadinfo->rli_policy = PPT_ROUNDROBIN;
       }
+      loadinfo->rli_load = (unsigned int)rint(getLoad() * (double)PPV_MAX_LOAD);
       Load = loadinfo->rli_load;
 
       // ====== Print program title =========================================
