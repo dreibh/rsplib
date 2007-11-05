@@ -146,7 +146,7 @@ bin_PROGRAMS = fractalpooluser registrar server terminal hsdump pingpongclient s
 EXTRA_DIST = registrar-example poolelement-example pooluser-example add-dummy-interface
 else
 bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
-EXTRA_DIST = fractalpooluser.cc registrar-example poolelement-example pooluser-example add-dummy-interface
+EXTRA_DIST = fractalpooluser.cc fractalpooluser.h registrar-example poolelement-example pooluser-example add-dummy-interface
 endif
 
 if BUILD_QT_PROGRAMS

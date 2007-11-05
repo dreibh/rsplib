@@ -5,3 +5,8 @@ http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
 
 
 2. Known Bugs:
+registrar: -peer Parameter and not existing DNS name. SCTPAssociation error on exit()
+with sctplib/socketapi:
+ERROR: Bad address test.xy:9901! Use format <address:port>.
+INTERNAL ERROR: SCTPAssociation::~SCTPAssociation() - Erase of association #1 failed!
+Aborted
