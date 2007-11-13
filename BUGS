@@ -5,8 +5,14 @@ http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
 
 
 2. Known Bugs:
-registrar: -peer Parameter and not existing DNS name. SCTPAssociation error on exit()
+- registrar: -peer Parameter and not existing DNS name. SCTPAssociation error on exit()
 with sctplib/socketapi:
 ERROR: Bad address test.xy:9901! Use format <address:port>.
 INTERNAL ERROR: SCTPAssociation::~SCTPAssociation() - Erase of association #1 failed!
 Aborted
+
+- Booted, ath0, eth0 use autoconf addrs
+ -> demo setup does not work
+ Added dummy0 with IPv4 -> still does not work
+ Added dummy0 with IPv4 + IPv6 -> still does not work(???)
+ Scoping Bug???
