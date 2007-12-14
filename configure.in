@@ -203,12 +203,7 @@ sunos4*)
     CFLAGS="$CFLAGS -DSUN -DSUN4"
     thread_LIBS="-lpthread"
     ;;
-darwin7*)
-    CFLAGS="$CFLAGS -DDARWIN"
-    CXXFLAGS="$CXXFLAGS -DDARWIN"
-    thread_LIBS="-lpthread"
-    ;;
-darwin8*)
+darwin*)
     CFLAGS="$CFLAGS -DDARWIN -DUSE_SELECT -DHAVE_CONNECTX_WITH_ID"
     CXXFLAGS="$CXXFLAGS -DDARWIN"
     thread_LIBS="-lpthread"
