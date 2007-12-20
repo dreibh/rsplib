@@ -202,63 +202,65 @@ int main(int argc, char** argv)
                   flags = 0;
                   received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
                                          &rinfo, &flags, 0);
+                  if(received > 0) {
 
-                  /* ====== Notification ================================= */
-                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                     notification = (union rserpool_notification*)&buffer;
-                     printf("\x1b[39;47mNotification: ");
-                     rsp_print_notification(notification, stdout);
-                     puts("\x1b[0m");
-                     if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
-                        (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                        break;
-                     }
-                  }
-
-                  /* ====== Message ====================================== */
-                  else {
-                     header = (const struct ScriptingCommonHeader*)buffer;
-                     if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
-                         (received >= (ssize_t)sizeof(struct ScriptingCommonHeader)) &&
-                         (ntohs(header->Length) == received) ) {
-                        switch(header->Type) {
-                           /* ====== Download message ==================== */
-                           case SPT_DOWNLOAD:
-                              puts("Download ...");
-                              download = (const struct Download*)&buffer;
-                              if(!outputFile) {
-                                 outputFile = fopen(outputName, "w");
-                                 if(outputFile == NULL) {
-                                    fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
-                                    goto finish;
-                                 }
-                              }
-                              length = received - sizeof(struct ScriptingCommonHeader);
-                              if(length > 0) {
-                                 if(fwrite(&download->Data, length, 1, outputFile) != 1) {
-                                    fprintf(stderr, "ERROR: Writing to output file failed!\n");
-                                    goto finish;
-                                 }
-                              }
-                              else {
-                                 success = true;
-                                 if(!quiet) {
-                                    puts("Operation completed!");
-                                 }
-                                 goto finish;
-                              }
-                            break;
-                           case SPT_KEEPALIVE_ACK:
-                              keepAliveTransmitted = false;
-                              lastKeepAlive        = getMicroTime();
-                            break;
-                           default:
-                              printf("Received unexpected message type #%u!\n", header->Type);
-                            break;
+                     /* ====== Notification ================================= */
+                     if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                        notification = (union rserpool_notification*)&buffer;
+                        printf("\x1b[39;47mNotification: ");
+                        rsp_print_notification(notification, stdout);
+                        puts("\x1b[0m");
+                        if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                           (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                           break;
                         }
                      }
+
+                     /* ====== Message ====================================== */
                      else {
-                        puts("Received invalid message!");
+                        header = (const struct ScriptingCommonHeader*)buffer;
+                        if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
+                            (received >= (ssize_t)sizeof(struct ScriptingCommonHeader)) &&
+                            (ntohs(header->Length) == received) ) {
+                           switch(header->Type) {
+                              /* ====== Download message ==================== */
+                              case SPT_DOWNLOAD:
+                                 puts("Download ...");
+                                 download = (const struct Download*)&buffer;
+                                 if(!outputFile) {
+                                    outputFile = fopen(outputName, "w");
+                                    if(outputFile == NULL) {
+                                       fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
+                                       goto finish;
+                                    }
+                                 }
+                                 length = received - sizeof(struct ScriptingCommonHeader);
+                                 if(length > 0) {
+                                    if(fwrite(&download->Data, length, 1, outputFile) != 1) {
+                                       fprintf(stderr, "ERROR: Writing to output file failed!\n");
+                                       goto finish;
+                                    }
+                                 }
+                                 else {
+                                    success = true;
+                                    if(!quiet) {
+                                       puts("Operation completed!");
+                                    }
+                                    goto finish;
+                                 }
+                               break;
+                              case SPT_KEEPALIVE_ACK:
+                                 keepAliveTransmitted = false;
+                                 lastKeepAlive        = getMicroTime();
+                               break;
+                              default:
+                                 printf("Received unexpected message type #%u!\n", header->Type);
+                               break;
+                           }
+                        }
+                        else {
+                           puts("Received invalid message!");
+                        }
                      }
                   }
                }

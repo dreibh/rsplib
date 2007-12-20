@@ -214,6 +214,11 @@ static bool createTransportParameter(struct RSerPoolMessage*             message
       case IPPROTO_UDP:
          type = ATT_UDP_TRANSPORT;
        break;
+#if 0
+      case IPPROTO_DCCP:
+         type = ATT_DCCP_TRANSPORT;
+       break;
+#endif
       default:
          LOG_ERROR
          fprintf(stdlog,"Unknown protocol #%d\n", transportAddressBlock->Protocol);
@@ -260,6 +265,18 @@ static bool createTransportParameter(struct RSerPoolMessage*             message
          utp->utp_port     = htons(transportAddressBlock->Port);
          utp->utp_reserved = 0;
        break;
+
+#if 0
+      case ATT_DCCP_TRANSPORT:
+         dtp = (struct rserpool_dccptransportparameter*)getSpace(message, sizeof(struct rserpool_dccptransportparameter));
+         if(dtp == NULL) {
+            return(false);
+         }
+         dtp->dtp_port     = htons(transportAddressBlock->Port);
+         dtp->dtp_scode    = 0;
+         dtp->dtp_reserved = 0;
+       break;
+#endif
    }
 
    for(i = 0;i < transportAddressBlock->Addresses;i++) {

@@ -106,7 +106,7 @@ static void handleRegistrarAnnounceCallback(struct RegistrarTable* registrarTabl
                               &registrarTable->RegistrarList,
                               message->RegistrarIdentifier,
                               PLNF_DYNAMIC,
-                              message->TransportAddressBlockListPtr,
+                              message->PeerListNodePtr->AddressBlock,
                               getMicroTime(),
                               &peerListNode);
                   if(result == RSPERR_OKAY) {

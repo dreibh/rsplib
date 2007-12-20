@@ -99,17 +99,19 @@ struct rserpool_tlv_header
 
 #define ATT_IPv4_ADDRESS               0x0001
 #define ATT_IPv6_ADDRESS               0x0002
-#define ATT_SCTP_TRANSPORT             0x0003
-#define ATT_TCP_TRANSPORT              0x0004
-#define ATT_UDP_TRANSPORT              0x0005
-#define ATT_POOL_POLICY                0x0006
-#define ATT_POOL_HANDLE                0x0007
-#define ATT_POOL_ELEMENT               0x0008
-#define ATT_SERVER_INFORMATION         0x0009
-#define ATT_OPERATION_ERROR            0x000a
-#define ATT_COOKIE                     0x000b
-#define ATT_POOL_ELEMENT_IDENTIFIER    0x000c
-#define ATT_POOL_ELEMENT_CHECKSUM      0x000d
+#define ATT_DCCP_TRANSPORT             0x0003
+#define ATT_SCTP_TRANSPORT             0x0004
+#define ATT_TCP_TRANSPORT              0x0005
+#define ATT_UDP_TRANSPORT              0x0006
+#define ATT_UDPLITE_TRANSPORT          0x0007
+#define ATT_POOL_POLICY                0x0008
+#define ATT_POOL_HANDLE                0x0009
+#define ATT_POOL_ELEMENT               0x000a
+#define ATT_SERVER_INFORMATION         0x000b
+#define ATT_OPERATION_ERROR            0x000c
+#define ATT_COOKIE                     0x000d
+#define ATT_POOL_ELEMENT_IDENTIFIER    0x000e
+#define ATT_POOL_ELEMENT_CHECKSUM      0x000f
 #define ATT_HANDLE_RESOLUTION          0x003f   /* Custom */
 
 struct rserpool_poolelementparameter
@@ -139,6 +141,13 @@ struct rserpool_udptransportparameter
 {
    uint16_t utp_port;
    uint16_t utp_reserved;
+};
+
+struct rserpool_dccptransportparameter
+{
+   uint16_t dtp_port;
+   uint16_t dtp_reserved;
+   uint32_t dtp_scode;
 };
 
 

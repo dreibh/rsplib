@@ -44,8 +44,8 @@ void registrarHandleASAPAnnounceTimer(struct Dispatcher* dispatcher,
 
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
-      message->Type         = AHT_SERVER_ANNOUNCE;
-      message->Flags        = 0x00;
+      message->Type                = AHT_SERVER_ANNOUNCE;
+      message->Flags               = 0x00;
       message->RegistrarIdentifier = registrar->ServerID;
       messageLength = rserpoolMessage2Packet(message);
       if(messageLength > 0) {
@@ -73,7 +73,7 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
                                      struct Timer*      timer,
                                      void*              userData)
 {
-   struct Registrar*                registrar = (struct Registrar*)userData;
+   struct Registrar*                 registrar = (struct Registrar*)userData;
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolElementNode)* nextPoolElementNode;
    unsigned int                      result;

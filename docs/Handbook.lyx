@@ -1,5 +1,5 @@
-#LyX 1.4.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass article
@@ -34,13 +34,21 @@ colorlinks=true]{hyperref}
 \end_preamble
 \language english
 \inputencoding auto
-\fontscheme times
+\font_roman times
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize 11
 \spacing single
 \papersize a4paper
 \use_geometry false
 \use_amsmath 1
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -53,7 +61,8 @@ colorlinks=true]{hyperref}
 \papersides 1
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "" 
 \end_header
 
 \begin_body
@@ -71,7 +80,7 @@ Thomas Dreibholz
 \newline
 Institute for Experimental Mathematics
 \newline
-Ellernstraﬂe 29, 45326
+Ellernstra√üe 29, 45326
  Essen
 \newline
 Mail: 
@@ -95,7 +104,7 @@ September 12, 2007
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \tableofcontents{}
+\begin_inset LatexCommand tableofcontents
 
 \end_inset
 
@@ -119,14 +128,16 @@ rsplib
 .
  For a detailed introduction to RSerPool and its concepts itself, see\InsetSpace ~
 
-\begin_inset LatexCommand \cite{Dre2006}
+\begin_inset LatexCommand cite
+key "Dre2006"
 
 \end_inset
 
 .
  For questions about RSerPool and rsplib, see our mailing lists at\InsetSpace ~
 
-\begin_inset LatexCommand \cite{RSerPoolPage}
+\begin_inset LatexCommand cite
+key "RSerPoolPage"
 
 \end_inset
 
@@ -155,12 +166,21 @@ status collapsed
 
 \end_layout
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{cap:The-RSerPool-Architecture}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "cap:The-RSerPool-Architecture"
 
 \end_inset
 
 The RSerPool Architecture
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -183,8 +203,12 @@ status collapsed
 
 \end_layout
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{cap:The-RSerPool-Protocol-Stack}
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
+\begin_inset LatexCommand label
+name "cap:The-RSerPool-Protocol-Stack"
 
 \end_inset
 
@@ -193,9 +217,15 @@ The RSerPool Protocol Stack
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
 Figure\InsetSpace ~
 
-\begin_inset LatexCommand \ref{cap:The-RSerPool-Architecture}
+\begin_inset LatexCommand ref
+reference "cap:The-RSerPool-Architecture"
 
 \end_inset
 
@@ -203,20 +233,23 @@ Figure\InsetSpace ~
 (RSerPool) architecture
  as defined by the Internet Draft\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-arch}
+\begin_inset LatexCommand cite
+key "draft-ietf-rserpool-arch"
 
 \end_inset
 
 ; the protocol stack of RSerPool is shown in figure\InsetSpace ~
 
-\begin_inset LatexCommand \ref{cap:The-RSerPool-Protocol-Stack}
+\begin_inset LatexCommand ref
+reference "cap:The-RSerPool-Protocol-Stack"
 
 \end_inset
 
 .
  An RSerPool scenario consists of three component classes\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-overview}
+\begin_inset LatexCommand cite
+key "draft-ietf-rserpool-overview"
 
 \end_inset
 
@@ -246,13 +279,15 @@ an organization or building)
  synchronize their view of the handlespace using the Endpoint haNdlespace
  Redundancy Protocol (ENRP\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-enrp,draft-ietf-rserpool-common-param}
+\begin_inset LatexCommand cite
+key "draft-ietf-rserpool-enrp,draft-ietf-rserpool-common-param"
 
 \end_inset
 
 ), transported via SCTP\InsetSpace ~
 
-\begin_inset LatexCommand \cite{RFC2960,Jun2005,JST2000b,SCI2002a}
+\begin_inset LatexCommand cite
+key "RFC2960,Jun2005,JST2000b,SCI2002a"
 
 \end_inset
 
@@ -277,7 +312,8 @@ it must also be usable low-performance devices like telecommunications
  pools and sessions only, but on the other hand makes a very efficient realizati
 on possible\InsetSpace ~
 
-\begin_inset LatexCommand \cite{FGCN2007-HsMgt,Contel2005}
+\begin_inset LatexCommand cite
+key "FGCN2007-HsMgt,Contel2005"
 
 \end_inset
 
@@ -288,7 +324,8 @@ ion; RSerPool does not intend to scale to the whole Internet.
  Nevertheless, it is assumed that PEs can be distributed globally, for their
  service to survive localized disasters\InsetSpace ~
 
-\begin_inset LatexCommand \cite{KiVS2007}
+\begin_inset LatexCommand cite
+key "KiVS2007"
 
 \end_inset
 
@@ -299,7 +336,8 @@ ion; RSerPool does not intend to scale to the whole Internet.
 PEs choose an arbitrary PR to register into a pool by using the Aggregate
  Server Access Protocol (ASAP\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param,draft-dreibholz-rserpool-asap-hropt}
+\begin_inset LatexCommand cite
+key "draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param,draft-dreibholz-rserpool-asap-hropt"
 
 \end_inset
 
@@ -314,9 +352,9 @@ PEs choose an arbitrary PR to register into a pool by using the Aggregate
 \end_layout
 
 \begin_layout Standard
-A client is called
+A client is called 
 \emph on
- pool user
+pool user
 \emph default
 \InsetSpace ~
 (PU) in RSerPool terminology.
@@ -333,13 +371,15 @@ handle resolution
 emph{pool policy}.
  A set of adaptive and non-adaptive pool policies is defined in\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-ietf-rserpool-policies,draft-dreibholz-rserpool-delay}
+\begin_inset LatexCommand cite
+key "draft-ietf-rserpool-policies,draft-dreibholz-rserpool-delay"
 
 \end_inset
 
 ; for a detailed discussion of these policies, see\InsetSpace ~
 
-\begin_inset LatexCommand \cite{Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005,ADCOM2007,FGCN2007-LoadBalancing}
+\begin_inset LatexCommand cite
+key "Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005,ADCOM2007,FGCN2007-LoadBalancing"
 
 \end_inset
 
@@ -424,7 +464,8 @@ sctplib
 \noun default
 \InsetSpace ~
 
-\begin_inset LatexCommand \cite{sctplib}
+\begin_inset LatexCommand cite
+key "sctplib"
 
 \end_inset
 
@@ -449,12 +490,15 @@ sctplib
  You need both.
  Get the latest versions from\InsetSpace ~
 
-\begin_inset LatexCommand \cite{RSerPoolPage}
+\begin_inset LatexCommand cite
+key "RSerPoolPage"
 
 \end_inset
 
  (
-\begin_inset LatexCommand \htmlurl[http://tdrwww.iem.uni-due.de/dreibholz/rserpool]{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
+\begin_inset LatexCommand htmlurl
+name "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
+target "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
 
 \end_inset
 
@@ -514,14 +558,16 @@ Useful options are
  This is useful for debugging purposes (e.g.\InsetSpace ~
 memory leak detection using Valgrind\InsetSpace ~
 
-\begin_inset LatexCommand \cite{Valgrind}
+\begin_inset LatexCommand cite
+key "Valgrind"
 
 \end_inset
 
 ).
  To use SCTP over UDP (defined in\InsetSpace ~
 
-\begin_inset LatexCommand \cite{draft-tuexen-sctp-udp-encaps}
+\begin_inset LatexCommand cite
+key "draft-tuexen-sctp-udp-encaps"
 
 \end_inset
 
@@ -620,7 +666,8 @@ rsplib
 \end_layout
 
 \begin_layout Subsubsection
-\begin_inset LatexCommand \label{sub:Preparation-Work}
+\begin_inset LatexCommand label
+name "sub:Preparation-Work"
 
 \end_inset
 
@@ -785,7 +832,8 @@ rsplib
 \end_layout
 
 \begin_layout Subsubsection
-\begin_inset LatexCommand \label{sub:Configuration-and-Installation}
+\begin_inset LatexCommand label
+name "sub:Configuration-and-Installation"
 
 \end_inset
 
@@ -799,12 +847,14 @@ rsplib
 \noun default
 , get the latest version from\InsetSpace ~
 
-\begin_inset LatexCommand \cite{RSerPoolPage}
+\begin_inset LatexCommand cite
+key "RSerPoolPage"
 
 \end_inset
 
  (
-\begin_inset LatexCommand \htmlurl{http://tdrwww.iem.uni-due.de/dreibholz/rserpool}
+\begin_inset LatexCommand htmlurl
+target "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
 
 \end_inset
 
@@ -856,7 +906,11 @@ You may use the following options:
 \family typewriter
 --enable-kernel-sctp
 \family default
- Enables usage of kernel SCTP.
+ Enables usage of kernel SCTP (
+\series bold
+you probably want this!
+\series default
+).
  Otherwise, userland SCTP is used.
 \end_layout
 
@@ -1022,7 +1076,8 @@ Wireshark
 \noun default
 \InsetSpace ~
 
-\begin_inset LatexCommand \cite{WiresharkUsersGuide}
+\begin_inset LatexCommand cite
+key "WiresharkUsersGuide"
 
 \end_inset
 
@@ -1082,7 +1137,8 @@ Wireshark
 \end_layout
 
 \begin_layout Subsection
-\begin_inset LatexCommand \label{sub:Testing-the-Installation}
+\begin_inset LatexCommand label
+name "sub:Testing-the-Installation"
 
 \end_inset
 
@@ -1131,7 +1187,8 @@ ID upon startup.
  verbosity of the log output.
  Also refer to subsection\InsetSpace ~
 
-\begin_inset LatexCommand \ref{sub:Preparation-Work}
+\begin_inset LatexCommand ref
+reference "sub:Preparation-Work"
 
 \end_inset
 
@@ -1194,7 +1251,8 @@ any
  interface.
  If you have set up the filter and coloring rules (see subsection\InsetSpace ~
 
-\begin_inset LatexCommand \ref{sub:Testing-the-Installation}
+\begin_inset LatexCommand ref
+reference "sub:Testing-the-Installation"
 
 \end_inset
 
@@ -1223,7 +1281,8 @@ man ./<program name>.8
 \noindent
 After installation (make install, see subsection\InsetSpace ~
 
-\begin_inset LatexCommand \ref{sub:Configuration-and-Installation}
+\begin_inset LatexCommand ref
+reference "sub:Configuration-and-Installation"
 
 \end_inset
 
@@ -1260,7 +1319,8 @@ hsdump A ENRP-based test utility to dump the handlespace of a PR.
 pingpongclient A simple PU for a request-response example service with cookie-ba
 sed failover\InsetSpace ~
 
-\begin_inset LatexCommand \cite{LCN2002}
+\begin_inset LatexCommand cite
+key "LCN2002"
 
 \end_inset
 
@@ -1271,7 +1331,8 @@ sed failover\InsetSpace ~
 calcappclient The PU for the CalcApp service used for performance measurements
  (see\InsetSpace ~
 
-\begin_inset LatexCommand \cite{Dre2006,KiVS2007}
+\begin_inset LatexCommand cite
+key "Dre2006,KiVS2007"
 
 \end_inset
 
@@ -1300,7 +1361,9 @@ rsplib
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[bibtotoc,acm]{Referenzarchiv}
+\begin_inset LatexCommand bibtex
+options "bibtotoc,acm"
+bibfiles "Referenzarchiv"
 
 \end_inset
 

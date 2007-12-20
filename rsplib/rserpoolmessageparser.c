@@ -396,6 +396,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
 
    tlvType = ntohs(((struct rserpool_tlv_header*)&message->Buffer[tlvPosition])->atlv_type);
    switch(PURE_ATT_TYPE(tlvType)) {
+
       case ATT_SCTP_TRANSPORT:
           stp = (struct rserpool_sctptransportparameter*)getSpace(message, sizeof(struct rserpool_sctptransportparameter));
           if(stp == NULL) {
@@ -408,6 +409,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
              hasControlChannel = true;
           }
        break;
+
       case ATT_TCP_TRANSPORT:
           ttp = (struct rserpool_tcptransportparameter*)getSpace(message, sizeof(struct rserpool_tcptransportparameter));
           if(ttp == NULL) {
@@ -420,16 +422,31 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
              hasControlChannel = true;
           }
        break;
+
       case ATT_UDP_TRANSPORT:
           utp = (struct rserpool_udptransportparameter*)getSpace(message, sizeof(struct rserpool_udptransportparameter));
           if(utp == NULL) {
              message->Error = RSPERR_INVALID_VALUES;
              return(false);
           }
-          port     = ntohs(utp->utp_port);
-          protocol = IPPROTO_UDP;
+          port              = ntohs(utp->utp_port);
+          protocol          = IPPROTO_UDP;
           hasControlChannel = false;
        break;
+
+#if 0
+      case ATT_DCCP_TRANSPORT:
+          dtp = (struct rserpool_dccptransportparameter*)getSpace(message, sizeof(struct rserpool_dccptransportparameter));
+          if(dtp == NULL) {
+             message->Error = RSPERR_INVALID_VALUES;
+             return(false);
+          }
+          port              = ntohs(dtp->dtp_port);
+          protocol          = IPPROTO_DCCP;
+          hasControlChannel = false;
+       break;
+#endif
+
       default:
          if(handleUnknownTLV(message, tlvType, tlvLength) == false) {
             return(false);
@@ -1478,7 +1495,7 @@ static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
 }
 
 
-/* ###### Scan handle resolution response message ############################# */
+/* ###### Scan handle resolution response message ######################## */
 static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    uint32_t*                     registrarIdentifier;
@@ -1491,15 +1508,31 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
    }
    message->RegistrarIdentifier = ntohl(*registrarIdentifier);
 
-   transportAddressBlockNew(&transportAddressBlock[0],
-                            IPPROTO_SCTP,
-                            getPort(&message->SourceAddress.sa),
-                            0,
-                            &message->SourceAddress, 1, 1);
-   message->TransportAddressBlockListPtr = transportAddressBlockDuplicate(transportAddressBlock);
-   if(message->TransportAddressBlockListPtr == NULL) {
-      message->Error = RSPERR_OUT_OF_MEMORY;
-      return(false);
+   /* ====== Try to read Server Information Parameter ==================== */
+   message->PeerListNodePtr = scanServerInformationParameter(message);
+   if(message->PeerListNodePtr == NULL) {
+      /* ====== Take address and port from UDP message =================== */
+      message->PeerListNodePtr = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
+      if(message->PeerListNodePtr == NULL) {
+         message->Error = RSPERR_OUT_OF_MEMORY;
+         return(false);
+      }
+      transportAddressBlockNew(&transportAddressBlock[0],
+                               IPPROTO_SCTP,
+                               getPort(&message->SourceAddress.sa),
+                               0,
+                               &message->SourceAddress, 1, 1);
+      transportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
+      if(transportAddressBlock == NULL) {
+         message->Error = RSPERR_OUT_OF_MEMORY;
+         free(message->PeerListNodePtr);
+         message->PeerListNodePtr = NULL;
+         return(false);
+      }
+      ST_CLASS(peerListNodeNew)(message->PeerListNodePtr,
+                                message->RegistrarIdentifier,
+                                PLNF_DYNAMIC,
+                                transportAddressBlock);
    }
 
    return(true);
