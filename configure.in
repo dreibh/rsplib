@@ -485,7 +485,7 @@ oldLIBS=$LIBS
 LIBS=
 AC_SEARCH_LIBS([BZ2_bzReadOpen], [bz2])
 bz2_LIBS=$LIBS
-$LIBS=$oldLIBS
+LIBS=$oldLIBS
 AC_CHECK_HEADERS([bzlib.h])
 
 
