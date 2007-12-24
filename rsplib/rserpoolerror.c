@@ -45,7 +45,6 @@ static struct ErrorTable ErrorDescriptions[] = {
    /* Protocol-specific error causes */
    { RSPERR_UNRECOGNIZED_PARAMETER,        "unrecognized parameter" },
    { RSPERR_UNRECOGNIZED_MESSAGE,          "unrecognized message" },
-   { RSPERR_AUTHORIZATION_FAILURE,         "authorization failure" },
    { RSPERR_INVALID_VALUES,                "invalid values" },
    { RSPERR_NO_USABLE_USER_ADDRESSES,      "no usable user endpoint address(es)" },
    { RSPERR_NO_USABLE_ASAP_ADDRESSES,      "no usable ASAP endpoint address(es)" },
@@ -62,7 +61,7 @@ static struct ErrorTable ErrorDescriptions[] = {
    { RSPERR_UNRECOGNIZED_PARAMETER_SILENT, "unrecognized parameter (silent)" },
 
    /* Handlespace-management specific error causes */
-   { RSPERR_NO_RESOURCES,                  "no resources" },
+   { RSPERR_OUT_OF_RESOURCES,              "out of resources" },
    { RSPERR_NOT_FOUND,                     "object not found" },
    { RSPERR_INVALID_ID,                    "invalid ID" },
    { RSPERR_OWN_ID,                        "own ID" },

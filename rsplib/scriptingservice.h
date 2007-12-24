@@ -63,7 +63,7 @@ class ScriptingServer : public TCPLikeServer
 
    private:
    virtual void finishSession(EventHandlingResult result);
-   virtual EventHandlingResult timerEvent(const unsigned long long now);
+   virtual EventHandlingResult syncTimerEvent(const unsigned long long now);
    EventHandlingResult startWorking();
    bool hasFinishedWork() const;
    EventHandlingResult performDownload();

@@ -252,7 +252,7 @@ EventHandlingResult ScriptingServer::startWorking()
       exit(1);
    }
 
-   setTimer(1);
+   setSyncTimer(1);
    State = SS_Working;
    return(EHR_Okay);
 }
@@ -275,12 +275,12 @@ bool ScriptingServer::hasFinishedWork() const
 
 
 // ###### Check, if work is already complete ################################
-EventHandlingResult ScriptingServer::timerEvent(const unsigned long long now)
+EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now)
 {
    if(hasFinishedWork()) {
       return(performDownload());
    }
-   setTimer(now + 1000000);
+   setSyncTimer(now + 1000000);
    return(EHR_Okay);
 }
 

@@ -724,7 +724,7 @@ static unsigned int asapInstanceHandleResolutionFromCache(
       result = RSPERR_OKAY;
       for(i = 0;i < *poolElementNodes;i++) {
           if(convertFunction(poolElementNodeArray[i], &nodePtrArray[i]) != 0) {
-             result = RSPERR_NO_RESOURCES;
+             result = RSPERR_OUT_OF_MEMORY;
           }
       }
       if(result != RSPERR_OKAY) {

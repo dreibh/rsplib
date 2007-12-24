@@ -38,12 +38,13 @@
 TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
 {
    RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
-   ServerList     = NULL;
-   IsNewSession   = true;
-   Shutdown       = false;
-   Finished       = false;
-   Load           = 0;
-   TimerTimeStamp = 0;
+   ServerList               = NULL;
+   IsNewSession             = true;
+   Shutdown                 = false;
+   Finished                 = false;
+   Load                     = 0;
+   SyncTimerTimeStamp       = 0;
+   AsyncTimerTimeStamp      = 0;
    printTimeStamp(stdout);
    printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
 }
@@ -136,12 +137,20 @@ EventHandlingResult TCPLikeServer::handleNotification(
 }
 
 
-// ###### Handle message ####################################################
-EventHandlingResult TCPLikeServer::timerEvent(const unsigned long long now)
+// ###### Handle synchronous timer ##########################################
+EventHandlingResult TCPLikeServer::syncTimerEvent(const unsigned long long now)
 {
    printTimeStamp(stdout);
-   puts("TIMER");
+   puts("SyncTimer");
    return(EHR_Okay);
+}
+
+
+// ###### Handle asynchronous timer #########################################
+void TCPLikeServer::asyncTimerEvent(const unsigned long long now)
+{
+   printTimeStamp(stdout);
+   puts("AsyncTimer");
 }
 
 
@@ -170,9 +179,9 @@ void TCPLikeServer::run()
       while(!Shutdown) {
          flags    = 0;
          unsigned long long nextTimerEvent;
-         if(TimerTimeStamp > 0) {
+         if(SyncTimerTimeStamp > 0) {
             now = getMicroTime();
-            nextTimerEvent = (TimerTimeStamp <= now) ? 0 : TimerTimeStamp - now;
+            nextTimerEvent = (SyncTimerTimeStamp <= now) ? 0 : SyncTimerTimeStamp - now;
          }
          else {
             nextTimerEvent = 5000000;
@@ -221,10 +230,10 @@ void TCPLikeServer::run()
          }
 
          // ====== Handle timer event =======================================
-         if((TimerTimeStamp > 0) && (eventHandlingResult == EHR_Okay)) {
+         if((SyncTimerTimeStamp > 0) && (eventHandlingResult == EHR_Okay)) {
             now = getMicroTime();
-            if(TimerTimeStamp <= now) {
-               eventHandlingResult = timerEvent(now);
+            if(SyncTimerTimeStamp <= now) {
+               eventHandlingResult = syncTimerEvent(now);
                if(eventHandlingResult != EHR_Okay) {
                   break;
                }
@@ -340,7 +349,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
             installBreakDetector();
             while(!breakDetected()) {
                // ====== Clean-up session list ==============================
-               serverSet.removeFinished();
+               serverSet.handleRemovalsAndTimers();
 
                // ====== Wait for incoming sessions =========================
                int newRSerPoolSocket = rsp_accept(rserpoolSocket, 25);
@@ -434,7 +443,7 @@ size_t TCPLikeServerList::getThreads()
 
 
 // ###### Remove finished sessions ##########################################
-void TCPLikeServerList::removeFinished()
+void TCPLikeServerList::handleRemovalsAndTimers()
 {
    lock();
    ThreadListEntry* entry = ThreadList;
@@ -442,6 +451,16 @@ void TCPLikeServerList::removeFinished()
       ThreadListEntry* next = entry->Next;
       if(entry->Object->hasFinished()) {
          remove(entry->Object);
+      }
+      else {
+         lock();
+         if(entry->Object->AsyncTimerTimeStamp > 0) {
+            const unsigned long long now = getMicroTime();
+            if(entry->Object->AsyncTimerTimeStamp <= now) {
+               entry->Object->asyncTimerEvent(now);
+            }
+         }
+         unlock();
       }
       entry = next;
    }

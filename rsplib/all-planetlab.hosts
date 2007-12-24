@@ -322,7 +322,6 @@ hit1.6planetlab.edu.cn
 pku1.6planetlab.edu.cn
 hit2.6planetlab.edu.cn
 pku2.6planetlab.edu.cn
-bupt1.6planetlab.edu.cn
 buaa2.6planetlab.edu.cn
 buaa1.6planetlab.edu.cn
 ustc2.6planetlab.edu.cn
@@ -376,7 +375,6 @@ dschinni.planetlab.extranet.uni-passau.de
 aladdin.planetlab.extranet.uni-passau.de
 planetlab1.lsd.ufcg.edu.br
 opal.cnu.ac.kr
-planetlab4.nbgisp.com
 planetlab2.nbgisp.com
 vayu.iitd.ernet.in
 ent2.cs.nccu.edu.tw
@@ -455,8 +453,6 @@ planet2.manchester.ac.uk
 planet1.manchester.ac.uk
 planetlab2.informatik.uni-erlangen.de
 planetlab-8.cs.princeton.edu
-crt1.planetlab.umontreal.ca
-crt3.planetlab.umontreal.ca
 planetlab-1.imperial.ac.uk
 planetlab-2.imperial.ac.uk
 ait05.us.es
@@ -562,8 +558,6 @@ planetlab-1.vuse.vanderbilt.edu
 planetlab-2.vuse.vanderbilt.edu
 planetlab1.eecs.wsu.edu
 planetlab2.eecs.wsu.edu
-planetlab1.pbs.org
-planetlab2.pbs.org
 plab1.eece.ksu.edu
 plab2.eece.ksu.edu
 planetlab-1.dis.uniroma1.it
@@ -583,8 +577,6 @@ pl2.unm.edu
 planet1.inf.tu-dresden.de
 planet2.inf.tu-dresden.de
 planetlab1.itwm.fhg.de
-planetlab0.cs.stir.ac.uk
-planetlab1.cs.stir.ac.uk
 planetlab1.uta.edu
 planetlab2.uta.edu
 planetlab1.cesnet.cz
@@ -610,7 +602,6 @@ planetlab1.seu.edu.cn
 planetlab2.seu.edu.cn
 plab1.engr.sjsu.edu
 plab2.engr.sjsu.edu
-dragonlab.6planetlab.edu.cn
 planet2.cc.gt.atl.ga.us
 planet3.cc.gt.atl.ga.us
 planet4.cc.gt.atl.ga.us
@@ -794,3 +785,21 @@ planetlab3.cslab.ece.ntua.gr
 planetlab1.it.uc3m.es
 planetlab1.wiwi.hu-berlin.de
 planetlab2.wiwi.hu-berlin.de
+onelab3.warsaw.rd.tp.pl
+planetlab1.williams.edu
+planetlab2.williams.edu
+planetlab3.williams.edu
+planetlab-13.cs.princeton.edu
+planetlab-15.cs.princeton.edu
+planetlab2.it.uc3m.es
+pllab1.kamgu.ru
+pllab2.kamgu.ru
+sv02-h010.utt.fr
+sv01-h010.utt.fr
+false-node.cs.princeton.edu
+false-node2.cs.princeton.edu
+pl1.planetlab.ics.tut.ac.jp
+pl2.planetlab.ics.tut.ac.jp
+planetlab01.sys.virginia.edu
+planetlab02.sys.virginia.edu
+bupt1.6planetlab.edu.cn

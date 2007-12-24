@@ -33,6 +33,16 @@
 #include "stringutilities.h"
 
 #include <complex>
+#include <iostream>
+
+
+#if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 303)
+#define likely(x)   (__builtin_expect(!!(x), 1))
+#define unlikely(x) (__builtin_expect(!!(x), 0))
+#else
+#define likely(x)   (x)
+#define unlikely(x) (x)
+#endif
 
 
 // ###### Constructor #######################################################
@@ -67,74 +77,12 @@ void FractalGeneratorServer::fractalGeneratorPrintParameters(const void* userDat
    const FractalGeneratorServerSettings* settings = (const FractalGeneratorServerSettings*)userData;
 
    puts("Fractal Generator Parameters:");
+   printf("   Data Max Time           = %u [ms]\n", (unsigned int)(settings->DataMaxTime / 1000ULL));
    printf("   Cookie Max Time         = %u [ms]\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
    printf("   Cookie Max Packets      = %u [Packets]\n", (unsigned int)settings->CookieMaxPackets);
    printf("   Transmit Timeout        = %u [ms]\n", (unsigned int)settings->TransmitTimeout);
    printf("   Failure After           = %u [Packets]\n", (unsigned int)settings->FailureAfter);
    printf("   Test Mode               = %s\n", (settings->TestMode == true) ? "on" : "off");
-}
-
-
-// ###### Send cookie #######################################################
-bool FractalGeneratorServer::sendCookie()
-{
-   FGPCookie cookie;
-   ssize_t   sent;
-
-   strncpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
-   cookie.Parameter.Header.Type   = FGPT_PARAMETER;
-   cookie.Parameter.Header.Flags  = 0x00;
-   cookie.Parameter.Header.Length = htons(sizeof(cookie.Parameter.Header));
-   cookie.Parameter.Width         = htonl(Status.Parameter.Width);
-   cookie.Parameter.Height        = htonl(Status.Parameter.Height);
-   cookie.Parameter.MaxIterations = htonl(Status.Parameter.MaxIterations);
-   cookie.Parameter.AlgorithmID   = htonl(Status.Parameter.AlgorithmID);
-   cookie.Parameter.C1Real        = Status.Parameter.C1Real;
-   cookie.Parameter.C2Real        = Status.Parameter.C2Real;
-   cookie.Parameter.C1Imag        = Status.Parameter.C1Imag;
-   cookie.Parameter.C2Imag        = Status.Parameter.C2Imag;
-   cookie.Parameter.N             = Status.Parameter.N;
-   cookie.CurrentX                = htonl(Status.CurrentX);
-   cookie.CurrentY                = htonl(Status.CurrentY);
-
-   sent = rsp_send_cookie(RSerPoolSocketDescriptor,
-                          (unsigned char*)&cookie, sizeof(cookie), 0,
-                          Settings.TransmitTimeout);
-
-   LastCookieTimeStamp        = getMicroTime();
-   DataPacketsAfterLastCookie = 0;
-   return(sent == sizeof(cookie));
-}
-
-
-// ###### Send data #########################################################
-bool FractalGeneratorServer::sendData(FGPData* data)
-{
-   const size_t dataSize = getFGPDataSize(data->Points);
-   ssize_t      sent;
-
-   for(size_t i = 0;i < data->Points;i++) {
-      data->Buffer[i] = htonl(data->Buffer[i]);
-   }
-   data->Header.Type   = FGPT_DATA;
-   data->Header.Flags  = 0x00;
-   data->Header.Length = htons(dataSize);
-   data->Points = htonl(data->Points);
-   data->StartX = htonl(data->StartX);
-   data->StartY = htonl(data->StartY);
-
-   sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                      data, dataSize, 0,
-                      0, htonl(PPID_FGP), 0, 0, 0,
-                      Settings.TransmitTimeout);
-
-   data->Points = 0;
-   data->StartX = 0;
-   data->StartY = 0;
-   LastSendTimeStamp = getMicroTime();
-   DataPacketsAfterLastCookie++;
-
-   return(sent == (ssize_t)dataSize);
 }
 
 
@@ -171,16 +119,16 @@ bool FractalGeneratorServer::handleParameter(const FGPParameter* parameter,
    if(!insideCookie) {
       printTimeStamp(stdout);
       printf("Got Parameter on RSerPool socket %u:\nw=%u h=%u c1=(%lf,%lf) c2=(%lf,%lf), n=%f, maxIterations=%u, algorithmID=%u\n",
-            RSerPoolSocketDescriptor,
-            Status.Parameter.Width,
-            Status.Parameter.Height,
-            networkToDouble(Status.Parameter.C1Real),
-            networkToDouble(Status.Parameter.C1Imag),
-            networkToDouble(Status.Parameter.C2Real),
-            networkToDouble(Status.Parameter.C2Imag),
-            networkToDouble(Status.Parameter.N),
-            Status.Parameter.MaxIterations,
-            Status.Parameter.AlgorithmID);
+             RSerPoolSocketDescriptor,
+             Status.Parameter.Width,
+             Status.Parameter.Height,
+             networkToDouble(Status.Parameter.C1Real),
+             networkToDouble(Status.Parameter.C1Imag),
+             networkToDouble(Status.Parameter.C2Real),
+             networkToDouble(Status.Parameter.C2Imag),
+             networkToDouble(Status.Parameter.N),
+             Status.Parameter.MaxIterations,
+             Status.Parameter.AlgorithmID);
    }
 
    if((Status.Parameter.Width > 65536)  ||
@@ -239,21 +187,196 @@ EventHandlingResult FractalGeneratorServer::handleMessage(const char* buffer,
 }
 
 
-// ###### Calculate image ####################################################
+// ###### Send cookie #######################################################
+bool FractalGeneratorServer::sendCookie(const unsigned long long now)
+{
+   FGPCookie cookie;
+   ssize_t   sent;
+
+   strncpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
+   cookie.Parameter.Header.Type   = FGPT_PARAMETER;
+   cookie.Parameter.Header.Flags  = 0x00;
+   cookie.Parameter.Header.Length = htons(sizeof(cookie.Parameter.Header));
+   cookie.Parameter.Width         = htonl(Status.Parameter.Width);
+   cookie.Parameter.Height        = htonl(Status.Parameter.Height);
+   cookie.Parameter.MaxIterations = htonl(Status.Parameter.MaxIterations);
+   cookie.Parameter.AlgorithmID   = htonl(Status.Parameter.AlgorithmID);
+   cookie.Parameter.C1Real        = Status.Parameter.C1Real;
+   cookie.Parameter.C2Real        = Status.Parameter.C2Real;
+   cookie.Parameter.C1Imag        = Status.Parameter.C1Imag;
+   cookie.Parameter.C2Imag        = Status.Parameter.C2Imag;
+   cookie.Parameter.N             = Status.Parameter.N;
+   cookie.CurrentX                = htonl(Status.CurrentX);
+   cookie.CurrentY                = htonl(Status.CurrentY);
+
+   sent = rsp_send_cookie(RSerPoolSocketDescriptor,
+                          (unsigned char*)&cookie, sizeof(cookie), 0,
+                          Settings.TransmitTimeout);
+
+   LastCookieTimeStamp        = now;
+   DataPacketsAfterLastCookie = 0;
+
+   if(unlikely(sent != sizeof(cookie))) {
+      printTimeStamp(stdout);
+      printf("Sending cookie on RSerPool socket %u failed!\n",
+             RSerPoolSocketDescriptor);
+      return(false);
+   }
+   return(true);
+}
+
+
+// ###### Send data #########################################################
+bool FractalGeneratorServer::sendData(const unsigned long long now)
+{
+   const size_t dataSize = getFGPDataSize(Data.Points);
+   ssize_t      sent;
+
+   Data.Header.Type   = FGPT_DATA;
+   Data.Header.Flags  = 0x00;
+   Data.Header.Length = htons(dataSize);
+   Data.Points        = htonl(Data.Points);
+   Data.StartX        = htonl(Data.StartX);
+   Data.StartY        = htonl(Data.StartY);
+
+   sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                      &Data, dataSize, 0,
+                      0, htonl(PPID_FGP), 0, 0, 0,
+                      Settings.TransmitTimeout);
+
+   DataPackets++;
+   DataPacketsAfterLastCookie++;
+   Data.Points        = 0;
+   Data.StartX        = 0;
+   Data.StartY        = 0;
+   LastSendTimeStamp  = now;
+
+   if(unlikely(sent != (ssize_t)dataSize)) {
+      printTimeStamp(stdout);
+      printf("Sending Data on RSerPool socket %u failed!\n",
+             RSerPoolSocketDescriptor);
+      return(false);
+   }
+   return(true);
+}
+
+
+// ###### Set point and advance x position ##################################
+EventHandlingResult FractalGeneratorServer::advanceX(const unsigned int color)
+{
+   if(Data.Points == 0) {
+      Data.StartX = Status.CurrentX;
+      Data.StartY = Status.CurrentY;
+   }
+   Data.Buffer[Data.Points] = htonl(color);
+   Data.Points++;
+
+   // ====== Send Data ======================================================
+   if(unlikely(Data.Points >= FGD_MAX_POINTS)) {
+      const unsigned long long now = getMicroTime();
+
+      if(unlikely(!sendData(now))) {
+         return(EHR_Abort);
+      }
+
+      // ====== Failure more ================================================
+      if(unlikely((Settings.FailureAfter > 0) && (DataPackets >= Settings.FailureAfter))) {
+         sendCookie(now);
+         printTimeStamp(stdout);
+         printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
+                RSerPoolSocketDescriptor,
+                (unsigned int)DataPackets);
+         return(EHR_Abort);
+      }
+
+      // ====== Schedule cookie/data timer ==================================
+      scheduleTimer();
+   }
+
+
+   // ====== Send Data/Cookie due to expired timer ==========================
+   if(unlikely(Alert)) {
+      Alert = 0;
+      const unsigned long long now = getMicroTime();
+
+      // ====== Send Data ===================================================
+      if(unlikely(LastSendTimeStamp + 1000000 < now)) {
+         if(unlikely(!sendData(now))) {
+            return(EHR_Abort);
+         }
+      }
+
+      // ====== Send cookie =================================================
+      if( (DataPacketsAfterLastCookie >= Settings.CookieMaxPackets) ||
+          (LastCookieTimeStamp + Settings.CookieMaxTime < now) ) {
+         if(unlikely(!sendCookie(now))) {
+            return(EHR_Abort);
+         }
+      }
+
+      // ====== Schedule cookie/data timer ==================================
+      scheduleTimer();
+   }
+
+
+   // ====== Shutdown ====================================================
+   if(unlikely(isShuttingDown())) {
+      printf("Aborting session on RSerPool socket %u due to server shutdown!\n",
+             RSerPoolSocketDescriptor);
+      const unsigned long long now = getMicroTime();
+      if(sendData(now)) {
+         sendCookie(now);
+      }
+      return(EHR_Abort);
+   }
+
+   Status.CurrentX++;
+   return(EHR_Okay);
+}
+
+
+// ###### Advance y position ################################################
+void FractalGeneratorServer::advanceY()
+{
+   Status.CurrentY++;
+   Status.CurrentX = 0;
+}
+
+
+// ###### Schedule timer ####################################################
+void FractalGeneratorServer::scheduleTimer()
+{
+   const unsigned long long nextTimerTimeStamp =
+      std::min(LastCookieTimeStamp + Settings.CookieMaxTime,
+               LastSendTimeStamp + Settings.DataMaxTime);
+   setAsyncTimer(nextTimerTimeStamp);
+}
+
+
+// ###### Handle cookie/transmission timer ##################################
+void FractalGeneratorServer::asyncTimerEvent(const unsigned long long now)
+{
+   Alert = 1;
+}
+
+
+// ###### Calculate image ###################################################
 EventHandlingResult FractalGeneratorServer::calculateImage()
 {
    // ====== Update load ====================================================
    setLoad(1.0 / ServerList->getMaxThreads());
 
    // ====== Initialize =====================================================
-   struct FGPData       data;
+   EventHandlingResult  result = EHR_Okay;
    double               stepX;
    double               stepY;
    std::complex<double> z;
    size_t               i;
-   size_t               dataPackets = 0;
+   const unsigned int   algorithm = (Settings.TestMode) ? 0 : Status.Parameter.AlgorithmID;
 
-   data.Points = 0;
+   Alert       = 0;
+   DataPackets = 0;
+   Data.Points = 0;
    const double c1real = networkToDouble(Status.Parameter.C1Real);
    const double c1imag = networkToDouble(Status.Parameter.C1Imag);
    const double c2real = networkToDouble(Status.Parameter.C2Real);
@@ -263,118 +386,103 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
    stepY = (c2imag - c1imag) / Status.Parameter.Height;
    LastCookieTimeStamp = LastSendTimeStamp = getMicroTime();
 
-   if(!sendCookie()) {
+   if(!sendCookie(LastCookieTimeStamp)) {
       printTimeStamp(stdout);
       printf("Sending cookie (start) on RSerPool socket %u failed!\n",
              RSerPoolSocketDescriptor);
       return(EHR_Abort);
    }
+   scheduleTimer();
 
-   // ====== Calculate image ================================================
-   while(Status.CurrentY < Status.Parameter.Height) {
-      while(Status.CurrentX < Status.Parameter.Width) {
-         // ====== Calculate pixel ==========================================
-         if(!Settings.TestMode) {
-            const std::complex<double> c =
-               std::complex<double>(c1real + ((double)Status.CurrentX * stepX),
-                                    c1imag + ((double)Status.CurrentY * stepY));
 
-            // ====== Algorithms ============================================
-            switch(Status.Parameter.AlgorithmID) {
-               case FGPA_MANDELBROT:
-                  z = std::complex<double>(0.0, 0.0);
-                  for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                     z = z*z - c;
-                     if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
-                        break;
-                     }
+   // ====== Algorithms =====================================================
+   switch(algorithm) {
+
+      // ====== Mandelbrot ==================================================
+      case FGPA_MANDELBROT:
+         while(Status.CurrentY < Status.Parameter.Height) {
+            while(Status.CurrentX < Status.Parameter.Width) {
+               // ====== Calculate pixel ====================================
+               const std::complex<double> c =
+                  std::complex<double>(c1real + ((double)Status.CurrentX * stepX),
+                                       c1imag + ((double)Status.CurrentY * stepY));
+
+               z = std::complex<double>(0.0, 0.0);
+               for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                  z = z*z - c;
+                  if(unlikely( (z.real() * z.real() + z.imag() * z.imag()) >= 2.0) ) {
+                     break;
                   }
-                break;
-               case FGPA_MANDELBROTN:
-                  z = std::complex<double>(0.0, 0.0);
-                  for(i = 0;i < Status.Parameter.MaxIterations;i++) {
-                     z = pow(z, (int)rint(n)) - c;
-                     if(z.real() * z.real() + z.imag() * z.imag() >= 2.0) {
-                        break;
-                     }
+               }
+
+               result = advanceX(i);
+               if(unlikely(result != EHR_Okay)) {
+                  goto finished;
+               }
+            }
+            advanceY();
+         }
+        break;
+
+      // ====== MandelbrotN =================================================
+      case FGPA_MANDELBROTN:
+         while(Status.CurrentY < Status.Parameter.Height) {
+            while(Status.CurrentX < Status.Parameter.Width) {
+               // ====== Calculate pixel ====================================
+               const std::complex<double> c =
+                  std::complex<double>(c1real + ((double)Status.CurrentX * stepX),
+                                       c1imag + ((double)Status.CurrentY * stepY));
+
+               z = std::complex<double>(0.0, 0.0);
+               for(i = 0;i < Status.Parameter.MaxIterations;i++) {
+                  z = pow(z, std::complex<double>(n)) - c;
+                  if(unlikely( (z.real() * z.real() + z.imag() * z.imag()) >= 2.0) ) {
+                     break;
                   }
-                break;
-               default:
-                  i = 0;
-                break;
+               }
+
+               result = advanceX(i);
+               if(unlikely(result != EHR_Okay)) {
+                  goto finished;
+               }
             }
+            advanceY();
          }
-         else {
-            i = (Status.CurrentX * Status.CurrentY) % 256;
-         }
-         // =================================================================
+        break;
 
-         if(data.Points == 0) {
-            data.StartX = Status.CurrentX;
-            data.StartY = Status.CurrentY;
-         }
-         data.Buffer[data.Points] = i;
-         data.Points++;
-
-         // ====== Send data ================================================
-         if( (data.Points >= FGD_MAX_POINTS) ||
-            (LastSendTimeStamp + 1000000 < getMicroTime()) ) {
-            if(!sendData(&data)) {
-               printTimeStamp(stdout);
-               printf("Sending data on RSerPool socket %u failed!\n",
-                      RSerPoolSocketDescriptor);
-               return(EHR_Abort);
+      // ====== Test Mode ===================================================
+      default:
+         while(Status.CurrentY < Status.Parameter.Height) {
+            while(Status.CurrentX < Status.Parameter.Width) {
+               result = advanceX((Status.CurrentX * Status.CurrentY) % 256);
+               if(unlikely(result != EHR_Okay)) {
+                  break;
+               }
             }
-
-            dataPackets++;
-            if((Settings.FailureAfter > 0) && (dataPackets >= Settings.FailureAfter)) {
-               sendCookie();
-               printTimeStamp(stdout);
-               printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
-                      RSerPoolSocketDescriptor,
-                      (unsigned int)dataPackets);
-               return(EHR_Abort);
-            }
+            advanceY();
          }
+        break;
 
-         Status.CurrentX++;
-      }
-      Status.CurrentX = 0;
-      Status.CurrentY++;
+   }
 
-      // ====== Send cookie =================================================
-      if( (LastCookieTimeStamp + Settings.CookieMaxTime < getMicroTime()) ||
-          (DataPacketsAfterLastCookie >=  Settings.CookieMaxPackets) ) {
-         if(!sendCookie()) {
-            printTimeStamp(stdout);
-            printf("Sending cookie (start) on RSerPool socket %u failed!\n",
-                  RSerPoolSocketDescriptor);
+
+   // ====== Send last Data packet ==========================================
+   if(result == EHR_Okay) {
+      const unsigned long long now = getMicroTime();
+      if(Data.Points > 0) {
+         if(unlikely(!sendData(now))) {
             return(EHR_Abort);
          }
       }
-      if(isShuttingDown()) {
-         printf("Aborting session on RSerPool socket %u due to server shutdown!\n",
-               RSerPoolSocketDescriptor);
+
+      Data.StartX = 0xffffffff;
+      Data.StartY = 0xffffffff;
+      if(unlikely(!sendData(now))) {
          return(EHR_Abort);
       }
    }
 
-   if(data.Points > 0) {
-      if(!sendData(&data)) {
-         printf("Sending data (last block) on RSerPool socket %u failed!\n",
-                  RSerPoolSocketDescriptor);
-         return(EHR_Abort);
-      }
-   }
-
-   data.StartX = 0xffffffff;
-   data.StartY = 0xffffffff;
-   if(!sendData(&data)) {
-      printf("Sending data (end of data) on RSerPool socket %u failed!\n",
-               RSerPoolSocketDescriptor);
-      return(EHR_Abort);
-   }
-
+finished:
    setLoad(0.0);
    return(EHR_Okay);
 }

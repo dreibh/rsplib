@@ -311,6 +311,7 @@ int main(int argc, char** argv)
       settings.TestMode         = false;
       settings.FailureAfter     = 0;
       settings.TransmitTimeout  = 2500;
+      settings.DataMaxTime      = 1000000;
       settings.CookieMaxTime    = 1000000;
       settings.CookieMaxPackets = 10;
       for(int i = 1;i < argc;i++) {
@@ -319,6 +320,12 @@ int main(int argc, char** argv)
          }
          else if(!(strncmp(argv[i], "-fgptransmittimeout=", 20))) {
             settings.TransmitTimeout = atol((const char*)&argv[i][20]);
+         }
+         else if(!(strncmp(argv[i], "-fgpdatamaxtime=", 16))) {
+            settings.DataMaxTime = 1000ULL * atol((const char*)&argv[i][16]);
+            if(settings.DataMaxTime < 100000) {
+               settings.DataMaxTime = 100000;
+            }
          }
          else if(!(strncmp(argv[i], "-fgpcookiemaxtime=", 18))) {
             settings.CookieMaxTime = 1000ULL * atol((const char*)&argv[i][18]);

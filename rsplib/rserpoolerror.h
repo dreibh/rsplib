@@ -44,14 +44,11 @@ extern "C" {
 /* Protocol-specific error causes */
 #define RSPERR_UNRECOGNIZED_PARAMETER        0x0001
 #define RSPERR_UNRECOGNIZED_MESSAGE          0x0002
-#define RSPERR_AUTHORIZATION_FAILURE         0x0003
-#define RSPERR_INVALID_VALUES                0x0004
+#define RSPERR_INVALID_VALUES                0x0003
 #define RSPERR_INCOMPATIBLE_POOL_POLICY      0x0005
-#define RSPERR_UNSUPPORTED_POOL_POLICY       0x0006
-#define RSPERR_OUT_OF_MEMORY                 0x0007
-#define RSPERR_WRONG_PROTOCOL                0x0008
-#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0009
-#define RSPERR_NOT_FOUND                     0x000a
+#define RSPERR_OUT_OF_RESOURCES              0x0006
+#define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0008
+#define RSPERR_NOT_FOUND                     0x0009
 
 /* Implementation-specific error causes */
 #define RSPERR_NOT_INITIALIZED               0x1000
@@ -63,18 +60,20 @@ extern "C" {
 #define RSPERR_NO_REGISTRAR                  0x1007
 #define RSPERR_TIMEOUT                       0x1008
 #define RSPERR_UNRECOGNIZED_PARAMETER_SILENT 0x1009
+#define RSPERR_WRONG_PROTOCOL                0x100a
+#define RSPERR_UNSUPPORTED_POOL_POLICY       0x100b
 
 /* Handlespace-management specific error causes */
-#define RSPERR_NO_RESOURCES                  0xf002
-#define RSPERR_INVALID_ID                    0xf004
-#define RSPERR_OWN_ID                        0xf005
-#define RSPERR_DUPLICATE_ID                  0xf006
-#define RSPERR_INVALID_POOL_POLICY           0xf00a
-#define RSPERR_INVALID_POOL_HANDLE           0xf00b
-#define RSPERR_INVALID_ADDRESSES             0xf00c
-#define RSPERR_INVALID_REGISTRATOR           0xf00d
-#define RSPERR_NO_USABLE_ASAP_ADDRESSES      0xf00e
-#define RSPERR_NO_USABLE_USER_ADDRESSES      0xf00f
+#define RSPERR_INVALID_ID                    0xf000
+#define RSPERR_OWN_ID                        0xf001
+#define RSPERR_DUPLICATE_ID                  0xf002
+#define RSPERR_INVALID_POOL_POLICY           0xf003
+#define RSPERR_INVALID_POOL_HANDLE           0xf004
+#define RSPERR_INVALID_ADDRESSES             0xf005
+#define RSPERR_INVALID_REGISTRATOR           0xf006
+#define RSPERR_NO_USABLE_ASAP_ADDRESSES      0xf007
+#define RSPERR_NO_USABLE_USER_ADDRESSES      0xf008
+#define RSPERR_OUT_OF_MEMORY                 RSPERR_OUT_OF_RESOURCES
 
 
 const char* rserpoolErrorGetDescription(const unsigned int error);

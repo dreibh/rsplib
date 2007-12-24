@@ -45,7 +45,7 @@ class TCPLikeServerList : public TDMutex
    ~TCPLikeServerList();
    bool add(TCPLikeServer* thread);
    void remove(TCPLikeServer* thread);
-   void removeFinished();
+   void handleRemovalsAndTimers();
    void removeAll();
 
    double getTotalLoad();
@@ -58,7 +58,7 @@ class TCPLikeServerList : public TDMutex
    friend class TCPLikeServer;
    struct ThreadListEntry {
       ThreadListEntry* Next;
-      TCPLikeServer*  Object;
+      TCPLikeServer*   Object;
    };
    ThreadListEntry* ThreadList;
    unsigned int     LoadSum;
@@ -69,6 +69,8 @@ class TCPLikeServerList : public TDMutex
 
 class TCPLikeServer : public TDThread
 {
+   friend class TCPLikeServerList;
+
    public:
    TCPLikeServer(int rserpoolSocketDescriptor);
    ~TCPLikeServer();
@@ -79,8 +81,11 @@ class TCPLikeServer : public TDThread
    inline bool isShuttingDown() const {
       return(Shutdown);
    }
-   inline void setTimer(const unsigned long long timeStamp) {
-      TimerTimeStamp = timeStamp;
+   inline void setSyncTimer(const unsigned long long timeStamp) {
+      SyncTimerTimeStamp = timeStamp;
+   }
+   inline void setAsyncTimer(const unsigned long long timeStamp) {
+      AsyncTimerTimeStamp = timeStamp;
    }
    inline TCPLikeServerList* getServerList() const {
       return(ServerList);
@@ -116,7 +121,8 @@ class TCPLikeServer : public TDThread
    protected:
    virtual EventHandlingResult initializeSession();
    virtual void finishSession(EventHandlingResult result);
-   virtual EventHandlingResult timerEvent(const unsigned long long now);
+   virtual EventHandlingResult syncTimerEvent(const unsigned long long now);
+   virtual void asyncTimerEvent(const unsigned long long now);
    virtual EventHandlingResult handleMessage(const char* buffer,
                                              size_t      bufferSize,
                                              uint32_t    ppid,
@@ -131,7 +137,8 @@ class TCPLikeServer : public TDThread
    bool               IsNewSession;
    bool               Shutdown;
    bool               Finished;
-   unsigned long long TimerTimeStamp;
+   unsigned long long SyncTimerTimeStamp;
+   unsigned long long AsyncTimerTimeStamp;
 };
 
 

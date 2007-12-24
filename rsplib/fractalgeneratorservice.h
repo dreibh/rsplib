@@ -40,6 +40,7 @@ class FractalGeneratorServer : public TCPLikeServer
    public:
    struct FractalGeneratorServerSettings
    {
+      unsigned long long DataMaxTime;
       unsigned long long CookieMaxTime;
       size_t             CookieMaxPackets;
       size_t             TransmitTimeout;
@@ -55,6 +56,7 @@ class FractalGeneratorServer : public TCPLikeServer
    static void fractalGeneratorPrintParameters(const void* userData);
 
    protected:
+   void asyncTimerEvent(const unsigned long long now);
    EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);
    EventHandlingResult handleMessage(const char* buffer,
                                      size_t      bufferSize,
@@ -62,19 +64,26 @@ class FractalGeneratorServer : public TCPLikeServer
                                      uint16_t    streamID);
 
    private:
-   bool sendCookie();
-   bool sendData(FGPData* data);
+   void scheduleTimer();
+   bool sendCookie(const unsigned long long now);
+   bool sendData(const unsigned long long now);
    bool handleParameter(const FGPParameter* parameter,
                         const size_t        size,
                         const bool          insideCookie = false);
    EventHandlingResult calculateImage();
+   EventHandlingResult advanceX(const unsigned int color);
+   void advanceY();
 
-   FractalGeneratorStatus         Status;
    unsigned long long             LastCookieTimeStamp;
    unsigned long long             LastSendTimeStamp;
-   FractalGeneratorServerSettings Settings;
    size_t                         DataPacketsAfterLastCookie;
-};
 
+   struct FGPData                 Data;
+   size_t                         DataPackets;
+   int                            Alert;
+
+   FractalGeneratorStatus         Status;
+   FractalGeneratorServerSettings Settings;
+};
 
 #endif
