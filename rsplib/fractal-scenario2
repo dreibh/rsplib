@@ -76,7 +76,9 @@ elif [ "x$1" = "xuser" ] ; then
       optRegistrars="$optRegistrars -registrar=$pr:3863"
    done
    shift
-   ./fractalpooluser $optRegistrars -loglevel=1 $OPT_CSP -configdir=fgpconfig $@
+   cmd="./fractalpooluser $optRegistrars -loglevel=1 $OPT_CSP -configdir=fgpconfig $@"
+   echo "#s $cmd"
+   $cmd
 else
    echo "ERROR: Bad parameter!"
 fi

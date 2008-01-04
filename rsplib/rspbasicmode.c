@@ -202,24 +202,30 @@ void rsp_cleanup()
             rsp_close(i);
          }
       }
-      simpleRedBlackTreeDelete(&gRSerPoolSocketSet);
-      identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
-      gRSerPoolSocketAllocationBitmap = NULL;
 
       /* ====== Clean-up ASAP Instance, CSP Reported and Dispatcher ====== */
       asapInstanceDelete(gAsapInstance);
       gAsapInstance = NULL;
-#ifdef ENABLE_CSP
+
       /* ====== Remove Component Status Reporter ========================= */
+#ifdef ENABLE_CSP
       if(gCSPReporter) {
          cspReporterDelete(gCSPReporter);
          free(gCSPReporter);
          gCSPReporter = NULL;
       }
 #endif
+
+      /* ====== Remove Dispatcher ======================================== */
       dispatcherDelete(&gDispatcher);
       threadSafetyDelete(&gRSerPoolSocketSetMutex);
       threadSafetyDelete(&gThreadSafety);
+
+      /* ====== Remove socket set ======================================== */
+      simpleRedBlackTreeDelete(&gRSerPoolSocketSet);
+      identifierBitmapDelete(gRSerPoolSocketAllocationBitmap);
+      gRSerPoolSocketAllocationBitmap = NULL;
+
    }
    finishLogging();
 }
