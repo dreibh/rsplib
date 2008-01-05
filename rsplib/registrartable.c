@@ -290,11 +290,19 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
 /* ###### Destructor ##################################################### */
 void registrarTableDelete(struct RegistrarTable* registrarTable)
 {
+   struct SimpleRedBlackTreeNode* node;
+
    if(registrarTable != NULL) {
       if(registrarTable->AnnounceSocket >= 0) {
          fdCallbackDelete(&registrarTable->AnnounceSocketFDCallback);
          ext_close(registrarTable->AnnounceSocket);
          registrarTable->AnnounceSocket = -1;
+      }
+      node = simpleRedBlackTreeGetFirst(&registrarTable->RegistrarAssocIDList);
+      while(node) {
+         CHECK(simpleRedBlackTreeRemove(&registrarTable->RegistrarAssocIDList, node) == node);
+         free(node);
+         node = simpleRedBlackTreeGetFirst(&registrarTable->RegistrarAssocIDList);
       }
       simpleRedBlackTreeDelete(&registrarTable->RegistrarAssocIDList);
       ST_CLASS(peerListManagementDelete)(&registrarTable->RegistrarList);
@@ -328,7 +336,7 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
 }
 
 
-/* ###### Remove registrar assoc ID to list ############################## */
+/* ###### Remove registrar assoc ID from list ############################ */
 static void removeRegistrarAssocID(struct RegistrarTable* registrarTable,
                                    int                    registrarHuntFD,
                                    sctp_assoc_t           assocID)
