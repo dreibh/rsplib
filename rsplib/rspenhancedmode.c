@@ -691,15 +691,9 @@ int rsp_connect_tags(int                  sd,
             connection establishment */
          oldEventMask = rserpoolSocket->Notifications.EventMask;
          rserpoolSocket->Notifications.EventMask = 0;
-         if(rsp_forcefailover_tags(rserpoolSocket->Descriptor, tags) == 0) {
-            result = 0;
-         }
-         else {
-            deleteSession(rserpoolSocket, session);
-            errno = EIO;
-         }
+         rsp_forcefailover_tags(rserpoolSocket->Descriptor, tags);
          rserpoolSocket->Notifications.EventMask = oldEventMask;
-
+         result = 0;
       }
       else {
          errno = ENOMEM;
