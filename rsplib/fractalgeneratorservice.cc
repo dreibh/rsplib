@@ -456,7 +456,7 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
             while(Status.CurrentX < Status.Parameter.Width) {
                result = advanceX((Status.CurrentX * Status.CurrentY) % 256);
                if(unlikely(result != EHR_Okay)) {
-                  break;
+                  goto finished;
                }
             }
             advanceY();
@@ -484,5 +484,5 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
 
 finished:
    setLoad(0.0);
-   return(EHR_Okay);
+   return(result);
 }

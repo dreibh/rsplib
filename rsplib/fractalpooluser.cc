@@ -405,7 +405,10 @@ void FractalPU::run()
          while(secsToWait > 0) {
             usleep(1000000);
             secsToWait--;
-            snprintf((char*)&str, sizeof(str), "Waiting for %u seconds ...", (int)secsToWait);
+            snprintf((char*)&str, sizeof(str),
+                     "%s - Waiting for %u seconds ...",
+                     (failed == 0) ? "Image completed" : "Image calculation failed",
+                     (int)secsToWait);
             qApp->lock();
             StatusBar->message(str);
             qApp->unlock();
@@ -606,11 +609,11 @@ void FractalCalculationThread::run()
                                  packets++;
                                  if(ShowStatus) {
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed packet #%u; PE is $%08x",
+                                             "Processed packet #%03u; PE is $%08x",
                                              (unsigned int)packets, rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed data packet #%u (from PE $%08x)...",
+                                             "Processed packet #%03u from PE $%08x ...",
                                              (unsigned int)packets, rinfo.rinfo_pe_id);
                                     qApp->lock();
                                     Master->StatusBar->message(statusText);
