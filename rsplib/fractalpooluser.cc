@@ -474,11 +474,7 @@ bool FractalCalculationThread::sendParameterMessage()
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
                       0, htonl(PPID_FGP), 0, 0, 0, Master->SendTimeout);
-   if(sent < 0) {
-      logerror("rsp_sendmsg() failed");
-      return(false);
-   }
-   return(true);
+   return(sent > 0);
 }
 
 
