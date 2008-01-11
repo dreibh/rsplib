@@ -7,19 +7,19 @@ PR_AUSTRALIA=`grep "^[a-Z0-9]" pr-australia.hosts`
 PR_ASIA=`grep "^[a-Z0-9]" pr-asia.hosts`
 PR_AMERICA=`grep "^[a-Z0-9]" pr-america.hosts`
 PR_EUROPE=`grep "^[a-Z0-9]" pr-europe.hosts`
-PR_MISCOPT=""
+PR_MISCOPT="-asapannounce=off -enrpannounce=off"
 
 PE_AUSTRALIA=`grep "^[a-Z0-9]" pe-australia.hosts`
 PE_ASIA=`grep "^[a-Z0-9]" pe-asia.hosts`
 PE_AMERICA=`grep "^[a-Z0-9]" pe-america.hosts`
 PE_EUROPE=`grep "^[a-Z0-9]" pe-europe.hosts`
-PE_MISCOPT=""
+PE_MISCOPT="-asapannounce=off"
 
 PU_AUSTRALIA=`grep "^[a-Z0-9]" pu-australia.hosts`
 PU_ASIA=`grep "^[a-Z0-9]" pu-asia.hosts`
 PU_AMERICA=`grep "^[a-Z0-9]" pu-america.hosts`
 PU_EUROPE=`grep "^[a-Z0-9]" pu-europe.hosts`
-PU_MISCOPT=""
+PU_MISCOPT="-asapannounce=off"
 
 MULTIPLIKATOR=1
 
