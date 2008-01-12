@@ -654,7 +654,6 @@ static bool createServerInformationParameter(struct RSerPoolMessage*        mess
    }
 
    sip->sip_server_id = htonl(peerListNode->Identifier);
-   sip->sip_flags     = peerListNode->Flags;
 
    if(createTransportParameter(message, peerListNode->AddressBlock) == false) {
       return(false);

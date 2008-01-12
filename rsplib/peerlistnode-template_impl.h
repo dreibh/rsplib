@@ -196,9 +196,6 @@ void ST_CLASS(peerListNodeGetDescription)(
    if(peerListNode->Flags & PLNF_FROM_PEER) {
       safestrcat(buffer, "[fromPeer]", bufferSize);
    }
-   if(peerListNode->Flags & PLNF_MULTICAST) {
-      safestrcat(buffer, "[multicast]", bufferSize);
-   }
 
    if(peerListNode->Status & PLNS_LISTSYNC) {
       safestrcat(buffer, " LISTSYNC", bufferSize);

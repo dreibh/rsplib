@@ -306,7 +306,6 @@ struct rserpool_handleupdateparameter
 struct rserpool_serverinfoparameter
 {
    uint32_t sip_server_id;
-   uint32_t sip_flags;
 };
 
 #define EHF_SERVERINFO_MULTICAST (1 << 31)

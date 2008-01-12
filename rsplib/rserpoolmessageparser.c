@@ -1270,7 +1270,7 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
 
    ST_CLASS(peerListNodeNew)(peerListNode,
                              ntohl(sip->sip_server_id),
-                             ntohl(sip->sip_flags),
+                             0,
                              newTransportAddressBlock);
 
    LOG_VERBOSE3
