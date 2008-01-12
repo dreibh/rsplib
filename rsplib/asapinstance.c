@@ -814,7 +814,7 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
             result = asapInstanceHandleResolutionFromCache(
                         asapInstance, poolHandle,
                         nodePtrArray,
-                        (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+                        poolElementNodeArray,
                         poolElementNodes, convertFunction, false);
 
             dispatcherUnlock(asapInstance->StateMachine);

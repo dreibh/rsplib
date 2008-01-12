@@ -348,12 +348,12 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          items,
                          struct TagItem*       tags)
 {
-   struct PoolHandle    myPoolHandle;
-   struct rsp_addrinfo* addrInfoArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
-   size_t               addrInfos;
-   unsigned int         hresResult;
-   int                  result;
-   size_t               n;
+   struct PoolHandle myPoolHandle;
+   void*             addrInfoArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
+   size_t            addrInfos;
+   unsigned int      hresResult;
+   int               result;
+   size_t            n;
 
    *rspAddrInfo = NULL;
    if(gAsapInstance) {
@@ -369,7 +369,8 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
       if(hresResult == RSPERR_OKAY) {
          if(addrInfos > 0) {
             for(n = 0;n < addrInfos - 1;n++) {
-               addrInfoArray[n]->ai_next = addrInfoArray[n + 1];
+               ((struct rsp_addrinfo*)addrInfoArray[n])->ai_next =
+                  (struct rsp_addrinfo*)addrInfoArray[n + 1];
             }
             *rspAddrInfo = addrInfoArray[0];
          }
