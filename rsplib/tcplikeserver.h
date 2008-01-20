@@ -41,7 +41,7 @@ class TCPLikeServer;
 class TCPLikeServerList : public TDMutex
 {
    public:
-   TCPLikeServerList(size_t maxThreads);
+   TCPLikeServerList(size_t maxThreads, int systemNotificationPipe);
    ~TCPLikeServerList();
    bool add(TCPLikeServer* thread);
    void remove(TCPLikeServer* thread);
@@ -61,9 +61,10 @@ class TCPLikeServerList : public TDMutex
       TCPLikeServer*   Object;
    };
    ThreadListEntry* ThreadList;
-   unsigned int     LoadSum;
    size_t           Threads;
    size_t           MaxThreads;
+   int              SystemNotificationPipe;
+   unsigned int     LoadSum;
 };
 
 
