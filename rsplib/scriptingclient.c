@@ -40,7 +40,9 @@
 
 
 /* ###### Upload input file ############################################## */
-static bool upload(int sd, const char* inputName)
+static bool upload(int                      sd,
+                   const char*              inputName,
+                   const unsigned long long transmitTimeout)
 {
    struct Upload upload;
    size_t        dataLength;
@@ -60,7 +62,7 @@ static bool upload(int sd, const char* inputName)
          upload.Header.Flags  = 0x00;
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, 0);
+                            0, htonl(PPID_SP), 0, 0, 0, transmitTimeout);
          if(sent <= 0) {
             success = false;
             printf("Upload error: %s\n", strerror(errno));
@@ -91,10 +93,11 @@ int main(int argc, char** argv)
    union rserpool_notification*        notification;
    const struct ScriptingCommonHeader* header;
    const struct Download*              download;
-   bool                                quiet             = false;
-   unsigned long long                  retryDelay        = 1000000;
-   unsigned long long                  keepAliveInterval = 5000000;
-   unsigned long long                  keepAliveTimeout  = 5000000;
+   bool                                quiet             =  false;
+   unsigned long long                  retryDelay        =  1000000;
+   unsigned long long                  transmitTimeout   = 60000000;
+   unsigned long long                  keepAliveInterval =  5000000;
+   unsigned long long                  keepAliveTimeout  =  5000000;
    struct KeepAlive                    keepAlive;
    bool                                keepAliveTransmitted;
    unsigned long long                  lastKeepAlive;
@@ -154,6 +157,7 @@ int main(int argc, char** argv)
       printf("Input Name          = %s\n", inputName);
       printf("Output Name         = %s\n\n", outputName);
       printf("Retry Delay         = %llu [ms]\n", retryDelay / 1000);
+      printf("Transmit Timeout    = %llu [ms]\n", transmitTimeout / 1000);
       printf("Keep-Alive Interval = %llu [ms]\n", keepAliveInterval / 1000);
       printf("Keep-Alive Timeout  = %llu [ms]\n", keepAliveTimeout / 1000);
    }
@@ -183,7 +187,7 @@ int main(int argc, char** argv)
 
       /* ====== Upload input file ======================================== */
       puts("Upload ...");
-      if(upload(sd, inputName)) {
+      if(upload(sd, inputName, transmitTimeout)) {
          puts("Processing ...");
 
          /* ====== Wait for results and regularly send keep-alives ======= */
