@@ -219,6 +219,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 #endif
 
 
+#if 0
 #ifdef LINUX
 #define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
 #ifdef HAVE_KERNEL_SCTP
@@ -454,6 +455,7 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
 
    return(true);
 }
+#endif
 #endif
 #endif
 
@@ -2089,6 +2091,108 @@ int establish(const int                socketDomain,
 }
 
 
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+#warning Using lksctp sctp_getladdrs()/sctp_getpaddrs() bugfix (at least libsctp<=1.0.7)!
+/*
+ * Common getsockopt() layer
+ * If the NEW getsockopt() API fails this function will fall back to using
+ * the old API
+ */
+static int
+sctp_getaddrs(int sd, sctp_assoc_t id,
+              int optname_new, int optname_num_old, int optname_old,
+              struct sockaddr **addrs)
+{
+   int cnt, err;
+   socklen_t len;
+   size_t bufsize = 4096; /*enough for most cases*/
+
+   struct sctp_getaddrs *getaddrs = (struct sctp_getaddrs*)malloc(bufsize);
+   if(!getaddrs)
+      return -1;
+
+   for(;;) {
+      char *new_buf;
+
+      len = bufsize;
+      getaddrs->assoc_id = id;
+      err = getsockopt(sd, SOL_SCTP, optname_new, getaddrs, &len);
+      if (err == 0) {
+         /*got it*/
+         break;
+      }
+      if (errno == ENOPROTOOPT) {
+         /*Kernel does not support new API*/
+         free(getaddrs);
+/*
+         return sctp_getaddrs_old(sd, id,
+                   optname_num_old, optname_old,
+                   addrs);
+*/
+         return -1;
+      }
+      if (errno != ENOMEM ) {
+         /*unknown error*/
+         free(getaddrs);
+         return -1;
+      }
+      /*expand buffer*/
+      if (bufsize > 128*1024) {
+         /*this is getting ridiculous*/
+         free(getaddrs);
+         errno = ENOBUFS;
+         return -1;
+      }
+      new_buf = realloc(getaddrs, bufsize+4096);
+      if (!new_buf) {
+         free(getaddrs);
+         return -1;
+      }
+      bufsize += 4096;
+      getaddrs = (struct sctp_getaddrs*)new_buf;
+   }
+
+   /* we skip traversing the list, allocating a new buffer etc. and enjoy
+    * a simple hack*/
+   cnt = getaddrs->addr_num;
+   memmove(getaddrs, getaddrs + 1, len);   // TD: corrent length value!
+   *addrs = (struct sockaddr*)getaddrs;
+
+   return cnt;
+} /* sctp_getaddrs() */
+
+/* Get all peer address on a socket.  This is a new SCTP API
+ * described in the section 8.3 of the Sockets API Extensions for SCTP.
+ * This is implemented using the getsockopt() interface.
+ */
+int
+sctp_getpaddrs(int sd, sctp_assoc_t id, struct sockaddr **addrs)
+{
+   return sctp_getaddrs(sd, id,
+              SCTP_GET_PEER_ADDRS,
+              SCTP_GET_PEER_ADDRS_NUM_OLD,
+              SCTP_GET_PEER_ADDRS_OLD,
+              addrs);
+} /* sctp_getpaddrs() */
+
+/* Get all locally bound address on a socket.  This is a new SCTP API
+ * described in the section 8.5 of the Sockets API Extensions for SCTP.
+ * This is implemented using the getsockopt() interface.
+ */
+int
+sctp_getladdrs(int sd, sctp_assoc_t id, struct sockaddr **addrs)
+{
+   return sctp_getaddrs(sd, id,
+             SCTP_GET_LOCAL_ADDRS,
+             SCTP_GET_LOCAL_ADDRS_NUM_OLD,
+             SCTP_GET_LOCAL_ADDRS_OLD,
+             addrs);
+} /* sctp_getladdrs() */
+#endif
+#endif
+
+
 /* ###### Get local addresses ############################################### */
 size_t getladdrsplus(const int              fd,
                      const sctp_assoc_t     assocID,
@@ -2105,16 +2209,19 @@ size_t getladdrsplus(const int              fd,
    union sockaddr_union socketName;
    socklen_t            socketNameLen;
    uint16_t             port;
+/*
    size_t               addrs2;
    size_t               j;
+*/
 #endif
 #endif
    int i;
 
    if(addrs > 0) {
+/*
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
-#warning Using getladdrs() INADDR_ANY bugfix for lksctp!
+#warning Using sctp_getladdrs() INADDR_ANY bugfix for lksctp!
       if((addrs == 1) &&
          ( ( (((struct sockaddr*)packedAddresses)->sa_family == AF_INET) &&
                 (((struct sockaddr_in*)packedAddresses)->sin_addr.s_addr == 0) ) ||
@@ -2133,13 +2240,13 @@ size_t getladdrsplus(const int              fd,
       }
 #endif
 #endif
-
+*/
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
 
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
-#warning Using getladdrs port 0 bugfix for lksctp!
+#warning Using sctp_getladdrs() port 0 bugfix for lksctp!
       if(getPort(&(*addressArray)[0].sa) == 0) {
          socketNameLen = sizeof(socketName);
          if(ext_getsockname(fd, (struct sockaddr*)&socketName, &socketNameLen) == 0) {

@@ -22,7 +22,7 @@ void printAddrs(struct sockaddr* addrArray,
          case AF_INET:
             in = (const sockaddr_in*)addrArray;
             if(inet_ntop(AF_INET, &in->sin_addr, (char*)&str, sizeof(str)) != NULL) {
-               printf(" - #%u: %s\n", i + 1, str);
+               printf(" - #%u: %s   port=%u\n", i + 1, str, ntohs(in->sin_port));
             }
             else {
                printf("ERROR: Bad IPv4 address!");
@@ -37,10 +37,10 @@ void printAddrs(struct sockaddr* addrArray,
                   if(ifname == NULL) {
                      ifname = "   ERROR: Bad link-local scope ID!";
                   }
-                  printf(" - #%u: %s%%%s\n", i + 1, str, ifname);
+                  printf(" - #%u: %s%%%s   port=%u\n", i + 1, str, ifname, ntohs(in6->sin6_port));
                }
                else {
-                  printf(" - #%u: %s\n", i + 1, str);
+                  printf(" - #%u: %s   port=%u\n", i + 1, str, ntohs(in6->sin6_port));
                }
             }
             else {
