@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <netinet/ip6.h>
 #include <netinet/sctp.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
 
 
 void printAddrs(struct sockaddr* addrArray,

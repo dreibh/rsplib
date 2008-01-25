@@ -219,7 +219,6 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 #endif
 
 
-#if 0
 #ifdef LINUX
 #define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
 #ifdef HAVE_KERNEL_SCTP
@@ -455,7 +454,6 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
 
    return(true);
 }
-#endif
 #endif
 #endif
 
@@ -2209,16 +2207,13 @@ size_t getladdrsplus(const int              fd,
    union sockaddr_union socketName;
    socklen_t            socketNameLen;
    uint16_t             port;
-/*
    size_t               addrs2;
    size_t               j;
-*/
 #endif
 #endif
    int i;
 
    if(addrs > 0) {
-/*
 #ifdef LINUX
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() INADDR_ANY bugfix for lksctp!
@@ -2240,7 +2235,6 @@ size_t getladdrsplus(const int              fd,
       }
 #endif
 #endif
-*/
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
 
