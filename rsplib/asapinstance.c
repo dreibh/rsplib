@@ -274,8 +274,6 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
                                                                               ASAP_DEFAULT_REGISTRAR_REQUEST_TIMEOUT);
    asapInstance->RegistrarResponseTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarResponseTimeout,
                                                                                ASAP_DEFAULT_REGISTRAR_RESPONSE_TIMEOUT);
-   asapInstance->CacheElementTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_CacheElementTimeout,
-                                                                          ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT);
 
 
    /* ====== Show results =================================================== */
@@ -284,7 +282,6 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
    fprintf(stdlog, "registrar.request.maxtrials   = %u\n",     (unsigned int)asapInstance->RegistrarRequestMaxTrials);
    fprintf(stdlog, "registrar.request.timeout     = %lluus\n", asapInstance->RegistrarRequestTimeout);
    fprintf(stdlog, "registrar.response.timeout    = %lluus\n", asapInstance->RegistrarResponseTimeout);
-   fprintf(stdlog, "cache.elementtimeout          = %lluus\n", asapInstance->CacheElementTimeout);
    LOG_END
 }
 
@@ -751,7 +748,8 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
                                                             struct ST_CLASS(PoolElementNode)** poolElementNodeArray,
                                                             size_t*                            poolElementNodes,
                                                             unsigned int                       (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                                                                                  void*                                   ptr))
+                                                                                                                  void*                                   ptr),
+                                                            const unsigned long long           cacheElementTimeout)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct RSerPoolMessage*           message;
@@ -764,7 +762,7 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
       message->Type      = AHT_HANDLE_RESOLUTION;
       message->Flags     = 0x00;
       message->Handle    = *poolHandle;
-      message->Addresses = ((*poolElementNodes != RSPGETADDRS_MAX) && (asapInstance->CacheElementTimeout > 0)) ? 0 : *poolElementNodes;
+      message->Addresses = ((*poolElementNodes != RSPGETADDRS_MAX) && (cacheElementTimeout > 0)) ? 0 : *poolElementNodes;
 
       result = asapInstanceDoIO(asapInstance, message, &response);
       if(result == RSPERR_OKAY) {
@@ -807,7 +805,7 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
                ST_CLASS(poolHandlespaceManagementRestartPoolElementExpiryTimer)(
                   &asapInstance->Cache,
                   newPoolElementNode,
-                  asapInstance->CacheElementTimeout);
+                  cacheElementTimeout);
             }
 
             /* ====== Select PEs from cache ============================== */
@@ -855,12 +853,13 @@ static unsigned int asapInstanceHandleResolutionAtRegistrar(struct ASAPInstance*
 /* ###### Do handle resolution for given pool handle ##################### */
 #define HRES_POOL_ELEMENT_NODE_ARRAY_SIZE 1024
 unsigned int asapInstanceHandleResolution(
-                struct ASAPInstance* asapInstance,
-                struct PoolHandle*   poolHandle,
-                void**               nodePtrArray,
-                size_t*              nodePtrs,
-                unsigned int         (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                        void*                                   ptr))
+                struct ASAPInstance*     asapInstance,
+                struct PoolHandle*       poolHandle,
+                void**                   nodePtrArray,
+                size_t*                  nodePtrs,
+                unsigned int             (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                            void*                                   ptr),
+                const unsigned long long cacheElementTimeout)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNodeArray[HRES_POOL_ELEMENT_NODE_ARRAY_SIZE];
    const size_t                      originalPoolElementNodes = min(HRES_POOL_ELEMENT_NODE_ARRAY_SIZE, *nodePtrs);
@@ -889,7 +888,8 @@ unsigned int asapInstanceHandleResolution(
                   asapInstance, poolHandle,
                   nodePtrArray,
                   (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
-                  nodePtrs, convertFunction);
+                  nodePtrs, convertFunction,
+                  cacheElementTimeout);
       if(result != RSPERR_OKAY) {
          LOG_VERBOSE
          fputs("Handle resolution not succesful\n", stdlog);

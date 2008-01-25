@@ -132,7 +132,7 @@ int main(int argc, char** argv)
    while(!breakDetected()) {
       requestTimeStamp = getMicroTime();
       result = rsp_getaddrinfo((const unsigned char*)poolHandle, strlen(poolHandle),
-                               &rspAddrInfo, items);
+                               &rspAddrInfo, items, 0);
       responseTimeStamp = getMicroTime();
       runs++;
 

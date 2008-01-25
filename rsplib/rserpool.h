@@ -180,6 +180,7 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
   * @param poolHandleSize Pool handle size.
   * @param rserpoolAddrInfo Pointer to variable to store pointer to first rsp_addrinfo to.
   * @param items Desired number of PE entries to obtain.
+  * @param staleCacheValue Stale cache value in milliseconds.
   * @return Number of PE entries obtained in case of success; -1 in case of an error.
   *
   * @see rsp_freeaddrinfo
@@ -187,7 +188,8 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
 int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     const size_t          poolHandleSize,
                     struct rsp_addrinfo** rserpoolAddrInfo,
-                    const size_t          items);
+                    const size_t          items,
+                    const unsigned int    staleCacheValue);
 
 /**
   * Free rsp_addrinfo structure.
@@ -460,11 +462,13 @@ int rsp_accept(int sd,
   * @param sd RSerPool socket descriptor.
   * @param poolHandle Pool handle.
   * @param poolHandleSize Size of the pool handle in bytes.
+  * @param staleCacheValue Stale cache value in milliseconds.
   * @return 0 in case of success; -1 in case of an error.
   */
 int rsp_connect(int                  sd,
                 const unsigned char* poolHandle,
-                const size_t         poolHandleSize);
+                const size_t         poolHandleSize,
+                const unsigned int   staleCacheValue);
 
 /**
   * Check, if a RSerPool socket has received a cookie from its PE.
@@ -474,13 +478,21 @@ int rsp_connect(int                  sd,
   */
 int rsp_has_cookie(int sd);
 
+
+#define FFF_NONE        0                 /* Normal failover, no report */
+#define FFF_UNREACHABLE (1 << 0)          /* Report unreachable PE      */
+
 /**
   * For a failover to a new Pool Element.
   *
   * @param sd RSerPool socket descriptor.
+  * @param flags Flags.
+  * @param staleCacheValue Stale cache value in milliseconds.
   * @return 0 in case of success; -1 in case of an error.
   */
-int rsp_forcefailover(int sd);
+int rsp_forcefailover(int                sd,
+                      const unsigned int flags,
+                      const unsigned int staleCacheValue);
 
 
 /* #######################################################################

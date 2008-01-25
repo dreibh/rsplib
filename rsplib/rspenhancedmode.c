@@ -666,6 +666,7 @@ int rsp_deregister(int sd, int flags)
 int rsp_connect_tags(int                  sd,
                      const unsigned char* poolHandle,
                      const size_t         poolHandleSize,
+                     const unsigned int   staleCacheValue,
                      struct TagItem*      tags)
 {
    struct RSerPoolSocket* rserpoolSocket;
@@ -691,7 +692,7 @@ int rsp_connect_tags(int                  sd,
             connection establishment */
          oldEventMask = rserpoolSocket->Notifications.EventMask;
          rserpoolSocket->Notifications.EventMask = 0;
-         rsp_forcefailover_tags(rserpoolSocket->Descriptor, tags);
+         rsp_forcefailover_tags(rserpoolSocket->Descriptor, FFF_NONE, staleCacheValue, tags);
          rserpoolSocket->Notifications.EventMask = oldEventMask;
          result = 0;
       }
@@ -715,9 +716,10 @@ int rsp_connect_tags(int                  sd,
 /* ###### RSerPool socket connect() implementation ####################### */
 int rsp_connect(int                  sd,
                 const unsigned char* poolHandle,
-                const size_t         poolHandleSize)
+                const size_t         poolHandleSize,
+                const unsigned int   staleCacheValue)
 {
-   return(rsp_connect_tags(sd, poolHandle, poolHandleSize, NULL));
+   return(rsp_connect_tags(sd, poolHandle, poolHandleSize, staleCacheValue, NULL));
 }
 
 
@@ -851,9 +853,31 @@ int rsp_has_cookie(int sd)
 }
 
 
+/* ###### Report PE as failed ############################################ */
+static void rsp_send_failure_report(struct RSerPoolSocket* rserpoolSocket,
+                                    struct TagItem*        tags)
+{
+   LOG_ACTION
+   fputs("Reporting failure of ", stdlog);
+   poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
+   fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u\n",
+           rserpoolSocket->ConnectedSession->ConnectedPE,
+           rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+           rserpoolSocket->ConnectedSession->SessionID);
+   LOG_END
+   rsp_pe_failure_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
+                       rserpoolSocket->ConnectedSession->Handle.Size,
+                       rserpoolSocket->ConnectedSession->ConnectedPE,
+                       tags);
+   rserpoolSocket->ConnectedSession->ConnectedPE = 0;
+}
+
+
 /* ###### Make failover ################################################## */
-int rsp_forcefailover_tags(int             sd,
-                           struct TagItem* tags)
+int rsp_forcefailover_tags(int                sd,
+                           const unsigned int flags,
+                           const unsigned int staleCacheValue,
+                           struct TagItem*    tags)
 {
    struct RSerPoolSocket*   rserpoolSocket;
    struct rsp_addrinfo*     rspAddrInfo;
@@ -887,21 +911,10 @@ int rsp_forcefailover_tags(int             sd,
    notificationQueueClear(&rserpoolSocket->Notifications);
 
    /* ====== Report failure ============================================== */
-   if((rserpoolSocket->ConnectedSession->ConnectedPE != 0) &&
+   if((flags & FFF_UNREACHABLE) &&
+      (rserpoolSocket->ConnectedSession->ConnectedPE != 0) &&
       (rserpoolSocket->ConnectedSession->Handle.Size > 0)) {
-      LOG_ACTION
-      fputs("Reporting failure of ", stdlog);
-      poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
-      fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u\n",
-              rserpoolSocket->ConnectedSession->ConnectedPE,
-              rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-              rserpoolSocket->ConnectedSession->SessionID);
-      LOG_END
-      rsp_pe_failure_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
-                          rserpoolSocket->ConnectedSession->Handle.Size,
-                          rserpoolSocket->ConnectedSession->ConnectedPE,
-                          tags);
-      rserpoolSocket->ConnectedSession->ConnectedPE = 0;
+      rsp_send_failure_report(rserpoolSocket, tags);
    }
 
    /* ====== Abort association =========================================== */
@@ -929,15 +942,15 @@ int rsp_forcefailover_tags(int             sd,
       LOG_END
       result = rsp_getaddrinfo_tags((unsigned char*)&rserpoolSocket->ConnectedSession->Handle.Handle,
                                     rserpoolSocket->ConnectedSession->Handle.Size,
-                                    &rspAddrInfo, 1,
+                                    &rspAddrInfo, 1, staleCacheValue,
                                     tags);
       if(result > 0) {
          if(rspAddrInfo->ai_protocol == rserpoolSocket->SocketProtocol) {
             /* ====== Establish connection ================================== */
             rserpoolSocket->Socket = connectToPE(rserpoolSocket,
-                                                rspAddrInfo->ai_pe_id,
-                                                rspAddrInfo->ai_addr,
-                                                rspAddrInfo->ai_addrs);
+                                                 rspAddrInfo->ai_pe_id,
+                                                 rspAddrInfo->ai_addr,
+                                                 rspAddrInfo->ai_addrs);
             if(rserpoolSocket->Socket >= 0) {
                success = true;
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
@@ -981,6 +994,7 @@ int rsp_forcefailover_tags(int             sd,
                LOG_ACTION
                fputs("Connection establishment was not possible\n", stdlog);
                LOG_END
+               rsp_send_failure_report(rserpoolSocket, tags);
             }
          }
          else {
@@ -1022,9 +1036,11 @@ int rsp_forcefailover_tags(int             sd,
 
 
 /* ###### Make failover ################################################## */
-int rsp_forcefailover(int sd)
+int rsp_forcefailover(int                sd,
+                      const unsigned int flags,
+                      const unsigned int staleCacheValue)
 {
-   return(rsp_forcefailover_tags(sd, NULL));
+   return(rsp_forcefailover_tags(sd, flags, staleCacheValue, NULL));
 }
 
 

@@ -132,12 +132,21 @@ int main(int argc, char** argv)
             retryDelay = 100000;
          }
       }
+      else if(!(strncmp(argv[i], "-transmittimeout=", 17))) {
+         transmitTimeout = 1000ULL * atol((const char*)&argv[i][17]);
+      }
+      else if(!(strncmp(argv[i], "-keepaliveinterval=", 19))) {
+         keepAliveInterval = 1000ULL * atol((const char*)&argv[i][19]);
+      }
+      else if(!(strncmp(argv[i], "-keepalivetimeout=", 18))) {
+         keepAliveTimeout = 1000ULL * atol((const char*)&argv[i][18]);
+      }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
       }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
          exit(1);
       }
    }
@@ -178,7 +187,7 @@ int main(int argc, char** argv)
    installBreakDetector();
    success = false;
    while( (!breakDetected()) &&
-          (rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle)) < 0) ) {
+          (rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) ) {
       perror("Unable to connect to pool element");
       usleep(2500000);
    }
@@ -306,7 +315,7 @@ int main(int argc, char** argv)
          outputFile = NULL;
       }
       unlink(outputName);
-      rsp_forcefailover(sd);
+      rsp_forcefailover(sd, FFF_NONE, 0);
    }
 
 finish:

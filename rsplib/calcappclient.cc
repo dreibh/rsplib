@@ -313,7 +313,7 @@ void handleCalcAppReject(struct Process* process,
    process->Status                         = PS_Failover;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
    process->KeepAliveTransmissionTimeStamp = ~0ULL;
-   rsp_forcefailover(process->RSerPoolSocketDescriptor);
+   rsp_forcefailover(process->RSerPoolSocketDescriptor, FFF_NONE, 0);
 
    /* No cookie for failover is available, therefore it is necessary
       to restart! */
@@ -476,7 +476,7 @@ bool handleKeepAliveTimeoutTimer(struct Process* process)
 {
    cout << "Timeout -> Failover" << endl;
 
-   rsp_forcefailover(process->RSerPoolSocketDescriptor);
+   rsp_forcefailover(process->RSerPoolSocketDescriptor, FFF_UNREACHABLE, 0);
 
    process->Status                         = PS_Processing;
    process->KeepAliveTimeoutTimeStamp      = ~0ULL;
@@ -525,7 +525,7 @@ void handleEvents(Process*    process,
          if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
             (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
             puts("--- FAILOVER ---");
-            rsp_forcefailover(process->RSerPoolSocketDescriptor);
+            rsp_forcefailover(process->RSerPoolSocketDescriptor, FFF_NONE, 0);
             /* No cookie for failover is available, therefore it is necessary
                to restart! */
             if(!rsp_has_cookie(process->RSerPoolSocketDescriptor)) {
@@ -625,7 +625,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
       process.RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(process.RSerPoolSocketDescriptor >= 0) {
          if(rsp_connect(process.RSerPoolSocketDescriptor,
-                        (unsigned char*)poolHandle, strlen(poolHandle)) == 0) {
+                        (unsigned char*)poolHandle, strlen(poolHandle), 0) == 0) {
             sendCalcAppRequest(&process);
 
             while((process.Status != PS_Failed) &&

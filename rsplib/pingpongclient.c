@@ -103,7 +103,7 @@ int main(int argc, char** argv)
       perror("Unable to create RSerPool socket");
       exit(1);
    }
-   if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle)) < 0) {
+   if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) {
       perror("Unable to connect to pool element");
       exit(1);
    }
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
                   if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                      (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
                      puts("FAILOVER...");
-                     rsp_forcefailover(sd);
+                     rsp_forcefailover(sd, FFF_NONE, 0);
                   }
                }
                else {

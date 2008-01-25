@@ -543,7 +543,7 @@ void FractalCalculationThread::run()
 
    Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(Session >= 0) {
-      if(rsp_connect(Session, Master->PoolHandle, Master->PoolHandleSize) == 0) {
+      if(rsp_connect(Session, Master->PoolHandle, Master->PoolHandleSize, 0) == 0) {
 
          // ====== Begin image calculation ==================================
          do {
@@ -631,7 +631,7 @@ void FractalCalculationThread::run()
                   if(Success == false) {
                      printTimeStamp(stdout);
                      printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
-                     rsp_forcefailover(Session);
+                     rsp_forcefailover(Session, FFF_NONE, 0);
                   }
 
                } while(rsp_has_cookie(Session));
@@ -639,7 +639,7 @@ void FractalCalculationThread::run()
             else {
                printTimeStamp(stdout);
                printf("FAILOVER AFTER FAILED sendParameterMessage() (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
-               rsp_forcefailover(Session);
+               rsp_forcefailover(Session, FFF_UNREACHABLE, 0);
             }
          } while(Success == false);
 

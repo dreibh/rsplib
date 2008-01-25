@@ -346,6 +346,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          poolHandleSize,
                          struct rsp_addrinfo** rspAddrInfo,
                          const size_t          items,
+                         const unsigned int    staleCacheValue,
                          struct TagItem*       tags)
 {
    struct PoolHandle myPoolHandle;
@@ -365,7 +366,8 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                       &myPoolHandle,
                       (void**)&addrInfoArray,
                       &addrInfos,
-                      convertPoolElementNode);
+                      convertPoolElementNode,
+                      1000ULL * staleCacheValue);
       if(hresResult == RSPERR_OKAY) {
          if(addrInfos > 0) {
             for(n = 0;n < addrInfos - 1;n++) {
@@ -400,9 +402,10 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
 int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     const size_t          poolHandleSize,
                     struct rsp_addrinfo** rspAddrInfo,
-                    const size_t          items)
+                    const size_t          items,
+                    const unsigned int    staleCacheValue)
 {
-   return(rsp_getaddrinfo_tags(poolHandle, poolHandleSize, rspAddrInfo, items, NULL));
+   return(rsp_getaddrinfo_tags(poolHandle, poolHandleSize, rspAddrInfo, items, staleCacheValue, NULL));
 }
 
 

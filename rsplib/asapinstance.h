@@ -76,8 +76,6 @@ struct ASAPInstance
    struct ST_CLASS(PoolHandlespaceManagement) Cache;
    struct ST_CLASS(PoolHandlespaceManagement) OwnPoolElements;
 
-   unsigned long long                         CacheElementTimeout;
-
    struct FDCallback                          RegistrarHuntFDCallback;
    struct FDCallback                          RegistrarFDCallback;
    struct Timer                               RegistrarTimeoutTimer;
@@ -88,7 +86,6 @@ struct ASAPInstance
 };
 
 
-#define ASAP_DEFAULT_CACHE_ELEMENT_TIMEOUT                     0
 #define ASAP_DEFAULT_REGISTRAR_ANNOUNCE_ADDRESS "239.0.0.1:3863"
 #define ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT          5000000
 #define ASAP_DEFAULT_REGISTRAR_CONNECT_MAXTRIALS               3
@@ -172,15 +169,17 @@ unsigned int asapInstanceReportFailure(struct ASAPInstance*            asapInsta
   * @param poolHandle Pool handle.
   * @param nodePtrArray Array to store pointers to converted PoolElementNodes to.
   * @param nodePrts Reference to variable containing maximum amount of pool element nodes to obtain. After function call, this variable contains actual amount of pool element nodes obtained.
+  * @param cacheElementTimeout Stale cache value for newly received PE entries.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
 unsigned int asapInstanceHandleResolution(
-                struct ASAPInstance* asapInstance,
-                struct PoolHandle*   poolHandle,
-                void**               nodePtrArray,
-                size_t*              nodePrts,
-                unsigned int         (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                                        void*                                   ptr));
+                struct ASAPInstance*     asapInstance,
+                struct PoolHandle*       poolHandle,
+                void**                   nodePtrArray,
+                size_t*                  nodePtrs,
+                unsigned int             (*convertFunction)(const struct ST_CLASS(PoolElementNode)* poolElementNode,
+                                                            void*                                   ptr),
+                const unsigned long long cacheElementTimeout);
 
 
 #ifdef __cplusplus

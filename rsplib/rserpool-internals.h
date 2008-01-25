@@ -77,6 +77,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                          const size_t          poolHandleSize,
                          struct rsp_addrinfo** rserpoolAddrInfo,
                          const size_t          items,
+                         const unsigned int    staleCacheValue,
                          struct TagItem*       tags);
 
 
@@ -96,9 +97,12 @@ int rsp_accept_tags(int             sd,
 int rsp_connect_tags(int                  sd,
                      const unsigned char* poolHandle,
                      const size_t         poolHandleSize,
+                     const unsigned int   staleCacheValue,
                      struct TagItem*      tags);
-int rsp_forcefailover_tags(int             sd,
-                           struct TagItem* tags);
+int rsp_forcefailover_tags(int                sd,
+                           const unsigned int flags,
+                           const unsigned int staleCacheValue,
+                           struct TagItem*    tags);
 
 
 #ifdef __cplusplus

@@ -40,7 +40,11 @@
 .Op Fl poolhandle=pool_handle
 .Op Fl input=file_name
 .Op Fl output=file_name
+.Op Fl quiet
 .Op Fl retrydelay=milliseconds
+.Op Fl transmittimeout=milliseconds
+.Op Fl keepaliveinterval=milliseconds
+.Op Fl keepalivetimeout=milliseconds
 .Op Fl cspinterval=milliseconds
 .Op Fl cspserver=address:port
 .Op Fl logappend=filename
@@ -70,8 +74,16 @@ Sets the PH to a non-default value; otherwise, the default setting is
 Sets the name of the input file to upload to the PE.
 .It Fl output=file_name
 Sets the name of the output file to write the download from the PE to.
+.It Fl quiet
+Turns on quiet mode, i.e. only few information is printed.
 .It Fl retrydelay=milliseconds
 Sets the retry delay upon failover in milliseconds.
+.It Fl transmittimeout=milliseconds
+Sets the transmission timeout in milliseconds.
+.It Fl keepaliveinterval=milliseconds
+Sets the keep-alive interval in milliseconds.
+.It Fl keepalivetimeout=milliseconds
+Sets the keep-alive timeout in milliseconds.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:
