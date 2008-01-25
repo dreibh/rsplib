@@ -423,10 +423,12 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    struct Registrar*        registrar   = (struct Registrar*)userData;
    const unsigned long long now         = getMicroTime();
    unsigned long long       runtime     = 0;
-   unsigned long long       startupTime = 0;
    unsigned long long       userTime    = 0;
    unsigned long long       systemTime  = 0;
+#ifdef LINUX
+   unsigned long long       startupTime = 0;
    unsigned long long       uptime;
+#endif
 
    if(registrar->StatsLine == 0) {
       fputs("AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n",

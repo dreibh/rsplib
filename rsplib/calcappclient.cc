@@ -748,10 +748,10 @@ finished:
 int main(int argc, char** argv)
 {
    struct rsp_info    info;
-   char*              poolHandle        = "CalcAppPool";
-   char*              vectorFileName    = "CalcAppPU.vec";
-   char*              scalarFileName    = "CalcAppPU.sca";
-   char*              objectName        = "scenario.calcapppooluser[0]";
+   const char*        poolHandle        = "CalcAppPool";
+   const char*        vectorFileName    = "CalcAppPU.vec";
+   const char*        scalarFileName    = "CalcAppPU.sca";
+   const char*        objectName        = "scenario.calcapppooluser[0]";
    unsigned long long startupDelayStamp = getMicroTime();
    int                i;
 
