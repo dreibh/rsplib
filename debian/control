@@ -2,8 +2,9 @@ Source: rsplib
 Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.6), libbz2-dev (>= 1.0), libqt3-mt-dev
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 
 
 Package: librsplib2
@@ -25,8 +26,6 @@ Description: RSerPool core API library rsplib
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: librsplib-dev
@@ -48,8 +47,6 @@ Description: Headers for RSerPool core API library rsplib
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: libcpprspserver2
@@ -71,8 +68,6 @@ Description: RSerPool high-level API library in C++
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: libcpprspserver-dev
@@ -94,8 +89,6 @@ Description: Headers for RSerPool high-level API library in C++
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-registrar
@@ -117,8 +110,6 @@ Description: RSerPool registrar
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-tools
@@ -140,8 +131,6 @@ Description: RSerPool test tools
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-fgpservice
@@ -163,8 +152,6 @@ Description: Example RSerPool service for fractal graphics computation
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-pingpongservice
@@ -186,8 +173,6 @@ Description: Example RSerPool service for functionality test
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-calcappservice
@@ -209,8 +194,6 @@ Description: Example RSerPool service for performance evaluation
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 
 
 Package: rsplib-scriptingservice
@@ -232,5 +215,3 @@ Description: Example RSerPool service for script-based workload distribution
  architecture to the management of only pools and sessions (no data
  synchronization, user management, etc.), but on the other hand makes a very
  efficient realization possible.
- .
- Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
