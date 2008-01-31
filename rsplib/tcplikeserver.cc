@@ -251,6 +251,11 @@ void TCPLikeServer::run()
       }
    }
 
+   // Since it can take some time to clean up the session (e.g. removing
+   // temporary files for Scripting Service), we finish the session *before*
+   // actually closing the association. Then, the PU waits until being finished
+   // before actually trying to distribute the next session.
+   finishSession(eventHandlingResult);
    if((eventHandlingResult == EHR_Abort) ||
       (eventHandlingResult == EHR_Shutdown)) {
       rsp_sendmsg(RSerPoolSocketDescriptor,
@@ -259,9 +264,6 @@ void TCPLikeServer::run()
                   (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                   0);
    }
-
-   finishSession(eventHandlingResult);
-
    Finished = true;
 }
 
@@ -366,10 +368,6 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                      (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
                   installBreakDetector();
                   while(!breakDetected()) {
-                     // ====== Clean-up session list ========================
-                     serverSet.handleRemovalsAndTimers();
-
-
                      // ====== Wait for actions =============================
                      struct pollfd pollfds[2];
                      pollfds[0].fd      = rserpoolSocket;
@@ -378,9 +376,16 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                      pollfds[1].fd      = rspNotificationPipe[0];
                      pollfds[1].events  = POLLIN;
                      pollfds[1].revents = 0;
-                     if(rsp_poll((struct pollfd*)&pollfds, 2, 2500) > 0) {
+                     const int result = rsp_poll((struct pollfd*)&pollfds, 2, 2500);
 
-                        // ====== Wait for incoming sessions ================
+                     // ====== Clean-up session list ========================
+                     // Possible, some sessions have finished working during
+                     // waiting time. Therefore, cleaning them up is useful
+                     // before accepting new sessions.
+                     serverSet.handleRemovalsAndTimers();
+
+                     // ====== Wait for incoming sessions ===================
+                     if(result > 0) {
                         if(pollfds[0].revents & POLLIN) {
                             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
                             if(newRSerPoolSocket >= 0) {

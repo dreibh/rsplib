@@ -238,9 +238,9 @@ int main(int argc, char** argv)
                            switch(header->Type) {
                               /* ====== Download message ==================== */
                               case SPT_DOWNLOAD:
-                                 puts("Download ...");
                                  download = (const struct Download*)&buffer;
                                  if(!outputFile) {
+                                    puts("Download ...");
                                     outputFile = fopen(outputName, "w");
                                     if(outputFile == NULL) {
                                        fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
