@@ -84,7 +84,7 @@
 .Op Fl pppmaxthreads=threads
 .Nm server
 .Op Fl scripting
-.Op Fl sskeeptempdirs=directory
+.Op Fl sskeeptempdirs
 .Op Fl ssmaxthreads=threads
 .Op Fl sstransmittimeout=milliseconds
 .\" ###### Description ######################################################
@@ -261,7 +261,7 @@ Sets an upper limit for the number of simultaneous PingPong sessions.
 .It Fl scripting
 Starts the Scripting service.
 .Bl -tag -width indent
-.It Fl sskeeptempdirs=directory
+.It Fl sskeeptempdirs
 Turns on keeping all temporary files for debugging. Handle with care!
 .It Fl ssmaxthreads=threads
 Sets an upper limit for the number of simultaneous sessions.
