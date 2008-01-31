@@ -44,6 +44,7 @@
 #define SPT_DOWNLOAD           0x02
 #define SPT_KEEPALIVE          0x03
 #define SPT_KEEPALIVE_ACK      0x04
+#define SPT_STATUS             0x05
 
 #define SD_MAX_DATASIZE       16384
 
@@ -86,6 +87,12 @@ struct KeepAliveAck
 {
    struct ScriptingCommonHeader Header;
    uint32_t                     Status;
+};
+
+struct Status
+{
+   struct ScriptingCommonHeader Header;
+   uint32_t                     ExitStatus;
 };
 
 

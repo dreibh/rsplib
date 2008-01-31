@@ -92,8 +92,11 @@ int main(int argc, char** argv)
    struct rsp_sndrcvinfo               rinfo;
    union rserpool_notification*        notification;
    const struct ScriptingCommonHeader* header;
+   const struct Status*                status;
    const struct Download*              download;
    bool                                quiet             =  false;
+   unsigned int                        trial             = 1;
+   unsigned int                        maxRetry          = 3;
    unsigned long long                  retryDelay        =  1000000;
    unsigned long long                  transmitTimeout   = 60000000;
    unsigned long long                  keepAliveInterval =  5000000;
@@ -107,6 +110,7 @@ int main(int argc, char** argv)
    ssize_t                             sent;
    size_t                              length;
    bool                                success;
+   uint32_t                            exitStatus;
    int                                 result;
    int                                 flags;
    int                                 sd;
@@ -125,6 +129,12 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-output=" ,8))) {
          outputName = (const char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-maxretry=" ,10))) {
+         maxRetry = atol((const char*)&argv[i][10]);
+         if(maxRetry < 1) {
+            maxRetry = 1;
+         }
       }
       else if(!(strncmp(argv[i], "-retrydelay=" ,12))) {
          retryDelay = 1000ULL * atol((const char*)&argv[i][12]);
@@ -146,7 +156,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
          exit(1);
       }
    }
@@ -165,6 +175,7 @@ int main(int argc, char** argv)
       printf("Pool Handle         = %s\n", poolHandle);
       printf("Input Name          = %s\n", inputName);
       printf("Output Name         = %s\n\n", outputName);
+      printf("Max Retry           = %u [ms]\n", maxRetry);
       printf("Retry Delay         = %llu [ms]\n", retryDelay / 1000);
       printf("Transmit Timeout    = %llu [ms]\n", transmitTimeout / 1000);
       printf("Keep-Alive Interval = %llu [ms]\n", keepAliveInterval / 1000);
@@ -229,14 +240,15 @@ int main(int argc, char** argv)
                         }
                      }
 
-                     /* ====== Message ====================================== */
+                     /* ====== Message =================================== */
                      else {
                         header = (const struct ScriptingCommonHeader*)buffer;
                         if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
                             (received >= (ssize_t)sizeof(struct ScriptingCommonHeader)) &&
                             (ntohs(header->Length) == received) ) {
                            switch(header->Type) {
-                              /* ====== Download message ==================== */
+
+                              /* ====== Download message ================= */
                               case SPT_DOWNLOAD:
                                  download = (const struct Download*)&buffer;
                                  if(!outputFile) {
@@ -262,17 +274,43 @@ int main(int argc, char** argv)
                                     goto finish;
                                  }
                                break;
+
+                              /* ====== Keep-Alive Ack message =========== */
                               case SPT_KEEPALIVE_ACK:
                                  keepAliveTransmitted = false;
                                  lastKeepAlive        = getMicroTime();
                                break;
-                              default:
-                                 printf("Received unexpected message type #%u!\n", header->Type);
+
+                              /* ====== Status message =================== */
+                              case SPT_STATUS:
+                                 if(received >= (ssize_t)sizeof(struct Status)) {
+                                    status     = (const struct Status*)&buffer;
+                                    exitStatus = ntohl(status->ExitStatus);
+                                    if(exitStatus != 0) {
+                                       printf("Got exit status %u from remote side!\n", exitStatus);
+                                       trial++;
+                                       if(trial < maxRetry) {
+                                          printf("Trying again (trial %u of %u) ...\n", trial, maxRetry);
+                                          goto failover;
+                                       }
+                                       fputs("Maximum number of trials reached -> check your input and the results!\n", stderr);
+                                       fputs("Trying to download the results file for debugging ...", stderr);
+                                    }
+                                 }
+                                 else {
+                                    fputs("Invalid Status message!\n", stderr);
+                                 }
                                break;
+
+                              /* ====== Unknown message type ============= */
+                              default:
+                                 fprintf(stderr, "Received unexpected message type #%u!\n", header->Type);
+                               break;
+
                            }
                         }
                         else {
-                           puts("Received invalid message!");
+                           fputs("Received invalid message!\n", stderr);
                         }
                      }
                   }
@@ -305,6 +343,7 @@ int main(int argc, char** argv)
             }
          }
       }
+failover:
       if(breakDetected()) {
          break;
       }

@@ -98,7 +98,8 @@ void ScriptingServer::finishSession(EventHandlingResult result)
    ChildProcess = 0;
    if((Directory) && (!Settings.KeepTempDirs)) {
       printTimeStamp(stdout);
-      printf("Cleaning up directory \"%s\"...\n", Directory);
+      printf("S%04d: Cleaning up directory \"%s\"...\n",
+             RSerPoolSocketDescriptor, Directory);
 
       DIR* dir = opendir(Directory);
       if(dir) {
@@ -113,7 +114,8 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       }
       if(rmdir(Directory) != 0) {
          printTimeStamp(stdout);
-         printf("Unable to remove directory \"%s\": %s!\n", Directory, strerror(errno));
+         printf("S%04d: Unable to remove directory \"%s\": %s!\n",
+                RSerPoolSocketDescriptor, Directory, strerror(errno));
       }
    }
 }
@@ -141,7 +143,8 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       Directory = tempnam("/tmp", "rspSS");
       if(Directory == NULL) {
          printTimeStamp(stdout);
-         puts("Unable to generate temporary directory name!");
+         printf("S%04d: Unable to generate temporary directory name!\n",
+                RSerPoolSocketDescriptor);
          return(EHR_Abort);
       }
       snprintf((char*)&InputName, sizeof(InputName), "%s/%s", Directory, INPUT_NAME);
@@ -152,8 +155,8 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       umask(S_IRWXG | S_IRWXO);   // Only access for myself!
       if(mkdir(Directory, S_IRUSR|S_IWUSR|S_IXUSR) != 0) {   // Only for myself!
          printTimeStamp(stdout);
-         printf("Unable to create temporary directory \"%s\": %s!\n",
-                Directory, strerror(errno));
+         printf("S%04d: Unable to create temporary directory \"%s\": %s!\n",
+                RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
 
@@ -162,11 +165,12 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       UploadFile = fopen(InputName, "w");
       if(UploadFile == NULL) {
          printTimeStamp(stdout);
-         printf("Unable to create input file in directory \"%s\": %s!\n",
-                Directory, strerror(errno));
+         printf("S%04d: Unable to create input file in directory \"%s\": %s!\n",
+                RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
-      printf("Starting upload into directory \"%s\"...\n", Directory);
+      printf("S%04d: Starting upload into directory \"%s\"...\n",
+             RSerPoolSocketDescriptor, Directory);
    }
 
    // ====== Write to input file ============================================
@@ -175,8 +179,8 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
    if(length > 0) {
       if(fwrite(&upload->Data, length, 1, UploadFile) != 1) {
          printTimeStamp(stdout);
-         printf("Write error for input file in directory \"%s\": %s!\n",
-                Directory, strerror(errno));
+         printf("S%04d: Write error for input file in directory \"%s\": %s!\n",
+                RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
    }
@@ -186,6 +190,27 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       return(startWorking());
    }
 
+   return(EHR_Okay);
+}
+
+
+// ###### Send status report ################################################
+EventHandlingResult ScriptingServer::sendStatus(const int exitStatus)
+{
+   Status status;
+   status.Header.Type   = SPT_STATUS;
+   status.Header.Flags  = 0x00;
+   status.Header.Length = htons(sizeof(status));
+   status.ExitStatus    = htonl((uint32_t)exitStatus);
+   ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                              (const char*)&status, sizeof(status), 0,
+                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+   if(sent <= 0) {
+      printTimeStamp(stdout);
+      printf("S%04d: Status transmission error: %s\n",
+             RSerPoolSocketDescriptor, strerror(errno));
+      return(EHR_Abort);
+   }
    return(EHR_Okay);
 }
 
@@ -200,7 +225,8 @@ EventHandlingResult ScriptingServer::performDownload()
    FILE* fh = fopen(OutputName, "r");
    if(fh != NULL) {
       printTimeStamp(stdout);
-      printf("Starting download of results in directory \"%s\"...\n", Directory);
+      printf("S%04d: Starting download of results in directory \"%s\"...\n",
+             RSerPoolSocketDescriptor, Directory);
       for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
          if(dataLength >= 0) {
@@ -213,7 +239,8 @@ EventHandlingResult ScriptingServer::performDownload()
             if(sent <= 0) {
                fclose(fh);
                printTimeStamp(stdout);
-               printf("Download data transmission error: %s\n", strerror(errno));
+               printf("S%04d: Download data transmission error: %s\n",
+                      RSerPoolSocketDescriptor, strerror(errno));
                return(EHR_Abort);
             }
          }
@@ -224,7 +251,8 @@ EventHandlingResult ScriptingServer::performDownload()
       fclose(fh);
    } else {
       printTimeStamp(stdout);
-      printf("There are no results in directory \"%s\"!\n", Directory);
+      printf("S%04d: There are no results in directory \"%s\"!\n",
+             RSerPoolSocketDescriptor, Directory);
       return(EHR_Abort);
    }
 
@@ -238,7 +266,8 @@ EventHandlingResult ScriptingServer::startWorking()
    assert(ChildProcess == 0);
 
    printTimeStamp(stdout);
-   printf("Starting work in directory \"%s\"...\n", Directory);
+   printf("S%04d: Starting work in directory \"%s\"...\n",
+          RSerPoolSocketDescriptor, Directory);
    ChildProcess = fork();
    if(ChildProcess == 0) {
       execlp("./scriptingcontrol",
@@ -259,7 +288,7 @@ EventHandlingResult ScriptingServer::startWorking()
 
 
 // ###### Check if child process has finished ###############################
-bool ScriptingServer::hasFinishedWork() const
+bool ScriptingServer::hasFinishedWork(int& exitStatus) const
 {
    int status;
 
@@ -267,9 +296,11 @@ bool ScriptingServer::hasFinishedWork() const
    pid_t childFinished = waitpid(ChildProcess, &status, WNOHANG);
    if(childFinished == ChildProcess) {
       if(WIFEXITED(status) || WIFSIGNALED(status)) {
+         exitStatus = WEXITSTATUS(status);
          return(true);
       }
    }
+   exitStatus = 0;
    return(false);
 }
 
@@ -277,8 +308,11 @@ bool ScriptingServer::hasFinishedWork() const
 // ###### Check, if work is already complete ################################
 EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now)
 {
-   if(hasFinishedWork()) {
-      return(performDownload());
+   int exitStatus;
+   if(hasFinishedWork(exitStatus)) {
+      if(sendStatus(exitStatus) == EHR_Okay) {
+         return(performDownload());
+      }
    }
    setSyncTimer(now + 1000000);
    return(EHR_Okay);
@@ -330,10 +364,11 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
    }
    else {
       printTimeStamp(stdout);
-      puts("Received invalid message!");
+      printf("S%04d: Received invalid message!\n", RSerPoolSocketDescriptor);
       return(EHR_Abort);
    }
    printTimeStamp(stdout);
-   printf("Received unexpected message $%08x in state #%u!\n", header->Type, State);
+   printf("S%04d: Received unexpected message $%08x in state #%u!\n",
+          RSerPoolSocketDescriptor, header->Type, State);
    return(EHR_Abort);
 }

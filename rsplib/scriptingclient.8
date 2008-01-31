@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 11, 2007
+.Dd January 31, 2008
 .Dt ScriptingClient 8
 .Os Scripting Client
 .\" ###### Name #############################################################
@@ -41,6 +41,7 @@
 .Op Fl input=file_name
 .Op Fl output=file_name
 .Op Fl quiet
+.Op Fl maxretry=trials
 .Op Fl retrydelay=milliseconds
 .Op Fl transmittimeout=milliseconds
 .Op Fl keepaliveinterval=milliseconds
@@ -54,7 +55,7 @@
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm scriptingclient
-is a Reliable Server Pooling (RSerPool) pool user (PU) for the Scripting
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the scripting
 service. The purpose of this service is to distribute input data to a
 scripting PE, execute a script doing some useful work on the input data and
 returning output data. For example, this service can be used for distributed
@@ -76,6 +77,11 @@ Sets the name of the input file to upload to the PE.
 Sets the name of the output file to write the download from the PE to.
 .It Fl quiet
 Turns on quiet mode, i.e. only few information is printed.
+.It Fl maxretry=trials
+Maximum number of retries upon errors on the remote site. The error counter only
+increments when the remote-side script returns a non-zero error code. When
+the error limit is reached, the received output file will be downloaded for
+debugging purposes.
 .It Fl retrydelay=milliseconds
 Sets the retry delay upon failover in milliseconds.
 .It Fl transmittimeout=milliseconds
