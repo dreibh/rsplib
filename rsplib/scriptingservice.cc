@@ -257,11 +257,11 @@ EventHandlingResult ScriptingServer::startWorking()
    if(ChildProcess == 0) {
       execlp("./scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, (char*)NULL);
       // Try standard location ...
       execlp("scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, (char*)NULL);
       perror("Failed to start script");
       exit(1);
    }
