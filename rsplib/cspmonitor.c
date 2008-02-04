@@ -282,9 +282,10 @@ int main(int argc, char** argv)
    struct SimpleRedBlackTree objectStorage;
    union sockaddr_union      localAddress;
    struct pollfd             ufds;
+   unsigned long long        now;
    unsigned long long        lastUpdate;
-   unsigned long long        updateInterval = 500000;
-   size_t                    lastElements   = ~0;
+   unsigned long long        updateInterval = 1000000;
+   size_t                    lastElements   = 0;
    size_t                    elements;
    int                       result;
    int                       reuse;
@@ -351,11 +352,14 @@ int main(int argc, char** argv)
    printf("\x1b[;H\x1b[2J");
 
    while(!breakDetected()) {
-      ufds.fd      = sd;
-      ufds.events  = POLLIN;
-      lastUpdate   = getMicroTime();
-      while(getMicroTime() - lastUpdate < updateInterval) {
-         result = ext_poll(&ufds, 1, 175);
+      ufds.fd          = sd;
+      ufds.events      = POLLIN;
+      now = lastUpdate = getMicroTime();
+      while(now - lastUpdate < updateInterval) {
+         now = getMicroTime();
+         result = ext_poll(&ufds, 1,
+                           ((lastUpdate + updateInterval) > now) ?
+                              (int)((lastUpdate + updateInterval - now) / 1000) : 0);
          if((result > 0) && (ufds.revents & POLLIN)) {
             handleMessage(sd, &objectStorage);
          }
