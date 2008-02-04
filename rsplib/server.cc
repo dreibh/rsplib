@@ -62,6 +62,7 @@ int main(int argc, char** argv)
    unsigned int        runtimeLimit  = 0;
    unsigned int        service       = SERVICE_ECHO;
    const char*         poolHandle    = NULL;
+   bool                policyChanged = false;
    bool                quiet         = false;
 
    /* ====== Read parameters ============================================= */
@@ -187,6 +188,7 @@ int main(int argc, char** argv)
             fprintf(stderr, "ERROR: Bad policy setting <%s>!\n", argv[i]);
             exit(1);
          }
+         policyChanged = true;
       }
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
          runtimeLimit = atol((const char*)&argv[i][9]);
@@ -434,6 +436,9 @@ int main(int argc, char** argv)
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
+            if(maxThreads < 1) {
+               maxThreads = 1;
+            }
          }
          else if(!(strcmp(argv[i], "-sskeeptempdirs"))) {
             settings.KeepTempDirs = true;
@@ -441,6 +446,10 @@ int main(int argc, char** argv)
          else if(!(strncmp(argv[i], "-sstransmittimeout=", 19))) {
             settings.TransmitTimeout = atol((const char*)&argv[i][19]);
          }
+      }
+      if(!policyChanged) {
+         loadInfo.rli_load_degradation = (unsigned int)rint((1.0 / maxThreads) * (double)PPV_MAX_LOAD_DEGRADATION);
+         loadInfo.rli_policy = PPT_LEASTUSED_DEGRADATION;
       }
 
       TCPLikeServer::poolElement("Scripting Server - Version 1.0",
