@@ -337,7 +337,7 @@ int main(int argc, char** argv)
 
                /* ====== KeepAlive timeout =============================== */
                else {
-                  printf("Keep-Alive timeout");
+                  puts("Keep-Alive timeout");
                   break;
                }
             }
