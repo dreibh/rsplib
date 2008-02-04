@@ -80,7 +80,7 @@ class ScriptingServer : public TCPLikeServer
 
    ScriptingState          State;
    ScriptingServerSettings Settings;
-   char*                   Directory;
+   char                    Directory[128];
    char                    InputName[256];
    char                    OutputName[256];
    char                    StatusName[256];

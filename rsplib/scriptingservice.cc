@@ -52,7 +52,6 @@ ScriptingServer::ScriptingServer(
 {
    Settings     = *settings;
    State        = SS_Upload;
-   Directory    = NULL;
    UploadFile   = NULL;
    ChildProcess = 0;
 }
@@ -64,10 +63,6 @@ ScriptingServer::~ScriptingServer()
    if(UploadFile) {
       fclose(UploadFile);
       UploadFile = NULL;
-   }
-   if(Directory) {
-      free(Directory);
-      Directory = NULL;
    }
 }
 
@@ -138,27 +133,17 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
 {
    // ====== Create temporary directory =====================================
    if(UploadFile == NULL) {
-      // ====== Get directory and file names ================================
-      // Directory = strdup("/tmp/X0");
-      Directory = tempnam("/tmp", "rspSS");
-      if(Directory == NULL) {
+      // ====== Create directory and get file names =========================
+      safestrcpy((char*)&Directory, "/tmp/rspSS-XXXXXX", sizeof(Directory));
+      if(mkdtemp((char*)&Directory) == NULL) {
          printTimeStamp(stdout);
-         printf("S%04d: Unable to generate temporary directory name!\n",
+         printf("S%04d: Unable to generate temporary directory!\n",
                 RSerPoolSocketDescriptor);
          return(EHR_Abort);
       }
       snprintf((char*)&InputName, sizeof(InputName), "%s/%s", Directory, INPUT_NAME);
       snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
       snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
-
-      // ====== Create directory ============================================
-      umask(S_IRWXG | S_IRWXO);   // Only access for myself!
-      if(mkdir(Directory, S_IRUSR|S_IWUSR|S_IXUSR) != 0) {   // Only for myself!
-         printTimeStamp(stdout);
-         printf("S%04d: Unable to create temporary directory \"%s\": %s!\n",
-                RSerPoolSocketDescriptor, Directory, strerror(errno));
-         return(EHR_Abort);
-      }
 
       // ====== Create input file ===========================================
       umask(S_IXUSR | S_IRWXG | S_IRWXO);   // Only read/write for myself!
