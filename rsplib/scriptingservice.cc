@@ -135,6 +135,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
    if(UploadFile == NULL) {
       // ====== Create directory and get file names =========================
       safestrcpy((char*)&Directory, "/tmp/rspSS-XXXXXX", sizeof(Directory));
+      umask(S_IRWXG | S_IRWXO);
       if(mkdtemp((char*)&Directory) == NULL) {
          printTimeStamp(stdout);
          printf("S%04d: Unable to generate temporary directory!\n",
