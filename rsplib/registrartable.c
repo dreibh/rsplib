@@ -408,7 +408,7 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
          fputs("\n", stdlog);
          LOG_END
 
-         /* ====== Get registrar's entry ======================== */
+         /* ====== Get registrar's entry ================================= */
          struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
          if(registrarAddressBlock) {
             transportAddressBlockNew(registrarAddressBlock,
@@ -426,12 +426,20 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
             free(registrarAddressBlock);
          }
          free(peerAddressArray);
-      }
 
-      sd = registrarTablePeelOffRegistrarAssocID(registrarTable,
-                                                 registrarHuntFD,
-                                                 registrarHuntMessageBuffer,
-                                                 assocID);
+         /* ====== Peel-off association ================================== */
+         sd = registrarTablePeelOffRegistrarAssocID(registrarTable,
+                                                    registrarHuntFD,
+                                                    registrarHuntMessageBuffer,
+                                                    assocID);
+      }
+      else {
+         LOG_VERBOSE2
+         fprintf(stdlog, "Cannot find our peer addresses of assoc %u (already broken) -> removing it\n",
+                 (unsigned int)assocID);
+         LOG_END
+         removeRegistrarAssocID(registrarTable, registrarHuntFD, assocID);
+      }
    }
    return(sd);
 }
@@ -448,14 +456,15 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
       LOG_VERBOSE2
       fprintf(stdlog, "Assoc %u peeled off from registrar hunt socket\n", (unsigned int)assocID);
       LOG_END
-      removeRegistrarAssocID(registrarTable, registrarHuntFD, assocID);
    }
    else {
       LOG_ERROR
       fprintf(stdlog, "Assoc %u peel-off failed: %s\n", assocID, strerror(errno));
-      LOG_END
+      LOG_END_FATAL
       sendabort(registrarHuntFD, assocID);
    }
+   /* In any case, the registrar association is broken -> remove it. */
+   removeRegistrarAssocID(registrarTable, registrarHuntFD, assocID);
    return(sd);
 }
 
