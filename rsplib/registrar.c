@@ -680,7 +680,7 @@ int main(int argc, char** argv)
       if(statsFile) {
          printf("Statistics Interval:    %ums\n", statsInterval);
       }
-      printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "" : daemonPIDFile);
+      printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "off" : daemonPIDFile);
 
       puts("\nASAP Parameters:");
       printf("   Distance Step:                               %ums\n",   (unsigned int)registrar->DistanceStep);
