@@ -110,6 +110,9 @@ static bool initComponentStatusReporter(struct rsp_info* info,
                   (const char*)&parameter[11]);
          return(false);
       }
+      if(getPort(&cspServerAddress.sa) == 0) {
+         setPort(&cspServerAddress.sa, 2960);
+      }
       info->ri_csp_server = &cspServerAddress.sa;
    }
    else if(!(strncmp(parameter, "-cspinterval=", 13))) {

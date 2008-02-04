@@ -417,6 +417,9 @@ int main(int argc, char** argv)
                     (char*)&argv[i][11]);
             exit(1);
          }
+         if(getPort(&cspReportAddress.sa) == 0) {
+            setPort(&cspReportAddress.sa, 2960);
+         }
          if(cspReportInterval <= 0) {
             cspReportInterval = 250000;
          }
