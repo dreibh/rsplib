@@ -38,6 +38,7 @@
 .Sh SYNOPSIS
 .Nm cspmonitor
 .Op Fl localaddress=address:port
+.Op Fl updateinterval=milliseconds
 .Op Fl compact
 .Op Fl full
 .Op Fl logappend=filename
@@ -57,7 +58,9 @@ The following options are available:
 .Bl -tag -width indent
 .It Fl localaddress=address:port
 Sets the local UDP socket address and port number. By default, it listens on
-any address, port 2960.
+all addresses, port 2960.
+.It Fl updateinterval=milliseconds
+Sets the update interval in milliseconds.
 .It Fl compact
 Turns on compact status display mode.
 .It Fl full

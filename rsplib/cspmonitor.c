@@ -283,6 +283,9 @@ int main(int argc, char** argv)
    union sockaddr_union      localAddress;
    struct pollfd             ufds;
    unsigned long long        lastUpdate;
+   unsigned long long        updateInterval = 500000;
+   size_t                    lastElements   = ~0;
+   size_t                    elements;
    int                       result;
    int                       reuse;
    int                       sd;
@@ -303,6 +306,12 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
+      else if(!(strncmp(argv[n], "-updateinterval=", 16))) {
+         updateInterval = 1000 * atol((char*)&argv[n][16]);
+         if(updateInterval < 100000) {
+            updateInterval = 100000;
+         }
+      }
       else if(!(strcmp(argv[n], "-compact"))) {
          useCompactMode = true;
       }
@@ -311,6 +320,7 @@ int main(int argc, char** argv)
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
+         fprintf(stderr, "Usage: %s {-localaddress=address:port} {-updateinterval=milliseconds} {-compact|-full}\n", argv[0]);
          exit(1);
       }
    }
@@ -341,10 +351,10 @@ int main(int argc, char** argv)
    printf("\x1b[;H\x1b[2J");
 
    while(!breakDetected()) {
-      ufds.fd     = sd;
-      ufds.events = POLLIN;
-      lastUpdate = getMicroTime();
-      while(getMicroTime() - lastUpdate < 350000) {
+      ufds.fd      = sd;
+      ufds.events  = POLLIN;
+      lastUpdate   = getMicroTime();
+      while(getMicroTime() - lastUpdate < updateInterval) {
          result = ext_poll(&ufds, 1, 175);
          if((result > 0) && (ufds.revents & POLLIN)) {
             handleMessage(sd, &objectStorage);
@@ -352,12 +362,18 @@ int main(int argc, char** argv)
       }
       purgeCSPObjects(&objectStorage);
 
-      printf("\x1b[;H");
-      printTimeStamp(stdout);
-      puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
-      simpleRedBlackTreePrint(&objectStorage, stdout);
-      printf("\x1b[0J");
-      fflush(stdout);
+      elements = simpleRedBlackTreeGetElements(&objectStorage);
+
+      if( (elements != lastElements) || (elements > 0) ) {
+         printf("\x1b[;H");
+         printTimeStamp(stdout);
+         puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
+         simpleRedBlackTreePrint(&objectStorage, stdout);
+         printf("\x1b[0J");
+         fflush(stdout);
+      }
+
+      lastElements = elements;
    }
 
    ext_close(sd);
