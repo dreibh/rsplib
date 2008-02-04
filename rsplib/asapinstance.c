@@ -1298,7 +1298,7 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
    struct ASAPInterThreadMessage* nextAITM;
    unsigned int                   result;
 
-   asapInstanceConnectToRegistrar(asapInstance, -1);
+   /* ====== Get next AITM =============================================== */
    interThreadMessagePortLock(&asapInstance->MainLoopPort);
    if(asapInstance->LastAITM) {
       aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(
@@ -1308,6 +1308,15 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
    else {
       aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort);
    }
+
+   /* ====== If there is an AITM, connect to registrar if necessary ====== */
+   if((aitm) && (asapInstance->RegistrarSocket < 0)) {
+      interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+      asapInstanceConnectToRegistrar(asapInstance, -1);
+      interThreadMessagePortLock(&asapInstance->MainLoopPort);
+   }
+
+   /* ====== Handle AITMs ================================================ */
    while(aitm != NULL) {
       nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
       aitm->TransmissionTrials++;
