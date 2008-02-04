@@ -712,8 +712,8 @@ bool string2address(const char* string, union sockaddr_union* address)
    char                 port[128];
    struct sockaddr_in*  ipv4address = (struct sockaddr_in*)address;
    struct sockaddr_in6* ipv6address = (struct sockaddr_in6*)address;
+   int                  portNumber  = 0;
    char*                p1;
-   int                  portNumber;
 
    struct addrinfo  hints;
    struct addrinfo* res;
@@ -756,8 +756,9 @@ bool string2address(const char* string, union sockaddr_union* address)
    }
 
    /* ====== Check port number =========================================== */
-   if((sscanf(port, "%d", &portNumber) == 1) &&
-      (portNumber < 0) &&
+   portNumber=~0;
+   if((sscanf(port, "%d", &portNumber) != 1) ||
+      (portNumber < 0) ||
       (portNumber > 65535)) {
       return(false);
    }
