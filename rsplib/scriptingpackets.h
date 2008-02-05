@@ -40,11 +40,12 @@
 
 #define PPID_SP          0x29097604
 
-#define SPT_UPLOAD             0x01
-#define SPT_DOWNLOAD           0x02
-#define SPT_KEEPALIVE          0x03
-#define SPT_KEEPALIVE_ACK      0x04
-#define SPT_STATUS             0x05
+#define SPT_READY              0x01
+#define SPT_UPLOAD             0x02
+#define SPT_DOWNLOAD           0x03
+#define SPT_KEEPALIVE          0x04
+#define SPT_KEEPALIVE_ACK      0x05
+#define SPT_STATUS             0x06
 
 #define SD_MAX_DATASIZE       16384
 
@@ -55,6 +56,11 @@ struct ScriptingCommonHeader
    uint16_t Length;
 };
 
+
+struct Ready
+{
+   struct ScriptingCommonHeader Header;
+};
 
 struct Upload
 {

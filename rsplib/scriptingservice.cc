@@ -54,6 +54,7 @@ ScriptingServer::ScriptingServer(
    State        = SS_Upload;
    UploadFile   = NULL;
    ChildProcess = 0;
+   Directory[0] = 0x00;
 }
 
 
@@ -83,6 +84,20 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData)
 }
 
 
+// ###### Initialize session ################################################
+EventHandlingResult ScriptingServer::initializeSession()
+{
+   Ready ready;
+   ready.Header.Type   = SPT_READY;
+   ready.Header.Flags  = 0x00;
+   ready.Header.Length = htons(sizeof(ready));
+   const ssize_t sent  = rsp_sendmsg(RSerPoolSocketDescriptor,
+                                     (const char*)&ready, sizeof(ready), 0,
+                                     0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+   return((sent == sizeof(ready)) ? EHR_Okay : EHR_Abort);
+}
+
+
 // ###### Clean up session ##################################################
 void ScriptingServer::finishSession(EventHandlingResult result)
 {
@@ -91,7 +106,7 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       waitpid(ChildProcess, NULL, 0);
    }
    ChildProcess = 0;
-   if((Directory) && (!Settings.KeepTempDirs)) {
+   if((Directory[0] != 0x00) && (!Settings.KeepTempDirs)) {
       printTimeStamp(stdout);
       printf("S%04d: Cleaning up directory \"%s\"...\n",
              RSerPoolSocketDescriptor, Directory);
@@ -354,7 +369,7 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
       return(EHR_Abort);
    }
    printTimeStamp(stdout);
-   printf("S%04d: Received unexpected message $%08x in state #%u!\n",
+   printf("S%04d: Received unexpected message $%02x in state #%u!\n",
           RSerPoolSocketDescriptor, header->Type, State);
    return(EHR_Abort);
 }

@@ -62,6 +62,7 @@ class ScriptingServer : public TCPLikeServer
                                      uint16_t    streamID);
 
    private:
+   virtual EventHandlingResult initializeSession();
    virtual void finishSession(EventHandlingResult result);
    virtual EventHandlingResult syncTimerEvent(const unsigned long long now);
    EventHandlingResult startWorking();

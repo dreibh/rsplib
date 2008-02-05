@@ -85,7 +85,7 @@ echo "   + Output will be written into \"$SS_OUT_NAME\""
 echo "   + Calling scriptingclient ..."
 echo ""
 
-env PATH=$PATH:. scriptingclient -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE || exit 1
+env PATH=$PATH:. scriptingclient -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE $@ || exit 1
 echo "   + scriptingclient has returned"
 
 

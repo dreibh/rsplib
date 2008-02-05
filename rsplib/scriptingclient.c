@@ -39,22 +39,47 @@
 #endif
 
 
+#define SSCR_OKAY        0
+#define SSCR_COMPLETE    1
+#define SSCR_FAILOVER    2
+
+#define SSCS_WAIT_READY  1
+#define SSCS_PROCESSING  2
+#define SSCS_DOWNLOAD    3
+
+
+static unsigned int       Status            = SSCS_WAIT_READY;
+static const char*        InputName         = NULL;
+static const char*        OutputName        = NULL;
+static FILE*              OutputFile        = NULL;
+static bool               Quiet             =  false;
+static unsigned int       MaxRetry          = 3;
+static unsigned long long RetryDelay        =  1000000;
+static unsigned long long TransmitTimeout   = 60000000;
+static unsigned long long KeepAliveInterval =  5000000;
+static unsigned long long KeepAliveTimeout  =  5000000;
+
+static unsigned int       Trial             = 1;
+static uint32_t           ExitStatus        = 0;
+static bool               KeepAliveTransmitted;
+static unsigned long long LastKeepAlive;
+
+
+
 /* ###### Upload input file ############################################## */
-static bool upload(int                      sd,
-                   const char*              inputName,
-                   const unsigned long long transmitTimeout)
+static unsigned int performUpload(int sd)
 {
    struct Upload upload;
    size_t        dataLength;
    ssize_t       sent;
-   bool          success = true;
 
-   FILE* fh = fopen(inputName, "r");
+   FILE* fh = fopen(InputName, "r");
    if(fh == NULL) {
-      fprintf(stderr, "ERROR: Unable to open input file \"%s\"!\n", inputName);
+      fprintf(stderr, "ERROR: Unable to open input file \"%s\"!\n", InputName);
       exit(1);
    }
 
+   puts("Uploading ...");
    for(;;) {
       dataLength = fread((char*)&upload.Data, 1, sizeof(upload.Data), fh);
       if(dataLength >= 0) {
@@ -62,56 +87,191 @@ static bool upload(int                      sd,
          upload.Header.Flags  = 0x00;
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, transmitTimeout);
+                            0, htonl(PPID_SP), 0, 0, 0, TransmitTimeout);
          if(sent <= 0) {
-            success = false;
             printf("Upload error: %s\n", strerror(errno));
+            return(SSCR_FAILOVER);
+         }
+         if(dataLength == 0) {
             break;
          }
       }
-      if(dataLength <= 0) {
-         break;
+      else {
+         fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", InputName);
+         exit(1);
       }
    }
    fclose(fh);
 
-   return(success);
+   puts("Upload complete.");
+   return(SSCR_OKAY);
 }
+
+
+/* ###### Handle Status message ############################################# */
+static unsigned int handleStatus(const struct Status* status,
+                                 const size_t         length)
+{
+   if(length >= sizeof(struct Status)) {
+      ExitStatus = ntohl(status->ExitStatus);
+      if(ExitStatus != 0) {
+         printf("Got exit status %u from remote side!\n", ExitStatus);
+         Trial++;
+         if(Trial < MaxRetry) {
+            printf("Trying again (Trial %u of %u) ...\n", Trial, MaxRetry);
+            return(SSCR_FAILOVER);
+         }
+         fputs("Maximum number of Trials reached -> check your input and the results!\n", stderr);
+         fputs("Trying to download the results file for debugging ...", stderr);
+      }
+      return(SSCR_OKAY);
+   }
+   else {
+      fputs("Invalid Status message!\n", stderr);
+      return(SSCR_FAILOVER);
+   }
+}
+
+
+/* ###### Send KeepAlive message ######################################### */
+static unsigned int sendKeepAlive(int sd)
+{
+   struct KeepAlive keepAlive;
+   ssize_t          sent;
+
+   keepAlive.Header.Type   = SPT_KEEPALIVE;
+   keepAlive.Header.Flags  = 0x00;
+   keepAlive.Header.Length = htons(sizeof(keepAlive));
+   sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
+                      0, htonl(PPID_SP), 0, 0, 0, 0);
+   if(sent <= 0) {
+      printf("Keep-Alive transmission error: %s\n", strerror(errno));
+      return(SSCR_FAILOVER);
+   }
+   KeepAliveTransmitted = true;
+   LastKeepAlive        = getMicroTime();
+   return(SSCR_OKAY);
+}
+
+
+/* ###### Handle Download message ######################################## */
+static unsigned int handleDownload(const struct Download* download,
+                                   const size_t           length)
+{
+   size_t dataLength;
+
+   /* ====== Create file, if necessary =================================== */
+   if(!OutputFile) {
+      puts("Downloading ...");
+      OutputFile = fopen(OutputName, "w");
+      if(OutputFile == NULL) {
+         fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", OutputName);
+         exit(1);
+      }
+   }
+
+   /* ====== Write data ================================================== */
+   dataLength = length - sizeof(struct ScriptingCommonHeader);
+   if(dataLength > 0) {
+      if(fwrite(&download->Data, dataLength, 1, OutputFile) != 1) {
+         fprintf(stderr, "ERROR: Writing to output file failed!\n");
+         fclose(OutputFile);
+         exit(1);
+      }
+   }
+   else {
+      fclose(OutputFile);
+      OutputFile = NULL;
+      if(!Quiet) {
+         puts("Download completed!");
+      }
+      return(SSCR_COMPLETE);
+   }
+
+   return(SSCR_OKAY);
+}
+
+
+/* ###### Handle message ################################################# */
+static unsigned int handleMessage(int                                 sd,
+                                  const struct ScriptingCommonHeader* header,
+                                  const size_t                        length,
+                                  const uint32_t                      ppid)
+{
+   /* ====== Check message header ======================================== */
+   if( (ppid != PPID_SP) ||
+       (length < sizeof(struct ScriptingCommonHeader)) ) {
+      fputs("Received invalid message!\n", stderr);
+      return(SSCR_FAILOVER);
+   }
+
+
+   /* ====== Handle message ============================================== */
+   switch(Status) {
+
+      /* ====== Wait for Ready message =================================== */
+      case SSCS_WAIT_READY:
+         switch(header->Type) {
+            case SPT_READY:
+               Status = SSCS_PROCESSING;
+               puts("Server is ready");
+               return(performUpload(sd));
+             break;
+         }
+        break;
+
+      /* ====== Processing =============================================== */
+      case SSCS_PROCESSING:
+         switch(header->Type) {
+            case SPT_KEEPALIVE_ACK:
+               KeepAliveTransmitted = false;
+               LastKeepAlive        = getMicroTime();
+               return(SSCR_OKAY);
+             break;
+            case SPT_STATUS:
+               Status = SSCS_DOWNLOAD;
+               return(handleStatus((const struct Status*)header, length));
+             break;
+         }
+       break;
+
+      /* ====== Processing =============================================== */
+      case SSCS_DOWNLOAD:
+         switch(header->Type) {
+            case SPT_DOWNLOAD:
+               return(handleDownload((const struct Download*)header, length));
+             break;
+            case SPT_KEEPALIVE_ACK:
+               KeepAliveTransmitted = false;
+               LastKeepAlive        = getMicroTime();
+               return(SSCR_OKAY);
+             break;
+         }
+       break;
+   }
+
+
+   /* ====== Unexpected message ========================================== */
+   fprintf(stderr, "Unexpected message $%02x in status #%u\n", header->Type, Status);
+   return(SSCR_FAILOVER);
+}
+
 
 
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
    const char*                         poolHandle = "ScriptingPool";
-   const char*                         inputName  = NULL;
-   const char*                         outputName = NULL;
-   FILE*                               outputFile = NULL;
    struct pollfd                       ufds;
    char                                buffer[65536];
    struct rsp_info                     info;
    struct rsp_sndrcvinfo               rinfo;
    union rserpool_notification*        notification;
-   const struct ScriptingCommonHeader* header;
-   const struct Status*                status;
-   const struct Download*              download;
-   bool                                quiet             =  false;
-   unsigned int                        trial             = 1;
-   unsigned int                        maxRetry          = 3;
-   unsigned long long                  retryDelay        =  1000000;
-   unsigned long long                  transmitTimeout   = 60000000;
-   unsigned long long                  keepAliveInterval =  5000000;
-   unsigned long long                  keepAliveTimeout  =  5000000;
-   struct KeepAlive                    keepAlive;
-   bool                                keepAliveTransmitted;
-   unsigned long long                  lastKeepAlive;
    unsigned long long                  nextTimer;
    unsigned long long                  now;
    ssize_t                             received;
-   ssize_t                             sent;
-   size_t                              length;
-   bool                                success;
-   uint32_t                            exitStatus;
-   int                                 result;
+   unsigned int                        result;
+   int                                 events;
    int                                 flags;
    int                                 sd;
    int                                 i;
@@ -125,42 +285,42 @@ int main(int argc, char** argv)
          poolHandle = (char*)&argv[i][12];
       }
       else if(!(strncmp(argv[i], "-input=" ,7))) {
-         inputName = (const char*)&argv[i][7];
+         InputName = (const char*)&argv[i][7];
       }
       else if(!(strncmp(argv[i], "-output=" ,8))) {
-         outputName = (const char*)&argv[i][8];
+         OutputName = (const char*)&argv[i][8];
       }
       else if(!(strncmp(argv[i], "-maxretry=" ,10))) {
-         maxRetry = atol((const char*)&argv[i][10]);
-         if(maxRetry < 1) {
-            maxRetry = 1;
+         MaxRetry = atol((const char*)&argv[i][10]);
+         if(MaxRetry < 1) {
+            MaxRetry = 1;
          }
       }
       else if(!(strncmp(argv[i], "-retrydelay=" ,12))) {
-         retryDelay = 1000ULL * atol((const char*)&argv[i][12]);
-         if(retryDelay < 100000) {
-            retryDelay = 100000;
+         RetryDelay = 1000ULL * atol((const char*)&argv[i][12]);
+         if(RetryDelay < 100000) {
+            RetryDelay = 100000;
          }
       }
       else if(!(strncmp(argv[i], "-transmittimeout=", 17))) {
-         transmitTimeout = 1000ULL * atol((const char*)&argv[i][17]);
+         TransmitTimeout = 1000ULL * atol((const char*)&argv[i][17]);
       }
       else if(!(strncmp(argv[i], "-keepaliveinterval=", 19))) {
-         keepAliveInterval = 1000ULL * atol((const char*)&argv[i][19]);
+         KeepAliveInterval = 1000ULL * atol((const char*)&argv[i][19]);
       }
       else if(!(strncmp(argv[i], "-keepalivetimeout=", 18))) {
-         keepAliveTimeout = 1000ULL * atol((const char*)&argv[i][18]);
+         KeepAliveTimeout = 1000ULL * atol((const char*)&argv[i][18]);
       }
-      else if(!(strcmp(argv[i], "-quiet"))) {
-         quiet = true;
+      else if(!(strcmp(argv[i], "-Quiet"))) {
+         Quiet = true;
       }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-Quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
          exit(1);
       }
    }
-   if( (inputName == NULL) || (outputName == NULL) ) {
+   if( (InputName == NULL) || (OutputName == NULL) ) {
       fprintf(stderr, "ERROR: Missing input or output file name!\n");
       exit(1);
    }
@@ -169,17 +329,17 @@ int main(int argc, char** argv)
 #endif
 
 
-   if(!quiet) {
+   if(!Quiet) {
       puts("Scripting Pool User - Version 1.0");
       puts("=================================\n");
       printf("Pool Handle         = %s\n", poolHandle);
-      printf("Input Name          = %s\n", inputName);
-      printf("Output Name         = %s\n\n", outputName);
-      printf("Max Retry           = %u [ms]\n", maxRetry);
-      printf("Retry Delay         = %llu [ms]\n", retryDelay / 1000);
-      printf("Transmit Timeout    = %llu [ms]\n", transmitTimeout / 1000);
-      printf("Keep-Alive Interval = %llu [ms]\n", keepAliveInterval / 1000);
-      printf("Keep-Alive Timeout  = %llu [ms]\n", keepAliveTimeout / 1000);
+      printf("Input Name          = %s\n", InputName);
+      printf("Output Name         = %s\n\n", OutputName);
+      printf("Max Retry           = %u [ms]\n", MaxRetry);
+      printf("Retry Delay         = %llu [ms]\n", RetryDelay / 1000);
+      printf("Transmit Timeout    = %llu [ms]\n", TransmitTimeout / 1000);
+      printf("Keep-Alive Interval = %llu [ms]\n", KeepAliveInterval / 1000);
+      printf("Keep-Alive Timeout  = %llu [ms]\n\n", KeepAliveTimeout / 1000);
    }
 
 
@@ -194,179 +354,95 @@ int main(int argc, char** argv)
       exit(1);
    }
 
+   if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) {
+      perror("Unable to connect to pool element");
+      exit(1);
+   }
 
    installBreakDetector();
-   success = false;
-   while( (!breakDetected()) &&
-          (rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) ) {
-      perror("Unable to connect to pool element");
-      usleep(2500000);
-   }
-   while(!breakDetected()) {
-      keepAliveTransmitted = false;
+   result = SSCR_OKAY;
+   while( (!breakDetected()) && (result != SSCR_COMPLETE) ) {
+      KeepAliveTransmitted = false;
+      LastKeepAlive        = getMicroTime();
+      result               = SSCR_OKAY;
 
-      /* ====== Upload input file ======================================== */
-      puts("Upload ...");
-      if(upload(sd, inputName, transmitTimeout)) {
-         puts("Processing ...");
+      /* ====== Wait for results and regularly send keep-alives ======= */
+      nextTimer   = LastKeepAlive + (KeepAliveTransmitted ? KeepAliveTimeout : KeepAliveInterval);
+      ufds.fd     = sd;
+      ufds.events = POLLIN;
+      now         = getMicroTime();
+      events = rsp_poll(&ufds, 1,
+                        (nextTimer <= now) ? 0 : (int)((nextTimer - now) / 1000));
 
-         /* ====== Wait for results and regularly send keep-alives ======= */
-         lastKeepAlive = getMicroTime();
-         while(!breakDetected()) {
-            nextTimer     = lastKeepAlive + (keepAliveTransmitted ? keepAliveTimeout : keepAliveInterval);
-            ufds.fd       = sd;
-            ufds.events   = POLLIN;
-            now           = getMicroTime();
-            result = rsp_poll(&ufds, 1,
-                              (nextTimer <= now) ? 0 : (int)((nextTimer - now) / 1000));
+      /* ====== Handle results ===================================== */
+      if( (events > 0) && (ufds.revents & POLLIN) ) {
+         flags = 0;
+         received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
+                                &rinfo, &flags, 0);
+         if(received > 0) {
 
-            /* ====== Handle results ===================================== */
-            if(result > 0) {
-               if(ufds.revents & POLLIN) {
-                  flags = 0;
-                  received = rsp_recvmsg(sd, (char*)&buffer, sizeof(buffer),
-                                         &rinfo, &flags, 0);
-                  if(received > 0) {
-
-                     /* ====== Notification ================================= */
-                     if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                        notification = (union rserpool_notification*)&buffer;
-                        printf("\x1b[39;47mNotification: ");
-                        rsp_print_notification(notification, stdout);
-                        puts("\x1b[0m");
-                        if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
-                           (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
-                           break;
-                        }
-                     }
-
-                     /* ====== Message =================================== */
-                     else {
-                        header = (const struct ScriptingCommonHeader*)buffer;
-                        if( (rinfo.rinfo_ppid == ntohl(PPID_SP)) &&
-                            (received >= (ssize_t)sizeof(struct ScriptingCommonHeader)) &&
-                            (ntohs(header->Length) == received) ) {
-                           switch(header->Type) {
-
-                              /* ====== Download message ================= */
-                              case SPT_DOWNLOAD:
-                                 download = (const struct Download*)&buffer;
-                                 if(!outputFile) {
-                                    puts("Download ...");
-                                    outputFile = fopen(outputName, "w");
-                                    if(outputFile == NULL) {
-                                       fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", outputName);
-                                       goto finish;
-                                    }
-                                 }
-                                 length = received - sizeof(struct ScriptingCommonHeader);
-                                 if(length > 0) {
-                                    if(fwrite(&download->Data, length, 1, outputFile) != 1) {
-                                       fprintf(stderr, "ERROR: Writing to output file failed!\n");
-                                       goto finish;
-                                    }
-                                 }
-                                 else {
-                                    success = true;
-                                    if(!quiet) {
-                                       puts("Operation completed!");
-                                    }
-                                    goto finish;
-                                 }
-                               break;
-
-                              /* ====== Keep-Alive Ack message =========== */
-                              case SPT_KEEPALIVE_ACK:
-                                 keepAliveTransmitted = false;
-                                 lastKeepAlive        = getMicroTime();
-                               break;
-
-                              /* ====== Status message =================== */
-                              case SPT_STATUS:
-                                 if(received >= (ssize_t)sizeof(struct Status)) {
-                                    status     = (const struct Status*)&buffer;
-                                    exitStatus = ntohl(status->ExitStatus);
-                                    if(exitStatus != 0) {
-                                       printf("Got exit status %u from remote side!\n", exitStatus);
-                                       trial++;
-                                       if(trial < maxRetry) {
-                                          printf("Trying again (trial %u of %u) ...\n", trial, maxRetry);
-                                          goto failover;
-                                       }
-                                       fputs("Maximum number of trials reached -> check your input and the results!\n", stderr);
-                                       fputs("Trying to download the results file for debugging ...", stderr);
-                                    }
-                                 }
-                                 else {
-                                    fputs("Invalid Status message!\n", stderr);
-                                 }
-                               break;
-
-                              /* ====== Unknown message type ============= */
-                              default:
-                                 fprintf(stderr, "Received unexpected message type #%u!\n", header->Type);
-                               break;
-
-                           }
-                        }
-                        else {
-                           fputs("Received invalid message!\n", stderr);
-                        }
-                     }
-                  }
+            /* ====== Notification ================================= */
+            if(flags & MSG_RSERPOOL_NOTIFICATION) {
+               notification = (union rserpool_notification*)&buffer;
+               printf("\x1b[39;47mNotification: ");
+               rsp_print_notification(notification, stdout);
+               puts("\x1b[0m");
+               if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
+                  (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
+                  result = SSCR_FAILOVER;
                }
             }
 
-            /* ====== Handle timers ====================================== */
-            now = getMicroTime();
-            if(nextTimer <= now) {
-               /* ====== KeepAlive transmission ========================== */
-               if(!keepAliveTransmitted) {
-                  keepAlive.Header.Type   = SPT_KEEPALIVE;
-                  keepAlive.Header.Flags  = 0x00;
-                  keepAlive.Header.Length = htons(sizeof(keepAlive));
-                  sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
-                                     0, htonl(PPID_SP), 0, 0, 0, 0);
-                  if(sent <= 0) {
-                     printf("Keep-Alive transmission error: %s\n", strerror(errno));
-                     break;
-                  }
-                  keepAliveTransmitted = true;
-                  lastKeepAlive        = getMicroTime();
-               }
-
-               /* ====== KeepAlive timeout =============================== */
-               else {
-                  puts("Keep-Alive timeout");
-                  break;
-               }
+            /* ====== Message =================================== */
+            else {
+               result = handleMessage(sd,
+                                      (const struct ScriptingCommonHeader*)&buffer,
+                                      (size_t)received, ntohl(rinfo.rinfo_ppid));
             }
          }
       }
-failover:
-      if(breakDetected()) {
-         break;
+
+      /* ====== Handle timers ====================================== */
+      now = getMicroTime();
+      if(nextTimer <= now) {
+         /* ====== KeepAlive transmission ========================== */
+         if(!KeepAliveTransmitted) {
+            result = sendKeepAlive(sd);
+         }
+
+         /* ====== KeepAlive timeout =============================== */
+         else {
+            puts("Keep-Alive timeout");
+            result = SSCR_FAILOVER;
+         }
       }
-      puts("FAILOVER ...");
-      usleep(2500000);
-      if(outputFile) {
-         fclose(outputFile);
-         outputFile = NULL;
+
+      /* ====== Failover ================================================= */
+      if(result == SSCR_FAILOVER) {
+         if(breakDetected()) {
+            break;
+         }
+         puts("FAILOVER ...");
+         usleep(RetryDelay);
+         if(OutputFile) {
+            fclose(OutputFile);
+            OutputFile = NULL;
+         }
+         unlink(OutputName);
+         Status = SSCS_WAIT_READY;
+         rsp_forcefailover(sd, FFF_NONE, 0);
       }
-      unlink(outputName);
-      rsp_forcefailover(sd, FFF_NONE, 0);
    }
 
-finish:
-   if(!quiet) {
-      puts("\x1b[0m\nTerminated!");
+   if(OutputFile) {
+      fclose(OutputFile);
+      OutputFile = NULL;
    }
-   if(outputFile) {
-      fclose(outputFile);
-      outputFile = NULL;
+   if(!Quiet) {
+      puts("\x1b[0m\nTerminated!");
    }
    rsp_close(sd);
    rsp_cleanup();
    rsp_freeinfo(&info);
-   return((success == true) ? 0 : 1);
+   return((result == SSCR_COMPLETE) ? 0 : 1);
 }
