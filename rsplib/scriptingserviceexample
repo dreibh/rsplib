@@ -33,6 +33,8 @@ if [ $# -lt 1 ] ; then
 fi
 DIRECTORY="."
 UNIQUE_ID="$1"
+shift
+
 POOLHANDLE="ScriptingPool"
 
 

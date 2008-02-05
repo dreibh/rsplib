@@ -54,10 +54,10 @@ static const char*        OutputName        = NULL;
 static FILE*              OutputFile        = NULL;
 static bool               Quiet             =  false;
 static unsigned int       MaxRetry          = 3;
-static unsigned long long RetryDelay        =  1000000;
 static unsigned long long TransmitTimeout   = 60000000;
 static unsigned long long KeepAliveInterval =  5000000;
 static unsigned long long KeepAliveTimeout  =  5000000;
+static unsigned long long RetryDelay        = 10000000;
 
 static unsigned int       Trial             = 1;
 static uint32_t           ExitStatus        = 0;
@@ -261,20 +261,20 @@ static unsigned int handleMessage(int                                 sd,
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   const char*                         poolHandle = "ScriptingPool";
-   struct pollfd                       ufds;
-   char                                buffer[65536];
-   struct rsp_info                     info;
-   struct rsp_sndrcvinfo               rinfo;
-   union rserpool_notification*        notification;
-   unsigned long long                  nextTimer;
-   unsigned long long                  now;
-   ssize_t                             received;
-   unsigned int                        result;
-   int                                 events;
-   int                                 flags;
-   int                                 sd;
-   int                                 i;
+   const char*                  poolHandle = "ScriptingPool";
+   struct pollfd                ufds;
+   char                         buffer[65536];
+   struct rsp_info              info;
+   struct rsp_sndrcvinfo        rinfo;
+   union rserpool_notification* notification;
+   unsigned long long           nextTimer;
+   unsigned long long           now;
+   ssize_t                      received;
+   unsigned int                 result;
+   int                          events;
+   int                          flags;
+   int                          sd;
+   int                          i;
 
    rsp_initinfo(&info);
    for(i = 1;i < argc;i++) {
@@ -311,12 +311,12 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-keepalivetimeout=", 18))) {
          KeepAliveTimeout = 1000ULL * atol((const char*)&argv[i][18]);
       }
-      else if(!(strcmp(argv[i], "-Quiet"))) {
+      else if(!(strcmp(argv[i], "-quiet"))) {
          Quiet = true;
       }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-Quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
          exit(1);
       }
    }
@@ -403,8 +403,7 @@ int main(int argc, char** argv)
       }
 
       /* ====== Handle timers ====================================== */
-      now = getMicroTime();
-      if(nextTimer <= now) {
+      if(nextTimer <= getMicroTime()) {
          /* ====== KeepAlive transmission ========================== */
          if(!KeepAliveTransmitted) {
             result = sendKeepAlive(sd);
@@ -419,15 +418,15 @@ int main(int argc, char** argv)
 
       /* ====== Failover ================================================= */
       if(result == SSCR_FAILOVER) {
-         if(breakDetected()) {
-            break;
-         }
-         puts("FAILOVER ...");
-         usleep(RetryDelay);
          if(OutputFile) {
             fclose(OutputFile);
             OutputFile = NULL;
          }
+         puts("FAILOVER ...");
+         nextTimer = getMicroTime() + RetryDelay;
+         do {
+            usleep(500000);
+         } while( (getMicroTime() < nextTimer) && (!breakDetected()) );
          unlink(OutputName);
          Status = SSCS_WAIT_READY;
          rsp_forcefailover(sd, FFF_NONE, 0);
