@@ -1,3 +1,10 @@
+rsplib (2.4.0-beta3) unstable; urgency=low
+
+  * Scripting service updates.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 06 Feb 2008 12:41:05 +0200
+
+
 rsplib (2.4.0-beta2.1) unstable; urgency=low
 
   * Registrar connection handling fixes and improvements.
