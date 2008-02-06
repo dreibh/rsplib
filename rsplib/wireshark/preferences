@@ -1,4 +1,4 @@
-# Configuration file for Wireshark 0.99.3a.
+# Configuration file for Wireshark 0.99.8.
 #
 # This file is regenerated each time preferences are saved within
 # Wireshark.  Making manual changes should be safe, however.
@@ -80,6 +80,10 @@ gui.ask_unsaved: FALSE
 # TRUE or FALSE (case-insensitive).
 gui.find_wrap: TRUE
 
+# Settings dialogs use a save button?
+# TRUE or FALSE (case-insensitive).
+gui.use_pref_save: FALSE
+
 # The path to the webbrowser.
 # Ex: mozilla %s
 gui.webbrowser: mozilla %s
@@ -145,7 +149,7 @@ capture.device: eth0
 
 # Capture in promiscuous mode?
 # TRUE or FALSE (case-insensitive).
-capture.prom_mode: TRUE
+capture.prom_mode: FALSE
 
 # Update packet list in real time during capture?
 # TRUE or FALSE (case-insensitive).
@@ -183,11 +187,43 @@ name_resolve: FALSE
 # A decimal number.
 name_resolve_concurrency: 500
 
+####### RTP Player ########
+
+# Maximum visible channels in RTP Player window.
+# An integer value greater than 0.
+rtp_player.max_visible: 4
+
 ####### Protocols ########
 
 # Enable this option to recognise all traffic on RTP dynamic payload type 96 (0x60) as FEC data corresponding to Pro-MPEG Code of Practice #3 release 2
 # TRUE or FALSE (case-insensitive).
 2dparityfec.enable: FALSE
+
+# Enable Architecture for Control Networks dissector (ANSI BSR E1.17)
+# TRUE or FALSE (case-insensitive).
+acn.heuristic_acn: FALSE
+
+# Enable Streaming DMX extension dissector (ANSI BSR E1.31)
+# TRUE or FALSE (case-insensitive).
+acn.dmx_enable: FALSE
+
+# Display format
+# One of: Hex    , Decimal, Percent
+# (case-insensitive).
+acn.dmx_display_view: Hex    
+
+# Display zeros instead of dots
+# TRUE or FALSE (case-insensitive).
+acn.dmx_display_zeros: FALSE
+
+# Display leading zeros on levels
+# TRUE or FALSE (case-insensitive).
+acn.dmx_display_leading_zeros: FALSE
+
+# Display line format
+# One of: 20 per line, 16 per line
+# (case-insensitive).
+acn.dmx_display_line_format: 20 per line
 
 # Set the UDP port for AudioCodes Trunk Traces.Use http://x.x.x.x/TrunkTraces to enable the traces in the Blade
 # A decimal number.
@@ -236,18 +272,39 @@ alcap.leg_info: TRUE
 amr.dynamic.payload.type: 0
 
 # Type of AMR encoding of the payload
-# One of: RFC 3267, AMR IF1, AMR IF2
+# One of: RFC 3267 octet aligned, RFC 3267 BW-efficient, AMR IF1, AMR IF2
 # (case-insensitive).
-amr.encoding.version: RFC 3267
+amr.encoding.version: RFC 3267 BW-efficient
+
+# The AMR mode
+# One of: Narrowband AMR, Wideband AMR
+# (case-insensitive).
+amr.mode: Narrowband AMR
 
 # (if other than the default of IOS 4.0.1)
-# One of: IS-634 rev. 0, TSB-80, IS-634-A, IOS 2.x, IOS 3.x, IOS 4.0.1
+# One of: IS-634 rev. 0, TSB-80, IS-634-A, IOS 2.x, IOS 3.x, IOS 4.0.1, IOS 5.0.1
 # (case-insensitive).
 ansi_a_bsmap.global_variant: IOS 4.0.1
 
-# GSM MAP SSNs to decode as ANSI MAP
+# ANSI MAP SSNs to decode as ANSI MAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
 ansi_map.map.ssn: 5-14
+
+# Attempt to detect excessive rate of ARP requests
+# TRUE or FALSE (case-insensitive).
+arp.detect_request_storms: FALSE
+
+# Number of requests needed within period to indicate a storm
+# A decimal number.
+arp.detect_storm_number_of_packets: 30
+
+# Period in milliseconds during which a packet storm may be detected
+# A decimal number.
+arp.detect_storm_period: 100
+
+# Attempt to detect duplicate use of IP addresses
+# TRUE or FALSE (case-insensitive).
+arp.detect_duplicate_ips: TRUE
 
 # The UDP port on which Art-Net packets will be sent
 # A decimal number.
@@ -313,6 +370,10 @@ asn1.debug: FALSE
 # TRUE or FALSE (case-insensitive).
 asn1.verbose_log: FALSE
 
+# Autodection between LANE and SSCOP is hard. As default LANE is preferred
+# TRUE or FALSE (case-insensitive).
+atm.dissect_lane_as_sscop: FALSE
+
 # Whether the ATP dissector should reassemble messages spanning multiple DDP packets
 # TRUE or FALSE (case-insensitive).
 atp.desegment: TRUE
@@ -328,6 +389,14 @@ beep.strict_header_terminator: TRUE
 # Whether the dissector should also display internal ASN.1 BER details such as Identifier and Length fields
 # TRUE or FALSE (case-insensitive).
 ber.show_internals: FALSE
+
+# Whether the dissector should decode unexpected tags as ASN.1 BER encoded data
+# TRUE or FALSE (case-insensitive).
+ber.decode_unexpected: FALSE
+
+# Whether the dissector should try decoding OCTET STRINGs as constructed ASN.1 BER encoded data
+# TRUE or FALSE (case-insensitive).
+ber.decode_octetstring: FALSE
 
 # Whether the BGP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -364,6 +433,10 @@ bootp.pkt.ccc.option: 122
 # (case-insensitive).
 bssap.bsap_or_bssap: BSSAP
 
+# Set Subsystem number used for BSSAP/BSSAP+
+# A decimal number.
+bssap.ssn: 98
+
 # Decode NRI (for use with SGSN in Pool)
 # TRUE or FALSE (case-insensitive).
 bssgp.decode_nri: FALSE
@@ -376,6 +449,10 @@ bssgp.nri_length: 4
 # TRUE or FALSE (case-insensitive).
 bthci_acl.btacl_reassembly: TRUE
 
+# Set an additional UDP port, besides the standard X'BAC0' (47808) port.
+# A decimal number.
+bvlc.additional_udp_port: 0
+
 # The date format: (DD/MM) or (MM/DD)
 # One of: DD/MM/YYYY, MM/DD/YYYY
 # (case-insensitive).
@@ -385,13 +462,25 @@ camel.date.format: DD/MM/YYYY
 # A string denoting an positive integer range (e.g., "1-20,30-40").
 camel.tcap.ssn: 6-9
 
+# Activate the analyse for Response Time
+# TRUE or FALSE (case-insensitive).
+camel.srt: FALSE
+
+# Statistics for Response Time
+# TRUE or FALSE (case-insensitive).
+camel.persistentsrt: FALSE
+
 # Whether the CAST dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 cast.reassembly: TRUE
 
-# Set the port for NetFlow messages
-# A decimal number.
-cflow.udp.port: 2055
+# Set the port(s) for NetFlow messages (default: 2055,9996)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+cflow.netflow.ports: 2055,9996
+
+# Set the port(s) for IPFIX messages (default: 4739)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+cflow.ipfix.ports: 4739
 
 # The type of CHDLC frame checksum (none, 16-bit, 32-bit)
 # One of: None, 16-Bit, 32-Bit
@@ -497,11 +586,11 @@ dcp.try_heuristic_first: FALSE
 # TRUE or FALSE (case-insensitive).
 dcp.check_checksum: TRUE
 
-# If a payload looks like its embedded in an IP primitive message, and there is an wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# If a payload looks like its embedded in an IP primitive message, and there is a wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
 # TRUE or FALSE (case-insensitive).
 dct2000.ipprim_heuristic: TRUE
 
-# If a payload looks like its embedded in an SCTP primitive message, and there is an wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# If a payload looks like its embedded in an SCTP primitive message, and there is a wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
 # TRUE or FALSE (case-insensitive).
 dct2000.sctpprim_heuristic: TRUE
 
@@ -513,38 +602,17 @@ dhcpfo.tcp_port: 519
 # TRUE or FALSE (case-insensitive).
 dhcpfo.desegment: TRUE
 
-# Standard version used for decoding
-# One of: Diameter base draft version 16 and below, Diameter base RFC 3588 
-# (case-insensitive).
-diameter.version: Diameter base RFC 3588 
-
-# Set the TCP port for Diameter messages
-# A decimal number.
-diameter.tcp.port: 3868
+# TCP ports to be decoded as Diameter (default: 3868,3868)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+diameter.tcp.ports: 3868,3868
 
 # Set the SCTP port for Diameter messages
 # A decimal number.
 diameter.sctp.port: 3868
 
-# Set the dictionary used for Diameter messages
-# A string.
-diameter.dictionary.name: /usr/local/share/wireshark/diameter/dictionary.xml
-
-# Only attempt to load and use the Diameter XML Dictionary when this option is selected
-# TRUE or FALSE (case-insensitive).
-diameter.dictionary.use: TRUE
-
 # Whether the Diameter dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 diameter.desegment: TRUE
-
-# If set, the value 0 (zero) can be used as a valid application ID. This is used in experimental cases.
-# TRUE or FALSE (case-insensitive).
-diameter.allow_zero_as_app_id: TRUE
-
-# If console output for errors should be suppressed or not
-# TRUE or FALSE (case-insensitive).
-diameter.suppress_console_output: TRUE
 
 # Set the UDP port for DIS messages
 # A decimal number.
@@ -562,6 +630,47 @@ distcc.tcp.port: 3632
 # TRUE or FALSE (case-insensitive).
 distcc.desegment_distcc_over_tcp: TRUE
 
+# Set the TCP port for Distributed Lock Manager
+# A decimal number.
+dlm3.tcp.port: 21064
+
+# Set the SCTP port for Distributed Lock Manager
+# A decimal number.
+dlm3.sctp.port: 21064
+
+# Port numbers used for DMP traffic
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+dmp.udp_ports: 
+
+# Calculate sequence/acknowledgement analysis
+# TRUE or FALSE (case-insensitive).
+dmp.seq_ack_analysis: TRUE
+
+# Align identifiers in info list (does not align when retransmission or duplicate acknowledgement indication)
+# TRUE or FALSE (case-insensitive).
+dmp.align_ids: FALSE
+
+# Print subject as body id in free text messages with subject
+# TRUE or FALSE (case-insensitive).
+dmp.subject_as_id: FALSE
+
+# Format of the structured message id
+# One of: None, 1 Byte value, 2 Byte value, 4 Byte value, 8 Byte value, Fixed text string, Zero terminated text string
+# (case-insensitive).
+dmp.struct_print: None
+
+# Used to set where the structured message id starts in the User Data
+# A decimal number.
+dmp.struct_offset: 0
+
+# Used to set length of fixed text string in the structured message id format (maximum 128 characters)
+# A decimal number.
+dmp.struct_length: 1
+
+# Whether the DNP3 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+dnp3.desegment: TRUE
+
 # Whether the DNS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 dns.desegment_dns_messages: TRUE
@@ -569,6 +678,10 @@ dns.desegment_dns_messages: TRUE
 # Set the port for DOP operations (if other than the default of 102)
 # A decimal number.
 dop.tcp.port: 102
+
+# Whether the DRDA dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+drda.desegment: TRUE
 
 # Whether the DSI dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -587,6 +700,10 @@ dtls.keys_list:
 
 # A string.
 dtls.debug_file: 
+
+# Set the TDP port for the DTPT Server
+# A decimal number.
+dtpt.tcp.port: 5721
 
 # Allow only packets with Major=0x03//Minor=0xFF as DVMRP V3 packets
 # TRUE or FALSE (case-insensitive).
@@ -623,6 +740,25 @@ enttec.dmx_disp_chan_nr_type: Hexadecimal
 # (case-insensitive).
 enttec.dmx_disp_col_count: 16
 
+# If you are capturing in networks with multiplexed or slow nodes, this can be useful
+# TRUE or FALSE (case-insensitive).
+epl.show_soc_flags: FALSE
+
+# Protocol encapsulated in HDLC records
+# One of: Cisco HDLC, PPP serial, Frame Relay, SS7 MTP2, Raw data
+# (case-insensitive).
+erf.erfhdlc: SS7 MTP2
+
+# Protocol encapsulated in ATM records
+# One of: ATM, LLC, Raw data
+# (case-insensitive).
+erf.erfatm: Raw data
+
+# Protocol encapsulated in Ethernet records
+# One of: Ethernet with FCS, Ethernet, Raw data
+# (case-insensitive).
+erf.erfeth: Raw data
+
 # This is done only if the Decoding is not SET or the packet does not belong to a SA. Assumes a 12 byte auth (HMAC-SHA1-96/HMAC-MD5-96/AES-XCBC-MAC-96) and attempts decode based on the ethertype 13 bytes from packet end
 # TRUE or FALSE (case-insensitive).
 esp.enable_null_encryption_decode_heuristic: FALSE
@@ -635,355 +771,355 @@ esp.enable_encryption_decode: FALSE
 # TRUE or FALSE (case-insensitive).
 esp.enable_authentication_check: FALSE
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_1: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_1: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_1: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_1: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_1: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_2: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_2: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_2: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_2: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_2: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_3: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_3: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_3: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_3: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_3: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_4: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_4: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_4: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_4: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_4: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_5: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_5: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_5: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_5: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_5: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_6: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_6: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_6: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_6: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_6: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_7: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_7: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_7: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_7: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_7: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_8: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_8: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_8: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_8: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_8: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_9: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_9: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_9: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_9: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_9: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_10: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_10: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_10: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_10: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_10: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_11: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_11: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_11: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_11: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_11: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_12: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_12: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_12: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_12: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_12: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_13: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_13: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_13: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_13: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_13: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_14: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_14: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_14: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_14: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_14: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_15: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_15: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_15: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_15: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_15: 
 
-# This field uses the following syntax : "Protocol|Source Address|Destination Adress|SPI". <Protocol>: either IPv4, IPv6 (upper and/or lowercase letters). <SPI> : the Security Parameter Index of the Security Association. You may indicate it in decimal (ex: 123) or in hexadecimal (ex: 0x45). The special keywords '*' may be used to match any SPI.Nevertheless, if you use more than one '*', it will restrict the length of the SPI in decimal to as many '*' as indicated. For example '**' will match 23 but not 234. 234 will be match by '***'. No checking will be done on the SPI value. Thus youhave to take into account that the SPI is 4 bytes length. <Addresses> : In this field we may have IPv6 or IPv4 address. Any address is a combination of an address or a prefix and a Prefixlen/Netmask separated by '/'. You may omit the Prefixlen/Netmask, assuming that the Adress is 128 bits length for IPv6 and 32 bits length for IPv4. The character '*' used at the Prefixlen/Netmask position will be as if you had omit it. <IPv6 Addresses> : Any valid IPv6 address is accepted. ex: 3FFE::1/128, 3FFE:4:5:6666::/64, ::1/128, 3FFE:4::5 .If your address is incorrect and longer than 16 bytes, only the last 16 bytes will be taken into account. You also may use the special character '*' to indicate any 4 bits block. ie : 3ffe::45*6. If you use only one '*' in the Address field it will accept any IPv6 address. <IPv4 Addresses> : Any valid IPv4 address is accepted. ex : 190.0.0.1/24, 10.0.0.2 .You also may use the special character '*' to indicate any 8 bits block. ie : 190.*.*.3. If you use only one '*' in the Address field it will accept any IPv4 address. No checking of correct IPv4 address will be done. For example 456.345.567.890 will be accepted. Thus you have to take care about what you write. Nevertheless only 3 characters will be taken into account for one byte. Ex : 190.0.0.0184 will not be considered correct. (Instead a kind of LRU Mechanism will be used and the address taken into account will be 190.0.0.418). Moreover only the four first values will be used (Ie 190.0.0.12.13 will be considered as 190.0.0.12).
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
 esp.sa_16: 
 
-# According to RFC 4305 Encryption Algorithms Requirements are the following : NULL (MUST), TripleDES-CBC [RFC2451] (MUST-), AES-CBC [RFC3602] (SHOULD+), AES-CTR [RFC3686] (SHOULD), DES-CBC [RFC2405] (SHOULD NOT). It will also decrypt BLOWFISH-CBC [RFC2451] and TWOFISH-CBC
+# Encryption algorithm
 # One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
 esp.encryption_algorithm_16: NULL
 
-# According to RFC 4305 Authentication Algorithms Requirements are the following : HMAC-SHA1-96 [RFC2404] (MUST), NULL (MUST), AES-XCBC-MAC-96 [RFC3566] (SHOULD+/Not Available), HMAC-MD5-96 [RFC2403] (MAY). It will also Check authentication for HMAC-SHA256
+# Authentication algorithm
 # One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
 # (case-insensitive).
 esp.authentication_algorithm_16: NULL
 
-# The key sizes supported are the following : [TripleDES-CBC] : 192 bits. [AES-CBC] : 128/192/256 bits. [AES-CTR] : 160/224/288 bits. The remaining 32 bits will be used as nonce. [DES-CBC] : 64 bits. [BLOWFISH-CBC] : 128 bits. [TWOFISH-CBC] : 128/256 bits
+# Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.encryption_key_16: 
 
-# The key sizes supported are the following : [HMAC-SHA1-96] : Any. [HMAC-SHA256] : Any. [HMAC-MD5] : Any.
+# Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
 esp.authentication_key_16: 
 
@@ -1026,6 +1162,10 @@ fcip.target_port: 3225
 # Whether the FDDI dissector should add 3-byte padding to all captured FDDI packets (useful with e.g. Tru64 UNIX tcpdump)
 # TRUE or FALSE (case-insensitive).
 fddi.padding: FALSE
+
+# With this option display filters for fmp fhandle a RPC call, even if the actual fhandle is only present in one of the packets
+# TRUE or FALSE (case-insensitive).
+fmp.fhandle_find_both_reqrep: FALSE
 
 # Encapsulation
 # One of: FRF 3.2/Cisco HDLC, GPRS Network Service, Raw Ethernet
@@ -1080,6 +1220,10 @@ gsm-sms-ud.prevent_dissectors_chg_cols: FALSE
 # A string denoting an positive integer range (e.g., "1-20,30-40").
 gsm_map.tcap.ssn: 6-9
 
+# Whether or not to try reassembling GSSAPI blobs spanning multiple (SMB/SessionSetup) PDUs
+# TRUE or FALSE (case-insensitive).
+gss-api.gssapi_reassembly: TRUE
+
 # GTPv0 port (default 3386)
 # A decimal number.
 gtp.v0_port: 3386
@@ -1104,6 +1248,10 @@ gtp.check_etsi: FALSE
 # TRUE or FALSE (case-insensitive).
 gtp.dissect_gtp_over_tcp: TRUE
 
+# H.225 Server TLS Port
+# A decimal number.
+h225.tls.port: 1300
+
 # Whether the H.225 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 h225.reassembly: TRUE
@@ -1124,13 +1272,41 @@ h245.reassembly: TRUE
 # TRUE or FALSE (case-insensitive).
 h245.shorttypes: FALSE
 
-# Whether persistent context information is to be kept
+# Mantain relationships between transactions and contexts and display an extra tree showing context data
 # TRUE or FALSE (case-insensitive).
 h248.ctx_info: FALSE
 
 # Port to be decoded as h248
 # A decimal number.
 h248.udp_port: 0
+
+# Port to be decoded as h248
+# A decimal number.
+h248.tcp_port: 2945
+
+# Desegment H.248 messages that span more TCP segments
+# TRUE or FALSE (case-insensitive).
+h248.desegment: TRUE
+
+# The dynamic payload type which will be interpreted as H264
+# A decimal number.
+h263p.dynamic.payload.type: 0
+
+# The dynamic payload type which will be interpreted as H264
+# A decimal number.
+h264.dynamic.payload.type: 0
+
+# Port to be decoded as h501
+# A decimal number.
+h501.udp.port: 2099
+
+# Port to be decoded as h501
+# A decimal number.
+h501.tcp.port: 2099
+
+# Desegment H.501 messages that span more TCP segments
+# TRUE or FALSE (case-insensitive).
+h501.desegment: TRUE
 
 # Whether the HTTP dissector should reassemble headers of a request spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -1148,13 +1324,21 @@ http.dechunk_body: TRUE
 # TRUE or FALSE (case-insensitive).
 http.decompress_body: TRUE
 
-# Decode packets on this TCP port as HTTP
-# A decimal number.
-http.tcp_alternate_port: 0
+# TCP Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+http.tcp.port: 80,3128,3132,8080,8088,11371,3689,1900
+
+# SSL/TLS Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+http.ssl.port: 443
 
 # Whether the 128th and following bytes of the ICMP payload should be decoded as MPLS extensions or as a portion of the original packet
 # TRUE or FALSE (case-insensitive).
 icmp.favor_icmp_mpls: FALSE
+
+# Ethertype used to indicate IEEE 802.1ah tag.
+# A hexadecimal number.
+ieee8021ah.8021ah_ethertype: 0x88f0
 
 # Whether the iFCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -1179,6 +1363,10 @@ ip.summary_in_tree: TRUE
 # Whether to validate the IP checksum
 # TRUE or FALSE (case-insensitive).
 ip.check_checksum: TRUE
+
+# Whether to correct for TSO-enabled hardware captures, such as spoofing the IP packet length
+# TRUE or FALSE (case-insensitive).
+ip.tso_support: FALSE
 
 # Whether the IPDC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -1261,7 +1449,11 @@ iuup.two_byte_pseudoheader: FALSE
 # A decimal number.
 iuup.dynamic.payload.type: 0
 
-# Whether the JXTA dissector should reassemble messages spanning multiple UDP/HTTP/TCP segments. To use this option you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings  and enable "Reassemble fragmented IP datagrams" in the IP protocol settings.
+# Enable to have correctly typed MIME media dissected as JXTA Messages.
+# TRUE or FALSE (case-insensitive).
+jxta.msg.mediatype: TRUE
+
+# Whether the JXTA dissector should reassemble messages spanning multiple UDP/TCP/SCTP segments. To use this option you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings  and enable "Reassemble fragmented IP datagrams" in the IP protocol settings.
 # TRUE or FALSE (case-insensitive).
 jxta.desegment: TRUE
 
@@ -1277,13 +1469,19 @@ jxta.tcp.heuristic: TRUE
 # TRUE or FALSE (case-insensitive).
 jxta.sctp.heuristic: FALSE
 
-# K12 module configuration filename
-# A string.
-k12.config: 
+# A table of matches vs stack filenames and relative protocols
 
 # Whether the Kerberos dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 kerberos.desegment: TRUE
+
+# Whether the dissector should try to decrypt encrypted Kerberos blobs. This requires that the proper keytab file is installed as well.
+# TRUE or FALSE (case-insensitive).
+kerberos.decrypt: FALSE
+
+# The keytab file containing all the secrets
+# A string.
+kerberos.file: insert filename here
 
 # Set the port for Kismet Client/Server messages (if other than the default of 2501)
 # A decimal number.
@@ -1299,26 +1497,34 @@ kpasswd.desegment: TRUE
 l2tp.cookie_size: 4 Byte Cookie
 
 # L2TPv3 L2-Specific Sublayer
-# One of: None, Default L2-Specific, ATM-Specific
+# One of: None, Default L2-Specific, ATM-Specific, LAPD-Specific
 # (case-insensitive).
 l2tp.l2_specific: Default L2-Specific
 
 # Decode L2TPv3 packet contents as this protocol
-# One of: Ethernet, Cisco HDLC, Frame Relay, PPP, IP, MPLS, AAL5
+# One of: Ethernet, Cisco HDLC, Frame Relay, PPP, IP, MPLS, AAL5, LAPD
 # (case-insensitive).
 l2tp.protocol: Cisco HDLC
+
+# Use SAPI values as specified in TS 48 056
+# TRUE or FALSE (case-insensitive).
+lapd.use_gsm_sapi_values: FALSE
 
 # Whether the Laplink dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 laplink.desegment_laplink_over_tcp: TRUE
 
-# Whether the LDAP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings, and disable "Verify length" in the BER protocol settings
+# Whether the LDAP dissector should reassemble messages spanning multiple TCP segments.To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 ldap.desegment_ldap_messages: TRUE
 
 # Set the port for LDAP operations
 # A decimal number.
 ldap.tcp.port: 389
+
+# Set the port for LDAP operations over SSL
+# A decimal number.
+ldap.ssl.port: 636
 
 # Set the TCP port for messages (if other than the default of 646)
 # A decimal number.
@@ -1407,6 +1613,10 @@ megaco.display_raw_text: TRUE
 # TRUE or FALSE (case-insensitive).
 megaco.display_dissect_tree: TRUE
 
+# Mantain relationships between transactions and contexts and display an extra tree showing context data
+# TRUE or FALSE (case-insensitive).
+megaco.ctx_info: FALSE
+
 # Set the UDP port for gateway messages (if other than the default of 2427)
 # A decimal number.
 mgcp.tcp.gateway_port: 2427
@@ -1431,9 +1641,21 @@ mgcp.display_raw_text: FALSE
 # TRUE or FALSE (case-insensitive).
 mgcp.display_mgcp_message_count: FALSE
 
+# Set the port for MIKEY messages (if other than the default of 2269)
+# A decimal number.
+mikey.udp.port: 2269
+
+# Set the port for MIKEY messages (if other than the default of 2269)
+# A decimal number.
+mikey.tcp.port: 2269
+
 # Display multipart bodies with no media type dissector as raw text (may cause problems with binary data).
 # TRUE or FALSE (case-insensitive).
 mime_multipart.display_unknown_body_as_text: FALSE
+
+# Remove any base64 content-transfer encoding from bodies. This supports export of the body and its further dissection.
+# TRUE or FALSE (case-insensitive).
+mime_multipart.remove_base64_encoding: FALSE
 
 # Set the UDP port for messages (if other than the default of 3503)
 # A decimal number.
@@ -1487,9 +1709,21 @@ mtp3.japan_5_bit_sls: FALSE
 # (case-insensitive).
 mtp3.addr_format: Dashed
 
+# Decode the spare bits of the SIO as the MSU priority (a national option in ITU)
+# TRUE or FALSE (case-insensitive).
+mtp3.itu_priority: FALSE
+
 # Whether the MySQL dissector should reassemble MySQL buffers spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 mysql.desegment_buffers: TRUE
+
+# Whether the MySQL dissector should display the SQL query string in the INFO column.
+# TRUE or FALSE (case-insensitive).
+mysql.show_sql_query: FALSE
+
+# Whether the NBD dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings
+# TRUE or FALSE (case-insensitive).
+nbd.desegment_nbd_messages: TRUE
 
 # Whether the NBSS dissector should reassemble packets spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -1502,6 +1736,10 @@ ncp.desegment: TRUE
 # Whether the NCP dissector should defragment NDS messages spanning multiple reply packets.
 # TRUE or FALSE (case-insensitive).
 ncp.defragment_nds: TRUE
+
+# Dissect the NetWare Information Structure as NetWare 5.x or higher or as older NetWare 3.x.
+# TRUE or FALSE (case-insensitive).
+ncp.newstyle: TRUE
 
 # Whether the NCP dissector should echo the NDS Entry ID to name resolves to the expert table.
 # TRUE or FALSE (case-insensitive).
@@ -1519,7 +1757,7 @@ ncp.error_2_expert: TRUE
 # TRUE or FALSE (case-insensitive).
 ncp.server_2_expert: TRUE
 
-# Whether the NCP dissector should echo file information to the expert table.
+# Whether the NCP dissector should echo file open/close/oplock information to the expert table.
 # TRUE or FALSE (case-insensitive).
 ncp.file_2_expert: TRUE
 
@@ -1560,6 +1798,10 @@ netsync.tcp_port: 5253
 # TRUE or FALSE (case-insensitive).
 netsync.desegment_netsync_messages: TRUE
 
+# Always dissect this port's traffic as newmail notifications.  Additional ports will be dynamically registered as they are seen in MAPI register push notification packets.
+# A decimal number.
+newmail.default_port: 0
+
 # Whether the dissector should snoop the FH to filename mappings by looking inside certain packets
 # TRUE or FALSE (case-insensitive).
 nfs.file_name_snooping: FALSE
@@ -1573,7 +1815,7 @@ nfs.file_full_name_snooping: FALSE
 nfs.fhandle_find_both_reqrep: FALSE
 
 # Decode all NFS file handles as if they are of this type
-# One of: Unknown, SVR4, KNFSD_LE, NFSD_LE, KNFSD_NEW, NetApp
+# One of: Unknown, SVR4, KNFSD_LE, NFSD_LE, KNFSD_NEW, ONTAP_V3, ONTAP_V4, ONTAP_GX_V3
 # (case-insensitive).
 nfs.default_fhandle_type: Unknown
 
@@ -1585,13 +1827,9 @@ nlm.msg_res_matching: FALSE
 # TRUE or FALSE (case-insensitive).
 norm.heuristic_norm: FALSE
 
-# Set the first UDP port
-# A decimal number.
-nsip.udp.port1: 2157
-
-# Set the second UDP port
-# A decimal number.
-nsip.udp.port2: 19999
+# UDP ports to be decoded as NSIP (default: 2157,19999)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+nsip.udp.ports: 2157,19999
 
 # NT Password (used to decrypt payloads)
 # A string.
@@ -1601,30 +1839,38 @@ ntlmssp.nt_password:
 # TRUE or FALSE (case-insensitive).
 opsi.desegment_opsi_messages: TRUE
 
+# TCP port for OSI over TPKT
+# A decimal number.
+osi.tpkt_port: 0
+
+# Whether segmented TPKT datagrams should be reassembled
+# TRUE or FALSE (case-insensitive).
+osi.tpkt_reassemble: FALSE
+
+# Set the port for P7 operations (if other than the default of 102)
+# A decimal number.
+p7.tcp.port: 102
+
+# Port numbers used for P_Mul traffic
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+p_mul.udp_ports: 2751,2752,2753,2754
+
 # Reassemble fragmented P_Mul packets
 # TRUE or FALSE (case-insensitive).
 p_mul.reassemble: TRUE
+
+# Make the P_Mul dissector use relative message id number instead of absolute ones
+# TRUE or FALSE (case-insensitive).
+p_mul.relative_msgid: TRUE
+
+# Calculate sequence/acknowledgement analysis
+# TRUE or FALSE (case-insensitive).
+p_mul.seq_ack_analysis: TRUE
 
 # Type of content in Data_PDU
 # One of: No decoding, Compressed Data Type
 # (case-insensitive).
 p_mul.decode: No decoding
-
-# Used for transmission of Request_PDUs, Reject_PDUs and Release_PDUs betweenthe transmitters
-# A decimal number.
-p_mul.tport: 2751
-
-# Used for transmission of Announce_PDUs to inform the receiver(s)
-# A decimal number.
-p_mul.rport: 2752
-
-# Used for the data traffic from the transmitters to the receiver(s)
-# A decimal number.
-p_mul.dport: 2753
-
-# Used for the data traffic from the receiver(s) to the transmitter
-# A decimal number.
-p_mul.aport: 2754
 
 # The UDP port on which Packet Cable Lawful Intercept packets will be sent
 # A decimal number.
@@ -1650,6 +1896,14 @@ pgm.udp.encap_mcast_port: 0
 # A decimal number.
 pgsql.tcp.port: 5432
 
+# The password to used to decrypt the encrypted elements within the PKCS#12 file
+# A string.
+pkcs12.password: 
+
+# Whether to try and decrypt the encrypted data within the PKCS#12 with a NULL password
+# TRUE or FALSE (case-insensitive).
+pkcs12.try_null_password: FALSE
+
 # Decode packets on this UDP port as PacketCable CCC
 # A decimal number.
 pkt_ccc.udp_port: 0
@@ -1657,6 +1911,10 @@ pkt_ccc.udp_port: 0
 # Whether the PN-RT summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
 pn_rt.summary_in_tree: TRUE
+
+# Whether fragmented 802.11 aggregated MPDUs should be reassembled
+# TRUE or FALSE (case-insensitive).
+ppi.reassemble: TRUE
 
 # The type of PPP frame checksum (none, 16-bit, 32-bit)
 # One of: None, 16-Bit, 32-Bit
@@ -1775,9 +2033,13 @@ rtcp.heuristic_rtcp: FALSE
 # TRUE or FALSE (case-insensitive).
 rtcp.show_roundtrip_calculation: FALSE
 
-# Minimum calculated roundtrip delay time in milliseconds that should be reported
+# Minimum (absolute) calculated roundtrip delay time in milliseconds that should be reported
 # A decimal number.
 rtcp.roundtrip_min_threshhold: 10
+
+# Whether the RTMPT dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+rtmpt.desegment: TRUE
 
 # Where available, show which protocol and frame caused this RTP stream to be created
 # TRUE or FALSE (case-insensitive).
@@ -1786,6 +2048,10 @@ rtp.show_setup_info: TRUE
 # If call control SIP/H323/RTSP/.. messages are missing in the trace, RTP isn't decoded without this
 # TRUE or FALSE (case-insensitive).
 rtp.heuristic_rtp: FALSE
+
+# Whether subdissector can request RTP streams to be reassembled
+# TRUE or FALSE (case-insensitive).
+rtp.desegment_rtp_streams: TRUE
 
 # If an RTP version 0 packet is encountered, it can be treated as an invalid packet, a STUN packet, or a T.38 packet
 # One of: Invalid RTP packets, STUN packets, T.38 packets
@@ -1799,6 +2065,10 @@ rtp.rfc2198_payload_type: 99
 # This is the value of the Payload Type fieldthat specifies RTP Events
 # A decimal number.
 rtpevent.event_payload_type_value: 101
+
+# Whether segmented RTSE datagrams should be reassembled. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+rtse.reassemble: TRUE
 
 # Set the TCP port for RTSP messages
 # A decimal number.
@@ -1832,10 +2102,6 @@ s5066.edition_one: FALSE
 # A decimal number.
 s5066.tcp.port: 5066
 
-# NT Password (used to verify password changes)
-# A string.
-samr.nt_password: 
-
 # The source point code (usually MSC) (to determine whether message is uplink or downlink)
 # A hexadecimal number.
 sccp.source_pc: 0
@@ -1844,14 +2110,28 @@ sccp.source_pc: 0
 # TRUE or FALSE (case-insensitive).
 sccp.show_length: FALSE
 
-# Whether XUDT messages dshould be reassembled
+# Whether XUDT messages should be reassembled
 # TRUE or FALSE (case-insensitive).
 sccp.defragment_xudt: TRUE
 
+# Whether to keep infomation about messages and their associations
+# TRUE or FALSE (case-insensitive).
+sccp.trace_sccp: FALSE
+
+# Show SLR, DLR, and CAUSE Parameters in the Information Column of the Summary
+# TRUE or FALSE (case-insensitive).
+sccp.show_more_info: FALSE
+
+# A table that enumerates user protocols to be used against specific PCs and SSNs
+
 # When Target Cannot Be Identified, Decode SCSI Messages As
-# One of: Block Device, Sequential Device
+# One of: Block Device, Sequential Device, Object Based Storage Device, Medium Changer Device, Multimedia Device
 # (case-insensitive).
 scsi.decode_scsi_messages_as: Block Device
+
+# Whether fragmented SCSI DATA IN/OUT transfers should be reassembled
+# TRUE or FALSE (case-insensitive).
+scsi.defragment: FALSE
 
 # Show source and destination port numbers in the protocol tree
 # TRUE or FALSE (case-insensitive).
@@ -1870,9 +2150,29 @@ sctp.show_always_control_chunks: TRUE
 # TRUE or FALSE (case-insensitive).
 sctp.try_heuristic_first: FALSE
 
-# Specifies that RTP/RTCP/T.38/MSRP/etc streams are decoded based upon port numbers found in SIP/SDP payload
+# Whether fragmented SCTP user messages should be reassembled
+# TRUE or FALSE (case-insensitive).
+sctp.reassembly: FALSE
+
+# Match TSNs and their SACKs
+# TRUE or FALSE (case-insensitive).
+sctp.tsn_analysis: FALSE
+
+# Specifies that RTP/RTCP/T.38/MSRP/etc streams are decoded based upon port numbers found in SDP payload
 # TRUE or FALSE (case-insensitive).
 sdp.establish_conversation: TRUE
+
+# Set the port(s) for sFlow messages (default: 6343)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+sflow.ports: 6343
+
+# Enabling dissection makes it easy to view protocol details in each of the sampled headers.  Disabling dissection may reduce noise caused when display filters match the contents of any sampled header(s).
+# TRUE or FALSE (case-insensitive).
+sflow.enable_dissection: TRUE
+
+# This option only makes sense if dissection of sampled headers is enabled and probably not even then.
+# TRUE or FALSE (case-insensitive).
+sflow.enable_analysis: FALSE
 
 # Set UDP port 1 for SigComp messages
 # A decimal number.
@@ -1907,9 +2207,17 @@ sigcomp.decomp.msg: TRUE
 sigcomp.display.decomp.msg.as.txt: FALSE
 
 # 0 = UDVM executes silently, then increasing detail about execution of UDVM instructions, Warning! CPU intense at high detail
-# One of: No-Printout, Low-detail, medium-detail, High-detail
+# One of: No-Printout, Low-detail, Medium-detail, High-detail
 # (case-insensitive).
 sigcomp.show.udvm.execution: No-Printout
+
+# SIP Server TCP Port
+# A decimal number.
+sip.tcp.port: 5060
+
+# SIP Server TLS Port
+# A decimal number.
+sip.tls.port: 5061
 
 # Specifies that the raw text of the SIP message should be displayed in addition to the dissection tree
 # TRUE or FALSE (case-insensitive).
@@ -1959,6 +2267,10 @@ smpp.reassemble_smpp_over_tcp: TRUE
 # TRUE or FALSE (case-insensitive).
 smtp.desegment_lines: TRUE
 
+# Whether the SMTP dissector should reassemble DATA command and lines spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+smtp.desegment_data: TRUE
+
 # Whether fragmented BIUs should be reassembled
 # TRUE or FALSE (case-insensitive).
 sna.defragment: TRUE
@@ -1967,10 +2279,6 @@ sna.defragment: TRUE
 # TRUE or FALSE (case-insensitive).
 snmp.display_oid: TRUE
 
-# List of MIB modules to load (the list is set to environment variable MIBS if the variable is not already set)The list must be separated by colons (:) on non-Windows systems and semicolons (;) on Windows systems
-# A string.
-snmp.mib_modules: IP-MIB:IF-MIB:TCP-MIB:UDP-MIB:SNMPv2-MIB:RFC1213-MIB:UCD-SNMP-MIB
-
 # Whether the SNMP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 snmp.desegment: TRUE
@@ -1978,6 +2286,8 @@ snmp.desegment: TRUE
 # ON - display dissected variables inside SNMP tree, OFF - display dissected variables in root tree after SNMP
 # TRUE or FALSE (case-insensitive).
 snmp.var_in_tree: TRUE
+
+# Table of engine-user associations used for authentication and decryption
 
 # Whether the SRVLOC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -1988,7 +2298,7 @@ srvloc.desegment_tcp: TRUE
 sscop.udp.ports: 
 
 # SSCOP payload (dissector to call on SSCOP payload)
-# One of: Data (no further dissection), Q.2931, SSCF-NNI (MTP3-b)
+# One of: Data (no further dissection), Q.2931, SSCF-NNI (MTP3-b), ALCAP, NBAP
 # (case-insensitive).
 sscop.payload: Q.2931
 
@@ -2004,8 +2314,7 @@ ssl.desegment_ssl_records: TRUE
 # TRUE or FALSE (case-insensitive).
 ssl.desegment_ssl_application_data: TRUE
 
-# semicolon separated list of private RSA keys used for SSL decryption; each list entry must be in the form of <ip>,<port>,<protocol>,<key_file_name><key_file_name>   is the local file name of the RSA private key used by the specified server
-
+# Semicolon-separated list of private RSA keys used for SSL decryption; each list entry must be in the form of <ip>,<port>,<protocol>,<key_file_name>. <key_file_name> is the local file name of the RSA private key used by the specified server (or name of the file containing such a list)
 # A string.
 ssl.keys_list: 
 
@@ -2013,6 +2322,10 @@ ssl.keys_list:
 
 # A string.
 ssl.debug_file: 
+
+# Whether the StarTeam dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+starteam.desegment: TRUE
 
 # Version used by Wireshark
 # One of: Internet Draft version 08, RFC 3868
@@ -2048,6 +2361,10 @@ t38.tpkt_usage: Maybe
 # TRUE or FALSE (case-insensitive).
 t38.show_setup_info: TRUE
 
+# Whether the TACACS+ dissector should reasssemble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+tacplus.desegment: TRUE
+
 # TACACS+ Encryption Key
 # A string.
 tacplus.key: 
@@ -2059,6 +2376,22 @@ tali.reassemble: TRUE
 # SCCP (and SUA) SSNs to decode as TCAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
 tcap.ssn: 
+
+# Activate the analyse for Response Time
+# TRUE or FALSE (case-insensitive).
+tcap.srt: FALSE
+
+# Statistics for Response Time
+# TRUE or FALSE (case-insensitive).
+tcap.persistentsrt: FALSE
+
+# Maximal delay for message repetion
+# A decimal number.
+tcap.repetitiontimeout: 10
+
+# Maximal delay for message lost
+# A decimal number.
+tcap.losttimeout: 30
 
 # Whether the TCP summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
@@ -2080,9 +2413,17 @@ tcp.analyze_sequence_numbers: TRUE
 # TRUE or FALSE (case-insensitive).
 tcp.relative_sequence_numbers: TRUE
 
+# Calculate timestamps relative to the first frame and the previous frame in the tcp conversation
+# TRUE or FALSE (case-insensitive).
+tcp.calculate_timestamps: FALSE
+
 # Try to decode a packet using an heuristic sub-dissector before using a sub-dissector registered to a specific port
 # TRUE or FALSE (case-insensitive).
 tcp.try_heuristic_first: FALSE
+
+# Set the port for IPSEC/ISAKMP messagesIf other than the default of 10000)
+# A decimal number.
+tcpencap.tcp.port: 10000
 
 # Whether the TDS dissector should reassemble TDS buffers spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -2110,13 +2451,22 @@ tds.tcp_ports:
 # TRUE or FALSE (case-insensitive).
 teredo.heuristic_teredo: FALSE
 
-# Whether SEGMENTATION_MANAGER datagrams should be reassembled
+# Whether TIPCv1 SEGMENTATION_MANAGER datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
 tipc.defragment: TRUE
 
 # Whether to try to dissect TIPC data or not
 # TRUE or FALSE (case-insensitive).
 tipc.dissect_tipc_data: FALSE
+
+# Try to decode a TIPCv2 packet using an heuristic sub-dissector before using a registered sub-dissector
+# TRUE or FALSE (case-insensitive).
+tipc.try_heuristic_first: FALSE
+
+# TIPC 1.7 removes/adds fields (not) available in TIPC 1.5/1.6 while keeping the version number 2 in the packages. "ALL" shows all fields that were ever used in both versions.
+# One of: ALL, TIPC 1.5/1.6, TIPC 1.7
+# (case-insensitive).
+tipc.handle_v2_as: ALL
 
 # Whether the TNS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -2125,6 +2475,14 @@ tns.desegment_tns_messages: TRUE
 # Whether the TPKT dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 tpkt.desegment: TRUE
+
+# 
+# A decimal number.
+tpncp.tcp.trunkpack_port: 2424
+
+# 
+# A decimal number.
+tpncp.udp.trunkpack_port: 2424
 
 # Whether Linux mangling of the link-layer header should be checked for and worked around
 # TRUE or FALSE (case-insensitive).
@@ -2142,9 +2500,17 @@ udp.summary_in_tree: TRUE
 # TRUE or FALSE (case-insensitive).
 udp.try_heuristic_first: FALSE
 
+# Whether to validate the UDP checksum
+# TRUE or FALSE (case-insensitive).
+udp.check_checksum: TRUE
+
 # Ignore an invalid checksum coverage field and continue dissection
 # TRUE or FALSE (case-insensitive).
 udplite.ignore_checksum_coverage: TRUE
+
+# Whether to validate the UDPlite checksum
+# TRUE or FALSE (case-insensitive).
+udplite.check_checksum: TRUE
 
 # Whether the ULP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
@@ -2158,129 +2524,27 @@ ulp.tcp.port: 7275
 # TRUE or FALSE (case-insensitive).
 uma.desegment_ucp_messages: TRUE
 
-# Set the TCP port1 for Unlicensed Mobile Access messages
+# TCP ports to be decoded as UMA (default: 14001,14001)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+uma.udp.ports: 14001,14001
+
+# A table that enumerates the various protocols to be used against a cartain user DLT
+
+# Whether the vlan summary line should be shown in the protocol tree
+# TRUE or FALSE (case-insensitive).
+vlan.summary_in_tree: TRUE
+
+# The Ethertype used to indicate 802.1QinQ VLAN in VLAN tunneling.
+# A hexadecimal number.
+vlan.qinq_ethertype: 0x9100
+
+# Whether the VNC dissector should reasss emble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+vnc.desegment: TRUE
+
+# Decode this port's traffic as VNC in addition to the default ports (5500, 5501, 5900, 5901)
 # A decimal number.
-uma.tcp.port1: 14001
-
-# Data Link Type
-# One of: Disabled, User 0 (DLT=147 WTAP_ENCAP=45), User 1 (DLT=148 WTAP_ENCAP=46), User 2 (DLT=149 WTAP_ENCAP=47), User 3 (DLT=150 WTAP_ENCAP=48), User 4 (DLT=151 WTAP_ENCAP=49), User 5 (DLT=152 WTAP_ENCAP=50), User 6 (DLT=153 WTAP_ENCAP=51), User 7 (DLT=154 WTAP_ENCAP=52), User 8 (DLT=155 WTAP_ENCAP=53), User 9 (DLT=156 WTAP_ENCAP=54), User 10 (DLT=157 WTAP_ENCAP=55), User 11 (DLT=158 WTAP_ENCAP=56), User 12 (DLT=159 WTAP_ENCAP=57), User 13 (DLT=160 WTAP_ENCAP=58), User 14 (DLT=161 WTAP_ENCAP=59), User 15 (DLT=162 WTAP_ENCAP=60)
-# (case-insensitive).
-user_dlt_a.dlt: Disabled
-
-# 
-# One of: No encpsulation, SSCOP
-# (case-insensitive).
-user_dlt_a.special_encap: No encpsulation
-
-# Payload
-# A string.
-user_dlt_a.payload: 
-
-# The size (in octets) of the Header
-# A decimal number.
-user_dlt_a.header_size: 0
-
-# The size (in octets) of the Trailer
-# A decimal number.
-user_dlt_a.trailer_size: 0
-
-# Header Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_a.header_proto: 
-
-# Trailer Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_a.trailer_proto: 
-
-# Data Link Type
-# One of: Disabled, User 0 (DLT=147 WTAP_ENCAP=45), User 1 (DLT=148 WTAP_ENCAP=46), User 2 (DLT=149 WTAP_ENCAP=47), User 3 (DLT=150 WTAP_ENCAP=48), User 4 (DLT=151 WTAP_ENCAP=49), User 5 (DLT=152 WTAP_ENCAP=50), User 6 (DLT=153 WTAP_ENCAP=51), User 7 (DLT=154 WTAP_ENCAP=52), User 8 (DLT=155 WTAP_ENCAP=53), User 9 (DLT=156 WTAP_ENCAP=54), User 10 (DLT=157 WTAP_ENCAP=55), User 11 (DLT=158 WTAP_ENCAP=56), User 12 (DLT=159 WTAP_ENCAP=57), User 13 (DLT=160 WTAP_ENCAP=58), User 14 (DLT=161 WTAP_ENCAP=59), User 15 (DLT=162 WTAP_ENCAP=60)
-# (case-insensitive).
-user_dlt_b.dlt: Disabled
-
-# 
-# One of: No encpsulation, SSCOP
-# (case-insensitive).
-user_dlt_b.special_encap: No encpsulation
-
-# Payload
-# A string.
-user_dlt_b.payload: 
-
-# The size (in octets) of the Header
-# A decimal number.
-user_dlt_b.header_size: 0
-
-# The size (in octets) of the Trailer
-# A decimal number.
-user_dlt_b.trailer_size: 0
-
-# Header Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_b.header_proto: 
-
-# Trailer Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_b.trailer_proto: 
-
-# Data Link Type
-# One of: Disabled, User 0 (DLT=147 WTAP_ENCAP=45), User 1 (DLT=148 WTAP_ENCAP=46), User 2 (DLT=149 WTAP_ENCAP=47), User 3 (DLT=150 WTAP_ENCAP=48), User 4 (DLT=151 WTAP_ENCAP=49), User 5 (DLT=152 WTAP_ENCAP=50), User 6 (DLT=153 WTAP_ENCAP=51), User 7 (DLT=154 WTAP_ENCAP=52), User 8 (DLT=155 WTAP_ENCAP=53), User 9 (DLT=156 WTAP_ENCAP=54), User 10 (DLT=157 WTAP_ENCAP=55), User 11 (DLT=158 WTAP_ENCAP=56), User 12 (DLT=159 WTAP_ENCAP=57), User 13 (DLT=160 WTAP_ENCAP=58), User 14 (DLT=161 WTAP_ENCAP=59), User 15 (DLT=162 WTAP_ENCAP=60)
-# (case-insensitive).
-user_dlt_c.dlt: Disabled
-
-# 
-# One of: No encpsulation, SSCOP
-# (case-insensitive).
-user_dlt_c.special_encap: No encpsulation
-
-# Payload
-# A string.
-user_dlt_c.payload: 
-
-# The size (in octets) of the Header
-# A decimal number.
-user_dlt_c.header_size: 0
-
-# The size (in octets) of the Trailer
-# A decimal number.
-user_dlt_c.trailer_size: 0
-
-# Header Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_c.header_proto: 
-
-# Trailer Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_c.trailer_proto: 
-
-# Data Link Type
-# One of: Disabled, User 0 (DLT=147 WTAP_ENCAP=45), User 1 (DLT=148 WTAP_ENCAP=46), User 2 (DLT=149 WTAP_ENCAP=47), User 3 (DLT=150 WTAP_ENCAP=48), User 4 (DLT=151 WTAP_ENCAP=49), User 5 (DLT=152 WTAP_ENCAP=50), User 6 (DLT=153 WTAP_ENCAP=51), User 7 (DLT=154 WTAP_ENCAP=52), User 8 (DLT=155 WTAP_ENCAP=53), User 9 (DLT=156 WTAP_ENCAP=54), User 10 (DLT=157 WTAP_ENCAP=55), User 11 (DLT=158 WTAP_ENCAP=56), User 12 (DLT=159 WTAP_ENCAP=57), User 13 (DLT=160 WTAP_ENCAP=58), User 14 (DLT=161 WTAP_ENCAP=59), User 15 (DLT=162 WTAP_ENCAP=60)
-# (case-insensitive).
-user_dlt_d.dlt: Disabled
-
-# 
-# One of: No encpsulation, SSCOP
-# (case-insensitive).
-user_dlt_d.special_encap: No encpsulation
-
-# Payload
-# A string.
-user_dlt_d.payload: 
-
-# The size (in octets) of the Header
-# A decimal number.
-user_dlt_d.header_size: 0
-
-# The size (in octets) of the Trailer
-# A decimal number.
-user_dlt_d.trailer_size: 0
-
-# Header Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_d.header_proto: 
-
-# Trailer Protocol (used only when ecapsulation is not given)
-# A string.
-user_dlt_d.trailer_proto: 
+vnc.alternate_port: 0
 
 # Enable this preference if you want to view the WBXML tokens without the representation in a media type (e.g., WML). Tokens will show up as Tag_0x12, attrStart_0x08 or attrValue_0x0B for example.
 # TRUE or FALSE (case-insensitive).
@@ -2290,6 +2554,18 @@ wbxml.skip_wbxml_token_mapping: FALSE
 # TRUE or FALSE (case-insensitive).
 wbxml.disable_wbxml_token_parsing: FALSE
 
+# Show transaction ID direction bit separately from the rest of the transaction ID field.
+# TRUE or FALSE (case-insensitive).
+wimaxasncp.show_transaction_id_d_bit: FALSE
+
+# Print debug output to the console.
+# TRUE or FALSE (case-insensitive).
+wimaxasncp.debug_enabled: FALSE
+
+# Set UDP port for WiMAX ASN Control Plane Protocol
+# A decimal number.
+wimaxasncp.udp.wimax_port: 2231
+
 # Whether the WINS-Replication dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
 winsrepl.reassemble: TRUE
@@ -2298,34 +2574,292 @@ winsrepl.reassemble: TRUE
 # TRUE or FALSE (case-insensitive).
 wlan.defragment: TRUE
 
+# Don't dissect 802.11n draft HT elements (which might contain duplicate information).
+# TRUE or FALSE (case-insensitive).
+wlan.ignore_draft_ht: FALSE
+
+# Whether retransmitted 802.11 frames should be subdissected
+# TRUE or FALSE (case-insensitive).
+wlan.retransmitted: TRUE
+
 # Some 802.11 cards include the FCS at the end of a packet, others do not.
 # TRUE or FALSE (case-insensitive).
 wlan.check_fcs: FALSE
 
-# Some 802.11 cards leave the WEP bit set even though the packet is decrypted.
-# TRUE or FALSE (case-insensitive).
-wlan.ignore_wep: FALSE
-
-# How many WEP keys do we have to choose from? (0 to disable, up to 4)
-# One of: 0, 1, 2, 3, 4
+# Some 802.11 cards leave the Protection bit set even though the packet is decrypted, and some also leave the IV (initialization vector).
+# One of: No, Yes - without IV, Yes - with IV
 # (case-insensitive).
-wlan.wep_keys: 0
+wlan.ignore_wep: Yes - without IV
 
-# First WEP key (A:B:C:D:E) [40bit], (A:B:C:D:E:F:G:H:I:J:K:L:M) [104bit], or whatever key length you're using
+# Enable WEP and WPA/WPA2 decryption
+# TRUE or FALSE (case-insensitive).
+wlan.enable_decryption: FALSE
+
+# This is just a static text
+
+# Key #1 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
 wlan.wep_key1: 
 
-# Second WEP key (A:B:C:D:E) [40bit], (A:B:C:D:E:F:G:H:I:J:K:L:M) [104bit], or whatever key length you're using
+# Key #2 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
 wlan.wep_key2: 
 
-# Third WEP key (A:B:C:D:E) [40bit], (A:B:C:D:E:F:G:H:I:J:K:L:M) [104bit], or whatever key length you're using
+# Key #3 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
 wlan.wep_key3: 
 
-# Fourth WEP key (A:B:C:D:E) [40bit] (A:B:C:D:E:F:G:H:I:J:K:L:M) [104bit], or whatever key length you're using
+# Key #4 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
 wlan.wep_key4: 
+
+# Key #5 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key5: 
+
+# Key #6 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key6: 
+
+# Key #7 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key7: 
+
+# Key #8 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key8: 
+
+# Key #9 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key9: 
+
+# Key #10 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key10: 
+
+# Key #11 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key11: 
+
+# Key #12 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key12: 
+
+# Key #13 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key13: 
+
+# Key #14 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key14: 
+
+# Key #15 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key15: 
+
+# Key #16 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key16: 
+
+# Key #17 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key17: 
+
+# Key #18 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key18: 
+
+# Key #19 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key19: 
+
+# Key #20 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key20: 
+
+# Key #21 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key21: 
+
+# Key #22 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key22: 
+
+# Key #23 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key23: 
+
+# Key #24 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key24: 
+
+# Key #25 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key25: 
+
+# Key #26 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key26: 
+
+# Key #27 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key27: 
+
+# Key #28 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key28: 
+
+# Key #29 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key29: 
+
+# Key #30 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key30: 
+
+# Key #31 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key31: 
+
+# Key #32 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key32: 
+
+# Key #33 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key33: 
+
+# Key #34 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key34: 
+
+# Key #35 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key35: 
+
+# Key #36 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key36: 
+
+# Key #37 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key37: 
+
+# Key #38 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key38: 
+
+# Key #39 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key39: 
+
+# Key #40 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key40: 
+
+# Key #41 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key41: 
+
+# Key #42 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key42: 
+
+# Key #43 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key43: 
+
+# Key #44 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key44: 
+
+# Key #45 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key45: 
+
+# Key #46 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key46: 
+
+# Key #47 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key47: 
+
+# Key #48 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key48: 
+
+# Key #49 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key49: 
+
+# Key #50 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key50: 
+
+# Key #51 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key51: 
+
+# Key #52 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key52: 
+
+# Key #53 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key53: 
+
+# Key #54 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key54: 
+
+# Key #55 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key55: 
+
+# Key #56 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key56: 
+
+# Key #57 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key57: 
+
+# Key #58 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key58: 
+
+# Key #59 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key59: 
+
+# Key #60 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key60: 
+
+# Key #61 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key61: 
+
+# Key #62 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key62: 
+
+# Key #63 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key63: 
+
+# Key #64 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
+# A string.
+wlan.wep_key64: 
+
+# Set the maximum Basic CID used in the Wimax decoder (if other than the default of 320).  Note: The maximum Primary CID is double the maximum Basic CID.
+# A decimal number.
+wmx.basic_cid_max: 320
+
+# Set to TRUE to use the Corrigendum 2 version of Wimax message decoding. Set to FALSE to use the 802.16e-2005  version.
+# TRUE or FALSE (case-insensitive).
+wmx.corrigendum_2_version: FALSE
 
 # If CALL REQUEST not seen or didn't specify protocol, dissect as QLLC/SNA
 # TRUE or FALSE (case-insensitive).
@@ -2339,9 +2873,21 @@ x.25.reassemble: TRUE
 # TRUE or FALSE (case-insensitive).
 x11.desegment: TRUE
 
+# Set the port for P1 operations (if other than the default of 102)
+# A decimal number.
+x411.tcp.port: 102
+
 # Try to recognize XML for unknown media types
 # TRUE or FALSE (case-insensitive).
 xml.heuristic: FALSE
+
+# Try to recognize XML for unknown TCP ports
+# TRUE or FALSE (case-insensitive).
+xml.heuristic_tcp: FALSE
+
+# TCP Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+xml.tcp.port: 
 
 # Whether the X.25-over-TCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
