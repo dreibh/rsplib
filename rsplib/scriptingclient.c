@@ -113,7 +113,7 @@ static unsigned int handleStatus(const struct Status* status,
                                  const size_t         length)
 {
    if(length >= sizeof(struct Status)) {
-      ExitStatus = ntohl(status->ExitStatus);
+      ExitStatus = ntohl(status->Status);
       if(ExitStatus != 0) {
          printf("Got exit status %u from remote side!\n", ExitStatus);
          Trial++;

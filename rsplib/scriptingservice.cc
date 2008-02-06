@@ -101,32 +101,27 @@ EventHandlingResult ScriptingServer::initializeSession()
 // ###### Clean up session ##################################################
 void ScriptingServer::finishSession(EventHandlingResult result)
 {
-   if(ChildProcess) {
-      kill(ChildProcess, SIGKILL);
-      waitpid(ChildProcess, NULL, 0);
-   }
-   ChildProcess = 0;
-   if((Directory[0] != 0x00) && (!Settings.KeepTempDirs)) {
-      printTimeStamp(stdout);
-      printf("S%04d: Cleaning up directory \"%s\"...\n",
-             RSerPoolSocketDescriptor, Directory);
+   char cmd[128];
+   int  success;
 
-      DIR* dir = opendir(Directory);
-      if(dir) {
-         dirent* entry = readdir(dir);
-         while(entry) {
-            char name[1024];
-            snprintf((char*)&name, sizeof(name), "%s/%s", Directory, entry->d_name);
-            unlink(name);
-            entry = readdir(dir);
-         }
-         closedir(dir);
-      }
-      if(rmdir(Directory) != 0) {
-         printTimeStamp(stdout);
-         printf("S%04d: Unable to remove directory \"%s\": %s!\n",
-                RSerPoolSocketDescriptor, Directory, strerror(errno));
-      }
+   snprintf((char*)&cmd, sizeof(cmd), "./scriptingcontrol cleanup %s %d %s",
+            Directory, ChildProcess,
+            (Settings.KeepTempDirs == true) ? "keeptempdirs" : "");
+   success = system(cmd);
+   if(success != 0) {
+      success = system((const char*)&cmd[2]);   // without "./"  ...
+   }
+
+   if(success != 0) {
+      printTimeStamp(stdout);
+      printf("S%04d: ERROR: Unable to clean up directory \"%s\": %s!\n",
+             RSerPoolSocketDescriptor, Directory, strerror(errno));
+   }
+
+   if(ChildProcess) {
+      kill(ChildProcess, SIGKILL);   // Just to be really sure ...
+      waitpid(ChildProcess, NULL, 0);
+      ChildProcess = 0;
    }
 }
 
@@ -202,7 +197,7 @@ EventHandlingResult ScriptingServer::sendStatus(const int exitStatus)
    status.Header.Type   = SPT_STATUS;
    status.Header.Flags  = 0x00;
    status.Header.Length = htons(sizeof(status));
-   status.ExitStatus    = htonl((uint32_t)exitStatus);
+   status.Status        = htonl((uint32_t)exitStatus);
    ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                               (const char*)&status, sizeof(status), 0,
                               0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
@@ -289,13 +284,14 @@ EventHandlingResult ScriptingServer::startWorking()
 
 
 // ###### Check if child process has finished ###############################
-bool ScriptingServer::hasFinishedWork(int& exitStatus) const
+bool ScriptingServer::hasFinishedWork(int& exitStatus)
 {
    int status;
 
    assert(ChildProcess != 0);
    pid_t childFinished = waitpid(ChildProcess, &status, WNOHANG);
    if(childFinished == ChildProcess) {
+      ChildProcess = 0;
       if(WIFEXITED(status) || WIFSIGNALED(status)) {
          exitStatus = WEXITSTATUS(status);
          return(true);

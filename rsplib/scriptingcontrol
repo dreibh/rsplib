@@ -29,37 +29,63 @@
 
 
 # ====== Preparation ========================================================
-if [ $# -lt 4 ] ; then
-   echo "Usage: scriptingcontrol [run|status] [Directory] [Input] [Output] [Status]"
+if [ $# -lt 1 ] ; then
+   echo >2 "Usage: scriptingcontrol {[run] [Directory] [Input] [Output] [Status]} {[cleanup] [Directory] [PID] {keeptempdirs}}"
    exit 1
 fi
-
 MODE="$1"
-DIRECTORY="$2"
-INPUT_NAME="$3"
-OUTPUT_NAME="$4"
-STATUS_NAME="$5"
-
-cd $DIRECTORY || exit 1
 
 
 # ====== Work mode ==========================================================
 if [ "$MODE" = "run" ] ; then
+   if [ $# -lt 4 ] ; then
+     echo >2 "Usage: scriptingcontrol [run] [Directory] [Input] [Output] [Status]"
+     exit 1
+   fi
+   DIRECTORY="$2"
+   INPUT_NAME="$3"
+   OUTPUT_NAME="$4"
+   STATUS_NAME="$5"
 
    # ====== Extract input ===================================================
+   cd $DIRECTORY || exit 1
    tar xzf $INPUT_NAME || exit 1
 
 
    # ====== Do the actual work ==============================================
    chmod 700 ssrun && \
    ./ssrun $OUTPUT_NAME || exit 1
-   # ls -l
 
 
-# ====== Obtain status ======================================================
-elif [ "$MODE" = "status" ] ; then
+# ====== Clean up directory =================================================
+elif [ "$MODE" = "cleanup" ] ; then
+   if [ $# -lt 3 ] ; then
+     echo >2 "Usage: scriptingcontrol [cleanup] [Directory] [PID] {keeptempdirs}"
+     exit 1
+   fi
+   DIRECTORY="$2"
+   PID="$3"
+   KEEPTEMPDIRS="$4"
 
-   echo "???" >$STATUS_NAME
+   # ------ Send SIGKILL to worker process and all of its childs ------------
+   if [ $PID -ne 0 ] ; then
+      CHILD_PIDS=""
+      find_child_pids() {
+         for pid in `pgrep -P $1` ; do
+            CHILD_PIDS="$CHILD_PIDS $pid"
+            find_child_pids $pid
+         done
+      }
+      find_child_pids $PID
+
+      echo "Terminating$CHILD_PIDS $PID ..."
+      kill -KILL $CHILD_PIDS $PID
+   fi
+
+   # ------ Remove temporary directory --------------------------------------
+   if [ "$KEEPTEMPDIRS" != "keeptempdirs" ] ; then
+      rm -rf "$DIRECTORY"
+   fi
 
 
 # ====== Bad mode ===========================================================

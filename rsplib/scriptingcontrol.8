@@ -36,12 +36,15 @@
 .Nd Scripting Control script for the Scripting Service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm scriptingcontrol
-.Op run|status
+.Nm scriptingcontrol run
 .Op Directory
 .Op Input
 .Op Output
 .Op Status
+.Nm scriptingcontrol cleanup
+.Op Directory
+.Op PID
+.Op keeptempdirs
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm scriptingcontrol
@@ -52,11 +55,11 @@ the input file name and should create an output file of the given name.
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It run|status
+.It run|cleanup
 .Nm run
 is used when the session is started.
-.Nm status
-should write a status into the status file.
+.Nm cleanup
+is used to kill all processes and remove the directory.
 .It Directory
 Gives the name of the temporary session directory.
 .It Input
@@ -65,6 +68,11 @@ Gives the name of the input file.
 Gives the name of the output file.
 .It Status
 Gives the name of the status file.
+.It PID
+The process ID (PID) of the session's worker process. All of its childs will
+be found and terminated during clean-up.
+.It keeptempdirs
+Do not delete temporary directory during clean-up.
 .El
 .\" ###### See also #########################################################
 .Sh SEE ALSO

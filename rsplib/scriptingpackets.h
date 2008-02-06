@@ -98,7 +98,7 @@ struct KeepAliveAck
 struct Status
 {
    struct ScriptingCommonHeader Header;
-   uint32_t                     ExitStatus;
+   uint32_t                     Status;
 };
 
 
