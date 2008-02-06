@@ -1,4 +1,4 @@
-/* packet-ssprotocol.c
+/* packet-scriptingservice.c
  * Routines for the Scripting Service Protocol, a load distribution application
  * of the rsplib RSerPool implementation
  * http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
@@ -10,8 +10,6 @@
  * Ethereal - Network traffic analyzer
  * By Gerald Combs <gerald@ethereal.com>
  * Copyright 1998 Gerald Combs
- *
- * Copied from README.developer
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,7 +27,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include <epan/packet.h>
@@ -75,12 +73,12 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 
 
 static const value_string message_type_values[] = {
-  { SS_READY_TYPE,          "ScriptingService Ready" },
-  { SS_UPLOAD_TYPE,         "ScriptingService Upload" },
-  { SS_DOWNLOAD_TYPE,       "ScriptingService Download" },
-  { SS_KEEPALIVE_TYPE,      "ScriptingService Keep-Alive" },
-  { SS_KAEEPALIVE_ACK_TYPE, "ScriptingService Keep-Alive Ack" },
-  { SS_STATUS_TYPE,         "ScriptingService Status" },
+  { SS_READY_TYPE,          "Ready" },
+  { SS_UPLOAD_TYPE,         "Upload" },
+  { SS_DOWNLOAD_TYPE,       "Download" },
+  { SS_KEEPALIVE_TYPE,      "Keep-Alive" },
+  { SS_KAEEPALIVE_ACK_TYPE, "Keep-Alive Ack" },
+  { SS_STATUS_TYPE,         "Status" },
   { 0, NULL }
 };
 
@@ -93,7 +91,7 @@ dissect_ssprotocol_message(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree
 
   type = tvb_get_guint8(message_tvb, MESSAGE_TYPE_OFFSET);
   if (pinfo && (check_col(pinfo->cinfo, COL_INFO))) {
-    col_add_fstr(pinfo->cinfo, COL_INFO, "%s ", val_to_str(type, message_type_values, "Unknown ScriptingServiceProtocol type"));
+    col_add_fstr(pinfo->cinfo, COL_INFO, "%s ", val_to_str(type, message_type_values, "Unknown SSP type"));
   }
   proto_tree_add_item(ssprotocol_tree, hf_message_type,   message_tvb, MESSAGE_TYPE_OFFSET,   MESSAGE_TYPE_LENGTH,   FALSE);
   proto_tree_add_item(ssprotocol_tree, hf_message_flags,  message_tvb, MESSAGE_FLAGS_OFFSET,  MESSAGE_FLAGS_LENGTH,  FALSE);
@@ -122,7 +120,7 @@ dissect_ssprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *tree)
 
   /* pinfo is NULL only if dissect_ssprotocol_message is called from dissect_error cause */
   if (pinfo && (check_col(pinfo->cinfo, COL_PROTOCOL)))
-    col_set_str(pinfo->cinfo, COL_PROTOCOL, "ScriptingServiceProtocol");
+    col_set_str(pinfo->cinfo, COL_PROTOCOL, "SSP");
 
   /* In the interest of speed, if "tree" is NULL, don't do any work not
      necessary to generate protocol tree items. */
@@ -139,7 +137,7 @@ dissect_ssprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *tree)
 }
 
 
-/* Register the protocol with Ethereal */
+/* Register the protocol */
 void
 proto_register_ssprotocol(void)
 {
@@ -159,7 +157,7 @@ proto_register_ssprotocol(void)
   };
 
   /* Register the protocol name and description */
-  proto_ssprotocol = proto_register_protocol("Scripting Service Protocol", "ScriptingServiceProtocol", "ssprotocol");
+  proto_ssprotocol = proto_register_protocol("Scripting Service Protocol", "SSP", "ssp");
 
   /* Required function calls to register the header fields and subtrees used */
   proto_register_field_array(proto_ssprotocol, hf, array_length(hf));

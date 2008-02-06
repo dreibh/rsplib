@@ -7,8 +7,8 @@
  *
  * $Id$
  *
- * Ethereal - Network traffic analyzer
- * By Gerald Combs <gerald@ethereal.com>
+ * Wireshark - Network traffic analyzer
+ * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
  * Copied from README.developer
@@ -135,11 +135,12 @@ dissect_fractalgeneratorprotocol_parameter_message(tvbuff_t *message_tvb, proto_
 static void
 dissect_fractalgeneratorprotocol_data_message(tvbuff_t *message_tvb, proto_tree *message_tree)
 {
+  guint16 buffer_length;
+
   proto_tree_add_item(message_tree, hf_data_start_x, message_tvb, DATA_STARTX_OFFSET, DATA_STARTX_LENGTH, FALSE);
   proto_tree_add_item(message_tree, hf_data_start_y, message_tvb, DATA_STARTY_OFFSET, DATA_STARTY_LENGTH, FALSE);
   proto_tree_add_item(message_tree, hf_data_points,  message_tvb, DATA_POINTS_OFFSET, DATA_POINTS_LENGTH, FALSE);
 
-  guint16 buffer_length;
   buffer_length = tvb_get_ntohl(message_tvb, DATA_POINTS_OFFSET)*4;
   if (buffer_length > 0) {
     proto_tree_add_item(message_tree, hf_buffer, message_tvb, DATA_BUFFER_OFFSET, buffer_length, FALSE);
@@ -193,7 +194,7 @@ dissect_fractalgeneratorprotocol(tvbuff_t *message_tvb, packet_info *pinfo, prot
   return(TRUE);
 }
 
-/* Register the protocol with Ethereal */
+/* Register the protocol with Wireshark */
 void
 proto_register_fractalgeneratorprotocol(void)
 {

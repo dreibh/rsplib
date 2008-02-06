@@ -7,8 +7,8 @@
  *
  * $Id$
  *
- * Ethereal - Network traffic analyzer
- * By Gerald Combs <gerald@ethereal.com>
+ * Wireshark - Network traffic analyzer
+ * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
  * Copied from README.developer
@@ -134,7 +134,7 @@ dissect_calcappprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *t
 }
 
 
-/* Register the protocol with Ethereal */
+/* Register the protocol with Wireshark */
 void
 proto_register_calcappprotocol(void)
 {
@@ -142,7 +142,7 @@ proto_register_calcappprotocol(void)
   /* Setup list of header fields */
   static hf_register_info hf[] = {
     { &hf_message_type,      { "Type",      "calcappprotocol.message_type",      FT_UINT8,  BASE_DEC, VALS(message_type_values), 0x0, "", HFILL } },
-    { &hf_message_flags,     { "Flags",     "calcpppprotocol.message_flags",     FT_UINT8,  BASE_DEC, NULL,                      0x0, "", HFILL } },
+    { &hf_message_flags,     { "Flags",     "calcappprotocol.message_flags",     FT_UINT8,  BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_message_length,    { "Length",    "calcappprotocol.message_length",    FT_UINT16, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_message_jobid,     { "JobID",     "calcappprotocol.message_jobid",     FT_UINT32, BASE_DEC, NULL,                      0x0, "", HFILL } },
     { &hf_message_jobsize,   { "JobSize",   "calcappprotocol.message_jobsize",   FT_UINT64, BASE_DEC, NULL,                      0x0, "", HFILL } },

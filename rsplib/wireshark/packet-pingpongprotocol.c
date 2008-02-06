@@ -7,8 +7,8 @@
  *
  * $Id$
  *
- * Ethereal - Network traffic analyzer
- * By Gerald Combs <gerald@ethereal.com>
+ * Wireshark - Network traffic analyzer
+ * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
  * Copied from README.developer
@@ -96,9 +96,9 @@ static const value_string message_type_values[] = {
 static void
 dissect_pingpongprotocol_ping_message(tvbuff_t *message_tvb, proto_tree *message_tree)
 {
-  proto_tree_add_item(message_tree, hf_ping_messageno, message_tvb, PING_MESSAGENO_OFFSET, PING_MESSAGENO_LENGTH, FALSE);
-
   guint16 ping_data_length;
+
+  proto_tree_add_item(message_tree, hf_ping_messageno, message_tvb, PING_MESSAGENO_OFFSET, PING_MESSAGENO_LENGTH, FALSE);
 
   ping_data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - PING_DATA_OFFSET;
   if (ping_data_length > 0)
@@ -108,10 +108,11 @@ dissect_pingpongprotocol_ping_message(tvbuff_t *message_tvb, proto_tree *message
 static void
 dissect_pingpongprotocol_pong_message(tvbuff_t *message_tvb, proto_tree *message_tree)
 {
+  guint16 pong_data_length;
+
   proto_tree_add_item(message_tree, hf_pong_messageno, message_tvb, PONG_MESSAGENO_OFFSET, PONG_MESSAGENO_LENGTH, FALSE);
   proto_tree_add_item(message_tree, hf_pong_replyno,   message_tvb, PONG_REPLYNO_OFFSET,   PONG_REPLYNO_LENGTH,   FALSE);
 
-  guint16 pong_data_length;
   pong_data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - PONG_DATA_OFFSET;
   if (pong_data_length > 0) {
     proto_tree_add_item(message_tree, hf_pong_data, message_tvb, PONG_DATA_OFFSET, pong_data_length, FALSE);
@@ -165,7 +166,7 @@ dissect_pingpongprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *
   return(TRUE);
 }
 
-/* Register the protocol with Ethereal */
+/* Register the protocol with Wireshark */
 void
 proto_register_pingpongprotocol(void)
 {

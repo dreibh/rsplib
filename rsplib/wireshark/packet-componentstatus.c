@@ -6,8 +6,8 @@
  *
  * $Id$
  *
- * Ethereal - Network traffic analyzer
- * By Gerald Combs <gerald@ethereal.com>
+ * Wireshark - Network traffic analyzer
+ * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
  * Copied from README.developer
@@ -158,10 +158,9 @@ dissect_componentstatusprotocol_componentstatusreport_message(tvbuff_t *message_
   proto_item *association_item;
   proto_tree *association_tree;
   gint        associations;
-  size_t      i;
+  int         i;
   gint        offset;
   gint        remaining_length;
-  char        title[64];
 
   proto_tree_add_item(message_tree, hf_componentstatusreport_reportinterval, message_tvb, COMPONENTSTATUSREPORT_REPORTINTERVAL_OFFSET, COMPONENTSTATUSREPORT_REPORTINTERVAL_LENGTH, FALSE);
   proto_tree_add_item(message_tree, hf_componentstatusreport_location, message_tvb,  COMPONENTSTATUSREPORT_LOCATION_OFFSET, COMPONENTSTATUSREPORT_LOCATION_LENGTH, FALSE);
@@ -173,8 +172,8 @@ dissect_componentstatusprotocol_componentstatusreport_message(tvbuff_t *message_
   offset = COMPONENTSTATUSREPORT_ASSOCIATIONARRAY_OFFSET;
   i = 1;
   while((remaining_length = tvb_length_remaining(message_tvb, offset)) >= COMPONENTASSOCIATION_LENGTH) {
-     snprintf((char*)&title, sizeof(title), "Association #%d", i++);
-     association_item = proto_tree_add_text(message_tree, message_tvb, offset, COMPONENTASSOCIATION_LENGTH, title);
+     association_item = proto_tree_add_text(message_tree, message_tvb, offset, COMPONENTASSOCIATION_LENGTH,
+         "Association #%d", i++);
      association_tree = proto_item_add_subtree(association_item, ett_association);
      association_tvb  = tvb_new_subset(message_tvb, offset, COMPONENTASSOCIATION_LENGTH, COMPONENTASSOCIATION_LENGTH);
 
@@ -212,13 +211,15 @@ dissect_componentstatusprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto
 {
   proto_item *componentstatusprotocol_item;
   proto_tree *componentstatusprotocol_tree;
+  gint8 type;
+  gint32 version;
 
   /* Check, if this packet really contains a ComponentStatusProtocol message */
-  const gint8 type = tvb_get_guint8(message_tvb, MESSAGE_TYPE_OFFSET);
+  type = tvb_get_guint8(message_tvb, MESSAGE_TYPE_OFFSET);
   if (type != COMPONENTSTATUS_COMPONENTSTATUSREPORT_MESSAGE_TYPE) {
     return(FALSE);
   }
-  const gint32 version = tvb_get_ntohl(message_tvb, MESSAGE_VERSION_OFFSET);
+  version = tvb_get_ntohl(message_tvb, MESSAGE_VERSION_OFFSET);
   if (version != COMPONENTSTATUSPROTOCOL_VERSION) {
     return(FALSE);
   }
@@ -242,7 +243,7 @@ dissect_componentstatusprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto
 }
 
 
-/* Register the protocol with Ethereal */
+/* Register the protocol with Wireshark */
 void
 proto_register_componentstatusprotocol(void)
 {
