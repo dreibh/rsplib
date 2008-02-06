@@ -1310,7 +1310,8 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
    }
 
    /* ====== If there is an AITM, connect to registrar if necessary ====== */
-   if((aitm) && (asapInstance->RegistrarSocket < 0)) {
+   if( (asapInstance->RegistrarSocket < 0) &&
+       ( (aitm) || ((ST_CLASS(poolHandlespaceManagementGetPoolElements)(&asapInstance->OwnPoolElements) > 0)) ) ) {
       interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
       asapInstanceConnectToRegistrar(asapInstance, -1);
       interThreadMessagePortLock(&asapInstance->MainLoopPort);
