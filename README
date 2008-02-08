@@ -1,6 +1,6 @@
 A. FIRST STEPS
 
-How to set up a simple test of the rsplib-2.3.0 release:
+How to set up a simple test of the rsplib-2.4.0 release:
 
 1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
    implementation, do the following two steps first:
@@ -21,9 +21,10 @@ How to set up a simple test of the rsplib-2.3.0 release:
 
 2. Get latest rsplib-****.tar.gz and install it by
       - Unpack the Tar/GZip archive
-      - If, AND ONLY IF, you would like to use *kernel* SCTP, do:
-         ./configure --enable-kernel-sctp
-        OTHERWISE (i.e. sctplib/socketapi userland implementation):
+      - If, AND ONLY IF, you would like to use sctplib/socketapi SCTP
+        userland implementation (if unsure, you do *NOT* want this!):
+         ./configure --disable-kernel-sctp 
+        OTHERWISE (i.e. for kernel SCTP):
          ./configure
       - make
       - make install
@@ -348,4 +349,4 @@ Visit http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/ for more informati
 ==================================================================================
 
 
-13.09.2007 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+08.02.2008 Thomas Dreibholz, dreibh@exp-math.uni-essen.de
