@@ -1,1 +1,1 @@
-EXTRA_DIST = Handbook.lyx
+EXTRA_DIST = Handbook.lyx Handbook.pdf

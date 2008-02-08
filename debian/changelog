@@ -1,3 +1,10 @@
+rsplib (2.4.0-beta4) unstable; urgency=low
+
+  * configure default is now: --enable-kernel-sctp.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 06 Feb 2008 12:41:05 +0200
+
+
 rsplib (2.4.0-beta3) unstable; urgency=low
 
   * Scripting service updates.
