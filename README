@@ -23,7 +23,7 @@ How to set up a simple test of the rsplib-2.4.0 release:
       - Unpack the Tar/GZip archive
       - If, AND ONLY IF, you would like to use sctplib/socketapi SCTP
         userland implementation (if unsure, you do *NOT* want this!):
-         ./configure --disable-kernel-sctp 
+         ./configure --disable-kernel-sctp
         OTHERWISE (i.e. for kernel SCTP):
          ./configure
       - make
@@ -103,9 +103,8 @@ How to set up a simple test of the rsplib-2.4.0 release:
    protocol traffic. Coloring rules and filters can be found in the directory
    "rsplib/wireshark" Simply copy "colorfilters", "dfilters" and optionally
    "preferences" to ~/.wireshark (or /root/.wireshark).
-   The "rsplib/wireshark" directory also includes the packet dissector souces for
-   the demo protocols. These dissectors are already included in recent Wireshark
-   distributions and are usually not needed!
+   Dissectors for the application protocols are already included in recent Wireshark
+   distributions!
 
 
 
