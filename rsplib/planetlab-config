@@ -37,7 +37,7 @@ DISTSTRIP=0
 DISTMISC=""
 SUIDPRGS="registrar server calcappclient hsdump rootshell"
 
-OPT_CSP="-cspserver=132.252.150.151 -cspinterval=1000"
+OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000"
 
 
 SCTPLIB_DIRECTORY="/home/dreibh/src/sctplib1"
