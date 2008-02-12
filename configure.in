@@ -502,7 +502,7 @@ fi
 
 # ###### Version information ################################################
 RSPLIB_CURRENT=2
-RSPLIB_REVISION=3
+RSPLIB_REVISION=4
 RSPLIB_AGE=0
 
 AC_SUBST(RSPLIB_CURRENT)
