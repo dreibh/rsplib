@@ -201,6 +201,7 @@ bool rserpoolMessageSend(int                      protocol,
    size_t   messageLength;
    ssize_t  sent;
    uint32_t myPPID;
+   size_t   i;
 
    messageLength = rserpoolMessage2Packet(message);
    if(messageLength > 0) {
@@ -229,9 +230,12 @@ bool rserpoolMessageSend(int                      protocol,
       LOG_ERROR
       logerror("sendtoplus() error");
       if(message->AddressArray) {
-         fputs("Failed to send to: ", stderr);
-         fputaddress(stderr, message->AddressArray, true);
-         fputs("\n", stderr);
+         fputs("Failed to send to addresses:\n", stdlog);
+         for(i = 0;i < message->Addresses;i++) {
+            fputs("- ", stderr);
+            fputaddress(&message->AddressArray[i].sa, true, stdlog);
+         }
+         fputs("\n", stdlog);
       }
       LOG_END
    }

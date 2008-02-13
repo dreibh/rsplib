@@ -46,9 +46,8 @@ int main(int argc, char** argv)
    int           poolElementArray[MAX_POOL_ELEMENTS];
    char          myPoolHandle[512];
    char*         poolHandle       = "TestPool";
-   size_t        elements         = 10;
+   size_t        poolElements     = 10;
    size_t        pools            = 0;
-   size_t        poolSize         = 10;
    bool          fastBreak        = false;
    bool          noDeregistration = false;
    size_t        i;
@@ -67,14 +66,14 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
       }
+      else if(!(strncmp(argv[i], "-ph=" ,4))) {
+         poolHandle = (char*)&argv[i][4];
+      }
       else if(!(strcmp(argv[i], "-fastbreak"))) {
          fastBreak = true;
       }
       else if(!(strcmp(argv[i], "-noderegistration"))) {
          noDeregistration = true;
-      }
-      else if(!(strncmp(argv[i], "-ph=" ,4))) {
-         poolHandle = (char*)&argv[i][4];
       }
       else if(!(strncmp(argv[i], "-load=" ,6))) {
          loadinfo.rli_load = atol((char*)&argv[i][6]);
@@ -94,19 +93,19 @@ int main(int argc, char** argv)
             loadinfo.rli_weight = 1;
          }
       }
-      else if(!(strncmp(argv[i], "-elements=" ,10))) {
-         elements = atol((char*)&argv[i][10]);
-         if(elements < 1) {
-            elements = 1;
+      else if(!(strncmp(argv[i], "-poolelements=" ,14))) {
+         poolElements = atol((char*)&argv[i][14]);
+         if(poolElements < 1) {
+            poolElements = 1;
          }
-         else if(elements > MAX_POOL_ELEMENTS) {
-            elements = MAX_POOL_ELEMENTS;
+         else if(poolElements > MAX_POOL_ELEMENTS) {
+            poolElements = MAX_POOL_ELEMENTS;
          }
       }
-      else if(!(strncmp(argv[i], "-poolsize=" ,10))) {
-         poolSize = atol((char*)&argv[i][10]);
-         if(poolSize < 1) {
-            poolSize = 1;
+      else if(!(strncmp(argv[i], "-pools=" ,7))) {
+         pools = atol((char*)&argv[i][7]);
+         if(pools < 1) {
+            pools = 1;
          }
       }
       else if(!(strncmp(argv[i], "-policy=" ,8))) {
@@ -153,7 +152,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "Bad argument \"%s\"!\n" ,argv[i]);
-         fprintf(stderr, "Usage: %s {-elements=total PEs} {-poolsize=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         fprintf(stderr, "Usage: %s {-poolelements=total PEs} {-pools=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }
@@ -167,24 +166,22 @@ int main(int argc, char** argv)
 
    puts("Test-Registrator - Version 1.0");
    puts("==============================\n");
-   printf("No Deregistration   = %s\n", (noDeregistration == true) ? "on" : "off");
-   printf("Fast Break          = %s\n", (fastBreak == true) ? "on" : "off");
-   printf("Total Pool Elements = %u\n", (unsigned int)elements);
-   printf("Pool Size           = %u PEs\n\n", (unsigned int)poolSize);
+   printf("No Deregistration = %s\n", (noDeregistration == true) ? "on" : "off");
+   printf("Fast Break        = %s\n", (fastBreak == true) ? "on" : "off");
+   printf("Pool              = %u PEs\n\n", (unsigned int)pools);
+   printf("Pool Elements     = %u\n", (unsigned int)poolElements);
 
 
-   for(i = 0;i < elements;i++) {
-      printf("Registering PE #%u...\n", (unsigned int)i + 1);
-      if(((i % poolSize) == 0) || (i == 0)) {
-         snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, (unsigned int)++pools);
-      }
+   for(i = 0;i < poolElements;i++) {
+      snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, 1 + (i % pools));
+      printf("Registering PE #%u in pool %s...\n", (unsigned int)i + 1, myPoolHandle);
       poolElementArray[i] = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(poolElementArray[i] < 0) {
          perror("Unable to create RSerPool socket");
          exit(1);
       }
       if(rsp_register(poolElementArray[i],
-                      (const unsigned char*)poolHandle, strlen(poolHandle),
+                      (const unsigned char*)myPoolHandle, strlen(myPoolHandle),
                       &loadinfo, 60000, 0) != 0) {
          perror("Unable to register pool element");
          exit(1);
@@ -200,7 +197,7 @@ int main(int argc, char** argv)
    }
 
    if(!noDeregistration) {
-      for(i = 0;i < elements;i++) {
+      for(i = 0;i < poolElements;i++) {
          rsp_deregister(poolElementArray[i], 0);
          rsp_close(poolElementArray[i]);
       }
