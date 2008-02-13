@@ -948,7 +948,8 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
 /* ###### Scan pool element paramter ##################################### */
 static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                             struct RSerPoolMessage* message,
-                                            const bool              registratorTransportRequired)
+                                            const bool              registratorTransportRequired,
+                                            const bool              mustHaveHomeRegistrar)
 {
    struct rserpool_poolelementparameter* pep;
    char                                  userTransportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
@@ -1015,6 +1016,12 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
    else {
       newRegistratorTransportAddressBlock = NULL;
    }
+   if( (mustHaveHomeRegistrar) && (pep->pep_homeserverid == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
+      free(newUserTransportAddressBlock);
+      free(poolElementNode);
+      message->Error = RSPERR_INVALID_ID;
+      return(NULL);
+   }
    ST_CLASS(poolElementNodeNew)(poolElementNode,
                                 ntohl(pep->pep_identifier),
                                 ntohl(pep->pep_homeserverid),
@@ -1023,6 +1030,12 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
                                 newUserTransportAddressBlock,
                                 newRegistratorTransportAddressBlock,
                                 -1, 0);
+
+   LOG_VERBOSE5
+   fputs("Successfully scanned pool element parameter: ", stdlog);
+   ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
+   LOG_END
+
    return(poolElementNode);
 }
 
@@ -1387,7 +1400,7 @@ static bool scanRegistrationMessage(struct RSerPoolMessage* message)
       return(false);
    }
 
-   message->PoolElementPtr = scanPoolElementParameter(message, false);
+   message->PoolElementPtr = scanPoolElementParameter(message, false, false);
    if(message->PoolElementPtr == NULL) {
       return(false);
    }
@@ -1483,7 +1496,7 @@ static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
             return(false);
          }
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
-            scanPoolElementParameter(message, false);
+            scanPoolElementParameter(message, false, false);
          if(message->PoolElementPtrArray[message->PoolElementPtrArraySize] == false) {
             break;
          }
@@ -1582,7 +1595,7 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
             return(false);
          }
          message->PoolElementPtrArray[message->PoolElementPtrArraySize] =
-            scanPoolElementParameter(message, false);
+            scanPoolElementParameter(message, false, false);
          message->PoolElementPtrArraySize++;
       }
    }
@@ -1754,8 +1767,8 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 
       while(scanPoolHandleParameter(message, &message->Handle)) {
          scannedPoolElementParameters = 0;
-         poolElementNode = scanPoolElementParameter(message, true);
-         while(poolElementNode) {
+         poolElementNode = scanPoolElementParameter(message, true, true);
+         while( (poolElementNode) && (message->Error == RSPERR_OKAY) ) {
             if(poolElementNode->RegistratorTransport == NULL) {
                free(poolElementNode->UserTransport);
                free(poolElementNode);
@@ -1793,7 +1806,10 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
                return(false);
             }
 
-            poolElementNode = scanPoolElementParameter(message, true);
+            poolElementNode = scanPoolElementParameter(message, true, true);
+         }
+         if(message->Error != RSPERR_OKAY) {
+            return(false);
          }
 
          if(scannedPoolElementParameters == 0) {
@@ -1803,6 +1819,11 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
             message->Error = RSPERR_INVALID_VALUES;
             return(false);
          }
+
+         LOG_VERBOSE5
+         fputs("Successfully scanned data from HandleTableResponse:\n", stdlog);
+         ST_CLASS(poolHandlespaceManagementPrint)(message->HandlespacePtr, stdlog, PENPO_FULL);
+         LOG_END
       }
    }
 
@@ -1827,7 +1848,7 @@ static bool scanHandleUpdateMessage(struct RSerPoolMessage* message)
    if(scanPoolHandleParameter(message, &message->Handle) == false) {
       return(false);
    }
-   message->PoolElementPtr = scanPoolElementParameter(message, true);
+   message->PoolElementPtr = scanPoolElementParameter(message, true, true);
    if(message->PoolElementPtr == NULL) {
       return(false);
    }
@@ -1868,8 +1889,8 @@ static bool scanInitTakeoverAckMessage(struct RSerPoolMessage* message)
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   message->SenderID     = ntohl(tp->tp_sender_id);
-   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->SenderID            = ntohl(tp->tp_sender_id);
+   message->ReceiverID          = ntohl(tp->tp_receiver_id);
    message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);
@@ -1886,8 +1907,8 @@ static bool scanTakeoverServerMessage(struct RSerPoolMessage* message)
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   message->SenderID     = ntohl(tp->tp_sender_id);
-   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->SenderID            = ntohl(tp->tp_sender_id);
+   message->ReceiverID          = ntohl(tp->tp_receiver_id);
    message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);
@@ -1929,9 +1950,9 @@ static bool scanASAPErrorMessage(struct RSerPoolMessage* message)
 static bool scanMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_header* header;
-   size_t              startPosition;
-   size_t              length;
-   size_t              i, j;
+   size_t                  startPosition;
+   size_t                  length;
+   size_t                  i, j;
 
    LOG_VERBOSE5
    fprintf(stdlog, "Incoming message (%u bytes):\n", (unsigned int)message->BufferSize);
@@ -2237,8 +2258,10 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       }
 
       LOG_WARNING
-      fprintf(stdlog, "Error while parsing message at byte %u: ",
-              (unsigned int)(*message)->Position);
+      fprintf(stdlog, "Error while parsing message at byte %u (TLV at position %u, length %u): ",
+              (unsigned int)(*message)->Position,
+              ((*message)->OffendingParameterTLV != NULL) ? ((long)(*message)->OffendingParameterTLV - (long)(*message)->Buffer) : 0,
+              (*message)->OffendingParameterTLVLength);
       rserpoolErrorPrint((*message)->Error, stdlog);
       fputs("\n", stdlog);
       LOG_END

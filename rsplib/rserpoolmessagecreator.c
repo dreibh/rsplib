@@ -595,6 +595,10 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
       return(false);
    }
 
+   if(message->OffendingParameterTLV == NULL) {
+      CHECK(message->OffendingParameterTLVLength == 0);
+   }
+
    cause = message->Error;
    switch(cause) {
       case RSPERR_UNRECOGNIZED_PARAMETER:
@@ -1312,7 +1316,7 @@ static bool createTakeoverServerMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer error ############################################## */
-static bool createENRPPeerErrorMessage(struct RSerPoolMessage* message)
+static bool createENRPErrorMessage(struct RSerPoolMessage* message)
 {
    struct rserpool_serverparameter* sp;
 
@@ -1338,7 +1342,7 @@ static bool createENRPPeerErrorMessage(struct RSerPoolMessage* message)
 
 
 /* ###### Create peer error ############################################## */
-static bool createASAPPeerErrorMessage(struct RSerPoolMessage* message)
+static bool createASAPErrorMessage(struct RSerPoolMessage* message)
 {
    if(beginMessage(message, AHT_ERROR,
                    message->Flags & 0x00,
@@ -1467,9 +1471,9 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
         break;
        case AHT_ERROR:
           LOG_VERBOSE2
-          fputs("Creating PeerError (ASAP) message...\n", stdlog);
+          fputs("Creating Error (ASAP) message...\n", stdlog);
           LOG_END
-          if(createASAPPeerErrorMessage(message) == true) {
+          if(createASAPErrorMessage(message) == true) {
              return(message->Position);
           }
         break;
@@ -1549,9 +1553,9 @@ size_t rserpoolMessage2Packet(struct RSerPoolMessage* message)
         break;
        case EHT_ERROR:
           LOG_VERBOSE2
-          fputs("Creating PeerError (ENRP) message...\n", stdlog);
+          fputs("Creating Error (ENRP) message...\n", stdlog);
           LOG_END
-          if(createENRPPeerErrorMessage(message) == true) {
+          if(createENRPErrorMessage(message) == true) {
              return(message->Position);
           }
         break;
