@@ -34,7 +34,4 @@ sudo dpkg -i \
    librsplib-dev_*.deb \
    rsplib-registrar_*.deb \
    rsplib-tools_*.deb \
-   rsplib-pingpongservice_*.deb \
-   rsplib-fgpservice_*.deb \
-   rsplib-calcappservice_*.deb \
-   rsplib-scriptingservice_*.deb
+   rsplib-services_*.deb

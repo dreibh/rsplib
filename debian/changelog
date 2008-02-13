@@ -1,3 +1,10 @@
+rsplib (2.4.0~beta4-2) unstable; urgency=low
+
+  * Debian update: joined services packages.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 13 Feb 2008 10:56:05 +0200
+
+
 rsplib (2.4.0~beta4-1) unstable; urgency=low
 
   * configure default is now: --enable-kernel-sctp.

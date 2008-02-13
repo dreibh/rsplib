@@ -454,11 +454,11 @@ int main(int argc, char** argv)
    beginLogging();
 
    if(!strcmp(asapAnnounceAddressParameter, "auto")) {
-      asapAnnounceAddressParameter = "239.0.0.1:3863";
+      asapAnnounceAddressParameter = "239.0.0.50:3863";
       asapSendAnnounces = true;
    }
    if(!strcmp(enrpMulticastAddressParameter, "auto")) {
-      enrpMulticastAddressParameter = "239.0.0.1:9901";
+      enrpMulticastAddressParameter = "239.0.0.51:9901";
       enrpAnnounceViaMulticast = true;
    }
    getSocketPair(asapUnicastAddressParameter, asapUnicastAddress, &asapUnicastSocket,

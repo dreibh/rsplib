@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r1718 | dreibh | 2008-02-12 15:18:12 +0100 (Tue, 12 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/rsplib/planetlab-config
+
+
+------------------------------------------------------------------------
+r1712 | dreibh | 2008-02-12 13:30:50 +0100 (Tue, 12 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+
+
+------------------------------------------------------------------------
 r1709 | dreibh | 2008-02-11 16:03:22 +0100 (Mon, 11 Feb 2008) | 1 line
 Changed paths:
    M /trunk/rsplib2/rsplib/planetlab-config

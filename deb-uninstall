@@ -34,7 +34,4 @@ sudo dpkg --purge \
    librsplib-dev \
    rsplib-registrar \
    rsplib-tools \
-   rsplib-pingpongservice \
-   rsplib-fgpservice \
-   rsplib-calcappservice \
-   rsplib-scriptingservice
+   rsplib-services

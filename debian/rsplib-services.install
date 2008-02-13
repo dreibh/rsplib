@@ -1,0 +1,7 @@
+debian/tmp/usr/bin/calcappclient
+debian/tmp/usr/bin/fractalpooluser
+debian/tmp/usr/share/fgpconfig/*.fsf
+debian/tmp/usr/bin/pingpongclient
+debian/tmp/usr/bin/scriptingclient
+debian/tmp/usr/bin/scriptingcontrol
+debian/tmp/usr/bin/scriptingserviceexample
