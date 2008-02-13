@@ -31,7 +31,6 @@
 #include "breakdetector.h"
 #ifdef ENABLE_CSP
 #include "componentstatusreporter.h"
-#include "randomizer.h"
 #endif
 
 
@@ -65,9 +64,6 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
-      }
-      else if(!(strncmp(argv[i], "-ph=" ,4))) {
-         poolHandle = (char*)&argv[i][4];
       }
       else if(!(strcmp(argv[i], "-fastbreak"))) {
          fastBreak = true;

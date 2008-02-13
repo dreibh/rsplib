@@ -2105,6 +2105,7 @@ sctp_getaddrs(int sd, sctp_assoc_t id,
 {
    int cnt, err;
    socklen_t len;
+   char *new_buf;
    size_t bufsize = 4096; /*enough for most cases*/
 
    struct sctp_getaddrs *getaddrs = (struct sctp_getaddrs*)malloc(bufsize);
@@ -2112,8 +2113,6 @@ sctp_getaddrs(int sd, sctp_assoc_t id,
       return -1;
 
    for(;;) {
-      char *new_buf;
-
       len = bufsize;
       getaddrs->assoc_id = id;
       err = getsockopt(sd, SOL_SCTP, optname_new, getaddrs, &len);
@@ -2143,7 +2142,7 @@ sctp_getaddrs(int sd, sctp_assoc_t id,
          errno = ENOBUFS;
          return -1;
       }
-      new_buf = realloc(getaddrs, bufsize+4096);
+      new_buf = (char*)realloc(getaddrs, bufsize+4096);
       if (!new_buf) {
          free(getaddrs);
          return -1;

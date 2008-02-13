@@ -86,9 +86,9 @@ void setLogColor(const unsigned int color);
       setLogColor(c1);                         \
       printTimeStamp(stdlog);                  \
       setLogColor(c2);                         \
-      fprintf(stdlog,"P%u.%x@%s %s:%u %s()\n", \
-              (unsigned int)getpid(),          \
-              (unsigned int)pthread_self(),    \
+      fprintf(stdlog,"P%lu.%lx@%s %s:%u %s()\n", \
+              (unsigned long)getpid(),           \
+              (unsigned long)pthread_self(),     \
               getHostName(),                   \
               __FILE__,                        \
               __LINE__,                        \

@@ -374,7 +374,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
                ((struct rsp_addrinfo*)addrInfoArray[n])->ai_next =
                   (struct rsp_addrinfo*)addrInfoArray[n + 1];
             }
-            *rspAddrInfo = addrInfoArray[0];
+            *rspAddrInfo = (struct rsp_addrinfo*)addrInfoArray[0];
          }
          return(addrInfos);
       }

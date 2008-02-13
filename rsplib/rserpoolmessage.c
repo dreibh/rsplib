@@ -230,9 +230,9 @@ bool rserpoolMessageSend(int                      protocol,
       LOG_ERROR
       logerror("sendtoplus() error");
       if(message->AddressArray) {
-         fputs("Failed to send to addresses:\n", stdlog);
+         fputs("Failed to send to addresses:", stdlog);
          for(i = 0;i < message->Addresses;i++) {
-            fputs("- ", stderr);
+            fputs("   ", stderr);
             fputaddress(&message->AddressArray[i].sa, true, stdlog);
          }
          fputs("\n", stdlog);
