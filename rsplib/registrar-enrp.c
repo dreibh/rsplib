@@ -54,8 +54,8 @@ void registrarHandleENRPAnnounceTimer(struct Dispatcher* dispatcher,
          LOG_END;
       }
       registrarSendENRPPresence(registrar, registrar->ENRPMulticastOutputSocket, 0, 0,
-                       (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
-                       0, false);
+                                (union sockaddr_union*)&registrar->ENRPMulticastAddress, 1,
+                                0, false);
    }
 
    /* ====== Send Presence to peers ====================================== */

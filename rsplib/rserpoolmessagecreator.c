@@ -145,10 +145,10 @@ static bool createPoolHandleParameter(struct RSerPoolMessage*  message,
 static bool createAddressParameter(struct RSerPoolMessage* message,
                                    const struct sockaddr*  address)
 {
-   size_t               tlvPosition = 0;
-   char*                output;
-   struct sockaddr_in*  in;
-   struct sockaddr_in6* in6;
+   size_t                     tlvPosition = 0;
+   char*                      output;
+   const struct sockaddr_in*  in;
+   const struct sockaddr_in6* in6;
 
    switch(address->sa_family) {
       case AF_INET:
@@ -163,15 +163,27 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
          memcpy(output, &in->sin_addr, 4);
        break;
       case AF_INET6:
-         if(beginTLV(message, &tlvPosition, ATT_IPv6_ADDRESS) == false) {
-            return(false);
-         }
-         in6 = (struct sockaddr_in6*)address;
-         output = (char*)getSpace(message, 16);
-         if(output == NULL) {
-            return(false);
-         }
-         memcpy(output, &in6->sin6_addr, 16);
+         in6 = (const struct sockaddr_in6*)address;
+         if(!IN6_IS_ADDR_V4MAPPED((const struct in6_addr*)&(in6->sin6_addr))) {
+            if(beginTLV(message, &tlvPosition, ATT_IPv6_ADDRESS) == false) {
+               return(false);
+            }
+            output = (char*)getSpace(message, 16);
+            if(output == NULL) {
+               return(false);
+            }
+            memcpy(output, &in6->sin6_addr, 16);
+          }
+          else {
+             if(beginTLV(message, &tlvPosition, ATT_IPv4_ADDRESS) == false) {
+                return(false);
+             }
+             output = (char*)getSpace(message, 4);
+             if(output == NULL) {
+                return(false);
+             }
+             memcpy(output, &in6->sin6_addr.s6_addr32[3], 4);
+          }
        break;
       default:
          LOG_ERROR
@@ -1063,7 +1075,7 @@ static bool createListResponseMessage(struct RSerPoolMessage* message)
    peerListNode = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(
                      &message->PeerListPtr->List);
    while(peerListNode != NULL) {
-      /* The draft does not say what to do when the amount of peers exceeds the
+      /* The draft does not say what to do when the number of peers exceeds the
          message size -> We fill as much entries as possible and reply this
          partial list. This is better than to do nothing! */
       oldPosition = message->Position;

@@ -228,6 +228,11 @@ bool rserpoolMessageSend(int                      protocol,
       }
       LOG_ERROR
       logerror("sendtoplus() error");
+      if(message->AddressArray) {
+         fputs("Failed to send to: ", stderr);
+         fputaddress(stderr, message->AddressArray, true);
+         fputs("\n", stderr);
+      }
       LOG_END
    }
    else {
