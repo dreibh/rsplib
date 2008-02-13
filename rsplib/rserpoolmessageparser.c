@@ -2258,10 +2258,10 @@ unsigned int rserpoolPacket2Message(char*                       packet,
       }
 
       LOG_WARNING
-      fprintf(stdlog, "Error while parsing message at byte %u (TLV at position %u, length %u): ",
+      fprintf(stdlog, "Error while parsing message at byte %u (TLV at position %lu, length %lu): ",
               (unsigned int)(*message)->Position,
-              ((*message)->OffendingParameterTLV != NULL) ? ((long)(*message)->OffendingParameterTLV - (long)(*message)->Buffer) : 0,
-              (*message)->OffendingParameterTLVLength);
+              ((*message)->OffendingParameterTLV != NULL) ? ((unsigned long)(*message)->OffendingParameterTLV - (unsigned long)(*message)->Buffer) : 0,
+              (unsigned long)(*message)->OffendingParameterTLVLength);
       rserpoolErrorPrint((*message)->Error, stdlog);
       fputs("\n", stdlog);
       LOG_END
