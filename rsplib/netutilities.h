@@ -45,6 +45,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <ext_socket.h>
 
 
