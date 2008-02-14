@@ -48,7 +48,7 @@ int main(int argc, char** argv)
    struct rsp_sndrcvinfo        rinfo;
    union rserpool_notification* notification;
    char                         buffer[65536 + 4];
-   char*                        poolHandle = "EchoPool";
+   const char*                  poolHandle = "EchoPool";
    struct pollfd                ufds[2];
    ssize_t                      received;
    ssize_t                      sent;

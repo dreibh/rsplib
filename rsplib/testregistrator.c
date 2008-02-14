@@ -48,7 +48,7 @@ int main(int argc, char** argv)
    struct rsp_loadinfo loadinfo;
    int           poolElementArray[MAX_POOL_ELEMENTS];
    char          myPoolHandle[512];
-   char*         poolHandle       = "TestPool";
+   const char*   poolHandle       = "TestPool";
    size_t        poolElements     = 10;
    size_t        pools            = 0;
    bool          fastBreak        = false;

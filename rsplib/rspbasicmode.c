@@ -196,7 +196,7 @@ void rsp_cleanup()
       CHECK(rsp_unmapsocket(STDOUT_FILENO) == 0);
       CHECK(rsp_unmapsocket(STDIN_FILENO) == 0);
       CHECK(rsp_unmapsocket(STDERR_FILENO) == 0);
-      for(i = 1;i < FD_SETSIZE;i++) {
+      for(i = 1;i < (int)FD_SETSIZE;i++) {
          if(identifierBitmapAllocateSpecificID(gRSerPoolSocketAllocationBitmap, i) < 0) {
             LOG_WARNING
             fprintf(stdlog, "RSerPool socket %d is still registered -> closing it\n", i);

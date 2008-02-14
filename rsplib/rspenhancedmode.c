@@ -263,7 +263,7 @@ int rsp_mapsocket(int sd, int toSD)
    struct RSerPoolSocket* rserpoolSocket;
 
    /* ====== Check for problems ========================================== */
-   if((sd < 0) || (sd >= FD_SETSIZE)) {
+   if((sd < 0) || (sd >= (int)FD_SETSIZE)) {
       errno = EINVAL;
       return(-1);
    }
@@ -416,7 +416,7 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
    int           i;
 
    /* ====== Check for problems ========================================== */
-   if(n > FD_SETSIZE) {
+   if(n > (int)FD_SETSIZE) {
       errno = EINVAL;
       return(-1);
    }

@@ -52,7 +52,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
                    void*              userData)
 {
    struct SimpleRedBlackTreeNode* result;
-   CHECK((fd >= 0) && (fd < FD_SETSIZE));
+   CHECK((fd >= 0) && (fd < (int)FD_SETSIZE));
 
    simpleRedBlackTreeNodeNew(&fdCallback->Node);
    fdCallback->Master          = dispatcher;

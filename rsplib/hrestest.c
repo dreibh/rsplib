@@ -42,7 +42,7 @@ int main(int argc, char** argv)
    struct rsp_info      info;
    struct rsp_addrinfo* rspAddrInfo;
    struct rsp_addrinfo* r;
-   char*                poolHandle = "EchoPool";
+   const char*          poolHandle = "EchoPool";
    unsigned int         pause      = 0;
    int                  i;
    int                  result;
