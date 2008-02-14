@@ -39,6 +39,7 @@ static void addPeer(struct Registrar* registrar, char* arg)
    size_t                        addresses;
    char*                         address;
    char*                         idx;
+   uint16_t                      port;
 
    addresses = 0;
    address = arg;
@@ -64,9 +65,13 @@ static void addPeer(struct Registrar* registrar, char* arg)
       fprintf(stderr, "ERROR: At least one peer address must be specified (at %s)!\n", arg);
       exit(1);
    }
+   port = getPort((struct sockaddr*)&addressArray[0]);
+   if(port == 0) {
+      port = ENRP_PORT;
+   }
    transportAddressBlockNew(transportAddressBlock,
                             IPPROTO_SCTP,
-                            getPort((struct sockaddr*)&addressArray[0]),
+                            port,
                             0,
                             (union sockaddr_union*)&addressArray,
                             addresses, MAX_PE_TRANSPORTADDRESSES);
@@ -87,7 +92,8 @@ static void getSocketPair(const char*                   sctpAddressParameter,
                           const char*                   udpGroupAddressParameter,
                           struct TransportAddressBlock* udpGroupTransportAddress,
                           int*                          udpSocket,
-                          const bool                    useIPv6)
+                          const bool                    useIPv6,
+                          const uint16_t                defaultPort)
 {
    union sockaddr_union        sctpAddressArray[MAX_PE_TRANSPORTADDRESSES];
    union sockaddr_union        groupAddress;
@@ -108,6 +114,9 @@ static void getSocketPair(const char*                   sctpAddressParameter,
    if(string2address(udpGroupAddressParameter, &groupAddress) == false) {
       fprintf(stderr, "ERROR: Bad multicast group address <%s>\n", udpGroupAddressParameter);
       exit(1);
+   }
+   if(getPort(&groupAddress.sa) == 0) {
+      setPort(&groupAddress.sa, defaultPort);
    }
 
    memset(&udpAddress, 0, sizeof(udpAddress));
@@ -454,19 +463,19 @@ int main(int argc, char** argv)
    beginLogging();
 
    if(!strcmp(asapAnnounceAddressParameter, "auto")) {
-      asapAnnounceAddressParameter = "239.0.0.50:3863";
-      asapSendAnnounces = true;
+      asapAnnounceAddressParameter = ASAP_ANNOUNCE_MULTICAST_ADDRESS;
+      asapSendAnnounces            = true;
    }
    if(!strcmp(enrpMulticastAddressParameter, "auto")) {
-      enrpMulticastAddressParameter = "239.0.0.51:9901";
-      enrpAnnounceViaMulticast = true;
+      enrpMulticastAddressParameter = ENRP_ANNOUNCE_MULTICAST_ADDRESS;
+      enrpAnnounceViaMulticast      = true;
    }
    getSocketPair(asapUnicastAddressParameter, asapUnicastAddress, &asapUnicastSocket,
                  asapSendAnnounces,
-                 asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket, useIPv6);
+                 asapAnnounceAddressParameter, asapAnnounceAddress, &asapAnnounceSocket, useIPv6, ASAP_PORT);
    getSocketPair(enrpUnicastAddressParameter, enrpUnicastAddress, &enrpUnicastSocket,
                  enrpAnnounceViaMulticast,
-                 enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket, useIPv6);
+                 enrpMulticastAddressParameter, enrpMulticastAddress, &enrpMulticastOutputSocket, useIPv6, ENRP_PORT);
 
    if(enrpAnnounceViaMulticast) {
       enrpMulticastInputSocket = ext_socket(enrpMulticastAddress->AddressArray[0].sa.sa_family,
