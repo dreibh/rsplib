@@ -33,11 +33,6 @@
 #include "tdtypes.h"
 
 
-/* Ensure consistent alignment! */
-#pragma pack(push)
-#pragma pack(4)
-
-
 #define CSP_VERSION        0x0200
 
 
@@ -61,7 +56,7 @@ struct ComponentStatusCommonHeader
    uint32_t Version;
    uint64_t SenderID;
    uint64_t SenderTimeStamp;
-};
+} __attribute__((packed));
 
 
 #define CSPR_LOCATION_SIZE 128
@@ -74,7 +69,7 @@ struct ComponentAssociation
    uint16_t Flags;
    uint16_t ProtocolID;
    uint32_t PPID;
-};
+} __attribute__((packed));
 
 struct ComponentStatusReport
 {
@@ -87,12 +82,9 @@ struct ComponentStatusReport
    uint16_t                           Workload;
    uint16_t                           Associations;
    struct ComponentAssociation        AssociationArray[0];
-};
+} __attribute__((packed));
 
 #define CSR_SET_WORKLOAD(w) ((w < 0.0) ? 0xffff : (uint16_t)rint(w * 0xfffe))
 #define CSR_GET_WORKLOAD(w) ((w == 0xffff) ? -1.0 : (double)(w / (double)0xfffe))
-
-
-#pragma pack(pop)
 
 #endif

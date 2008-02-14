@@ -33,11 +33,6 @@
 #include "netdouble.h"
 
 
-// Ensure consistent alignment!
-#pragma pack(push)
-#pragma pack(4)
-
-
 #define PPID_CALCAPP 0x29097603
 
 #define CALCAPP_REQUEST       1
@@ -57,7 +52,7 @@ struct CalcAppMessage
    uint32_t JobID;
    uint64_t JobSize;
    uint64_t Completed;
-};
+} __attribute__((packed));
 
 
 struct CalcAppCookie
@@ -65,8 +60,6 @@ struct CalcAppCookie
    uint32_t JobID;
    uint64_t JobSize;
    uint64_t Completed;
-};
-
-#pragma pack(pop)
+} __attribute__((packed));
 
 #endif

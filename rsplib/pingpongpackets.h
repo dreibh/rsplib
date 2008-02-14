@@ -33,11 +33,6 @@
 #include "tdtypes.h"
 
 
-// Ensure consistent alignment!
-#pragma pack(push)
-#pragma pack(4)
-
-
 #define PPID_PPP 0x29097602
 
 #define PPPT_PING 0x01
@@ -48,14 +43,14 @@ struct PingPongCommonHeader
    uint8_t  Type;
    uint8_t  Flags;
    uint16_t Length;
-};
+} __attribute__((packed));
 
 struct Ping
 {
    struct PingPongCommonHeader Header;
    uint64_t                    MessageNo;
    char                        Data[];
-};
+} __attribute__((packed));
 
 struct Pong
 {
@@ -63,7 +58,7 @@ struct Pong
    uint64_t                    MessageNo;
    uint64_t                    ReplyNo;
    char                        Data[];
-};
+} __attribute__((packed));
 
 
 #define PPP_COOKIE_ID "<PP-TD1>"
@@ -72,8 +67,6 @@ struct PPPCookie
 {
    char     ID[8];
    uint64_t ReplyNo;
-};
-
-#pragma pack(pop)
+} __attribute__((packed));
 
 #endif

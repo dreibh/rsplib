@@ -34,11 +34,6 @@
 #include "netdouble.h"
 
 
-// Ensure consistent alignment!
-#pragma pack(push)
-#pragma pack(4)
-
-
 #define PPID_FGP 0x29097601
 
 #define FGPT_PARAMETER 0x01
@@ -49,7 +44,7 @@ struct FGPCommonHeader
    uint8_t  Type;
    uint8_t  Flags;
    uint16_t Length;
-};
+} __attribute__((packed));
 
 
 
@@ -69,7 +64,7 @@ struct FGPParameter
    network_double_t C2Real;
    network_double_t C2Imag;
    network_double_t N;
-};
+} __attribute__((packed));
 
 #define FGD_MAX_POINTS 324
 
@@ -80,7 +75,7 @@ struct FGPData
    uint32_t        StartY;
    uint32_t        Points;
    uint32_t        Buffer[FGD_MAX_POINTS];
-};
+} __attribute__((packed));
 
 
 /**
@@ -105,16 +100,13 @@ struct FGPCookie
    FGPParameter Parameter;
    uint32_t     CurrentX;
    uint32_t     CurrentY;
-};
+} __attribute__((packed));
 
 
 struct FractalGeneratorStatus {
    struct FGPParameter Parameter;
    uint32_t            CurrentX;
    uint32_t            CurrentY;
-};
-
-
-#pragma pack(pop)
+} __attribute__((packed));
 
 #endif

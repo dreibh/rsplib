@@ -33,11 +33,6 @@
 #include "tdtypes.h"
 
 
-// Ensure consistent alignment!
-#pragma pack(push)
-#pragma pack(4)
-
-
 #define PPID_SP          0x29097604
 
 #define SPT_READY              0x01
@@ -54,54 +49,51 @@ struct ScriptingCommonHeader
    uint8_t  Type;
    uint8_t  Flags;
    uint16_t Length;
-};
+} __attribute__((packed));
 
 
 struct Ready
 {
    struct ScriptingCommonHeader Header;
-};
+} __attribute__((packed));
 
 struct Upload
 {
    struct ScriptingCommonHeader Header;
    char                         Data[SD_MAX_DATASIZE];
-};
+} __attribute__((packed));
 
 struct UploadComplete
 {
    struct ScriptingCommonHeader Header;
-};
+} __attribute__((packed));
 
 struct Download
 {
    struct ScriptingCommonHeader Header;
    char                         Data[SD_MAX_DATASIZE];
-};
+} __attribute__((packed));
 
 struct DownloadComplete
 {
    struct ScriptingCommonHeader Header;
-};
+} __attribute__((packed));
 
 struct KeepAlive
 {
    struct ScriptingCommonHeader Header;
-};
+} __attribute__((packed));
 
 struct KeepAliveAck
 {
    struct ScriptingCommonHeader Header;
    uint32_t                     Status;
-};
+} __attribute__((packed));
 
 struct Status
 {
    struct ScriptingCommonHeader Header;
    uint32_t                     Status;
-};
-
-
-#pragma pack(pop)
+} __attribute__((packed));
 
 #endif
