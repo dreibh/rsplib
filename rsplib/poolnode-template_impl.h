@@ -86,9 +86,9 @@ void ST_CLASS(poolNodeGetDescription)(const struct ST_CLASS(PoolNode)* poolNode,
                                       char*                            buffer,
                                       const size_t                     bufferSize)
 {
-   char  poolHandleDescription[256];
-   char  poolDescription[128];
-   char* protocol = "(unknown)";
+   char        poolHandleDescription[256];
+   char        poolDescription[128];
+   const char* protocol = "(unknown)";
 
    switch(poolNode->Protocol) {
       case IPPROTO_SCTP:
