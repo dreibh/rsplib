@@ -182,7 +182,13 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
              if(output == NULL) {
                 return(false);
              }
+#if defined SOLARIS
+             memcpy(output, &in6->sin6_addr._S6_un._S6_u32[3], 4);
+#elif defined LINUX
              memcpy(output, &in6->sin6_addr.s6_addr32[3], 4);
+#else
+             memcpy(output, &in6->sin6_addr.__u6_addr.__u6_addr32[3], 4);
+#endif
           }
        break;
       default:
