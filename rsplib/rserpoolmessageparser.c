@@ -1525,7 +1525,7 @@ static bool scanHandleResolutionResponseMessage(struct RSerPoolMessage* message)
 static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
 {
    uint32_t*                     registrarIdentifier;
-   char                          transportAddressBlockBuffer[transportAddressBlockGetSize(1)];
+   char                          transportAddressBlockBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* transportAddressBlock = (struct TransportAddressBlock*)&transportAddressBlockBuffer;
 
    registrarIdentifier = (uint32_t*)getSpace(message, sizeof(uint32_t));
