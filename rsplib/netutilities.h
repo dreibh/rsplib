@@ -514,6 +514,11 @@ size_t getpaddrsplus(const int              fd,
                      union sockaddr_union** addressArray);
 
 
+#ifdef USE_SELECT
+int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif
