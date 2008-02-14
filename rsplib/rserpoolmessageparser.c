@@ -64,7 +64,7 @@ static bool getNextTLV(struct RSerPoolMessage*      message,
 
    *header = (struct rserpool_tlv_header*)getSpace(message, sizeof(struct rserpool_tlv_header));
    if(*header == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_MESSAGE;
       return(false);
    }
 
@@ -82,7 +82,7 @@ static bool getNextTLV(struct RSerPoolMessage*      message,
              "p=%u + l=%u > size=%u   type=$%02x\n",
              (unsigned int)(message->Position - sizeof(struct rserpool_tlv_header)), (unsigned int)*tlvLength, (unsigned int)message->BufferSize, *tlvType);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
 
@@ -90,7 +90,7 @@ static bool getNextTLV(struct RSerPoolMessage*      message,
       LOG_WARNING
       fputs("TLV length too low!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
 
@@ -162,15 +162,13 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
    struct rserpool_header* header;
    size_t                  length;
 
-   *startPosition                  = message->Position;
-   message->OffendingMessage       = (char*)&message->Buffer[*startPosition];
-   message->OffendingMessageLength = 0;
-   message->OffendingParameterTLV  = NULL;
-   message->OffendingParameterTLV  = 0;
+   *startPosition                 = message->Position;
+   message->OffendingParameterTLV = NULL;
+   message->OffendingParameterTLV = 0;
 
    header = (struct rserpool_header*)getSpace(message, sizeof(struct rserpool_header));
    if(header == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_MESSAGE;
       return(0);
    }
 
@@ -182,19 +180,18 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
              "p=%u + l=%u - 4 > size=%u\n",
              (unsigned int)message->Position, (unsigned int)length, (unsigned int)message->BufferSize);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_MESSAGE;
       return(0);
    }
    if(length < sizeof(struct rserpool_tlv_header)) {
       LOG_WARNING
       fputs("Message length too low!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_MESSAGE;
       return(0);
    }
 
-   message->Flags                  = header->ah_flags;
-   message->OffendingMessageLength = length;
+   message->Flags = header->ah_flags;
    return(length);
 }
 
@@ -218,15 +215,13 @@ static bool checkFinishMessage(struct RSerPoolMessage* message,
       LOG_END
       if(message->Error == RSPERR_OKAY) {
          /* Error has not been set yet (first error occured) */
-         message->Error = RSPERR_INVALID_VALUES;
+         message->Error = RSPERR_INVALID_MESSAGE;
       }
       return(false);
    }
 
    message->OffendingParameterTLV       = NULL;
    message->OffendingParameterTLVLength = 0;
-   message->OffendingMessage            = NULL;
-   message->OffendingMessageLength      = 0;
    return(true);
 }
 
@@ -269,11 +264,11 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
    const size_t                length = (size_t)ntohs(header->atlv_length);
    const size_t                endPos = tlvPosition + length + getPadding(length, 4);
 
-   if(message->Position > endPos ) {
+   if(message->Position > endPos) {
       LOG_WARNING
       fputs("TLV length invalid!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
    else if(message->Position < endPos) {
@@ -286,7 +281,7 @@ static bool checkFinishTLV(struct RSerPoolMessage* message,
          LOG_WARNING
          fputs("Unxpected end of message!\n", stdlog);
          LOG_END
-         message->Error = RSPERR_INVALID_VALUES;
+         message->Error = RSPERR_INVALID_TLV;
          return(false);
       }
    }
@@ -326,7 +321,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
                LOG_WARNING
                fputs("Unexpected end of IPv4 address TLV!\n", stdlog);
                LOG_END
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             in = (struct sockaddr_in*)address;
@@ -341,7 +336,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             LOG_WARNING
             fputs("IPv4 address TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -352,7 +347,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
                LOG_WARNING
                fputs("Unexpected end of IPv6 address TLV!\n", stdlog);
                LOG_END
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             in6 = (struct sockaddr_in6*)address;
@@ -369,7 +364,7 @@ static bool scanAddressParameter(struct RSerPoolMessage* message,
             LOG_WARNING
             fputs("IPv6 address TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -402,7 +397,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message,  &tlvPosition, 0, false);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
    tlvLength -= sizeof(struct rserpool_tlv_header);
@@ -414,7 +409,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
       case ATT_SCTP_TRANSPORT:
           stp = (struct rserpool_sctptransportparameter*)getSpace(message, sizeof(struct rserpool_sctptransportparameter));
           if(stp == NULL) {
-             message->Error = RSPERR_INVALID_VALUES;
+             message->Error = RSPERR_INVALID_TLV;
              return(false);
           }
           port     = ntohs(stp->stp_port);
@@ -427,7 +422,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
       case ATT_TCP_TRANSPORT:
           ttp = (struct rserpool_tcptransportparameter*)getSpace(message, sizeof(struct rserpool_tcptransportparameter));
           if(ttp == NULL) {
-             message->Error = RSPERR_INVALID_VALUES;
+             message->Error = RSPERR_INVALID_TLV;
              return(false);
           }
           port     = ntohs(ttp->ttp_port);
@@ -440,7 +435,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
       case ATT_UDP_TRANSPORT:
           utp = (struct rserpool_udptransportparameter*)getSpace(message, sizeof(struct rserpool_udptransportparameter));
           if(utp == NULL) {
-             message->Error = RSPERR_INVALID_VALUES;
+             message->Error = RSPERR_INVALID_TLV;
              return(false);
           }
           port              = ntohs(utp->utp_port);
@@ -452,7 +447,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
       case ATT_DCCP_TRANSPORT:
           dtp = (struct rserpool_dccptransportparameter*)getSpace(message, sizeof(struct rserpool_dccptransportparameter));
           if(dtp == NULL) {
-             message->Error = RSPERR_INVALID_VALUES;
+             message->Error = RSPERR_INVALID_TLV;
              return(false);
           }
           port              = ntohs(dtp->dtp_port);
@@ -474,14 +469,14 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
          LOG_WARNING
          fputs("Too many addresses, internal limit reached!\n", stdlog);
          LOG_END
-         message->Error = RSPERR_INVALID_VALUES;
+         message->Error = RSPERR_INVALID_VALUE;
          return(false);
       }
       if((tlvType != ATT_SCTP_TRANSPORT) && (addresses > 1)) {
          LOG_WARNING
          fputs("Multiple addresses for non-multihomed protocol!\n", stdlog);
          LOG_END
-         message->Error = RSPERR_INVALID_VALUES;
+         message->Error = RSPERR_INVALID_VALUE;
          return(false);
       }
       if(scanAddressParameter(message, port, &addressArray[addresses]) == false) {
@@ -507,7 +502,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
       LOG_WARNING
       fputs("No addresses given!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -555,7 +550,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
    size_t  tlvPosition = 0;
    size_t  tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_POLICY, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
    tlvLength -= sizeof(struct rserpool_tlv_header);
@@ -564,7 +559,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
       LOG_WARNING
       fputs("TLV too short\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
    policyType = ntohl(*((uint32_t*)&message->Buffer[message->Position]));
@@ -575,6 +570,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_leastused)) {
             lu = (struct rserpool_policy_leastused*)getSpace(message, sizeof(struct rserpool_policy_leastused));
             if(lu == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(lu->pp_lu_policy);
@@ -588,7 +584,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("LU TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -596,6 +592,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_leastused_dpf)) {
             ludpf = (struct rserpool_policy_leastused_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_dpf));
             if(ludpf == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(ludpf->pp_ludpf_policy);
@@ -614,7 +611,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("LU-DPF TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -622,6 +619,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_leastused_degradation)) {
             lud = (struct rserpool_policy_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation));
             if(lud == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType      = ntohl(lud->pp_lud_policy);
@@ -638,7 +636,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("LUD TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -646,6 +644,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_leastused_degradation_dpf)) {
             luddpf = (struct rserpool_policy_leastused_degradation_dpf*)getSpace(message, sizeof(struct rserpool_policy_leastused_degradation_dpf));
             if(luddpf == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType      = ntohl(luddpf->pp_luddpf_policy);
@@ -666,7 +665,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("LUD-DPF TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -674,6 +673,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_priority_leastused)) {
             plu = (struct rserpool_policy_priority_leastused*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused));
             if(plu == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(plu->pp_plu_policy);
@@ -687,7 +687,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("PLU TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -695,6 +695,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_priority_leastused_degradation)) {
             plud = (struct rserpool_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused_degradation));
             if(plud == NULL) {
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType      = ntohl(plud->pp_plud_policy);
@@ -711,7 +712,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("PLUD TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -719,7 +720,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_random)) {
             rd = (struct rserpool_policy_random*)getSpace(message, sizeof(struct rserpool_policy_random));
             if(rd == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(rd->pp_rd_policy);
@@ -734,7 +735,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("RAND TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -742,7 +743,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_weighted_random)) {
             wrd = (struct rserpool_policy_weighted_random*)getSpace(message, sizeof(struct rserpool_policy_weighted_random));
             if(wrd == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(wrd->pp_wrd_policy);
@@ -758,7 +759,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("WRAND TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_TLV;
             return(false);
          }
        break;
@@ -766,7 +767,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_weighted_random_dpf)) {
             wrddpf = (struct rserpool_policy_weighted_random_dpf*)getSpace(message, sizeof(struct rserpool_policy_weighted_random_dpf));
             if(wrddpf == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(wrddpf->pp_wrddpf_policy);
@@ -786,7 +787,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("WRAND-DPF TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -794,7 +795,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_roundrobin)) {
             rr = (struct rserpool_policy_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_roundrobin));
             if(rr == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(rr->pp_rr_policy);
@@ -808,7 +809,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("RR TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -816,7 +817,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_weighted_roundrobin)) {
             wrr = (struct rserpool_policy_weighted_roundrobin*)getSpace(message, sizeof(struct rserpool_policy_weighted_roundrobin));
             if(wrr == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(wrr->pp_wrr_policy);
@@ -830,7 +831,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("WRR TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -838,7 +839,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          if(tlvLength >= sizeof(struct rserpool_policy_priority)) {
             p = (struct rserpool_policy_priority*)getSpace(message, sizeof(struct rserpool_policy_priority));
             if(p == NULL) {
-               message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
             poolPolicySettings->PolicyType = ntohl(p->pp_p_policy);
@@ -852,7 +853,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("PRI TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+               message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -873,7 +874,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("RLU TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_TLV;
             return(false);
          }
        break;
@@ -897,7 +898,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("RLUD TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -918,7 +919,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("PLU TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -942,7 +943,7 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             LOG_WARNING
             fputs("RPLUD TLV too short\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
        break;
@@ -979,18 +980,18 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
    size_t tlvPosition = 0;
    size_t tlvLength   = checkBeginTLV(message, &tlvPosition, ATT_POOL_ELEMENT, true);
    if(tlvLength < sizeof(struct rserpool_tlv_header)) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(NULL);
    }
 
    pep = (struct rserpool_poolelementparameter*)getSpace(message, sizeof(struct rserpool_poolelementparameter));
    if(pep == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(NULL);
    }
 
    if( (mustHaveHomeRegistrar) && (pep->pep_homeserverid == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(NULL);
    }
 
@@ -1069,17 +1070,17 @@ static bool scanPoolHandleParameter(struct RSerPoolMessage* message,
       LOG_WARNING
       fputs("Pool handle too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_TLV;
       return(false);
    }
 
    poolHandle = (unsigned char*)getSpace(message, tlvLength);
    if(poolHandle == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    if(tlvLength > MAX_POOLHANDLESIZE) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
    }
    poolHandleNew(poolHandlePtr, poolHandle, tlvLength);
 
@@ -1108,7 +1109,7 @@ static bool scanPoolElementIdentifierParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Pool element identifier too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1141,7 +1142,7 @@ static bool scanHandlespaceChecksumParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Pool element checksum too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1176,7 +1177,7 @@ static bool scanErrorParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Error parameter TLV too short\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1188,7 +1189,7 @@ static bool scanErrorParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Cause length too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1220,7 +1221,7 @@ static bool scanCookieParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Cookie too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1266,18 +1267,18 @@ static struct ST_CLASS(PeerListNode)* scanServerInformationParameter(struct RSer
       LOG_WARNING
       fputs("Server information too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
    sip = (struct rserpool_serverinfoparameter*)getSpace(message, sizeof(struct rserpool_serverinfoparameter));
    if(sip == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
    if(scanTransportParameter(message, transportAddressBlock) == false) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1331,7 +1332,7 @@ static bool scanHandleResolutionParameter(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Handle resolution parameter too short!\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1626,7 +1627,7 @@ static bool scanBusinessCardMessage(struct RSerPoolMessage* message)
       LOG_WARNING
       fputs("Business Card contains no Pool Element Parameters\n", stdlog);
       LOG_END
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
 
@@ -1641,7 +1642,7 @@ static bool scanPresenceMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
@@ -1667,7 +1668,7 @@ static bool scanListRequestMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
@@ -1687,7 +1688,7 @@ static bool scanListResponseMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
@@ -1754,7 +1755,7 @@ static bool scanHandleTableRequestMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
@@ -1774,7 +1775,7 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);
@@ -1841,7 +1842,7 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
             LOG_WARNING
             fputs("HandleTableResponse contains empty pool\n", stdlog);
             LOG_END
-            message->Error = RSPERR_INVALID_VALUES;
+            message->Error = RSPERR_INVALID_VALUE;
             return(false);
          }
 
@@ -1863,7 +1864,7 @@ static bool scanHandleUpdateMessage(struct RSerPoolMessage* message)
 
    pnup = (struct rserpool_handleupdateparameter*)getSpace(message, sizeof(struct rserpool_handleupdateparameter));
    if(pnup == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(pnup->pnup_sender_id);
@@ -1893,7 +1894,7 @@ static bool scanInitTakeoverMessage(struct RSerPoolMessage* message)
 
    tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
    if(tp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID            = ntohl(tp->tp_sender_id);
@@ -1911,7 +1912,7 @@ static bool scanInitTakeoverAckMessage(struct RSerPoolMessage* message)
 
    tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
    if(tp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID            = ntohl(tp->tp_sender_id);
@@ -1929,7 +1930,7 @@ static bool scanTakeoverServerMessage(struct RSerPoolMessage* message)
 
    tp = (struct rserpool_targetparameter*)getSpace(message, sizeof(struct rserpool_targetparameter));
    if(tp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID            = ntohl(tp->tp_sender_id);
@@ -1947,7 +1948,7 @@ static bool scanENRPErrorMessage(struct RSerPoolMessage* message)
 
    sp = (struct rserpool_serverparameter*)getSpace(message, sizeof(struct rserpool_serverparameter));
    if(sp == NULL) {
-      message->Error = RSPERR_INVALID_VALUES;
+      message->Error = RSPERR_INVALID_VALUE;
       return(false);
    }
    message->SenderID   = ntohl(sp->sp_sender_id);

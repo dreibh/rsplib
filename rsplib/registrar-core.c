@@ -223,6 +223,7 @@ void registrarHandleSocketEvent(struct Dispatcher* dispatcher,
                   registrarHandleMessage(registrar, message, fd);
                }
                else if( (message->Error != RSPERR_UNRECOGNIZED_PARAMETER_SILENT) &&
+                        ( (fd == registrar->ASAPSocket) || (fd == registrar->ENRPUnicastSocket) ) &&
                         (message->Type != AHT_ERROR) &&
                         (message->Type != EHT_ERROR) ) {
                   LOG_WARNING
@@ -233,11 +234,6 @@ void registrarHandleSocketEvent(struct Dispatcher* dispatcher,
                   fputs("\n", stdlog);
                   LOG_END
                   if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
-                     if(message->OffendingMessage) {
-                        message->ErrorCauseMessage           = (char*)memdup(message->OffendingMessage, message->OffendingMessageLength);
-                        message->ErrorCauseMessageLength     = message->OffendingMessageLength;
-                        message->ErrorCauseMessageAutoDelete = true;
-                     }
                      if(message->OffendingParameterTLV) {
                         message->ErrorCauseParameterTLV           = (char*)memdup(message->OffendingParameterTLV, message->OffendingParameterTLVLength);
                         message->ErrorCauseParameterTLVLength     = message->OffendingParameterTLVLength;

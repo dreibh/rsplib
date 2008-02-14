@@ -45,7 +45,9 @@ static struct ErrorTable ErrorDescriptions[] = {
    /* Protocol-specific error causes */
    { RSPERR_UNRECOGNIZED_PARAMETER,        "unrecognized parameter" },
    { RSPERR_UNRECOGNIZED_MESSAGE,          "unrecognized message" },
-   { RSPERR_INVALID_VALUES,                "invalid values" },
+   { RSPERR_INVALID_MESSAGE,               "invalid message" },
+   { RSPERR_INVALID_TLV,                   "invalid TLV" },
+   { RSPERR_INVALID_VALUE,                 "invalid value" },
    { RSPERR_NO_USABLE_USER_ADDRESSES,      "no usable user endpoint address(es)" },
    { RSPERR_NO_USABLE_ASAP_ADDRESSES,      "no usable ASAP endpoint address(es)" },
 

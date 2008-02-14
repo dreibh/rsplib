@@ -218,8 +218,8 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
             fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", arg);
             exit(1);
          }
-         if(getPort(&asapAnnounceAddress) == 0) {
-            setPort(&asapAnnounceAddress, ASAP_PORT);
+         if(getPort(&asapAnnounceAddress.sa) == 0) {
+            setPort(&asapAnnounceAddress.sa, ASAP_PORT);
          }
          info->ri_registrar_announce = (struct sockaddr*)&asapAnnounceAddress;
          info->ri_disable_autoconfig = 0;

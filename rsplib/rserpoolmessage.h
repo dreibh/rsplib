@@ -80,14 +80,14 @@ struct rserpool_header
    uint8_t  ah_type;
    uint8_t  ah_flags;
    uint16_t ah_length;
-};
+} __attribute__((packed));
 
 
 struct rserpool_tlv_header
 {
    uint16_t atlv_type;
    uint16_t atlv_length;
-};
+} __attribute__((packed));
 
 
 #define ATT_ACTION_MASK                0xc000
@@ -119,7 +119,7 @@ struct rserpool_poolelementparameter
    uint32_t pep_identifier;
    uint32_t pep_homeserverid;
    uint32_t pep_reg_life;
-};
+} __attribute__((packed));
 
 
 #define UTP_DATA_ONLY         0x0000
@@ -129,65 +129,65 @@ struct rserpool_sctptransportparameter
 {
    uint16_t stp_port;
    uint16_t stp_transport_use;
-};
+} __attribute__((packed));
 
 struct rserpool_tcptransportparameter
 {
    uint16_t ttp_port;
    uint16_t ttp_transport_use;
-};
+} __attribute__((packed));
 
 struct rserpool_udptransportparameter
 {
    uint16_t utp_port;
    uint16_t utp_reserved;
-};
+} __attribute__((packed));
 
 struct rserpool_dccptransportparameter
 {
    uint16_t dtp_port;
    uint16_t dtp_reserved;
    uint32_t dtp_scode;
-};
+} __attribute__((packed));
 
 
 struct rserpool_policy_roundrobin
 {
    uint32_t pp_rr_policy;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_weighted_roundrobin
 {
    uint32_t pp_wrr_policy;
    uint32_t pp_wrr_weight;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_priority
 {
    uint32_t pp_p_policy;
    uint32_t pp_p_priority;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_leastused
 {
    uint32_t  pp_lu_policy;
    uint32_t pp_lu_load;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_leastused_dpf
 {
-   uint32_t  pp_ludpf_policy;
+   uint32_t pp_ludpf_policy;
    uint32_t pp_ludpf_load;
    uint32_t pp_ludpf_load_dpf;
    uint32_t pp_ludpf_distance;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_leastused_degradation
 {
    uint32_t pp_lud_policy;
    uint32_t pp_lud_load;
    uint32_t pp_lud_loaddeg;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_leastused_degradation_dpf
 {
@@ -196,31 +196,31 @@ struct rserpool_policy_leastused_degradation_dpf
    uint32_t pp_luddpf_loaddeg;
    uint32_t pp_luddpf_load_dpf;
    uint32_t pp_luddpf_distance;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_priority_leastused
 {
    uint32_t pp_plu_policy;
    uint32_t pp_plu_load;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_priority_leastused_degradation
 {
    uint32_t pp_plud_policy;
    uint32_t pp_plud_load;
    uint32_t pp_plud_loaddeg;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_random
 {
    uint32_t pp_rd_policy;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_weighted_random
 {
    uint32_t pp_wrd_policy;
    uint32_t pp_wrd_weight;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_weighted_random_dpf
 {
@@ -228,33 +228,33 @@ struct rserpool_policy_weighted_random_dpf
    uint32_t pp_wrddpf_weight;
    uint32_t pp_wrddpf_weight_dpf;
    uint32_t pp_wrddpf_distance;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_randomized_leastused
 {
    uint32_t pp_rlu_policy;
    uint32_t pp_rlu_load;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_randomized_leastused_degradation
 {
    uint32_t pp_rlud_policy;
    uint32_t pp_rlud_load;
    uint32_t pp_rlud_loaddeg;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_randomized_priority_leastused
 {
    uint32_t pp_rplu_policy;
    uint32_t pp_rplu_load;
-};
+} __attribute__((packed));
 
 struct rserpool_policy_randomized_priority_leastused_degradation
 {
    uint32_t pp_rplud_policy;
    uint32_t pp_rplud_load;
    uint32_t pp_rplud_loaddeg;
-};
+} __attribute__((packed));
 
 
 struct rserpool_errorcause
@@ -262,13 +262,13 @@ struct rserpool_errorcause
    uint16_t aec_cause;
    uint16_t aec_length;
    char     aec_data[0];
-};
+} __attribute__((packed));
 
 
 struct rserpool_handleresolutionparameter
 {
    uint32_t hrp_items;
-};
+} __attribute__((packed));
 
 
 #define EHT_ENRP_MODIFIER         0xee00
@@ -289,7 +289,7 @@ struct rserpool_peerpresenceparameter
    uint32_t ppp_sender_id;
    uint32_t ppp_receiver_id;
    uint32_t ppp_checksum;
-};
+} __attribute__((packed));
 
 struct rserpool_handleupdateparameter
 {
@@ -297,7 +297,7 @@ struct rserpool_handleupdateparameter
    uint32_t pnup_receiver_id;
    uint16_t pnup_update_action;
    uint16_t pnup_pad;
-};
+} __attribute__((packed));
 
 #define PNUP_ADD_PE 0x0000
 #define PNUP_DEL_PE 0x0001
@@ -306,7 +306,7 @@ struct rserpool_handleupdateparameter
 struct rserpool_serverinfoparameter
 {
    uint32_t sip_server_id;
-};
+} __attribute__((packed));
 
 #define EHF_SERVERINFO_MULTICAST (1 << 31)
 
@@ -315,14 +315,14 @@ struct rserpool_serverparameter
 {
    uint32_t sp_sender_id;
    uint32_t sp_receiver_id;
-};
+} __attribute__((packed));
 
 struct rserpool_targetparameter
 {
    uint32_t tp_sender_id;
    uint32_t tp_receiver_id;
    uint32_t tp_target_id;
-};
+} __attribute__((packed));
 
 
 #define EHF_PRESENCE_REPLY_REQUIRED                (1 << 0)
@@ -346,15 +346,10 @@ struct RSerPoolMessage
    size_t                                      OperationErrorLength;
 
    char*                                       OffendingParameterTLV;
-   char*                                       OffendingMessage;
    size_t                                      OffendingParameterTLVLength;
-   size_t                                      OffendingMessageLength;
 
-   char*                                       ErrorCauseMessage;
    char*                                       ErrorCauseParameterTLV;
-   size_t                                      ErrorCauseMessageLength;
    size_t                                      ErrorCauseParameterTLVLength;
-   bool                                        ErrorCauseMessageAutoDelete;
    bool                                        ErrorCauseParameterTLVAutoDelete;
 
    char*                                       Buffer;

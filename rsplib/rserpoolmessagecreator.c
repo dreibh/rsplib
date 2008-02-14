@@ -602,13 +602,10 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
    cause = message->Error;
    switch(cause) {
       case RSPERR_UNRECOGNIZED_PARAMETER:
+      case RSPERR_INVALID_TLV:
+      case RSPERR_INVALID_VALUE:
          data       = message->ErrorCauseParameterTLV;
          dataLength = message->ErrorCauseParameterTLVLength;
-       break;
-      case RSPERR_UNRECOGNIZED_MESSAGE:
-      case RSPERR_INVALID_VALUES:
-         data       = message->ErrorCauseMessage;
-         dataLength = message->ErrorCauseMessageLength;
        break;
       default:
          data       = NULL;

@@ -44,7 +44,9 @@ extern "C" {
 /* Protocol-specific error causes */
 #define RSPERR_UNRECOGNIZED_PARAMETER        0x0001
 #define RSPERR_UNRECOGNIZED_MESSAGE          0x0002
-#define RSPERR_INVALID_VALUES                0x0003
+#define RSPERR_INVALID_MESSAGE               0x0010
+#define RSPERR_INVALID_TLV                   0x0003
+#define RSPERR_INVALID_VALUE                 0x0011
 #define RSPERR_INCOMPATIBLE_POOL_POLICY      0x0005
 #define RSPERR_OUT_OF_RESOURCES              0x0006
 #define RSPERR_WRONG_CONTROLCHANNEL_HANDLING 0x0008
