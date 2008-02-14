@@ -67,10 +67,10 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 #endif
                                )
 {
-   struct Registrar*       registrar;
-   int                     autoCloseTimeout;
-#ifdef SCTP_DELAYED_SACK
-   struct sctp_assoc_value sctpAssocValue;
+   struct Registrar*     registrar;
+   int                   autoCloseTimeout;
+#ifdef sctp_sack_info
+   struct sctp_sack_info sctpSACKInfo;
 #endif
 
    registrar = (struct Registrar*)malloc(sizeof(struct Registrar));
@@ -180,22 +180,23 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
          logerror("setsockopt() for SCTP_AUTOCLOSE failed");
          LOG_END
       }
-#ifdef SCTP_DELAYED_SACK
+#ifdef sctp_sack_info
       /* ====== Tune SACK handling ======================================= */
       /* Without this tuning, the PE would wait 200ms to acknowledge a
          Endpoint Unreachable. The usually immediately following
          Handle Resolution transmission would also be delayed ... */
-      sctpAssocValue.assoc_id    = 0;
-      sctpAssocValue.assoc_value = 1;
+      sctpSACKInfo.sack_assoc_id = 0;
+      sctpSACKInfo.sack_delay    = 0;
+      sctpSACKInfo.sack_freq     = 1;
       if(ext_setsockopt(registrar->ASAPSocket,
                         IPPROTO_SCTP, SCTP_DELAYED_SACK,
-                        &sctpAssocValue, sizeof(sctpAssocValue)) < 0) {
+                        &sctpSACKInfo, sizeof(sctpSACKInfo)) < 0) {
          LOG_WARNING
          logerror("Unable to set SCTP_DELAYED_SACK");
          LOG_END
       }
 #else
-#warning SCTP_DELAYED_SACK is not defined - Unable to tune SACK handling!
+#warning SCTP_DELAYED_SACK/sctp_sack_info is not supported - Unable to tune SACK handling!
 #endif
 
       memcpy(&registrar->ASAPAnnounceAddress, asapAnnounceAddress, sizeof(registrar->ASAPAnnounceAddress));

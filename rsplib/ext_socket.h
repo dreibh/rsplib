@@ -58,7 +58,7 @@
 
 
 #define SOCKETAPI_MAJOR_VERSION  0x2
-#define SOCKETAPI_MINOR_VERSION  0x1100
+#define SOCKETAPI_MINOR_VERSION  0x2200
 
 
 /*
@@ -364,10 +364,16 @@ struct sctp_event_subscribe
 
 
 struct sctp_assoc_value {
-   sctp_assoc_t            assoc_id;
-   uint32_t                assoc_value;
+   sctp_assoc_t assoc_id;
+   uint32_t     assoc_value;
 };
 
+
+struct sctp_sack_info {
+   sctp_assoc_t sack_assoc_id;
+   uint32_t     sack_delay;
+   uint32_t     sack_freq;
+};
 
 
 #define SCTP_INITMSG                1000
