@@ -162,11 +162,11 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
    struct rserpool_header* header;
    size_t                  length;
 
-   *startPosition                     = message->Position;
-   message->OffendingMessageTLV       = (char*)&message->Buffer[*startPosition];
-   message->OffendingMessageTLVLength = 0;
-   message->OffendingParameterTLV     = NULL;
-   message->OffendingParameterTLV     = 0;
+   *startPosition                  = message->Position;
+   message->OffendingMessage       = (char*)&message->Buffer[*startPosition];
+   message->OffendingMessageLength = 0;
+   message->OffendingParameterTLV  = NULL;
+   message->OffendingParameterTLV  = 0;
 
    header = (struct rserpool_header*)getSpace(message, sizeof(struct rserpool_header));
    if(header == NULL) {
@@ -193,8 +193,8 @@ static size_t checkBeginMessage(struct RSerPoolMessage* message,
       return(0);
    }
 
-   message->Flags                     = header->ah_flags;
-   message->OffendingMessageTLVLength = length;
+   message->Flags                  = header->ah_flags;
+   message->OffendingMessageLength = length;
    return(length);
 }
 
@@ -225,8 +225,8 @@ static bool checkFinishMessage(struct RSerPoolMessage* message,
 
    message->OffendingParameterTLV       = NULL;
    message->OffendingParameterTLVLength = 0;
-   message->OffendingMessageTLV         = NULL;
-   message->OffendingMessageTLVLength   = 0;
+   message->OffendingMessage            = NULL;
+   message->OffendingMessageLength      = 0;
    return(true);
 }
 
@@ -1535,19 +1535,29 @@ static bool scanServerAnnounceMessage(struct RSerPoolMessage* message)
    message->RegistrarIdentifier = ntohl(*registrarIdentifier);
 
    /* ====== Try to read Server Information Parameter ==================== */
-   message->PeerListNodePtr = scanServerInformationParameter(message);
-   if(message->PeerListNodePtr == NULL) {
+   transportAddressBlock->Protocol = 0;
+   while( (scanTransportParameter(message, transportAddressBlock) == true) &&
+          (transportAddressBlock->Protocol != IPPROTO_SCTP) ) {
+   }
+
+   if(transportAddressBlock->Protocol != IPPROTO_SCTP) {
       /* ====== Take address and port from UDP message =================== */
-      message->PeerListNodePtr = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
-      if(message->PeerListNodePtr == NULL) {
-         message->Error = RSPERR_OUT_OF_MEMORY;
-         return(false);
-      }
       transportAddressBlockNew(&transportAddressBlock[0],
                                IPPROTO_SCTP,
                                getPort(&message->SourceAddress.sa),
                                0,
                                &message->SourceAddress, 1, 1);
+   }
+
+
+   /* ====== Create PeerListNode ========================================= */
+   message->PeerListNodePtr = scanServerInformationParameter(message);
+   if(message->PeerListNodePtr == NULL) {
+      message->PeerListNodePtr = (struct ST_CLASS(PeerListNode)*)malloc(sizeof(struct ST_CLASS(PeerListNode)));
+      if(message->PeerListNodePtr == NULL) {
+         message->Error = RSPERR_OUT_OF_MEMORY;
+         return(false);
+      }
       transportAddressBlock = transportAddressBlockDuplicate(transportAddressBlock);
       if(transportAddressBlock == NULL) {
          message->Error = RSPERR_OUT_OF_MEMORY;

@@ -595,20 +595,20 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
       return(false);
    }
 
-   if(message->OffendingParameterTLV == NULL) {
-      CHECK(message->OffendingParameterTLVLength == 0);
+   if(message->ErrorCauseParameterTLV == NULL) {
+      CHECK(message->ErrorCauseParameterTLVLength == 0);
    }
 
    cause = message->Error;
    switch(cause) {
       case RSPERR_UNRECOGNIZED_PARAMETER:
-         data       = message->OffendingParameterTLV;
-         dataLength = message->OffendingParameterTLVLength;
+         data       = message->ErrorCauseParameterTLV;
+         dataLength = message->ErrorCauseParameterTLVLength;
        break;
       case RSPERR_UNRECOGNIZED_MESSAGE:
       case RSPERR_INVALID_VALUES:
-         data       = message->OffendingMessageTLV;
-         dataLength = message->OffendingMessageTLVLength;
+         data       = message->ErrorCauseMessage;
+         dataLength = message->ErrorCauseMessageLength;
        break;
       default:
          data       = NULL;

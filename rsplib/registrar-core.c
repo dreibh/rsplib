@@ -233,6 +233,17 @@ void registrarHandleSocketEvent(struct Dispatcher* dispatcher,
                   fputs("\n", stdlog);
                   LOG_END
                   if((ppid == PPID_ASAP) || (ppid == PPID_ENRP)) {
+                     if(message->OffendingMessage) {
+                        message->ErrorCauseMessage           = (char*)memdup(message->OffendingMessage, message->OffendingMessageLength);
+                        message->ErrorCauseMessageLength     = message->OffendingMessageLength;
+                        message->ErrorCauseMessageAutoDelete = true;
+                     }
+                     if(message->OffendingParameterTLV) {
+                        message->ErrorCauseParameterTLV           = (char*)memdup(message->OffendingParameterTLV, message->OffendingParameterTLVLength);
+                        message->ErrorCauseParameterTLVLength     = message->OffendingParameterTLVLength;
+                        message->ErrorCauseParameterTLVAutoDelete = true;
+                     }
+
                      /* For ASAP or ENRP messages, we can reply
                         error message */
                      if(message->PPID == PPID_ASAP) {

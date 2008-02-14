@@ -158,9 +158,13 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          free(message->HandlespacePtr);
          message->HandlespacePtr = NULL;
       }
-      if((message->OffendingParameterTLV) && (message->OffendingParameterTLVAutoDelete)) {
-         free(message->OffendingParameterTLV);
-         message->OffendingParameterTLV = NULL;
+      if((message->ErrorCauseMessage) && (message->ErrorCauseMessageAutoDelete)) {
+         free(message->ErrorCauseMessage);
+         message->ErrorCauseMessage = NULL;
+      }
+      if((message->ErrorCauseParameterTLV) && (message->ErrorCauseParameterTLVAutoDelete)) {
+         free(message->ErrorCauseParameterTLV);
+         message->ErrorCauseParameterTLV = NULL;
       }
 
       buffer                      = message->Buffer;

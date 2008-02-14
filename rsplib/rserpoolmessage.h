@@ -346,11 +346,16 @@ struct RSerPoolMessage
    size_t                                      OperationErrorLength;
 
    char*                                       OffendingParameterTLV;
+   char*                                       OffendingMessage;
    size_t                                      OffendingParameterTLVLength;
-   bool                                        OffendingParameterTLVAutoDelete;
-   char*                                       OffendingMessageTLV;
-   size_t                                      OffendingMessageTLVLength;
-   bool                                        OffendingMessageTLVAutoDelete;
+   size_t                                      OffendingMessageLength;
+
+   char*                                       ErrorCauseMessage;
+   char*                                       ErrorCauseParameterTLV;
+   size_t                                      ErrorCauseMessageLength;
+   size_t                                      ErrorCauseParameterTLVLength;
+   bool                                        ErrorCauseMessageAutoDelete;
+   bool                                        ErrorCauseParameterTLVAutoDelete;
 
    char*                                       Buffer;
    bool                                        BufferAutoDelete;
