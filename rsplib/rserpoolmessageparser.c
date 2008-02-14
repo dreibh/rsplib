@@ -37,6 +37,20 @@
 #include <ext_socket.h>
 
 
+/* ###### Peek next TLV header type ###################################### */
+static uint16_t peekNextTLVType(struct RSerPoolMessage* message)
+{
+   const struct rserpool_tlv_header* header;
+
+   header = (const struct rserpool_tlv_header*)getSpace(message, sizeof(struct rserpool_tlv_header));
+   if(header) {
+      message->Position -= sizeof(struct rserpool_tlv_header);
+      return(ntohs(header->atlv_type));
+   }
+   return(0x00);
+}
+
+
 /* ###### Scan next TLV header ########################################### */
 static bool getNextTLV(struct RSerPoolMessage*      message,
                        size_t*                      tlvPosition,
@@ -975,6 +989,11 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
       return(NULL);
    }
 
+   if( (mustHaveHomeRegistrar) && (pep->pep_homeserverid == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
+      message->Error = RSPERR_INVALID_VALUES;
+      return(NULL);
+   }
+
    if(scanTransportParameter(message, userTransportAddressBlock) == false) {
       return(NULL);
    }
@@ -1015,12 +1034,6 @@ static struct ST_CLASS(PoolElementNode)* scanPoolElementParameter(
    }
    else {
       newRegistratorTransportAddressBlock = NULL;
-   }
-   if( (mustHaveHomeRegistrar) && (pep->pep_homeserverid == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
-      free(newUserTransportAddressBlock);
-      free(poolElementNode);
-      message->Error = RSPERR_INVALID_ID;
-      return(NULL);
    }
    ST_CLASS(poolElementNodeNew)(poolElementNode,
                                 ntohl(pep->pep_identifier),
@@ -1765,10 +1778,14 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
       }
       ST_CLASS(poolHandlespaceManagementNew)(message->HandlespacePtr, 0, NULL, NULL, NULL);
 
-      while(scanPoolHandleParameter(message, &message->Handle)) {
+      while( (message->Error == RSPERR_OKAY) &&
+             (peekNextTLVType(message) == ATT_POOL_HANDLE) &&
+             ( ((scanPoolHandleParameter(message, &message->Handle)) != NULL) ) ) {
          scannedPoolElementParameters = 0;
-         poolElementNode = scanPoolElementParameter(message, true, true);
-         while( (poolElementNode) && (message->Error == RSPERR_OKAY) ) {
+
+         while( (message->Error == RSPERR_OKAY) &&
+                (peekNextTLVType(message) == ATT_POOL_ELEMENT) &&
+                ( (poolElementNode = scanPoolElementParameter(message, true, true)) != NULL ) ) {
             if(poolElementNode->RegistratorTransport == NULL) {
                free(poolElementNode->UserTransport);
                free(poolElementNode);
@@ -1805,8 +1822,6 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
                LOG_END
                return(false);
             }
-
-            poolElementNode = scanPoolElementParameter(message, true, true);
          }
          if(message->Error != RSPERR_OKAY) {
             return(false);
@@ -1871,8 +1886,8 @@ static bool scanInitTakeoverMessage(struct RSerPoolMessage* message)
       message->Error = RSPERR_INVALID_VALUES;
       return(false);
    }
-   message->SenderID     = ntohl(tp->tp_sender_id);
-   message->ReceiverID   = ntohl(tp->tp_receiver_id);
+   message->SenderID            = ntohl(tp->tp_sender_id);
+   message->ReceiverID          = ntohl(tp->tp_receiver_id);
    message->RegistrarIdentifier = ntohl(tp->tp_target_id);
 
    return(true);

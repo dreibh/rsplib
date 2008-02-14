@@ -162,14 +162,10 @@ void rserpoolMessageClearAll(struct RSerPoolMessage* message)
          free(message->OffendingParameterTLV);
          message->OffendingParameterTLV = NULL;
       }
-      if((message->OffendingMessageTLV) && (message->OffendingMessageTLVAutoDelete)) {
-         free(message->OffendingMessageTLV);
-         message->OffendingMessageTLV = NULL;
-      }
 
-      buffer             = message->Buffer;
-      originalBufferSize = message->OriginalBufferSize;
-      bufferAutoDelete   = message->BufferAutoDelete;
+      buffer                      = message->Buffer;
+      originalBufferSize          = message->OriginalBufferSize;
+      bufferAutoDelete            = message->BufferAutoDelete;
       memset(message,0,sizeof(struct RSerPoolMessage));
       message->BufferAutoDelete   = bufferAutoDelete;
       message->OriginalBufferSize = originalBufferSize;
