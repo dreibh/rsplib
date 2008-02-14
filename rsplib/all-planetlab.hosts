@@ -245,8 +245,8 @@ plab1.cs.ust.hk
 plab2.cs.ust.hk
 planetlab1.cs.uit.no
 planetlab2.cs.uit.no
-planetlab1.cs.northwestern.edu
-planetlab2.cs.northwestern.edu
+planetlab1.eecs.northwestern.edu
+planetlab2.eecs.northwestern.edu
 planetlab1.poly.edu
 planetlab1.uc.edu
 planetlab2.uc.edu
@@ -335,8 +335,6 @@ tongji1.6planetlab.edu.cn
 sjtu2.6planetlab.edu.cn
 planetlab1.iitb.ac.in
 csu2.6planetlab.edu.cn
-planetlabtwo.ccs.neu.edu
-planetlabone.ccs.neu.edu
 planetlab1.mnlab.cti.depaul.edu
 planetlab-dsl-1.ucsd.edu
 planetlab1.cs.unc.edu
@@ -808,3 +806,7 @@ planetlab2.upc.es
 planetlab1.upc.es
 plane-lab-pb1.uni-paderborn.de
 plane-lab-pb2.uni-paderborn.de
+planetlabone.ccs.neu.edu
+planetlabtwo.ccs.neu.edu
+planetlab1.science.unitn.it
+planetlab2.science.unitn.it
