@@ -30,7 +30,7 @@
 #ifndef COMPONENTSTATUSPACKETS_H
 #define COMPONENTSTATUSPACKETS_H
 
-#include <stdint.h>
+#include "tdtypes.h"
 
 
 /* Ensure consistent alignment! */

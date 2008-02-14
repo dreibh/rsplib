@@ -30,7 +30,7 @@
 #ifndef PINGPONGPACKETS_H
 #define PINGPONGPACKETS_H
 
-#include <stdint.h>
+#include "tdtypes.h"
 
 
 // Ensure consistent alignment!

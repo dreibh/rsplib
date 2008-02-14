@@ -32,11 +32,12 @@
 #include "timeutilities.h"
 #include "stringutilities.h"
 
-#include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <assert.h>
-#include <dirent.h>
-#include <sys/types.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 
 #define INPUT_NAME  "input.data"

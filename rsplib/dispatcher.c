@@ -39,6 +39,8 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "dispatcher.h"
+
+#include <string.h>
 #include <netinet/in.h>
 #include <ext_socket.h>
 

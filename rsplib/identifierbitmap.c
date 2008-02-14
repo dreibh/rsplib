@@ -31,6 +31,8 @@
 #include "identifierbitmap.h"
 #include "debug.h"
 
+#include <string.h>
+
 
 /* ###### Constructor #################################################### */
 struct IdentifierBitmap* identifierBitmapNew(const size_t entries)

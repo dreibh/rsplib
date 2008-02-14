@@ -31,6 +31,8 @@
 #include "loglevel.h"
 #include "threadsafety.h"
 
+#include <unistd.h>
+
 
 static unsigned long long gMutexCounter = 0;
 

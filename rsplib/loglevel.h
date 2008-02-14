@@ -47,6 +47,9 @@
 #include "threadsafety.h"
 #include "debug.h"
 
+#include <errno.h>
+#include <unistd.h>
+
 
 #ifdef __cplusplus
 extern "C" {

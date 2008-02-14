@@ -30,8 +30,6 @@
 #ifndef NETDOUBLE_H
 #define NETDOUBLE_H
 
-#include <stdint.h>
-
 
 #ifdef __cplusplus
 extern "C" {

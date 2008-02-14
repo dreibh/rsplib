@@ -39,6 +39,8 @@
 #include "componentstatuspackets.h"
 #endif
 
+#include <math.h>
+
 
 #define SERVICE_ECHO      1
 #define SERVICE_DISCARD   2

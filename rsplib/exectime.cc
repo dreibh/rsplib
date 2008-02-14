@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 #include <thread.h>
 #include <iostream>
 #include <sys/time.h>

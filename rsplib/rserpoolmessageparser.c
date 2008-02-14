@@ -1780,7 +1780,7 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
 
       while( (message->Error == RSPERR_OKAY) &&
              (peekNextTLVType(message) == ATT_POOL_HANDLE) &&
-             ( ((scanPoolHandleParameter(message, &message->Handle)) != NULL) ) ) {
+             ( ((scanPoolHandleParameter(message, &message->Handle)) == true) ) ) {
          scannedPoolElementParameters = 0;
 
          while( (message->Error == RSPERR_OKAY) &&

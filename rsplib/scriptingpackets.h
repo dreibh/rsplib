@@ -30,7 +30,7 @@
 #ifndef SCRIPTINGPACKETS_H
 #define SCRIPTINGPACKETS_H
 
-#include <stdint.h>
+#include "tdtypes.h"
 
 
 // Ensure consistent alignment!

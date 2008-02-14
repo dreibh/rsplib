@@ -41,6 +41,8 @@
 #include "transportaddressblock.h"
 #include "stringutilities.h"
 
+#include <math.h>
+
 
 #ifdef INCLUDE_LINEARLIST
 #include "linearlist.h"

@@ -31,14 +31,6 @@
 #define RANDOMIZER_H
 
 #include "tdtypes.h"
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <sys/types.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {

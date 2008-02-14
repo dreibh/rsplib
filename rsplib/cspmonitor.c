@@ -35,6 +35,10 @@
 #include "componentstatusreporter.h"
 #include "simpleredblacktree.h"
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
+#include <string.h>
 #include <sys/poll.h>
 #include <ext_socket.h>
 

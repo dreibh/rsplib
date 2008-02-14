@@ -40,6 +40,7 @@
 #include "threadsafety.h"
 #include "stringutilities.h"
 
+#include <unistd.h>
 #include <sys/utsname.h>
 
 

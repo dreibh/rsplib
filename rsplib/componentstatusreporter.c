@@ -36,6 +36,8 @@
 #include "stringutilities.h"
 #include "randomizer.h"
 
+#include <math.h>
+
 
 extern struct Dispatcher gDispatcher;
 

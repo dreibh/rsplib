@@ -43,6 +43,8 @@
 #include "componentstatusreporter.h"
 #endif
 
+#include <stdio.h>
+
 
 struct ASAPInstance*       gAsapInstance = NULL;
 struct Dispatcher          gDispatcher;

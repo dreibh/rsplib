@@ -33,6 +33,10 @@
 #include "componentstatusreporter.h"
 #endif
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 
 #define MAX_POOL_ELEMENTS 50000
 

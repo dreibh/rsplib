@@ -34,6 +34,9 @@
 #include "breakdetector.h"
 #include "tagitem.h"
 
+#include <math.h>
+#include <string.h>
+
 
 // ###### Constructor #######################################################
 TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)

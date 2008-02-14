@@ -30,9 +30,8 @@
 #ifndef FRACTALGENERATORPACKETS_H
 #define FRACTALGENERATORPACKETS_H
 
+#include "tdtypes.h"
 #include "netdouble.h"
-
-#include <stdint.h>
 
 
 // Ensure consistent alignment!

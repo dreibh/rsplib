@@ -27,6 +27,7 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <math.h>
 #include <iostream>
 
 #include "calcappservice.h"

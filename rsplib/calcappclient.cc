@@ -41,6 +41,7 @@
 #include "componentstatuspackets.h"
 #endif
 
+#include <math.h>
 #include <ext_socket.h>
 #include <iostream>
 

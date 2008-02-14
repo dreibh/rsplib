@@ -38,6 +38,9 @@
 #include "componentstatuspackets.h"
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+
 
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)

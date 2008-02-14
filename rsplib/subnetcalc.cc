@@ -27,10 +27,10 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include "tdtypes.h"
+
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

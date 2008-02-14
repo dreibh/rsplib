@@ -31,6 +31,10 @@
 #include "breakdetector.h"
 #include "timeutilities.h"
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)

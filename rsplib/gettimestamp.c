@@ -30,7 +30,9 @@
 #include "tdtypes.h"
 #include "timeutilities.h"
 
+#include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 
 /* ###### Main program ################################################### */

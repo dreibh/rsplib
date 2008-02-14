@@ -38,6 +38,11 @@
 #include "componentstatuspackets.h"
 #endif
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
 
 #define SSCR_OKAY        0
 #define SSCR_COMPLETE    1

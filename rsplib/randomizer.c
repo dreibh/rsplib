@@ -30,7 +30,7 @@
 #include "randomizer.h"
 #include "timeutilities.h"
 
-#include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 
 
