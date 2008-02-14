@@ -1,4 +1,5 @@
 #include "rserpoolmessage.h"
+#include "netutilities.h"
 #include "loglevel.h"
 
 
@@ -102,17 +103,90 @@ void addGenericParameter(uint16_t type, char* data)
    endTLV(tlv);
 }
 
-// void testASAPError()
-// {
-//    beginMsg(AHT_ERROR & 0xff, 0);
-//    endMsg(PPID_ASAP);
-//
-//    beginMsg(AHT_ERROR & 0xff, 0);
-//    rserpool_tlv_header* tlv = beginTLV(ATT_OPERATION_ERROR);
-//    addErrorCauseParameter("Test");
-//    endTLV(tlv);
-//    endMsg(PPID_ASAP);
-// }
+
+/*
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Type = 0xa            |       Length=variable         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                         PE Identifier                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Home ENRP Server Identifier                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                      Registration Life                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   :                      User Transport param                     :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   :                 Member Selection Policy param                 :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   :                      ASAP Transport param                     :
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
+
+void addRoundRobinParameter()
+{
+   rserpool_tlv_header* tlv = beginTLV(ATT_POOL_POLICY);
+   rserpool_policy_roundrobin* rr = (rserpool_policy_roundrobin*)get(sizeof(rserpool_policy_roundrobin));
+   rr->pp_rr_policy = PPT_ROUNDROBIN;;
+   endTLV(tlv);
+}
+
+void addAddressParameter(char* addr)
+{
+   sockaddr_union a;
+   CHECK(string2address(addr, &a));
+
+   if(a.sa.sa_family == AF_INET) {
+      rserpool_tlv_header* tlv = beginTLV(ATT_IPv4_ADDRESS);
+      char* buf = get(4);
+      memcpy(buf, &a.in.sin_addr.s_addr, 4);
+      endTLV(tlv);
+   }
+   else if(a.sa.sa_family == AF_INET6) {
+      rserpool_tlv_header* tlv = beginTLV(ATT_IPv6_ADDRESS);
+      char* buf = get(16);
+      memcpy(buf, &a.in6.sin6_addr.s6_addr32, 16);
+      endTLV(tlv);
+   }
+   else { CHECK(false); }
+}
+
+void addSCTPTransportParameter(uint16_t port, uint16_t use, char* a1, char* a2, char* a3)
+{
+   rserpool_tlv_header* tlv = beginTLV(ATT_SCTP_TRANSPORT);
+   rserpool_sctptransportparameter* sctptp = (rserpool_sctptransportparameter*)get(sizeof(rserpool_sctptransportparameter));
+   sctptp->stp_port          = htons(port);
+   sctptp->stp_transport_use = htons(use);
+   if(a1) addAddressParameter(a1);
+   if(a2) addAddressParameter(a2);
+   if(a3) addAddressParameter(a3);
+   endTLV(tlv);
+}
+
+void addPoolElementParameter(uint32_t peId, uint32_t homePRID)
+{
+   rserpool_tlv_header* tlv = beginTLV(ATT_POOL_ELEMENT);
+   rserpool_poolelementparameter* pep = (rserpool_poolelementparameter*)get(sizeof(rserpool_poolelementparameter));
+   pep->pep_identifier   = htonl(peId);
+   pep->pep_homeserverid = htonl(homePRID);
+   pep->pep_reg_life     = htonl(300000);
+
+   addSCTPTransportParameter(1234, UTP_DATA_PLUS_CONTROL, "127.0.0.1:1234", NULL, NULL);
+   addRoundRobinParameter();
+//    addSCTPTransportParameter(1234, UTP_DATA_ONLY, "127.0.0.1:9999", NULL, NULL);
+
+   endTLV(tlv);
+}
+
+
+
+
+void testASAPHandleResolutionResponse()
+{
+   beginMsg(AHT_HANDLE_RESOLUTION_RESPONSE & 0xff, 0);
+   addGenericParameter(ATT_POOL_HANDLE, "EchoPool");
+   addPoolElementParameter(0x1234,0x9999999);
+   endMsg(PPID_ASAP);
+}
 
 
 void testASAPHandleResolution()
@@ -124,6 +198,7 @@ void testASAPHandleResolution()
 
    beginMsg(AHT_HANDLE_RESOLUTION & 0xff, 0);
    addGenericParameter(ATT_POOL_HANDLE, "EchoPool");
+   addRoundRobinParameter();
    addGenericParameter(1234, "TEST");
    endMsg(PPID_ASAP);
 }
@@ -140,7 +215,8 @@ int main(int argc, char** argv)
    message = rserpoolMessageNew(NULL, 65536);
    if(message) {
 
-      testASAPHandleResolution();
+//       testASAPHandleResolution();
+      testASAPHandleResolutionResponse();
 
       rserpoolMessageDelete(message);
    }
