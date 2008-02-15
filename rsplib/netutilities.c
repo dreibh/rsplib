@@ -1582,10 +1582,10 @@ size_t getSocklen(const struct sockaddr* address)
 
 
 /* ###### Multicast group management ##################################### */
-static bool multicastGroupMgt(int              sockfd,
-                              struct sockaddr* address,
-                              const char*      interface,
-                              const bool       add)
+static bool multicastGroupControlIF(int              sockfd,
+                                    struct sockaddr* address,
+                                    const char*      interface,
+                                    const bool       add)
 {
    struct ip_mreq   mreq;
    struct ifreq     ifr;
@@ -1624,9 +1624,9 @@ static bool multicastGroupMgt(int              sockfd,
 
 
 /* ###### Join or leave multicast group ################################## */
-bool joinOrLeaveMulticastGroup(int                         sd,
-                               const union sockaddr_union* groupAddress,
-                               const bool                  add)
+bool multicastGroupControl(int                         sd,
+                           const union sockaddr_union* groupAddress,
+                           const bool                  add)
 {
    struct if_nameindex* ifindex;
    size_t               successes = 0;
@@ -1649,7 +1649,7 @@ bool joinOrLeaveMulticastGroup(int                         sd,
          fputaddress(&groupAddress->sa, true, stdlog);
          fputs(" ...\n", stdlog);
          LOG_END
-         if(multicastGroupMgt(sd, (struct sockaddr*)groupAddress, ifindex[i].if_name, add)) {
+         if(multicastGroupControlIF(sd, (struct sockaddr*)groupAddress, ifindex[i].if_name, add)) {
             LOG_VERBOSE4
             fputs("Succeeded\n", stdlog);
             LOG_END
@@ -1678,13 +1678,13 @@ bool joinOrLeaveMulticastGroup(int                         sd,
 
 
 /* ###### Send multicast message over each possible interface ############ */
-size_t sendMulticastOverAllInterfaces(int                    sd,
-                                      int                    family,
-                                      const void*            buffer,
-                                      const size_t           length,
-                                      const int              flags,
-                                      const struct sockaddr* to,
-                                      socklen_t              tolen)
+size_t sendmulticast(int                    sd,
+                     int                    family,
+                     const void*            buffer,
+                     const size_t           length,
+                     const int              flags,
+                     const struct sockaddr* to,
+                     socklen_t              tolen)
 {
    struct if_nameindex* ifindex;
    size_t               i;
@@ -1964,130 +1964,6 @@ int connectplus(int                   sockfd,
       result = -ENOMEM;
    }
    return(result);
-}
-
-
-/* ###### Create socket and establish connection ######################### */
-int establish(const int                socketDomain,
-              const int                socketType,
-              const int                socketProtocol,
-              union sockaddr_union*    addressArray,
-              const size_t             addresses,
-              const unsigned long long timeout)
-{
-   fd_set               fdset;
-   struct timeval       to;
-   struct sockaddr*     packedAddresses;
-   union sockaddr_union peerAddress;
-   socklen_t            peerAddressLen;
-   int                  result;
-   int                  sockfd;
-   size_t               i;
-
-   LOG_VERBOSE
-   fprintf(stdlog, "Trying to establish connection via socket(%d,%d,%d)\n",
-           socketDomain, socketType, socketProtocol);
-   LOG_END
-
-   sockfd = ext_socket(socketDomain, socketType, socketProtocol);
-   if(sockfd >= 0) {
-      setNonBlocking(sockfd);
-
-      LOG_VERBOSE2
-      fprintf(stdlog, "Trying to establish association from socket %d to address(es) {", sockfd);
-      for(i = 0;i < addresses;i++) {
-         fputaddress((struct sockaddr*)&addressArray[i], false, stdlog);
-         if(i + 1 < addresses) {
-            fputs(" ", stdlog);
-         }
-      }
-      fprintf(stdlog, "}, port %u...\n", getPort((struct sockaddr*)&addressArray[0]));
-      LOG_END
-
-      if(socketProtocol == IPPROTO_SCTP) {
-         packedAddresses = pack_sockaddr_union(addressArray, addresses);
-         if(packedAddresses) {
-#ifdef HAVE_CONNECTX_WITH_ID
-            result = sctp_connectx(sockfd, packedAddresses, addresses, NULL);
-#else
-            result = sctp_connectx(sockfd, packedAddresses, addresses);
-#endif
-            free(packedAddresses);
-         }
-         else {
-            errno = ENOMEM;
-            return(-1);
-         }
-      }
-      else {
-         if(addresses != 1) {
-            LOG_ERROR
-            fputs("Multiple addresses are only valid for SCTP\n", stdlog);
-            LOG_END
-            return(-1);
-         }
-         result = ext_connect(sockfd, (struct sockaddr*)&addressArray[0],
-                              getSocklen((struct sockaddr*)&addressArray[0]));
-      }
-      if( (((result < 0) && (errno == EINPROGRESS)) || (result >= 0)) ) {
-         FD_ZERO(&fdset);
-         FD_SET(sockfd, &fdset);
-         to.tv_sec  = timeout / 1000000;
-         to.tv_usec = timeout % 1000000;
-         LOG_VERBOSE2
-         fprintf(stdlog, "Waiting for association establishment with timeout %lld [us]...\n",
-                 ((unsigned long long)to.tv_sec * (unsigned long long)1000000) + (unsigned long long)to.tv_usec);
-         LOG_END
-         result = ext_select(sockfd + 1, NULL, &fdset, NULL, &to);
-         LOG_VERBOSE2
-         fprintf(stdlog, "result=%d\n", result);
-         LOG_END
-         if(result > 0) {
-            peerAddressLen = sizeof(peerAddress);
-            if(ext_getpeername(sockfd, (struct sockaddr*)&peerAddress, &peerAddressLen) >= 0) {
-               LOG_VERBOSE2
-               fputs("Successfully established connection to address(es) {", stdlog);
-               for(i = 0;i < addresses;i++) {
-                  fputaddress((struct sockaddr*)&addressArray[i], false, stdlog);
-                  if(i + 1 < addresses) {
-                     fputs(" ", stdlog);
-                  }
-               }
-               fprintf(stdlog, "}, port %u\n", getPort((struct sockaddr*)&addressArray[0]));
-               LOG_END
-               return(sockfd);
-            }
-            else {
-               LOG_VERBOSE2
-               logerror("peername");
-               fputs("Connection establishment to address(es) {", stdlog);
-               for(i = 0;i < addresses;i++) {
-                  fputaddress((struct sockaddr*)&addressArray[i], false, stdlog);
-                  if(i + 1 < addresses) {
-                     fputs(" ", stdlog);
-                  }
-               }
-               fprintf(stdlog, "}, port %u failed\n", getPort((struct sockaddr*)&addressArray[0]));
-               LOG_END
-            }
-         }
-         else {
-            LOG_VERBOSE2
-            fputs("select() call timed out\n", stdlog);
-            LOG_END
-         }
-      }
-
-      LOG_VERBOSE2
-      fputs("connect()/connectx() failed\n", stdlog);
-      LOG_END
-      ext_close(sockfd);
-   }
-
-   LOG_VERBOSE
-   fputs("Connection establishment failed\n", stdlog);
-   LOG_END
-   return(-1);
 }
 
 

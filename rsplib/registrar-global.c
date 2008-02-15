@@ -232,9 +232,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
 
       timerStart(&registrar->ENRPAnnounceTimer, getMicroTime() + registrar->MentorDiscoveryTimeout);
       if(registrar->ENRPAnnounceViaMulticast) {
-         if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
-                                      &registrar->ENRPMulticastAddress,
-                                      true) == false) {
+         if(multicastGroupControl(registrar->ENRPMulticastInputSocket,
+                                  &registrar->ENRPMulticastAddress,
+                                  true) == false) {
             LOG_WARNING
             fputs("Unable to join multicast group ", stdlog);
             fputaddress(&registrar->ENRPMulticastAddress.sa, true, stdlog);

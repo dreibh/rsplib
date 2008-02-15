@@ -44,9 +44,9 @@ void registrarHandleENRPAnnounceTimer(struct Dispatcher* dispatcher,
 
    /* ====== Send Presence as multicast announce ========================= */
    if(registrar->ENRPAnnounceViaMulticast) {
-      if(joinOrLeaveMulticastGroup(registrar->ENRPMulticastInputSocket,
-                                   &registrar->ENRPMulticastAddress,
-                                   true) == false) {
+      if(multicastGroupControl(registrar->ENRPMulticastInputSocket,
+                               &registrar->ENRPMulticastAddress,
+                               true) == false) {
          LOG_WARNING
          fputs("Unable to join multicast group ", stdlog);
          fputaddress(&registrar->ENRPMulticastAddress.sa, true, stdlog);
@@ -1112,7 +1112,7 @@ void registrarSendENRPPresence(struct Registrar*             registrar,
          messageLength = rserpoolMessage2Packet(message);
          if(messageLength > 0) {
             if(sd == registrar->ENRPMulticastOutputSocket) {
-               if(sendMulticastOverAllInterfaces(
+               if(sendmulticast(
                      registrar->ENRPMulticastOutputSocket,
                      registrar->ENRPMulticastOutputSocketFamily,
                      message->Buffer,

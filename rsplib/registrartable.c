@@ -242,9 +242,9 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
                return(false);
             }
 
-            if(!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                          &registrarTable->AnnounceAddress,
-                                          true)) {
+            if(!multicastGroupControl(registrarTable->AnnounceSocket,
+                                      &registrarTable->AnnounceAddress,
+                                      true)) {
                LOG_WARNING
                fputs("Joining multicast group ",  stdlog);
                fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
@@ -724,9 +724,9 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             LOG_END
 
             if( (registrarTable->AnnounceAddress.sa.sa_family != 0) &&
-                (!joinOrLeaveMulticastGroup(registrarTable->AnnounceSocket,
-                                            &registrarTable->AnnounceAddress,
-                                            true)) ) {
+                (!multicastGroupControl(registrarTable->AnnounceSocket,
+                                        &registrarTable->AnnounceAddress,
+                                        true)) ) {
                LOG_WARNING
                fputs("Joining multicast group ",  stdlog);
                fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);

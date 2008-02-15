@@ -397,9 +397,9 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID);
   * @param address Address of multicast group to join/leave.
   * @param add true to join/false to leave multicast group.
   */
-bool joinOrLeaveMulticastGroup(int                         sd,
-                               const union sockaddr_union* groupAddress,
-                               const bool                  add);
+bool multicastGroupControl(int                         sd,
+                           const union sockaddr_union* groupAddress,
+                           const bool                  add);
 
 /**
   * Send multicast message over each possible interface.
@@ -412,13 +412,13 @@ bool joinOrLeaveMulticastGroup(int                         sd,
   * @param to Destination address or NULL for connection-oriented socket.
   * @param tolen Length of destination address or 0 if not given.
   */
-size_t sendMulticastOverAllInterfaces(int                    sockfd,
-                                      int                    family,
-                                      const void*            buffer,
-                                      const size_t           length,
-                                      const int              flags,
-                                      const struct sockaddr* to,
-                                      socklen_t              tolen);
+size_t sendmulticast(int                    sockfd,
+                     int                    family,
+                     const void*            buffer,
+                     const size_t           length,
+                     const int              flags,
+                     const struct sockaddr* to,
+                     socklen_t              tolen);
 
 /**
   * Set address and port reuse on socket on or off.
@@ -428,20 +428,6 @@ size_t sendMulticastOverAllInterfaces(int                    sockfd,
   * @return true for success; false otherwise.
   */
 bool setReusable(int sd, int on);
-
-/**
-  * Create socket and establish connection to a given peer.
-  * A connection establishment is tried on all given peer
-  * addresses in parallel. The first sucessfully established
-  * connection socket descriptor is returned. All other
-  * connections are aborted.
-  */
-int establish(const int             socketDomain,
-              const int             socketType,
-              const int             socketProtocol,
-              union sockaddr_union* addressArray,
-              const size_t          addresses,
-              const unsigned long long          timeout);
 
 
 #define TAG_TuneSCTP_MinRTO      (TAG_USER + 15000)

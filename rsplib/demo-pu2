@@ -1,2 +1,0 @@
-#!/bin/sh
-fractalexample/fractalpooluser -logcolor=off -loglevel=6 -logfile=pu2.log -cspreportinterval=222 -cspreportaddress=127.0.0.1:2960 -identifier=2 $@

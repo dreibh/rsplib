@@ -49,7 +49,7 @@ void registrarHandleASAPAnnounceTimer(struct Dispatcher* dispatcher,
       message->RegistrarIdentifier = registrar->ServerID;
       messageLength = rserpoolMessage2Packet(message);
       if(messageLength > 0) {
-         if(sendMulticastOverAllInterfaces(
+         if(sendmulticast(
                registrar->ASAPAnnounceSocket,
                registrar->ASAPAnnounceSocketFamily,
                message->Buffer,

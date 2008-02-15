@@ -1,2 +1,0 @@
-#!/bin/sh
-./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto -maxbadpereports=99999999 -logcolor=on -loglevel=4 -logfile=ns1.log -cspreportinterval=333 -cspreportaddress=127.0.0.1:2960 -identifier=65536 $@

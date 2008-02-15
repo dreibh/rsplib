@@ -1,6 +1,7 @@
 #include "rserpoolmessage.h"
 #include "netutilities.h"
 #include "loglevel.h"
+#include "t7.h"
 
 
 struct RSerPoolMessage* message;
@@ -122,35 +123,39 @@ void addGenericParameter(uint16_t type, char* data)
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
 
-void addRoundRobinParameter()
+rserpool_tlv_header* addRoundRobinParameter()
 {
    rserpool_tlv_header* tlv = beginTLV(ATT_POOL_POLICY);
    rserpool_policy_roundrobin* rr = (rserpool_policy_roundrobin*)get(sizeof(rserpool_policy_roundrobin));
    rr->pp_rr_policy = PPT_ROUNDROBIN;;
    endTLV(tlv);
+   return(tlv);
 }
 
-void addAddressParameter(char* addr)
+rserpool_tlv_header* addAddressParameter(char* addr)
 {
-   sockaddr_union a;
+   rserpool_tlv_header* tlv;
+   sockaddr_union       a;
    CHECK(string2address(addr, &a));
 
    if(a.sa.sa_family == AF_INET) {
-      rserpool_tlv_header* tlv = beginTLV(ATT_IPv4_ADDRESS);
+      tlv = beginTLV(ATT_IPv4_ADDRESS);
       char* buf = get(4);
       memcpy(buf, &a.in.sin_addr.s_addr, 4);
       endTLV(tlv);
    }
    else if(a.sa.sa_family == AF_INET6) {
-      rserpool_tlv_header* tlv = beginTLV(ATT_IPv6_ADDRESS);
+      tlv = beginTLV(ATT_IPv6_ADDRESS);
       char* buf = get(16);
       memcpy(buf, &a.in6.sin6_addr.s6_addr32, 16);
       endTLV(tlv);
    }
    else { CHECK(false); }
+
+   return(tlv);
 }
 
-void addSCTPTransportParameter(uint16_t port, uint16_t use, char* a1, char* a2, char* a3)
+rserpool_tlv_header*  addSCTPTransportParameter(uint16_t port, uint16_t use, char* a1, char* a2, char* a3)
 {
    rserpool_tlv_header* tlv = beginTLV(ATT_SCTP_TRANSPORT);
    rserpool_sctptransportparameter* sctptp = (rserpool_sctptransportparameter*)get(sizeof(rserpool_sctptransportparameter));
@@ -160,9 +165,10 @@ void addSCTPTransportParameter(uint16_t port, uint16_t use, char* a1, char* a2, 
    if(a2) addAddressParameter(a2);
    if(a3) addAddressParameter(a3);
    endTLV(tlv);
+   return(tlv);
 }
 
-void addPoolElementParameter(uint32_t peId, uint32_t homePRID)
+rserpool_tlv_header*  addPoolElementParameter(uint32_t peId, uint32_t homePRID)
 {
    rserpool_tlv_header* tlv = beginTLV(ATT_POOL_ELEMENT);
    rserpool_poolelementparameter* pep = (rserpool_poolelementparameter*)get(sizeof(rserpool_poolelementparameter));
@@ -175,6 +181,7 @@ void addPoolElementParameter(uint32_t peId, uint32_t homePRID)
 //    addSCTPTransportParameter(1234, UTP_DATA_ONLY, "127.0.0.1:9999", NULL, NULL);
 
    endTLV(tlv);
+   return(tlv);
 }
 
 
