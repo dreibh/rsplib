@@ -104,7 +104,8 @@ get-all-good-hosts ()
 # HOSTSFILEMIDDLE="essen"
 # test-hosts
 
-IN_HOSTS="`grep ".de$" all-planetlab.hosts` `grep ".at$" all-planetlab.hosts` `grep ".ch$" all-planetlab.hosts` `grep ".fr$" all-planetlab.hosts` `grep ".be$" all-planetlab.hosts` `grep ".nl$" all-planetlab.hosts` `grep ".pl$" all-planetlab.hosts` `grep ".cz$" all-planetlab.hosts` `grep ".dk$" all-planetlab.hosts` `grep ".se$" all-planetlab.hosts` `grep ".fi$" all-planetlab.hosts` `grep ".uk$" all-planetlab.hosts` `grep ".no$" all-planetlab.hosts` `grep ".it$" all-planetlab.hosts` `grep ".es$" all-planetlab.hosts` `grep ".pt$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
+#  `grep ".at$" all-planetlab.hosts` `grep ".ch$" all-planetlab.hosts` `grep ".fr$" all-planetlab.hosts` `grep ".be$" all-planetlab.hosts` `grep ".nl$" all-planetlab.hosts` `grep ".pl$" all-planetlab.hosts` `grep ".cz$" all-planetlab.hosts` `grep ".dk$" all-planetlab.hosts` `grep ".se$" all-planetlab.hosts` `grep ".fi$" all-planetlab.hosts` `grep ".uk$" all-planetlab.hosts` `grep ".no$" all-planetlab.hosts` `grep ".it$" all-planetlab.hosts` `grep ".es$" all-planetlab.hosts` `grep ".pt$" all-planetlab.hosts`"
 HOSTSFILEMIDDLE="europe"
 test-hosts
 
