@@ -1,4 +1,297 @@
 ------------------------------------------------------------------------
+r1746 | dreibh | 2008-02-21 20:45:10 +0100 (Thu, 21 Feb 2008) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+- Scripting service update. Removed umask().
+- Version change.
+
+------------------------------------------------------------------------
+r1745 | dreibh | 2008-02-15 12:14:39 +0100 (Fri, 15 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/create-hosts-files
+   M /trunk/rsplib2/rsplib/planetlab.hosts
+
+
+------------------------------------------------------------------------
+r1744 | dreibh | 2008-02-15 09:51:50 +0100 (Fri, 15 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/TODO
+   D /trunk/rsplib2/rsplib/demo-ns1
+   D /trunk/rsplib2/rsplib/demo-ns2
+   D /trunk/rsplib2/rsplib/demo-pe1
+   D /trunk/rsplib2/rsplib/demo-pe2
+   D /trunk/rsplib2/rsplib/demo-pu1
+   D /trunk/rsplib2/rsplib/demo-pu2
+   M /trunk/rsplib2/rsplib/do-clearall
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/netutilities.h
+   D /trunk/rsplib2/rsplib/p1
+   D /trunk/rsplib2/rsplib/p2
+   D /trunk/rsplib2/rsplib/r1
+   D /trunk/rsplib2/rsplib/r2
+   D /trunk/rsplib2/rsplib/r3
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+   M /trunk/rsplib2/rsplib/registrar-global.c
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/t7.cc
+   A /trunk/rsplib2/rsplib/t7.h
+   D /trunk/rsplib2/rsplib/u1
+
+netutilities.c cleanups.
+
+------------------------------------------------------------------------
+r1743 | dreibh | 2008-02-14 18:22:44 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/all-planetlab.hosts
+
+
+------------------------------------------------------------------------
+r1742 | dreibh | 2008-02-14 18:15:25 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/testregistrator.c
+
+printf format string fix (added cast).
+
+------------------------------------------------------------------------
+r1741 | dreibh | 2008-02-14 18:12:54 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fdcallback.c
+   M /trunk/rsplib2/rsplib/hrestest.c
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/terminal.c
+   M /trunk/rsplib2/rsplib/testregistrator.c
+
+Added casts to get rid of C++ under FreeBSD warnings.
+
+------------------------------------------------------------------------
+r1740 | dreibh | 2008-02-14 18:04:44 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/poolnode-template_impl.h
+
+
+------------------------------------------------------------------------
+r1739 | dreibh | 2008-02-14 18:01:53 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/dispatcher.c
+
+
+------------------------------------------------------------------------
+r1738 | dreibh | 2008-02-14 17:54:22 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.h
+
+
+------------------------------------------------------------------------
+r1737 | dreibh | 2008-02-14 17:51:05 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.h
+
+
+------------------------------------------------------------------------
+r1736 | dreibh | 2008-02-14 17:48:50 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+
+
+------------------------------------------------------------------------
+r1735 | dreibh | 2008-02-14 17:23:42 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+
+------------------------------------------------------------------------
+r1734 | dreibh | 2008-02-14 17:04:29 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/t7.cc
+
+
+------------------------------------------------------------------------
+r1733 | dreibh | 2008-02-14 16:28:10 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/registrar-core.c
+   M /trunk/rsplib2/rsplib/rserpoolerror.c
+   M /trunk/rsplib2/rsplib/rserpoolerror.h
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.h
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+   M /trunk/rsplib2/rsplib/rsputilities.c
+   A /trunk/rsplib2/rsplib/t7.cc
+
+More usful error numbers when parsing messages.
+
+------------------------------------------------------------------------
+r1732 | dreibh | 2008-02-14 13:14:23 +0100 (Thu, 14 Feb 2008) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.h
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rsputilities.c
+
+- Added default ports.
+- Setting announce multicast address in rserpool.h.
+
+------------------------------------------------------------------------
+r1731 | dreibh | 2008-02-14 12:07:17 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/calcapppackets.h
+   M /trunk/rsplib2/rsplib/componentstatuspackets.h
+   M /trunk/rsplib2/rsplib/fractalgeneratorpackets.h
+   M /trunk/rsplib2/rsplib/pingpongpackets.h
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+
+Got rid of #pragmas for alignment.
+
+------------------------------------------------------------------------
+r1730 | dreibh | 2008-02-14 11:53:34 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/ext_socket.h
+   M /trunk/rsplib2/rsplib/registrar-global.c
+
+Updated SCTP_DELAYED_SACK tuning to latest draft.
+
+------------------------------------------------------------------------
+r1728 | dreibh | 2008-02-14 11:33:57 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+Fix for Server Announce. Now handing Transport Parameters correctly.
+
+------------------------------------------------------------------------
+r1727 | dreibh | 2008-02-14 11:27:26 +0100 (Thu, 14 Feb 2008) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrar-core.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.h
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+- Error handling improvements.
+- Fix for Server Announce.
+
+------------------------------------------------------------------------
+r1726 | dreibh | 2008-02-14 10:56:55 +0100 (Thu, 14 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/breakdetector.c
+   M /trunk/rsplib2/rsplib/calcappclient.cc
+   M /trunk/rsplib2/rsplib/calcappservice.cc
+   M /trunk/rsplib2/rsplib/componentstatuspackets.h
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+   M /trunk/rsplib2/rsplib/dispatcher.c
+   M /trunk/rsplib2/rsplib/exectime.cc
+   M /trunk/rsplib2/rsplib/fork.c
+   M /trunk/rsplib2/rsplib/fractalgeneratorpackets.h
+   M /trunk/rsplib2/rsplib/gettimestamp.c
+   M /trunk/rsplib2/rsplib/hrestest.c
+   M /trunk/rsplib2/rsplib/identifierbitmap.c
+   M /trunk/rsplib2/rsplib/loglevel.c
+   M /trunk/rsplib2/rsplib/loglevel.h
+   M /trunk/rsplib2/rsplib/netdouble.h
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/pingpongclient.c
+   M /trunk/rsplib2/rsplib/pingpongpackets.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement.h
+   M /trunk/rsplib2/rsplib/randomizer.c
+   M /trunk/rsplib2/rsplib/randomizer.h
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/subnetcalc.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tdtypes.h
+   M /trunk/rsplib2/rsplib/terminal.c
+   M /trunk/rsplib2/rsplib/testregistrator.c
+   M /trunk/rsplib2/rsplib/threadsafety.c
+   M /trunk/rsplib2/rsplib/timestamphashtable.h
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+stdint.h include cleanup -> moved to tdtypes.h.
+
+------------------------------------------------------------------------
+r1725 | dreibh | 2008-02-14 10:05:41 +0100 (Thu, 14 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+
+------------------------------------------------------------------------
+r1724 | dreibh | 2008-02-13 17:37:54 +0100 (Wed, 13 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/loglevel.h
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/testregistrator.c
+
+Added cast to compile with g++.
+
+------------------------------------------------------------------------
+r1723 | dreibh | 2008-02-13 17:09:23 +0100 (Wed, 13 Feb 2008) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/testregistrator.c
+
+- Log message fix.
+- Update of testregistrator.
+
+------------------------------------------------------------------------
+r1722 | dreibh | 2008-02-13 16:21:29 +0100 (Wed, 13 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+Fixed cast for printf.
+
+------------------------------------------------------------------------
+r1721 | dreibh | 2008-02-13 16:18:51 +0100 (Wed, 13 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+Handle error of PR-ID=0 in PoolElementParameters.
+
+------------------------------------------------------------------------
+r1720 | dreibh | 2008-02-13 12:57:55 +0100 (Wed, 13 Feb 2008) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+
+Fix: Send IPv4 instead of mapped IPv6 in Presences.
+
+------------------------------------------------------------------------
+r1719 | dreibh | 2008-02-13 11:04:53 +0100 (Wed, 13 Feb 2008) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/deb-install
+   M /trunk/rsplib2/deb-uninstall
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   D /trunk/rsplib2/debian/rsplib-calcappservice.install
+   D /trunk/rsplib2/debian/rsplib-calcappservice.manpages
+   D /trunk/rsplib2/debian/rsplib-fgpservice.install
+   D /trunk/rsplib2/debian/rsplib-fgpservice.manpages
+   D /trunk/rsplib2/debian/rsplib-pingpongservice.install
+   D /trunk/rsplib2/debian/rsplib-pingpongservice.manpages
+   D /trunk/rsplib2/debian/rsplib-scriptingservice.install
+   D /trunk/rsplib2/debian/rsplib-scriptingservice.manpages
+   A /trunk/rsplib2/debian/rsplib-services.install
+   A /trunk/rsplib2/debian/rsplib-services.manpages
+   M /trunk/rsplib2/rsplib/asapinstance.h
+   M /trunk/rsplib2/rsplib/registrar.c
+
+
+------------------------------------------------------------------------
 r1718 | dreibh | 2008-02-12 15:18:12 +0100 (Tue, 12 Feb 2008) | 1 line
 Changed paths:
    M /trunk/rsplib2/ChangeLog
