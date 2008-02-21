@@ -1,3 +1,11 @@
+rsplib (2.4.0-1) unstable; urgency=low
+
+  * Scripting service update.
+  * Release version 2.4.0.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 23 Feb 2008 19:04:05 +0200
+
+
 rsplib (2.4.0~beta4-2) unstable; urgency=low
 
   * Debian update: joined services packages.
