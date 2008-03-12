@@ -16,7 +16,7 @@ else
 fi
 
 if [ -e /usr/local/share/aclocal ] ; then
-   aclocal -I /usr/local/share/aclocal -I /usr/share/aclocal
+   aclocal -I /usr/local/share/aclocal
 else
    aclocal -I /usr/share/aclocal
 fi
