@@ -338,7 +338,6 @@ csu2.6planetlab.edu.cn
 planetlab1.mnlab.cti.depaul.edu
 planetlab-dsl-1.ucsd.edu
 planetlab1.cs.unc.edu
-planetlab2.cs.unc.edu
 thu1.6planetlab.edu.cn
 thu2.6planetlab.edu.cn
 planetlab2.iitr.ernet.in
@@ -541,7 +540,6 @@ csplanet2.ncat.edu
 planet01.hhi.fraunhofer.de
 planet02.hhi.fraunhofer.de
 planetlab1.ci.pwr.wroc.pl
-planetlab1.larc.usp.br
 planetlab2.larc.usp.br
 planetlab-1.vuse.vanderbilt.edu
 planetlab-2.vuse.vanderbilt.edu
@@ -640,7 +638,6 @@ deimos.cecalc.ula.ve
 planetlab3.ie.cuhk.edu.hk
 planetlab4.ie.cuhk.edu.hk
 planetlab5.ie.cuhk.edu.hk
-planetlab1.muraoka.info.waseda.ac.jp
 planetlab2.muraoka.info.waseda.ac.jp
 planetlab-2.fokus.fraunhofer.de
 planetlab-1.fokus.fraunhofer.de
@@ -804,9 +801,18 @@ earth.cs.brown.edu
 planetlab3.upc.es
 planetlab2.upc.es
 planetlab1.upc.es
-plane-lab-pb1.uni-paderborn.de
-plane-lab-pb2.uni-paderborn.de
 planetlabone.ccs.neu.edu
 planetlabtwo.ccs.neu.edu
 planetlab1.science.unitn.it
 planetlab2.science.unitn.it
+plane-lab-pb2.uni-paderborn.de
+planet-lab1.ufabc.edu.br
+planet-lab2.ufabc.edu.br
+planetlab1.muraoka.info.waseda.ac.jp
+planetlab2.cs.unc.edu
+planetlab1.larc.usp.br
+hptest-1.cs.princeton.edu
+host4-plb.loria.fr
+plane-lab-pb1.uni-paderborn.de
+pl1.rennes.supelec.fr
+pl2.rennes.supelec.fr

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+# Copyright (C) 2005-2008 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
 # $Id$
 #
@@ -42,6 +42,9 @@ while [ x$1 != "x" ] ; do \
          showhosts=1
       elif [ "x$1" = "x-showoutput" ] ; then
          SERVER_TEST_OUTPUT=/dev/stderr
+      elif [ "x$1" = "x-timeout" ] ; then
+         SERVER_TEST_TIMEOUT=$2
+         shift
       else
          echo "ERROR: Bad parameter $1"
          exit 1
@@ -59,7 +62,7 @@ for SERVER in $SERVER_LIST; do
    if [ $showhosts = 1 ] ; then
       echo "# Testing $SERVER ..."
    fi
-   ./execalarm $SERVER_TEST_TIMEOUT "ssh -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER \"$SERVER_TEST && echo \\\"$SERVER is ready!\\\"\"" 1>$SERVER_TEST_OUTPUT 2>$SERVER_TEST_OUTPUT
+   ./execalarm $SERVER_TEST_TIMEOUT "ssh -C -i $PLANETLAB_KEY -oConnectTimeout=60 -oStrictHostKeyChecking=no -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER \"$SERVER_TEST && echo \\\"$SERVER is ready!\\\"\"" 1>$SERVER_TEST_OUTPUT 2>$SERVER_TEST_OUTPUT
    result=$?
    if [ $result -eq 0 ]  ; then
       isgood=1

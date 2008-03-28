@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+# Copyright (C) 2005-2008 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
 # $Id$
 #
@@ -28,6 +28,8 @@ MAX_GOOD=999
 PUs=15
 PEs=6
 PRs=1
+
+GET_ALL_MAX_PARALLEL=64
 
 
 
@@ -89,12 +91,27 @@ get-all-good-hosts ()
 {
    echo "# Hosts list created on `date`" >$OUT_HOSTS
    hosts=`echo $IN_HOSTS | xargs -n1 echo | sort -u`
+   count=0
    for host in $hosts ; do
       echo "Trying $host ..."
-      result=`./filter-hosts $host`
+      ./filter-hosts -timeout $SERVER_TEST_TIMEOUT $host >try-$host.tmp &
+
+      let count=$count+1
+      if [ $count -ge $GET_ALL_MAX_PARALLEL ] ; then
+         echo "Waiting for results ..."
+         wait
+         count=0
+      fi
+   done
+   echo "Waiting for results ..."
+   wait
+
+   for host in $hosts ; do
+      result=`cat try-$host.tmp`
       if [ "x$result" != "x" ] ; then
          echo $result >>$OUT_HOSTS
       fi
+      #rm -f try-$host.tmp
    done
 }
 
@@ -131,7 +148,7 @@ test-hosts
 
 echo "Testing *all* nodes sequentially. This will take a long time ..."
 . ./planetlab-config
-IN_HOSTS="`cat all-planetlab.hosts`"
+IN_HOSTS="`cat all-planetlab.hosts`"     #  | grep ".de$"
 OUT_HOSTS=good-planetlab.hosts
-let SERVER_TEST_TIMEOUT=100*$SERVER_TEST_TIMEOUT
+let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
 get-all-good-hosts
