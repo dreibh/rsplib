@@ -460,7 +460,7 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
    else {
       LOG_ERROR
       fprintf(stdlog, "Assoc %u peel-off failed: %s\n", assocID, strerror(errno));
-      LOG_END_FATAL
+      LOG_END
       sendabort(registrarHuntFD, assocID);
    }
    /* In any case, the registrar association is broken -> remove it. */
@@ -820,7 +820,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                   else {
                      LOG_ERROR
                      fputs("Peeked notification but failed to read it\n", stdlog);
-                     LOG_END_FATAL
+                     LOG_END
                   }
 
                   /* ====== Is there a connection to a registrar? ======== */

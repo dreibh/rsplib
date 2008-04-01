@@ -28,7 +28,7 @@ PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planet5.cs.huji.ac
 PLANETLAB_YUMOPTS="--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate"
 
-DISTNAME="rsplib-2.4.0~beta4"
+DISTNAME="rsplib-2.4.0"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
 DISTPRGS="registrar server calcappclient hsdump rootshell"
