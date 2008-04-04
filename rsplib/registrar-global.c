@@ -262,7 +262,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       }
 #endif
 
-      if(registrar->StatsFile) {
+      if(registrar->StatsInterval > 0) {
          timerNew(&registrar->StatsTimer,
                   &registrar->StateMachine,
                   statisticsCallback,
