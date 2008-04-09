@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./server -scripting -maxthreads=2 -cspmonitor=132.252.151.151:2960 -cspinterval=1000 -policy=LeastUsedDegradation:0.25
