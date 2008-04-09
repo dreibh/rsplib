@@ -80,6 +80,7 @@ static unsigned int performUpload(int sd)
 
    FILE* fh = fopen(InputName, "r");
    if(fh == NULL) {
+      printTimeStamp(stderr);
       fprintf(stderr, "ERROR: Unable to open input file \"%s\"!\n", InputName);
       exit(1);
    }
@@ -102,6 +103,7 @@ static unsigned int performUpload(int sd)
          }
       }
       else {
+         printTimeStamp(stderr);
          fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", InputName);
          exit(1);
       }
@@ -126,12 +128,14 @@ static unsigned int handleStatus(const struct Status* status,
             printf("Trying again (Trial %u of %u) ...\n", Trial, MaxRetry);
             return(SSCR_FAILOVER);
          }
+         printTimeStamp(stderr);
          fputs("Maximum number of Trials reached -> check your input and the results!\n", stderr);
          fputs("Trying to download the results file for debugging ...", stderr);
       }
       return(SSCR_OKAY);
    }
    else {
+      printTimeStamp(stderr);
       fputs("Invalid Status message!\n", stderr);
       return(SSCR_FAILOVER);
    }
@@ -170,6 +174,7 @@ static unsigned int handleDownload(const struct Download* download,
       puts("Downloading ...");
       OutputFile = fopen(OutputName, "w");
       if(OutputFile == NULL) {
+         printTimeStamp(stderr);
          fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", OutputName);
          exit(1);
       }
@@ -179,6 +184,7 @@ static unsigned int handleDownload(const struct Download* download,
    dataLength = length - sizeof(struct ScriptingCommonHeader);
    if(dataLength > 0) {
       if(fwrite(&download->Data, dataLength, 1, OutputFile) != 1) {
+         printTimeStamp(stderr);
          fprintf(stderr, "ERROR: Writing to output file failed!\n");
          fclose(OutputFile);
          exit(1);
@@ -206,6 +212,7 @@ static unsigned int handleMessage(int                                 sd,
    /* ====== Check message header ======================================== */
    if( (ppid != PPID_SP) ||
        (length < sizeof(struct ScriptingCommonHeader)) ) {
+      printTimeStamp(stderr);
       fputs("Received invalid message!\n", stderr);
       return(SSCR_FAILOVER);
    }
@@ -257,7 +264,9 @@ static unsigned int handleMessage(int                                 sd,
 
 
    /* ====== Unexpected message ========================================== */
-   fprintf(stderr, "Unexpected message $%02x in status #%u\n", header->Type, Status);
+   printTimeStamp(stderr);
+   fprintf(stderr, "Unexpected message $%02x in status #%u (length=%u, ppid=$%08x)\n",
+           header->Type, Status, (unsigned int)length, ppid);
    return(SSCR_FAILOVER);
 }
 
