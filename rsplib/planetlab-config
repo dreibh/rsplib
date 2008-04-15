@@ -24,18 +24,18 @@
 
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab2.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
+PLANETLAB_COMPILEHOST="planetlab1.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
-PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate"
+PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind"
 
 DISTNAME="rsplib-2.4.0"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
-DISTPRGS="registrar server calcappclient hsdump rootshell"
+DISTPRGS="rootshell registrar server calcappclient hsdump"
 KILLALLMISC="perftool bzip2 gzip tar yum /usr/bin/python /usr/bin/yum"
 DISTSTRIP=0
 DISTMISC=""
-SUIDPRGS="registrar server calcappclient hsdump rootshell"
+SUIDPRGS=" rootshell"   # "registrar server calcappclient hsdump"
 
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000"
 

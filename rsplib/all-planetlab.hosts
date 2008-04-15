@@ -243,8 +243,6 @@ irabonnie.iralab.uni-karlsruhe.de
 iraclyde.iralab.uni-karlsruhe.de
 plab1.cs.ust.hk
 plab2.cs.ust.hk
-planetlab1.cs.uit.no
-planetlab2.cs.uit.no
 planetlab1.eecs.northwestern.edu
 planetlab2.eecs.northwestern.edu
 planetlab1.poly.edu
@@ -639,8 +637,6 @@ planetlab3.ie.cuhk.edu.hk
 planetlab4.ie.cuhk.edu.hk
 planetlab5.ie.cuhk.edu.hk
 planetlab2.muraoka.info.waseda.ac.jp
-planetlab-2.fokus.fraunhofer.de
-planetlab-1.fokus.fraunhofer.de
 planetlab1.fct.ualg.pt
 planetlab2.fct.ualg.pt
 adam.ee.ntu.edu.tw
@@ -771,7 +767,6 @@ onelab3.warsaw.rd.tp.pl
 planetlab1.williams.edu
 planetlab2.williams.edu
 planetlab3.williams.edu
-planetlab-13.cs.princeton.edu
 planetlab-15.cs.princeton.edu
 planetlab2.it.uc3m.es
 pllab1.kamgu.ru
@@ -816,3 +811,14 @@ host4-plb.loria.fr
 plane-lab-pb1.uni-paderborn.de
 pl1.rennes.supelec.fr
 pl2.rennes.supelec.fr
+mtuplanetlab1.cs.mtu.edu
+planetlab3.ani.univie.ac.at
+planetlab4.ani.univie.ac.at
+planetlab1.cs.uit.no
+planetlab2.cs.uit.no
+planetlab1.pjwstk.edu.pl
+planetlab2.pjwstk.edu.pl
+planetlab-1.fokus.fraunhofer.de
+onelab09.inria.fr
+onelab10.inria.fr
+onelab11.inria.fr
