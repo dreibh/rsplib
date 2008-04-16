@@ -533,11 +533,11 @@ void registrarHandleENRPListResponse(struct Registrar*       registrar,
 
                   /* ====== New peer -> Send Peer Presence =============== */
                   registrarSendENRPPresence(registrar,
-                                   registrar->ENRPUnicastSocket, 0, 0,
-                                   newPeerListNode->AddressBlock->AddressArray,
-                                   newPeerListNode->AddressBlock->Addresses,
-                                   newPeerListNode->Identifier,
-                                   false);
+                                            registrar->ENRPUnicastSocket, 0, 0,
+                                            newPeerListNode->AddressBlock->AddressArray,
+                                            newPeerListNode->AddressBlock->Addresses,
+                                            newPeerListNode->Identifier,
+                                            false);
                }
             }
             else {
@@ -860,7 +860,7 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
       fputs(" at address ", stdlog);
       transportAddressBlockPrint(message->PeerListNodePtr->AddressBlock, stdlog);
    }
-   fputs("\n", stdlog);
+   fprintf(stdlog, " (via %d/%u)\n", fd, (unsigned int)assocID);
    LOG_END
 
 
@@ -945,33 +945,34 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
                                       true);
          }
 
-         /* ====== Mentor query ========================================== */
-         if( (registrar->InStartupPhase) &&
-             (registrar->MentorServerID == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
-            LOG_ACTION
-            fputs("Trying ", stdlog);
-            ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-            fputs(" as mentor server...\n", stdlog);
-            LOG_END
-            peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
-            registrar->MentorServerID = peerListNode->Identifier;
-            registrarSendENRPListRequest(registrar,
-                                         registrar->ENRPUnicastSocket,
-                                         0, 0,
-                                         peerListNode->AddressBlock->AddressArray,
-                                         peerListNode->AddressBlock->Addresses,
-                                         peerListNode->Identifier);
-            registrarSendENRPHandleTableRequest(registrar,
-                                                registrar->ENRPUnicastSocket,
-                                                0, 0,
-                                                peerListNode->AddressBlock->AddressArray,
-                                                peerListNode->AddressBlock->Addresses,
-                                                peerListNode->Identifier,
-                                                0x00);
-         }
+         /* ====== There is an association with that peer ================ */
+         else {
+            /* ====== Mentor query ======================================= */
+            if( (registrar->InStartupPhase) &&
+                (registrar->MentorServerID == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
+               LOG_ACTION
+               fputs("Trying ", stdlog);
+               ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+               fputs(" as mentor server...\n", stdlog);
+               LOG_END
+               peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
+               registrar->MentorServerID = peerListNode->Identifier;
+               registrarSendENRPListRequest(registrar,
+                                            registrar->ENRPUnicastSocket,
+                                            0, 0,
+                                            peerListNode->AddressBlock->AddressArray,
+                                            peerListNode->AddressBlock->Addresses,
+                                            peerListNode->Identifier);
+               registrarSendENRPHandleTableRequest(registrar,
+                                                   registrar->ENRPUnicastSocket,
+                                                   0, 0,
+                                                   peerListNode->AddressBlock->AddressArray,
+                                                   peerListNode->AddressBlock->Addresses,
+                                                   peerListNode->Identifier,
+                                                   0x00);
+            }
 
-         /* ====== Check if synchronization is necessary ================= */
-         if(assocID != 0) {
+            /* ====== Check if synchronization is necessary ============== */
             if(!(peerListNode->Status & PLNS_HTSYNC)) {
                /* Attention: We only synchronize on SCTP-received Presence messages! */
                checksum = ST_CLASS(peerListNodeGetOwnershipChecksum)(

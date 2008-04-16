@@ -184,7 +184,7 @@ void ST_CLASS(peerListNodeGetDescription)(
             peerListNode->Identifier,
             peerListNode->LastUpdateTimeStamp,
             (unsigned int)handlespaceChecksumFinish(peerListNode->OwnershipChecksum));
-   if(peerListNode->Flags & PENF_NEW) {
+   if(peerListNode->Flags & PLNF_NEW) {
       safestrcat(buffer, "[new]", bufferSize);
    }
    if(!(peerListNode->Flags & PLNF_DYNAMIC)) {
