@@ -37,6 +37,7 @@
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
 .Nm registrar
+.Op Fl announcettl=TTL
 .Op Fl asap=auto|address:port,address,...
 .Op Fl asapannounce=auto|address:port
 .Op Fl autoclosetimeout=seconds
@@ -98,6 +99,8 @@ The following options are available:
 .Bl -tag -width indent
 .It Fl quiet
 Do not print startup and shutdown messages.
+.It Fl announcettl=TTL
+Sets the TTL for outgoing ASAP Announce/ENRP Presence messages via multicast.
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent

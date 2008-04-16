@@ -72,6 +72,7 @@
 #define REGISTRAR_DEFAULT_MENTOR_DISCOVERY_TIMEOUT                    5000000
 #define REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
 #define REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT                         300000000
+#define REGISTRAR_DEFAULT_ANNOUNCE_TTL                                     30
 
 
 struct Registrar
@@ -109,6 +110,7 @@ struct Registrar
    bool                                       InStartupPhase;
    RegistrarIdentifierType                    MentorServerID;
 
+   int                                        AnnounceTTL;
    size_t                                     DistanceStep;
    size_t                                     MaxBadPEReports;
    unsigned long long                         AutoCloseTimeout;

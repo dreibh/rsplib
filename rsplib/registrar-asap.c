@@ -56,7 +56,8 @@ void registrarHandleASAPAnnounceTimer(struct Dispatcher* dispatcher,
                messageLength,
                0,
                (struct sockaddr*)&registrar->ASAPAnnounceAddress,
-               getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress)) <= 0) {
+               getSocklen((struct sockaddr*)&registrar->ASAPAnnounceAddress),
+               registrar->AnnounceTTL) <= 0) {
             LOG_WARNING
             logerror("Unable to send announce");
             LOG_END

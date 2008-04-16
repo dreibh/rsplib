@@ -156,6 +156,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->PeerHeartbeatCycle                    = REGISTRAR_DEFAULT_PEER_HEARTBEAT_CYCLE;
       registrar->MentorDiscoveryTimeout                = REGISTRAR_DEFAULT_MENTOR_DISCOVERY_TIMEOUT;
       registrar->TakeoverExpiryInterval                = REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
+      registrar->AnnounceTTL                           = REGISTRAR_DEFAULT_ANNOUNCE_TTL;
 
       registrar->StatsFile             = statsFile;
       registrar->StatsInterval         = statsInterval;

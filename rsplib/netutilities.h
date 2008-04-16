@@ -411,6 +411,7 @@ bool multicastGroupControl(int                         sd,
   * @param flags sendmsg() flags.
   * @param to Destination address or NULL for connection-oriented socket.
   * @param tolen Length of destination address or 0 if not given.
+  * @param ttl TTL for the multicast packet.
   */
 size_t sendmulticast(int                    sockfd,
                      int                    family,
@@ -418,7 +419,8 @@ size_t sendmulticast(int                    sockfd,
                      const size_t           length,
                      const int              flags,
                      const struct sockaddr* to,
-                     socklen_t              tolen);
+                     socklen_t              tolen,
+                     int                    ttl);
 
 /**
   * Set address and port reuse on socket on or off.

@@ -638,6 +638,15 @@ int main(int argc, char** argv)
             registrar->TakeoverExpiryInterval = 60000000;
          }
       }
+      else if(!(strncmp(argv[i], "-announcettl=", 13))) {
+         registrar->AnnounceTTL = atol((char*)&argv[i][13]);
+         if(registrar->AnnounceTTL < 1) {
+            registrar->AnnounceTTL = 1;
+         }
+         else if(registrar->AnnounceTTL > 255) {
+            registrar->AnnounceTTL = 255;
+         }
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -670,6 +679,7 @@ int main(int argc, char** argv)
       else {
          puts("(none)");
       }
+      printf("ASAP/ENRP Announce TTL: %d\n", registrar->AnnounceTTL);
    #ifdef ENABLE_CSP
       if(cspReportInterval > 0) {
          printf("CSP Report Address:     ");

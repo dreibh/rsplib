@@ -1119,7 +1119,8 @@ void registrarSendENRPPresence(struct Registrar*             registrar,
                      messageLength,
                      0,
                      &destinationAddressList->sa,
-                     getSocklen(&destinationAddressList->sa)) <= 0) {
+                     getSocklen(&destinationAddressList->sa),
+                     registrar->AnnounceTTL) <= 0) {
                   LOG_WARNING
                   fputs("Sending Presence via multicast failed\n", stdlog);
                   LOG_END

@@ -1684,7 +1684,8 @@ size_t sendmulticast(int                    sd,
                      const size_t           length,
                      const int              flags,
                      const struct sockaddr* to,
-                     socklen_t              tolen)
+                     socklen_t              tolen,
+                     int                    ttl)
 {
    struct if_nameindex* ifindex;
    size_t               i;
@@ -1715,7 +1716,8 @@ size_t sendmulticast(int                    sd,
                if(family == AF_INET) {
                   if(ext_ioctl(sd, SIOCGIFADDR, (char*)&ifr) >= 0) {
                      memcpy(&inaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, sizeof(struct in_addr));
-                     if(ext_setsockopt(sd, IPPROTO_IP, IP_MULTICAST_IF, &inaddr, sizeof(inaddr)) == 0) {
+                     if( (ext_setsockopt(sd, IPPROTO_IP, IP_MULTICAST_IF, &inaddr, sizeof(inaddr)) == 0) &&
+                         (ext_setsockopt(sd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) == 0) ) {
                         ready = true;
                      }
                      else {
@@ -1727,7 +1729,8 @@ size_t sendmulticast(int                    sd,
                }
                else if(family == AF_INET6) {
                   outif = ifindex[i].if_index;
-                  if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) {
+                  if( (ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &outif, sizeof(outif)) == 0) &&
+                      (ext_setsockopt(sd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl, sizeof(outif)) == 0) ) {
                      ready = true;
                   }
                }
