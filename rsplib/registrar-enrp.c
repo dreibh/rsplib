@@ -945,34 +945,33 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
                                       true);
          }
 
-         /* ====== There is an association with that peer ================ */
-         else {
-            /* ====== Mentor query ======================================= */
-            if( (registrar->InStartupPhase) &&
-                (registrar->MentorServerID == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
-               LOG_ACTION
-               fputs("Trying ", stdlog);
-               ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
-               fputs(" as mentor server...\n", stdlog);
-               LOG_END
-               peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
-               registrar->MentorServerID = peerListNode->Identifier;
-               registrarSendENRPListRequest(registrar,
-                                            registrar->ENRPUnicastSocket,
-                                            0, 0,
-                                            peerListNode->AddressBlock->AddressArray,
-                                            peerListNode->AddressBlock->Addresses,
-                                            peerListNode->Identifier);
-               registrarSendENRPHandleTableRequest(registrar,
-                                                   registrar->ENRPUnicastSocket,
-                                                   0, 0,
-                                                   peerListNode->AddressBlock->AddressArray,
-                                                   peerListNode->AddressBlock->Addresses,
-                                                   peerListNode->Identifier,
-                                                   0x00);
-            }
+         /* ====== Mentor query ========================================== */
+         if( (registrar->InStartupPhase) &&
+             (registrar->MentorServerID == UNDEFINED_REGISTRAR_IDENTIFIER) ) {
+            LOG_ACTION
+            fputs("Trying ", stdlog);
+            ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
+            fputs(" as mentor server...\n", stdlog);
+            LOG_END
+            peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
+            registrar->MentorServerID = peerListNode->Identifier;
+            registrarSendENRPListRequest(registrar,
+                                          registrar->ENRPUnicastSocket,
+                                          0, 0,
+                                          peerListNode->AddressBlock->AddressArray,
+                                          peerListNode->AddressBlock->Addresses,
+                                          peerListNode->Identifier);
+            registrarSendENRPHandleTableRequest(registrar,
+                                                registrar->ENRPUnicastSocket,
+                                                0, 0,
+                                                peerListNode->AddressBlock->AddressArray,
+                                                peerListNode->AddressBlock->Addresses,
+                                                peerListNode->Identifier,
+                                                0x00);
+         }
 
-            /* ====== Check if synchronization is necessary ============== */
+         /* ====== Check if synchronization is necessary ================= */
+         if(assocID != 0) {
             if(!(peerListNode->Status & PLNS_HTSYNC)) {
                /* Attention: We only synchronize on SCTP-received Presence messages! */
                checksum = ST_CLASS(peerListNodeGetOwnershipChecksum)(

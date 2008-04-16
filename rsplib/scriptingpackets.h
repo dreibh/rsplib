@@ -42,7 +42,7 @@
 #define SPT_KEEPALIVE_ACK      0x05
 #define SPT_STATUS             0x06
 
-#define SD_MAX_DATASIZE       16384
+#define SD_MAX_DATASIZE        1400
 
 struct ScriptingCommonHeader
 {
