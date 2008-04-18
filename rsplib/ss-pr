@@ -27,4 +27,4 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-./registrar -asap=[::]:3863 -enrp=[::]:9901 -cspserver=132.252.151.151:2960 -cspinterval=1000 $@
+./registrar -asap=[::]:3863 -enrp=[::]:9901 -cspserver=132.252.151.151:2960 -cspinterval=1000 -loglevel=4 >pr.log 2>&1 $@

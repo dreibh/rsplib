@@ -34,4 +34,4 @@ if [ $CPUs -lt 1 ] ; then
 fi
 
 echo "CPUs=$CPUs ..."
-./server -scripting -ssmaxthreads=$CPUs -cspserver=132.252.151.151:2960 -cspinterval=1000 -policy=LeastUsedDegradation:0.25 $@
+./server -scripting -ssmaxthreads=$CPUs -cspserver=132.252.151.151:2960 -cspinterval=1000 -policy=LeastUsedDegradation:0.25 -loglevel=3 >pe.log 2>&1 $@
