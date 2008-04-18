@@ -533,11 +533,11 @@ void registrarHandleENRPListResponse(struct Registrar*       registrar,
 
                   /* ====== New peer -> Send Peer Presence =============== */
                   registrarSendENRPPresence(registrar,
-                                            registrar->ENRPUnicastSocket, 0, 0,
-                                            newPeerListNode->AddressBlock->AddressArray,
-                                            newPeerListNode->AddressBlock->Addresses,
-                                            newPeerListNode->Identifier,
-                                            false);
+                                   registrar->ENRPUnicastSocket, 0, 0,
+                                   newPeerListNode->AddressBlock->AddressArray,
+                                   newPeerListNode->AddressBlock->Addresses,
+                                   newPeerListNode->Identifier,
+                                   false);
                }
             }
             else {
@@ -860,7 +860,7 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
       fputs(" at address ", stdlog);
       transportAddressBlockPrint(message->PeerListNodePtr->AddressBlock, stdlog);
    }
-   fprintf(stdlog, " (via %d/%u)\n", fd, (unsigned int)assocID);
+   fputs("\n", stdlog);
    LOG_END
 
 
@@ -956,11 +956,11 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
             peerListNode->Status |= PLNS_LISTSYNC|PLNS_HTSYNC|PLNS_MENTOR;
             registrar->MentorServerID = peerListNode->Identifier;
             registrarSendENRPListRequest(registrar,
-                                          registrar->ENRPUnicastSocket,
-                                          0, 0,
-                                          peerListNode->AddressBlock->AddressArray,
-                                          peerListNode->AddressBlock->Addresses,
-                                          peerListNode->Identifier);
+                                         registrar->ENRPUnicastSocket,
+                                         0, 0,
+                                         peerListNode->AddressBlock->AddressArray,
+                                         peerListNode->AddressBlock->Addresses,
+                                         peerListNode->Identifier);
             registrarSendENRPHandleTableRequest(registrar,
                                                 registrar->ENRPUnicastSocket,
                                                 0, 0,
