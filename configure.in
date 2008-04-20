@@ -31,7 +31,7 @@
 AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.4.0)
+AM_INIT_AUTOMAKE(rsplib, 2.5.0~beta1-1)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -387,9 +387,26 @@ else
                    AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])],
                   AC_MSG_RESULT(no))
 
-
+   # ====== Check for SCTP library linker parameter =========================
    sctplib_LIBS=""
-   socketapi_LIBS="-lsctp"
+   socketapi_LIBS=""
+   sctp_okay=0
+   AC_CHECK_LIB(sctp, sctp_sendmsg, [
+      socketapi_LIBS="-lsctp"
+      sctp_okay=1])
+   if test $sctp_okay -ne 1 ; then
+      AC_CHECK_LIB(c, sctp_sendmsg, [
+         socketapi_LIBS=""
+         sctp_okay=1])
+   fi
+
+   AC_MSG_CHECKING([whether library parameter for SCTP functions])
+   if test $sctp_okay -ne 1 ; then
+      AC_MSG_ERROR([Do not know where to find SCTP functions! Missing libsctp?])
+   else
+      AC_MSG_RESULT([appending "$socketapi_LIBS"])
+   fi
+
    glib_LIBS=""
    CFLAGS="$CFLAGS -DHAVE_KERNEL_SCTP"
    CXXFLAGS="$CXXFLAGS -DHAVE_KERNEL_SCTP"

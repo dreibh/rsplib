@@ -1,3 +1,10 @@
+rsplib (2.5.0~beta1-1) unstable; urgency=low
+
+  * TTL configuration option for PR, default TTL=30.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 19 Apr 2008 09:04:05 +0200
+
+
 rsplib (2.4.0-1) unstable; urgency=low
 
   * Scripting service update.
