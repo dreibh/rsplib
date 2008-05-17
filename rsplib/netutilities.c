@@ -1312,11 +1312,14 @@ int sendtoplus(int                      sockfd,
    union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
    size_t                 addresses = 0;
    struct sctp_sndrcvinfo sri;
-   struct timeval         selectTimeout;
-   fd_set                 fdset;
+   struct pollfd          pfd;
    size_t                 i;
    int                    result;
    char*                  p;
+   unsigned long long     startTime;
+   unsigned long long     now;
+   unsigned long long     remainingTimeout;
+int n=0;
 
    LOG_VERBOSE4
    fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u flags=$%x toaddrs=%p toaddrcnt=%u...\n",
@@ -1386,47 +1389,62 @@ int sendtoplus(int                      sockfd,
    }
 
    if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
-      LOG_VERBOSE4
-      fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %lld [us]...\n",
-              sockfd, (unsigned int)assocID, timeout);
-      LOG_END
-
-      FD_ZERO(&fdset);
-      FD_SET(sockfd, &fdset);
-      selectTimeout.tv_sec  = timeout / 1000000;
-      selectTimeout.tv_usec = timeout % 1000000;
-      result = ext_select(sockfd + 1,
-                          NULL, &fdset, NULL,
-                          &selectTimeout);
-      if((result > 0) && FD_ISSET(sockfd, &fdset)) {
+      remainingTimeout = timeout;
+      startTime        = getMicroTime();
+      for(;;) {
          LOG_VERBOSE4
-         fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
-                 sockfd, (unsigned int)assocID, (unsigned int)length);
+         fprintf(stdlog, "sendmsg(%d/A%u) would block, waiting with timeout %lld [us]...\n",
+               sockfd, (unsigned int)assocID, remainingTimeout);
          LOG_END
-         if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
-            if(toaddrs) {
-               LOG_VERBOSE5
-               fputs("Calling sctp_sendx() with addresses...\n", stdlog);
-               LOG_END
-               result = sctp_sendx(sockfd, buffer, length,
-                                   (struct sockaddr*)&addressArray, addresses,
-                                   &sri, flags);
+
+         pfd.fd      = sockfd;
+         pfd.events  = POLLOUT;
+         pfd.revents = 0;
+         result = ext_poll((struct pollfd*)&pfd, 1, (int)(remainingTimeout / 1000));
+         if( (result > 0) && (pfd.revents = POLLOUT) ) {
+            LOG_VERBOSE4
+            fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
+                  sockfd, (unsigned int)assocID, (unsigned int)length);
+            LOG_END
+            if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
+               if(toaddrs) {
+                  LOG_VERBOSE5
+                  fputs("Calling sctp_sendx() with addresses...\n", stdlog);
+                  LOG_END
+                  result = sctp_sendx(sockfd, buffer, length,
+                                    (struct sockaddr*)&addressArray, addresses,
+                                    &sri, flags);
+               }
+               else {
+                  LOG_VERBOSE5
+                  fputs("Calling sctp_send() with AssocID...\n", stdlog);
+                  LOG_END
+                  result = sctp_send(sockfd, buffer, length, &sri, flags);
+               }
             }
             else {
                LOG_VERBOSE5
-               fputs("Calling sctp_send() with AssocID...\n", stdlog);
+               fputs("Calling sctp_sendto()...\n", stdlog);
                LOG_END
-               result = sctp_send(sockfd, buffer, length,
-                                  &sri, flags);
+               result = ext_sendto(sockfd, buffer, length, flags,
+                                 (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
             }
          }
-         else {
-            LOG_VERBOSE5
-            fputs("Calling sctp_sendto()...\n", stdlog);
-            LOG_END
-            result = ext_sendto(sockfd, buffer, length, flags,
-                              (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
+         if( (result >= 0) || (errno != EWOULDBLOCK) ) {
+            break;
          }
+
+         /* For some reason, lksctp reports POLLOUT, but then returns
+            EWOULDBLOCK again upon transmission - even for small message sizes.
+            Is there a better way of waiting until SCTP is ready?
+            sched_yield() at least ensures some scheduling fairness ... */
+
+         now = getMicroTime();
+         if(now - startTime >= timeout) {
+            break;
+         }
+         remainingTimeout = timeout - (now - startTime);
+         sched_yield();
       }
    }
 
@@ -1452,11 +1470,14 @@ int recvfromplus(int                      sockfd,
                  const unsigned long long timeout)
 {
    struct sctp_sndrcvinfo* sri;
-   struct iovec    iov = { (char*)buffer, length };
-   struct cmsghdr* cmsg;
-   size_t          cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
-   char            cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
-   struct msghdr msg = {
+   struct iovec            iov = { (char*)buffer, length };
+   struct cmsghdr*         cmsg;
+   size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
+   char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
+   struct pollfd           pfd;
+   int                     result;
+   int                     cc;
+   struct msghdr           msg = {
 #ifdef __APPLE__
       (char*)from,
 #else
@@ -1467,10 +1488,6 @@ int recvfromplus(int                      sockfd,
       cbuf, cmsglen,
       *flags
    };
-   struct timeval selectTimeout;
-   fd_set         fdset;
-   int            result;
-   int            cc;
 
    if(ppid     != NULL) *ppid     = 0;
    if(streamID != NULL) *streamID = 0;
@@ -1489,15 +1506,11 @@ int recvfromplus(int                      sockfd,
               sockfd, timeout);
       LOG_END
 
-      FD_ZERO(&fdset);
-      FD_SET(sockfd, &fdset);
-      selectTimeout.tv_sec  = timeout / 1000000;
-      selectTimeout.tv_usec = timeout % 1000000;
-
-      result = ext_select(sockfd + 1,
-                          &fdset, NULL, NULL,
-                          &selectTimeout);
-      if((result > 0) && FD_ISSET(sockfd, &fdset)) {
+      pfd.fd      = sockfd;
+      pfd.events  = POLLIN;
+      pfd.revents = 0;
+      result = ext_poll((struct pollfd*)&pfd, 1, (int)(timeout / 1000));
+      if( (result > 0) && (pfd.revents = POLLIN) ) {
          LOG_VERBOSE5
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);

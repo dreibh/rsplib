@@ -42,6 +42,10 @@ SS_TEMPDIR="ssTEMP-$UNIQUE_ID"
 SS_IN_NAME="ssIN-$UNIQUE_ID.tar.gz"
 SS_OUT_NAME="ssOUT-$UNIQUE_ID.tar.gz"
 
+SS_IN_BYTES=10000
+SS_OUT_BYTES=10000
+
+
 # This is the run script.
 SS_RUNSCRIPT=" \
  OUTPUT_ARCHIVE=\$1
@@ -51,10 +55,11 @@ SS_RUNSCRIPT=" \
  \
  echo \"   + Simulating some work (your program may do something more useful here!)\" && \
  date >my-output.data && \
+ dd if=/dev/urandom of=my-output.random bs=$SS_OUT_BYTES count=1 && \
  sleep 10 && \
  \
  echo \"   + Writing results archive \\\"\$OUTPUT_ARCHIVE\\\" ...\" && \
- tar czvf \$OUTPUT_ARCHIVE my-output.data && \
+ tar czvf \$OUTPUT_ARCHIVE my-output.data my-output.random && \
  \
  echo \"   + Script processing successfully finished!\"
 "
@@ -69,14 +74,15 @@ mkdir "$DIRECTORY/$SS_TEMPDIR" && \
 echo "   + Changing to directory \"$DIRECTORY/$SS_TEMPDIR\" ..." && \
 cd "$DIRECTORY/$SS_TEMPDIR" &&  \
 \
-echo "   + Writing input file \"my-input.data\" ..." && \
+echo "   + Writing input files \"my-input.data\" and \"my-input.random\" ..." && \
 echo "This is an example input for ID $UNIQUE_ID" >my-input.data && \
+dd if=/dev/urandom of=my-input.random bs=$SS_OUT_BYTES count=1 && \
 \
 echo "   + Writing runscript \"ssrun\" ..." && \
 echo "$SS_RUNSCRIPT" >ssrun && \
 \
 echo "   + Archiving \"ssrun\" and \"my-input.data\" into \"$SS_IN_NAME\" ..." && \
-tar chzf ../$SS_IN_NAME ssrun my-input.data && \
+tar chzf ../$SS_IN_NAME ssrun my-input.data my-input.random && \
 cd .. || exit 1
 
 

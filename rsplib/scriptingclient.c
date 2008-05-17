@@ -93,7 +93,7 @@ static unsigned int performUpload(int sd)
          upload.Header.Flags  = 0x00;
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, TransmitTimeout);
+                            0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
          if(sent <= 0) {
             printf("Upload error: %s\n", strerror(errno));
             return(SSCR_FAILOVER);
