@@ -52,7 +52,7 @@ for SERVER in $SERVER_LIST; do
    cmd="sudo yum $PLANETLAB_YUMOPTS clean all ; sudo yum $PLANETLAB_YUMOPTS makecache ; sudo yum -y $PLANETLAB_YUMOPTS update ; sudo yum -y $PLANETLAB_YUMOPTS upgrade ; $cmd ; sudo /usr/bin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
    echo $cmd
 
-   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "$cmd" &
+   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no -oStrictHostKeyChecking=no $PLANETLAB_USER@$SERVER "$cmd" &
 done
 
 wait
