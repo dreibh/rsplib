@@ -24,7 +24,7 @@
 
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab1.postel.org"   # "planetlab1.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
+PLANETLAB_COMPILEHOST="plane-lab-pb1.uni-paderborn.de"   # "mars.planetlab.haw-hamburg.de"  # "planetlab1.postel.org"   # "planetlab1.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind"
 
