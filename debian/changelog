@@ -1,4 +1,4 @@
-rsplib (2.5.0~beta3-1) hardy; urgency=low
+rsplib (2.5.0~beta3.3-1) hardy; urgency=low
 
   * TTL configuration option for PR, default TTL=30.
 
