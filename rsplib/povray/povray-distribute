@@ -49,10 +49,10 @@ cp $INPUT $TEMPDIR/input.pov
 
 # ====== Write ssrun script =================================================
 (
-   echo "#!/bin/bash"
+   echo "#!/bin/sh"
    echo "OUTPUT_ARCHIVE=\$1"
    echo "SUCCESS=1"
-   echo -n "povray -w$WIDTH -h$HEIGHT +a0.3 +Ooutput.png "
+   echo -n "povray -w$WIDTH -h$HEIGHT +a0.3 -D +FN8 +Ooutput.png "
    echo    "input.pov >output.txt 2>&1 || SUCCESS=0"
    echo "tar czvf \$OUTPUT_ARCHIVE output.png output.txt || SUCCESS=0"
    echo "exit $SUCCESS"
