@@ -36,6 +36,5 @@ done \
 ) | sort -u`
 
 for POV_FILE in $POV_FILE_LIST ; do
-   echo f=$POV_FILE
-   ./povray-distribute 1600 1200 $POV_FILE
+   ./povray-distribute 1600 1200 $POV_FILE &
 done

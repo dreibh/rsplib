@@ -64,7 +64,7 @@ chmod +x "$TEMPDIR/ssrun"
 cd "$TEMPDIR"
 tar czf input.tar.gz ssrun input.pov
 cd ..
-../scriptingclient -input=$TEMPDIR/input.tar.gz -output=$TEMPDIR/output.tar.gz
+../scriptingclient -quiet -input=$TEMPDIR/input.tar.gz -output=$TEMPDIR/output.tar.gz
 if [ -e "$TEMPDIR/output.tar.gz" ] ; then
   cd "$TEMPDIR"
   tar xzf output.tar.gz
