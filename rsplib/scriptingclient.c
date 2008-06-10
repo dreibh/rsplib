@@ -129,8 +129,9 @@ static unsigned int handleStatus(const struct Status* status,
             return(SSCR_FAILOVER);
          }
          printTimeStamp(stderr);
-         fputs("Maximum number of Trials reached -> check your input and the results!\n", stderr);
+         fputs("Maximum number of trials reached -> check your input and the results!\n", stderr);
          fputs("Trying to download the results file for debugging ...", stderr);
+         return(SSCR_COMPLETE);
       }
       return(SSCR_OKAY);
    }
