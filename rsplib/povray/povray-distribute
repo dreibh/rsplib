@@ -49,7 +49,7 @@ umask 077
 rm -rf $TEMPDIR
 mkdir $TEMPDIR
 cp $INPUT $TEMPDIR/input.pov
-find -name "*.inc" | xargs -n1 -i§ cp § $TEMPDIR
+find -name "*.inc" | xargs --no-run-if-empty -n1 -i§ cp § $TEMPDIR
 
 
 # ====== Write ssrun script =================================================
@@ -67,7 +67,8 @@ chmod +x "$TEMPDIR/ssrun"
 
 # ====== Create and distribute work package =================================
 cd "$TEMPDIR"
-tar czf input.tar.gz ssrun input.pov *.inc
+find . -name "ssrun" -or -name "input.pov" -or -name "*.inc" | \
+   xargs tar czf input.tar.gz
 cd ..
 ../scriptingclient -quiet -input=$TEMPDIR/input.tar.gz \
                    -output=$TEMPDIR/output.tar.gz
