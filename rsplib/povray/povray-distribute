@@ -37,6 +37,10 @@ WIDTH=$1
 HEIGHT=$2
 INPUT=$3
 OUTPUT="`echo $INPUT | sed -e "s/.pov/-$WIDTH-$HEIGHT.png"/g`"
+if [ -e $OUTPUT ] ; then
+   echo >&2 "ERROR: Output file $OUTPUT already exists!"
+   exit 1
+fi
 
 
 # ====== Create temporary directory =========================================
@@ -45,6 +49,7 @@ umask 077
 rm -rf $TEMPDIR
 mkdir $TEMPDIR
 cp $INPUT $TEMPDIR/input.pov
+find -name "*.inc" | xargs -n1 -i§ cp § $TEMPDIR
 
 
 # ====== Write ssrun script =================================================
@@ -62,7 +67,7 @@ chmod +x "$TEMPDIR/ssrun"
 
 # ====== Create and distribute work package =================================
 cd "$TEMPDIR"
-tar czf input.tar.gz ssrun input.pov
+tar czf input.tar.gz ssrun input.pov *.inc
 cd ..
 ../scriptingclient -quiet -input=$TEMPDIR/input.tar.gz \
                    -output=$TEMPDIR/output.tar.gz
@@ -72,6 +77,7 @@ if [ -e "$TEMPDIR/output.tar.gz" ] ; then
   cd ..
    if [ -e "$TEMPDIR/output.png" ] ; then
      cp $TEMPDIR/output.png $OUTPUT
+     rm -rf $TEMPDIR
    else
       echo >&2 "ERROR: No image has been created. Check log:"
       echo "------ LOG ------------------------------------------------"
