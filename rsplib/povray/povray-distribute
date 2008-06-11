@@ -73,11 +73,11 @@ cd ..
 ../scriptingclient -quiet -input=$TEMPDIR/input.tar.gz \
                    -output=$TEMPDIR/output.tar.gz
 if [ -e "$TEMPDIR/output.tar.gz" ] ; then
-  cd "$TEMPDIR"
-  tar xzf output.tar.gz
-  cd ..
+   cd "$TEMPDIR"
+   tar xzf output.tar.gz
+   cd ..
    if [ -e "$TEMPDIR/output.png" ] ; then
-     cp $TEMPDIR/output.png $OUTPUT
+     mv $TEMPDIR/output.png $OUTPUT
      rm -rf $TEMPDIR
    else
       echo >&2 "ERROR: No image has been created. Check log:"
