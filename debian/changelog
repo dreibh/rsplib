@@ -1,3 +1,10 @@
+rsplib (2.5.0~beta5-1) hardy; urgency=low
+
+  * Added povray load distribution example script.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 13 Jun 2008 07:11:27 +0800
+
+
 rsplib (2.5.0~beta4.1-1) hardy; urgency=low
 
   * Compile fixes to work again under Ubuntu Intrepid.
