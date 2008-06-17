@@ -10,7 +10,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2007 by Thomas Dreibholz
+# Copyright (C) 2002-2008 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,8 +31,11 @@
 . ./debian.conf
 
 
-# Nur einmalig erforderlich!
-# dh_make -c gpl -n -e dreibh@iem.uni-due.de -m
+# ---------------------------------------------------------------------------
+# ATTENTION:
+# debian/changelog MUST be like package (version-0ubuntu1); intrepid
+# "ubuntu" and "intrepid" are exchanged by this script
+# ---------------------------------------------------------------------------
 
 
 DISTRIBUTIONS=`\
@@ -71,7 +74,12 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
 
 
    if [ "$DISTRIBUTION" != "default" ] ; then
-      sed -e "s/) hardy;/$DISTRIBUTION) $DISTRIBUTION;/g" <debian/changelog >debian/changelog.new
+      if [ "$DISTRIBUTION" = "unstable" -o "$DISTRIBUTION" = "testing" -o "$DISTRIBUTION" = "stable" ] ; then
+         sed -e "s/ubuntu/debian-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
+      else
+         sed -e "s/ubuntu/ubuntu-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
+         # sed -e "s/) intrepid;/$DISTRIBUTION) $DISTRIBUTION;/1" <debian/changelog >debian/changelog.new
+      fi
       mv debian/changelog.new debian/changelog
    fi
 

@@ -1,6 +1,6 @@
 A. FIRST STEPS
 
-How to set up a simple test of the rsplib-2.4.0 release:
+How to set up a simple test of the rsplib-2.5.0 release:
 
 1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
    implementation, do the following two steps first:

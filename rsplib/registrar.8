@@ -1,4 +1,4 @@
-.\" $Id$
+.\" $Id: registrar.8 1767 2008-04-16 11:41:05Z dreibh $
 .\" --------------------------------------------------------------------------
 .\"
 .\"              //===//   //=====   //===//   //       //   //===//
@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 11, 2007
+.Dd June 17, 2008
 .Dt Registrar 8
 .Os RSerPool Registrar
 .\" ###### Name #############################################################
@@ -133,9 +133,9 @@ Sets the ASAP endpoint address(es). Use "auto" to automatically set it (default)
 .It Fl asapannounce=auto|address:port
 Sets the multicast address and UDP port to send the ASAP Announces to. Use "auto" to automatically set it (default). Examples:
 .br
--asapannounce=auto
+\-asapannounce=auto
 .br
--asapannounce=239.0.0.1:3863
+\-asapannounce=239.0.0.1:3863
 .It Fl endpointkeepalivetransmissioninterval=milliseconds
 Sets the ASAP Endpoint Keep Alive interval.
 .It Fl endpointkeepalivetimeoutinterval=milliseconds
@@ -164,17 +164,17 @@ Sets the ASAP Announce interval.
 .It Fl enrp=auto|address:port,address,...
 Sets the ENRP endpoint address(es). Use "auto" to automatically set it (default). Examples:
 .br
--enrp=auto
+\-enrp=auto
 .br
--enrp=1.2.3.4:9901
+\-enrp=1.2.3.4:9901
 .br
--enrp=1.2.3.4:9901,[2000::1:2:3],9.8.7.6
+\-enrp=1.2.3.4:9901,[2000::1:2:3],9.8.7.6
 .It Fl enrpannounce=auto|address:port
 Sets the multicast address and UDP port to send the ENRP Announces to. Use "auto" to automatically set it (default). Examples:
 .br
--enrpannounce=auto
+\-enrpannounce=auto
 .br
--enrpannounce=239.0.0.1:9901
+\-enrpannounce=239.0.0.1:9901
 .It Fl maxelementsperhtrequest=items
 Sets the maximum number of items per ENRP Handle Table Response.
 .It Fl mentordiscoverytimeout=milliseconds

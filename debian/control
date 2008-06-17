@@ -1,7 +1,8 @@
 Source: rsplib
 Section: net
 Priority: optional
-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
+XSBC-Original-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
 Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.5), libbz2-dev (>= 1.0), libqt3-mt-dev
 Standards-Version: 3.7.3
@@ -12,20 +13,14 @@ Section: libs
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: RSerPool core API library rsplib
+Description: RSerPool client/server API library for load distribution and server redundancy
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool. The API is
+ provided by this package.
 
 
 Package: librsplib-dev
@@ -33,20 +28,10 @@ Section: libdevel
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib2
-Description: Headers for RSerPool core API library rsplib
+Description: Headers of the RSerPool client/server API library rsplib
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ This package provides header files for the rsplib library. You need them to
+ develop your own RSerPool-based clients and servers.
 
 
 Package: libcpprspserver2
@@ -54,20 +39,9 @@ Section: libs
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: RSerPool high-level API library in C++
+Description: C++ RSerPool client/server API library
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ This package provides an object-oriented API for the rsplib library.
 
 
 Package: libcpprspserver-dev
@@ -75,20 +49,10 @@ Section: libdevel
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver2
-Description: Headers for RSerPool high-level API library in C++
+Description: Headers of the C++ RSerPool client/server API library
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ This package provides the header files for the rsplib C++ API. You need them to
+ develop your own RSerPool-based clients and servers based on the C++ API.
 
 
 Package: rsplib-registrar
@@ -96,20 +60,11 @@ Section: net
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: RSerPool registrar
+Description: RSerPool Registrar service
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ The registrar is the management component for RSerPool-based server pools.
+ You need at least one registrar in a setup. But for redundancy reasons, you
+ should have at least two.
 
 
 Package: rsplib-tools
@@ -119,18 +74,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: RSerPool test tools
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ This package provides some test tools for RSerPool setups.
 
 
 Package: rsplib-services
@@ -138,17 +82,18 @@ Section: net
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
-Description: Example RSerPool services
+Recommends: rsplib-fgp-cfgfiles
+Description: RSerPool example services
  .
- The Reliable Server Pooling (RSerPool) architecture which is currently under
- standardization by the IETF RSerPool WG is an overlay network framework to
- provide server replication and session failover capabilities to its
- applications. Server redundancy leads to load distribution and load balancing,
- which are also covered by RSerPool. But in strong contrast to  other solutions
- in the area of GRID and high-performance computing, the  fundamental property
- of RSerPool is to be "lightweight", i.e. it can be used on devices providing
- only meagre memory and CPU resources (e.g. embedded systems like
- telecommunications equipment or routers). This property restricts the RSerPool
- architecture to the management of only pools and sessions (no data
- synchronization, user management, etc.), but on the other hand makes a very
- efficient realization possible.
+ This package provides the rsplib RSerPool example services:
+ Echo, Discard, Daytime, CharGen, CalcApp, FractalGenerator, ScriptingService.
+
+
+Package: rsplib-fgp-cfgfiles
+Section: net
+Priority: optional
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
+Description: RSerPool Fractal Generator Service example input files
+ .
+ This package provides a set of input files for the Fractal Generator service.
