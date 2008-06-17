@@ -75,9 +75,9 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
 
    if [ "$DISTRIBUTION" != "default" ] ; then
       if [ "$DISTRIBUTION" = "unstable" -o "$DISTRIBUTION" = "testing" -o "$DISTRIBUTION" = "stable" ] ; then
-         sed -e "s/ubuntu/debian-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
+         sed -e "s/intrepid;/$DISTRIBUTION;/1" -e "s/ubuntu/$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
       else
-         sed -e "s/ubuntu/ubuntu-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
+         sed -e "s/intrepid;/$DISTRIBUTION;/1" -e "s/ubuntu/ubuntu-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
          # sed -e "s/) intrepid;/$DISTRIBUTION) $DISTRIBUTION;/1" <debian/changelog >debian/changelog.new
       fi
       mv debian/changelog.new debian/changelog
@@ -101,3 +101,9 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
 
    cd ..
 done
+
+
+if [ -e "$UPSTREAM_PACKAGE.asc" ] ; then
+   rm -f "$UPSTREAM_PACKAGE.asc"
+fi
+gpg -sab $UPSTREAM_PACKAGE
