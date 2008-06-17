@@ -1,7 +1,8 @@
 Source: rsplib
 Section: net
 Priority: optional
-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+XSBC-Original-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
 Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.5), libbz2-dev (>= 1.0), libqt3-mt-dev
 Standards-Version: 3.7.3
