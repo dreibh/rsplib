@@ -53,8 +53,9 @@ fi
 UPSTREAM_PACKAGE="`find . -name $PACKAGE-*.gz`"
 UPSTREAM_PACKAGES=`find . -name $PACKAGE-*.gz | wc --lines`
 if [ "$UPSTREAM_PACKAGE" == "" ]; then
-  rm -f $PACKAGE-*.gz $PACKAGE"_"*.gz
-  ( ./bootstrap && ./configure $CONFOPT && make dist ) || exit 1
+   rm -f $PACKAGE-*.gz $PACKAGE"_"*.gz
+   ( ./bootstrap && ./configure $CONFOPT && make dist ) || exit 1
+   UPSTREAM_PACKAGE="`find . -name $PACKAGE-*.gz`"
 elif [ $UPSTREAM_PACKAGES -ne 1 ] ; then
    echo "ERROR: There are multiple upstream packages (from \"make dist\")!" >&2
    echo "       Remove all except the actual version!" >&2
@@ -106,4 +107,5 @@ done
 if [ -e "$UPSTREAM_PACKAGE.asc" ] ; then
    rm -f "$UPSTREAM_PACKAGE.asc"
 fi
-gpg -sab $UPSTREAM_PACKAGE
+echo "Signing upstream package $UPSTREAM_PACKAGE ..."
+gpg -sab "$UPSTREAM_PACKAGE"
