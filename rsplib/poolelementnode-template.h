@@ -88,6 +88,7 @@ struct ST_CLASS(PoolElementNode)
    struct TransportAddressBlock*      RegistratorTransport;
 
    void*                              UserData;
+   unsigned long long                 LastKeepAliveTransmission;
 };
 
 

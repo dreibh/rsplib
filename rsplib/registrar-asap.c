@@ -28,6 +28,7 @@
  */
 
 #include "registrar.h"
+#include "poolhandle.h"
 
 
 /* ###### ASAP Announce timer ############################################ */
@@ -92,13 +93,16 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
             &registrar->Handlespace.Handlespace,
             poolElementNode);
 
-         registrarSendASAPEndpointKeepAlive(registrar, poolElementNode, false);
+         registrarWriteActionLog(registrar, "Send", "ASAP", "EndpointKeepAlive", "KeepAliveTransmissionTimer", 0, registrar->EndpointKeepAliveTimeoutInterval,
+                                 &poolElementNode->OwnerPoolNode->Handle,poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
 
+         registrarSendASAPEndpointKeepAlive(registrar, poolElementNode, false);
+         poolElementNode->LastKeepAliveTransmission = getMicroTime();
          ST_CLASS(poolHandlespaceNodeActivateTimer)(
             &registrar->Handlespace.Handlespace,
             poolElementNode,
             PENT_KEEPALIVE_TIMEOUT,
-            getMicroTime() + registrar->EndpointKeepAliveTimeoutInterval);
+            poolElementNode->LastKeepAliveTransmission + registrar->EndpointKeepAliveTimeoutInterval);
       }
 
       else if( (poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) ||
@@ -110,6 +114,8 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
             poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
             fputs(" -> removing it\n", stdlog);
             LOG_END
+            registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "KeepAliveTimeoutTimer", 0, registrar->EndpointKeepAliveTimeoutInterval,
+                                    &poolElementNode->OwnerPoolNode->Handle, poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
          }
          else {
             LOG_ACTION
@@ -118,6 +124,8 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
             poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
             fputs(" -> removing it\n", stdlog);
             LOG_END
+            registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "ExpiryTimer", 0, registrar->TakeoverExpiryInterval,
+                                    &poolElementNode->OwnerPoolNode->Handle, poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
          }
 
          if(poolElementNode->HomeRegistrarIdentifier == registrar->ServerID) {
@@ -199,6 +207,9 @@ void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar,
             registrarSendENRPHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
 
+         registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "Disconnect", 0, 0,
+                                 &poolElementNode->OwnerPoolNode->Handle, poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
+
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                      &registrar->Handlespace,
                      poolElementNode);
@@ -251,6 +262,9 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
    poolHandlePrint(&message->Handle, stdlog);
    fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
    LOG_END
+
+   registrarWriteActionLog(registrar, "Recv", "ASAP", "Registration", "Requested", 0, 0,
+                           &message->Handle, message->PoolElementPtr->Identifier, registrar->ServerID, 0, 0, 0);
 
    message->Type       = AHT_REGISTRATION_RESPONSE;
    message->Flags      = 0x00;
@@ -318,6 +332,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
                ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
                fputs("\n", stdlog);
                LOG_END
+
 
                /* ====== Tune SCTP association ============================== */
 /*
@@ -417,6 +432,8 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
       if(message->Error) {
          message->Flags |= AHF_REGISTRATION_REJECT;
       }
+      registrarWriteActionLog(registrar, "Recv", "ASAP", "RegistrationResponse", "Requested", 0, 0,
+                              &message->Handle, message->PoolElementPtr->Identifier, registrar->ServerID, 0, 0, message->Error);
       if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
          LOG_WARNING
          logerror("Sending RegistrationResponse failed");
@@ -447,6 +464,9 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
    poolHandlePrint(&message->Handle, stdlog);
    fprintf(stdlog, "/$%08x\n", message->Identifier);
    LOG_END
+
+   registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "Requested", 0, 0,
+                           &message->Handle, message->Identifier, registrar->ServerID, 0, 0, 0);
 
    message->Type  = AHT_DEREGISTRATION_RESPONSE;
    message->Flags = 0x00;
@@ -532,6 +552,8 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
       LOG_END
    }
 
+   registrarWriteActionLog(registrar, "Send", "ASAP", "DeregistrationResponse", "Requested", message->Flags, 0,
+                           &message->Handle, message->Identifier, registrar->ServerID, 0, 0, message->Error);
    if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
       LOG_WARNING
       logerror("Sending DeregistrationResponse failed");
@@ -563,6 +585,9 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
    fprintf(stdlog, " for %u items (%u requested)\n",
            (unsigned int)items, (unsigned int)message->Addresses);
    LOG_END
+
+   registrarWriteActionLog(registrar, "Recv", "ASAP", "HandleResolution", "Requested", items, 0,
+                           &message->Handle, 0, 0, 0, 0, 0);
 
 
    registrar->HandleResolutionCount++;
@@ -612,6 +637,9 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
       LOG_END
    }
 
+   registrarWriteActionLog(registrar, "Send", "ASAP", "HandleResolutionResponse", "Requested", poolElementNodes, 0,
+                           &message->Handle, 0, 0, 0, 0, message->Error);
+
    if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
       LOG_WARNING
       logerror("Sending handle resolution response failed");
@@ -627,6 +655,7 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
                                              struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+   const unsigned long long          now = getMicroTime();
 
    LOG_VERBOSE2
    fprintf(stdlog, "Got EndpointKeepAliveAck for pool element $%08x of pool ",
@@ -644,6 +673,10 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
       fputs("EndpointKeepAlive successful, resetting timer\n", stdlog);
       LOG_END
 
+      registrarWriteActionLog(registrar, "Recv", "ASAP", "EndpointKeepAliveAck", "InTime", 0,
+                              now - poolElementNode->LastKeepAliveTransmission,
+                              &message->Handle, message->Identifier, 0, 0, 0, 0);
+
       ST_CLASS(poolHandlespaceNodeDeactivateTimer)(
          &registrar->Handlespace.Handlespace,
          poolElementNode);
@@ -657,6 +690,10 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
                       &registrar->Handlespace));
    }
    else {
+      registrarWriteActionLog(registrar, "Recv", "ASAP", "EndpointKeepAliveAck", "TooLateAlreadyRemoved", 0,
+                              now - poolElementNode->LastKeepAliveTransmission,
+                              &message->Handle, message->Identifier, 0, 0, 0, 0);
+
       LOG_WARNING
       fprintf(stdlog,
               "EndpointKeepAliveAck for not-existing pool element $%08x of pool ",

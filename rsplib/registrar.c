@@ -290,6 +290,7 @@ int main(int argc, char** argv)
    unsigned long long            cspReportInterval = 0;
 #endif
 
+   FILE*                         actionLogFile = NULL;
    FILE*                         statsFile     = NULL;
    int                           statsInterval = -1;
 
@@ -391,6 +392,16 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
          daemonPIDFile = (const char*)&argv[i][15];
       }
+      else if(!(strncmp(argv[i], "-actionlogfile=", 15))) {
+         if(actionLogFile) {
+            fclose(actionLogFile);
+         }
+         actionLogFile = fopen((const char*)&argv[i][15], "w");
+         if(actionLogFile == NULL) {
+            fprintf(stderr, "ERROR: Unable to create action log file \"%s\"!\n",
+                    (char*)&argv[i][11]);
+         }
+      }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile) {
             fclose(statsFile);
@@ -454,7 +465,7 @@ int main(int argc, char** argv)
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
-            "{-statsfile=file} {-statsinterval=millisecs} "
+            "{-actionlogfile=file} {-statsfile=file} {-statsinterval=millisecs} "
             "{-daemonpidfile=file}"
             "\n",argv[0]);
          exit(1);
@@ -505,7 +516,7 @@ int main(int argc, char** argv)
                             enrpMulticastOutputSocket,
                             asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
                             enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
-                            statsFile, statsInterval
+                            actionLogFile, statsFile, statsInterval
 #ifdef ENABLE_CSP
                             , cspReportInterval, &cspReportAddress
 #endif
@@ -702,6 +713,9 @@ int main(int argc, char** argv)
       if(statsFile) {
          printf("Statistics Interval:    %ums\n", statsInterval);
       }
+      if(actionLogFile) {
+         printf("Action Log File:        active\n");
+      }
       printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "off" : daemonPIDFile);
 
       puts("\nASAP Parameters:");
@@ -770,6 +784,9 @@ int main(int argc, char** argv)
    finishLogging();
    if(statsFile) {
       fclose(statsFile);
+   }
+   if(actionLogFile) {
+      fclose(actionLogFile);
    }
    if(!quiet) {
       puts("\nTerminated!");

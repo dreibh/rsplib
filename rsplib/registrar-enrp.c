@@ -298,6 +298,9 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
             fputs("\n", stdlog);
             LOG_END
          }
+
+         registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "AddPE", 0, 0,
+                                 &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
       }
       else {
          LOG_WARNING
@@ -312,7 +315,7 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
                   &registrar->Handlespace,
                   &message->Handle,
                   message->PoolElementPtr->Identifier);
-      if(message->Error == RSPERR_OKAY) {
+      if(result == RSPERR_OKAY) {
          LOG_ACTION
          fputs("Successfully deregistered ", stdlog);
          poolHandlePrint(&message->Handle, stdlog);
@@ -328,8 +331,9 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
          rserpoolErrorPrint(result, stdlog);
          fputs("\n", stdlog);
          LOG_END
-
       }
+      registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "DelPE", 0, 0,
+                              &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
    }
 
    else {
@@ -371,6 +375,9 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
       ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
       fputs("\n", stdlog);
       LOG_END
+
+      registrarWriteActionLog(registrar, "Send", "ENRP", "Update", ((message->Action == PNUP_ADD_PE) ? "AddPE" : "DelPE"), 0, 0,
+                              &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, 0);
 
 #ifndef MSG_SEND_TO_ALL
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);

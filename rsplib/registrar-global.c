@@ -59,6 +59,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const union sockaddr_union*    asapAnnounceAddress,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress,
+                               FILE*                          actionLogFile,
                                FILE*                          statsFile,
                                unsigned int                   statsInterval
 #ifdef ENABLE_CSP
@@ -158,7 +159,10 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->TakeoverExpiryInterval                = REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
       registrar->AnnounceTTL                           = REGISTRAR_DEFAULT_ANNOUNCE_TTL;
 
-      registrar->StatsFile             = statsFile;
+      registrar->ActionLogFile         = actionLogFile;
+      registrar->ActionLogLine         = 0;
+      registrar->ActionLogLastActivity = 0;
+      registrar->ActionLogStartTime    = getMicroTime();
       registrar->StatsInterval         = statsInterval;
       registrar->StatsStartTime        = 0;
       registrar->StatsLine             = 0;
@@ -270,6 +274,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                   (void*)registrar);
          timerStart(&registrar->StatsTimer, 0);
       }
+      registrarBeginActionLog(registrar);
    }
 
    return(registrar);
@@ -637,5 +642,46 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
    }
    else {
       *distance = 0;
+   }
+}
+
+
+/* ###### Write action log header line ################################### */
+void registrarBeginActionLog(struct Registrar* registrar)
+{
+   if(registrar->ActionLogFile) {
+      fputs("AbsTime RelTime   Direction Protocol Action Type Reason Flags   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n", registrar->ActionLogFile);
+   }
+}
+
+
+/* ###### Write action log entry ######################################### */
+void registrarWriteActionLog(struct Registrar*         registrar,
+                             const char*               direction,
+                             const char*               protocol,
+                             const char*               action,
+                             const char*               reason,
+                             const uint32_t            flags,
+                             const unsigned long long  timeValue,
+                             const struct PoolHandle*  poolHandle,
+                             PoolElementIdentifierType poolElementID,
+                             RegistrarIdentifierType   senderID,
+                             RegistrarIdentifierType   receiverID,
+                             RegistrarIdentifierType   targetID,
+                             unsigned int              errorCode)
+{
+   if(registrar->ActionLogFile) {
+      registrar->ActionLogLastActivity = getMicroTime();
+      registrar->ActionLogLine++;
+      fprintf(registrar->ActionLogFile, "%06llu   %1.6f %1.6f   %s %s %s %s %u %1.6f   \"",
+              registrar->ActionLogLine,
+              registrar->ActionLogLastActivity / 1000000.0,
+              (registrar->ActionLogLastActivity - registrar->ActionLogStartTime) / 1000000.0,
+              direction, protocol, action, reason, flags, timeValue / 1000000.0);
+      if(poolHandle) {
+         poolHandlePrint(poolHandle, registrar->ActionLogFile);
+      }
+      fprintf(registrar->ActionLogFile, "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
+              poolElementID, senderID, receiverID, targetID, errorCode);
    }
 }

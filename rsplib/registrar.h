@@ -128,6 +128,10 @@ struct Registrar
    unsigned long long                         MentorDiscoveryTimeout;
    unsigned long long                         TakeoverExpiryInterval;
 
+   FILE*                                      ActionLogFile;
+   unsigned long long                         ActionLogLine;
+   unsigned long long                         ActionLogLastActivity;
+   unsigned long long                         ActionLogStartTime;
    FILE*                                      StatsFile;
    struct Timer                               StatsTimer;
    unsigned long long                         StatsLine;
@@ -160,6 +164,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const union sockaddr_union*    asapAnnounceAddress,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress,
+                               FILE*                          actionLogFile,
                                FILE*                          statsFile,
                                unsigned int                   statsInterval
 #ifdef ENABLE_CSP
@@ -183,6 +188,23 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
                              struct PoolPolicySettings*              updatedPolicySettings,
                              bool                                    addDistance,
                              unsigned int*                           distance);
+
+
+/* ###### Action Log ##################################################### */
+void registrarBeginActionLog(struct Registrar* registrar);
+void registrarWriteActionLog(struct Registrar*         registrar,
+                             const char*               direction,
+                             const char*               protocol,
+                             const char*               action,
+                             const char*               reason,
+                             const uint32_t            flags,
+                             const unsigned long long  timeValue,
+                             const struct PoolHandle*  poolHandle,
+                             PoolElementIdentifierType poolElementID,
+                             RegistrarIdentifierType   senderID,
+                             RegistrarIdentifierType   receiverID,
+                             RegistrarIdentifierType   targetID,
+                             unsigned int              errorCode);
 
 
 /* ###### Core ########################################################### */

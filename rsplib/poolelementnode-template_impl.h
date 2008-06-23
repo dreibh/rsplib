@@ -72,6 +72,7 @@ void ST_CLASS(poolElementNodeNew)(struct ST_CLASS(PoolElementNode)* poolElementN
    poolElementNode->RegistratorTransport       = registratorTransport;
 
    poolElementNode->UserData                   = 0;
+   poolElementNode->LastKeepAliveTransmission  = 0;
 }
 
 
