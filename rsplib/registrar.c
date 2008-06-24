@@ -284,15 +284,18 @@ int main(int argc, char** argv)
    const char*                   daemonPIDFile                 = NULL;
    FILE*                         fh;
    pid_t                         childProcess;
+   int                           bzerror;
 
 #ifdef ENABLE_CSP
    union sockaddr_union          cspReportAddress;
    unsigned long long            cspReportInterval = 0;
 #endif
 
-   FILE*                         actionLogFile = NULL;
-   FILE*                         statsFile     = NULL;
-   int                           statsInterval = -1;
+   FILE*                         actionLogFile   = NULL;
+   BZFILE*                       actionLogBZFile = NULL;
+   FILE*                         statsFile       = NULL;
+   BZFILE*                       statsBZFile     = NULL;
+   int                           statsInterval   = -1;
 
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];
@@ -393,6 +396,10 @@ int main(int argc, char** argv)
          daemonPIDFile = (const char*)&argv[i][15];
       }
       else if(!(strncmp(argv[i], "-actionlogfile=", 15))) {
+         if(actionLogBZFile) {
+            BZ2_bzWriteClose(&bzerror, actionLogBZFile, 0, NULL, NULL);
+            actionLogBZFile = NULL;
+         }
          if(actionLogFile) {
             fclose(actionLogFile);
          }
@@ -400,6 +407,13 @@ int main(int argc, char** argv)
          if(actionLogFile == NULL) {
             fprintf(stderr, "ERROR: Unable to create action log file \"%s\"!\n",
                     (char*)&argv[i][11]);
+         }
+         if(strstr(&argv[i][15], ".bz2") == &argv[i][15 + strlen(&argv[i][15]) - 4]) {
+            actionLogBZFile = BZ2_bzWriteOpen(&bzerror, actionLogFile, 9, 0, 30);
+            if(actionLogBZFile == NULL) {
+               fprintf(stderr, "ERROR: Unable to initialize BZip2 compressor for action log file \"%s\"!\n",
+                       (char*)&argv[i][11]);
+            }
          }
       }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
@@ -410,6 +424,13 @@ int main(int argc, char** argv)
          if(statsFile == NULL) {
             fprintf(stderr, "ERROR: Unable to create statistics file \"%s\"!\n",
                     (char*)&argv[i][11]);
+         }
+         if(strstr(&argv[i][11], ".bz2") == &argv[i][11 + strlen(&argv[i][11]) - 4]) {
+            statsBZFile = BZ2_bzWriteOpen(&bzerror, statsFile, 9, 0, 30);
+            if(statsBZFile == NULL) {
+               fprintf(stderr, "ERROR: Unable to initialize BZip2 compressor for statistics file \"%s\"!\n",
+                       (char*)&argv[i][11]);
+            }
          }
       }
       else if(!(strncmp(argv[i], "-statsinterval=", 15))) {
@@ -516,7 +537,7 @@ int main(int argc, char** argv)
                             enrpMulticastOutputSocket,
                             asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
                             enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
-                            actionLogFile, statsFile, statsInterval
+                            actionLogFile, actionLogBZFile, statsFile, statsBZFile, statsInterval
 #ifdef ENABLE_CSP
                             , cspReportInterval, &cspReportAddress
 #endif
@@ -782,8 +803,16 @@ int main(int argc, char** argv)
    /* ====== Clean up ==================================================== */
    registrarDelete(registrar);
    finishLogging();
+   if(statsBZFile) {
+      BZ2_bzWriteClose(&bzerror, statsBZFile, 0, NULL, NULL);
+      statsBZFile = NULL;
+   }
    if(statsFile) {
       fclose(statsFile);
+   }
+   if(actionLogBZFile) {
+      BZ2_bzWriteClose(&bzerror, actionLogBZFile, 0, NULL, NULL);
+      actionLogBZFile = NULL;
    }
    if(actionLogFile) {
       fclose(actionLogFile);

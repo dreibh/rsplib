@@ -49,22 +49,24 @@ static size_t registrarGetReportFunction(
 
 
 /* ###### Constructor #################################################### */
-struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
-                               int                            asapUnicastSocket,
-                               int                            asapAnnounceSocket,
-                               int                            enrpUnicastSocket,
-                               int                            enrpMulticastOutputSocket,
-                               int                            enrpMulticastInputSocket,
-                               const bool                     asapSendAnnounces,
-                               const union sockaddr_union*    asapAnnounceAddress,
-                               const bool                     enrpAnnounceViaMulticast,
-                               const union sockaddr_union*    enrpMulticastAddress,
-                               FILE*                          actionLogFile,
-                               FILE*                          statsFile,
-                               unsigned int                   statsInterval
+struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
+                               int                           asapUnicastSocket,
+                               int                           asapAnnounceSocket,
+                               int                           enrpUnicastSocket,
+                               int                           enrpMulticastOutputSocket,
+                               int                           enrpMulticastInputSocket,
+                               const bool                    asapSendAnnounces,
+                               const union sockaddr_union*   asapAnnounceAddress,
+                               const bool                    enrpAnnounceViaMulticast,
+                               const union sockaddr_union*   enrpMulticastAddress,
+                               FILE*                         actionLogFile,
+                               BZFILE*                       actionLogBZFile,
+                               FILE*                         statsFile,
+                               BZFILE*                       statsBZFile,
+                               unsigned int                  statsInterval
 #ifdef ENABLE_CSP
-                               , const unsigned int           cspReportInterval,
-                               const union sockaddr_union*    cspReportAddress
+                               , const unsigned int          cspReportInterval,
+                               const union sockaddr_union*   cspReportAddress
 #endif
                                )
 {
@@ -160,9 +162,12 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
       registrar->AnnounceTTL                           = REGISTRAR_DEFAULT_ANNOUNCE_TTL;
 
       registrar->ActionLogFile         = actionLogFile;
+      registrar->ActionLogBZFile       = actionLogBZFile;
       registrar->ActionLogLine         = 0;
       registrar->ActionLogLastActivity = 0;
       registrar->ActionLogStartTime    = getMicroTime();
+      registrar->StatsFile             = statsFile;
+      registrar->StatsBZFile           = statsBZFile;
       registrar->StatsInterval         = statsInterval;
       registrar->StatsStartTime        = 0;
       registrar->StatsLine             = 0;
@@ -432,14 +437,22 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    unsigned long long       runtime     = 0;
    unsigned long long       userTime    = 0;
    unsigned long long       systemTime  = 0;
+   int                      bzerror;
+   const char*              header;
+   char                     str[1024];
 #ifdef LINUX
    unsigned long long       startupTime = 0;
    unsigned long long       uptime;
 #endif
 
    if(registrar->StatsLine == 0) {
-      fputs("AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n",
-            registrar->StatsFile);
+      header = "AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n";
+      if(registrar->StatsBZFile) {
+         BZ2_bzWrite(&bzerror, registrar->StatsBZFile, (char*)header, strlen(header));
+      }
+      else {
+         fputs(header, registrar->StatsFile);
+      }
       registrar->StatsLine      = 1;
       registrar->StatsStartTime = now;
    }
@@ -457,24 +470,30 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    }
 #endif
 
-   fprintf(registrar->StatsFile,
-           "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu %llu\n",
-           registrar->StatsLine++,
-           now / 1000000.0,
-           (now - registrar->StatsStartTime) / 1000000.0,
+   snprintf((char*)&str, sizeof(str),
+            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu %llu\n",
+            registrar->StatsLine++,
+            now / 1000000.0,
+            (now - registrar->StatsStartTime) / 1000000.0,
 
-           runtime / 1000000.0,
-           userTime / 1000000.0,
-           systemTime / 1000000.0,
+            runtime / 1000000.0,
+            userTime / 1000000.0,
+            systemTime / 1000000.0,
 
-           registrar->RegistrationCount,
-           registrar->ReregistrationCount,
-           registrar->DeregistrationCount,
-           registrar->HandleResolutionCount,
-           registrar->FailureReportCount,
-           registrar->SynchronizationCount,
-           registrar->UpdateCount);
-   fflush(registrar->StatsFile);
+            registrar->RegistrationCount,
+            registrar->ReregistrationCount,
+            registrar->DeregistrationCount,
+            registrar->HandleResolutionCount,
+            registrar->FailureReportCount,
+            registrar->SynchronizationCount,
+            registrar->UpdateCount);
+   if(registrar->StatsBZFile) {
+      BZ2_bzWrite(&bzerror, registrar->StatsBZFile, str, strlen(str));
+   }
+   else {
+      fputs(header, registrar->StatsFile);
+      fflush(registrar->StatsFile);
+   }
 
    timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
 }
@@ -649,8 +668,18 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
 /* ###### Write action log header line ################################### */
 void registrarBeginActionLog(struct Registrar* registrar)
 {
+   const char* header;
+   int         bzerror;
+
    if(registrar->ActionLogFile) {
-      fputs("AbsTime RelTime   Direction Protocol Action Reason   Flags Counter Time   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n", registrar->ActionLogFile);
+      header = "AbsTime RelTime   Direction Protocol Action Reason   Flags Counter Time   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n";
+      if(registrar->ActionLogBZFile) {
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, (char*)header, strlen(header));
+      }
+      else {
+         fputs(header, registrar->ActionLogFile);
+         fflush(registrar->ActionLogFile);
+      }
    }
 }
 
@@ -671,19 +700,40 @@ void registrarWriteActionLog(struct Registrar*         registrar,
                              RegistrarIdentifierType   targetID,
                              unsigned int              errorCode)
 {
+   char str1[1024];
+   char str2[1024];
+   char str3[256];
+   int  bzerror;
+
    if(registrar->ActionLogFile) {
       registrar->ActionLogLastActivity = getMicroTime();
       registrar->ActionLogLine++;
-      fprintf(registrar->ActionLogFile, "%06llu   %1.6f %1.6f   \"%s\" \"%s\" \"%s\" \"%s\"   0x%x %llu %1.6f   \"",
-              registrar->ActionLogLine,
-              registrar->ActionLogLastActivity / 1000000.0,
-              (registrar->ActionLogLastActivity - registrar->ActionLogStartTime) / 1000000.0,
-              direction, protocol, action, reason, flags, counter, timeValue / 1000000.0);
+      snprintf((char*)&str1, sizeof(str1),
+               "%06llu   %1.6f %1.6f   \"%s\" \"%s\" \"%s\" \"%s\"   0x%x %llu %1.6f   \"",
+               registrar->ActionLogLine,
+               registrar->ActionLogLastActivity / 1000000.0,
+               (registrar->ActionLogLastActivity - registrar->ActionLogStartTime) / 1000000.0,
+               direction, protocol, action, reason, flags, counter, timeValue / 1000000.0);
       if(poolHandle) {
-         poolHandlePrint(poolHandle, registrar->ActionLogFile);
+         poolHandleGetDescription(poolHandle, (char*)&str2, sizeof(str2));
       }
-      fprintf(registrar->ActionLogFile, "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
-              poolElementID, senderID, receiverID, targetID, errorCode);
-      fflush(registrar->ActionLogFile);
+      else {
+         str2[0] = 0x00;
+      }
+      snprintf((char*)&str3, sizeof(str3),
+               "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
+               poolElementID, senderID, receiverID, targetID, errorCode);
+
+      if(registrar->ActionLogBZFile) {
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str1, strlen(str1));
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str2, strlen(str2));
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str3, strlen(str3));
+      }
+      else {
+         fputs(str1, registrar->ActionLogFile);
+         fputs(str2, registrar->ActionLogFile);
+         fputs(str3, registrar->ActionLogFile);
+         fflush(registrar->ActionLogFile);
+      }
    }
 }

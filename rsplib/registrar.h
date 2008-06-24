@@ -49,6 +49,7 @@
 #include <ext_socket.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <bzlib.h>
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
@@ -129,10 +130,12 @@ struct Registrar
    unsigned long long                         TakeoverExpiryInterval;
 
    FILE*                                      ActionLogFile;
+   BZFILE*                                    ActionLogBZFile;
    unsigned long long                         ActionLogLine;
    unsigned long long                         ActionLogLastActivity;
    unsigned long long                         ActionLogStartTime;
    FILE*                                      StatsFile;
+   BZFILE*                                    StatsBZFile;
    struct Timer                               StatsTimer;
    unsigned long long                         StatsLine;
    unsigned long long                         StatsStartTime;
@@ -165,7 +168,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const bool                     enrpAnnounceViaMulticast,
                                const union sockaddr_union*    enrpMulticastAddress,
                                FILE*                          actionLogFile,
+                               BZFILE*                        actionLogBZFile,
                                FILE*                          statsFile,
+                               BZFILE*                        statsBZFile,
                                unsigned int                   statsInterval
 #ifdef ENABLE_CSP
                                , const unsigned int           cspReportInterval,
