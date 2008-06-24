@@ -650,7 +650,7 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
 void registrarBeginActionLog(struct Registrar* registrar)
 {
    if(registrar->ActionLogFile) {
-      fputs("AbsTime RelTime   Direction Protocol Action Type Reason Flags   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n", registrar->ActionLogFile);
+      fputs("AbsTime RelTime   Direction Protocol Action Reason   Flags Counter Time   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n", registrar->ActionLogFile);
    }
 }
 
@@ -662,6 +662,7 @@ void registrarWriteActionLog(struct Registrar*         registrar,
                              const char*               action,
                              const char*               reason,
                              const uint32_t            flags,
+                             const unsigned long long  counter,
                              const unsigned long long  timeValue,
                              const struct PoolHandle*  poolHandle,
                              PoolElementIdentifierType poolElementID,
@@ -673,15 +674,16 @@ void registrarWriteActionLog(struct Registrar*         registrar,
    if(registrar->ActionLogFile) {
       registrar->ActionLogLastActivity = getMicroTime();
       registrar->ActionLogLine++;
-      fprintf(registrar->ActionLogFile, "%06llu   %1.6f %1.6f   %s %s %s %s %u %1.6f   \"",
+      fprintf(registrar->ActionLogFile, "%06llu   %1.6f %1.6f   \"%s\" \"%s\" \"%s\" \"%s\"   0x%x %llu %1.6f   \"",
               registrar->ActionLogLine,
               registrar->ActionLogLastActivity / 1000000.0,
               (registrar->ActionLogLastActivity - registrar->ActionLogStartTime) / 1000000.0,
-              direction, protocol, action, reason, flags, timeValue / 1000000.0);
+              direction, protocol, action, reason, flags, counter, timeValue / 1000000.0);
       if(poolHandle) {
          poolHandlePrint(poolHandle, registrar->ActionLogFile);
       }
       fprintf(registrar->ActionLogFile, "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
               poolElementID, senderID, receiverID, targetID, errorCode);
+      fflush(registrar->ActionLogFile);
    }
 }

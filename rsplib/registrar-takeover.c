@@ -56,6 +56,8 @@ void registrarHandleENRPInitTakeover(struct Registrar*       registrar,
            message->SenderID,
            message->RegistrarIdentifier);
    LOG_END
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "InitTakeover", "", 0, 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
 
    /* ====== We are the takeover target -> try to stop it by Peer Presence */
    if(message->RegistrarIdentifier == registrar->ServerID) {
@@ -156,6 +158,9 @@ void registrarSendENRPInitTakeoverToAllPeers(struct Registrar*             regis
       message->ReceiverID   = 0;
       message->RegistrarIdentifier = targetID;
 
+      registrarWriteActionLog(registrar, "Send", "ENRP", "InitTakeover", "", 0, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
       while(peerListNode != NULL) {
          message->ReceiverID   = peerListNode->Identifier;
@@ -185,6 +190,7 @@ void registrarHandleENRPInitTakeoverAck(struct Registrar*       registrar,
                                         struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PeerListNode)* peerListNode;
+   size_t                         acksToGo;
 
    if(message->SenderID == registrar->ServerID) {
       /* This is our own message -> skip it! */
@@ -203,9 +209,14 @@ void registrarHandleENRPInitTakeoverAck(struct Registrar*       registrar,
             message->RegistrarIdentifier);
       LOG_END
 
-      if(takeoverProcessAcknowledge(peerListNode->TakeoverProcess,
-                                    message->RegistrarIdentifier,
-                                    message->SenderID) > 0) {
+      acksToGo = takeoverProcessAcknowledge(peerListNode->TakeoverProcess,
+                                            message->RegistrarIdentifier,
+                                            message->SenderID);
+
+      registrarWriteActionLog(registrar, "Recv", "ENRP", "InitTakeoverAck", "", 0, acksToGo, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+
+      if(acksToGo > 0) {
          LOG_ACTION
          fprintf(stdlog, "Peer $%08x acknowledges takeover of target $%08x. %u acknowledges to go.\n",
                message->SenderID,
@@ -260,6 +271,9 @@ void registrarSendENRPInitTakeoverAck(struct Registrar*             registrar,
               message->RegistrarIdentifier,
               message->ReceiverID);
       LOG_END
+      registrarWriteActionLog(registrar, "Send", "ENRP", "InitTakeoverAck", "", 0, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, 0, 0, 0, message) == false) {
          LOG_WARNING
@@ -360,6 +374,10 @@ void registrarHandleENRPTakeoverServer(struct Registrar*       registrar,
            message->RegistrarIdentifier);
    LOG_END
 
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "TakeoverServer", "", 0, 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+
+
    /* ====== Update PEs' home PR identifier ============================== */
    poolElementNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolElementOwnershipNodeForIdentifier)(
                         &registrar->Handlespace.Handlespace, message->RegistrarIdentifier);
@@ -408,6 +426,9 @@ static void registrarSendENRPTakeoverServer(struct Registrar*             regist
       message->SenderID            = registrar->ServerID;
       message->ReceiverID          = receiverID;
       message->RegistrarIdentifier = targetID;
+
+      registrarWriteActionLog(registrar, "Send", "ENRP", "TakeoverServer", "", 0, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
 
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, 0, message) == false) {

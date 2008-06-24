@@ -299,7 +299,7 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
             LOG_END
          }
 
-         registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "AddPE", 0, 0,
+         registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "AddPE", 0, 0, 0,
                                  &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
       }
       else {
@@ -332,7 +332,7 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
          fputs("\n", stdlog);
          LOG_END
       }
-      registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "DelPE", 0, 0,
+      registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "DelPE", 0, 0, 0,
                               &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
    }
 
@@ -376,7 +376,7 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
       fputs("\n", stdlog);
       LOG_END
 
-      registrarWriteActionLog(registrar, "Send", "ENRP", "Update", ((message->Action == PNUP_ADD_PE) ? "AddPE" : "DelPE"), 0, 0,
+      registrarWriteActionLog(registrar, "Send", "ENRP", "Update", ((message->Action == PNUP_ADD_PE) ? "AddPE" : "DelPE"), 0, 0, 0,
                               &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, 0);
 
 #ifndef MSG_SEND_TO_ALL
@@ -429,6 +429,8 @@ void registrarHandleENRPListRequest(struct Registrar*       registrar,
    fprintf(stdlog, "Got ListRequest from peer $%08x\n",
            message->SenderID);
    LOG_END
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "ListRequest", "", 0, 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
 
    response = rserpoolMessageNew(NULL, 65536);
    if(response != NULL) {
@@ -445,6 +447,9 @@ void registrarHandleENRPListRequest(struct Registrar*       registrar,
       fprintf(stdlog, "Sending ListResponse to peer $%08x...\n",
               message->SenderID);
       LOG_END
+      registrarWriteActionLog(registrar, "Send", "ENRP", "ListResponse", "", message->Flags,
+                              ST_CLASS(peerListGetPeerListNodes)(&response->PeerListPtr->List), 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              fd, assocID, 0, 0, 0, response) == false) {
          LOG_WARNING
@@ -478,6 +483,8 @@ void registrarSendENRPListRequest(struct Registrar*           registrar,
       message->Flags        = 0x00;
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = receiverID;
+      registrarWriteActionLog(registrar, "Send", "ENRP", "ListRequest", "", 0, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
@@ -511,6 +518,9 @@ void registrarHandleENRPListResponse(struct Registrar*       registrar,
    fprintf(stdlog, "Got ListResponse from peer $%08x\n",
            message->SenderID);
    LOG_END
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "ListResponse", "", message->Flags,
+                           (message->PeerListPtr != NULL) ? ST_CLASS(peerListGetPeerListNodes)(&message->PeerListPtr->List) : 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
 
    /* ====== Handle response ============================================= */
    if(!(message->Flags & EHF_LIST_RESPONSE_REJECT)) {
@@ -540,11 +550,11 @@ void registrarHandleENRPListResponse(struct Registrar*       registrar,
 
                   /* ====== New peer -> Send Peer Presence =============== */
                   registrarSendENRPPresence(registrar,
-                                   registrar->ENRPUnicastSocket, 0, 0,
-                                   newPeerListNode->AddressBlock->AddressArray,
-                                   newPeerListNode->AddressBlock->Addresses,
-                                   newPeerListNode->Identifier,
-                                   false);
+                                            registrar->ENRPUnicastSocket, 0, 0,
+                                            newPeerListNode->AddressBlock->AddressArray,
+                                            newPeerListNode->AddressBlock->Addresses,
+                                            newPeerListNode->Identifier,
+                                            false);
                }
             }
             else {
@@ -600,6 +610,8 @@ void registrarHandleENRPHandleTableRequest(struct Registrar*       registrar,
    fprintf(stdlog, "Got HandleTableRequest from peer $%08x\n",
            message->SenderID);
    LOG_END
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "HandleTableRequest", "", message->Flags, 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
 
    registrar->SynchronizationCount++;
 
@@ -636,6 +648,9 @@ void registrarHandleENRPHandleTableRequest(struct Registrar*       registrar,
       fprintf(stdlog, "Sending HandleTableResponse to peer $%08x...\n",
               message->SenderID);
       LOG_END
+      registrarWriteActionLog(registrar, "Send", "ENRP", "HandleTableResponse", "", message->Flags,
+                              (response->HandlespacePtr != NULL) ? ST_CLASS(poolHandlespaceManagementGetPoolElements)(response->HandlespacePtr) : 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              fd, assocID, 0, 0, 0, response) == false) {
          LOG_WARNING
@@ -670,6 +685,8 @@ void registrarSendENRPHandleTableRequest(struct Registrar*           registrar,
       message->Flags        = flags;
       message->SenderID     = registrar->ServerID;
       message->ReceiverID   = receiverID;
+      registrarWriteActionLog(registrar, "Send", "ENRP", "HandleTableRequest", "", message->Flags, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, 0, message) == false) {
          LOG_WARNING
@@ -707,6 +724,9 @@ void registrarHandleENRPHandleTableResponse(struct Registrar*       registrar,
    fprintf(stdlog, "Got HandleTableResponse from peer $%08x\n",
            message->SenderID);
    LOG_END
+   registrarWriteActionLog(registrar, "Recv", "ENRP", "HandleTableResponse", "", message->Flags,
+                           (message->HandlespacePtr != NULL) ? ST_CLASS(poolHandlespaceManagementGetPoolElements)(message->HandlespacePtr) : 0, 0,
+                           NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
 
 
    /* ====== Find peer list node ========================================= */
@@ -879,8 +899,12 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
                                0,
                                &message->SourceAddress,
                                1, MAX_PE_TRANSPORTADDRESSES);
+      registrarWriteActionLog(registrar, "Recv", "MulticastENRP", "Presence", "",  message->Flags, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
    }
    else {
+      registrarWriteActionLog(registrar, "Recv", "ENRP", "Presence", "", message->Flags, 0, 0,
+                              NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
       if(transportAddressBlockGetAddressesFromSCTPSocket(remoteAddressBlock,
                                                          fd, assocID,
                                                          MAX_PE_TRANSPORTADDRESSES,
@@ -1119,6 +1143,8 @@ void registrarSendENRPPresence(struct Registrar*             registrar,
          messageLength = rserpoolMessage2Packet(message);
          if(messageLength > 0) {
             if(sd == registrar->ENRPMulticastOutputSocket) {
+               registrarWriteActionLog(registrar, "Send", "MulticastENRP", "Presence", "", message->Flags, 0, 0,
+                                       NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
                if(sendmulticast(
                      registrar->ENRPMulticastOutputSocket,
                      registrar->ENRPMulticastOutputSocketFamily,
@@ -1134,6 +1160,8 @@ void registrarSendENRPPresence(struct Registrar*             registrar,
                }
             }
             else {
+               registrarWriteActionLog(registrar, "Send", "ENRP", "Presence", "", message->Flags, 0, 0,
+                                       NULL, 0, message->SenderID, message->ReceiverID, 0, 0);
                if(rserpoolMessageSend(IPPROTO_SCTP,
                                       sd, assocID, msgSendFlags, 0, 0, message) == false) {
                   LOG_WARNING
