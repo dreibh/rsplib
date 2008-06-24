@@ -954,14 +954,16 @@ void registrarHandleENRPPresence(struct Registrar*       registrar,
       result = ST_CLASS(peerListManagementRegisterPeerListNode)(
                   &registrar->Peers,
                   message->PeerListNodePtr->Identifier,
-                  PLNF_DYNAMIC,
+                  PLNF_DYNAMIC|PLNF_NEW,   /* The entry is assumed to be new */
                   enrpTransportAddressBlock,
                   getMicroTime(),
                   &peerListNode);
 
       if(result == RSPERR_OKAY) {
          /* ====== Send Presence to new peer ============================= */
-         if(assocID == 0) {
+         /* PLNF_NEW will be removed when the entry was not new. If it is
+            still set, there is a new PR -> send him a Presence */
+         if(peerListNode->Flags & PLNF_NEW) {
             LOG_ACTION
             fputs("Sending Presence to new peer ", stdlog);
             ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
