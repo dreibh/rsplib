@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 
 
    for(i = 0;i < poolElements;i++) {
-      snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, (unsigned int)(1 + (i % pools)));
+      snprintf((char*)&myPoolHandle, sizeof(myPoolHandle), "%s-%04u", poolHandle, (unsigned int)(1 + (i % max(1, pools))));
       printf("Registering PE #%u in pool %s...\n", (unsigned int)i + 1, myPoolHandle);
       poolElementArray[i] = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
       if(poolElementArray[i] < 0) {

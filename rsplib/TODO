@@ -1,3 +1,10 @@
+Policy/kumulativer Lastwert:
+ Policy-Struktur überarbeiten
+   -> Update()-Funktion für Änderungserfassung vom PE
+   -> kumulativer Lastwert für LU, LUD, ...
+
+======
+
 - Adreßfilter ASAP/ENRP, Scope für sendx/connectx!
 - Message Parser
 
