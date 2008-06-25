@@ -41,14 +41,14 @@
 // ###### Constructor #######################################################
 TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
 {
-   RSerPoolSocketDescriptor   = rserpoolSocketDescriptor;
-   ServerList                 = NULL;
-   IsNewSession               = true;
-   Shutdown                   = false;
-   Finished                   = false;
-   Load                       = 0;
-   SyncTimerTimeStamp         = 0;
-   AsyncTimerTimeStamp        = 0;
+   RSerPoolSocketDescriptor = rserpoolSocketDescriptor;
+   ServerList               = NULL;
+   IsNewSession             = true;
+   Shutdown                 = false;
+   Finished                 = false;
+   Load                     = 0;
+   SyncTimerTimeStamp       = 0;
+   AsyncTimerTimeStamp      = 0;
    printTimeStamp(stdout);
    printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
 }
