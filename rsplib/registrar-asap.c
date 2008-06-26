@@ -693,8 +693,7 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
                       &registrar->Handlespace));
    }
    else {
-      registrarWriteActionLog(registrar, "Recv", "ASAP", "EndpointKeepAliveAck", "TooLateAlreadyRemoved", 0, 0,
-                              now - poolElementNode->LastKeepAliveTransmission,
+      registrarWriteActionLog(registrar, "Recv", "ASAP", "EndpointKeepAliveAck", "TooLateAlreadyRemoved", 0, 0, 0,
                               &message->Handle, message->Identifier, 0, 0, 0, 0);
 
       LOG_WARNING
