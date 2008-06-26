@@ -293,10 +293,12 @@ bool ScriptingServer::hasFinishedWork(int& exitStatus)
       ChildProcess = 0;
       if(WIFEXITED(status) || WIFSIGNALED(status)) {
          exitStatus = WEXITSTATUS(status);
+printf("STATUS: %d -> exit code = %d\n", ChildProcess, exitStatus);
          return(true);
       }
    }
    exitStatus = 0;
+printf("STATUS: %d  not finished\n", ChildProcess);
    return(false);
 }
 
