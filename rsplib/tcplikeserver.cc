@@ -459,8 +459,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
          else {
             perror("Unable to map notification pipe FDs");
          }
+         ext_close(systemNotificationPipe[0]);
          ext_close(systemNotificationPipe[1]);
-         ext_close(systemNotificationPipe[2]);
       }
       else {
          perror("Unable to create notification pipe");
