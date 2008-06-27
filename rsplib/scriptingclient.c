@@ -64,11 +64,21 @@ static unsigned long long KeepAliveInterval =  5000000;
 static unsigned long long KeepAliveTimeout  =  5000000;
 static unsigned long long RetryDelay        = 10000000;
 
+static const char*        RunID             = NULL;
 static unsigned int       Trial             = 1;
 static uint32_t           ExitStatus        = 0;
 static bool               KeepAliveTransmitted;
 static unsigned long long LastKeepAlive;
 
+
+/* ###### Write new log line ############################################# */
+static void newLogLine(FILE* fh)
+{
+   printTimeStamp(fh);
+   if(RunID) {
+      fprintf(fh, "[%s] ", RunID);
+   }
+}
 
 
 /* ###### Upload input file ############################################## */
@@ -85,7 +95,9 @@ static unsigned int performUpload(int sd)
       exit(1);
    }
 
+   newLogLine(stdout);
    puts("Uploading ...");
+   fflush(stdout);
    for(;;) {
       dataLength = fread((char*)&upload.Data, 1, sizeof(upload.Data), fh);
       if(dataLength >= 0) {
@@ -95,7 +107,9 @@ static unsigned int performUpload(int sd)
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                             0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
          if(sent <= 0) {
+            newLogLine(stdout);
             printf("Upload error: %s\n", strerror(errno));
+            fflush(stdout);
             return(SSCR_FAILOVER);
          }
          if(dataLength == 0) {
@@ -103,14 +117,16 @@ static unsigned int performUpload(int sd)
          }
       }
       else {
-         printTimeStamp(stderr);
+         newLogLine(stderr);
          fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", InputName);
          exit(1);
       }
    }
    fclose(fh);
 
+   newLogLine(stdout);
    puts("Upload complete.");
+   fflush(stdout);
    return(SSCR_OKAY);
 }
 
@@ -122,13 +138,17 @@ static unsigned int handleStatus(const struct Status* status,
    if(length >= sizeof(struct Status)) {
       ExitStatus = ntohl(status->Status);
       if(ExitStatus != 0) {
+         newLogLine(stdout);
          printf("Got exit status %u from remote side!\n", ExitStatus);
+         fflush(stdout);
          Trial++;
          if(Trial < MaxRetry) {
+            newLogLine(stdout);
             printf("Trying again (Trial %u of %u) ...\n", Trial, MaxRetry);
+            fflush(stdout);
             return(SSCR_FAILOVER);
          }
-         printTimeStamp(stderr);
+         newLogLine(stderr);
          fputs("Maximum number of trials reached -> check your input and the results!\n", stderr);
          fputs("Trying to download the results file for debugging ...", stderr);
          return(SSCR_COMPLETE);
@@ -136,8 +156,9 @@ static unsigned int handleStatus(const struct Status* status,
       return(SSCR_OKAY);
    }
    else {
-      printTimeStamp(stderr);
-      fputs("Invalid Status message!\n", stderr);
+      newLogLine(stdout);
+      puts("Invalid Status message!");
+      fflush(stdout);
       return(SSCR_FAILOVER);
    }
 }
@@ -155,7 +176,9 @@ static unsigned int sendKeepAlive(int sd)
    sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
                       0, htonl(PPID_SP), 0, 0, 0, 0);
    if(sent <= 0) {
+      newLogLine(stdout);
       printf("Keep-Alive transmission error: %s\n", strerror(errno));
+      fflush(stdout);
       return(SSCR_FAILOVER);
    }
    KeepAliveTransmitted = true;
@@ -172,10 +195,12 @@ static unsigned int handleDownload(const struct Download* download,
 
    /* ====== Create file, if necessary =================================== */
    if(!OutputFile) {
+      newLogLine(stdout);
       puts("Downloading ...");
+      fflush(stdout);
       OutputFile = fopen(OutputName, "w");
       if(OutputFile == NULL) {
-         printTimeStamp(stderr);
+         newLogLine(stderr);
          fprintf(stderr, "ERROR: Unable to create output file \"%s\"!\n", OutputName);
          exit(1);
       }
@@ -185,7 +210,7 @@ static unsigned int handleDownload(const struct Download* download,
    dataLength = length - sizeof(struct ScriptingCommonHeader);
    if(dataLength > 0) {
       if(fwrite(&download->Data, dataLength, 1, OutputFile) != 1) {
-         printTimeStamp(stderr);
+         newLogLine(stderr);
          fprintf(stderr, "ERROR: Writing to output file failed!\n");
          fclose(OutputFile);
          exit(1);
@@ -195,7 +220,9 @@ static unsigned int handleDownload(const struct Download* download,
       fclose(OutputFile);
       OutputFile = NULL;
       if(!Quiet) {
+         newLogLine(stdout);
          puts("Download completed!");
+         fflush(stdout);
       }
       return(SSCR_COMPLETE);
    }
@@ -213,8 +240,9 @@ static unsigned int handleMessage(int                                 sd,
    /* ====== Check message header ======================================== */
    if( (ppid != PPID_SP) ||
        (length < sizeof(struct ScriptingCommonHeader)) ) {
-      printTimeStamp(stderr);
-      fputs("Received invalid message!\n", stderr);
+      newLogLine(stdout);
+      puts("Received invalid message!");
+      fflush(stdout);
       return(SSCR_FAILOVER);
    }
 
@@ -227,7 +255,9 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_READY:
                Status = SSCS_PROCESSING;
+               newLogLine(stdout);
                puts("Server is ready");
+               fflush(stdout);
                return(performUpload(sd));
              break;
          }
@@ -265,9 +295,10 @@ static unsigned int handleMessage(int                                 sd,
 
 
    /* ====== Unexpected message ========================================== */
-   printTimeStamp(stderr);
-   fprintf(stderr, "Unexpected message $%02x in status #%u (length=%u, ppid=$%08x)\n",
-           header->Type, Status, (unsigned int)length, ppid);
+   newLogLine(stdout);
+   printf("Unexpected message $%02x in status #%u (length=%u, ppid=$%08x)\n",
+          header->Type, Status, (unsigned int)length, ppid);
+   fflush(stdout);
    return(SSCR_FAILOVER);
 }
 
@@ -304,6 +335,9 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-output=" ,8))) {
          OutputName = (const char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-runid=" ,7))) {
+         RunID = (const char*)&argv[i][7];
       }
       else if(!(strncmp(argv[i], "-maxretry=" ,10))) {
          MaxRetry = atol((const char*)&argv[i][10]);
@@ -359,17 +393,24 @@ int main(int argc, char** argv)
 
 
    if(rsp_initialize(&info) < 0) {
+      newLogLine(stderr);
       fputs("ERROR: Unable to initialize rsplib\n", stderr);
       exit(1);
    }
 
    sd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd < 0) {
+      newLogLine(stderr);
       perror("Unable to create RSerPool socket");
       exit(1);
    }
 
+   newLogLine(stdout);
+   puts("Connecting to pool ...");
+   fflush(stdout);
+
    if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) {
+      newLogLine(stderr);
       perror("Unable to connect to pool element");
       exit(1);
    }
@@ -399,9 +440,11 @@ int main(int argc, char** argv)
             /* ====== Notification ================================= */
             if(flags & MSG_RSERPOOL_NOTIFICATION) {
                notification = (union rserpool_notification*)&buffer;
+               newLogLine(stdout);
                printf("\x1b[39;47mNotification: ");
                rsp_print_notification(notification, stdout);
                puts("\x1b[0m");
+               fflush(stdout);
                if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                   (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
                   result = SSCR_FAILOVER;
@@ -426,7 +469,9 @@ int main(int argc, char** argv)
 
          /* ====== KeepAlive timeout =============================== */
          else {
+            newLogLine(stdout);
             puts("Keep-Alive timeout");
+            fflush(stdout);
             result = SSCR_FAILOVER;
          }
       }
@@ -437,7 +482,9 @@ int main(int argc, char** argv)
             fclose(OutputFile);
             OutputFile = NULL;
          }
+         newLogLine(stdout);
          puts("FAILOVER ...");
+         fflush(stdout);
          nextTimer = getMicroTime() + RetryDelay;
          do {
             usleep(500000);

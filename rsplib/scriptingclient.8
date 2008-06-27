@@ -43,6 +43,7 @@
 .Op Fl quiet
 .Op Fl maxretry=trials
 .Op Fl retrydelay=milliseconds
+.Op Fl runid=description
 .Op Fl transmittimeout=milliseconds
 .Op Fl keepaliveinterval=milliseconds
 .Op Fl keepalivetimeout=milliseconds
@@ -84,6 +85,9 @@ the error limit is reached, the received output file will be downloaded for
 debugging purposes.
 .It Fl retrydelay=milliseconds
 Sets the retry delay upon failover in milliseconds.
+.It Fl runid=description
+Add the given description to all log lines of the scripting service PU
+operation. This can be useful when multiple PUs are running simultaneously.
 .It Fl transmittimeout=milliseconds
 Sets the transmission timeout in milliseconds.
 .It Fl keepaliveinterval=milliseconds
