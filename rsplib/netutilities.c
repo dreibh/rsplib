@@ -59,6 +59,9 @@
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
 #define CMSG_LEN(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + (len))
 #endif
+#ifdef HAVE_VALGRIND_MEMCHECK_H
+#include <valgrind/memcheck.h>
+#endif
 
 
 #define MAX_AUTOSELECT_TRIALS 50000
@@ -2047,6 +2050,9 @@ sctp_getaddrs(int sd, sctp_assoc_t id,
     * a simple hack*/
    cnt = getaddrs->addr_num;
    memmove(getaddrs, getaddrs + 1, len);   // TD: corrent length value!
+#ifdef HAVE_VALGRIND_MEMCHECK_H
+   VALGRIND_MAKE_MEM_DEFINED(getaddrs, len);
+#endif
    *addrs = (struct sockaddr*)getaddrs;
 
    return cnt;

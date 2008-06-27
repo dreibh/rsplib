@@ -387,6 +387,11 @@ else
                    AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])],
                   AC_MSG_RESULT(no))
 
+   # ====== Check for Valgrind ==============================================
+   # Needed to avoid false positives for sctp_getladdrs()/sctp_getpaddrs()
+   AC_CHECK_HEADERS([valgrind/valgrind.h])
+   AC_CHECK_HEADERS([valgrind/memcheck.h])
+
    # ====== Check for SCTP library linker parameter =========================
    sctplib_LIBS=""
    socketapi_LIBS=""
