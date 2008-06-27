@@ -399,6 +399,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                else {
                                   puts("Rejected new session");
                                   rsp_close(newRSerPoolSocket);
+                                  delete serviceThread;
                                }
                             }
                         }
