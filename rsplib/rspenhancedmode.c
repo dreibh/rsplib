@@ -780,7 +780,6 @@ int rsp_accept(int sd,
 
 /* ###### Establish association to a new PE ############################## */
 static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
-                       const uint32_t         peIdentifier,
                        const struct sockaddr* destinationAddressArray,
                        const size_t           destinationAddresses)
 {
@@ -797,10 +796,10 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
       setNonBlocking(sd);
       if(configureSCTPSocket(sd, 0)) {
          LOG_VERBOSE
-         fprintf(stdlog, "Trying connection to pool element $%08x (", peIdentifier);
+         fprintf(stdlog, "Trying connection to pool element $%08x (", rserpoolSocket->ConnectedSession->ConnectedPE);
          poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
          fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u)\n",
-                 peIdentifier,
+                 rserpoolSocket->ConnectedSession->ConnectedPE,
                  rserpoolSocket->Descriptor, sd,
                  rserpoolSocket->ConnectedSession->SessionID);
          LOG_END
@@ -824,10 +823,10 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
          }
 
          LOG_VERBOSE
-         fprintf(stdlog, "Failed to establish connection to pool element $%08x (", peIdentifier);
+         fprintf(stdlog, "Failed to establish connection to pool element $%08x (", rserpoolSocket->ConnectedSession->ConnectedPE);
          poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
          fprintf(stdlog, "/$%08x on RSerPool socket %u, socket %d, session %u)\n",
-                 peIdentifier,
+                 rserpoolSocket->ConnectedSession->ConnectedPE,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket,
                  rserpoolSocket->ConnectedSession->SessionID);
          LOG_END
@@ -947,14 +946,13 @@ int rsp_forcefailover_tags(int                sd,
       if(result > 0) {
          if(rspAddrInfo->ai_protocol == rserpoolSocket->SocketProtocol) {
             /* ====== Establish connection ================================== */
+            rserpoolSocket->ConnectedSession->ConnectedPE = rspAddrInfo->ai_pe_id;
             rserpoolSocket->Socket = connectToPE(rserpoolSocket,
-                                                 rspAddrInfo->ai_pe_id,
                                                  rspAddrInfo->ai_addr,
                                                  rspAddrInfo->ai_addrs);
             if(rserpoolSocket->Socket >= 0) {
                success = true;
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
-               rserpoolSocket->ConnectedSession->ConnectedPE         = rspAddrInfo->ai_pe_id;
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
                                            0);
@@ -1645,7 +1643,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
          session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
          while(session != NULL) {
             if((!session->IsIncoming) &&
-               (session->ConnectedPE != 0)) {
+               (session->IsFailed)) {
                (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->ConnectedPE);
                (*caeArray)[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
                (*caeArray)[caeArraySize].Flags      = 0;
