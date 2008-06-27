@@ -1643,7 +1643,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
          session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
          while(session != NULL) {
             if((!session->IsIncoming) &&
-               (session->IsFailed)) {
+               (!session->IsFailed)) {
                (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->ConnectedPE);
                (*caeArray)[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
                (*caeArray)[caeArraySize].Flags      = 0;
