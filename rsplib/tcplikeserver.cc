@@ -393,13 +393,18 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
                             if(newRSerPoolSocket >= 0) {
                                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
-                               if((serviceThread) && (serverSet.add(serviceThread))) {
-                                  serviceThread->start();
+                               if(serviceThread) {
+                                  if(serverSet.add(serviceThread)) {
+                                     serviceThread->start();
+                                  }
+                                  else {
+                                     puts("Rejected new session");
+                                     delete serviceThread;
+                                  }
                                }
                                else {
-                                  puts("Rejected new session");
+                                  puts("Unable to create new service thread");
                                   rsp_close(newRSerPoolSocket);
-                                  delete serviceThread;
                                }
                             }
                         }
