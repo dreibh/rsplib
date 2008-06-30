@@ -261,6 +261,7 @@ void TCPLikeServer::run()
    finishSession(eventHandlingResult);
    if((eventHandlingResult == EHR_Abort) ||
       (eventHandlingResult == EHR_Shutdown)) {
+printf("Abort: sd=%d  ehr=%d\n", RSerPoolSocketDescriptor, eventHandlingResult);
       rsp_sendmsg(RSerPoolSocketDescriptor,
                   NULL, 0, 0,
                   0, 0, 0, 0,
