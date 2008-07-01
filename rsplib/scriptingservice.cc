@@ -306,14 +306,16 @@ printf("STATUS: %d  not finished\n", ChildProcess);
 // ###### Check, if work is already complete ################################
 EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now)
 {
-   int exitStatus;
+   EventHandlingResult result = EHR_Okay;
+   int                 exitStatus;
    if(hasFinishedWork(exitStatus)) {
-      if(sendStatus(exitStatus) == EHR_Okay) {
-         return(performDownload());
+      result = sendStatus(exitStatus);
+      if(result == EHR_Okay) {
+         result = performDownload();
       }
    }
    setSyncTimer(now + 1000000);
-   return(EHR_Okay);
+   return(result);
 }
 
 

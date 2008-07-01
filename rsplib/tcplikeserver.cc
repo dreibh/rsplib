@@ -83,9 +83,7 @@ void TCPLikeServer::finishSession(EventHandlingResult result)
 // ###### Shutdown thread ###################################################
 void TCPLikeServer::shutdown()
 {
-   if(!Finished) {
-      Shutdown = true;
-   }
+   Shutdown = true;
 }
 
 
@@ -521,17 +519,19 @@ void TCPLikeServerList::handleRemovalsAndTimers()
    while(entry != NULL) {
       ThreadListEntry* next = entry->Next;
       if(entry->Object->hasFinished()) {
+printf("FIN!!!: %p\n", entry->Object);
          remove(entry->Object);
       }
       else {
-         lock();
+printf("!fin: %p\n", entry->Object);
+         entry->Object->lock();
          if(entry->Object->AsyncTimerTimeStamp > 0) {
             const unsigned long long now = getMicroTime();
             if(entry->Object->AsyncTimerTimeStamp <= now) {
                entry->Object->asyncTimerEvent(now);
             }
          }
-         unlock();
+         entry->Object->unlock();
       }
       entry = next;
    }
