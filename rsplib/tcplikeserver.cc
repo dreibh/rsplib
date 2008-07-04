@@ -184,6 +184,8 @@ void TCPLikeServer::run()
    EventHandlingResult   eventHandlingResult;
    unsigned long long    now;
 
+printf("Startup: sd=%d\n", RSerPoolSocketDescriptor);
+
    eventHandlingResult = initializeSession();
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
@@ -197,9 +199,16 @@ void TCPLikeServer::run()
             nextTimerEvent = 5000000;
          }
          now      = getMicroTime();
+printf("nx=%llu\n", nextTimerEvent);
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
                                     &rinfo, &flags, (int)(nextTimerEvent / 1000));
+
+
+if(received >= 0)
+printf("event sd=%d r=%d\n", RSerPoolSocketDescriptor, received);
+
+
          if(received > 0) {
             /*
             for(int i = 0;i < received;i++) {
@@ -394,7 +403,10 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
                                if(serviceThread) {
                                   if(serverSet.add(serviceThread)) {
-                                     serviceThread->start();
+                                     if(!serviceThread->start()) {
+                                        puts("Unable to create service thread");
+                                        delete serviceThread;
+                                     }
                                   }
                                   else {
                                      puts("Rejected new session");
