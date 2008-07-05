@@ -494,12 +494,8 @@ int rsp_listen(int sd, int backlog)
 {
    struct RSerPoolSocket* rserpoolSocket;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-
-   if(rserpoolSocket->PoolElement) {
-      return(ext_listen(rserpoolSocket->Socket, backlog));
-   }
-   errno = EBADF;
-   return(-1);
+   // printf("backlog(%d)=%d\n", sd, backlog);
+   return(ext_listen(rserpoolSocket->Socket, backlog));
 }
 
 
@@ -569,14 +565,6 @@ int rsp_register_tags(int                        sd,
 
    /* ====== Registration of a new pool element ========================== */
    else {
-      if(ext_listen(rserpoolSocket->Socket, 10) < 0) {
-         LOG_ERROR
-         logerror("Unable to set socket for new pool element to listen mode");
-         LOG_END
-         threadSafetyUnlock(&rserpoolSocket->Mutex);
-         return(-1);
-      }
-
       /* ====== Create pool element ====================================== */
       rserpoolSocket->PoolElement = (struct PoolElement*)malloc(sizeof(struct PoolElement));
       if(rserpoolSocket->PoolElement == NULL) {
@@ -1128,16 +1116,17 @@ ssize_t rsp_recvmsg(int                    sd,
                     int*                   msg_flags,
                     int                    timeout)
 {
-   struct RSerPoolSocket* rserpoolSocket;
-   struct Session*        session;
-   struct rsp_sndrcvinfo  rinfoDummy;
-   sctp_assoc_t           assocID;
-   int                    flags;
-   ssize_t                received;
-   ssize_t                received2;
-   unsigned long long     startTimeStamp;
-   unsigned long long     currentTimeout;
-   unsigned long long     now;
+   struct RSerPoolSocket*         rserpoolSocket;
+   struct Session*                session;
+   struct rsp_sndrcvinfo          rinfoDummy;
+   const union sctp_notification* notification;
+   sctp_assoc_t                   assocID;
+   int                            flags;
+   ssize_t                        received;
+   ssize_t                        received2;
+   unsigned long long             startTimeStamp;
+   unsigned long long             currentTimeout;
+   unsigned long long             now;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    if(rinfo == NULL) {
@@ -1242,9 +1231,18 @@ ssize_t rsp_recvmsg(int                    sd,
 
          /* ====== Handle notification ====================================== */
          if(flags & MSG_NOTIFICATION) {
-            handleNotification(rserpoolSocket,
-                               (const union sctp_notification*)rserpoolSocket->MsgBuffer->Buffer);
-            received = -1;
+            notification = (const union sctp_notification*)rserpoolSocket->MsgBuffer->Buffer;
+            handleNotification(rserpoolSocket, notification);
+            if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
+                ( (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) ||
+                  (notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ) ) {
+               /* The association is closed here. Therefore, we return length 0
+                  to signalize the disconnect. */
+               received = 0;
+            }
+            else {
+               received = -1;
+            }
          }
 
          /* ====== Handle ASAP control channel message ====================== */
@@ -1362,8 +1360,8 @@ ssize_t rsp_recvfullmsg(int                    sd,
    ssize_t                  received;
 
    while( ((received = rsp_recvmsg(sd, (char*)&((char*)buffer)[offset], bufferLength - offset,
-                                  rinfo, msg_flags,
-                                  ((endTimeStamp - now) > 0) ? (int)((endTimeStamp - now) / 1000) : 0)) > 0) &&
+                                   rinfo, msg_flags,
+                                   ((endTimeStamp - now) > 0) ? (int)((endTimeStamp - now) / 1000) : 0)) > 0) &&
           (offset < bufferLength) ) {
       offset += received;
       if(*msg_flags & MSG_EOR) {

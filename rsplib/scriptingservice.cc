@@ -164,6 +164,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
                 RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      printTimeStamp(stdout);
       printf("S%04d: Starting upload into directory \"%s\"...\n",
              RSerPoolSocketDescriptor, Directory);
    }
@@ -272,7 +273,7 @@ EventHandlingResult ScriptingServer::startWorking()
       execlp("scriptingcontrol",
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, (char*)NULL);
-      perror("Failed to start script");
+      perror("Failed to start scriptingcontrol");
       exit(1);
    }
 
@@ -293,12 +294,10 @@ bool ScriptingServer::hasFinishedWork(int& exitStatus)
       ChildProcess = 0;
       if(WIFEXITED(status) || WIFSIGNALED(status)) {
          exitStatus = WEXITSTATUS(status);
-printf("STATUS: %d -> exit code = %d\n", ChildProcess, exitStatus);
          return(true);
       }
    }
    exitStatus = 0;
-printf("STATUS: %d  not finished\n", ChildProcess);
    return(false);
 }
 

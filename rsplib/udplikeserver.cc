@@ -173,7 +173,8 @@ void UDPLikeServer::poolElement(const char*          programTitle,
    }
 
    RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
-   if(RSerPoolSocketDescriptor >= 0) {
+   if( (RSerPoolSocketDescriptor >= 0) &&
+       (rsp_listen(RSerPoolSocketDescriptor, 10) == 0) ) {
       // ====== Initialize PE settings ======================================
       struct rsp_loadinfo dummyLoadinfo;
       if(loadinfo == NULL) {

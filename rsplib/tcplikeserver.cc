@@ -184,8 +184,6 @@ void TCPLikeServer::run()
    EventHandlingResult   eventHandlingResult;
    unsigned long long    now;
 
-printf("Startup: sd=%d\n", RSerPoolSocketDescriptor);
-
    eventHandlingResult = initializeSession();
    if(eventHandlingResult == EHR_Okay) {
       while(!Shutdown) {
@@ -199,15 +197,9 @@ printf("Startup: sd=%d\n", RSerPoolSocketDescriptor);
             nextTimerEvent = 5000000;
          }
          now      = getMicroTime();
-printf("nx=%llu\n", nextTimerEvent);
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
                                     &rinfo, &flags, (int)(nextTimerEvent / 1000));
-
-
-if(received >= 0)
-printf("event sd=%d r=%d\n", RSerPoolSocketDescriptor, received);
-
 
          if(received > 0) {
             /*
@@ -268,7 +260,6 @@ printf("event sd=%d r=%d\n", RSerPoolSocketDescriptor, received);
    finishSession(eventHandlingResult);
    if((eventHandlingResult == EHR_Abort) ||
       (eventHandlingResult == EHR_Shutdown)) {
-printf("Abort: sd=%d  ehr=%d\n", RSerPoolSocketDescriptor, eventHandlingResult);
       rsp_sendmsg(RSerPoolSocketDescriptor,
                   NULL, 0, 0,
                   0, 0, 0, 0,
@@ -302,7 +293,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
    }
 
    int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP);
-   if(rserpoolSocket >= 0) {
+   if( (rserpoolSocket >= 0) &&
+       (rsp_listen(rserpoolSocket, (int)maxThreads) == 0) ) {
       // ====== Initialize notification pipe ================================
       int systemNotificationPipe[2];
       int rspNotificationPipe[2];
@@ -404,16 +396,19 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                if(serviceThread) {
                                   if(serverSet.add(serviceThread)) {
                                      if(!serviceThread->start()) {
-                                        puts("Unable to create service thread");
+                                        printTimeStamp(stderr);
+                                        fputs("ERROR: Unable to create service thread\n", stderr);
                                         delete serviceThread;
                                      }
                                   }
                                   else {
-                                     puts("Rejected new session");
+                                     printTimeStamp(stdout);
+                                     puts("Rejected new session - server is fully loaded");
                                      delete serviceThread;
                                   }
                                }
                                else {
+                                  printTimeStamp(stderr);
                                   puts("Unable to create new service thread");
                                   rsp_close(newRSerPoolSocket);
                                }
@@ -436,6 +431,12 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                                 loadinfo, reregInterval, REGF_DONTWAIT,
                                                 tags);
                            }
+                        }
+
+                        // ====== Change backlog ============================
+                        int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                        if(rsp_listen(rserpoolSocket, backlog) < 0) {
+                           perror("Unable to update backlog using rsp_listen()");
                         }
 
                         // ====== Clear notification pipe ===================
@@ -531,11 +532,9 @@ void TCPLikeServerList::handleRemovalsAndTimers()
    while(entry != NULL) {
       ThreadListEntry* next = entry->Next;
       if(entry->Object->hasFinished()) {
-printf("FIN!!!: %p\n", entry->Object);
          remove(entry->Object);
       }
       else {
-printf("!fin: %p\n", entry->Object);
          entry->Object->lock();
          if(entry->Object->AsyncTimerTimeStamp > 0) {
             const unsigned long long now = getMicroTime();
