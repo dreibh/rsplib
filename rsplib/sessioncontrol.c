@@ -431,7 +431,8 @@ static void handleShutdown(struct RSerPoolSocket*            rserpoolSocket,
 
 
 /* ###### Handle SCTP notification ####################################### */
-void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
+/* Returns true, if association has been disconnected; false otherwise. */
+bool handleNotification(struct RSerPoolSocket*         rserpoolSocket,
                         const union sctp_notification* notification)
 {
 
@@ -450,6 +451,7 @@ void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
             case SCTP_COMM_LOST:
             case SCTP_SHUTDOWN_COMP:
                handleCommLost(rserpoolSocket, &notification->sn_assoc_change);
+               return(true);
              break;
          }
       }
@@ -457,6 +459,14 @@ void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
          handleShutdown(rserpoolSocket, &notification->sn_shutdown_event);
       }
    }
+   else {
+      if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
+          ( (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) ||
+            (notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ) ) {
+         return(true);
+      }
+   }
+   return(false);
 }
 
 

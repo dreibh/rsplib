@@ -59,7 +59,7 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     int*                   msg_flags,
                                     const bool             isPreRead);
 
-void handleNotification(struct RSerPoolSocket*         rserpoolSocket,
+bool handleNotification(struct RSerPoolSocket*         rserpoolSocket,
                         const union sctp_notification* notification);
 void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
                                  const sctp_assoc_t     assocID,

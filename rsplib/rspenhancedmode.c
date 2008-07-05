@@ -1122,6 +1122,7 @@ ssize_t rsp_recvmsg(int                    sd,
    const union sctp_notification* notification;
    sctp_assoc_t                   assocID;
    int                            flags;
+   int                            errorCode;
    ssize_t                        received;
    ssize_t                        received2;
    unsigned long long             startTimeStamp;
@@ -1178,14 +1179,17 @@ ssize_t rsp_recvmsg(int                    sd,
                                       &assocID,
                                       &rinfo->rinfo_stream,
                                       currentTimeout);
+         errorCode = errno;
          LOG_VERBOSE
-         fprintf(stdlog, "received=%d\n", (int)received);
+         fprintf(stdlog, "received=%d errno=%d\n", (int)received, errorCode);
          LOG_END
 
          /* Note, messageBufferRead()'s PPID byte order is host byte order! */
          rinfo->rinfo_ppid = htonl(rinfo->rinfo_ppid);
 
-         if(received == 0) {
+         if( (received == 0) ||
+             ((received < 0) && (errorCode != EAGAIN)) ) {
+            /* A failover is necessary due to error or shutdown. */
             threadSafetyLock(&rserpoolSocket->Mutex);
             if(rserpoolSocket->ConnectedSession) {
                struct NotificationNode* notificationNode;
@@ -1232,12 +1236,11 @@ ssize_t rsp_recvmsg(int                    sd,
          /* ====== Handle notification ====================================== */
          if(flags & MSG_NOTIFICATION) {
             notification = (const union sctp_notification*)rserpoolSocket->MsgBuffer->Buffer;
-            handleNotification(rserpoolSocket, notification);
-            if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
-                ( (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP) ||
-                  (notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ) ) {
+            if(handleNotification(rserpoolSocket, notification) == true) {
                /* The association is closed here. Therefore, we return length 0
-                  to signalize the disconnect. */
+                  to signalize the disconnect. If there is a corresponding
+                  notification, we will copy it later; otherwise, for
+                  SOCK_STREAM, the 0 is returned back. */
                received = 0;
             }
             else {
