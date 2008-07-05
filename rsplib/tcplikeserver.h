@@ -45,13 +45,16 @@ class TCPLikeServerList : public TDMutex
    ~TCPLikeServerList();
    bool add(TCPLikeServer* thread);
    void remove(TCPLikeServer* thread);
-   void handleRemovalsAndTimers();
+   size_t handleRemovalsAndTimers();
    void removeAll();
 
    double getTotalLoad();
    size_t getThreads();
    inline size_t getMaxThreads() const {
       return(MaxThreads);
+   }
+   inline bool hasCapacity() const {
+      return(Threads < MaxThreads);
    }
 
    private:

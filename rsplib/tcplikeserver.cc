@@ -385,32 +385,51 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                      // Possible, some sessions have finished working during
                      // waiting time. Therefore, cleaning them up is useful
                      // before accepting new sessions.
-                     serverSet.handleRemovalsAndTimers();
+                     if(serverSet.handleRemovalsAndTimers() > 0) {
+                        int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                        if(rsp_listen(rserpoolSocket, backlog) < 0) {
+                           perror("Unable to update backlog using rsp_listen()");
+                        }
+                     }
 
                      // ====== Wait for incoming sessions ===================
                      if(result > 0) {
                         if(pollfds[0].revents & POLLIN) {
                             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
                             if(newRSerPoolSocket >= 0) {
-                               TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
-                               if(serviceThread) {
-                                  if(serverSet.add(serviceThread)) {
-                                     if(!serviceThread->start()) {
-                                        printTimeStamp(stderr);
-                                        fputs("ERROR: Unable to create service thread\n", stderr);
+                               if(serverSet.hasCapacity()) {
+                                  TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
+                                  if(serviceThread) {
+                                     if(serverSet.add(serviceThread)) {
+                                        if(serviceThread->start()) {
+                                           int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                                           if(rsp_listen(rserpoolSocket, backlog) < 0) {
+                                              perror("Unable to update backlog using rsp_listen()");
+                                           }
+                                        }
+                                        else {
+                                           printTimeStamp(stderr);
+                                           fputs("ERROR: Unable to start up service thread\n", stderr);
+                                           serverSet.remove(serviceThread);
+                                           delete serviceThread;
+                                        }
+                                     }
+                                     else {
                                         delete serviceThread;
+                                        printTimeStamp(stderr);
+                                        puts("Unable to add new service thread");
                                      }
                                   }
                                   else {
-                                     printTimeStamp(stdout);
-                                     puts("Rejected new session - server is fully loaded");
-                                     delete serviceThread;
+                                     rsp_close(newRSerPoolSocket);
+                                     printTimeStamp(stderr);
+                                     puts("Unable to create new service thread");
                                   }
                                }
                                else {
-                                  printTimeStamp(stderr);
-                                  puts("Unable to create new service thread");
                                   rsp_close(newRSerPoolSocket);
+                                  printTimeStamp(stdout);
+                                  puts("Rejected new session, since server is fully loaded");
                                }
                             }
                         }
@@ -431,12 +450,6 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                                 loadinfo, reregInterval, REGF_DONTWAIT,
                                                 tags);
                            }
-                        }
-
-                        // ====== Change backlog ============================
-                        int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
-                        if(rsp_listen(rserpoolSocket, backlog) < 0) {
-                           perror("Unable to update backlog using rsp_listen()");
                         }
 
                         // ====== Clear notification pipe ===================
@@ -525,14 +538,17 @@ size_t TCPLikeServerList::getThreads()
 
 
 // ###### Remove finished sessions ##########################################
-void TCPLikeServerList::handleRemovalsAndTimers()
+size_t TCPLikeServerList::handleRemovalsAndTimers()
 {
+   size_t removed = 0;
+
    lock();
    ThreadListEntry* entry = ThreadList;
    while(entry != NULL) {
       ThreadListEntry* next = entry->Next;
       if(entry->Object->hasFinished()) {
          remove(entry->Object);
+         removed++;
       }
       else {
          entry->Object->lock();
@@ -547,6 +563,8 @@ void TCPLikeServerList::handleRemovalsAndTimers()
       entry = next;
    }
    unlock();
+
+   return(removed);
 }
 
 
