@@ -387,7 +387,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                      // before accepting new sessions.
                      if(serverSet.handleRemovalsAndTimers() > 0) {
                         int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
-                        if(rsp_listen(rserpoolSocket, backlog) < 0) {
+                        if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
                            perror("Unable to update backlog using rsp_listen()");
                         }
                      }
@@ -403,7 +403,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                      if(serverSet.add(serviceThread)) {
                                         if(serviceThread->start()) {
                                            int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
-                                           if(rsp_listen(rserpoolSocket, backlog) < 0) {
+                                           if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
                                               perror("Unable to update backlog using rsp_listen()");
                                            }
                                         }

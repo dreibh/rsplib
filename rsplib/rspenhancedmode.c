@@ -494,7 +494,7 @@ int rsp_listen(int sd, int backlog)
 {
    struct RSerPoolSocket* rserpoolSocket;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
-   // printf("backlog(%d)=%d\n", sd, backlog);
+   /* printf("backlog(%d)=%d\n", sd, backlog); */
    return(ext_listen(rserpoolSocket->Socket, backlog));
 }
 
