@@ -176,9 +176,16 @@ static unsigned int sendKeepAlive(int sd)
    sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
                       0, htonl(PPID_SP), 0, 0, 0, 0);
    if(sent <= 0) {
-      newLogLine(stdout);
-      printf("Keep-Alive transmission error: %s\n", strerror(errno));
-      fflush(stdout);
+      if(Status != SSCS_WAIT_READY) {
+         newLogLine(stdout);
+         printf("Keep-Alive transmission error in state #%u: %s\n", Status, strerror(errno));
+         fflush(stdout);
+      }
+      else {
+         newLogLine(stdout);
+         puts("Trying again ...");
+         fflush(stdout);
+      }
       return(SSCR_FAILOVER);
    }
    KeepAliveTransmitted = true;
@@ -296,7 +303,7 @@ static unsigned int handleMessage(int                                 sd,
 
    /* ====== Unexpected message ========================================== */
    newLogLine(stdout);
-   printf("Unexpected message $%02x in status #%u (length=%u, ppid=$%08x)\n",
+   printf("Unexpected message $%02x in state #%u (length=%u, ppid=$%08x)\n",
           header->Type, Status, (unsigned int)length, ppid);
    fflush(stdout);
    return(SSCR_FAILOVER);
