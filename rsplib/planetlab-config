@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+# Copyright (C) 2005-2008 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
 #
-# $Id: install-binaries 1435 2007-06-05 13:20:58Z dreibh $
+# $Id$
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab1.exp-math.uni-essen.de"   # "plane-lab-pb1.uni-paderborn.de"   # "mars.planetlab.haw-hamburg.de"  # "planetlab1.postel.org"   # "planetlab1.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
+PLANETLAB_COMPILEHOST="merkur.planetlab.haw-hamburg.de"   # planetlab1.exp-math.uni-essen.de"   # "plane-lab-pb1.uni-paderborn.de"   # "mars.planetlab.haw-hamburg.de"  # "planetlab1.postel.org"   # "planetlab1.exp-math.uni-essen.de"   # "planet5.cs.huji.ac.il" "planetlab2.exp-math.uni-essen.de" "planetlab1.exp-math.uni-essen.de" "planetlab15.millennium.berkeley.edu"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind"
 
@@ -40,8 +40,13 @@ SUIDPRGS=" rootshell"   # "registrar server calcappclient hsdump"
 OPT_CSP="-cspserver=132.252.150.151:2960 -cspinterval=1000"
 
 
+# ###########################################################################
+# ACHTUNG: Der SCTP-über-UDP-Port wird auf $SCTP_OVER_UDP_PORT gesetzt!
+# ###########################################################################
+
+SCTP_OVER_UDP_PORT=9899
 SCTPLIB_DIRECTORY="/home/dreibh/src/sctplib1"
-SCTPLIB_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode"
+SCTPLIB_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode --with-sctp-over-udp-port=$SCTP_OVER_UDP_PORT"
 SOCKETAPI_DIRECTORY="/home/dreibh/src/socketapi"
 SOCKETAPI_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode"
 
