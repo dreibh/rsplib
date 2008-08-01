@@ -48,15 +48,6 @@ int main(int argc, char** argv)
    }
 
 
-/*
-   int reusable = 1;
-   if(setsockopt(rawSocket,  SOL_SOCKET, SO_REUSEADDR, &reusable, sizeof(reusable)) < 0) {
-      perror("setsockopt(SO_REUSEADDR)");
-      exit(1);
-   }
-*/
-
-
    for(;;) {
       pollfd pfds[2];
       pfds[0].fd     = normalSocket;
