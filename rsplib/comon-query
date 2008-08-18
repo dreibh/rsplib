@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+#
+# $Id: planetlab-config 1843 2008-08-01 13:31:44Z dreibh $
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+
+if [ $# -lt 1 ] ; then
+   echo  >&2 "Usage: comon-query [Results File] [Query] [Table Columns] [Sorting] [Format: formatspaces|formatcsv|nameonly]"
+   echo  >&2 "Example: comon-query alive.hosts \"resptime>0 && sshstatus<2h && (dns1udp<80 || dns2udp<80)\" name,location name formatspaces"
+   exit 1
+fi
+
+FILE=$1
+QUERY=""
+FORMAT=formatspaces
+DUMPCOLS=""
+SORT=
+
+if [ "$2" != "" ] ; then
+   QUERY=$2
+fi
+if [ "$3" != "" ] ; then
+   DUMPCOLS=$3
+fi
+if [ "$4" != "" ] ; then
+   SORT=$4
+fi
+if [ "$5" != "" ] ; then
+   FORMAT=$5
+fi
+
+
+echo "Querying CoMon ..."
+echo "Results file: $FILE"
+echo "Query:        $QUERY"
+echo "Format:       $FORMAT"
+echo "Dump Columns: $DUMPCOLS"
+echo "Sorted by:    $SORT"
+
+wget -q -O$FILE "http://summer.cs.princeton.edu/status/tabulator.cgi?table=table_nodeviewshort&format=$FORMAT&select='$QUERY'&format=$FORMAT&sort=$SORT&dumpcols='$DUMPCOLS'"
+wc --lines $FILE

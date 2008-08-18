@@ -117,30 +117,35 @@ get-all-good-hosts ()
 
 
 
-# IN_HOSTS="`grep ".uni-essen.de$" all-planetlab.hosts`"
+./comon-query all-planetlab.hosts "resptime<1000000000" name name nameonly
+./comon-query alive-planetlab.hosts "resptime>0 && sshstatus<2h && (dns1udp<80 || dns2udp<80)" name name nameonly
+
+
+
+# IN_HOSTS="`grep ".uni-essen.de$" alive-planetlab.hosts`"
 # HOSTSFILEMIDDLE="essen"
 # test-hosts
 
-IN_HOSTS="`grep ".de$" all-planetlab.hosts`"
-#  `grep ".at$" all-planetlab.hosts` `grep ".ch$" all-planetlab.hosts` `grep ".fr$" all-planetlab.hosts` `grep ".be$" all-planetlab.hosts` `grep ".nl$" all-planetlab.hosts` `grep ".pl$" all-planetlab.hosts` `grep ".cz$" all-planetlab.hosts` `grep ".dk$" all-planetlab.hosts` `grep ".se$" all-planetlab.hosts` `grep ".fi$" all-planetlab.hosts` `grep ".uk$" all-planetlab.hosts` `grep ".no$" all-planetlab.hosts` `grep ".it$" all-planetlab.hosts` `grep ".es$" all-planetlab.hosts` `grep ".pt$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".de$" alive-planetlab.hosts`"
+#  `grep ".at$" alive-planetlab.hosts` `grep ".ch$" alive-planetlab.hosts` `grep ".fr$" alive-planetlab.hosts` `grep ".be$" alive-planetlab.hosts` `grep ".nl$" alive-planetlab.hosts` `grep ".pl$" alive-planetlab.hosts` `grep ".cz$" alive-planetlab.hosts` `grep ".dk$" alive-planetlab.hosts` `grep ".se$" alive-planetlab.hosts` `grep ".fi$" alive-planetlab.hosts` `grep ".uk$" alive-planetlab.hosts` `grep ".no$" alive-planetlab.hosts` `grep ".it$" alive-planetlab.hosts` `grep ".es$" alive-planetlab.hosts` `grep ".pt$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="europe"
 test-hosts
 
-IN_HOSTS="`grep ".edu$" all-planetlab.hosts`"
-# "`grep ".berkeley.edu$" all-planetlab.hosts` `grep ".ucla.edu$" all-planetlab.hosts` `grep ".ucsd.edu$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".edu$" alive-planetlab.hosts`"
+# "`grep ".berkeley.edu$" alive-planetlab.hosts` `grep ".ucla.edu$" alive-planetlab.hosts` `grep ".ucsd.edu$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="america"
 test-hosts
 
-IN_HOSTS="`grep ".jp$" all-planetlab.hosts` `grep ".cn$" all-planetlab.hosts` `grep ".th$" all-planetlab.hosts` `grep ".sg$" all-planetlab.hosts` `grep ".kr$" all-planetlab.hosts` `grep ".tw$" all-planetlab.hosts` `grep ".in$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".jp$" alive-planetlab.hosts` `grep ".cn$" alive-planetlab.hosts` `grep ".th$" alive-planetlab.hosts` `grep ".sg$" alive-planetlab.hosts` `grep ".kr$" alive-planetlab.hosts` `grep ".tw$" alive-planetlab.hosts` `grep ".in$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="asia"
 test-hosts
 
-IN_HOSTS="`grep ".au$" all-planetlab.hosts` `grep ".nz$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".au$" alive-planetlab.hosts` `grep ".nz$" alive-planetlab.hosts`"
 let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
 HOSTSFILEMIDDLE="australia"
 test-hosts
 
-IN_HOSTS="`grep ".cn$" all-planetlab.hosts`"
+IN_HOSTS="`grep ".cn$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="china"
 test-hosts
 
@@ -148,7 +153,10 @@ test-hosts
 
 echo "Testing *all* nodes sequentially. This will take a long time ..."
 . ./planetlab-config
-IN_HOSTS="`cat all-planetlab.hosts`"     #  | grep ".de$"
+IN_HOSTS="`cat alive-planetlab.hosts`"     #  | grep ".de$"
 OUT_HOSTS=good-planetlab.hosts
 let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
 get-all-good-hosts
+
+
+mv good-planetlab.hosts planetlab.hosts
