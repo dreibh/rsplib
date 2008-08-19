@@ -1,14 +1,13 @@
 #!/bin/bash
-#
-# Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
-#
 # $Id$
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,11 +15,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Contact: dreibh@iem.uni-due.de
-#
+
 
 . ./planetlab-config
 
@@ -33,7 +31,7 @@ fi
 
 
 echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-cat ../$DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
 echo \"\`date\`: Cleaning up $SERVER ...\" && \
 rm -rf sctplib* && \
 rm -rf socketapi* && \

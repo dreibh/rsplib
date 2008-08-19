@@ -1,14 +1,13 @@
 #!/bin/bash
-#
-# Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2006 by Thomas Dreibholz, dreibh@exp-math.uni-essen.de
-#
 # $Id$
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,11 +15,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Contact: dreibh@iem.uni-due.de
-#
+
 
 . ./planetlab-config
 
@@ -34,18 +32,17 @@ fi
 
 rm -rf $DISTNAME-bin.tar.bz2 bin/
 
-cd ..
+cd ../..
 rm -f *.tar.gz   # Entferne alte Dists!
 make dist
 if [ ! -e $DISTNAME.tar.gz ] ; then
    echo "ERROR: Unable to create distribution $DISTNAME! Is this the correct version?"
    exit 1
 fi
-cd $DISTDIRNAME
 
 
 echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-cat ../$DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+cat $DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
 echo \"\`date\`: Transfering archive to $SERVER ...\" && \
 cat > /tmp/$DISTNAME.tar.gz && \
 echo \"\`date\`: Unpacking archive on $SERVER ...\" && \
@@ -69,6 +66,8 @@ fi && \
 cd .. && \
 tar cvf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2"
 
+
 echo -e "\x1b[34m`date`: Downloading binary archive from $SERVER ...\x1b[0m"
+cd $DISTDIRNAME/planetlab
 scp -i $PLANETLAB_KEY $PLANETLAB_USER@$SERVER:$DISTNAME/$DISTDIRNAME/$DISTNAME-bin.tar.bz2 .
 tar xjvf $DISTNAME-bin.tar.bz2
