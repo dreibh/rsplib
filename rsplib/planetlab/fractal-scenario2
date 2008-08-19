@@ -82,7 +82,7 @@ elif [ "x$1" = "xuser" ] ; then
       optRegistrars="$optRegistrars -registrar=$pr:3863"
    done
    shift
-   cmd="./fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=fgpconfig $@"
+   cmd="../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig $@"
    echo "# $cmd"
    $cmd
 else

@@ -1,4 +1,24 @@
 #!/bin/bash
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
 
 . ./planetlab-config
 
@@ -191,7 +211,10 @@ elif [ "x$1" = "xuser" ] ; then
    for pr in $PR_EUROPE ; do
       optRegistrars="$optRegistrars -registrar=$pr:3863"
    done
-   ./fractalpooluser $optRegistrars -loglevel=1 $OPT_CSP
+   shift
+   cmd="../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig $@"
+   echo "# $cmd"
+   $cmd
 else
    echo "ERROR: Bad parameter!"
 fi

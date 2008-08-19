@@ -1,5 +1,5 @@
-rsplib (2.5.0~beta10-0ubuntu1) intrepid; urgency=low
+rsplib (2.5.0~beta11-0ubuntu1) intrepid; urgency=low
 
   * Created updated Debian/Ubuntu package.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 17 Aug 2008 14:09:31 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 20 Aug 2008 14:09:31 +0200
