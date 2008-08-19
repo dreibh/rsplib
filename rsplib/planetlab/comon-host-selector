@@ -49,6 +49,8 @@ CandidateForPE="($GoodHost && $TimeOkay)"
 CandidateForPR="($GreatHost && $TimeFine)"
 
 
+./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
+
 ./comon-query pr-europe.hosts "$CandidateForPR && location==$Europe" name 5minload nameonly quiet
 ./comon-query pr-asia.hosts "$CandidateForPR && location==$Australasia" name 5minload nameonly quiet
 ./comon-query pr-america.hosts "$CandidateForPR && (location==$NorthAmerica || location==$SouthAmerica)" name 5minload nameonly quiet
@@ -61,6 +63,8 @@ CandidateForPR="($GreatHost && $TimeFine)"
 ./comon-query pu-asia.hosts "$CandidateForPE && location==$Australasia" name 5minload nameonly quiet
 ./comon-query pu-america.hosts "$CandidateForPE && (location==$NorthAmerica || location==$SouthAmerica)" name 5minload nameonly quiet
 
+
+wc --lines alive-planetlab.hosts
 
 wc --lines pr-europe.hosts
 wc --lines pr-asia.hosts
