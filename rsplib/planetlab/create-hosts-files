@@ -2,7 +2,7 @@
 # $Id$
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2002-2008 by Thomas Dreibholz
+# Copyright (C) 2005-2008 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,30 +52,32 @@ get-hosts ()
 test-hosts ()
 {
    hosts=`echo $IN_HOSTS | xargs -n1 echo | sort -u`
-   goodhosts=`echo $hosts | xargs -x ./exectime "./filter-hosts >/dev/null"`
+   goodhosts=`echo $hosts | xargs -x ../exectime "./filter-hosts >/dev/null"`
 
    if [ "x$goodhosts" = "x" ] ; then
-      echo "ERROR: No good hosts found!"
-      exit 1
+      echo "WARNING: No good hosts found!"
+      rm -f pu-$HOSTSFILEMIDDLE.hosts
+      rm -f pe-$HOSTSFILEMIDDLE.hosts
+      rm -f pr-$HOSTSFILEMIDDLE.hosts
+   else
+      GH_GOODHOSTS=$goodhosts
+      GH_AMOUNT=$PUs
+      get-hosts
+      OUT_PUs=$GH_OUTPUT
+
+      GH_AMOUNT=$PEs
+      get-hosts
+      OUT_PEs=$GH_OUTPUT
+
+      GH_AMOUNT=$PRs
+      get-hosts
+      OUT_PRs=$GH_OUTPUT
+
+      echo "PRs: $OUT_PRs"
+      echo "PEs: $OUT_PEs"
+      echo "PUs: $OUT_PUs"
+      write-hosts
    fi
-
-   GH_GOODHOSTS=$goodhosts
-   GH_AMOUNT=$PUs
-   get-hosts
-   OUT_PUs=$GH_OUTPUT
-
-   GH_AMOUNT=$PEs
-   get-hosts
-   OUT_PEs=$GH_OUTPUT
-
-   GH_AMOUNT=$PRs
-   get-hosts
-   OUT_PRs=$GH_OUTPUT
-
-   echo "PRs: $OUT_PRs"
-   echo "PEs: $OUT_PEs"
-   echo "PUs: $OUT_PUs"
-   write-hosts
 }
 
 write-hosts ()
@@ -109,7 +111,7 @@ get-all-good-hosts ()
       if [ "x$result" != "x" ] ; then
          echo $result >>$OUT_HOSTS
       fi
-      #rm -f try-$host.tmp
+      rm -f try-$host.tmp
    done
 }
 

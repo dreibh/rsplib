@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: add-dummy-interface 1805 2008-06-17 09:29:48Z dreibh $
+# $Id$
 #
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2008 by Thomas Dreibholz
