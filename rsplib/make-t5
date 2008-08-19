@@ -1,3 +1,0 @@
-#!/bin/bash
-
-g++ t5.cc -o t5 -Wall -O2 $@ -I.. timeutilities.o netdouble.o netutilities.o loglevel.o threadsafety.o tagitem.o randomizer.o stringutilities.o -lpthread -lsctp

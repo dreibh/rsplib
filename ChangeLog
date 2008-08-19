@@ -1,4 +1,227 @@
 ------------------------------------------------------------------------
+r1832 | dreibh | 2008-07-01 12:05:24 +0200 (Di, 01 Jul 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Fix in TCPLikeServer: for timer, there must be a lock for the thread, not for the thread list (which is already locked).
+
+------------------------------------------------------------------------
+r1831 | dreibh | 2008-06-30 13:20:08 +0200 (Mo, 30 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+
+------------------------------------------------------------------------
+r1830 | dreibh | 2008-06-30 12:26:16 +0200 (Mo, 30 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Bugfix: Destruction of TCPLikeServer also closes RSerPool socket. Upon rejection, no rsp_close() is necessary.
+
+------------------------------------------------------------------------
+r1829 | dreibh | 2008-06-27 14:33:43 +0200 (Fr, 27 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+
+------------------------------------------------------------------------
+r1828 | dreibh | 2008-06-27 11:30:51 +0200 (Fr, 27 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Fix in TCPLikeServer: close systemNotificationPipe with correct indices (0,1) instead of 1,2.
+
+------------------------------------------------------------------------
+r1827 | dreibh | 2008-06-27 11:26:55 +0200 (Fr, 27 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/ss-pr
+
+If valgrind is available, mark memory from LK-SCTP sctp_getladdrs()/sctp_getpaddrs() as "defined". This avoids many false positives.
+
+------------------------------------------------------------------------
+r1826 | dreibh | 2008-06-27 10:17:43 +0200 (Fr, 27 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Fixed memory leak in TCPLikeServer: forgot to delete ServiceThread when the session is rejected.
+
+------------------------------------------------------------------------
+r1825 | dreibh | 2008-06-27 10:05:46 +0200 (Fr, 27 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/scriptingclient.8
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+
+ScriptingPU: Added more verbose log output (date + run ID).
+
+------------------------------------------------------------------------
+r1824 | dreibh | 2008-06-27 10:05:21 +0200 (Fr, 27 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Fix: PE ID was set to 0 before transmitting in Endpoint Unreachable.
+
+------------------------------------------------------------------------
+r1823 | dreibh | 2008-06-26 14:36:20 +0200 (Do, 26 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+
+ASAP Action Log fix.
+
+------------------------------------------------------------------------
+r1822 | dreibh | 2008-06-26 13:08:48 +0200 (Do, 26 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/ss-server
+
+
+------------------------------------------------------------------------
+r1821 | dreibh | 2008-06-25 20:56:25 +0200 (Mi, 25 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+
+------------------------------------------------------------------------
+r1820 | dreibh | 2008-06-25 09:45:16 +0200 (Mi, 25 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/create-hosts-files
+   M /trunk/rsplib2/rsplib/planetlab-config
+   M /trunk/rsplib2/rsplib/planetlab.hosts
+
+
+------------------------------------------------------------------------
+r1819 | dreibh | 2008-06-25 09:44:02 +0200 (Mi, 25 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/rsplib/TODO
+   M /trunk/rsplib2/rsplib/testregistrator.c
+
+Fix for testregistrator (divide by 0 when pools==0).
+
+------------------------------------------------------------------------
+r1818 | dreibh | 2008-06-24 19:08:59 +0200 (Di, 24 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+
+Fix for Presence handling: only send Presence when another PR entry is really new.
+
+------------------------------------------------------------------------
+r1817 | dreibh | 2008-06-24 19:08:18 +0200 (Di, 24 Jun 2008) | 2 lines
+Geänderte Pfade:
+   A /trunk/rsplib2/rsplib/storage/registrar-enrp.c (von /trunk/rsplib2/rsplib/registrar-enrp.c:1815)
+
+Backup of registrar-enrp.c
+
+------------------------------------------------------------------------
+r1816 | dreibh | 2008-06-24 18:27:21 +0200 (Di, 24 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/registrar-global.c
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/registrar.h
+
+Registrar: Added BZ2 compression option for action log and statistics file.
+
+------------------------------------------------------------------------
+r1815 | dreibh | 2008-06-24 14:49:41 +0200 (Di, 24 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/planetlab-config
+   M /trunk/rsplib2/rsplib/ss-pr
+
+
+------------------------------------------------------------------------
+r1814 | dreibh | 2008-06-24 09:34:38 +0200 (Di, 24 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+   M /trunk/rsplib2/rsplib/registrar-global.c
+   M /trunk/rsplib2/rsplib/registrar-takeover.c
+   M /trunk/rsplib2/rsplib/registrar.h
+
+ENRP Action Log.
+
+------------------------------------------------------------------------
+r1813 | dreibh | 2008-06-23 21:44:43 +0200 (Mo, 23 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/rsplib/poolelementnode-template.h
+   M /trunk/rsplib2/rsplib/poolelementnode-template_impl.h
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+   M /trunk/rsplib2/rsplib/registrar-global.c
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/registrar.h
+
+Added ASAP Action Log.
+
+------------------------------------------------------------------------
+r1812 | dreibh | 2008-06-17 18:34:02 +0200 (Di, 17 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+XSBC-Original-Maintainer update for Ubuntu.
+
+------------------------------------------------------------------------
+r1811 | dreibh | 2008-06-17 14:10:31 +0200 (Di, 17 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r1809 | dreibh | 2008-06-17 13:09:00 +0200 (Di, 17 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+
+------------------------------------------------------------------------
+r1807 | dreibh | 2008-06-17 12:11:46 +0200 (Di, 17 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/make-deb
+
+
+------------------------------------------------------------------------
+r1806 | dreibh | 2008-06-17 11:54:36 +0200 (Di, 17 Jun 2008) | 1 line
+Geänderte Pfade:
+   M /trunk/rsplib2/make-deb
+
+
+------------------------------------------------------------------------
+r1805 | dreibh | 2008-06-17 11:29:48 +0200 (Di, 17 Jun 2008) | 2 lines
+Geänderte Pfade:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/clean-deb
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/deb-install
+   M /trunk/rsplib2/deb-uninstall
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/copyright
+   A /trunk/rsplib2/debian/rsplib-fgp-cfgfiles.install
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+   M /trunk/rsplib2/debian/rsplib-services.install
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/debian/watch
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+   M /trunk/rsplib2/make-deb
+   M /trunk/rsplib2/rsplib/add-dummy-interface
+   M /trunk/rsplib2/rsplib/registrar.8
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+   M /trunk/rsplib2/rsplib/ss-pr
+   M /trunk/rsplib2/rsplib/ss-server
+   M /trunk/rsplib2/rsplib.lsm
+
+Debian script updates for Ubuntu Intrepid.
+
+------------------------------------------------------------------------
 r1804 | dreibh | 2008-06-16 13:22:18 +0200 (Mo, 16 Jun 2008) | 2 lines
 Geänderte Pfade:
    M /trunk/rsplib2/acinclude.m4

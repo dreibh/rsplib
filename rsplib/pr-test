@@ -1,6 +1,0 @@
-#!/bin/bash
-
-./registrar   \
-   -asap=[::]:3863 -asapannounce=[222.222.222.222]:3863   \
-   -enrp=[::]:9901 -enrpannounce=[234.234.234.234]:9901   \
-   $@
