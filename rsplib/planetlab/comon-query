@@ -31,6 +31,7 @@ QUERY=""
 FORMAT=formatspaces
 DUMPCOLS=""
 SORT=
+QUIET=0
 
 if [ "$2" != "" ] ; then
    QUERY=$2
@@ -44,14 +45,22 @@ fi
 if [ "$5" != "" ] ; then
    FORMAT=$5
 fi
+if [ "$6" == "quiet" ] ; then
+   QUIET=1
+fi
 
 
-echo "Querying CoMon ..."
-echo "Results file: $FILE"
-echo "Query:        $QUERY"
-echo "Format:       $FORMAT"
-echo "Dump Columns: $DUMPCOLS"
-echo "Sorted by:    $SORT"
+if [ $QUIET -ne 1 ] ; then
+   echo "Querying CoMon ..."
+   echo "Results file: $FILE"
+   echo "Query:        $QUERY"
+   echo "Format:       $FORMAT"
+   echo "Dump Columns: $DUMPCOLS"
+   echo "Sorted by:    $SORT"
+fi
 
 wget -q -O$FILE "http://summer.cs.princeton.edu/status/tabulator.cgi?table=table_nodeviewshort&format=$FORMAT&select='$QUERY'&format=$FORMAT&sort=$SORT&dumpcols='$DUMPCOLS'"
-wc --lines $FILE
+
+if [ $QUIET -ne 1 ] ; then
+   wc --lines $FILE
+fi
