@@ -491,7 +491,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
       BZ2_bzWrite(&bzerror, registrar->StatsBZFile, str, strlen(str));
    }
    else {
-      fputs(header, registrar->StatsFile);
+      fputs(str, registrar->StatsFile);
       fflush(registrar->StatsFile);
    }
 
