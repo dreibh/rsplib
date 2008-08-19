@@ -72,7 +72,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
 {
    struct Registrar*     registrar;
    int                   autoCloseTimeout;
-#ifdef sctp_sack_info
+#ifdef HAVE_SCTP_DELAYED_SACK
    struct sctp_sack_info sctpSACKInfo;
 #endif
 
@@ -190,7 +190,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
          logerror("setsockopt() for SCTP_AUTOCLOSE failed");
          LOG_END
       }
-#ifdef sctp_sack_info
+#ifdef HAVE_SCTP_DELAYED_SACK
       /* ====== Tune SACK handling ======================================= */
       /* Without this tuning, the PE would wait 200ms to acknowledge a
          Endpoint Unreachable. The usually immediately following

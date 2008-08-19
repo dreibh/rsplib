@@ -290,7 +290,7 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
-#ifdef sctp_sack_info
+#ifdef HAVE_SCTP_DELAYED_SACK
    struct sctp_sack_info sctpSACKInfo;
 #endif
 
@@ -329,7 +329,7 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
       fprintf(stdlog, "Connected to registrar $%08x\n", asapInstance->RegistrarIdentifier);
       LOG_END
 
-#ifdef sctp_sack_info
+#ifdef HAVE_SCTP_DELAYED_SACK
       /* ====== Tune SACK handling ======================================= */
       sctpSACKInfo.sack_assoc_id = 0;
       sctpSACKInfo.sack_delay    = 0;

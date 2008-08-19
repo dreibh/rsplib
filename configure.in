@@ -360,6 +360,7 @@ int main(int argc, char** argv)
    AC_DEFINE(HAVE_SCTP_SENDX, 1, [Define to 1 if you have the `sctp_sendx' function.])
    AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.])
    AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])
+   AC_DEFINE(HAVE_SCTP_DELAYED_SACK, 1, [Define to 1 if SCTP_DELAYED_SACK with sctp_sack_info is available.])
 
    LIBS=$oldLIBS
    # ========================================================================
@@ -385,6 +386,14 @@ else
                    int result = sctp_connectx(0, NULL, 0, &id);],
                   [AC_MSG_RESULT(yes)
                    AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])],
+                  AC_MSG_RESULT(no))
+   AC_MSG_CHECKING(whether SCTP_DELAYED_SACK with sctp_sack_info is available)
+   AC_TRY_COMPILE([#include <sys/types.h>
+                   #include <netinet/sctp.h>],
+                  [struct sctp_sack_info sctpSACKInfo;
+                   int opt = SCTP_DELAYED_SACK;],
+                  [AC_MSG_RESULT(yes)
+                   AC_DEFINE(HAVE_SCTP_DELAYED_SACK, 1, [Define to 1 if SCTP_DELAYED_SACK with sctp_sack_info is available.])],
                   AC_MSG_RESULT(no))
 
    # ====== Check for Valgrind ==============================================
