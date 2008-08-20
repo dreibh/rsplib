@@ -444,9 +444,13 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    unsigned long long       startupTime = 0;
    unsigned long long       uptime;
 #endif
+   size_t                   peers;
+   size_t                   pools;
+   size_t                   poolElements;
+   size_t                   ownedPoolElements;
 
    if(registrar->StatsLine == 0) {
-      header = "AbsTime RelTime Runtime UserTime SystemTime Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n";
+      header = "AbsTime RelTime Runtime UserTime SystemTime   Peers Pools PoolElements OwnedPoolElements   Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n";
       if(registrar->StatsBZFile) {
          BZ2_bzWrite(&bzerror, registrar->StatsBZFile, (char*)header, strlen(header));
       }
@@ -470,8 +474,13 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    }
 #endif
 
+   peers             = ST_CLASS(peerListManagementGetPeers)(&registrar->Peers);
+   pools             = ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace);
+   poolElements      = ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace);
+   ownedPoolElements = ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace);
+
    snprintf((char*)&str, sizeof(str),
-            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu %llu %llu %llu\n",
+            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu  %llu %llu %llu %llu %llu %llu %llu\n",
             registrar->StatsLine++,
             now / 1000000.0,
             (now - registrar->StatsStartTime) / 1000000.0,
@@ -479,6 +488,8 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
             runtime / 1000000.0,
             userTime / 1000000.0,
             systemTime / 1000000.0,
+
+            peers, pools, poolElements, ownedPoolElements,
 
             registrar->RegistrationCount,
             registrar->ReregistrationCount,

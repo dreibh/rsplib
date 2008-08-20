@@ -1,21 +1,38 @@
 #!/bin/bash
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
 
 . ./planetlab-config
 
-TESTID=fractal-scenario2
-
-PR_LIST=`cat pe-america.hosts pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
-PE_LIST=`cat planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
+PRsPerRegion=1
+PR_LIST=`( head -n$PRsPerRegion pr-europe.hosts ; head -n$PRsPerRegion pr-america.hosts ; head -n$PRsPerRegion pr-asia.hosts ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
+PE_LIST=`cat good-planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
 # PE_LIST=`cat pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`
 
-# PR_LIST=`cat pl-beta.hosts|head -n3`
-# PE_LIST=`cat pl-beta.hosts`
 
-
+TESTID=fractal-scenario2
 PR_MISCOPT="-asapannounce=off -enrpannounce=off -cspinterval=1000 -loglevel=3"
 PE_MISCOPT="-asapannounce=off -cspinterval=0 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=3 "
 PU_MISCOPT=""
-VALGRIND="/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
+VALGRIND=""  # "/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
 
 resetAll ()
 {
@@ -32,8 +49,7 @@ startNetwork ()
    number=1
    for pr in $PR_LIST ; do
       echo "Starting PR on $pr ..."
-echo "# ./rootshell $VALGRIND ./registrar $OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers >$TESTID-pr$number-$pr.log 2>&1"
-      ./start-process "Registrar-$number" "./rootshell $VALGRIND ./registrar $OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers >$TESTID-pr$number-$pr.log 2>&1" $pr &
+      ./start-process "Registrar-$number" "./rootshell $VALGRIND ./registrar $OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data >$TESTID-pr$number-$pr.log 2>&1" $pr &
       let number=$number+1
    done
 
