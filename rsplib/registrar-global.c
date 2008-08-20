@@ -489,7 +489,10 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
             userTime / 1000000.0,
             systemTime / 1000000.0,
 
-            peers, pools, poolElements, ownedPoolElements,
+            (unsigned long long)peers,
+            (unsigned long long)pools,
+            (unsigned long long)poolElements,
+            (unsigned long long)ownedPoolElements,
 
             registrar->RegistrationCount,
             registrar->ReregistrationCount,
