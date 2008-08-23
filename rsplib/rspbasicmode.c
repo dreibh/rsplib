@@ -118,22 +118,6 @@ int rsp_initialize(struct rsp_info* info)
          info->ri_build_time = buildTime;
       }
 
-#ifdef ENABLE_CSP
-      /* ====== Initialize Component Status Reporter ===================== */
-      if((info) &&
-         (info->ri_csp_interval > 0) && (info->ri_csp_server != NULL)) {
-         gCSPReporter = (struct CSPReporter*)malloc(sizeof(struct CSPReporter));
-         if(gCSPReporter) {
-            cspReporterNew(gCSPReporter, &gDispatcher,
-                           info->ri_csp_identifier,
-                           info->ri_csp_server,
-                           1000UL * info->ri_csp_interval,
-                           getComponentStatus,
-                           NULL);
-         }
-      }
-#endif
-
       /* ====== Initialize session storage =============================== */
       simpleRedBlackTreeNew(&gRSerPoolSocketSet,
                             rserpoolSocketPrint,
@@ -152,6 +136,23 @@ int rsp_initialize(struct rsp_info* info)
          /* ====== Add static registrars ================================= */
          if( (info == NULL) ||
              (addStaticRegistrars(gAsapInstance->RegistrarSet, info)) ) {
+
+#ifdef ENABLE_CSP
+            /* ====== Initialize Component Status Reporter =============== */
+            if((info) &&
+               (info->ri_csp_interval > 0) && (info->ri_csp_server != NULL)) {
+               gCSPReporter = (struct CSPReporter*)malloc(sizeof(struct CSPReporter));
+               if(gCSPReporter) {
+                  cspReporterNew(gCSPReporter, &gDispatcher,
+                                 info->ri_csp_identifier,
+                                 info->ri_csp_server,
+                                 1000UL * info->ri_csp_interval,
+                                 getComponentStatus,
+                                 NULL);
+               }
+            }
+#endif
+
             LOG_NOTE
             fputs("rsplib is ready\n", stdlog);
             LOG_END
