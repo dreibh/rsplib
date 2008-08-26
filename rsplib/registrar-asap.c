@@ -111,8 +111,8 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
                (poolElementNode->TimerCode == PENT_EXPIRY) ) {
          if(poolElementNode->TimerCode == PENT_KEEPALIVE_TIMEOUT) {
             LOG_ACTION
-            fprintf(stdlog, "Keep alive timeout expired for pool element $%08x of pool ",
-                  poolElementNode->Identifier);
+            fprintf(stdlog, "Keep-alive timeout expired for pool element $%08x of pool ",
+                    poolElementNode->Identifier);
             poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
             fputs(" -> removing it\n", stdlog);
             LOG_END

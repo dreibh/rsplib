@@ -480,7 +480,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    ownedPoolElements = ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace);
 
    snprintf((char*)&str, sizeof(str),
-            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu  %llu %llu %llu %llu %llu %llu %llu\n",
+            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu   %llu %llu %llu %llu %llu %llu %llu\n",
             registrar->StatsLine++,
             now / 1000000.0,
             (now - registrar->StatsStartTime) / 1000000.0,
