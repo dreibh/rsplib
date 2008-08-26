@@ -133,9 +133,10 @@ void ST_CLASS(poolUserNodePrint)(const struct ST_CLASS(PoolUserNode)* poolUserNo
 
 
 /* ###### Compute a hash from PH and PE ID ############################### */
-static unsigned int computePHPEHash(const struct PoolHandle*        poolHandle,
-                                    const PoolElementIdentifierType identifier)
+static unsigned int ST_CLASS(computePHPEHash)(const struct PoolHandle*        poolHandle,
+                                              const PoolElementIdentifierType identifier)
 {
+#warning Not implemented yet
    return(0);
 }
 
@@ -156,7 +157,7 @@ double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)*
       }
    }
 
-   hash = computePHPEHash(poolHandle, 0);
+   hash = ST_CLASS(computePHPEHash)(poolHandle, 0);
    timeStampHashTableAddTimeStamp(poolUserNode->HandleResolutionHash, hash, now);
    /* timeStampHashTablePrint(poolUserNode->HandleResolutionHash,stdout); */
    return(timeStampHashTableGetRate(poolUserNode->HandleResolutionHash, hash));
@@ -179,7 +180,7 @@ double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNod
       }
    }
 
-   hash = computePHPEHash(poolHandle, 0);
+   hash = ST_CLASS(computePHPEHash)(poolHandle, 0);
    timeStampHashTableAddTimeStamp(poolUserNode->EndpointUnreachableHash, hash, now);
    /* timeStampHashTablePrint(poolUserNode->EndpointUnreachableHash,stdout); */
    return(timeStampHashTableGetRate(poolUserNode->EndpointUnreachableHash, hash));
