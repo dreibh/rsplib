@@ -1,5 +1,5 @@
 rsplib (2.5.0~rc1-0ubuntu1) intrepid; urgency=low
 
-  * Created updated Debian/Ubuntu package.
+  * Initial Ubuntu package (LP: #190435).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 26 Aug 2008 20:09:31 +0200

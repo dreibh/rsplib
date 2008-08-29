@@ -7,32 +7,34 @@ Homepage: http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html
 Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.5), libbz2-dev (>= 1.0), libqt3-mt-dev
 Standards-Version: 3.8.0
 
-
 Package: librsplib2
 Section: libs
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: RSerPool client/server API library for load distribution and server redundancy
- .
  Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
  lightweight server pool and session management framework. It provides highly
  available pool management (that is registration handling and load
  distribution/balancing) by components called Registrar and a
- client-side/server-side API for accessing the service of a pool. The API is
- provided by this package.
-
+ client-side/server-side API for accessing the service of a pool.
+ .
+ The API is provided by this package.
 
 Package: librsplib-dev
 Section: libdevel
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib2
-Description: Headers of the RSerPool client/server API library rsplib
+Description: headers of the RSerPool client/server API library rsplib
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides header files for the rsplib library. You need them to
  develop your own RSerPool-based clients and servers.
-
 
 Package: libcpprspserver2
 Section: libs
@@ -40,20 +42,28 @@ Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: C++ RSerPool client/server API library
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides an object-oriented API for the rsplib library.
-
 
 Package: libcpprspserver-dev
 Section: libdevel
 Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver2
-Description: Headers of the C++ RSerPool client/server API library
+Description: headers of the C++ RSerPool client/server API library
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides the header files for the rsplib C++ API. You need them to
  develop your own RSerPool-based clients and servers based on the C++ API.
-
 
 Package: rsplib-registrar
 Section: net
@@ -61,11 +71,15 @@ Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: RSerPool Registrar service
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
- The registrar is the management component for RSerPool-based server pools.
- You need at least one registrar in a setup. But for redundancy reasons, you
- should have at least two.
-
+ This package provides the registrar, which is the management component for
+ RSerPool-based server pools. You need at least one registrar in a setup,
+ but for redundancy reasons, you should have at least two.
 
 Package: rsplib-tools
 Section: net
@@ -73,9 +87,13 @@ Priority: optional
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: RSerPool test tools
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides some test tools for RSerPool setups.
-
 
 Package: rsplib-services
 Section: net
@@ -84,10 +102,14 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
 Recommends: rsplib-fgp-cfgfiles
 Description: RSerPool example services
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides the rsplib RSerPool example services:
  Echo, Discard, Daytime, CharGen, CalcApp, FractalGenerator, ScriptingService.
-
 
 Package: rsplib-fgp-cfgfiles
 Section: net
@@ -95,5 +117,10 @@ Priority: optional
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
 Description: RSerPool Fractal Generator Service example input files
+ Reliable Server Pooling (RSerPool) is the IETF's upcoming standard for a
+ lightweight server pool and session management framework. It provides highly
+ available pool management (that is registration handling and load
+ distribution/balancing) by components called Registrar and a
+ client-side/server-side API for accessing the service of a pool.
  .
  This package provides a set of input files for the Fractal Generator service.
