@@ -154,6 +154,19 @@ struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddPoolUserNode)(
 }
 
 
+/* ###### Add or update PoolUserNode ######################################## */
+struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddOrUpdatePoolUserNode)(
+                                  struct ST_CLASS(PoolUserList)*  poolUserList,
+                                  struct ST_CLASS(PoolUserNode)** poolUserNode)
+{
+   struct ST_CLASS(PoolUserNode)* newPoolUserNode = ST_CLASS(poolUserListAddPoolUserNode)(poolUserList, *poolUserNode);
+   if(newPoolUserNode == *poolUserNode) {
+      *poolUserNode = NULL;
+   }
+   return(newPoolUserNode);
+}
+
+
 /* ###### Find PoolUserNode ############################################## */
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListFindPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
@@ -166,7 +179,7 @@ struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListFindPoolUserNode)(
    cmpElement.ConnectionSocketDescriptor = connectionSocketDescriptor;
    cmpElement.ConnectionAssocID          = connectionAssocID;
    result = ST_METHOD(Find)(&poolUserList->PoolUserListStorage,
-                              &cmpElement.PoolUserListStorageNode);
+                            &cmpElement.PoolUserListStorageNode);
    if(result) {
       return(ST_CLASS(getPoolUserNodeFromPoolUserListStorageNode)(result));
    }

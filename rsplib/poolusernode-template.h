@@ -76,11 +76,12 @@ double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)*
                                                   const unsigned long long       now,
                                                   const size_t                   buckets,
                                                   const size_t                   maxEntries);
-double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)* poolUserNode,
-                                                     const struct PoolHandle*       poolHandle,
-                                                     const unsigned long long       now,
-                                                     const size_t                   buckets,
-                                                     const size_t                   maxEntries);
+double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)*  poolUserNode,
+                                                     const struct PoolHandle*        poolHandle,
+                                                     const PoolElementIdentifierType peIdentifier,
+                                                     const unsigned long long        now,
+                                                     const size_t                    buckets,
+                                                     const size_t                    maxEntries);
 
 
 #ifdef __cplusplus

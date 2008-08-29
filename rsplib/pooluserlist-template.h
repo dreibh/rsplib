@@ -63,6 +63,9 @@ void ST_CLASS(poolUserListClear)(struct ST_CLASS(PoolUserList)* poolUserList);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
                                   struct ST_CLASS(PoolUserNode)* poolUserListNode);
+struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListAddOrUpdatePoolUserNode)(
+                                  struct ST_CLASS(PoolUserList)*  poolUserList,
+                                  struct ST_CLASS(PoolUserNode)** poolUserNode);
 struct ST_CLASS(PoolUserNode)* ST_CLASS(poolUserListFindPoolUserNode)(
                                   struct ST_CLASS(PoolUserList)* poolUserList,
                                   const int                      connectionSocketDescriptor,

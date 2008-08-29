@@ -136,8 +136,26 @@ void ST_CLASS(poolUserNodePrint)(const struct ST_CLASS(PoolUserNode)* poolUserNo
 static unsigned int ST_CLASS(computePHPEHash)(const struct PoolHandle*        poolHandle,
                                               const PoolElementIdentifierType identifier)
 {
-#warning Not implemented yet
-   return(0);
+   uint32_t hash = 0;
+   uint32_t rest;
+
+   const uint32_t* ph = (const uint32_t*)&poolHandle->Handle;
+   ssize_t i = poolHandle->Size;
+   while(i >= sizeof(uint32_t)) {
+      hash = hash ^ *ph;
+      ph++;
+      i -= sizeof(uint32_t);
+   }
+   if(i > 0) {
+      rest = 0;
+      memcpy(&rest, ph, i);
+      hash = hash ^ rest;
+   }
+
+   hash = hash ^ (uint32_t)identifier;
+
+printf("H=%08x\n",hash);
+   return(hash);
 }
 
 
@@ -159,17 +177,18 @@ double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)*
 
    hash = ST_CLASS(computePHPEHash)(poolHandle, 0);
    timeStampHashTableAddTimeStamp(poolUserNode->HandleResolutionHash, hash, now);
-   /* timeStampHashTablePrint(poolUserNode->HandleResolutionHash,stdout); */
+   /* timeStampHashTablePrint(poolUserNode->HandleResolutionHash, stdout); */
    return(timeStampHashTableGetRate(poolUserNode->HandleResolutionHash, hash));
 }
 
 
 /* ###### Note a handle resolution into the hash table ################### */
-double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)* poolUserNode,
-                                                     const struct PoolHandle*       poolHandle,
-                                                     const unsigned long long       now,
-                                                     const size_t                   buckets,
-                                                     const size_t                   maxEntries)
+double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNode)*  poolUserNode,
+                                                     const struct PoolHandle*        poolHandle,
+                                                     const PoolElementIdentifierType peIdentifier,
+                                                     const unsigned long long        now,
+                                                     const size_t                    buckets,
+                                                     const size_t                    maxEntries)
 {
    unsigned int hash;
 
@@ -180,8 +199,8 @@ double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNod
       }
    }
 
-   hash = ST_CLASS(computePHPEHash)(poolHandle, 0);
+   hash = ST_CLASS(computePHPEHash)(poolHandle, peIdentifier);
    timeStampHashTableAddTimeStamp(poolUserNode->EndpointUnreachableHash, hash, now);
-   /* timeStampHashTablePrint(poolUserNode->EndpointUnreachableHash,stdout); */
+   /* timeStampHashTablePrint(poolUserNode->EndpointUnreachableHash, stdout); */
    return(timeStampHashTableGetRate(poolUserNode->EndpointUnreachableHash, hash));
 }
