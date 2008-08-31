@@ -145,6 +145,9 @@ size_t ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
 void ST_CLASS(peerListManagementVerifyChecksumsInHandlespace)(
         struct ST_CLASS(PeerListManagement)*        peerListManagement,
         struct ST_CLASS(PoolHandlespaceManagement)* poolHandlespaceManagement);
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetUsefulPeerForPE)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const PoolElementIdentifierType      peIdentifier);
 
 
 #ifdef __cplusplus

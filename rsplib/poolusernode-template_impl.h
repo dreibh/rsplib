@@ -132,33 +132,6 @@ void ST_CLASS(poolUserNodePrint)(const struct ST_CLASS(PoolUserNode)* poolUserNo
 }
 
 
-/* ###### Compute a hash from PH and PE ID ############################### */
-static unsigned int ST_CLASS(computePHPEHash)(const struct PoolHandle*        poolHandle,
-                                              const PoolElementIdentifierType identifier)
-{
-   uint32_t hash = 0;
-   uint32_t rest;
-
-   const uint32_t* ph = (const uint32_t*)&poolHandle->Handle;
-   ssize_t i = poolHandle->Size;
-   while(i >= sizeof(uint32_t)) {
-      hash = hash ^ *ph;
-      ph++;
-      i -= sizeof(uint32_t);
-   }
-   if(i > 0) {
-      rest = 0;
-      memcpy(&rest, ph, i);
-      hash = hash ^ rest;
-   }
-
-   hash = hash ^ (uint32_t)identifier;
-
-printf("H=%08x\n",hash);
-   return(hash);
-}
-
-
 /* ###### Note a handle resolution into the hash table ################### */
 double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)* poolUserNode,
                                                   const struct PoolHandle*       poolHandle,
@@ -175,7 +148,7 @@ double ST_CLASS(poolUserNodeNoteHandleResolution)(struct ST_CLASS(PoolUserNode)*
       }
    }
 
-   hash = ST_CLASS(computePHPEHash)(poolHandle, 0);
+   hash = computePHPEHash(poolHandle, 0);
    timeStampHashTableAddTimeStamp(poolUserNode->HandleResolutionHash, hash, now);
    /* timeStampHashTablePrint(poolUserNode->HandleResolutionHash, stdout); */
    return(timeStampHashTableGetRate(poolUserNode->HandleResolutionHash, hash));
@@ -199,7 +172,7 @@ double ST_CLASS(poolUserNodeNoteEndpointUnreachable)(struct ST_CLASS(PoolUserNod
       }
    }
 
-   hash = ST_CLASS(computePHPEHash)(poolHandle, peIdentifier);
+   hash = computePHPEHash(poolHandle, peIdentifier);
    timeStampHashTableAddTimeStamp(poolUserNode->EndpointUnreachableHash, hash, now);
    /* timeStampHashTablePrint(poolUserNode->EndpointUnreachableHash, stdout); */
    return(timeStampHashTableGetRate(poolUserNode->EndpointUnreachableHash, hash));

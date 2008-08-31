@@ -48,3 +48,30 @@ PoolElementIdentifierType getPoolElementIdentifier()
    PoolElementIdentifierType poolElementIdentifier = 1 + (random32() % 0xfffffffe);
    return(poolElementIdentifier);
 }
+
+
+/* ###### Compute a hash from PH and PE ID ############################### */
+unsigned int computePHPEHash(const struct PoolHandle*        poolHandle,
+                             const PoolElementIdentifierType identifier)
+{
+   uint32_t hash = 0;
+   uint32_t rest;
+
+   const uint32_t* ph = (const uint32_t*)&poolHandle->Handle;
+   ssize_t i = poolHandle->Size;
+   while(i >= (ssize_t)sizeof(uint32_t)) {
+      hash = hash ^ *ph;
+      ph++;
+      i -= sizeof(uint32_t);
+   }
+   if(i > 0) {
+      rest = 0;
+      memcpy(&rest, ph, i);
+      hash = hash ^ rest;
+   }
+
+   hash = hash ^ (uint32_t)identifier;
+
+printf("H=%08x\n",hash);
+   return(hash);
+}

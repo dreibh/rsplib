@@ -594,3 +594,28 @@ void ST_CLASS(peerListManagementVerifyChecksumsInHandlespace)(
       peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerListManagement->List, peerListNode);
    }
 }
+
+
+/* ###### Get better peer for PE ######################################### */
+struct ST_CLASS(PeerListNode)* ST_CLASS(peerListManagementGetUsefulPeerForPE)(
+                                  struct ST_CLASS(PeerListManagement)* peerListManagement,
+                                  const PoolElementIdentifierType      peIdentifier)
+{
+   struct ST_CLASS(PeerListNode)* bestPeerListNode = NULL;
+   struct ST_CLASS(PeerListNode)* peerListNode     = ST_CLASS(peerListGetFirstPeerListNodeFromIndexStorage)(&peerListManagement->List);
+   PoolElementIdentifierType      bestMetric       = peerListManagement->List.OwnIdentifier ^ peIdentifier;
+   PoolElementIdentifierType      metric;
+
+   /* Current best metric is the own node. Only return other entry if it has a
+      better metric! */
+
+   while(peerListNode != NULL) {
+      metric = peerListNode->Identifier ^ peIdentifier;
+      if( (peerListNode->Identifier != UNDEFINED_REGISTRAR_IDENTIFIER) && (metric > bestMetric) ) {
+         bestPeerListNode = peerListNode;
+         bestMetric       = metric;
+      }
+      peerListNode = ST_CLASS(peerListGetNextPeerListNodeFromIndexStorage)(&peerListManagement->List, peerListNode);
+   }
+   return(bestPeerListNode);
+}

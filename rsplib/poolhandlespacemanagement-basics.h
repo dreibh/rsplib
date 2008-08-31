@@ -40,6 +40,7 @@
 #include <netinet/in.h>
 
 #include "rserpoolerror.h"
+#include "poolhandle.h"
 
 
 #ifdef __cplusplus
@@ -105,6 +106,8 @@ enum PoolNodeUpdateAction
 const char* poolHandlespaceManagementGetErrorDescription(const unsigned int errorCode);
 PoolElementIdentifierType getPoolElementIdentifier();
 
+unsigned int computePHPEHash(const struct PoolHandle*        poolHandle,
+                             const PoolElementIdentifierType identifier);
 
 /*
  Starting value for seqence numbers. Set it to (~0) ^ 0xf to test
