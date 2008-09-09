@@ -286,6 +286,19 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
             fputs("Handlespace content:\n", stdlog);
             registrarDumpHandlespace(registrar);
             LOG_END
+
+
+            /* ====== Takeover suggestion ================================ */
+            if( (message->Flags & EHF_TAKEOVER_SUGGESTED) &&
+                (registrar->ENRPSupportTakeoverSuggestion) &&
+                (newPoolElementNode->HomeRegistrarIdentifier != registrar->ServerID) ) {
+               LOG_WARNING
+               fprintf(stdlog, "Trying to take over PE $%08x from peer $%08x upon its suggestion\n",
+                       newPoolElementNode->Identifier, newPoolElementNode->HomeRegistrarIdentifier);
+               LOG_END
+               registrarSendASAPEndpointKeepAlive(registrar, newPoolElementNode, true);
+            }
+            /* =========================================================== */
          }
          else {
             LOG_WARNING
@@ -352,6 +365,7 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
 {
 #ifndef MSG_SEND_TO_ALL
    struct ST_CLASS(PeerListNode)* peerListNode;
+   struct ST_CLASS(PeerListNode)* betterPeerListNode = NULL;
 #endif
    struct RSerPoolMessage*        message;
 
@@ -375,6 +389,20 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
       ST_CLASS(poolElementNodePrint)(poolElementNode, stdlog, PENPO_FULL);
       fputs("\n", stdlog);
       LOG_END
+
+      /* ====== Takeover suggestion ====================================== */
+      if( (action == PNUP_ADD_PE) &&
+          (registrar->ENRPSupportTakeoverSuggestion) &&
+          (poolElementNode->HomeRegistrarIdentifier == registrar->ServerID) ) {
+         betterPeerListNode = ST_CLASS(peerListManagementGetUsefulPeerForPE)(&registrar->Peers, poolElementNode->Identifier);
+         if(betterPeerListNode) {
+            LOG_WARNING
+            fprintf(stdlog, "Found better peer $%08x for PE $%08x\n",
+                    betterPeerListNode->Identifier, poolElementNode->Identifier);
+            LOG_END
+         }
+      }
+      /* ================================================================= */
 
       registrarWriteActionLog(registrar, "Send", "ENRP", "Update", ((message->Action == PNUP_ADD_PE) ? "AddPE" : "DelPE"), 0, 0, 0,
                               &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, 0);
@@ -403,6 +431,21 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
                           0,
                           MSG_SEND_TO_ALL, 0, 0, message);
 #endif
+
+      if(betterPeerListNode) {
+         message->Flags |= EHF_TAKEOVER_SUGGESTED;
+         message->ReceiverID   = betterPeerListNode->Identifier;
+         message->AddressArray = betterPeerListNode->AddressBlock->AddressArray;
+         message->Addresses    = betterPeerListNode->AddressBlock->Addresses;
+         LOG_WARNING
+         fprintf(stdlog, "Sending HandleUpdate to unicast peer $%08x with TakeoverSuggested flag...\n",
+                 betterPeerListNode->Identifier);
+         LOG_END
+         rserpoolMessageSend(IPPROTO_SCTP,
+                             registrar->ENRPUnicastSocket,
+                             0, 0, 0, 0,
+                             message);
+      }
 
       rserpoolMessageDelete(message);
    }

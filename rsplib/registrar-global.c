@@ -131,18 +131,18 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
                registrarHandlePeerEvent,
                (void*)registrar);
 
-      registrar->InStartupPhase            = true;
-      registrar->MentorServerID            = 0;
+      registrar->InStartupPhase                = true;
+      registrar->MentorServerID                = 0;
 
-      registrar->ASAPSocket                = asapUnicastSocket;
-      registrar->ASAPAnnounceSocket        = asapAnnounceSocket;
-      registrar->ASAPSendAnnounces         = asapSendAnnounces;
+      registrar->ASAPSocket                    = asapUnicastSocket;
+      registrar->ASAPAnnounceSocket            = asapAnnounceSocket;
+      registrar->ASAPSendAnnounces             = asapSendAnnounces;
 
-      registrar->ENRPUnicastSocket         = enrpUnicastSocket;
-      registrar->ENRPMulticastInputSocket  = enrpMulticastOutputSocket;
-      registrar->ENRPMulticastOutputSocket = enrpMulticastInputSocket;
-      registrar->ENRPAnnounceViaMulticast  = enrpAnnounceViaMulticast;
-
+      registrar->ENRPUnicastSocket             = enrpUnicastSocket;
+      registrar->ENRPMulticastInputSocket      = enrpMulticastOutputSocket;
+      registrar->ENRPMulticastOutputSocket     = enrpMulticastInputSocket;
+      registrar->ENRPAnnounceViaMulticast      = enrpAnnounceViaMulticast;
+      registrar->ENRPSupportTakeoverSuggestion = REGISTRAR_DEFAULT_SUPPORT_TAKEOVER_SUGGESTION;
 
       registrar->DistanceStep                          = REGISTRAR_DEFAULT_DISTANCE_STEP;
       registrar->MaxBadPEReports                       = REGISTRAR_DEFAULT_MAX_BAD_PE_REPORTS;

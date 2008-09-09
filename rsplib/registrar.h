@@ -74,6 +74,7 @@
 #define REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
 #define REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT                         300000000
 #define REGISTRAR_DEFAULT_ANNOUNCE_TTL                                     30
+#define REGISTRAR_DEFAULT_SUPPORT_TAKEOVER_SUGGESTION                   false
 #define REGISTRAR_DEFAULT_MAX_HR_RATE                                    -1.0   /* unlimited */
 #define REGISTRAR_DEFAULT_MAX_EU_RATE                                    -1.0   /* unlimited */
 
@@ -109,6 +110,7 @@ struct Registrar
    struct MessageBuffer*                      ENRPUnicastMessageBuffer;
    bool                                       ENRPAnnounceViaMulticast;
    struct Timer                               ENRPAnnounceTimer;
+   bool                                       ENRPSupportTakeoverSuggestion;
 
    bool                                       InStartupPhase;
    RegistrarIdentifierType                    MentorServerID;

@@ -1223,7 +1223,7 @@ static bool createHandleUpdateMessage(struct RSerPoolMessage* message)
    CHECK(message->PoolElementPtr->RegistratorTransport != NULL);
 
    if(beginMessage(message, EHT_HANDLE_UPDATE,
-                   message->Flags & 0x00,
+                   message->Flags & EHF_TAKEOVER_SUGGESTED,
                    PPID_ENRP) == NULL) {
       return(false);
    }

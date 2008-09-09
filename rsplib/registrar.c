@@ -341,6 +341,7 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-peermaxtimenoresponse=", 23))) ||
                (!(strncmp(argv[i], "-mentordiscoverytimeout=", 19))) ||
                (!(strncmp(argv[i], "-takeoverexpiryinterval=", 24))) ||
+               (!(strcmp(argv[i], "-supporttakeoversuggestion"))) ||
                (!(strncmp(argv[i], "-maxincrement=", 14))) ||
                (!(strncmp(argv[i], "-maxhresitems=", 14))) ||
                (!(strncmp(argv[i], "-maxhrrate=", 11))) ||
@@ -487,7 +488,7 @@ int main(int argc, char** argv)
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
-            "{-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
+            "{-supporttakeoversuggestion} {-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
             "{-actionlogfile=file} {-statsfile=file} {-statsinterval=millisecs} "
             "{-daemonpidfile=file}"
             "\n",argv[0]);
@@ -687,6 +688,9 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-maxeurate=", 11))) {
          registrar->MaxEURate = atof((const char*)&argv[i][11]);
       }
+      else if(!(strcmp(argv[i], "-supporttakeoversuggestion"))) {
+         registrar->ENRPSupportTakeoverSuggestion = true;
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -763,6 +767,7 @@ int main(int argc, char** argv)
       printf("   Max Elements per Handle Table Request:       %u\n",     (unsigned int)registrar->MaxElementsPerHTRequest);
       printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorDiscoveryTimeout / 1000);
       printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
+      printf("   Support for Takeover Suggestion:             %s\n", registrar->ENRPSupportTakeoverSuggestion ? "on" : "off");
       puts("Security Parameters:");
       printf("   Max Handle Resolution Rate:                  ");
       if(registrar->MaxHRRate > 0.0) {
