@@ -37,19 +37,6 @@ bool poolUserHasPermissionFor(const int                       fd,
             avoid DoS when - for some reason - the PR's memory is full. */
          return(true);
       }
-
-/*
-      NextPoolUserNode->HandleResolutionHash    = timeStampHashTableNew(TSHT_BUCKETS, TSHT_ENTRIES);
-      NextPoolUserNode->EndpointUnreachableHash = timeStampHashTableNew(TSHT_BUCKETS, TSHT_ENTRIES);
-      if( (NextPoolUserNode->HandleResolutionHash == NULL) ||
-          (NextPoolUserNode->EndpointUnreachableHash == NULL) ) {
-         if(NextPoolUserNode->HandleResolutionHash) free(NextPoolUserNode->HandleResolutionHash);
-         if(NextPoolUserNode->EndpointUnreachableHash) free(NextPoolUserNode->EndpointUnreachableHash);
-         free(NextPoolUserNode);
-         NextPoolUserNode = NULL;
-         return(false);
-      }
-*/
    }
 
    ST_CLASS(poolUserNodeNew)(NextPoolUserNode, fd, assocID);

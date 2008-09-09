@@ -343,6 +343,8 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-takeoverexpiryinterval=", 24))) ||
                (!(strncmp(argv[i], "-maxincrement=", 14))) ||
                (!(strncmp(argv[i], "-maxhresitems=", 14))) ||
+               (!(strncmp(argv[i], "-maxhrrate=", 11))) ||
+               (!(strncmp(argv[i], "-maxeurate=", 11))) ||
                (!(strncmp(argv[i], "-maxelementsperhtrequest=", 25))) ) {
          /* to be handled later */
       }
@@ -481,7 +483,7 @@ int main(int argc, char** argv)
             "{-identifier=registrar identifier} "
             "{-disable-ipv6} {-quiet} "
             "{-autoclosetimeout=seconds} {-serverannouncecycle=milliseconds} "
-            "{-maxbadpereports=reports} "
+            "{-maxbadpereports=reports} {-maxeurate=rate} {-maxhrrate=rate} "
             "{-endpointkeepalivetransmissioninterval=milliseconds} {-endpointkeepalivetimeoutinterval=milliseconds} "
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
@@ -679,6 +681,12 @@ int main(int argc, char** argv)
             registrar->AnnounceTTL = 255;
          }
       }
+      else if(!(strncmp(argv[i], "-maxhrrate=", 11))) {
+         registrar->MaxHRRate = atof((const char*)&argv[i][11]);
+      }
+      else if(!(strncmp(argv[i], "-maxeurate=", 11))) {
+         registrar->MaxEURate = atof((const char*)&argv[i][11]);
+      }
    }
 #ifndef FAST_BREAK
    installBreakDetector();
@@ -755,6 +763,21 @@ int main(int argc, char** argv)
       printf("   Max Elements per Handle Table Request:       %u\n",     (unsigned int)registrar->MaxElementsPerHTRequest);
       printf("   Mentor Hunt Timeout:                         %lldms\n", registrar->MentorDiscoveryTimeout / 1000);
       printf("   Takeover Expiry Interval:                    %lldms\n", registrar->TakeoverExpiryInterval / 1000);
+      puts("Security Parameters:");
+      printf("   Max Handle Resolution Rate:                  ");
+      if(registrar->MaxHRRate > 0.0) {
+         printf("%1.2lf requests/s\n", registrar->MaxHRRate);
+      }
+      else {
+         puts("unlimited");
+      }
+      printf("   Max Endpoint Unreachable Rate:               ");
+      if(registrar->MaxEURate > 0.0) {
+         printf("%1.2lf requests/s\n", registrar->MaxEURate);
+      }
+      else {
+         puts("unlimited");
+      }
       puts("");
    }
 

@@ -71,7 +71,5 @@ unsigned int computePHPEHash(const struct PoolHandle*        poolHandle,
    }
 
    hash = hash ^ (uint32_t)identifier;
-
-printf("H=%08x\n",hash);
    return(hash);
 }

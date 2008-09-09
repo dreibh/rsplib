@@ -30,6 +30,7 @@
 #include "rserpool.h"
 #include "breakdetector.h"
 #include "timeutilities.h"
+#include "randomizer.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -42,8 +43,9 @@ int main(int argc, char** argv)
    struct rsp_info      info;
    struct rsp_addrinfo* rspAddrInfo;
    struct rsp_addrinfo* r;
-   const char*          poolHandle = "EchoPool";
-   unsigned int         pause      = 0;
+   const char*          poolHandle                   = "EchoPool";
+   unsigned int         pause                        = 0;
+   double               reportUnreachableProbability = 0.0;
    int                  i;
    int                  result;
    FILE*                statsFile     = stdout;
@@ -66,17 +68,26 @@ int main(int argc, char** argv)
       if(rsp_initarg(&info, argv[i])) {
          /* rsplib argument */
       }
-      else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
+      else if(!(strncmp(argv[i], "-poolhandle=" , 12))) {
          poolHandle = (char*)&argv[i][12];
       }
-      else if(!(strncmp(argv[i], "-pause=" ,7))) {
+      else if(!(strncmp(argv[i], "-pause=" , 7))) {
          pause = atol((char*)&argv[i][7]);
       }
-      else if(!(strncmp(argv[i], "-items=" ,7))) {
+      else if(!(strncmp(argv[i], "-items=" , 7))) {
          items = atol((char*)&argv[i][7]);
       }
-      else if(!(strncmp(argv[i], "-maxruns=" ,9))) {
+      else if(!(strncmp(argv[i], "-maxruns=" , 9))) {
          maxRuns = atol((char*)&argv[i][9]);
+      }
+      else if(!(strncmp(argv[i], "-reportunreachableprobability=" , 30))) {
+         reportUnreachableProbability = atof((char*)&argv[i][30]);
+         if(reportUnreachableProbability > 1.0) {
+            reportUnreachableProbability = 1.0;
+         }
+         else if(reportUnreachableProbability < 0.0) {
+            reportUnreachableProbability = 0.0;
+         }
       }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
@@ -104,7 +115,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-items=Items} {-printresults} {-pause=microsecs} {-maxruns=Runs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-items=Items} {-printresults} {-pause=microsecs} {-reportunreachableprobability=probability=probability} {-maxruns=Runs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
          exit(1);
       }
    }
@@ -113,11 +124,12 @@ int main(int argc, char** argv)
    if(!quiet) {
       puts("RSerPool Handle Resolution Tester - Version 1.0");
       puts("===============================================\n");
-      printf("Pool Handle         = %s\n",   poolHandle);
-      printf("Items               = %u\n", (unsigned int)items);
-      printf("Pause               = %ums\n", pause);
-      printf("Max Runs            = %llu\n", maxRuns);
-      printf("Statistics Interval = %ums\n", statsInterval);
+      printf("Pool Handle                    = %s\n",   poolHandle);
+      printf("Items                          = %u\n", (unsigned int)items);
+      printf("Pause                          = %ums\n", pause);
+      printf("Max Runs                       = %llu\n", maxRuns);
+      printf("Report Unreachable Probability = %1.2lf%%\n", reportUnreachableProbability * 100.0);
+      printf("Statistics Interval            = %ums\n", statsInterval);
       puts("");
    }
 
@@ -148,6 +160,19 @@ int main(int argc, char** argv)
             r = rspAddrInfo;
             while(r != NULL) {
                printf("   ID $%08x\n", r->ai_pe_id);
+               r = r->ai_next;
+            }
+         }
+
+         if(reportUnreachableProbability > 0.0) {
+            r = rspAddrInfo;
+            while(r != NULL) {
+               if(randomDouble() <= reportUnreachableProbability) {
+                  rsp_pe_failure((const unsigned char*)poolHandle, strlen(poolHandle), r->ai_pe_id);
+                  if(printResults) {
+                     printf("   => Endpoint Unreachable for ID $%08x\n", r->ai_pe_id);
+                  }
+               }
                r = r->ai_next;
             }
          }

@@ -71,7 +71,7 @@ uint64_t random64();
   *
   * @return Random value.
   */
-double randomExpDouble(const double p);
+double randomDouble();
 
 /**
   * Get exponential-distributed random value.

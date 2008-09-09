@@ -244,8 +244,8 @@ void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar,
 
 /* ###### Handle ASAP Registration ####################################### */
 void registrarHandleASAPRegistration(struct Registrar*       registrar,
-                                     int                     fd,
-                                     sctp_assoc_t            assocID,
+                                     const int               fd,
+                                     const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message)
 {
 
@@ -453,8 +453,8 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
 
 /* ###### Handle ASAP Deregistration ##################################### */
 void registrarHandleASAPDeregistration(struct Registrar*       registrar,
-                                       int                     fd,
-                                       sctp_assoc_t            assocID,
+                                       const int               fd,
+                                       const sctp_assoc_t      assocID,
                                        struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -566,8 +566,8 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
 
 /* ###### Handle ASAP Handle Resolution ################################## */
 void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
-                                         int                     fd,
-                                         sctp_assoc_t            assocID,
+                                         const int               fd,
+                                         const sctp_assoc_t      assocID,
                                          struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNodeArray[MAX_MAX_HANDLE_RESOLUTION_ITEMS];
@@ -596,13 +596,24 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
 
    message->Type  = AHT_HANDLE_RESOLUTION_RESPONSE;
    message->Flags = 0x00;
-   message->Error = ST_CLASS(poolHandlespaceManagementHandleResolution)(
-                       &registrar->Handlespace,
-                       &message->Handle,
-                       (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
-                       &poolElementNodes,
-                       items,
-                       registrar->MaxIncrement);
+   if( (registrar->MaxHRRate > 0.0) &&
+       (!registrarPoolUserHasPermissionFor(registrar, fd, assocID, AHT_HANDLE_RESOLUTION,
+                                           &message->Handle, 0)) ) {
+      LOG_WARNING
+      fprintf(stdlog, "Refusing handle resolution for assoc %u\n", assocID);
+      LOG_END
+      poolElementNodes = 0;
+      message->Error   = RSPERR_NOT_FOUND;
+   }
+   else {
+      message->Error = ST_CLASS(poolHandlespaceManagementHandleResolution)(
+                          &registrar->Handlespace,
+                          &message->Handle,
+                          (struct ST_CLASS(PoolElementNode)**)&poolElementNodeArray,
+                          &poolElementNodes,
+                          items,
+                          registrar->MaxIncrement);
+   }
    if(message->Error == RSPERR_OKAY) {
       LOG_VERBOSE1
       fprintf(stdlog, "Selected %u element%s\n", (unsigned int)poolElementNodes,
@@ -653,8 +664,8 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
 
 /* ###### Handle ASAP Endpoint Keep-Alive Ack ############################ */
 void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
-                                             int                     fd,
-                                             sctp_assoc_t            assocID,
+                                             const int               fd,
+                                             const sctp_assoc_t      assocID,
                                              struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -769,8 +780,8 @@ void registrarSendASAPEndpointKeepAlive(struct Registrar*                 regist
 
 /* ###### Handle ASAP Endpoint Unreachable ############################### */
 void registrarHandleASAPEndpointUnreachable(struct Registrar*       registrar,
-                                            int                     fd,
-                                            sctp_assoc_t            assocID,
+                                            const int               fd,
+                                            const sctp_assoc_t      assocID,
                                             struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
@@ -782,6 +793,18 @@ void registrarHandleASAPEndpointUnreachable(struct Registrar*       registrar,
    poolHandlePrint(&message->Handle, stdlog);
    fputs("\n", stdlog);
    LOG_END
+
+   if( (registrar->MaxEURate > 0.0) &&
+       (!registrarPoolUserHasPermissionFor(registrar, fd, assocID, AHT_ENDPOINT_UNREACHABLE,
+                                           &message->Handle, 0  /* === only pool! === */)) ) {
+      LOG_WARNING
+      fprintf(stdlog, "Refusing EndpointUnreachable for pool element $%08x of pool ",
+              message->Identifier);
+      poolHandlePrint(&message->Handle, stdlog);
+      fprintf(stdlog, " from assoc %u\n", assocID);
+      LOG_END
+      return;
+   }
 
    registrar->FailureReportCount++;
 

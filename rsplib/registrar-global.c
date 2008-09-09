@@ -108,6 +108,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
                                              NULL,
                                              poolElementNodeDisposer,
                                              registrar);
+      ST_CLASS(poolUserListNew)(&registrar->PoolUsers);
       ST_CLASS(peerListManagementNew)(&registrar->Peers,
                                       &registrar->Handlespace,
                                       registrar->ServerID,
@@ -160,6 +161,9 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       registrar->MentorDiscoveryTimeout                = REGISTRAR_DEFAULT_MENTOR_DISCOVERY_TIMEOUT;
       registrar->TakeoverExpiryInterval                = REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL;
       registrar->AnnounceTTL                           = REGISTRAR_DEFAULT_ANNOUNCE_TTL;
+
+      registrar->MaxHRRate                             = REGISTRAR_DEFAULT_MAX_HR_RATE;
+      registrar->MaxEURate                             = REGISTRAR_DEFAULT_MAX_EU_RATE;
 
       registrar->ActionLogFile         = actionLogFile;
       registrar->ActionLogBZFile       = actionLogBZFile;
@@ -296,6 +300,7 @@ void registrarDelete(struct Registrar* registrar)
       fdCallbackDelete(&registrar->ENRPUnicastSocketFDCallback);
       fdCallbackDelete(&registrar->ASAPSocketFDCallback);
       ST_CLASS(peerListManagementDelete)(&registrar->Peers);
+      ST_CLASS(poolUserListDelete)(&registrar->PoolUsers);
       ST_CLASS(poolHandlespaceManagementDelete)(&registrar->Handlespace);
 #ifdef ENABLE_CSP
       if(registrar->CSPReportInterval > 0) {

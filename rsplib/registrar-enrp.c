@@ -205,8 +205,8 @@ void registrarHandlePeerEvent(struct Dispatcher* dispatcher,
 
 /* ###### Handle ENRP Handle Update ###################################### */
 void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
-                                     int                     fd,
-                                     sctp_assoc_t            assocID,
+                                     const int               fd,
+                                     const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
@@ -411,8 +411,8 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
 
 /* ###### Handle ENRP List Request ####################################### */
 void registrarHandleENRPListRequest(struct Registrar*       registrar,
-                                    int                     fd,
-                                    sctp_assoc_t            assocID,
+                                    const int               fd,
+                                    const sctp_assoc_t      assocID,
                                     struct RSerPoolMessage* message)
 {
    struct RSerPoolMessage* response;

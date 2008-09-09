@@ -74,6 +74,8 @@
 #define REGISTRAR_DEFAULT_TAKEOVER_EXPIRY_INTERVAL                    5000000
 #define REGISTRAR_DEFAULT_AUTOCLOSE_TIMEOUT                         300000000
 #define REGISTRAR_DEFAULT_ANNOUNCE_TTL                                     30
+#define REGISTRAR_DEFAULT_MAX_HR_RATE                                    -1.0   /* unlimited */
+#define REGISTRAR_DEFAULT_MAX_EU_RATE                                    -1.0   /* unlimited */
 
 
 struct Registrar
@@ -148,6 +150,11 @@ struct Registrar
    unsigned long long                         SynchronizationCount;
    unsigned long long                         UpdateCount;
 
+   double                                     MaxHRRate;
+   double                                     MaxEURate;
+
+   struct ST_CLASS(PoolUserList)              PoolUsers;
+
 #ifdef ENABLE_CSP
    struct CSPReporter                         CSPReporter;
    unsigned int                               CSPReportInterval;
@@ -187,8 +194,8 @@ unsigned long long registrarRandomizeCycle(const unsigned long long interval);
 unsigned int registrarRoundDistance(const unsigned int distance,
                                     const unsigned int step);
 void registrarUpdateDistance(struct Registrar*                       registrar,
-                             int                                     fd,
-                             sctp_assoc_t                            assocID,
+                             const int                               fd,
+                             const sctp_assoc_t                      assocID,
                              const struct ST_CLASS(PoolElementNode)* poolElementNode,
                              struct PoolPolicySettings*              updatedPolicySettings,
                              bool                                    addDistance,
@@ -237,32 +244,32 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
 
 /* ====== Handlespace Operations ======================= */
 void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar,
-                                             const int          sd,
+                                             const int          fd,
                                              const sctp_assoc_t assocID);
 void registrarHandleASAPRegistration(struct Registrar*       registrar,
-                                     int                     fd,
-                                     sctp_assoc_t            assocID,
+                                     const int               fd,
+                                     const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message);
 void registrarHandleASAPDeregistration(struct Registrar*       registrar,
-                                       int                     fd,
-                                       sctp_assoc_t            assocID,
+                                       const int               fd,
+                                       const sctp_assoc_t      assocID,
                                        struct RSerPoolMessage* message);
 void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
-                                         int                     fd,
-                                         sctp_assoc_t            assocID,
+                                         const int               fd,
+                                         const sctp_assoc_t      assocID,
                                          struct RSerPoolMessage* message);
 
 /* ====== Monitoring =================================== */
 void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
-                                             int                     fd,
-                                             sctp_assoc_t            assocID,
+                                             const int               fd,
+                                             const sctp_assoc_t      assocID,
                                              struct RSerPoolMessage* message);
 void registrarSendASAPEndpointKeepAlive(struct Registrar*                 registrar,
                                         struct ST_CLASS(PoolElementNode)* poolElementNode,
                                         const bool                        newHomeRegistrar);
 void registrarHandleASAPEndpointUnreachable(struct Registrar*       registrar,
-                                            int                     fd,
-                                            sctp_assoc_t            assocID,
+                                            const int               fd,
+                                            const sctp_assoc_t      assocID,
                                             struct RSerPoolMessage* message);
 
 
@@ -276,33 +283,33 @@ void registrarHandlePeerEvent(struct Dispatcher* dispatcher,
 
 /* ====== List/Handlespace I/O ========================= */
 void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
-                                     int                     fd,
-                                     sctp_assoc_t            assocID,
+                                     const int               fd,
+                                     const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message);
 void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
                                    struct ST_CLASS(PoolElementNode)* poolElementNode,
                                    const uint16_t                    action);
 void registrarHandleENRPListRequest(struct Registrar*       registrar,
-                                    int                     fd,
-                                    sctp_assoc_t            assocID,
+                                    const int               fd,
+                                    const sctp_assoc_t      assocID,
                                     struct RSerPoolMessage* message);
 void registrarSendENRPListRequest(struct Registrar*           registrar,
-                                  int                         sd,
+                                  const int                   fd,
                                   const sctp_assoc_t          assocID,
                                   int                         msgSendFlags,
                                   const union sockaddr_union* destinationAddressList,
                                   const size_t                destinationAddresses,
                                   RegistrarIdentifierType     receiverID);
 void registrarHandleENRPListResponse(struct Registrar*       registrar,
-                                     int                     fd,
-                                     sctp_assoc_t            assocID,
+                                     const int               fd,
+                                     const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message);
 void registrarHandleENRPHandleTableRequest(struct Registrar*       registrar,
-                                           int                     fd,
-                                           sctp_assoc_t            assocID,
+                                           const int               fd,
+                                           const sctp_assoc_t      assocID,
                                            struct RSerPoolMessage* message);
 void registrarSendENRPHandleTableRequest(struct Registrar*           registrar,
-                                         int                         sd,
+                                         const int                   fd,
                                          const sctp_assoc_t          assocID,
                                          int                         msgSendFlags,
                                          const union sockaddr_union* destinationAddressList,
@@ -310,17 +317,17 @@ void registrarSendENRPHandleTableRequest(struct Registrar*           registrar,
                                          RegistrarIdentifierType     receiverID,
                                          unsigned int                flags);
 void registrarHandleENRPHandleTableResponse(struct Registrar*       registrar,
-                                            int                     fd,
-                                            sctp_assoc_t            assocID,
+                                            const int               fd,
+                                            const sctp_assoc_t      assocID,
                                             struct RSerPoolMessage* message);
 
 /* ====== Handlespace Audit ============================ */
 void registrarHandleENRPPresence(struct Registrar*       registrar,
-                                 int                     fd,
+                                 const int               fd,
                                  sctp_assoc_t            assocID,
                                  struct RSerPoolMessage* message);
 void registrarSendENRPPresence(struct Registrar*             registrar,
-                               int                           sd,
+                               const int                     fd,
                                const sctp_assoc_t            assocID,
                                int                           msgSendFlags,
                                const union sockaddr_union*   destinationAddressList,
@@ -331,27 +338,34 @@ void registrarSendENRPPresenceToAllPeers(struct Registrar* registrar);
 
 /* ====== Takeover ===================================== */
 void registrarHandleENRPInitTakeover(struct Registrar*       registrar,
-                                     int                     fd,
+                                     const int               fd,
                                      sctp_assoc_t            assocID,
                                      struct RSerPoolMessage* message);
 void registrarSendENRPInitTakeoverToAllPeers(struct Registrar*             registrar,
                                              const RegistrarIdentifierType targetID);
 void registrarHandleENRPInitTakeoverAck(struct Registrar*       registrar,
-                                        int                     fd,
+                                        const int               fd,
                                         sctp_assoc_t            assocID,
                                         struct RSerPoolMessage* message);
 void registrarSendENRPInitTakeoverAck(struct Registrar*             registrar,
-                                      const int                     sd,
+                                      const int                     fd,
                                       const sctp_assoc_t            assocID,
                                       const RegistrarIdentifierType receiverID,
                                       const RegistrarIdentifierType targetID);
 
 void registrarHandleENRPTakeoverServer(struct Registrar*       registrar,
-                                       int                     fd,
+                                       const int               fd,
                                        sctp_assoc_t            assocID,
                                        struct RSerPoolMessage* message);
 void registrarSendENRPTakeoverServerToAllPeers(struct Registrar*             registrar,
                                                const RegistrarIdentifierType targetID);
 
+/* ###### Security ####################################################### */
+bool registrarPoolUserHasPermissionFor(struct Registrar*               registrar,
+                                       const int                       fd,
+                                       const sctp_assoc_t              assocID,
+                                       const unsigned int              action,
+                                       const struct PoolHandle*        poolHandle,
+                                       const PoolElementIdentifierType peIdentifier);
 
 #endif

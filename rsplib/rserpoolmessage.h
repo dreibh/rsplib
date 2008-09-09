@@ -330,6 +330,7 @@ struct rserpool_targetparameter
 #define EHF_LIST_RESPONSE_REJECT                   (1 << 0)
 #define EHF_HANDLE_TABLE_RESPONSE_REJECT           (1 << 0)
 #define EHF_HANDLE_TABLE_RESPONSE_MORE_TO_SEND     (1 << 1)
+#define EHF_TAKEOVER_SUGGESTED                     (1 << 0)   /* draft-dreibholz-rserpool-enrpupdate */
 
 
 struct RSerPoolMessage
