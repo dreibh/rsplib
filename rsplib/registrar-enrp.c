@@ -365,8 +365,8 @@ void registrarSendENRPHandleUpdate(struct Registrar*                 registrar,
 {
 #ifndef MSG_SEND_TO_ALL
    struct ST_CLASS(PeerListNode)* peerListNode;
-   struct ST_CLASS(PeerListNode)* betterPeerListNode = NULL;
 #endif
+   struct ST_CLASS(PeerListNode)* betterPeerListNode = NULL;
    struct RSerPoolMessage*        message;
 
    message = rserpoolMessageNew(NULL, 65536);
