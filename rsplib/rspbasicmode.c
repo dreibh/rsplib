@@ -474,7 +474,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
          ST_CLASS(poolElementNodeNew)(
             &myPoolElementNode,
             rspAddrInfo->ai_pe_id,
-            0,
+            gAsapInstance->RegistrarIdentifier,
             registrationLife,
             &myPolicySettings,
             myTransportAddressBlock,

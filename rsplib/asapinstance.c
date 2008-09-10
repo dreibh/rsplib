@@ -1002,6 +1002,9 @@ static void asapInstanceHandleEndpointKeepAlive(
             if(asapInstanceConnectToRegistrar(asapInstance, sd) == true) {
                /* The new registrar ID is already known */
                asapInstance->RegistrarIdentifier = message->RegistrarIdentifier;
+               LOG_NOTE
+               fprintf(stdlog, "Home registrar is $%08x\n", asapInstance->RegistrarIdentifier);
+               LOG_END
             }
          }
          else {
