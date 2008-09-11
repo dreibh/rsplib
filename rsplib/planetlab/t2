@@ -1,0 +1,108 @@
+#!/bin/bash
+
+. ./planetlab-config
+
+SSH_NODE=merkur.planetlab.haw-hamburg.de
+SSH_USER=$PLANETLAB_USER
+SSH_KEY=$PLANETLAB_KEY
+
+SSH_OPTS="-oConnectTimeout=7 -oConnectionAttempts=3 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
+
+SERVICE_DIRECTORY="bin"
+SERVICE_PROGRAM="registrar2"
+SERVICE_OPTS="$OPT_CSP -asapannounce=off -enrpannounce=off"
+SERVICE_INSTANCE_ID=1
+
+SERVICE_PIDFILE=$SSH_NODE-$SERVICE_PROGRAM-$SERVICE_INSTANCE_ID.pid
+SERVICE_LOGFILE=$SSH_NODE-$SERVICE_PROGRAM-$SERVICE_INSTANCE_ID.log
+
+
+
+
+
+
+
+SSH_NODE=localhost # merkur.planetlab.haw-hamburg.de
+SSH_USER=dreibh # $PLANETLAB_USER
+SSH_KEY=/home/dreibh/.ssh/test-key   # $PLANETLAB_KEY
+SERVICE_DIRECTORY="src/rsplib2/rsplib"
+
+
+service_control ()
+{
+   SC_ACTION="$1"
+
+   SC_SSH_NODE="$2"
+   SC_SSH_USER="$3"
+   SC_SSH_KEY="$4"
+
+   SC_SERVICE_INSTANCE_ID="$5"
+   SC_SERVICE_DIRECTORY="$6"
+   SC_SERVICE_PROGRAM="$7"
+   SC_SERVICE_OPTS="$8"
+
+   SC_SERVICE_PIDFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.pid
+   SC_SERVICE_LOGFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.log
+
+
+   ssh -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
+      echo "Logged in to $SC_SSH_NODE"
+      cd $SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         echo "$SC_SERVICE_PIDFILE already exisits."
+         PID="\`cat $SC_SERVICE_PIDFILE\`"
+         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            echo "\$PID is still running!"
+            exit 100   # Error Code 1 = still running
+         else
+            echo "\$PID is not running -> removing PID file."
+            rm -f $SC_SERVICE_PIDFILE
+         fi
+      fi
+      ulimit -c unlimited
+      echo "Starting $SC_SERVICE_PROGRAM service on \$HOSTNAME ..."
+      nohup ./$SC_SERVICE_PROGRAM $SERVICE_OPTS >$SERVICE_LOGFILE 2>&1 &
+      PID=\$!
+      echo \$PID >$SC_SERVICE_PIDFILE
+
+      if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         exit 0   # Error Code 0 = okay
+      fi
+      exit 200   # Error Code 200 = not working
+   EOF
+
+   echo "OK!"
+}
+
+
+
+# ssh -C -l $SSH_USER -i $SSH_KEY $SSH_OPTS $SSH_NODE <<EOF
+#    echo "Logged in to $SSH_NODE"
+#    cd $SERVICE_DIRECTORY
+#    if [ -e $SERVICE_PIDFILE ] ; then
+#       echo "$SERVICE_PIDFILE already exisits."
+#       PID="\`cat $SERVICE_PIDFILE\`"
+#       if ps -p "\$PID" | grep $SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+#          echo "\$PID is still running!"
+#          exit 100   # Error Code 1 = still running
+#       else
+#          echo "\$PID is not running -> removing PID file."
+#          rm -f $SERVICE_PIDFILE
+#       fi
+#    fi
+#    ulimit -c unlimited
+#    echo "Starting $SERVICE_PROGRAM service on \$HOSTNAME ..."
+#    nohup ./$SERVICE_PROGRAM $SERVICE_OPTS >$SERVICE_LOGFILE 2>&1 &
+#    PID=\$!
+#    echo \$PID >$SERVICE_PIDFILE
+#
+#    if ps -p "\$PID" | grep $SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+#       exit 0   # Error Code 0 = okay
+#    fi
+#    exit 200   # Error Code 200 = not working
+# EOF
+
+
+
+service_control start    $SSH_NODE $SSH_USER $SSH_KEY   $SERVICE_INSTANCE_ID $SC_SERVICE_DIRECTORY $SC_SERVICE_PROGRAM $SERVICE_OPTS
+echo "$? done!"

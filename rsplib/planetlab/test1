@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: fractal-scenario2 1863 2008-08-26 13:24:38Z dreibh $
+# $Id: test1 1863 2008-08-26 13:24:38Z dreibh $
 #
 # Thomas Dreibholz's PlanetLab Script Collection
 # Copyright (C) 2005-2008 by Thomas Dreibholz
@@ -88,7 +88,7 @@ stopNetwork ()
 
 
 if [ $# -lt 1 ] ; then
-   echo "Usage: fractal-scenario2 [start|stop|reset|user]"
+   echo "Usage: test1 [start|stop|reset|user]"
 fi
 
 if [ "x$1" = "xstart" ] ; then
