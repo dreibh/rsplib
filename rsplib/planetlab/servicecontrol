@@ -1,0 +1,87 @@
+#!/bin/bash
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+
+if [ ! $# -eq 8 ] ; then
+   echo >&2 "Usage: $0  [Action]  [SSH Node] [SSH User] [SSH Key]  [Instance ID] [Directory] [Program] [Opts]"
+   exit 1
+fi
+
+
+SC_ACTION="$1"
+
+SC_SSH_NODE="$2"
+SC_SSH_USER="$3"
+SC_SSH_KEY="$4"
+
+SC_SERVICE_INSTANCE_ID="$5"
+SC_SERVICE_DIRECTORY="$6"
+SC_SERVICE_PROGRAM="$7"
+SC_SERVICE_OPTS="$8"
+
+SC_SERVICE_PIDFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.pid
+SC_SERVICE_LOGFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.log
+
+
+ssh -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
+   # echo "Logged in to $SC_SSH_NODE"
+
+   cd $SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
+
+   if [ $SC_ACTION = "stop" -o $SC_ACTION = "restart" ] ; then
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         echo "Stopping $SC_SERVICE_PROGRAM on \$HOSTNAME ..."
+         PID="\`cat $SC_SERVICE_PIDFILE\`"
+         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            kill -INT \$PID
+         else
+            echo "\$PID has already stopped -> removing PID file."
+            rm -f $SC_SERVICE_PIDFILE
+         fi
+      fi
+   fi
+
+   if [ $SC_ACTION = "start" -o $SC_ACTION = "restart" ] ; then
+      echo "Starting $SC_SERVICE_PROGRAM on \$HOSTNAME ..."
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         echo "$SC_SERVICE_PIDFILE already exisits."
+         PID="\`cat $SC_SERVICE_PIDFILE\`"
+         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            echo "$SC_SERVICE_PROGRAM is still running (PID \$PID)!"
+            exit 1   # Error Code 1 = still running
+         else
+            # Remove PID file, since process is already stopped.
+            rm -f $SC_SERVICE_PIDFILE
+         fi
+      fi
+      ulimit -c unlimited
+      sudo nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
+      PID=\$!
+      echo \$PID >$SC_SERVICE_PIDFILE
+
+      if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         exit 0   # Error Code 0 = okay
+      fi
+      exit 200   # Error Code 200 = not working
+   fi
+
+   exit 0
+EOF
