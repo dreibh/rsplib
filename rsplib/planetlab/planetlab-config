@@ -21,7 +21,7 @@
 
 
 PLANETLAB_KEY=~/.ssh/planetlab
-PLANETLAB_USER=due_RSerPool_2008 # due_test
+PLANETLAB_USER=due_test   # due_RSerPool_2008 # due_test
 PLANETLAB_COMPILEHOST="merkur.planetlab.haw-hamburg.de"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind"
@@ -35,14 +35,14 @@ DISTSTRIP=0
 DISTMISC=""
 SUIDPRGS="rootshell"   # "registrar server calcappclient hsdump"
 
-OPT_CSP="-cspserver=210.37.47.63:2960 -cspinterval=1000"
+OPT_CSP="-cspserver=210.37.47.91:2960 -cspinterval=1000"
 
 
 # ###########################################################################
 # ACHTUNG: Der SCTP-über-UDP-Port wird auf $SCTP_OVER_UDP_PORT gesetzt!
 # ###########################################################################
 
-SCTP_OVER_UDP_PORT=22222   # Default: 9899
+SCTP_OVER_UDP_PORT=9899   # 22222   # Default: 9899
 SCTPLIB_DIRECTORY="/home/dreibh/src/sctplib1"
 SCTPLIB_OPT="--enable-sctp-over-udp --enable-static --disable-shared --enable-maintainer-mode --with-sctp-over-udp-port=$SCTP_OVER_UDP_PORT"
 SOCKETAPI_DIRECTORY="/home/dreibh/src/socketapi"

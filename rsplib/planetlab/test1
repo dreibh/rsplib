@@ -22,7 +22,7 @@
 
 . ./planetlab-config
 
-PRsPerRegion=1
+PRsPerRegion=2
 PR_LIST=`( head -n$PRsPerRegion pr-europe.hosts | sort -u ; head -n$PRsPerRegion pr-america.hosts | sort -u ; head -n$PRsPerRegion pr-asia.hosts | sort -u )`
 PE_LIST=`cat great-planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
 # PE_LIST=`cat pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`
