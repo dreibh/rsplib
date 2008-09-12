@@ -20,8 +20,8 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-if [ ! $# -eq 8 ] ; then
-   echo >&2 "Usage: $0  [Action]  [SSH Node] [SSH User] [SSH Key]  [Instance ID] [Directory] [Program] [Opts]"
+if [ $# -lt 8 ] ; then
+   echo >&2 "Usage: $0  [Action]  [SSH Node] [SSH User] [SSH Key]  [Instance ID] [Directory] [Program] [Opts]  [Pre-Program, e.g. sudo/nice]"
    exit 1
 fi
 
@@ -36,31 +36,45 @@ SC_SERVICE_INSTANCE_ID="$5"
 SC_SERVICE_DIRECTORY="$6"
 SC_SERVICE_PROGRAM="$7"
 SC_SERVICE_OPTS="$8"
+SC_SERVICE_PRE_PROGRAM="$9"
 
 SC_SERVICE_PIDFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.pid
 SC_SERVICE_LOGFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.log
 
+SC_SERVICE_SHUTDOWN_TIMEOUT=10   # 10s to wait after SIGINT. After that: SIGKILL.
 
-ssh -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
+
+ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
    # echo "Logged in to $SC_SSH_NODE"
 
    cd $SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
 
    if [ $SC_ACTION = "stop" -o $SC_ACTION = "restart" ] ; then
       if [ -e $SC_SERVICE_PIDFILE ] ; then
-         echo "Stopping $SC_SERVICE_PROGRAM on \$HOSTNAME ..."
+         echo -e "\x1b[034mStopping $SC_SERVICE_PROGRAM on \$HOSTNAME ...\x1b[030m"
          PID="\`cat $SC_SERVICE_PIDFILE\`"
          if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            kill -INT \$PID
+            $SC_SERVICE_PRE_PROGRAM kill -INT \$PID
+            i=0 ; while [ \$i -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
+               sleep 1
+               if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  i=$SC_SERVICE_SHUTDOWN_TIMEOUT
+               fi
+               let i=\$i+1
+            done
+            if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               echo "$SC_SERVICE_PROGRAM on \$HOSTNAME has not stopped yet -> sending SIGKILL."
+               $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID
+            fi
          else
-            echo "\$PID has already stopped -> removing PID file."
-            rm -f $SC_SERVICE_PIDFILE
+            echo "\$PID has already stopped -> only removing PID file."
          fi
+         rm -f $SC_SERVICE_PIDFILE
       fi
    fi
 
    if [ $SC_ACTION = "start" -o $SC_ACTION = "restart" ] ; then
-      echo "Starting $SC_SERVICE_PROGRAM on \$HOSTNAME ..."
+      echo -e "\x1b[033mStarting $SC_SERVICE_PROGRAM on \$HOSTNAME ...\x1b[0m"
       if [ -e $SC_SERVICE_PIDFILE ] ; then
          echo "$SC_SERVICE_PIDFILE already exisits."
          PID="\`cat $SC_SERVICE_PIDFILE\`"
@@ -73,15 +87,30 @@ ssh -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
          fi
       fi
       ulimit -c unlimited
-      sudo nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
+      $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
       PID=\$!
       echo \$PID >$SC_SERVICE_PIDFILE
 
-      if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-         exit 0   # Error Code 0 = okay
+      sleep 5   # Wait some time, for sudo/nice etc. to start the actual program
+
+      if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID   # Just to make sure it is gone
+         exit 200   # Error Code 200 = not working
       fi
-      exit 200   # Error Code 200 = not working
    fi
 
-   exit 0
+   if [ $SC_ACTION = "status" ] ; then
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         PID="\`cat $SC_SERVICE_PIDFILE\`"
+         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            echo -e "\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\x1b[0m"
+         else
+            echo -e "\x1b[031m$SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\x1b[0m"
+         fi
+      else
+         echo -e "\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\x1b[030m"
+      fi
+   fi
+
+   # echo "Leaving $SC_SSH_NODE"
 EOF
