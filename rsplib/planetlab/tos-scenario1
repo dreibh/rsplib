@@ -104,7 +104,7 @@ echo "###### Starting PEs ###################################################"
 id=1
 for pe in $PEList ; do
    ./servicecontrol restart $pe  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY server \
-      "-loglevel=5 -calcapp -capcapacity=1000000 $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
+      "-loglevel=5 -calcapp -capcapacity=1000000 "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=pe-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
 wait
@@ -114,7 +114,7 @@ echo "###### Starting PUs ###################################################"
 id=1
 for pu in $PUList ; do
    ./servicecontrol restart $pu  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY calcappclient \
-      "-loglevel=5 -jobsize=10000000 -jobinterval=30 -scalar=pu-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
+      "-loglevel=5 -jobsize=10000000 -jobinterval=30 "-object=scenario.calcAppPoolUser[$id]" -scalar=pu-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
 wait
