@@ -193,13 +193,16 @@ endif
 
 
 # ###### Test programs ######################################################
-noinst_PROGRAMS = hrestest testregistrator combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell t1
+noinst_PROGRAMS = hrestest testregistrator createsummary combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell t1
 
 hrestest_SOURCES = hrestest.c
 hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 testregistrator_SOURCES = testregistrator.c
 testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+
+createsummary_SOURCES = createsummary.cc
+createsummary_LDADD   = $(bz2_LIBS) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS)
 
 combinesummaries_SOURCES = combinesummaries.cc
 combinesummaries_LDADD   = $(bz2_LIBS)

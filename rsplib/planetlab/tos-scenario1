@@ -148,3 +148,23 @@ for pr in $PRList ; do
    let id=$id+1
 done
 wait
+
+
+echo "###### Downloading results ############################################"
+allNodes="`
+(
+   for pr in $PRList ; do
+      echo $pr
+   done
+   for pe in $PEList ; do
+      echo $pe
+   done
+   for pu in $PUList ; do
+      echo $pu
+   done
+) | sort -u`"
+
+for node in $allNodes ; do
+   ./get "$node:$SERVICE_DIRECTORY/*.sca" . &
+done
+wait
