@@ -20,33 +20,37 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-if [ $# -lt 8 ] ; then
-   echo >&2 "Usage: $0  [Action]  [SSH Node] [SSH User] [SSH Key]  [Instance ID] [Directory] [Program] [Opts]  [Pre-Program, e.g. sudo/nice]"
+if [ $# -lt 9 ] ; then
+   echo >&2 "Usage: $0  [Action]  [SSH Command] [SSH Node] [SSH User] [SSH Key]  [Instance ID] [Directory] [Program] [Opts]  [Pre-Program, e.g. sudo/nice]"
    exit 1
 fi
 
 
 SC_ACTION="$1"
 
-SC_SSH_NODE="$2"
-SC_SSH_USER="$3"
-SC_SSH_KEY="$4"
+SC_SSH_COMMAND="$2"
+SC_SSH_NODE="$3"
+SC_SSH_USER="$4"
+SC_SSH_KEY="$5"
 SC_SSH_OPTS="-oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
+shift ; shift ; shift ; shift ; shift
 
-SC_SERVICE_INSTANCE_ID="$5"
-SC_SERVICE_DIRECTORY="$6"
-SC_SERVICE_PROGRAM="$7"
-SC_SERVICE_OPTS="$8"
-SC_SERVICE_PRE_PROGRAM="$9"
+SC_SERVICE_INSTANCE_ID="$1"
+SC_SERVICE_DIRECTORY="$2"
+SC_SERVICE_PROGRAM="$3"
+SC_SERVICE_OPTS="$4"
+SC_SERVICE_PRE_PROGRAM="$5"
 
 SC_SERVICE_PIDFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.pid
 SC_SERVICE_LOGFILE=$SC_SSH_NODE-$SC_SERVICE_PROGRAM-$SC_SERVICE_INSTANCE_ID.log
 
+SC_SERVICE_STARTUP_TIMEOUT=5     # 5s to wait for service startup.
 SC_SERVICE_SHUTDOWN_TIMEOUT=10   # 10s to wait after SIGINT. After that: SIGKILL.
 
 
 # echo "Arguments:"
 # echo SC_ACTION=$SC_ACTION
+# echo SC_SSH_COMMAND=$SC_SSH_COMMAND
 # echo SC_SSH_NODE=$SC_SSH_NODE
 # echo SC_SSH_USER=$SC_SSH_USER
 # echo SC_SSH_KEY=$SC_SSH_KEY
@@ -57,21 +61,23 @@ SC_SERVICE_SHUTDOWN_TIMEOUT=10   # 10s to wait after SIGINT. After that: SIGKILL
 # echo SC_SERVICE_PRE_PROGRAM=$SC_SERVICE_PRE_PROGRAM
 
 
-ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
+$SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
    # echo "Logged in to $SC_SSH_NODE"
 
-   cd $SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
+   cd ~/$SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
 
    if [ $SC_ACTION = "stop" -o $SC_ACTION = "restart" ] ; then
       if [ -e $SC_SERVICE_PIDFILE ] ; then
-         echo -e "\x1b[034mStopping $SC_SERVICE_PROGRAM on \$HOSTNAME ...\x1b[030m"
+         echo -e "\\\x1b[034mStopping $SC_SERVICE_PROGRAM on \$HOSTNAME ...\\\x1b[030m"
          PID="\`cat $SC_SERVICE_PIDFILE\`"
          if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
             $SC_SERVICE_PRE_PROGRAM kill -INT \$PID
+            sleep 0.1
             i=0 ; while [ \$i -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
-               sleep 1
                if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
                   i=$SC_SERVICE_SHUTDOWN_TIMEOUT
+               else
+                  sleep 1
                fi
                let i=\$i+1
             done
@@ -87,7 +93,7 @@ ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
    fi
 
    if [ $SC_ACTION = "start" -o $SC_ACTION = "restart" ] ; then
-      echo -e "\x1b[033mStarting $SC_SERVICE_PROGRAM on \$HOSTNAME ...\x1b[0m"
+      echo -e "\\\x1b[033mStarting $SC_SERVICE_PROGRAM on \$HOSTNAME ...\\\x1b[0m"
       if [ -e $SC_SERVICE_PIDFILE ] ; then
          echo "$SC_SERVICE_PIDFILE already exisits."
          PID="\`cat $SC_SERVICE_PIDFILE\`"
@@ -104,7 +110,15 @@ ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
       PID=\$!
       echo \$PID >$SC_SERVICE_PIDFILE
 
-      sleep 5   # Wait some time, for sudo/nice etc. to start the actual program
+      # Wait some time, for sudo/nice etc. to start the actual program
+      i=0 ; while [ \$i -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
+         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            i=$SC_SERVICE_STARTUP_TIMEOUT
+         else
+            sleep 1
+         fi
+         let i=\$i+1
+      done
 
       if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
          $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID   # Just to make sure it is gone
@@ -116,12 +130,12 @@ ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
       if [ -e $SC_SERVICE_PIDFILE ] ; then
          PID="\`cat $SC_SERVICE_PIDFILE\`"
          if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            echo -e "\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\x1b[0m"
+            echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
          else
-            echo -e "\x1b[031m$SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\x1b[0m"
+            echo -e "\\\x1b[031m$SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
          fi
       else
-         echo -e "\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\x1b[030m"
+         echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\\\x1b[030m"
       fi
    fi
 

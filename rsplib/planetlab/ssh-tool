@@ -1,0 +1,48 @@
+#!/bin/bash
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+
+CmdFile=""
+Command=""
+if [ $1 = "WriteCmd" ] ; then
+   Command="$1"
+   CmdFile="$2"
+   (
+      while read cmd ; do
+        echo "$cmd"
+      done
+   ) >>$CmdFile
+elif [ $1 = "RunCmd" ] ; then
+   Command="$1"
+   CmdFile="$2"
+   shift ; shift
+   SC_SSH_NODE="$1"
+   SC_SSH_USER="$2"
+   SC_SSH_KEY="$3"
+   SC_SSH_OPTS="-oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
+   ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <$CmdFile
+else
+   (
+      while read cmd ; do
+        echo "$cmd"
+      done
+   ) | ssh $@
+fi

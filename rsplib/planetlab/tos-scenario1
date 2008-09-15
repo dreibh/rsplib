@@ -93,7 +93,7 @@ echo PU_PROpt=$PU_PROpt
 echo "###### Starting PRs ###################################################"
 id=1
 for pr in $PRList ; do
-   ./servicecontrol restart $pr  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY registrar \
+   ./servicecontrol "ssh" restart $pr  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY registrar \
       "-loglevel=9 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=999999 $OPT_CSP $PR_PROpt"   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
@@ -103,7 +103,7 @@ wait
 echo "###### Starting PEs ###################################################"
 id=1
 for pe in $PEList ; do
-   ./servicecontrol restart $pe  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY server \
+   ./servicecontrol "ssh" restart $pe  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY server \
       "-loglevel=5 -calcapp -capcapacity=1000000 "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=pe-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
@@ -113,7 +113,7 @@ wait
 echo "###### Starting PUs ###################################################"
 id=1
 for pu in $PUList ; do
-   ./servicecontrol restart $pu  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY calcappclient \
+   ./servicecontrol "ssh" restart $pu  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY calcappclient \
       "-loglevel=5 -jobsize=10000000 -jobinterval=30 "-object=scenario.calcAppPoolUser[$id]" -scalar=pu-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
@@ -126,7 +126,7 @@ sleep 60
 echo "###### Stopping PUs ###################################################"
 id=1
 for pu in $PUList ; do
-   ./servicecontrol stop $pu  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY calcappclient ""   "$SERVICE_PRE_PROGRAM" &
+   ./servicecontrol "ssh" stop $pu  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY calcappclient ""   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
 wait
@@ -135,7 +135,7 @@ wait
 echo "###### Stopping PEs ###################################################"
 id=1
 for pe in $PEList ; do
-   ./servicecontrol stop $pe  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY server ""   "$SERVICE_PRE_PROGRAM" &
+   ./servicecontrol "ssh" stop $pe  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY server ""   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
 wait
@@ -144,7 +144,7 @@ wait
 echo "###### Stopping PRs ###################################################"
 id=1
 for pr in $PRList ; do
-   ./servicecontrol stop $pr  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY registrar ""   "$SERVICE_PRE_PROGRAM" &
+   ./servicecontrol "ssh" stop $pr  $SSH_NODE $SSH_USER $SSH_KEY   $id $SERVICE_DIRECTORY registrar ""   "$SERVICE_PRE_PROGRAM" &
    let id=$id+1
 done
 wait
