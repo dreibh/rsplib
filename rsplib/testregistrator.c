@@ -46,13 +46,14 @@ int main(int argc, char** argv)
 {
    struct rsp_info     info;
    struct rsp_loadinfo loadinfo;
-   int           poolElementArray[MAX_POOL_ELEMENTS];
-   char          myPoolHandle[512];
-   const char*   poolHandle       = "TestPool";
-   size_t        poolElements     = 10;
-   size_t        pools            = 0;
-   bool          fastBreak        = false;
-   bool          noDeregistration = false;
+   int                 poolElementArray[MAX_POOL_ELEMENTS];
+   char                myPoolHandle[512];
+   const char*         poolHandle       = "TestPool";
+   size_t              poolElements     = 10;
+   size_t              pools            = 0;
+   bool                fastBreak        = false;
+   bool                noDeregistration = false;
+   unsigned long long  pause            = 0;
    size_t        i;
 
 
@@ -108,6 +109,9 @@ int main(int argc, char** argv)
             pools = 1;
          }
       }
+      else if(!(strncmp(argv[i], "-pause=" ,7))) {
+         pause = 1000ULL * atol((char*)&argv[i][7]);
+      }
       else if(!(strncmp(argv[i], "-policy=" ,8))) {
          if((!(strcmp((char*)&argv[i][8], "roundrobin"))) || (!(strcmp((char*)&argv[i][8], "rr")))) {
             loadinfo.rli_policy = PPT_ROUNDROBIN;
@@ -152,7 +156,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "Bad argument \"%s\"!\n" ,argv[i]);
-         fprintf(stderr, "Usage: %s {-poolelements=total PEs} {-pools=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
+         fprintf(stderr, "Usage: %s {-poolelements=total PEs} {-pools=PEs} {-poolhandle=pool handle} {-fastbreak} {-noderegistration} {-pause=milliseconds} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} {-policy=roundrobin|rr|weightedroundrobin|wee|leastused|lu|leastuseddegradation|lud|random|rd|weightedrandom|wrd} {-load=load} {-weight=weight} \n" ,
                 argv[0]);
          exit(1);
       }
@@ -166,10 +170,11 @@ int main(int argc, char** argv)
 
    puts("Test-Registrator - Version 1.0");
    puts("==============================\n");
-   printf("No Deregistration = %s\n", (noDeregistration == true) ? "on" : "off");
-   printf("Fast Break        = %s\n", (fastBreak == true) ? "on" : "off");
-   printf("Pool              = %u PEs\n\n", (unsigned int)pools);
-   printf("Pool Elements     = %u\n", (unsigned int)poolElements);
+   printf("No Deregistration           = %s\n", (noDeregistration == true) ? "on" : "off");
+   printf("Fast Break                  = %s\n", (fastBreak == true) ? "on" : "off");
+   printf("Pool                        = %u PEs\n\n", (unsigned int)pools);
+   printf("Pool Elements               = %u\n", (unsigned int)poolElements);
+   printf("Pause between registrations = %llums\n", pause / 1000);
 
 
    for(i = 0;i < poolElements;i++) {
@@ -185,6 +190,9 @@ int main(int argc, char** argv)
                       &loadinfo, 60000, 0) != 0) {
          perror("Unable to register pool element");
          exit(1);
+      }
+      if(pause > 0) {
+         usleep(pause);
       }
    }
 
