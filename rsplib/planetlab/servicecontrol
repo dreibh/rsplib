@@ -64,79 +64,88 @@ SC_SERVICE_SHUTDOWN_TIMEOUT=10   # 10s to wait after SIGINT. After that: SIGKILL
 $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <<EOF
    # echo "Logged in to $SC_SSH_NODE"
 
-   cd ~/$SC_SERVICE_DIRECTORY || exit 201    # Error Code 201 = no directory
+   if [ -e ~/$SC_SERVICE_DIRECTORY ] ; then
+      cd ~/$SC_SERVICE_DIRECTORY
 
-   if [ $SC_ACTION = "stop" -o $SC_ACTION = "restart" ] ; then
-      if [ -e $SC_SERVICE_PIDFILE ] ; then
-         echo -e "\\\x1b[034mStopping $SC_SERVICE_PROGRAM on \$HOSTNAME ...\\\x1b[030m"
-         PID="\`cat $SC_SERVICE_PIDFILE\`"
-         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            $SC_SERVICE_PRE_PROGRAM kill -INT \$PID
-            sleep 0.1
-            i=0 ; while [ \$i -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
-               if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-                  i=$SC_SERVICE_SHUTDOWN_TIMEOUT
+      if [ "$SC_ACTION" = "stop" -o "$SC_ACTION" = "restart" ] ; then
+         if [ -e $SC_SERVICE_PIDFILE ] ; then
+            echo -e "\\\x1b[034mStopping $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[030m"
+            PID="\`cat $SC_SERVICE_PIDFILE\`"
+            if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               $SC_SERVICE_PRE_PROGRAM kill -INT \$PID
+               sleep 0.1
+               i=0 ; while [ \$i -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
+                  if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                     i=$SC_SERVICE_SHUTDOWN_TIMEOUT
+                  else
+                     sleep 1
+                  fi
+                  let i=\$i+1
+               done
+               if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  echo "$SC_SERVICE_PROGRAM on \$HOSTNAME has not stopped yet -> sending SIGKILL."
+                  $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID
+               fi
+            else
+               echo "\$PID has already stopped -> only removing PID file."
+            fi
+            rm -f $SC_SERVICE_PIDFILE
+         fi
+      fi
+
+      if [ "$SC_ACTION" = "start" -o "$SC_ACTION" = "restart" ] ; then
+         echo -e "\\\x1b[033mStarting $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[0m"
+         DoStartup=1
+         if [ -e $SC_SERVICE_PIDFILE ] ; then
+            echo "$SC_SERVICE_PIDFILE already exisits."
+            PID="\`cat $SC_SERVICE_PIDFILE\`"
+            if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               echo "$SC_SERVICE_PROGRAM is still running (PID \$PID)!"
+               DoStartup=0
+            else
+               # Remove PID file, since process is already stopped.
+               rm -f $SC_SERVICE_PIDFILE
+            fi
+         fi
+
+         if [ \$DoStartup -eq 1 ] ; then
+            ulimit -c unlimited
+            $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
+            PID=\$!
+            echo \$PID >$SC_SERVICE_PIDFILE
+
+            # Wait some time, for sudo/nice etc. to start the actual program
+            i=0 ; while [ \$i -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
+               if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  i=$SC_SERVICE_STARTUP_TIMEOUT
                else
                   sleep 1
                fi
                let i=\$i+1
             done
+
+            if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID   # Just to make sure it is gone
+               let ExitCode=\$ExitCode+1
+            fi
+         fi
+      fi
+
+      if [ "$SC_ACTION" = "status" ] ; then
+         if [ -e $SC_SERVICE_PIDFILE ] ; then
+            PID="\`cat $SC_SERVICE_PIDFILE\`"
             if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-               echo "$SC_SERVICE_PROGRAM on \$HOSTNAME has not stopped yet -> sending SIGKILL."
-               $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID
+               echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
+            else
+               echo -e "\\\x1b[031m$SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
             fi
          else
-            echo "\$PID has already stopped -> only removing PID file."
-         fi
-         rm -f $SC_SERVICE_PIDFILE
-      fi
-   fi
-
-   if [ $SC_ACTION = "start" -o $SC_ACTION = "restart" ] ; then
-      echo -e "\\\x1b[033mStarting $SC_SERVICE_PROGRAM on \$HOSTNAME ...\\\x1b[0m"
-      if [ -e $SC_SERVICE_PIDFILE ] ; then
-         echo "$SC_SERVICE_PIDFILE already exisits."
-         PID="\`cat $SC_SERVICE_PIDFILE\`"
-         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            echo "$SC_SERVICE_PROGRAM is still running (PID \$PID)!"
-            exit 1   # Error Code 1 = still running
-         else
-            # Remove PID file, since process is already stopped.
-            rm -f $SC_SERVICE_PIDFILE
+            echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\\\x1b[030m"
          fi
       fi
-      ulimit -c unlimited
-      $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
-      PID=\$!
-      echo \$PID >$SC_SERVICE_PIDFILE
 
-      # Wait some time, for sudo/nice etc. to start the actual program
-      i=0 ; while [ \$i -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
-         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            i=$SC_SERVICE_STARTUP_TIMEOUT
-         else
-            sleep 1
-         fi
-         let i=\$i+1
-      done
-
-      if ! ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-         $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID   # Just to make sure it is gone
-         exit 200   # Error Code 200 = not working
-      fi
-   fi
-
-   if [ $SC_ACTION = "status" ] ; then
-      if [ -e $SC_SERVICE_PIDFILE ] ; then
-         PID="\`cat $SC_SERVICE_PIDFILE\`"
-         if ps -p "\$PID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
-         else
-            echo -e "\\\x1b[031m$SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
-         fi
-      else
-         echo -e "\\\x1b[032m$SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\\\x1b[030m"
-      fi
+   else
+      let ExitCode=\$ExitCode+1
    fi
 
    # echo "Leaving $SC_SSH_NODE"
