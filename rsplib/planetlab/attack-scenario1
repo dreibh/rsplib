@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Contact: dreibh@iem.uni-due.de
+# Contact: network@iem.uni-due.de
 
 
 if [ -e ./planetlab-config ] ; then
@@ -51,8 +51,8 @@ SSH_KEY=$PLANETLAB_KEY
 SERVICE_DIRECTORY="bin"
 SERVICE_PRE_PROGRAM="sudo"
 
-SSH_USER="dreibh"
-SSH_KEY="/home/dreibh/.ssh/test-key"
+SSH_USER="network"
+SSH_KEY="/home/network/.ssh/id_dsa"
 SERVICE_DIRECTORY="src/rsplib2/rsplib"
 SERVICE_PRE_PROGRAM=""
 OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
@@ -69,7 +69,7 @@ check_variable ()
 
 
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
-# Duration=30
+# Duration=15
 # PRs=1
 # PEs=5
 # PUs=10
@@ -182,7 +182,7 @@ for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
 done
 for node in $AttackerList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -identifier=$AttackIdentifier -policy=$Policy -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -identifier=$AttackIdentifier -policy=$Policy -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
@@ -199,7 +199,7 @@ for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PEList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
-      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 v=1
@@ -218,7 +218,7 @@ for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PUList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
-      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
