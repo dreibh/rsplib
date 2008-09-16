@@ -633,7 +633,8 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
                         (unsigned char*)poolHandle, strlen(poolHandle), 0) == 0) {
             sendCalcAppRequest(&process);
 
-            while((process.Status != PS_Failed) &&
+            while((!breakDetected()) &&
+                  (process.Status != PS_Failed) &&
                   (process.Status != PS_Completed)) {
 
                /* ====== Call rsp_poll() ================================= */
@@ -666,11 +667,6 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
                   }
                   goto finished;
                }
-               if(breakDetected()) {
-                  rsp_close(process.RSerPoolSocketDescriptor);
-                  process.RSerPoolSocketDescriptor = -1;
-                  goto finished;
-               }
 
                if(process.Status == PS_Failover) {
                   handleFailover(&process);
@@ -681,6 +677,12 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
                delete process.CurrentJob;
                process.CurrentJob = process.Queue.dequeue();
                process.Status     = PS_Init;
+            }
+
+            if(breakDetected()) {
+               rsp_close(process.RSerPoolSocketDescriptor);
+               process.RSerPoolSocketDescriptor = -1;
+               goto finished;
             }
          }
          else {
