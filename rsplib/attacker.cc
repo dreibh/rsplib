@@ -185,6 +185,7 @@ int main(int argc, char** argv)
          }
       }
       else {
+         fprintf(stderr, "ERROR: Bad parameter <%s>!\n", argv[i]);
          fprintf(stderr, "Usage: %s {-type=registration|handleresolution} {-interval=Seconds} {-identifier=Identifier} {-policy=Policy} {-reportunreachableprobability=Probability}\n", argv[0]);
          exit(1);
       }
