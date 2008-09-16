@@ -1,0 +1,248 @@
+#!/bin/bash
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab Script Collection
+# Copyright (C) 2005-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+
+if [ -e ./planetlab-config ] ; then
+   . ./planetlab-config
+elif [ -e ../../planetlab-config ] ; then
+   . ../../planetlab-config
+else
+   echo >&2 "ERROR: planetlab-config not found!"
+   exit 1
+fi
+if [ -e ./servicecontrol ] ; then
+   SERVICE_CONTROL_CMD=./servicecontrol
+elif [ -e ../../servicecontrol ] ; then
+   SERVICE_CONTROL_CMD=../../servicecontrol
+else
+   echo >&2 "ERROR: servicecontrol not found!"
+   exit 1
+fi
+
+
+SSH_USER=$PLANETLAB_USER
+SSH_KEY=$PLANETLAB_KEY
+SERVICE_DIRECTORY="bin"
+SERVICE_PRE_PROGRAM="sudo"
+
+SSH_USER="dreibh"
+SSH_KEY="/home/dreibh/.ssh/test-key"
+SERVICE_DIRECTORY="src/rsplib2/rsplib"
+SERVICE_PRE_PROGRAM=""
+
+
+check_variable ()
+{
+   if [ "$1" == "" ] ; then
+      echo >&2 "ERROR: Variable $1 is not set!"
+      exit 1
+   fi
+   echo "   $1=$2"
+}
+
+
+# PRs=1
+# PEs=4
+# PUs=6
+# Policy="LeastUsed"
+# MaxBadPEReports=3
+# JobInterval=30.0
+# JobSize=10000000
+# Attackers=1
+# AttackType="registration"
+# AttackInterval=1
+# AttackIdentifier=0
+# AttackReportUnreachableProbability=0.0
+
+check_variable Duration $Duration
+check_variable PRs $PRs
+check_variable PEs $PEs
+check_variable PUs $PUs
+check_variable Policy $Policy
+check_variable MaxBadPEReports $MaxBadPEReports
+check_variable JobInterval $JobInterval
+check_variable JobSize $JobSize
+check_variable Attackers $Attackers
+check_variable AttackType $AttackType
+check_variable AttackInterval $AttackInterval
+check_variable AttackIdentifier $AttackIdentifier
+check_variable AttackReportUnreachableProbability $AttackReportUnreachableProbability
+
+ID=attack-scenario1
+
+# exit 0
+
+
+# Get list of n nodes
+# $1 = Node list
+# $2 = n
+get_nodes ()
+{
+   n=0
+   NodeList=""
+   CandidateList=$1
+   if [ "$CandidateList" = "" ] ; then
+      echo "ERROR: Empty node list $1!"
+      exit 1
+   fi
+
+   while [ $n -lt $2 ] ; do
+      for node in $CandidateList ; do
+         NodeList="$NodeList $node "
+         let n=$n+1
+         if [ $n -ge $2 ] ; then
+            return
+         fi
+      done
+   done
+}
+
+
+# UsefulNodes1="`(grep ".de$" great-planetlab.hosts ; grep ".edu$" great-planetlab.hosts) | sort -u`"
+# UsefulNodes2="`(grep ".de$" great-planetlab.hosts ; grep ".edu$" great-planetlab.hosts) | sort -ru`"
+# echo $UsefulNodes
+
+UsefulNodes1="localhost" # "`cat working.hosts`"
+UsefulNodes2="localhost" # "`cat working.hosts`"
+
+get_nodes "$UsefulNodes1" $PRs       ; PRList=$NodeList
+get_nodes "$UsefulNodes2" $PEs       ; PEList=$NodeList
+get_nodes "$UsefulNodes2" $PUs       ; PUList=$NodeList
+get_nodes "$UsefulNodes2" $Attackers ; AttackerList=$NodeList
+
+
+MasterPR="`echo $PRList | head -n1`"
+
+
+PR_PROpt=""
+PE_PROpt=""
+PU_PROpt=""
+for pr in $PRList ; do
+   PR_PROpt="$PR_PROpt -peer=$pr:9901 "
+   PE_PROpt="$PE_PROpt -registrar=$pr:3863 "
+   PU_PROpt="$PU_PROpt -registrar=$pr:3863 "
+done
+
+echo PR_PROpt=$PR_PROpt
+echo PE_PROpt=$PE_PROpt
+echo PU_PROpt=$PU_PROpt
+
+
+echo "###### Starting PRs ###################################################"
+id=1
+for pr in $PRList ; do
+   $SERVICE_CONTROL_CMD restart   "ssh" $pr  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
+      "-loglevel=5 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports $OPT_CSP $PR_PROpt"   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+sleep 6
+
+echo "###### Starting attackers #############################################"
+id=1
+for pr in $AttackerList ; do
+   $SERVICE_CONTROL_CMD restart   "ssh" $pr  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
+      "-type=$AttackType -interval=$AttackInterval -identifier=$AttackIdentifier -policy=$Policy -reportunreachableprobability=$AttackReportUnreachableProbability $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+sleep 6
+
+echo "###### Starting PEs ###################################################"
+id=1
+for pe in $PEList ; do
+   $SERVICE_CONTROL_CMD restart   "ssh" $pe  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
+      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+sleep 6
+
+echo "###### Starting PUs ###################################################"
+id=1
+for attacker in $PUList ; do
+   $SERVICE_CONTROL_CMD restart   "ssh" $attacker  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
+      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt $OPT_CSP"   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+
+sleep $Duration
+
+
+echo "###### Stopping PUs ###################################################"
+id=1
+for pu in $PUList ; do
+   $SERVICE_CONTROL_CMD stop   "ssh" $pu  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient ""   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+
+echo "###### Stopping PEs ###################################################"
+id=1
+for pe in $PEList ; do
+   $SERVICE_CONTROL_CMD stop   "ssh" $pe  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server ""   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+
+echo "###### Stopping attackers #############################################"
+id=1
+for attacker in $AttackerList ; do
+   $SERVICE_CONTROL_CMD stop   "ssh" $attacker  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker ""   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+
+echo "###### Stopping PRs ###################################################"
+id=1
+for pr in $PRList ; do
+   $SERVICE_CONTROL_CMD stop   "ssh" $pr  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar ""   "$SERVICE_PRE_PROGRAM" &
+   let id=$id+1
+done
+wait
+
+
+echo "###### Downloading results ############################################"
+allNodes="`
+(
+   for pr in $PRList ; do
+      echo $pr
+   done
+   for pe in $PEList ; do
+      echo $pe
+   done
+   for pu in $PUList ; do
+      echo $pu
+   done
+) | sort -u`"
+
+for node in $allNodes ; do
+   scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.sca" . &
+done
+wait
