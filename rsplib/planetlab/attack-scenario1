@@ -69,19 +69,19 @@ check_variable ()
 
 
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
-# Duration=15
-# PRs=1
-# PEs=5
-# PUs=10
-# Policy="LeastUsed"
-# MaxBadPEReports=3
-# JobInterval=30.0
-# JobSize=10000000
-# Attackers=1
-# AttackType="registration"
-# AttackInterval=1
-# AttackIdentifier=0
-# AttackReportUnreachableProbability=0.0
+# export Duration=120
+# export PRs=1
+# export PEs=10
+# export PUs=30
+# export Attackers=1
+# export AttackInterval=1
+# export Policy="LeastUsed"
+# export MaxBadPEReports=3
+# export JobInterval=60.0
+# export JobSize=10000000
+# export AttackType="registration"
+# export AttackIdentifier=0
+# export AttackReportUnreachableProbability=0.0
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
 
 check_variable Duration $Duration
@@ -218,7 +218,7 @@ for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PUList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
-      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval -poolhandle=Pool-$ID "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do

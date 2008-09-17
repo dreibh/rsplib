@@ -1,17 +1,17 @@
 #!/bin/bash
 
 export Measurement=attack1
-export Duration=900
+export Duration=300
 export PRs=1
 export PEs=10
 export PUs=30
+export AttackInterval=1
 export Policy="LeastUsed"
 export MaxBadPEReports=3
 export JobInterval=60.0
 export JobSize=10000000
 export Attackers=1
 export AttackType="registration"
-export AttackInterval=1
 export AttackIdentifier=0
 export AttackReportUnreachableProbability=0.0
 
@@ -27,7 +27,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Policy in LeastUsed RoundRobin Random ; do
-   for AttackInterval in 0.25 1 5 10 20 30 ; do
+   for AttackInterval in 1 5 10 30 ; do
 
       ID=$Duration-$Policy-$AttackInterval
       VARIABLES="Duration Policy AttackInterval"
