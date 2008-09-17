@@ -727,12 +727,10 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Startup Time\"         %1.6f\n", objectName, TotalStartupTime);
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Processing Time\"      %1.6f\n", objectName, TotalProcessingTime);
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Handling Time\"        %1.6f\n", objectName, TotalHandlingTime);
-   if(TotalProcessingTime > 0.0) {
-      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Processing Speed\"   %1.0f\n", objectName, TotalJobSizeCompleted / TotalProcessingTime);
-   }
-   if(TotalHandlingTime > 0.0) {
-      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Handling Speed\"     %1.0f\n", objectName, TotalJobSizeCompleted / TotalHandlingTime);
-   }
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Processing Speed\"   %1.0f\n", objectName,
+           (TotalProcessingTime > 0.0) ? TotalJobSizeCompleted / TotalProcessingTime : 0.0);
+   fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Average Handling Speed\"     %1.0f\n", objectName,
+           (TotalHandlingTime > 0.0) ? TotalJobSizeCompleted / TotalHandlingTime : 0.0);
 
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Jobs Queued\"          %llu\n",  objectName, TotalJobsQueued);
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total Jobs Started\"         %llu\n",  objectName, TotalJobsStarted);

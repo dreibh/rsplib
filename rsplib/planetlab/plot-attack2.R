@@ -35,6 +35,19 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
         "User's Perspective", NA, NA, list(0,1),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
+        "Policy", "AttackReportUnreachableProbability"),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsQueued",
+        "Policy", "AttackReportUnreachableProbability"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsStarted",
+        "Policy", "AttackReportUnreachableProbability"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsCompleted",
         "Policy", "AttackReportUnreachableProbability")
 )
 
@@ -57,6 +70,22 @@ plotVariables <- list(
            "data1$calcAppPoolUser.CalcAppPUAverageHandlingSpeed",
            "brown4",
            list("calcAppPoolUser-CalcAppPUAverageHandlingSpeed")),
+
+   list("calcAppPoolUser-CalcAppPUTotalJobsQueued",
+           "Total Requests Queued [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsQueued",
+           "blue4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsQueued")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsStarted",
+           "Total Requests Started [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsStarted",
+           "yellow4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsStarted")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsCompleted",
+           "Total Requests Completed [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsCompleted",
+           "green4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsCompleted")),
 
    list("Policy",
            "Pool Policy{P}",

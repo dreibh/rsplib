@@ -51,8 +51,8 @@ SSH_KEY=$PLANETLAB_KEY
 SERVICE_DIRECTORY="bin"
 SERVICE_PRE_PROGRAM="sudo"
 
-SSH_USER="network"
-SSH_KEY="/home/network/.ssh/id_dsa"
+SSH_USER="dreibh"
+SSH_KEY="/home/dreibh/.ssh/test-key"
 SERVICE_DIRECTORY="src/rsplib2/rsplib"
 SERVICE_PRE_PROGRAM=""
 OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
@@ -69,19 +69,21 @@ check_variable ()
 
 
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
-# export Duration=120
-# export PRs=1
-# export PEs=10
-# export PUs=30
-# export Attackers=1
-# export Policy="RoundRobin"
-# export MaxBadPEReports=3
-# export JobInterval=60.0
-# export JobSize=10000000
-# export AttackType="handleresolution"
-# export AttackInterval=0.1
-# export AttackIdentifier=0
-# export AttackReportUnreachableProbability=1.0
+# Duration=120
+# PRs=1
+# PEs=10
+# PUs=30
+# Policy=RoundRobin
+# MaxBadPEReports=3
+# Capacity=1000000
+# ReregInterval=30000
+# JobInterval=60.0
+# JobSize=10000000
+# Attackers=0
+# AttackType=handleresolution
+# AttackInterval=0.1
+# AttackIdentifier=0
+# AttackReportUnreachableProbability=1.0
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
 
 check_variable Duration $Duration
@@ -90,6 +92,8 @@ check_variable PEs $PEs
 check_variable PUs $PUs
 check_variable Policy $Policy
 check_variable MaxBadPEReports $MaxBadPEReports
+check_variable Capacity $Capacity
+check_variable ReregInterval $ReregInterval
 check_variable JobInterval $JobInterval
 check_variable JobSize $JobSize
 check_variable Attackers $Attackers
@@ -165,7 +169,7 @@ for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PRList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-      "-loglevel=5 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports $OPT_CSP $PR_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=5 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
@@ -199,7 +203,7 @@ for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PEList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
-      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 v=1
@@ -305,6 +309,6 @@ allNodes="`
 ) | xargs -n1 echo | sort -u`"
 
 for node in $allNodes ; do
-   scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.sca" . &
+   scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
 done
 wait

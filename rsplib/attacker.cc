@@ -281,6 +281,7 @@ int main(int argc, char** argv)
                          &loadInfo,
                          72000000,
                          dontwait ? REGF_DONTWAIT|REGF_CONTROLCHANNEL : REGF_CONTROLCHANNEL);
+         printTimeStamp(stdout);
          if(result == 0) {
             printf("(Re-)Registration successful, ID is $%08x\n", rspAddrInfo.ai_pe_id);
          }
@@ -293,6 +294,7 @@ int main(int argc, char** argv)
          char buffer[65536];
          int  received;
          while( (received = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0)) > 0 ) {
+            printTimeStamp(stdout);
             printf("Discard message of %d bytes.\n", received);
          }
       }
@@ -313,9 +315,9 @@ int main(int argc, char** argv)
          int result = rsp_getaddrinfo((const unsigned char*)poolHandle, strlen(poolHandle),
                                       &rspAddrInfo, 1, 0);
 
+         printTimeStamp(stdout);
+         printf("Selected %d items\n", result);
          if(result > 0) {
-            printf("Selected %d items\n", result);
-
             if(reportUnreachableProbability > 0.0) {
                struct rsp_addrinfo* r = rspAddrInfo;
                while(r != NULL) {
