@@ -236,6 +236,11 @@ int main(int argc, char** argv)
          perror("bind() failed");
          exit(1);
       }
+      setNonBlocking(sd);
+      if(ext_listen(sd, 100) < 0) {
+         perror("listen() failed");
+         exit(1);
+      }
       sctpLocalAddresses = getladdrsplus(sd, 0, &sctpLocalAddressArray);
       if(sctpLocalAddresses <= 0) {
          perror("sctp_getladdrs() failed!");
@@ -263,7 +268,6 @@ int main(int argc, char** argv)
             exit(1);
          }
       }
-      close(sd);
 
 
       /* ====== Registration loop ======================================== */
@@ -285,6 +289,12 @@ int main(int argc, char** argv)
          }
 
          usleep(attackInterval);
+
+         char buffer[65536];
+         int  received;
+         while( (received = ext_recv(sd, (char*)&buffer, sizeof(buffer), 0)) > 0 ) {
+            printf("Discard message of %d bytes.\n", received);
+         }
       }
 
       /* ====== Clean up ============================================== */
@@ -294,6 +304,7 @@ int main(int argc, char** argv)
       if(packedAddressArray) {
          free(packedAddressArray);
       }
+      close(sd);
    }
 
    else if(!strcmp(attackType, "handleresolution")) {
