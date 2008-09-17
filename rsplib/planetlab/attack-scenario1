@@ -68,21 +68,21 @@ check_variable ()
 }
 
 
-echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
-export Duration=120
-export PRs=1
-export PEs=10
-export PUs=30
-export Attackers=1
-export AttackInterval=1
-export Policy="LeastUsed"
-export MaxBadPEReports=3
-export JobInterval=60.0
-export JobSize=10000000
-export AttackType="registration"
-export AttackIdentifier=0
-export AttackReportUnreachableProbability=0.0
-echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
+# echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
+# export Duration=120
+# export PRs=1
+# export PEs=10
+# export PUs=30
+# export Attackers=1
+# export AttackInterval=1
+# export Policy="LeastUsed"
+# export MaxBadPEReports=3
+# export JobInterval=60.0
+# export JobSize=10000000
+# export AttackType="registration"
+# export AttackIdentifier=0
+# export AttackReportUnreachableProbability=0.0
+# echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
 
 check_variable Duration $Duration
 check_variable PRs $PRs
