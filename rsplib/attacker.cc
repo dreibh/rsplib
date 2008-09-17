@@ -329,6 +329,7 @@ int main(int argc, char** argv)
 
             rsp_freeaddrinfo(rspAddrInfo);
          }
+         usleep(attackInterval);
       }
    }
 

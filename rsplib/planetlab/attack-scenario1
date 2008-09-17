@@ -74,14 +74,14 @@ check_variable ()
 # export PEs=10
 # export PUs=30
 # export Attackers=1
-# export AttackInterval=1
-# export Policy="LeastUsed"
+# export Policy="RoundRobin"
 # export MaxBadPEReports=3
 # export JobInterval=60.0
 # export JobSize=10000000
-# export AttackType="registration"
+# export AttackType="handleresolution"
+# export AttackInterval=0.1
 # export AttackIdentifier=0
-# export AttackReportUnreachableProbability=0.0
+# export AttackReportUnreachableProbability=1.0
 # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
 
 check_variable Duration $Duration
