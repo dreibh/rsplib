@@ -28,7 +28,7 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Policy in LeastUsed LeastUsedDegradation RoundRobin Random ; do
+for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
    for AttackInterval in 0.1 1 5 10 ; do
       for AttackReportUnreachableProbability in 0.0 1.0 ; do
 

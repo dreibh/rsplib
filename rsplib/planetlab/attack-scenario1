@@ -51,8 +51,8 @@ SSH_KEY=$PLANETLAB_KEY
 SERVICE_DIRECTORY="bin"
 SERVICE_PRE_PROGRAM="sudo"
 
-SSH_USER="dreibh"
-SSH_KEY="/home/dreibh/.ssh/test-key"
+SSH_USER="network"
+SSH_KEY="/home/network/.ssh/id_dsa"
 SERVICE_DIRECTORY="src/rsplib2/rsplib"
 SERVICE_PRE_PROGRAM=""
 OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
