@@ -198,8 +198,8 @@ int main(int argc, char** argv)
    printf("Attack Interval        = %lluus\n", attackInterval);
    printf("Pool Handle            = %s\n", poolHandle);
    printf("Identifier             = %08x\n", identifier);
-   printf("Do not wait for result = %s\n\n", (dontwait == true) ? "yes" : "no");
-   printf("Report Unreachable Pr. = %1.2lf%%\n", reportUnreachableProbability * 100.0);
+   printf("Do not wait for result = %s\n", (dontwait == true) ? "yes" : "no");
+   printf("Report Unreachable Pr. = %1.2lf%%\n\n", reportUnreachableProbability * 100.0);
 
 
    if(rsp_initialize(&info) < 0) {
