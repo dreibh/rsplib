@@ -1,26 +1,44 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack1
+# Name:        attack-countermeasure1
 # Description: PE-based attack (localhost measurements)
 # Revision:    $Id$
 # ###########################################################################
 
+# . ./planetlab-config
+# export SSH_USER=$PLANETLAB_USER
+# export SSH_KEY=$PLANETLAB_KEY
+# export SERVICE_DIRECTORY="bin"
+# export SERVICE_PRE_PROGRAM="sudo"
 
-export Measurement=attack1
-export Duration=900
+export SSH_USER="dreibh"
+export SSH_KEY="/home/dreibh/.ssh/test-key"
+export SERVICE_DIRECTORY="src/rsplib2/rsplib"
+export SERVICE_PRE_PROGRAM=""
+export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
+
+export PRNodeList="localhost"
+export PENodeList="localhost"
+export PUNodeList="localhost"
+export AttackerNodeList="localhost"
+
+export Measurement=attack-countermeasure1
+export Duration=100
 export PRs=1
 export PEs=10
 export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
 export MaxBadPEReports=3
+export MaxHRRate=-1
+export MaxEURate=-1
 export Capacity=1000000
 export ReregInterval=30000
 export JobInterval=60.0
 export JobSize=10000000
 export Attackers=1
 export AttackType="registration"
-export AttackIdentifier=0
+export AttackIdentifier=0xdeadbeef   # !!! Fixed ID !!!
 export AttackReportUnreachableProbability=0.0
 
 
@@ -34,8 +52,8 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random; do
-   for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
+for Policy in LeastUsed  ; do   # "LeastUsedDegradation:0.1" RoundRobin Random
+   for AttackInterval in 0.1  10 ; do   # 0.1 0.5 5 10 15 22 30 40 50         0.5 5
 
       ID=$Duration-$Policy-$AttackInterval
       VARIABLES="Duration Policy AttackInterval"
@@ -50,7 +68,7 @@ for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random; do
 
       cd "$Measurement/$ID"
       if [ ! -e status.txt ] ; then
-         ../../attack-scenario1 && touch status.txt
+         ../../attack-scenario2 && touch status.txt
       else
          echo "Skipping $ID -> already complete."
       fi
