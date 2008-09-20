@@ -6,6 +6,23 @@
 # ###########################################################################
 
 
+# . ./planetlab-config
+# export SSH_USER=$PLANETLAB_USER
+# export SSH_KEY=$PLANETLAB_KEY
+# export SERVICE_DIRECTORY="bin"
+# export SERVICE_PRE_PROGRAM="sudo"
+
+export SSH_USER="network"
+export SSH_KEY="/home/network/.ssh/id_dsa"
+export SERVICE_DIRECTORY="src/rsplib2/rsplib"
+export SERVICE_PRE_PROGRAM=""
+export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
+
+export PRNodeList="localhost"
+export PENodeList="localhost"
+export PUNodeList="localhost"
+export AttackerNodeList="localhost"
+
 export Measurement=attack-registration-localI
 export Duration=900
 export PRs=1
@@ -14,6 +31,8 @@ export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
 export MaxBadPEReports=3
+export MaxHRRate=-1
+export MaxEURate=-1
 export Capacity=1000000
 export ReregInterval=30000
 export JobInterval=60.0
@@ -50,7 +69,7 @@ for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random; do
 
       cd "$Measurement/$ID"
       if [ ! -e status.txt ] ; then
-         ../../attack-scenario1 && touch status.txt
+         ../../attack-scenario2 && touch status.txt
       else
          echo "Skipping $ID -> already complete."
       fi
