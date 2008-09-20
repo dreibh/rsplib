@@ -38,8 +38,8 @@ for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random; do
    for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
 
       ID=$Duration-$Policy-$AttackInterval
-      VARIABLES="Duration Policy AttackInterval"
-      VALUES="$Duration \"$Policy\" $AttackInterval"
+      VARIABLES="Duration Policy Capacity JobSize JobInterval AttackInterval"
+      VALUES="$Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval"
 
 
       echo ID=$ID

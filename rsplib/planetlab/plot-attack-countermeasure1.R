@@ -32,9 +32,26 @@ plotConfigurations <- list(
    #      "a-Axis Variable", "b-Axis Variable", "p-Axis Variable")
    # ------------------------------------------------------------------------
 
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-Utilization.pdf"),
+        "User's Perspective", NA,  NA, list(1,1),
+        "AttackInterval", "calcAppPoolElement-CalcAppPEUtilization",
+        "Policy", ""),
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA,  list(seq(30,80,10)), list(0.5,0.2),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
+        "Policy", ""),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsQueued.pdf"),
         "User's Perspective", NA, NA, list(0,1),
-        "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsQueued",
+        "Policy", ""),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsStarted.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsStarted",
+        "Policy", ""),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsCompleted.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsCompleted",
         "Policy", "")
 )
 
@@ -52,18 +69,47 @@ plotVariables <- list(
    #             (measurementDirectory/Results/....data.tar.bz2 is added!)
    # ------------------------------------------------------------------------
 
+   list("calcAppPoolElement-CalcAppPEUtilization",
+           "Average Request Handling Speed [%]",
+           "100.0 * data1$calcAppPoolElement.CalcAppPEUtilization",
+           "brown4",
+           list("calcAppPoolElement-CalcAppPEUtilization")),
    list("calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
            "Average Request Handling Speed [Calculations/s]",
            "data1$calcAppPoolUser.CalcAppPUAverageHandlingSpeed",
            "brown4",
            list("calcAppPoolUser-CalcAppPUAverageHandlingSpeed")),
+   list("calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
+           "Average Request Handling Speed [%]",
+           "100.0 * data1$calcAppPoolUser.CalcAppPUAverageHandlingSpeed / data1$Capacity",
+           "brown4",
+           list("calcAppPoolUser-CalcAppPUAverageHandlingSpeed")),
+
+   list("calcAppPoolUser-CalcAppPUTotalJobsQueued",
+           "Total Requests Queued [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsQueued",
+           "blue4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsQueued")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsStarted",
+           "Total Requests Started [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsStarted",
+           "yellow4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsStarted")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsCompleted",
+           "Total Requests Completed [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsCompleted",
+           "green4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsCompleted")),
 
    list("Policy",
            "Pool Policy{P}",
            NA, "black"),
    list("AttackInterval",
            "Attack Interval{A}[s]",
-           NA, "black")
+           NA, "black"),
+   list("AttackReportUnreachableProbability",
+           "AttackReportUnreachableProbability{u}[%]",
+           "100.0 * data1$AttackReportUnreachableProbability", "black")
 )
 
 # ###########################################################################

@@ -11,8 +11,8 @@
 # export SERVICE_DIRECTORY="bin"
 # export SERVICE_PRE_PROGRAM="sudo"
 
-export SSH_USER="dreibh"
-export SSH_KEY="/home/dreibh/.ssh/test-key"
+export SSH_USER="network"
+export SSH_KEY="/home/network/.ssh/id_dsa"
 export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 export SERVICE_PRE_PROGRAM=""
 export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
@@ -23,7 +23,7 @@ export PUNodeList="localhost"
 export AttackerNodeList="localhost"
 
 export Measurement=attack-countermeasure1
-export Duration=100
+export Duration=900
 export PRs=1
 export PEs=10
 export PUs=30
@@ -52,12 +52,12 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Policy in LeastUsed  ; do   # "LeastUsedDegradation:0.1" RoundRobin Random
-   for AttackInterval in 0.1  10 ; do   # 0.1 0.5 5 10 15 22 30 40 50         0.5 5
+for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
+   for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
 
       ID=$Duration-$Policy-$AttackInterval
-      VARIABLES="Duration Policy AttackInterval"
-      VALUES="$Duration \"$Policy\" $AttackInterval"
+      VARIABLES="Duration Policy Capacity JobSize JobInterval AttackInterval"
+      VALUES="$Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval"
 
 
       echo ID=$ID
