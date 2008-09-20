@@ -1,7 +1,7 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack-handleResolution-localI
-# Description: PU-based attack (localhost measurements)
+# Name:        attack-handleResolution-countermeasure-localI
+# Description: PU-based attack countermeasure (localhost measurements)
 # Revision:    $Id$
 # ###########################################################################
 
@@ -16,14 +16,14 @@ export SSH_USER="network"
 export SSH_KEY="/home/network/.ssh/id_dsa"
 export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 export SERVICE_PRE_PROGRAM=""
-export OPT_CSP="-cspserver=210.37.47.79:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
 
 export PRNodeList="localhost"
 export PENodeList="localhost"
 export PUNodeList="localhost"
 export AttackerNodeList="localhost"
 
-export Measurement=attack-handleResolution-localI
+export Measurement=attack-handleResolution-countermeasure-localI
 export Duration=900
 export PRs=1
 export PEs=10
@@ -31,8 +31,8 @@ export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
 export MaxBadPEReports=3
-export MaxHRRate=-1
-export MaxEURate=-1
+export MaxHRRate=1
+export MaxEURate=1
 export Capacity=1000000
 export ReregInterval=30000
 export JobInterval=60.0
@@ -55,7 +55,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
    for AttackInterval in 0.1 1 3 5 7.5 10 ; do
-      for AttackReportUnreachableProbability in 0.0 1.0 ; do
+      for AttackReportUnreachableProbability in 1.0 ; do
 
          ID=$Duration-$Policy-$AttackInterval-$AttackReportUnreachableProbability
          VARIABLES="Duration Policy Capacity JobSize JobInterval AttackInterval AttackReportUnreachableProbability"
