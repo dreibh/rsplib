@@ -33,7 +33,7 @@ plotConfigurations <- list(
    # ------------------------------------------------------------------------
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
-        "User's Perspective", NA, NA, list(0,1),
+        "User's Perspective", NA, NA, list(1,0),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
         "Policy", "AttackReportUnreachableProbability"),
 
