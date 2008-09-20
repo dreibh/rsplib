@@ -21,7 +21,7 @@ plotVariables <- list(
    # ------------------------------------------------------------------------
 
    list("calcAppPoolElement-CalcAppPEUtilization",
-           "Average Request Handling Speed [%]",
+           "Average System Utilization [%]",
            "100.0 * data1$calcAppPoolElement.CalcAppPEUtilization",
            "blue4",
            list("calcAppPoolElement-CalcAppPEUtilization")),
