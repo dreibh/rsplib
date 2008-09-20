@@ -1,7 +1,7 @@
 # ###########################################################################
 # Name:        attack-plottertemplates.R
 # Description: Templates for plotting attack scenario results
-# Revision:    $Id: plot-attack-countermeasure1.R 1923 2008-09-20 04:29:19Z dreibh $
+# Revision:    $Id$
 # ###########################################################################
 
 source("plotter.R")

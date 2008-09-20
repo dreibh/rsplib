@@ -1,5 +1,5 @@
 # ###########################################################################
-# Name:        attack1b
+# Name:        attack-countermeasure3b
 # Description:
 # Revision:    $Id$
 # ###########################################################################
@@ -8,7 +8,7 @@ source("plotter.R")
 
 
 # ------ Plotter Settings ---------------------------------------------------
-measurementDirectory  <- "attack1b"
+measurementDirectory  <- "attack-countermeasure3b"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
@@ -34,8 +34,21 @@ plotConfigurations <- list(
 
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
         "User's Perspective", NA, NA, list(0,1),
-        "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
-        "Policy", "")
+        "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeed",
+        "Policy", "AttackInterval", ""),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "Attackers", "calcAppPoolUser-CalcAppPUTotalJobsQueued",
+        "Policy", "AttackInterval", ""),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "Attackers", "calcAppPoolUser-CalcAppPUTotalJobsStarted",
+        "Policy", "AttackInterval", ""),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, NA, list(0,1),
+        "Attackers", "calcAppPoolUser-CalcAppPUTotalJobsCompleted",
+        "Policy", "AttackInterval", "")
 )
 
 
@@ -58,12 +71,34 @@ plotVariables <- list(
            "brown4",
            list("calcAppPoolUser-CalcAppPUAverageHandlingSpeed")),
 
+   list("calcAppPoolUser-CalcAppPUTotalJobsQueued",
+           "Total Requests Queued [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsQueued",
+           "blue4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsQueued")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsStarted",
+           "Total Requests Started [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsStarted",
+           "yellow4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsStarted")),
+   list("calcAppPoolUser-CalcAppPUTotalJobsCompleted",
+           "Total Requests Completed [Requests/PU]",
+           "data1$calcAppPoolUser.CalcAppPUTotalJobsCompleted",
+           "green4",
+           list("calcAppPoolUser-CalcAppPUTotalJobsCompleted")),
+
    list("Policy",
            "Pool Policy{P}",
            NA, "black"),
+   list("Attackers",
+           "Attackers{:alpha:}[1]",
+           NA, "black"),
    list("AttackInterval",
            "Attack Interval{A}[s]",
-           NA, "black")
+           NA, "black"),
+   list("AttackReportUnreachableProbability",
+           "AttackReportUnreachableProbability{u}[%]",
+           "100.0 * data1$AttackReportUnreachableProbability", "black")
 )
 
 # ###########################################################################
