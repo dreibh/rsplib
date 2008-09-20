@@ -38,7 +38,7 @@ export JobInterval=60.0
 export JobSize=10000000
 export Attackers=1
 export AttackType="registration"
-export AttackIdentifier=0xdeadbeef   # !!! Fixed ID !!!
+export AttackIdentifier=12345678   # !!! Fixed ID !!!
 export AttackReportUnreachableProbability=0.0
 
 
