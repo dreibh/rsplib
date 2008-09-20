@@ -15,15 +15,15 @@ export SSH_USER="network"
 export SSH_KEY="/home/network/.ssh/id_dsa"
 export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 export SERVICE_PRE_PROGRAM=""
-export OPT_CSP="-cspserver=210.37.47.66:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=210.37.47.81:2960 -cspinterval=1000"
 
-export PRNodeList="210.37.47.66"
-export PENodeList="210.37.47.61 210.37.47.73"
-export PUNodeList="210.37.47.74 210.37.47.78 210.37.47.87"
-export AttackerNodeList="210.37.47.67"
+export PRNodeList="210.37.47.29"
+export PENodeList="210.37.47.70 210.37.47.71"
+export PUNodeList="210.37.47.68 210.37.47.69 210.37.47.31"
+export AttackerNodeList="210.37.47.28"
 
 export Measurement=attack-registration-countermeasure-labI
-export Duration=900
+export Duration=120
 export PRs=1
 export PEs=10
 export PUs=30
@@ -53,7 +53,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
-   for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
+   for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do 
 
       ID=$Duration-$Policy-$AttackInterval
       VARIABLES="Duration Policy Capacity JobSize JobInterval AttackInterval"
