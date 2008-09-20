@@ -1,10 +1,34 @@
+# $Id$
 # ###########################################################################
 #             Thomas Dreibholz's R Simulation Scripts Collection
-#                  Copyright (C) 2005-2007 Thomas Dreibholz
+#                  Copyright (C) 2005-2008 Thomas Dreibholz
 #
-#           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+#               Author: Thomas Dreibholz, dreibh@iem.uni-due.de
 # ###########################################################################
-# $Id$
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+
+# Safe division
+safeDiv <- function(a, b, zeroValue=0) {
+   c <- a / b
+   nullSet <- is.nan(c)
+   result <- replace(c, nullSet, zeroValue)
+   return(result)
+}
 
 
 # Get array of gray tones (equivalent of rainbow() for b/w laser printing)
@@ -22,9 +46,15 @@ rainbow2 <- function(n)
    if(n == 2) {
       return(c("red", "blue"))   # rot/blau statt rot/türkis!
    }
-   else if(n <= 4) {
+   else if(n <= 3) {
       return(rainbow(n))
    }
+#    else if(n == 4) {
+#       return(c("red", "#00aa00", "black", "blue"))
+#    }
+#    else if(n == 5) {
+#       return(c("red", "#00aa00", "black", "blue", "magenta"))
+#    }
    return(rainbow(n, gamma=2))
 }
 
@@ -50,15 +80,21 @@ getBackgroundColor <- function(index, colorMode = cmColor, pStart = 0)
 }
 
 
-titleRegExpr <- "([^\[\{]*)([\{]([^\}]*)[\}]){0,1}([^\[]*)([\[]([^\]]*)[\]]){0,1}"
+# --- Mit Escapces ---   titleRegExpr <- "([^\[\{]*)([\{]([^\}]*)[\}]){0,1}([^\[]*)([\[]([^\]]*)[\]]){0,1}"
+titleRegExpr <- "([^[{]*)([{]([^}]*)[}]){0,1}([^[]*)([[]([^]]*)[]]){0,1}"
 removeSpaceRegExpr <- "([[:space:]]*)([^ ]*)([[:space:]]*)"
+expressionExpr <- ":([^:]*):"
 
 
 # Extract variable from axis title
 getVariable <- function(title)
 {
    result <- sub(extended=TRUE, titleRegExpr, "\\1", title)
-   return(result)
+   e <- sub(extended=TRUE, expressionExpr, "\\1", result)
+   if(e == result) {
+      return(paste(sep="", "paste(\"", result, "\")"))
+   }
+   return(e)
 }
 
 
@@ -69,7 +105,11 @@ getAbbreviation <- function(title)
    if(result == "") {
       return(getVariable(title))
    }
-   return(result)
+   e <- sub(extended=TRUE, expressionExpr, "\\1", result)
+   if(e == result) {
+      return(paste(sep="", "paste(\"", result, "\")"))
+   }
+   return(e)
 }
 
 
@@ -77,9 +117,27 @@ getAbbreviation <- function(title)
 getUnit <- function(title)
 {
    result <- sub(extended=TRUE, titleRegExpr, "\\6", title)
-   return(result)
+   e <- sub(extended=TRUE, expressionExpr, "\\1", result)
+   if(e == result) {
+      return(paste(sep="", "paste(\"", result, "\")"))
+   }
+   return(e)
 }
 
+
+# Extract label expression (as string!) from title
+getLabel <- function(title)
+{
+   label <- getVariable(title)
+   if(getAbbreviation(title) != getVariable(title)) {
+      label <- paste(sep="", "paste(sep=\"\", ", label, ", \" \", ", getAbbreviation(title), ")")
+   }
+   if(getUnit(title) != "paste(\"\")") {   # unit is "empty string expression"
+      label <- paste(sep="", "paste(sep=\"\", ", label, ", \" [\", ", getUnit(title), ", \"]\")")
+   }
+
+   return(label)
+}
 
 
 
@@ -221,12 +279,13 @@ plotstd3 <- function(mainTitle,
                      colorMode         = cmColor,
                      zColorArray       = c(),
                      frameColor        = par("fg"),
-                     legendSizeFactor  = 0.8,
+                     legendSize  = 0.8,
                      xValueFilter      = "%s",
                      yValueFilter      = "%s",
                      zValueFilter      = "%s",
                      vValueFilter      = "%s",
-                     wValueFilter      = "%s")
+                     wValueFilter      = "%s",
+                     inPlotStd6        = FALSE)
 {
    xLevels <- levels(factor(xSet))
    yLevels <- levels(factor(ySet))
@@ -283,8 +342,18 @@ plotstd3 <- function(mainTitle,
 
 
    # ------ Create plot window ----------------------------------------------
+   if(!inPlotStd6) {
+      margins <- c(3.25,3.25,3,0.25) + 0.0   # Margins as c(bottom, left, top, right)
+                                          # Default is c(5, 4, 4, 2) + 0.1
+   }
+   else {
+      margins <- c(5, 5, 3, 2) + 0.0   # For usage within plotstd6()
+   }
+   opar <- par(mar = margins)
+
    plot.new()
    plot.window(xRange, yRange)
+
    if(!legendOnly) {
       if(nlevels(xSet)) {
          axis(1, seq(length(xLevels)), xLevels, col=frameColor, col.axis=frameColor)
@@ -302,8 +371,7 @@ plotstd3 <- function(mainTitle,
             for(r in rangeSet[2:length(rangeSet)]) {
                rangeColor <- rangeColors[colorNumber %% (length(rangeColors) + 1)]
                rect(min(xRange) - (max(xRange) - min(xRange)), xLow,
-                    max(xRange) + (max(xRange) - min(xRange)), r,
-                    col=rangeColor ,border=FALSE)
+                    max(xRange) + (max(xRange) - min(xRange)), r, col=rangeColor)
                xLow <- r
 
                colorNumber <- colorNumber + 1
@@ -314,61 +382,31 @@ plotstd3 <- function(mainTitle,
       # ------ Axis and labels ----------------------------------------------
       grid(20, 20, lty=1)
       box(col=frameColor)
-      xLabel <- getVariable(xTitle)
-      if(getAbbreviation(xTitle) != getVariable(xTitle)) {
-         xLabel <- paste(sep="", xLabel, " ", getAbbreviation(xTitle), "")
-      }
-      if(getUnit(xTitle) != "") {
-         xLabel <- paste(sep="", xLabel, " [", getUnit(xTitle), "]")
-      }
-      yLabel <- getVariable(yTitle)
-      if(getAbbreviation(yTitle) != getVariable(yTitle)) {
-         yLabel <- paste(sep="", yLabel, " ", getAbbreviation(yTitle), "")
-      }
-      if(getUnit(yTitle) != "") {
-         yLabel <- paste(sep="", yLabel, " [", getUnit(yTitle), "]")
-      }
+      xLabel <- getLabel(xTitle)
+      yLabel <- getLabel(yTitle)
 
-      mtext(xLabel, col=frameColor,
-            side = 1, at = xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-      mtext(yLabel, col=frameColor,
-            side = 2, at = yRange[1] + ((yRange[2] - yRange[1]) / 2), line=2.5,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-      mtext(mainTitle, col=frameColor,
-            side=3, at=xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
-            xpd = NA, font = par("font.main"), cex = par("cex.main"))
+      mtext(parse(text=xLabel), col=frameColor,
+            side = 1, adj=0.5, line=2.25,
+            xpd = NA, font = par("font.main"), cex = par("cex.lab"))
+      mtext(parse(text=yLabel), col=frameColor,
+            side = 2, adj=0.5, line=2.25,
+            xpd = NA, font = par("font.main"), cex = par("cex.lab"))
+      mtext(parse(text=getLabel(mainTitle)), col=frameColor,
+            side = 3, adj=0.5, line=1.75,
+            xpd = NA, font = par("font.main"), cex = 1.2 * par("cex.main"))
 
-      zvwLabel <- getVariable(zTitle)
-      if(getAbbreviation(zTitle) != getVariable(zTitle)) {
-         zvwLabel <- paste(sep="", zvwLabel, " ", getAbbreviation(zTitle), "")
-      }
-      if(getUnit(zTitle) != "") {
-         zvwLabel <- paste(sep="", zvwLabel, " [", getUnit(zTitle), "]")
-      }
+      zvwLabel <- getLabel(zTitle)
       if(length(vLevels) > 1) {
-         zvwLabel <- paste(sep="", zvwLabel, " / ", getVariable(vTitle))
-         if(getAbbreviation(vTitle) != getVariable(vTitle)) {
-            zvwLabel <- paste(sep="", zvwLabel, " ", getAbbreviation(vTitle), "")
-         }
-         if(getUnit(vTitle) != "") {
-            zvwLabel <- paste(sep="", zvwLabel, " [", getUnit(vTitle), "]")
-         }
+         zvwLabel <- paste(sep="", "paste(", zvwLabel, ", \" / \", ", getLabel(vTitle), ")")
       }
       if(length(wLevels) > 1) {
-         zvwLabel <- paste(sep="", zvwLabel, " / ", getVariable(wTitle))
-         if(getAbbreviation(wTitle) != getVariable(wTitle)) {
-            zvwLabel <- paste(sep="", zvwLabel, " ", getAbbreviation(wTitle), "")
-         }
-         if(getUnit(wTitle) != "") {
-            zvwLabel <- paste(sep="", zvwLabel, " [", getUnit(wTitle), "]")
-         }
+         zvwLabel <- paste(sep="", "paste(", zvwLabel, ", \" / \", ", getLabel(wTitle), ")")
       }
-      mtext(zvwLabel, col=frameColor,
-            side = 3, at = max(xRange), line=0.5, adj=1,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-   }
 
+      mtext(parse(text=zvwLabel), col=frameColor,
+            side = 3, line=0.5, adj=1,
+            xpd = NA, font = par("font.main"), cex = par("cex.lab"))
+   }
 
    # ------ Plot curves -----------------------------------------------------
    legendTexts  <- c()
@@ -384,18 +422,19 @@ plotstd3 <- function(mainTitle,
             v <- vLevels[vPosition]
 
             # ----- Legend settings -----------------------------------------
-            if((length(vLevels) > 1) ||
-               (length(wLevels) > 1)) {
-               legendText <- paste(sep="", getAbbreviation(zTitle), "=", gettextf(zValueFilter, z))
-            }
-            else {
-               legendText  <- paste(sep="", z)
-            }
+            # Old behaviour: skip Z variable when there is no V/W axis.
+            # if((length(vLevels) > 1) || (length(wLevels) > 1)) {
+            #    legendText <- paste(sep="", "paste(sep=\"\", ", getAbbreviation(zTitle), ", \"=", gettextf(zValueFilter, z), "\")")
+            # }
+            # else {
+            #    legendText <- paste(sep="", "\"", z, "\"")
+            # }
+            legendText <- paste(sep="", "paste(sep=\"\", ", getAbbreviation(zTitle), ", \"=", gettextf(zValueFilter, z), "\")")
             if(length(vLevels) > 1) {
-               legendText <- paste(sep="", legendText, ", ", getAbbreviation(vTitle), "=", gettextf(vValueFilter, v))
+               legendText <- paste(sep="", "paste(sep=\"\", ", legendText, ", \", \", ", getAbbreviation(vTitle), ", \"=", gettextf(vValueFilter, v), "\")")
             }
             if(length(wLevels) > 1) {
-               legendText <- paste(sep="", legendText, ", ", getAbbreviation(wTitle), "=", gettextf(wValueFilter, w))
+               legendText <- paste(sep="", "paste(sep=\"\", ", legendText, ", \", \", ", getAbbreviation(wTitle), ", \"=", gettextf(wValueFilter, w), "\")")
             }
             legendColor <- zColorArray[zPosition]
             legendStyle <- vPosition %% 7
@@ -406,6 +445,18 @@ plotstd3 <- function(mainTitle,
                   xSubset <- subset(xSet, (zSet == z) & (vSet == v) & (wSet == w))
                   ySubset <- subset(ySet, (zSet == z) & (vSet == v) & (wSet == w))
                   points(xSubset, ySubset, col=legendColor, cex=par("cex"), pch=legendDot)
+
+                  legendTexts <- append(legendTexts, legendText)
+                  legendColors <- append(legendColors, legendColor)
+                  legendStyles <- append(legendStyles, legendStyle)
+                  legendDots <- append(legendDots, legendDot)
+               }
+
+               # ----- Lines plot without confidence intervals --------------
+               else if((type == "lx") || (type=="linesx")) {
+                  xSubset <- subset(xSet, (zSet == z) & (vSet == v) & (wSet == w))
+                  ySubset <- subset(ySet, (zSet == z) & (vSet == v) & (wSet == w))
+                  lines(xSubset, ySubset, col=legendColor, cex=par("cex"), pch=legendDot)
 
                   legendTexts <- append(legendTexts, legendText)
                   legendColors <- append(legendColors, legendColor)
@@ -447,7 +498,7 @@ plotstd3 <- function(mainTitle,
                         yMin <- min(ySubset)
                         yMean <- mean(ySubset)
                         yMax <- max(ySubset)
-                        if(yMin != yMax) {
+                        if(yMax - yMin > 0.000001) {
                            yTest <- t.test(ySubset, conf.level=confidence)
                            yMin <- yTest$conf.int[1]
                            yMax <- yTest$conf.int[2]
@@ -657,205 +708,27 @@ plotstd3 <- function(mainTitle,
       legend(lx, ly,
              xjust = lxjust,
              yjust = lyjust,
-             legendTexts,
+             parse(text=legendTexts),
              bg=legendBackground,
              col=legendColors,
              lty=legendStyles,
              pch=legendDots,
              text.col=legendColors,
-             lwd=par("cex"), cex=legendSizeFactor*par("cex"))
+             lwd=1, cex=legendSize)
    }
+
+   par(opar)
+   return(1)
 }
 
 
-# 2-dimensional array of plotstd3 plots (a-dimension only)
-plotstd4 <- function(mainTitle, aTitle, xTitle, yTitle, zTitle,
-                     aSet, xSet, ySet, zSet,
-                     vSet=c(), wSet=c(),
-                     vTitle             = "??vTitle??",
-                     wTitle             = "??wTitle??",
-                     aAxisTicks         = length(levels(factor(aSet))) > 1,
-                     xAxisTicks         = c(),
-                     yAxisTicks         = c(),
-                     confidence         = 0.95,
-                     hbarSet            = c(),
-                     hbarMeanSteps      = 10,
-                     xSeparatorsSet     = c(),
-                     xSeparatorsTitles  = c(),
-                     xSeparatorsColors  = c(),
-                     rangeSet           = c(),
-                     rangeColors        = c(),
-                     type               = "lines",
-                     hideLegend         = FALSE,
-                     legendPos          = c(0,1),
-                     colorMode          = cmColor,
-                     frameColor         = par("fg"))
+# Prepare layout for plotstd6
+makeLayout <- function(aSet, bSet, aTitle, bTitle, pTitle, pSubLabel, pColor, colorMode)
 {
    aLevels <- levels(factor(aSet))
-   aLevelsCount <- length(aLevels)
-   if(length(aLevels) < 1) {
-      cat("WARNING: plotstd4() - aLevels=c()\n")
-      return(0);
-   }
-
-   if(colorMode == cmColor) {
-      aLevelsColorArray <- rainbow(length(aLevels), start=0, end=3/6)
-   }
-   else if(colorMode == cmGrayScale) {
-      aLevelsColorArray <- graybow(length(aLevels))
-   }
-   else {
-      aLevelsColorArray <- rep(par("fg"), length(aLevels))
-   }
-
-   width  <- ceiling(sqrt(aLevelsCount))
-   height <- ceiling(aLevelsCount / width)
-
-
-   # ------ Get x/y tickmarks -----------------------------------------------
-   if(missing(xAxisTicks) || (length(xAxisTicks) == 0)) {
-      xAxisTicks = levels(factor(xSet))
-      if(length(xAxisTicks) > 20) {
-         unique(seq(min(xSet), max(xSet), length=10))
-      }
-   }
-   if(missing(yAxisTicks) || (length(yAxisTicks) == 0)) {
-      yAxisTicks = levels(factor(ySet))
-      if(length(yAxisTicks) > 20) {
-         unique(seq(min(ySet), max(ySet), length=10))
-      }
-   }
-
-
-   # ------ Create outer margin for title and labels ------------------------
-   opar <- par(oma = par("oma") + c(2,2,4,2))  # Rahmen um Gesamtarray
-   on.exit(par(opar))
-
-
-   # ------ Create layout ---------------------------------------------------
-   layoutMatrix <- matrix(rep(0, width * 2 * height),
-                          2 * height,
-                          width,
-                          byrow = TRUE)
-   widthArray <- rep(100, width)
-   heightArray <- rep(100, 2 * height)
-   for(i in seq(2, 2 * height, by=2)) {
-      heightArray[i] <- max(20, (100 * height) / 12)
-   }
-
-   figureIndex <- 1
-   for(y in 1:height) {
-      for(x in 1:width) {
-         if(figureIndex <= length(aLevels)) {
-            layoutMatrix[2*(y - 1) + 2, x] <- figureIndex
-            figureIndex <- figureIndex + 1
-         }
-      }
-   }
-   for(y in 1:height) {
-      for(x in 1:width) {
-         layoutMatrix[2*(y - 1) + 1, x] <- figureIndex
-         figureIndex <- figureIndex + 1
-      }
-   }
-
-   nf <- layout(layoutMatrix, widthArray, heightArray, TRUE)
-   # layout.show(nf)
-
-   # ------ Create a a value labels -----------------------------------------
-   for(a in 1:length(aLevels)) {
-      par(mar=c(1, 1, 1, 1))
-      plot.new()
-      plot.window(c(0, 1), c(0, 1))
-      rect(0, 0, 1, 1, col=aLevelsColorArray[a])
-      text(0.5, 0.5, aLevels[a])
-   }
-
-
-   # ------ Plot curves -----------------------------------------------------
-   labelShrinkFactor <- 0.5   # 1.0 / max(length(aLevels), length(bLevels))
-   legendShrinkFactor <- 0.75
-
-   for(aPosition in seq(1, length(aLevels))) {
-      a <- aLevels[aPosition]
-
-      oldPar <- par(mar=par("mar") + c(3,3,3,3),
-                     cex.lab=par("cex.lab") * labelShrinkFactor,
-                     cex=par("cex") * legendShrinkFactor)
-
-      xSubset <- subset(xSet, (aSet == a))
-      ySubset <- subset(ySet, (aSet == a))
-      zSubset <- subset(zSet, (aSet == a))
-      vSubset <- subset(vSet, (aSet == a))
-      wSubset <- subset(wSet, (aSet == a))
-
-      subMainTitle <- ""
-      xSubTitle <- xTitle
-      ySubTitle <- yTitle
-      plotstd3(subMainTitle,
-               xSubTitle, ySubTitle, zTitle,
-               xSubset, ySubset, zSubset,
-               vSubset, wSubset, vTitle, wTitle,
-               xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
-               confidence = confidence,
-               hbarSet = hbarSet,
-               hbarMeanSteps = hbarMeanSteps,
-               xSeparatorsSet = xSeparatorsSet,
-               xSeparatorsTitles = xSeparatorsTitles,
-               xSeparatorsColors = xSeparatorsColors,
-               rangeSet=rangeSet, rangeColors=rangeColors,
-               type = type,
-               hideLegend = hideLegend,
-               legendPos = legendPos,
-               colorMode = colorMode,
-               frameColor=frameColor)
-      par(oldPar)
-   }
-
-
-
-   # ------ Create title and labels -----------------------------------------
-   mtext(mainTitle, col=frameColor, side=3, at=0.5, line=0.5, outer=TRUE,
-         xpd = NA, font = par("font.main"), cex = par("cex.main"))
-   mtext(aTitle, col=frameColor, side=1, at=0.5, line=0.5, outer=TRUE,
-         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-}
-
-
-# 2-dimensional array of plotstd3 plots
-plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
-                     aSet, bSet, xSet, ySet, zSet,
-                     vSet              = c(),
-                     wSet              = c(),
-                     vTitle            = "??vTitle??",
-                     wTitle            = "??wTitle??",
-                     aAxisTicks        = length(levels(factor(aSet))) > 1,
-                     bAxisTicks        = length(levels(factor(bSet))) > 1,
-                     xAxisTicks        = c(), yAxisTicks = c(),
-                     confidence        = 0.95,
-                     hbarSet           = c(),
-                     hbarMeanSteps     = 10,
-                     xSeparatorsSet    = c(),
-                     xSeparatorsTitles = c(),
-                     xSeparatorsColors = c(),
-                     rangeSet          = c(),
-                     rangeColors       = c(),
-                     type              = "lines",
-                     hideLegend        = FALSE,
-                     legendPos         = c(0,1),
-                     colorMode         = cmColor,
-                     frameColor        = par("fg"))
-{
-   aLevels <- levels(factor(aSet))
-   bLevels <- levels(factor(bSet))
-   if(length(aLevels) < 1) {
-      cat("WARNING: plotstd5() - aLevels=c()\n")
-      return(0);
-   }
-   if(length(bLevels) < 1) {
-      cat("WARNING: plotstd5() - bLevels=c()\n")
-      return(0);
-   }
+   bLevels <- rev(levels(factor(bSet)))   # Reverse B-set levels!
+   w <- length(aLevels)
+   h <- length(bLevels)
 
    if(colorMode == cmColor) {
       aLevelsColorArray <- rainbow(length(aLevels), start=0, end=3/6)
@@ -870,167 +743,145 @@ plotstd5 <- function(mainTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
       bLevelsColorArray <- rep("#ffffff", length(bLevels))
    }
 
-   plotALabels <- 0
-   plotBLabels <- 0
-   if((aAxisTicks) || (length(levels(factor(aSet))) > 1)) {
-      plotALabels <- 1
+   allocateALabels <- 0
+   if(w > 1) {
+      allocateALabels <- 2
    }
-   if((bAxisTicks) || (length(levels(factor(bSet))) > 1)) {
-      plotBLabels <- 1
-   }
-   aLabel <- getVariable(aTitle)
-   if(getAbbreviation(aTitle) != getVariable(xTitle)) {
-      aLabel <- paste(sep="", aLabel, " ", getAbbreviation(aTitle), "")
-   }
-   if(getUnit(aTitle) != "") {
-      aLabel <- paste(sep="", aLabel, " [", getUnit(aTitle), "]")
-   }
-   bLabel <- getVariable(bTitle)
-   if(getAbbreviation(bTitle) != getVariable(bTitle)) {
-      bLabel <- paste(sep="", bLabel, " ", getAbbreviation(bTitle), "")
-   }
-   if(getUnit(bTitle) != "") {
-      bLabel <- paste(sep="", bLabel, " [", getUnit(bTitle), "]")
+   allocateBLabels <- 0
+   if(h > 1) {
+      allocateBLabels <- 2
    }
 
+   layoutWidth   <- w + allocateBLabels
+   layoutHeight  <- 2 + h + allocateALabels
 
-   # ------ Get x/y tickmarks -----------------------------------------------
-   if(missing(xAxisTicks) || (length(xAxisTicks) == 0)) {
-      xAxisTicks = levels(factor(xSet))
-      if(length(xAxisTicks) > 20) {
-         unique(seq(min(xSet), max(xSet), length=10))
+
+   # ------ Allocate IDs in layout ------------------------------------------
+   # In this order, the parts have to be plotted!
+   nextID <- 1
+   if(allocateBLabels > 0) {
+      bTitleStart <- nextID
+      bTitleID    <- bTitleStart + h
+      nextID      <- bTitleID + 1
+   }
+   if(allocateALabels > 0) {
+      aTitleStart <- nextID
+      aTitleID    <- aTitleStart + w
+      nextID      <- aTitleID + 1
+   }
+   if((allocateBLabels > 0) & (allocateALabels > 0)) {
+      abAxisCrossID <- nextID
+      nextID        <- abAxisCrossID + 1
+   }
+   pTitleID    <- nextID
+   pSubLabelID <- nextID + 1
+   plotStart   <- nextID + 2
+
+
+   # ------ Header (i.e. titles) --------------------------------------------
+   header <- append(rep(pTitleID, layoutWidth),
+                    rep(pSubLabelID, layoutWidth))
+   layoutMatrix <- header
+
+   # ------ Body ------------------------------------------------------------
+   for(row in 0:(h-1)) {
+      # ------ B-axis labels ------------------------------------------------
+      rowLine <- c()
+      if(allocateBLabels > 0) {
+         rowLine <- c(bTitleID, bTitleStart + row)
       }
+      rowLine <- append(rowLine, plotStart + seq(row * w, (row + 1) * w - 1, 1))
+
+      layoutMatrix <- append(layoutMatrix, rowLine)
    }
-   if(missing(yAxisTicks) || (length(yAxisTicks) == 0)) {
-      yAxisTicks = levels(factor(ySet))
-      if(length(yAxisTicks) > 20) {
-         unique(seq(min(ySet), max(ySet), length=10))
+
+   # ------ Footer (i.e. A-axis labels) -------------------------------------
+   if(allocateALabels > 0) {
+      footer1 <- c()
+      footer2 <- c()
+      if(allocateBLabels > 0) {
+         footer1 <- c(abAxisCrossID, abAxisCrossID)
+         footer2 <- c(abAxisCrossID, abAxisCrossID)
       }
+      footer1 <- append(footer1, seq(aTitleStart, aTitleStart + w - 1, 1))
+      footer2 <- append(footer2, rep(aTitleID, w))
+
+      layoutMatrix <- append(layoutMatrix, footer1)
+      layoutMatrix <- append(layoutMatrix, footer2)
    }
 
-
-   # ------ Create outer margin for title and labels ------------------------
-   opar <- par(oma = par("oma") + c(2,2,4,2))  # Rahmen um Gesamtarray
-   on.exit(par(opar))
-
-
-   # ------ Create layout ---------------------------------------------------
-   layoutMatrix <- matrix(rep(0, (length(bLevels) + plotALabels) * (length(aLevels) + plotBLabels)),
-                          length(bLevels) + plotALabels,
-                          length(aLevels) + plotBLabels,
-                          byrow = TRUE)
-   widthArray <- rep(100, length(aLevels) + 1)
-   if(plotBLabels > 0) {
-      widthArray[1] <- max(30, (100 * length(aLevels)) / 12)
+   # ------ Creation of layout matrix ---------------------------------------
+   widthArray <- c()
+   if(allocateBLabels > 0) {
+      widthArray <- c(lcm(1), lcm(1))
    }
-   heightArray <- rep(100, length(bLevels) + 1)
-   if(plotALabels > 0) {
-      heightArray[length(bLevels) + 1] <- max(20, (100 * length(bLevels)) / 12)
+   widthArray  <- append(widthArray, rep(1, w))
+   if(pSubLabel != "") {
+      heightArray <- append(c(lcm(1.5), lcm(1)), rep(1, h))
+   }
+   else {
+      heightArray <- append(c(lcm(1.5), lcm(0.1)), rep(1, h))
+   }
+   if(allocateALabels > 0) {
+      heightArray <- append(heightArray, c(lcm(1), lcm(1)))
    }
 
-   figureIndex <- 1
-   if(plotALabels > 0) {
-      for(a in 1:length(aLevels)) {
-         layoutMatrix[length(bLevels) + 1, a + plotBLabels] <- figureIndex
-         figureIndex <- figureIndex + 1
-      }
-   }
-   if(plotBLabels > 0) {
+   m <- matrix(layoutMatrix, layoutHeight, layoutWidth, byrow = TRUE)
+   # print(m)
+   l <- layout(m, widths=widthArray, heights=heightArray, respect=TRUE)
+   # layout.show(l)
+
+   oldPar <- par(mar=c(0,0,0,0))
+
+   # ------ Print B-axis labels ---------------------------------------------
+   if(allocateBLabels > 0) {
       for(b in 1:length(bLevels)) {
-         layoutMatrix[1 + length(bLevels) - b, 1] <- figureIndex
-         figureIndex <- figureIndex + 1
-      }
-   }
-   for(b in 1:length(bLevels)) {
-      for(a in 1:length(aLevels)) {
-         layoutMatrix[1 + length(bLevels) - b, a + plotBLabels] <- figureIndex
-         figureIndex <- figureIndex + 1
-      }
-   }
-
-   nf <- layout(layoutMatrix, widthArray, heightArray, TRUE)
-   # layout.show(nf)
-
-
-   # ------ Create a and b value labels -------------------------------------
-   if(plotALabels > 0) {
-      for(a in 1:length(aLevels)) {
-         par(mar=c(1, 1, 1, 1))
-         plot.new()
-         plot.window(c(0, 1), c(0, 1))
-         rect(0, 0, 1, 1, col=aLevelsColorArray[a])
-         text(0.5, 0.5, aLevels[a])
-      }
-   }
-
-   if(plotBLabels > 0) {
-      for(b in 1:length(bLevels)) {
-         par(mar=c(1, 1, 1, 1))
          plot.new()
          plot.window(c(0, 1), c(0, 1))
          rect(0, 0, 1, 1, col=bLevelsColorArray[b])
-         text(0.5, 0.5, bLevels[b], srt=90)
+         value <- paste(sep="", "paste(", getAbbreviation(bTitle), ", \"=", bLevels[b], "\")")
+         text(0.5, 0.5, parse(text=value), srt=90)
       }
+
+      # ------ B-axis title -------------------------------------------------
+      plot.new()
+      plot.window(c(0, 1), c(0, 1))
+      text(0.5, 0.5, parse(text=getLabel(bTitle)), adj=0.5, srt=90, font=par("font.main"))
    }
 
-
-   # ------ Plot curves -----------------------------------------------------
-   labelShrinkFactor <- 0.5   # 1.0 / max(length(aLevels), length(bLevels))
-   legendShrinkFactor <- 0.75
-
-   for(bPosition in seq(1, length(bLevels))) {
-      b <- bLevels[bPosition]
-      for(aPosition in seq(1, length(aLevels))) {
-         a <- aLevels[aPosition]
-
-         oldPar <- par(mar=par("mar") + c(3,3,3,3),
-                       cex.lab=par("cex.lab") * labelShrinkFactor,
-                       cex=par("cex") * legendShrinkFactor)
-
-         xSubset <- subset(xSet, (aSet == a) & (bSet == b))
-         ySubset <- subset(ySet, (aSet == a) & (bSet == b))
-         zSubset <- subset(zSet, (aSet == a) & (bSet == b))
-         vSubset <- subset(vSet, (aSet == a) & (bSet == b))
-         wSubset <- subset(wSet, (aSet == a) & (bSet == b))
-
-         subMainTitle <- ""
-         xSubTitle <- xTitle
-         ySubTitle <- yTitle
-         plotstd3(subMainTitle,
-                  xSubTitle, ySubTitle, zTitle,
-                  xSubset, ySubset, zSubset,
-                  vSubset, wSubset, vTitle, wTitle,
-                  xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
-                  confidence = confidence,
-                  hbarSet = hbarSet,
-                  hbarMeanSteps = hbarMeanSteps,
-                  xSeparatorsSet = xSeparatorsSet,
-                  xSeparatorsTitles = xSeparatorsTitles,
-                  xSeparatorsColors = xSeparatorsColors,
-                  rangeSet=rangeSet, rangeColors=rangeColors,
-                  type = type,
-                  hideLegend=hideLegend,
-                  legendPos=legendPos,
-                  colorMode = colorMode,
-                  frameColor=frameColor)
-         par(oldPar)
+   # ------ Print A-axis labels ---------------------------------------------
+   if(allocateALabels > 0) {
+      for(a in 1:length(aLevels)) {
+         plot.new()
+         plot.window(c(0, 1), c(0, 1))
+         rect(0, 0, 1, 1, col=aLevelsColorArray[a])
+         value <- paste(sep="", "paste(", getAbbreviation(aTitle), ", \"=", aLevels[a], "\")")
+         text(0.5, 0.5, parse(text=value))
       }
+
+      # ------ A-axis title -------------------------------------------------
+      plot.new()
+      plot.window(c(0, 1), c(0, 1))
+      text(0.5, 0.5, parse(text=getLabel(aTitle)), adj=0.5, font=par("font.main"))
    }
 
+   # ------ Print titles ----------------------------------------------------
+   if((allocateBLabels > 0) & (allocateALabels > 0)) {
+      plot.new()   # Corner A/B
+   }
 
-   # ------ Create title and labels -----------------------------------------
-   mtext(mainTitle, col=frameColor, side=3, at=0.5, line=0.5, outer=TRUE,
-         xpd = NA, font = par("font.main"), cex = par("cex.main"))
-   if(plotALabels > 0) {
-      mtext(aLabel, col=frameColor,
-            side=1, at=0.5, line=0.5, outer=TRUE,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   plot.new()   # Title
+   plot.window(c(0, 1), c(0, 1))
+   text(0.5, 0.5, parse(text=getLabel(pTitle)), adj=0.5, font=par("font.main"), cex=1.5*par("cex.main"))
+
+   plot.new()   # Sub-title
+   plot.window(c(0, 1), c(0, 1))
+   if(pSubLabel != "") {
+      rect(0, 0, 1.02, 1, col=pColor)
+      text(0.5, 0.5, parse(text=pSubLabel), adj=0.5, font=3)
    }
-   if(plotBLabels > 0) {
-      mtext(bLabel, col=frameColor,
-            side=2, at=0.5, line=0.5, outer=TRUE,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-   }
+
+   par(oldPar)
 }
 
 
@@ -1041,8 +892,6 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      wSet              = c(),
                      vTitle            = "??vTitle??",
                      wTitle            = "??wTitle??",
-                     aAxisTicks        = length(levels(factor(aSet))) > 1,
-                     bAxisTicks        = length(levels(factor(bSet))) > 1,
                      xAxisTicks        = c(),
                      yAxisTicks        = c(),
                      confidence        = 0.95,
@@ -1057,6 +906,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                      pStart            = 0,
                      hideLegend        = FALSE,
                      legendPos         = c(0,1),
+                     legendSize        = 0.8,
                      colorMode         = cmColor,
                      frameColor        = par("fg"),
                      simulationName    = "")
@@ -1070,117 +920,76 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
    if(length(bSet) == 0) {
       bSet <- rep(0, length(xSet))
    }
+   aLevels <- levels(factor(aSet))
+   bLevels <- levels(factor(bSet))
    pLevels <- levels(factor(pSet))
-   index <- 0
+
+   aLabel    <- getLabel(aTitle)
+   bLabel    <- getLabel(bTitle)
+   pLabel    <- getLabel(mainTitle)
+   pSubLabel <- ""
+
+   page <- 1
    for(p in pLevels) {
-      oldPar1 <- par(mar=c(3,3,3,3), oma=c(2,2,4,2), bg=getBackgroundColor(index, colorMode, pStart))
+      # ------ Prepare page -------------------------------------------
+      if(length(pLevels) > 1) {
+         pSubLabel <- paste(sep="", "paste(sep=\"\", ", getLabel(pTitle), ", \" = ", p, "\")")
+      }
+      # oldPar1 <- par(bg=getBackgroundColor(page, colorMode, pStart))
 
-      xSubset <- subset(xSet, (pSet == p))
-      ySubset <- subset(ySet, (pSet == p))
-      zSubset <- subset(zSet, (pSet == p))
-      vSubset <- subset(vSet, (pSet == p))
-      wSubset <- subset(wSet, (pSet == p))
-      aSubset <- subset(aSet, (pSet == p))
-      bSubset <- subset(bSet, (pSet == p))
-      if(pTitle != "") {
-         subMainTitle <- paste(sep="", pTitle, " = ", p)
-      }
-      else {
-         subMainTitle <- ""
-      }
-      if(length(pLevels) <= 1) {
-         subMainTitle <- ""
-      }
+      pColor <- getBackgroundColor(page, colorMode, pStart)
+      makeLayout(aSet, bSet, aTitle, bTitle, mainTitle, pSubLabel, pColor, colorMode)
 
-      if(length(levels(factor(bSet))) <= 1) {
-         if(length(levels(factor(aSet))) <= 1) {
-            plotstd3(subMainTitle,
-                     xTitle, yTitle, zTitle,
-                     xSubset, ySubset, zSubset,
-                     vSubset, wSubset, vTitle, wTitle,
-                     xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
-                     confidence = confidence,
-                     hbarSet = hbarSet,
-                     hbarMeanSteps = hbarMeanSteps,
-                     xSeparatorsSet = xSeparatorsSet,
-                     xSeparatorsTitles = xSeparatorsTitles,
-                     xSeparatorsColors = xSeparatorsColors,
-                     rangeSet=rangeSet, rangeColors=rangeColors,
-                     type = type,
-                     hideLegend = hideLegend,
-                     legendPos = legendPos,
-                     colorMode = colorMode,
-                     frameColor = frameColor)
-         }
-         else {
-            oldPar2 <- par(font.main=3, cex.main=0.9)
-            plotstd4(subMainTitle,
-                     aTitle, xTitle, yTitle, zTitle,
-                     aSubset, xSubset, ySubset, zSubset,
-                     vSubset, wSubset, vTitle, wTitle,
-                     aAxisTicks = aAxisTicks,
-                     xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
-                     confidence = confidence,
-                     hbarSet = hbarSet,
-                     hbarMeanSteps = hbarMeanSteps,
-                     xSeparatorsSet = xSeparatorsSet,
-                     xSeparatorsTitles = xSeparatorsTitles,
-                     xSeparatorsColors = xSeparatorsColors,
-                     rangeSet=rangeSet, rangeColors=rangeColors,
-                     type = type,
-                     hideLegend = hideLegend,
-                     legendPos = legendPos,
-                     colorMode = colorMode,
-                     frameColor = frameColor)
+
+      # ------ Plot page ----------------------------------------------
+      i<-1
+      for(b in bLevels) {
+         for(a in aLevels) {
+            # ------ Get sets -----------------------------------------
+            xSubset <- subset(xSet, (pSet == p) & (aSet == a) & (bSet == b))
+            ySubset <- subset(ySet, (pSet == p) & (aSet == a) & (bSet == b))
+            zSubset <- subset(zSet, (pSet == p) & (aSet == a) & (bSet == b))
+            vSubset <- subset(vSet, (pSet == p) & (aSet == a) & (bSet == b))
+            wSubset <- subset(wSet, (pSet == p) & (aSet == a) & (bSet == b))
+
+            cexScaleFactor <- 1.0
+
+            oldPar2 <- par(cex=cexScaleFactor*par("cex"),
+                           cex.main=cexScaleFactor*par("cex.main"),
+                           cex.lab=cexScaleFactor*par("cex.lab"))
+            if(plotstd3("",
+                        xTitle, yTitle, zTitle,
+                        xSubset, ySubset, zSubset,
+                        vSubset, wSubset, vTitle, wTitle,
+                        xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
+                        confidence = confidence,
+                        hbarSet = hbarSet, hbarMeanSteps = hbarMeanSteps,
+                        xSeparatorsSet = xSeparatorsSet,
+                        xSeparatorsTitles = xSeparatorsTitles,
+                        xSeparatorsColors = xSeparatorsColors,
+                        rangeSet=rangeSet, rangeColors=rangeColors,
+                        type = type,
+                        hideLegend = hideLegend,
+                        legendSize = legendSize,
+                        legendPos = legendPos,
+                        colorMode = colorMode,
+                        frameColor = frameColor,
+                        inPlotStd6 = TRUE) < 1) {
+               # No data for this field!
+               plot.new()   # Must be here, otherwise the order will be wrong!
+            }
+
             par(oldPar2)
          }
       }
-      else {
-         oldPar2 <- par(font.main=3, cex.main=0.9)
-         plotstd5(subMainTitle,
-                  aTitle, bTitle, xTitle, yTitle, zTitle,
-                  aSubset, bSubset, xSubset, ySubset, zSubset,
-                  vSubset, wSubset, vTitle, wTitle,
-                  aAxisTicks = aAxisTicks, bAxisTicks = bAxisTicks,
-                  xAxisTicks = xAxisTicks, yAxisTicks = yAxisTicks,
-                  confidence = confidence,
-                  hbarSet = hbarSet,
-                  hbarMeanSteps = hbarMeanSteps,
-                  xSeparatorsSet = xSeparatorsSet,
-                  xSeparatorsTitles = xSeparatorsTitles,
-                  xSeparatorsColors = xSeparatorsColors,
-                  rangeSet=rangeSet, rangeColors=rangeColors,
-                  type = type,
-                  hideLegend = hideLegend,
-                  legendPos = legendPos,
-                  colorMode = colorMode,
-                  frameColor = frameColor)
-         par(oldPar2)
-      }
 
-      mtext(mainTitle, col=frameColor,
-            side=3, at=0.5, line=0.5, outer=TRUE,
-            xpd = NA, font = par("font.main"), cex = par("cex.main"))
-      mtext(simulationName,
-            side=1, at=0, line=0.5, adj=0, outer=TRUE,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
-      mtext(paste(sep="", "Copyright  ", format(Sys.time(), "%Y"), " Thomas Dreibholz - ", date()),
-            side=1, at=1, line=0.5, adj=1, outer=TRUE,
-            xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
 
-      par(oldPar1)
-      index <- index + 1
+      #  ------ Reset page settings -----------------------------------
+      # if(length(pLevels) > 1) {
+      #    par(oldPar1)
+      # }
+      page <- page + 1
    }
-}
-
-
-# Value filter for printing histogram plot values
-plothist.valuefilter <- function(value, confidence)
-{
-   if(confidence != 0) {
-      return(sprintf("%1.2f ± %1.0f%%", value, 100.0*confidence/value))
-   }
-   return(sprintf("%1.2f", value))
 }
 
 
@@ -1198,7 +1007,7 @@ plothist <- function(mainTitle,
                      colorMode        = cmColor,
                      zColorArray      = c(),
                      frameColor       = par("fg"),
-                     legendSizeFactor = 0.8,
+                     legendSize = 0.8,
                      showMinMax       = FALSE,
                      showConfidence   = TRUE,
                      confidence       = 0.95,
@@ -1391,7 +1200,7 @@ plothist <- function(mainTitle,
             bg=legendBackground,
             col=zColorArray,
             text.col=zColorArray,
-            lwd=5*par("cex"), cex=legendSizeFactor*par("cex"))
+            lwd=5*par("cex"), cex=legendSize*par("cex"))
    }
 }
 
@@ -1517,7 +1326,8 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
    if(!plotOwnOutput) {
       pdf(paste(sep="", simulationDirectory, ".pdf"),
           width=plotWidth, height=plotHeight, onefile=TRUE,
-          family=plotFontFamily, pointsize=plotFontPointsize)
+          family=plotFontFamily, pointsize=plotFontPointsize,
+          title=simulationDirectory)
    }
    for(i in 1:length(plotConfigurations)) {
       plotConfiguration <- unlist(plotConfigurations[i], recursive=FALSE)
@@ -1694,7 +1504,7 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
                   rangeSet=rangeSet, rangeColors=rangeColors,
                   type="l",
                   frameColor=frameColor,
-                  legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,
+                  legendSize=plotLegendSizeFactor, confidence=plotConfidence,
                   colorMode=plotColorMode, hideLegend=plotHideLegend, legendPos=legendPos)
       }
       else {
@@ -1706,7 +1516,7 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
                   rangeSet=rangeSet, rangeColors=rangeColors,
                   type="l",
                   frameColor=frameColor,
-                  legendSizeFactor=plotLegendSizeFactor, confidence=plotConfidence,
+                  legendSize=plotLegendSizeFactor, confidence=plotConfidence,
                   colorMode=plotColorMode, hideLegend=plotHideLegend, legendPos=legendPos)
       }
       if(plotOwnOutput) {

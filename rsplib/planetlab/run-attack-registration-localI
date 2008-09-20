@@ -1,12 +1,12 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack1
+# Name:        attack-registration-localI
 # Description: PE-based attack (localhost measurements)
 # Revision:    $Id$
 # ###########################################################################
 
 
-export Measurement=attack1
+export Measurement=attack-registration-localI
 export Duration=900
 export PRs=1
 export PEs=10

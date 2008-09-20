@@ -1,7 +1,7 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack-countermeasure1
-# Description: PE-based attack (localhost measurements)
+# Name:        attack-registration-countermeasure-localI
+# Description: PE-based attack countermeasure (localhost measurements)
 # Revision:    $Id$
 # ###########################################################################
 
@@ -22,7 +22,7 @@ export PENodeList="localhost"
 export PUNodeList="localhost"
 export AttackerNodeList="localhost"
 
-export Measurement=attack-countermeasure1
+export Measurement=attack-registration-countermeasure-localI
 export Duration=900
 export PRs=1
 export PEs=10
