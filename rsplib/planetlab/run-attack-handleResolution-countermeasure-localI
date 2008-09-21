@@ -62,8 +62,8 @@ for Run in 0 1 2 ; do
             if [ $Run -gt 0 ] ; then
                ID=Run$Run-$ID
             fi
-            VARIABLES="Duration Policy Capacity JobSize JobInterval AttackInterval AttackReportUnreachableProbability"
-            VALUES="$Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval $AttackReportUnreachableProbability"
+            VARIABLES="Run Duration Policy Capacity JobSize JobInterval AttackInterval AttackReportUnreachableProbability"
+            VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval $AttackReportUnreachableProbability"
    
    
             echo ID=$ID
