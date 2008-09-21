@@ -16,7 +16,7 @@ export SSH_USER="network"
 export SSH_KEY="/home/network/.ssh/id_dsa"
 export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 export SERVICE_PRE_PROGRAM=""
-export OPT_CSP="-cspserver=210.37.47.79:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
 
 export PRNodeList="localhost"
 export PENodeList="localhost"
