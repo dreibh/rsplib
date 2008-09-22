@@ -54,12 +54,12 @@ check_variable ()
 # SERVICE_DIRECTORY="src/rsplib2/rsplib"
 # SERVICE_PRE_PROGRAM=""
 # OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
-# 
+#
 # PRNodeList="localhost"
 # PENodeList="localhost"
 # PUNodeList="localhost"
 # AttackerNodeList="localhost"
-# 
+#
 # Duration=60
 # PRs=1
 # PEs=10
@@ -193,7 +193,7 @@ for node in $AttackerList ; do
    fi
 echo "aid=$aid"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -identifier=$aid -policy=$Policy -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -identifier=$aid -policy=$Policy -loaddegoverride=0 -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do

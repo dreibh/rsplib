@@ -54,7 +54,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Policy in LeastUsed ; do   #  "LeastUsedDegradation:0.1" RoundRobin Random
-   for AttackInterval in 1 ; do   # 0.1 0.5 5 10 15 22 30 40 50        0.1 0.5 5 10
+   for AttackInterval in 1 10 ; do   # 0.1 0.5 5 10 15 22 30 40 50        0.1 0.5 5 10
 
       ID=$Duration-$Policy-$AttackInterval
       VARIABLES="Duration Policy AttackInterval"

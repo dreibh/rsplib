@@ -62,6 +62,6 @@ plotVariables <- list(
            "Attack Interval{A}[s]",
            NA, "black"),
    list("AttackReportUnreachableProbability",
-           "AttackReportUnreachableProbability{u}[%]",
+           "Unreachable Probability{u}[%]",
            "100.0 * data1$AttackReportUnreachableProbability", "black")
 )
