@@ -58,7 +58,7 @@ for Run in 0 1 2 ; do
    for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
       for AttackInterval in 0.1 ; do
          for AttackReportUnreachableProbability in 1.0 ; do
-            for Attackers in 1 3 5 7 10 ; do
+            for Attackers in 0 1 3 5 7 10 ; do
    
                ID=$Duration-$Policy-$AttackInterval-$AttackReportUnreachableProbability-$Attackers
                if [ $Run -gt 0 ] ; then
