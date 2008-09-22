@@ -94,6 +94,7 @@ check_variable Duration $Duration
 check_variable PRs $PRs
 check_variable PEs $PEs
 check_variable PUs $PUs
+check_variable LoadDegOverride $LoadDegOverride
 check_variable Policy $Policy
 check_variable MaxBadPEReports $MaxBadPEReports
 check_variable Capacity $Capacity
@@ -191,9 +192,8 @@ for node in $AttackerList ; do
    if [ $AttackIdentifier -ne 0 ] ; then
       let aid=$AttackIdentifier+$id-1
    fi
-echo "aid=$aid"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -identifier=$aid -policy=$Policy -loaddegoverride=0 -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do

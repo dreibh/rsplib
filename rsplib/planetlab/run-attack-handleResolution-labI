@@ -29,6 +29,7 @@ export PEs=10
 export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
+export LoadDegOverride=0.1
 export MaxBadPEReports=3
 export MaxHRRate=-1
 export MaxEURate=-1
