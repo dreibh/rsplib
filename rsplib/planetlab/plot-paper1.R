@@ -27,7 +27,7 @@ plotConfigurations <- list(
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", ""),
    list("attack-registration-countermeasure-localII", "attack-registration-countermeasure-localII-HandlingSpeed.pdf",
-        "Lab Measurement", NA,  list(seq(0,85,10)), list(1,0),
+        "Lab Measurement", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackInterval"),
 
@@ -40,7 +40,7 @@ plotConfigurations <- list(
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
    list("attack-handleResolution-countermeasure-localII", "attack-handleResolution-countermeasure-localII-HandlingSpeed.pdf",
-        "Lab Measurement", NA,  list(seq(0,85,10)), list(1,0),
+        "Lab Measurement", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability", "AttackInterval")
 )
