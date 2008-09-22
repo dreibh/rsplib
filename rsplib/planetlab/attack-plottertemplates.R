@@ -53,7 +53,7 @@ plotVariables <- list(
            list("calcAppPoolUser-CalcAppPUTotalJobsCompleted")),
 
    list("Policy",
-           "Pool Policy{P}",
+           "Pool Policy{p}",
            NA, "black"),
    list("Attackers",
            "Number of Attackers{:alpha:}[1]",
