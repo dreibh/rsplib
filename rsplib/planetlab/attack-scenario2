@@ -172,7 +172,7 @@ for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PRList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-      "-loglevel=5 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=3 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
@@ -210,7 +210,7 @@ for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PEList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
-      "-loglevel=5 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=4 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 v=1
@@ -229,7 +229,7 @@ for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
 done
 for node in $PUList ; do
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
-      "-loglevel=5 -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=Pool-$ID "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=4 -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=Pool-$ID "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
@@ -319,3 +319,4 @@ for node in $allNodes ; do
    scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
 done
 wait
+bzip2 *.log *.cmd *.sca

@@ -80,7 +80,7 @@ for Run in 0 1 2 ; do
          cd ../..
    
    
-         SCALARS="`find $Measurement/$ID -name "*.sca"`"
+         SCALARS="`find $Measurement/$ID -name "*.sca.bz2"`"
          for sca in $SCALARS ; do
             echo "--values=\"$VALUES\"" >>$Measurement/summary.input
             echo "--input=$sca" >>$Measurement/summary.input
