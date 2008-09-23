@@ -72,6 +72,9 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-interval=", 10))) {
          attackInterval = (unsigned long long)rint(atof((char*)&argv[i][10]) * 1000000.0);
       }
+      else if(!(strncmp(argv[i], "-loaddegoverride=", 17))) {
+         loadInfo.rli_load_degradation = (unsigned int)rint(atof((const char*)&argv[i][17]) * (double)PPV_MAX_LOAD_DEGRADATION);
+      }
       else if(!(strncmp(argv[i], "-poolhandle=" , 12))) {
          poolHandle = (char*)&argv[i][12];
       }
@@ -186,7 +189,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "ERROR: Bad parameter <%s>!\n", argv[i]);
-         fprintf(stderr, "Usage: %s {-type=registration|handleresolution} {-interval=Seconds} {-identifier=Identifier} {-policy=Policy} {-reportunreachableprobability=Probability}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-type=registration|handleresolution} {-interval=Seconds} {-identifier=Identifier} {-policy=Policy} {-loaddegoverride=Load Degradation} {-reportunreachableprobability=Probability}\n", argv[0]);
          exit(1);
       }
    }
@@ -197,7 +200,8 @@ int main(int argc, char** argv)
    printf("Attack Type            = %s\n", attackType);
    printf("Attack Interval        = %lluus\n", attackInterval);
    printf("Pool Handle            = %s\n", poolHandle);
-   printf("Identifier             = %08x\n", identifier);
+   printf("Identifier             = $%08x\n", identifier);
+   printf("Load Degradation       = $%08x\n", loadInfo.rli_load_degradation);
    printf("Do not wait for result = %s\n", (dontwait == true) ? "yes" : "no");
    printf("Report Unreachable Pr. = %1.2lf%%\n\n", reportUnreachableProbability * 100.0);
 
