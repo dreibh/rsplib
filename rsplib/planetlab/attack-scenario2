@@ -165,12 +165,16 @@ echo PE_PROpt=$PE_PROpt
 echo PU_PROpt=$PU_PROpt
 
 
+rm -f *.log *.cmd *.sca *.log.bz2 *.cmd.bz2 *.sca.bz2
+
+
 echo "###### Starting PRs ###################################################"
 id=1
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pr-start.cmd
 done
 for node in $PRList ; do
+   echo "PR=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
       "-loglevel=3 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
@@ -228,6 +232,7 @@ for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pu-start.cmd
 done
 for node in $PUList ; do
+echo "PU=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
       "-loglevel=4 -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=Pool-$ID "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
@@ -238,6 +243,9 @@ done
 wait
 
 
+echo "###### Running test ###################################################"
+echo "Duration is $Duration seconds"
+echo "Now is `date`"
 sleep $Duration
 
 
