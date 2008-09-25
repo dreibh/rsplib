@@ -16,7 +16,7 @@ export SERVICE_PRE_PROGRAM="sudo"
 # export SSH_KEY="/home/network/.ssh/id_dsa"
 # export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 # export SERVICE_PRE_PROGRAM=""
-# export OPT_CSP="-cspserver=210.37.47.6:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=210.37.47.6:2960 -cspinterval=1000"
 
 export PRNodeList="`cat PL-USA.hosts`"
 export PENodeList="`cat PL-USA.hosts`"
@@ -26,8 +26,8 @@ export AttackerNodeList="`cat PL-USA.hosts`"
 export Measurement=attack-registration-planetlabI
 export Duration=120
 export PRs=1
-export PEs=10
-export PUs=30
+export PEs=1
+export PUs=5
 export AttackInterval=1
 export Policy="LeastUsed"
 export LoadDegOverride=0
@@ -65,8 +65,8 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Run in 0 ; do
-   for Policy in LeastUsed ; do #  "LeastUsedDegradation:0.1" RoundRobin Random
-      for AttackInterval in 0.5 50 ; do #  0.1 0.5 5 10 15 22 30 40 50
+   for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
+      for AttackInterval in 0.1 50 ; do
 
          ID=$Duration-$Policy-$AttackInterval
          if [ $Run -gt 0 ] ; then

@@ -168,7 +168,7 @@ echo PU_PROpt=$PU_PROpt
 rm -f *.log *.cmd *.sca *.log.bz2 *.cmd.bz2 *.sca.bz2
 
 
-echo "###### Starting PRs ###################################################"
+echo "`date` ###### Starting PRs ###################################################"
 id=1
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pr-start.cmd
@@ -176,7 +176,7 @@ done
 for node in $PRList ; do
    echo "PR=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-      "-loglevel=3 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=6 -asap=[::]:3863 -enrp=[::]:9901 -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
@@ -186,12 +186,13 @@ wait
 
 sleep 6
 
-echo "###### Starting attackers #############################################"
+echo "`date` ###### Starting attackers #############################################"
 id=1
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
    rm -f $node-attacker-start.cmd
 done
 for node in $AttackerList ; do
+   echo "A=$node"
    aid=0
    if [ $AttackIdentifier -ne 0 ] ; then
       let aid=$AttackIdentifier+$id-1
@@ -207,12 +208,13 @@ wait
 
 sleep 6
 
-echo "###### Starting PEs ###################################################"
+echo "`date`# ##### Starting PEs ###################################################"
 id=1
 for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pe-start.cmd
 done
 for node in $PEList ; do
+   echo "PE=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
       "-loglevel=4 -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
@@ -226,7 +228,7 @@ wait
 
 sleep 6
 
-echo "###### Starting PUs ###################################################"
+echo "`date` ###### Starting PUs ###################################################"
 id=1
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pu-start.cmd
@@ -243,13 +245,13 @@ done
 wait
 
 
-echo "###### Running test ###################################################"
+echo "`date` ###### Running test ###################################################"
 echo "Duration is $Duration seconds"
 echo "Now is `date`"
 sleep $Duration
 
 
-echo "###### Stopping PUs ###################################################"
+echo "`date` ###### Stopping PUs ###################################################"
 id=1
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pu-stop.cmd
@@ -264,7 +266,7 @@ done
 wait
 
 
-echo "###### Stopping PEs ###################################################"
+echo "`date` ###### Stopping PEs ###################################################"
 id=1
 for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pe-stop.cmd
@@ -279,7 +281,7 @@ done
 wait
 
 
-echo "###### Stopping attackers #############################################"
+echo "`date` ###### Stopping attackers #############################################"
 id=1
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
    rm -f $node-attacker-stop.cmd
@@ -294,7 +296,7 @@ done
 wait
 
 
-echo "###### Stopping PRs ###################################################"
+echo "`date` ###### Stopping PRs ###################################################"
 id=1
 for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
    rm -f $node-pr-stop.cmd
@@ -309,7 +311,7 @@ done
 wait
 
 
-echo "###### Downloading results ############################################"
+echo "`date` ###### Downloading results ############################################"
 allNodes="`
 (
    for pr in $PRList ; do
@@ -324,6 +326,7 @@ allNodes="`
 ) | xargs -n1 echo | sort -u`"
 
 for node in $allNodes ; do
+   echo "N=$node"
    scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
 done
 wait

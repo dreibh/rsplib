@@ -35,7 +35,7 @@ DISTSTRIP=0
 DISTMISC=""
 SUIDPRGS="rootshell"   # "registrar server calcappclient hsdump"
 
-export OPT_CSP="-cspserver=210.37.47.6:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=132.252.151.151:2960 -cspinterval=1000"
 
 
 # ###########################################################################

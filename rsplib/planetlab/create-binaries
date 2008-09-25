@@ -42,7 +42,7 @@ fi
 
 
 echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
-cat $DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no $PLANETLAB_USER@$SERVER "\
+cat $DISTNAME.tar.gz | ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no -oStrictHostKeyChecking=no $PLANETLAB_USER@$SERVER "\
 echo \"\`date\`: Transfering archive to $SERVER ...\" && \
 cat > /tmp/$DISTNAME.tar.gz && \
 echo \"\`date\`: Unpacking archive on $SERVER ...\" && \
