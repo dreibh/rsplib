@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 {
    struct rsp_info       info;
    struct rsp_loadinfo   loadInfo;
+   uint16_t              port           = 0;
    uint32_t              identifier     = 0;
    const char*           attackType     = "registration";
    unsigned long long    attackInterval = 1000000;
@@ -77,6 +78,9 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-poolhandle=" , 12))) {
          poolHandle = (char*)&argv[i][12];
+      }
+      else if(!(strncmp(argv[i], "-port=" , 6))) {
+         port = atol((const char*)&argv[i][6]);
       }
       else if(!(strcmp(argv[i], "-dontwait"))) {
          dontwait = true;
@@ -189,7 +193,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "ERROR: Bad parameter <%s>!\n", argv[i]);
-         fprintf(stderr, "Usage: %s {-type=registration|handleresolution} {-interval=Seconds} {-identifier=Identifier} {-policy=Policy} {-loaddegoverride=Load Degradation} {-reportunreachableprobability=Probability}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-type=registration|handleresolution} {-interval=Seconds} {-port=Port} {-identifier=Identifier} {-policy=Policy} {-loaddegoverride=Load Degradation} {-reportunreachableprobability=Probability}\n", argv[0]);
          exit(1);
       }
    }
@@ -200,6 +204,7 @@ int main(int argc, char** argv)
    printf("Attack Type            = %s\n", attackType);
    printf("Attack Interval        = %lluus\n", attackInterval);
    printf("Pool Handle            = %s\n", poolHandle);
+   printf("Port                   = %u\n", port);
    printf("Identifier             = $%08x\n", identifier);
    printf("Load Degradation       = $%08x\n", loadInfo.rli_load_degradation);
    printf("Do not wait for result = %s\n", (dontwait == true) ? "yes" : "no");
@@ -236,6 +241,7 @@ int main(int argc, char** argv)
       }
       union sockaddr_union anyAddress;
       string2address(checkIPv6() ? "[::]" : "0.0.0.0", &anyAddress);
+      setPort(&anyAddress.sa, port);
       if(ext_bind(sd, (sockaddr*)&anyAddress, sizeof(anyAddress)) < 0) {
          perror("bind() failed");
          exit(1);
