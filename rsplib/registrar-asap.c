@@ -440,6 +440,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
          LOG_WARNING
          logerror("Sending RegistrationResponse failed");
          LOG_END
+         sendabort(fd, assocID);
       }
    }
    else {
@@ -560,6 +561,7 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
       LOG_WARNING
       logerror("Sending DeregistrationResponse failed");
       LOG_END
+      sendabort(fd, assocID);
    }
 }
 
@@ -658,6 +660,7 @@ void registrarHandleASAPHandleResolution(struct Registrar*       registrar,
       LOG_WARNING
       logerror("Sending handle resolution response failed");
       LOG_END
+      sendabort(fd, assocID);
    }
 }
 
@@ -771,6 +774,7 @@ void registrarSendASAPEndpointKeepAlive(struct Registrar*                 regist
          poolHandlePrint(&poolElementNode->OwnerPoolNode->Handle, stdlog);
          fputs(" failed\n", stdlog);
          LOG_END
+         sendabort(registrar->ASAPSocket, 0);
       }
 
       rserpoolMessageDelete(message);
