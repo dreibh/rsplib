@@ -24,10 +24,10 @@ export PUNodeList="`cat PL-USA.hosts`"
 export AttackerNodeList="`cat PL-USA.hosts`"
 
 export Measurement=attack-registration-planetlabI
-export Duration=120
+export Duration=900
 export PRs=1
-export PEs=1
-export PUs=5
+export PEs=10
+export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
 export LoadDegOverride=0
