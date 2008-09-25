@@ -167,16 +167,16 @@ struct rsp_addrinfo {
    uint32_t             ai_pe_id;
 };
 
-unsigned int rsp_pe_registration(const unsigned char* poolHandle,
-                                 const size_t         poolHandleSize,
-                                 struct rsp_addrinfo* rspAddrInfo,
-                                 struct rsp_loadinfo* rspLoadInfo,
-                                 unsigned int         registrationLife,
-                                 int                  flags);
+unsigned int rsp_pe_registration(const unsigned char*       poolHandle,
+                                 const size_t               poolHandleSize,
+                                 struct rsp_addrinfo*       rspAddrInfo,
+                                 const struct rsp_loadinfo* rspLoadInfo,
+                                 unsigned int               registrationLife,
+                                 const int                  flags);
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
                                    const uint32_t       identifier,
-                                   int                  flags);
+                                   const int            flags);
 unsigned int rsp_pe_failure(const unsigned char* poolHandle,
                             const size_t         poolHandleSize,
                             const uint32_t       identifier);

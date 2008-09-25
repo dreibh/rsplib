@@ -432,13 +432,13 @@ void rsp_freeaddrinfo(struct rsp_addrinfo* rspAddrInfo)
 
 
 /* ###### Register pool element ########################################## */
-unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
-                                      const size_t         poolHandleSize,
-                                      struct rsp_addrinfo* rspAddrInfo,
-                                      struct rsp_loadinfo* rspLoadInfo,
-                                      unsigned int         registrationLife,
-                                      int                  flags,
-                                      struct TagItem*      tags)
+unsigned int rsp_pe_registration_tags(const unsigned char*       poolHandle,
+                                      const size_t               poolHandleSize,
+                                      struct rsp_addrinfo*       rspAddrInfo,
+                                      const struct rsp_loadinfo* rspLoadInfo,
+                                      const unsigned int         registrationLife,
+                                      const int                  flags,
+                                      struct TagItem*            tags)
 {
    struct PoolHandle                myPoolHandle;
    struct ST_CLASS(PoolElementNode) myPoolElementNode;
@@ -511,12 +511,12 @@ unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
 
 
 /* ###### Register pool element ########################################## */
-unsigned int rsp_pe_registration(const unsigned char* poolHandle,
-                                 const size_t         poolHandleSize,
-                                 struct rsp_addrinfo* rspAddrInfo,
-                                 struct rsp_loadinfo* rspLoadInfo,
-                                 unsigned int         registrationLife,
-                                 int                  flags)
+unsigned int rsp_pe_registration(const unsigned char*       poolHandle,
+                                 const size_t               poolHandleSize,
+                                 struct rsp_addrinfo*       rspAddrInfo,
+                                 const struct rsp_loadinfo* rspLoadInfo,
+                                 const unsigned int         registrationLife,
+                                 const int                  flags)
 {
    return(rsp_pe_registration_tags(poolHandle, poolHandleSize,
                                    rspAddrInfo, rspLoadInfo, registrationLife,
@@ -528,7 +528,7 @@ unsigned int rsp_pe_registration(const unsigned char* poolHandle,
 unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
                                         const size_t         poolHandleSize,
                                         const uint32_t       identifier,
-                                        int                  flags,
+                                        const int            flags,
                                         struct TagItem*      tags)
 {
    struct PoolHandle myPoolHandle;
@@ -553,7 +553,7 @@ unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
 unsigned int rsp_pe_deregistration(const unsigned char* poolHandle,
                                    const size_t         poolHandleSize,
                                    const uint32_t       identifier,
-                                   int                  flags)
+                                   const int            flags)
 {
    return(rsp_pe_deregistration_tags(poolHandle, poolHandleSize, identifier,
                                      flags, NULL));

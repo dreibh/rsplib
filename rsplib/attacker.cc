@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
 
    rsp_initinfo(&info);
-   memset((char*)&loadInfo, sizeof(loadInfo), 0);
+   memset((char*)&loadInfo, 0, sizeof(loadInfo));
    loadInfo.rli_policy = PPT_ROUNDROBIN;
    for(int i = 1;i < argc;i++) {
       if(rsp_initarg(&info, argv[i])) {

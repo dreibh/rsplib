@@ -56,17 +56,17 @@ struct TagItem;
 #define TAG_RspLib_RegistrarResponseTimeout          (TAG_USER + 4007)
 
 
-unsigned int rsp_pe_registration_tags(const unsigned char* poolHandle,
-                                      const size_t         poolHandleSize,
-                                      struct rsp_addrinfo* rspAddrInfo,
-                                      struct rsp_loadinfo* rspLoadInfo,
-                                      unsigned int         registrationLife,
-                                      int                  flags,
-                                      struct TagItem*      tags);
+unsigned int rsp_pe_registration_tags(const unsigned char*       poolHandle,
+                                      const size_t               poolHandleSize,
+                                      struct rsp_addrinfo*       rspAddrInfo,
+                                      const struct rsp_loadinfo* rspLoadInfo,
+                                      const unsigned int         registrationLife,
+                                      const int                  flags,
+                                      struct TagItem*            tags);
 unsigned int rsp_pe_deregistration_tags(const unsigned char* poolHandle,
                                         const size_t         poolHandleSize,
                                         const uint32_t       identifier,
-                                        int                  flags,
+                                        const int            flags,
                                         struct TagItem*      tags);
 unsigned int rsp_pe_failure_tags(const unsigned char* poolHandle,
                                  const size_t         poolHandleSize,
@@ -85,8 +85,8 @@ int rsp_register_tags(int                        sd,
                       const unsigned char*       poolHandle,
                       const size_t               poolHandleSize,
                       const struct rsp_loadinfo* loadinfo,
-                      unsigned int               reregistrationInterval,
-                      int                        flags,
+                      const unsigned int         reregistrationInterval,
+                      const int                  flags,
                       struct TagItem*            tags);
 int rsp_deregister_tags(int            sd,
                        int             flags,
