@@ -197,7 +197,7 @@ for node in $AttackerList ; do
       let aid=$AttackIdentifier+$id-1
    fi
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -port=1111 -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
