@@ -197,8 +197,10 @@ for node in $AttackerList ; do
    if [ $AttackIdentifier -ne 0 ] ; then
       let aid=$AttackIdentifier+$id-1
    fi
+   let aport=1110+$id
+echo "AP+$aport"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -port=1111 -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -port=$aport -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
@@ -330,4 +332,4 @@ for node in $allNodes ; do
    scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
 done
 wait
-bzip2 *.log *.cmd *.sca
+bzip2 *.log *.cmd *.sca *.data
