@@ -31,7 +31,7 @@ plotConfigurations <- list(
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackInterval"),
 
-   list("attack-handleResolution-labI", "attack-handleResolution-labI-HandlingSpeed.pdf",
+   list("attack-handleResolution-localI", "attack-handleResolution-localI-HandlingSpeed.pdf",
         "Pool User Attack (Lab Measurement)", NA,  list(seq(0,85,10)), list(1,0),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
