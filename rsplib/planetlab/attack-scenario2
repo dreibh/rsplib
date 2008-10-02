@@ -61,7 +61,8 @@ check_variable ()
 # AttackerNodeList="localhost"
 #
 # PortBase=0
-# Duration=120
+# Measurement=Test
+# Duration=15
 # PRs=3
 # PEs=3
 # PUs=3
@@ -111,8 +112,11 @@ check_variable AttackInterval $AttackInterval
 check_variable AttackIdentifier $AttackIdentifier
 check_variable AttackReportUnreachableProbability $AttackReportUnreachableProbability
 
-ID=$Measurement
+ID="$Measurement"
+POOLHANDLE="`echo Pool-$ID | md5sum | awk '{ print $1 }'`"
 
+echo "ID=$ID"
+echo "PoolHandle=$POOLHANDLE"
 
 # Get list of n nodes
 # $1 = Node list
@@ -219,7 +223,7 @@ for node in $AttackerList ; do
    fi
    let aport=$AttackerPortBase+$id
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
-      "-type=$AttackType -interval=$AttackInterval -port=$aport -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=Pool-$ID -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
+      "-type=$AttackType -interval=$AttackInterval -port=$aport -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=$POOLHANDLE -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
@@ -237,7 +241,7 @@ done
 for node in $PEList ; do
    echo "PE=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
-      "-loglevel=4 -logcolor=off -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=Pool-$ID -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=4 -logcolor=off -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=$POOLHANDLE -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 v=1
@@ -257,7 +261,7 @@ done
 for node in $PUList ; do
 echo "PU=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
-      "-loglevel=4 -logcolor=off -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=Pool-$ID "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+      "-loglevel=4 -logcolor=off -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=$POOLHANDLE "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
 done
 for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
