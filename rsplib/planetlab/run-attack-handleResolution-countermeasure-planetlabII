@@ -1,0 +1,101 @@
+#!/bin/bash
+# ###########################################################################
+# Name:        attack-handleResolution-countermeasure-planetlabII
+# Description: PU-based attack countermeasure (PlanetLab measurements)
+#              Varying the number of attackers
+# Revision:    $Id$
+# ###########################################################################
+
+
+. ./planetlab-config
+export SSH_USER=$PLANETLAB_USER
+export SSH_KEY=$PLANETLAB_KEY
+export SERVICE_DIRECTORY="bin"
+export SERVICE_PRE_PROGRAM="sudo"
+
+# export SSH_USER="network"
+# export SSH_KEY="/home/network/.ssh/id_dsa"
+# export SERVICE_DIRECTORY="src/rsplib2/rsplib"
+# export SERVICE_PRE_PROGRAM=""
+export OPT_CSP="-cspserver=132.252.151.151:2960 -cspinterval=1000"
+
+export PRNodeList="`cat PL-USA.hosts`"
+export PENodeList="`cat PL-USA.hosts`"
+export PUNodeList="`cat PL-USA.hosts`"
+export AttackerNodeList="`cat PL-USA.hosts`"
+
+export PortBase=7667
+
+export Measurement=attack-handleResolution-countermeasure-planetlabII
+export Duration=900
+export PRs=1
+export PEs=10
+export PUs=30
+export AttackInterval=1
+export Policy="LeastUsed"
+export LoadDegOverride=0.1
+export MaxBadPEReports=3
+export MaxHRRate=1
+export MaxEURate=1
+export Capacity=1000000
+export ReregInterval=30000
+export JobInterval=60.0
+export JobSize=10000000
+export Attackers=1
+export AttackType="handleresolution"
+export AttackIdentifier=0
+export AttackReportUnreachableProbability=1.0
+
+
+if [ ! -e "$Measurement" ] ; then
+   mkdir "$Measurement"
+fi
+rm -rf "$Measurement/Results"
+if [ ! -e "$Measurement/Results" ] ; then
+   mkdir "$Measurement/Results"
+fi
+echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
+
+
+for Run in 0 ; do
+   for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
+      for AttackInterval in 0.1 ; do
+         for AttackReportUnreachableProbability in 1.0 ; do
+            for Attackers in 0 1 3 5 7 10 ; do
+
+               ID=$Duration-$Policy-$AttackInterval-$AttackReportUnreachableProbability-$Attackers
+               if [ $Run -gt 0 ] ; then
+                  ID=Run$Run-$ID
+               fi
+               VARIABLES="Run Duration Policy Capacity JobSize JobInterval AttackInterval AttackReportUnreachableProbability Attackers"
+               VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval $AttackReportUnreachableProbability $Attackers"
+
+
+               echo ID=$ID
+               if [ ! -e "$Measurement/$ID" ] ; then
+                  mkdir "$Measurement/$ID"
+               fi
+
+
+               cd "$Measurement/$ID"
+               if [ ! -e status.txt ] ; then
+                  ../../attack-scenario2 && touch status.txt
+               else
+                  echo "Skipping $ID -> already complete."
+               fi
+               cd ../..
+
+
+               SCALARS="`find $Measurement/$ID -name "*.sca.bz2"`"
+               for sca in $SCALARS ; do
+                  echo "--values=\"$VALUES\"" >>$Measurement/summary.input
+                  echo "--input=$sca" >>$Measurement/summary.input
+               done
+            done
+         done
+      done
+   done
+done
+
+
+cat $Measurement/summary.input | ../createsummary "$VARIABLES" -batch
