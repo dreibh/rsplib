@@ -1,10 +1,9 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack-registration-planetlabI
-# Description: PE-based attack (PlanetLab measurements)
-# Revision:    $Id: run-attack-registration-labI 1953 2008-09-23 03:15:40Z dreibh $
+# Name:        attack-registration-countermeasure-planetlabI
+# Description: PE-based attack countermeasure (PlanetLab measurements)
+# Revision:    $Id$
 # ###########################################################################
-
 
 . ./planetlab-config
 export SSH_USER=$PLANETLAB_USER
@@ -16,23 +15,23 @@ export SERVICE_PRE_PROGRAM="sudo"
 # export SSH_KEY="/home/network/.ssh/id_dsa"
 # export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 # export SERVICE_PRE_PROGRAM=""
-export OPT_CSP="-cspserver=210.37.47.6:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=132.252.151.151:2960 -cspinterval=1000"
 
 export PRNodeList="`cat PL-USA.hosts`"
 export PENodeList="`cat PL-USA.hosts`"
 export PUNodeList="`cat PL-USA.hosts`"
 export AttackerNodeList="`cat PL-USA.hosts`"
 
-export PortBase=3667
+export PortBase=3000
 
-export Measurement=attack-registration-planetlabI
+export Measurement=attack-registration-countermeasure-planetlabI
 export Duration=900
 export PRs=1
 export PEs=10
 export PUs=30
 export AttackInterval=1
 export Policy="LeastUsed"
-export LoadDegOverride=0
+export LoadDegOverride=0.1
 export MaxBadPEReports=3
 export MaxHRRate=-1
 export MaxEURate=-1
@@ -42,18 +41,8 @@ export JobInterval=60.0
 export JobSize=10000000
 export Attackers=1
 export AttackType="registration"
-export AttackIdentifier=0
+export AttackIdentifier=12345678   # !!! Fixed IDs !!!
 export AttackReportUnreachableProbability=0.0
-
-
-if [ ! -e "$Measurement" ] ; then
-   mkdir "$Measurement"
-fi
-rm -rf "$Measurement/Results"
-if [ ! -e "$Measurement/Results" ] ; then
-   mkdir "$Measurement/Results"
-fi
-echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 if [ ! -e "$Measurement" ] ; then
@@ -68,7 +57,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 for Run in 0 ; do
    for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
-      for AttackInterval in 0.1 50 ; do
+      for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
 
          ID=$Duration-$Policy-$AttackInterval
          if [ $Run -gt 0 ] ; then
