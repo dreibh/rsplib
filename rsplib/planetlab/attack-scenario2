@@ -93,6 +93,7 @@ check_variable AttackerNodeList $AttackerNodeList
 
 check_variable PortBase
 
+check_variable Measurement $Measurement
 check_variable Duration $Duration
 check_variable PRs $PRs
 check_variable PEs $PEs
@@ -110,7 +111,7 @@ check_variable AttackInterval $AttackInterval
 check_variable AttackIdentifier $AttackIdentifier
 check_variable AttackReportUnreachableProbability $AttackReportUnreachableProbability
 
-ID=attack-scenario2
+ID=$Measurement
 
 
 # Get list of n nodes
@@ -193,10 +194,7 @@ enrpPort=$ENRPPortBase
 for node in $PRList ; do
    echo "PR=$node"
    $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-      "-loglevel=6 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
-
-echo "R$id: -asap=[::]:$asapPort -enrp=[::]:$enrpPort"
-
+      "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data"   "$SERVICE_PRE_PROGRAM"
    let id=$id+1
    let asapPort=$asapPort+1
    let enrpPort=$enrpPort+1
