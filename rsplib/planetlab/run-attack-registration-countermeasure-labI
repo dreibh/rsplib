@@ -55,22 +55,22 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 for Run in 0 1 2 ; do
    for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
-      for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do 
-   
+      for AttackInterval in 0.1 0.5 5 10 15 22 30 40 50 ; do
+
          ID=$Duration-$Policy-$AttackInterval
-         if [ $Run -gt 0 ] ; then
+         if [ $Run != "0" ] ; then
             ID=Run$Run-$ID
          fi
          VARIABLES="Run Duration Policy Capacity JobSize JobInterval AttackInterval"
          VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval"
-   
-   
+
+
          echo ID=$ID
          if [ ! -e "$Measurement/$ID" ] ; then
             mkdir "$Measurement/$ID"
          fi
-   
-   
+
+
          cd "$Measurement/$ID"
          if [ ! -e status.txt ] ; then
             ../../attack-scenario2 && touch status.txt
@@ -78,8 +78,8 @@ for Run in 0 1 2 ; do
             echo "Skipping $ID -> already complete."
          fi
          cd ../..
-   
-   
+
+
          SCALARS="`find $Measurement/$ID -name "*.sca.bz2"`"
          for sca in $SCALARS ; do
             echo "--values=\"$VALUES\"" >>$Measurement/summary.input

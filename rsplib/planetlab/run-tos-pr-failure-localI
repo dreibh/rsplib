@@ -63,7 +63,7 @@ for Run in 0 ; do
       for UseTakeoverSuggestion in "true" "false" ; do
 
          ID=$Duration-$Policy-$UseTakeoverSuggestion
-         if [ $Run -gt 0 ] ; then
+         if [ $Run != "0" ] ; then
             ID=Run$Run-$ID
          fi
          VARIABLES="Run Duration Policy Capacity JobSize JobInterval UseTakeoverSuggestion"
