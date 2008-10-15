@@ -56,9 +56,9 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 ; do
+for Run in 0 1 2 3 4 6 7 8 9 A B C D ; do
    for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
-      for AttackInterval in 0.1 1 2 3 5 7.5 10 ; do
+      for AttackInterval in 0.1 0.5 1 2 3 5 7.5 10 ; do
          for AttackReportUnreachableProbability in 0.0 1.0 ; do
 
             ID=$Duration-$Policy-$AttackInterval-$AttackReportUnreachableProbability
