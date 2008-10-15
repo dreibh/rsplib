@@ -24,6 +24,7 @@
 #include <iostream>
 #include <vector>
 #include <bzlib.h>
+#include <string.h>
 #include "simpleredblacktree.h"
 
 
