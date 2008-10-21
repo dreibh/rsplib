@@ -60,7 +60,7 @@ void putAddress(uint32_t address)
 
    iaddr.s_addr = htonl(address);
    inet_ntop(AF_INET, (char*)&iaddr, (char*)&str, sizeof(str));
-   printf(str);
+   fputs(str, stdout);
 }
 
 

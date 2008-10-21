@@ -50,7 +50,7 @@ void printTimeStamp(FILE* fd)
    const time_t             timeStamp = microTime / 1000000;
    const struct tm*         timeptr   = localtime(&timeStamp);
 
-   strftime((char*)&str,sizeof(str),"%d-%b-%Y %H:%M:%S",timeptr);
-   fprintf(fd,str);
-   fprintf(fd,".%04d: ",(unsigned int)(microTime % 1000000) / 100);
+   strftime((char*)&str, sizeof(str), "%d-%b-%Y %H:%M:%S", timeptr);
+   fputs(str, fd);
+   fprintf(fd, ".%04d: ", (unsigned int)(microTime % 1000000) / 100);
 }

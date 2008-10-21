@@ -65,7 +65,7 @@ int main(int argc, char** argv)
       const time_t     timeValue = timeStamp / 1000000;
       const struct tm* timePtr   = localtime(&timeValue);
       strftime((char*)&str, sizeof(str), "%d-%b-%Y %H:%M:%S", timePtr);
-      printf(str);
+      fputs(str, stdout);
       printf(".%06Lu, offset is %lluus\n", timeStamp % 1000000ULL, offset);
    }
 
