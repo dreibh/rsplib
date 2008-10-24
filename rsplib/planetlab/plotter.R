@@ -289,6 +289,11 @@ plotstd3 <- function(mainTitle,
 {
    xLevels <- levels(factor(xSet))
    yLevels <- levels(factor(ySet))
+   if(length(zSet) < 1) {
+      zSet <- rep(0, length(ySet))
+      zTitle     <- ""
+      hideLegend <- TRUE
+   }
    zLevels <- levels(factor(zSet))
    if(length(xLevels) < 1) {
       cat("WARNING: plotstd3() - xLevels=c()\n")
@@ -1492,7 +1497,7 @@ createPlots <- function(simulationDirectory, plotConfigurations, customFilter=""
       # ------ Plot ---------------------------------------------------------
       if(plotOwnOutput) {
          pdf(pdfName,
-            width=plotWidth, height=plotHeight, onefile=TRUE,
+            width=plotWidth, height=plotHeight, onefile=FALSE,
             family=plotFontFamily, pointsize=plotFontPointsize)
       }
       if( (length(aSet) > 0) || (length(bSet) > 0) || (length(pSet) > 0)) {
