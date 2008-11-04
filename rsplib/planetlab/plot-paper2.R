@@ -23,24 +23,24 @@ plotConfidence        <- 0.95
 # ------ Plots --------------------------------------------------------------
 plotConfigurations <- list(
    list("attack-registration-planetlabI", "attack-registration-planetlabI-HandlingSpeed.pdf",
-        "Pool Element Attack (Lab Measurement)", NA, list(seq(0,85,10)), list(1,0),
+        "Pool Element Attack (PlanetLab)", NA, list(seq(0,85,10)), list(1,0),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", ""),
    list("attack-registration-countermeasure-planetlabII", "attack-registration-countermeasure-planetlabII-HandlingSpeed.pdf",
-        "Lab Measurement", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
+        "PlanetLab", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackInterval"),
 
    list("attack-handleResolution-planetlabI", "attack-handleResolution-planetlabI-HandlingSpeed.pdf",
-        "Pool User Attack (Lab Measurement)", NA,  list(seq(0,85,10)), list(1,0),
+        "Pool User Attack (PlanetLab)", NA,  list(seq(0,85,10)), list(1,0),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
    list("attack-handleResolution-countermeasure-planetlabI", "attack-handleResolution-countermeasure-planetlabI-HandlingSpeed.pdf",
-        "Lab Measurement", NA,  list(seq(0,85,10)), list(1,0),
+        "PlanetLab", NA,  list(seq(0,85,10)), list(1,0),
         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
    list("attack-handleResolution-countermeasure-planetlabII", "attack-handleResolution-countermeasure-planetlabII-HandlingSpeed.pdf",
-        "Lab Measurement", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
+        "PlanetLab", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability", "AttackInterval")
 )
