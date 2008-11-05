@@ -349,7 +349,7 @@ plotstd3 <- function(mainTitle,
    # ------ Create plot window ----------------------------------------------
    if(!inPlotStd6) {
       margins <- c(3.25,3.25,3,0.25) + 0.0   # Margins as c(bottom, left, top, right)
-                                             # Default is c(5, 4, 4, 2) + 0.1
+                                          # Default is c(5, 4, 4, 2) + 0.1
    }
    else {
       margins <- c(5, 5, 3, 2) + 0.0   # For usage within plotstd6()
@@ -736,8 +736,8 @@ makeLayout <- function(aSet, bSet, aTitle, bTitle, pTitle, pSubLabel, pColor, co
    h <- length(bLevels)
 
    if(colorMode == cmColor) {
-      aLevelsColorArray <- rainbow(length(aLevels), start=0, end=3/6)
-      bLevelsColorArray <- rainbow(length(bLevels), start=4/6, end=6/6)
+      aLevelsColorArray <- rainbow(length(aLevels), start=0, end=3/6, s=0.3)
+      bLevelsColorArray <- rainbow(length(bLevels), start=4/6, end=6/6, s=0.3)
    }
    else if(colorMode == cmGrayScale) {
       aLevelsColorArray <- graybow(length(aLevels))
@@ -998,16 +998,6 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 }
 
 
-# Value filter for printing histogram plot values
-plothist.valuefilter <- function(value, confidence)
-{
-   if(confidence != 0) {
-      return(sprintf("%1.2f ± %1.0f%%", value, 100.0*confidence/value))
-   }
-   return(sprintf("%1.2f", value))
-}
-
-
 # Plot a histogram.
 plothist <- function(mainTitle,
                      xTitle, yTitle, zTitle,
@@ -1062,10 +1052,7 @@ plothist <- function(mainTitle,
    breakSet <- sort(unique(breakSet))
 
    r <- hist(xSet, br=breakSet, plot=FALSE, freq=freq)
-
-   margins <- c(3.25,3.25,3,0.25) + 0.0   # Margins as c(bottom, left, top, right)
-                                          # Default is c(5, 4, 4, 2) + 0.1
-   opar <- par(col.lab=frameColor, col.main=frameColor, mar=margins)
+   opar <- par(col.lab=frameColor,col.main=frameColor,font.main=2,cex.main=2)
 
    xRange <- c(min(xAxisTicks), max(xAxisTicks))
    if(length(yAxisTicks) < 2) {
@@ -1086,24 +1073,22 @@ plothist <- function(mainTitle,
    abline(h=yAxisTicks, lty=1, col="lightgray")
    box(col=frameColor)
 
-   xLabel <- getLabel(xTitle)
-   yLabel <- getLabel(yTitle)
-
-   mtext(parse(text=xLabel), col=frameColor,
-         side = 1, adj=0.5, line=2.25,
-         xpd = NA, font = par("font.main"), cex = par("cex.lab"))
-   mtext(parse(text=yLabel), col=frameColor,
-         side = 2, adj=0.5, line=2.25,
-         xpd = NA, font = par("font.main"), cex = par("cex.lab"))
-   mtext(parse(text=getLabel(mainTitle)), col=frameColor,
-         side = 3, adj=0.5, line=1.75,
-         xpd = NA, font = par("font.main"), cex = 1.2 * par("cex.main"))
+   mtext(xTitle, col=frameColor,
+         side = 1, at = xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   mtext(yTitle, col=frameColor,
+         side = 2, at = yRange[1] + ((yRange[2] - yRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
+   mtext(mainTitle, col=frameColor,
+         side=3, at=xRange[1] + ((xRange[2] - xRange[1]) / 2), line=2.5,
+         xpd = NA, font = par("font.main"), cex = par("cex.main"))
    if(length(zLevels) > 1) {
-      zLabel <- getLabel(zTitle)
-      mtext(parse(text=zLabel), col=frameColor,
+      mtext(zTitle, col=frameColor,
             side = 3, at = max(xRange), line=0.5, adj=1,
             xpd = NA, font = par("font.lab"), cex = par("cex.lab"))
    }
+
+   par(opar)
 
 
    # ------ Plot bars -------------------------------------------------------
@@ -1220,10 +1205,8 @@ plothist <- function(mainTitle,
             bg=legendBackground,
             col=zColorArray,
             text.col=zColorArray,
-            lwd=10*par("cex"), cex=legendSize*par("cex"))
+            lwd=5*par("cex"), cex=legendSize*par("cex"))
    }
-
-   par(opar)
 }
 
 
