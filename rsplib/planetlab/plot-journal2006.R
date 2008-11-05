@@ -1,3 +1,9 @@
+# ###########################################################################
+# Name:        plot-perftest1.R
+# Description:
+# Revision:    $Id$
+# ###########################################################################
+
 source("plotter.R")
 
 ownOutput  <- FALSE
@@ -7,7 +13,7 @@ legendPos  <- c(1,1)
 
 xAxisTicks <- seq(0,4,0.5)
 yAxisTicks <- seq(0,0.6,0.1)
-frameColor <- "gold4"
+frameColor <- "brown4"
 
 
 getTimeOffsetVector <- function(data)
@@ -55,7 +61,7 @@ getMeasurementVector <- function(data, timeOffsetVector, queuingStart, queuingEn
 
 createHistogram <- function(pdfName, data, timeOffsetVector, queuingStart, queuingEnd, title)
 {
-   pdf(pdfName, width=10, height=7.5, onefile=TRUE, family="Helvetica", pointsize=18)
+   pdf(pdfName, width=10, height=7.5, onefile=TRUE, family="Helvetica", pointsize=22)
 
    policySubset <- getPolicyVector(data, timeOffsetVector, queuingStart, queuingEnd)
    measurementSubset <- getMeasurementVector(data, timeOffsetVector, queuingStart, queuingEnd)

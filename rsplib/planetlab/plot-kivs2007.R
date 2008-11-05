@@ -1,3 +1,9 @@
+# ###########################################################################
+# Name:        plot-perftest1.R
+# Description:
+# Revision:    $Id$
+# ###########################################################################
+
 source("plotter.R")
 
 ownOutput  <- FALSE
@@ -208,10 +214,10 @@ dumpJobsResults <- function(inFile, data, timeOffsetVector,
 cat("Loading data ...\n")
 inFileA <- "DisasterScenario1-A.data.bz2"
 inFileB <- "DisasterScenario1-B.data.bz2"
-# dataA <- loadResults(inFileA)
-# dataB <- loadResults(inFileB)
-# timeOffsetVectorA <- getTimeOffsetVector(dataA)
-# timeOffsetVectorB <- getTimeOffsetVector(dataB)
+dataA <- loadResults(inFileA)
+dataB <- loadResults(inFileB)
+timeOffsetVectorA <- getTimeOffsetVector(dataA)
+timeOffsetVectorB <- getTimeOffsetVector(dataB)
 cat("Loading data completed!\n")
 
 
