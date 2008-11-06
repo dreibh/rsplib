@@ -40,15 +40,21 @@ getHandlingTimeVector <- function(data, timeOffsetVector, measurement, queuingSt
 handlingTimeStat <- function(data, timeOffsetVector, measurement, queuingStart, queuingEnd)
 {
    htSubset <- getHandlingTimeVector(data, timeOffsetVector, measurement, queuingStart, queuingEnd)
-   htMin  <- min(htSubset)
-   htMax  <- max(htSubset)
-   htMean <- mean(htSubset)
-   htTest <- t.test(htSubset)
-   cat(sprintf("%2dm - %2dm:   mean=%1.5f +/- %1.5f   min=%1.5f max=%1.5f\n",
-               queuingStart, queuingEnd,
-               htMean, htMean - htTest$conf.int[1],
-               htMin, htMax))
-   return(htMean)
+   if(length(htSubset) > 0) {
+      htMin  <- min(htSubset)
+      htMax  <- max(htSubset)
+      htMean <- mean(htSubset)
+      htTest <- t.test(htSubset)
+      cat(sprintf("%2dm - %2dm:   mean=%1.5f +/- %1.5f   min=%1.5f max=%1.5f\n",
+                  queuingStart, queuingEnd,
+                  htMean, htMean - htTest$conf.int[1],
+                  htMin, htMax))
+      return(htMean)
+   }
+   else {
+      cat(sprintf("%2dm - %2dm:   EMPTY!\n", queuingStart, queuingEnd))
+      return(NaN)
+   }
 }
 
 
