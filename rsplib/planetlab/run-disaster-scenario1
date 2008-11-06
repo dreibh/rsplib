@@ -20,7 +20,8 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-runSets="U01 U02 U03 U04 U05 U06 U07 U08 U09 U10 U11 U12"
+# runSets="U01 U02 U03 U04 U05 U06 U07 U08 U09 U10 U11 U12"
+runSets="V00 V01 V03 V04 V05 V06 V07 V08 V09 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20"
 
 for run in $runSets ; do
 
@@ -31,6 +32,11 @@ for run in $runSets ; do
    M2PE="-poolhandle=PoolTwo -calcapp -rereginterval=3333 -policy=LeastUsed -capmaxjobs=5 -loglevel=3"
    M1PU="-poolhandle=PoolOne -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
    M2PU="-poolhandle=PoolTwo -jobinterval=7.5 -jobsize=1000000 -loglevel=3"
+
+
+   killall ssh
+   rm *.pid
+   cat p?-*.hosts | xargs ./do-killall
 
 
    # ------ Registrars ------------------------------------------------------

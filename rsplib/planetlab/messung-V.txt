@@ -1,0 +1,24 @@
+Messung V
+=========
+- run-disaster-scenario1
+- combine-disaster-scenario1-results
+- combine-journal2006
+- plot-kivs2007.R
+- plot-journal2006.R
+
+Rechnerauswahl: CoMon (Good inkl. "uptime >= 1 Tag" ) + Filterung durch Test
+
+
+LU-DPF Average over all Measurements:
+ 1m - 14m:   mean=1.74689 +/- 0.03568   min=0.00512 max=610.70459
+16m - 29m:   mean=1.95082 +/- 0.01501   min=0.00513 max=129.65164
+31m - 45m:   mean=1.81240 +/- 0.01296   min=0.00216 max=150.82283
+46m - 49m:   mean=1.54786 +/- 0.02656   min=0.00813 max=81.06472
+51m - 64m:   mean=1.61929 +/- 0.01604   min=0.00606 max=197.53542
+
+LU Average over all Measurements:
+ 1m - 14m:   mean=2.67781 +/- 0.04919   min=0.00428 max=612.09117
+16m - 29m:   mean=2.77720 +/- 0.01918   min=0.00924 max=136.49608
+31m - 45m:   mean=2.51920 +/- 0.01653   min=0.00295 max=159.95655
+46m - 49m:   mean=2.43794 +/- 0.03236   min=0.02627 max=80.88857
+51m - 64m:   mean=2.56475 +/- 0.02140   min=0.01540 max=212.66835
