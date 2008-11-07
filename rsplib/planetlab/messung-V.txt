@@ -22,3 +22,10 @@ LU Average over all Measurements:
 31m - 45m:   mean=2.51920 +/- 0.01653   min=0.00295 max=159.95655
 46m - 49m:   mean=2.43794 +/- 0.03236   min=0.02627 max=80.88857
 51m - 64m:   mean=2.56475 +/- 0.02140   min=0.01540 max=212.66835
+
+
+improvement <- function(old, new)
+{
+   i <- 100.0 * (old - new) / old
+   sprintf("%1.1f", i)
+}

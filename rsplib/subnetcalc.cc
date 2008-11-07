@@ -186,7 +186,7 @@ int main(int argc, char** argv)
    printf("Broadcast     = "); putAddress(broadcast); puts("");
    printf("                "); putAddressBinary(broadcast, prefix); puts("");
    printf("Wildcard Mask = "); putAddress(wildcard); puts("");
-   printf("Host Bits     = %u\n", 32 - prefix);
+   printf("Host Bits     = %u\n", (unsigned int)(32 - prefix));
    printf("Max. Hosts    = %u\n", (unsigned int)hosts);
    printf("Host Range    = { ");
    putAddress(host1); printf(" - "); putAddress(host2);
