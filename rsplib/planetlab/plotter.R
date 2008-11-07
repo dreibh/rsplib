@@ -948,7 +948,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
 
       # ------ Plot page ----------------------------------------------
       i<-1
-      for(b in bLevels) {
+      for(b in rev(bLevels)) {
          for(a in aLevels) {
             # ------ Get sets -----------------------------------------
             xSubset <- subset(xSet, (pSet == p) & (aSet == a) & (bSet == b))
@@ -983,6 +983,7 @@ plotstd6 <- function(mainTitle, pTitle, aTitle, bTitle, xTitle, yTitle, zTitle,
                # No data for this field!
                plot.new()   # Must be here, otherwise the order will be wrong!
             }
+            # text(0, 0, paste(a,b), adj=c(0,0))
 
             par(oldPar2)
          }
