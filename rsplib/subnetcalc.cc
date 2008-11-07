@@ -1,14 +1,6 @@
 /* $Id$
- * --------------------------------------------------------------------------
  *
- *              //===//   //=====   //===//   //       //   //===//
- *             //    //  //        //    //  //       //   //    //
- *            //===//   //=====   //===//   //       //   //===<<
- *           //   \\         //  //        //       //   //    //
- *          //     \\  =====//  //        //=====  //   //===//    Version II
- *
- * ------------- An Efficient RSerPool Prototype Implementation -------------
- *
+ * IPv4 Subnet Calculator
  * Copyright (C) 2002-2008 by Thomas Dreibholz
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,8 +18,6 @@
  *
  * Contact: dreibh@iem.uni-due.de
  */
-
-#include "tdtypes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,8 +42,47 @@ bool getAddress(const char* str, uint32_t& address)
 }
 
 
+// ###### Get IPv4 address class ############################################
+const char* getAddressClass(uint32_t address) {
+   if((address & 0x80000000) == 0) {
+      return("A");
+   }
+   else if((address & 0xc0000000) == 0x80000000) {
+      return("B");
+   }
+   else if((address & 0xe0000000) == 0xc0000000) {
+      return("C");
+   }
+   return("Invalid!");
+}
+
+
+// ###### Print IPv4 address in binary digits ###############################
+void putAddressBinary(uint32_t address, const size_t prefix)
+{
+   for(int i = 31;i >= 0;i--) {
+      const uint32_t v = (uint32_t)1 << i;
+      if(32 - i > (int)prefix) {   // Colourize output
+         printf("\x1b[33m");
+      }
+      else {
+         printf("\x1b[34m");
+      }
+      if(address >= v) {
+         printf("1");
+         address -= v;
+      }
+      else {
+         printf("0");
+      }
+      printf("\x1b[0m");   // Turn off colour printing
+      if( ((i % 8) == 0) && (i > 0) ) printf(" . ");
+   }
+}
+
+
 // ###### Print IPv4 address ################################################
-void putAddress(uint32_t address)
+void putAddress(const uint32_t address)
 {
    char    str[256];
    in_addr iaddr;
@@ -65,7 +94,7 @@ void putAddress(uint32_t address)
 
 
 // ###### Calculate prefix length ###########################################
-size_t prefixLength(uint32_t netmask)
+size_t prefixLength(const uint32_t netmask)
 {
    for(int i = 31;i >= 0;i--) {
       if(!(netmask & (1 << (uint32_t)i))) {
@@ -77,7 +106,7 @@ size_t prefixLength(uint32_t netmask)
 
 
 // ###### Is given netmask valid? ###########################################
-bool verifyNetmask(uint32_t netmask)
+bool verifyNetmask(const uint32_t netmask)
 {
    bool host = true;
 
@@ -147,12 +176,19 @@ int main(int argc, char** argv)
    }
    wildcard  = ~netmask;
 
+   printf("Address       = "); putAddress(address); puts("");
+   printf("                "); putAddressBinary(address, prefix); puts("");
+   printf("Address Class = %s\n", getAddressClass(network));
    printf("Network       = "); putAddress(network); printf(" / %u\n", (unsigned int)prefix);
+   printf("                "); putAddressBinary(network, prefix); puts("");
    printf("Netmask       = "); putAddress(netmask); puts("");
+   printf("                "); putAddressBinary(netmask, prefix); puts("");
    printf("Broadcast     = "); putAddress(broadcast); puts("");
+   printf("                "); putAddressBinary(broadcast, prefix); puts("");
    printf("Wildcard Mask = "); putAddress(wildcard); puts("");
+   printf("Host Bits     = %u\n", 32 - prefix);
    printf("Max. Hosts    = %u\n", (unsigned int)hosts);
    printf("Host Range    = { ");
-   putAddress(host1); printf(" ... "); putAddress(host2);
+   putAddress(host1); printf(" - "); putAddress(host2);
    puts(" }");
 }
