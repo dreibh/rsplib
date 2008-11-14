@@ -24,24 +24,24 @@ plotConfidence        <- 0.95
 # ------ Plots --------------------------------------------------------------
 plotConfigurations <- list(
    list("attack-registration-planetlabI", "attack-registration-planetlabI-HandlingSpeed.pdf",
-        "Pool Element Attack (PlanetLab)", list(seq(0,1,0.1)), list(seq(0,85,10)), list(1,1),
+        "***R0*** Pool Element Attack (PlanetLab)", list(seq(0,1,0.1)), list(seq(0,85,10)), list(1,1),
         "AttackFrequency", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", ""),
    list("attack-registration-countermeasure-planetlabII", "attack-registration-countermeasure-planetlabII-HandlingSpeed.pdf",
-        "Pool Element Attack (PlanetLab)", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
+        "***RC2*** Pool Element Attack (PlanetLab)", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackFrequency"),
 
    list("attack-handleResolution-planetlabI", "attack-handleResolution-planetlabI-HandlingSpeed.pdf",
-        "Pool User Attack (PlanetLab)", list(seq(0,2,0.2)),  list(seq(0,85,10)), list(1,0.9),
+        "**H0** Pool User Attack (PlanetLab)", list(seq(0,2,0.2)),  list(seq(0,85,10)), list(0,0),
         "AttackFrequency", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
    list("attack-handleResolution-countermeasure-planetlabI", "attack-handleResolution-countermeasure-planetlabI-HandlingSpeed.pdf",
-        "Pool User Attack (PlanetLab)", list(seq(0,2,0.2)),  list(seq(0,85,10)), list(1,0),
+        "***HC1*** Pool User Attack (PlanetLab)", list(seq(0,2,0.2)),  list(seq(0,85,10)), list(1,0),
         "AttackFrequency", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability"),
    list("attack-handleResolution-countermeasure-planetlabII", "attack-handleResolution-countermeasure-planetlabII-HandlingSpeed.pdf",
-        "Pool User Attack (PlanetLab)", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
+        "***HC2*** Pool User Attack (PlanetLab)", list(seq(0,10,1)),  list(seq(0,85,10)), list(1,0),
         "Attackers", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "AttackReportUnreachableProbability", "AttackFrequency")
 )

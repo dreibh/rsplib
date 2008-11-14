@@ -356,3 +356,4 @@ for node in $allNodes ; do
 done
 wait
 bzip2 *.log *.cmd *.sca *.data
+touch status.txt
