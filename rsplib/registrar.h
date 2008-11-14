@@ -152,6 +152,12 @@ struct Registrar
    unsigned long long                         SynchronizationCount;
    unsigned long long                         UpdateCount;
 
+   bool                                       NeedsWeightedStatValues;
+   struct WeightedStatValue                   PoolsCount;
+   struct WeightedStatValue                   PoolElementsCount;
+   struct WeightedStatValue                   OwnedPoolElementsCount;
+   struct WeightedStatValue                   PeersCount;
+
    double                                     MaxHRRate;
    double                                     MaxEURate;
 
@@ -191,6 +197,10 @@ unsigned int registrarAddStaticPeer(
                 struct Registrar*                   registrar,
                 const RegistrarIdentifierType       identifier,
                 const struct TransportAddressBlock* transportAddressBlock);
+
+void registrarPrintScalarStatistics(struct Registrar* registrar,
+                                    FILE*             fh,
+                                    const char*       objectName);
 
 unsigned long long registrarRandomizeCycle(const unsigned long long interval);
 unsigned int registrarRoundDistance(const unsigned int distance,

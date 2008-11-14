@@ -280,6 +280,11 @@ int main(int argc, char** argv)
    int                           enrpMulticastOutputSocket     = -1;
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;
+
+   const char*                   objectName = "registrar";
+   const char*                   scalarName = NULL;
+   FILE*                         scalarFH   = NULL;
+
    bool                          useIPv6                       = checkIPv6();
    const char*                   daemonPIDFile                 = NULL;
    FILE*                         fh;
@@ -419,6 +424,12 @@ int main(int argc, char** argv)
             }
          }
       }
+      else if(!(strncmp(argv[i], "-object=", 8))) {
+         objectName = (const char*)&argv[i][8];
+      }
+      else if(!(strncmp(argv[i], "-scalar=", 8))) {
+         scalarName = (const char*)&argv[i][8];
+      }
       else if(!(strncmp(argv[i], "-statsfile=", 11))) {
          if(statsFile) {
             fclose(statsFile);
@@ -489,7 +500,7 @@ int main(int argc, char** argv)
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-supporttakeoversuggestion} {-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
-            "{-actionlogfile=file} {-statsfile=file} {-statsinterval=millisecs} "
+            "{-actionlogfile=file} {-statsfile=file} {-statsinterval=millisecs} {-scalar=file} {-object=ID} "
             "{-daemonpidfile=file}"
             "\n",argv[0]);
          exit(1);
@@ -548,6 +559,9 @@ int main(int argc, char** argv)
    if(registrar == NULL) {
       fprintf(stderr, "ERROR: Unable to initialize Registrar object!\n");
       exit(1);
+   }
+   if(scalarName) {
+      registrar->NeedsWeightedStatValues = true;   /* Compute only if necessary! */
    }
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-peer=",6))) {
@@ -749,6 +763,10 @@ int main(int argc, char** argv)
       if(actionLogFile) {
          printf("Action Log File:        active\n");
       }
+      if(scalarName) {
+         printf("Scalar File:            %s\n", scalarName);
+         printf("Object ID:              %s\n", objectName);
+      }
       printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "off" : daemonPIDFile);
 
       puts("\nASAP Parameters:");
@@ -829,6 +847,16 @@ int main(int argc, char** argv)
    }
 
    /* ====== Clean up ==================================================== */
+   if(scalarName) {
+       scalarFH = fopen(scalarName, "w");
+       if(scalarFH) {
+          registrarPrintScalarStatistics(registrar, scalarFH, objectName);
+          fclose(scalarFH);
+       }
+       else {
+          fprintf(stderr, "ERROR: Unable to create scalar file \"%s\"!\n", scalarName);
+       }
+   }
    registrarDelete(registrar);
    finishLogging();
    if(statsBZFile) {

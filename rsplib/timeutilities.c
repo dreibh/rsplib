@@ -54,3 +54,36 @@ void printTimeStamp(FILE* fd)
    fputs(str, fd);
    fprintf(fd, ".%04d: ", (unsigned int)(microTime % 1000000) / 100);
 }
+
+
+/* ###### Initialize weighted statistics value ########################### */
+void initWeightedStatValue(struct WeightedStatValue* value,
+                           const unsigned long long  now)
+{
+   value->Value           = 0.0;
+   value->Cumulation      = 0.0;
+   value->StartTimeStamp  = now;
+   value->UpdateTimeStamp = now;
+}
+
+
+/* ###### Update weighted statistics value ############################### */
+void updateWeightedStatValue(struct WeightedStatValue* value,
+                             const unsigned long long  now,
+                             const double              v)
+{
+   const unsigned long long elapsedSinceLastUpdate = now - value->UpdateTimeStamp;
+   value->Cumulation     += value->Value * (elapsedSinceLastUpdate / 1000000.0);
+   value->Value           = v;
+   value->UpdateTimeStamp = now;
+}
+
+
+/* ###### Get weighted statistics value ################################## */
+double averageWeightedStatValue(struct WeightedStatValue* value,
+                                const unsigned long long  now)
+{
+   const unsigned long long elapsedSinceStart = now - value->StartTimeStamp;
+   updateWeightedStatValue(value, now, value->Value);
+   return(value->Cumulation / (elapsedSinceStart / 1000000.0));
+}

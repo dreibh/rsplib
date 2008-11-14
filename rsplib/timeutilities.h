@@ -53,6 +53,47 @@ unsigned long long getMicroTime();
 void printTimeStamp(FILE* fd);
 
 
+struct WeightedStatValue
+{
+   double             Value;
+   double             Cumulation;
+   unsigned long long StartTimeStamp;
+   unsigned long long UpdateTimeStamp;
+};
+
+
+/**
+  * Initialize WeightedStatValue object.
+  *
+  * @param value WeightedStatValue.
+  * @param now Current time stamp.
+  */
+void initWeightedStatValue(struct WeightedStatValue* value,
+                           const unsigned long long  now);
+
+
+/**
+  * Update WeightedStatValue object by new value.
+  *
+  * @param value WeightedStatValue.
+  * @param now Current time stamp.
+  * @param v New value.
+  */
+void updateWeightedStatValue(struct WeightedStatValue* value,
+                             const unsigned long long  now,
+                             const double              v);
+
+
+/**
+  * Compute average from WeightedStatValue.
+  *
+  * @param value WeightedStatValue.
+  * @param now Current time stamp.
+  */
+double averageWeightedStatValue(struct WeightedStatValue* value,
+                                const unsigned long long  now);
+
+
 
 #ifdef __cplusplus
 }

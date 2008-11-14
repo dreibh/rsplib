@@ -79,6 +79,8 @@ void registrarHandleMessage(struct Registrar*       registrar,
                             struct RSerPoolMessage* message,
                             int                     sd)
 {
+   unsigned long long now;
+
    if(sd == registrar->ENRPMulticastInputSocket) {
       if(message->Type == EHT_PRESENCE) {
          registrarHandleENRPPresence(registrar, sd, 0, message);
@@ -150,6 +152,14 @@ void registrarHandleMessage(struct Registrar*       registrar,
             LOG_END
           break;
       }
+   }
+
+   if(registrar->NeedsWeightedStatValues) {
+      now = getMicroTime();
+      updateWeightedStatValue(&registrar->PoolsCount, now, ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->PoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->OwnedPoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->PeersCount, now, ST_CLASS(peerListManagementGetPeers)(&registrar->Peers));
    }
 }
 

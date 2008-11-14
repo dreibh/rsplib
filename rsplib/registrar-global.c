@@ -183,6 +183,12 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       registrar->SynchronizationCount  = 0;
       registrar->UpdateCount           = 0;
 
+      registrar->NeedsWeightedStatValues = false;
+      initWeightedStatValue(&registrar->PoolsCount, registrar->ActionLogStartTime);
+      initWeightedStatValue(&registrar->PoolElementsCount, registrar->ActionLogStartTime);
+      initWeightedStatValue(&registrar->OwnedPoolElementsCount, registrar->ActionLogStartTime);
+      initWeightedStatValue(&registrar->PeersCount, registrar->ActionLogStartTime);
+
       autoCloseTimeout = (registrar->AutoCloseTimeout / 1000000);
       if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
          LOG_ERROR
@@ -516,6 +522,30 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
 
    timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
 }
+
+
+/* ###### Print scalar statistics ######################################## */
+void registrarPrintScalarStatistics(struct Registrar* registrar,
+                                    FILE*             fh,
+                                    const char*       objectName)
+{
+   const unsigned long long now = getMicroTime();
+
+   fputs("run 1 \"scenario\"\n", fh);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Registrations\"      %8llu\n", objectName, registrar->RegistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Reregistrations\"    %8llu\n", objectName, registrar->ReregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Deregistrations\"    %8llu\n", objectName, registrar->DeregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Resolutions\" %8llu\n", objectName, registrar->HandleResolutionCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Failure Reports\"    %8llu\n", objectName, registrar->FailureReportCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Synchronizations\"   %8llu\n", objectName, registrar->SynchronizationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Updates\"            %8llu\n", objectName, registrar->UpdateCount);
+
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pools\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pool Elements\"       %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolElementsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Owned Pool Elements\" %1.6f\n", objectName, averageWeightedStatValue(&registrar->OwnedPoolElementsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Peers\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->PeersCount, now));
+}
+
 
 
 #ifdef ENABLE_CSP
