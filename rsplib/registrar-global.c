@@ -165,23 +165,24 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       registrar->MaxHRRate                             = REGISTRAR_DEFAULT_MAX_HR_RATE;
       registrar->MaxEURate                             = REGISTRAR_DEFAULT_MAX_EU_RATE;
 
-      registrar->ActionLogFile         = actionLogFile;
-      registrar->ActionLogBZFile       = actionLogBZFile;
-      registrar->ActionLogLine         = 0;
-      registrar->ActionLogLastActivity = 0;
-      registrar->ActionLogStartTime    = getMicroTime();
-      registrar->StatsFile             = statsFile;
-      registrar->StatsBZFile           = statsBZFile;
-      registrar->StatsInterval         = statsInterval;
-      registrar->StatsStartTime        = 0;
-      registrar->StatsLine             = 0;
-      registrar->RegistrationCount     = 0;
-      registrar->ReregistrationCount   = 0;
-      registrar->DeregistrationCount   = 0;
-      registrar->HandleResolutionCount = 0;
-      registrar->FailureReportCount    = 0;
-      registrar->SynchronizationCount  = 0;
-      registrar->UpdateCount           = 0;
+      registrar->ActionLogFile          = actionLogFile;
+      registrar->ActionLogBZFile        = actionLogBZFile;
+      registrar->ActionLogLine          = 0;
+      registrar->ActionLogLastActivity  = 0;
+      registrar->ActionLogStartTime     = getMicroTime();
+      registrar->StatsFile              = statsFile;
+      registrar->StatsBZFile            = statsBZFile;
+      registrar->StatsInterval          = statsInterval;
+      registrar->StatsStartTime         = 0;
+      registrar->StatsLine              = 0;
+      registrar->RegistrationCount      = 0;
+      registrar->ReregistrationCount    = 0;
+      registrar->DeregistrationCount    = 0;
+      registrar->HandleResolutionCount  = 0;
+      registrar->FailureReportCount     = 0;
+      registrar->SynchronizationCount   = 0;
+      registrar->HandleUpdateCount      = 0;
+      registrar->EndpointKeepAliveCount = 0;
 
       registrar->NeedsWeightedStatValues = false;
       initWeightedStatValue(&registrar->PoolsCount, registrar->ActionLogStartTime);
@@ -461,7 +462,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    size_t                   ownedPoolElements;
 
    if(registrar->StatsLine == 0) {
-      header = "AbsTime RelTime Runtime UserTime SystemTime   Peers Pools PoolElements OwnedPoolElements   Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations Updates\n";
+      header = "AbsTime RelTime Runtime UserTime SystemTime   Peers Pools PoolElements OwnedPoolElements   Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations HandleUpdates EndpointKeepAlives\n";
       if(registrar->StatsBZFile) {
          BZ2_bzWrite(&bzerror, registrar->StatsBZFile, (char*)header, strlen(header));
       }
@@ -491,7 +492,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    ownedPoolElements = ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace);
 
    snprintf((char*)&str, sizeof(str),
-            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu   %llu %llu %llu %llu %llu %llu %llu\n",
+            "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu   %llu %llu %llu %llu %llu %llu %llu %llu\n",
             registrar->StatsLine++,
             now / 1000000.0,
             (now - registrar->StatsStartTime) / 1000000.0,
@@ -511,7 +512,8 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
             registrar->HandleResolutionCount,
             registrar->FailureReportCount,
             registrar->SynchronizationCount,
-            registrar->UpdateCount);
+            registrar->HandleUpdateCount,
+            registrar->EndpointKeepAliveCount);
    if(registrar->StatsBZFile) {
       BZ2_bzWrite(&bzerror, registrar->StatsBZFile, str, strlen(str));
    }
@@ -532,13 +534,14 @@ void registrarPrintScalarStatistics(struct Registrar* registrar,
    const unsigned long long now = getMicroTime();
 
    fputs("run 1 \"scenario\"\n", fh);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Registrations\"      %8llu\n", objectName, registrar->RegistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Reregistrations\"    %8llu\n", objectName, registrar->ReregistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Deregistrations\"    %8llu\n", objectName, registrar->DeregistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Resolutions\" %8llu\n", objectName, registrar->HandleResolutionCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Failure Reports\"    %8llu\n", objectName, registrar->FailureReportCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Synchronizations\"   %8llu\n", objectName, registrar->SynchronizationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Updates\"            %8llu\n", objectName, registrar->UpdateCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Registrations\"        %8llu\n", objectName, registrar->RegistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Reregistrations\"      %8llu\n", objectName, registrar->ReregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Deregistrations\"      %8llu\n", objectName, registrar->DeregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Resolutions\"   %8llu\n", objectName, registrar->HandleResolutionCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Failure Reports\"      %8llu\n", objectName, registrar->FailureReportCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Synchronizations\"     %8llu\n", objectName, registrar->SynchronizationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Updates\"       %8llu\n", objectName, registrar->HandleUpdateCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Endpoint Keep Alives\" %8llu\n", objectName, registrar->EndpointKeepAliveCount);
 
    fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pools\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolsCount, now));
    fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pool Elements\"       %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolElementsCount, now));

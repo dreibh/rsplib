@@ -150,7 +150,8 @@ struct Registrar
    unsigned long long                         HandleResolutionCount;
    unsigned long long                         FailureReportCount;
    unsigned long long                         SynchronizationCount;
-   unsigned long long                         UpdateCount;
+   unsigned long long                         HandleUpdateCount;
+   unsigned long long                         EndpointKeepAliveCount;
 
    bool                                       NeedsWeightedStatValues;
    struct WeightedStatValue                   PoolsCount;

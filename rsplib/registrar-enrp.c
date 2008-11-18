@@ -222,7 +222,7 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
       return;
    }
 
-   registrar->UpdateCount++;
+   registrar->HandleUpdateCount++;
 
    LOG_VERBOSE
    fputs("Got HandleUpdate for ", stdlog);

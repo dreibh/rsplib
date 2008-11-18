@@ -777,6 +777,8 @@ void registrarSendASAPEndpointKeepAlive(struct Registrar*                 regist
          sendabort(registrar->ASAPSocket, 0);
       }
 
+      registrar->EndpointKeepAliveCount++;
+
       rserpoolMessageDelete(message);
    }
 }
