@@ -34,9 +34,11 @@ static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElemen
                                     void*                             userData);
 static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
                                  void*                          userData);
+#ifdef ENABLE_REGISTRAR_STATISTICS
 static void statisticsCallback(struct Dispatcher* dispatcher,
                                struct Timer*      timer,
                                void*              userData);
+#endif
 #ifdef ENABLE_CSP
 static size_t registrarGetReportFunction(
                  void*                         userData,
@@ -58,14 +60,17 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
                                const bool                    asapSendAnnounces,
                                const union sockaddr_union*   asapAnnounceAddress,
                                const bool                    enrpAnnounceViaMulticast,
-                               const union sockaddr_union*   enrpMulticastAddress,
-                               FILE*                         actionLogFile,
+                               const union sockaddr_union*   enrpMulticastAddress
+#ifdef ENABLE_REGISTRAR_STATISTICS
+                             , FILE*                         actionLogFile,
                                BZFILE*                       actionLogBZFile,
                                FILE*                         statsFile,
                                BZFILE*                       statsBZFile,
-                               unsigned int                  statsInterval
+                               const unsigned int            statsInterval,
+                               const bool                    needsWeightedStatValues
+#endif
 #ifdef ENABLE_CSP
-                               , const unsigned int          cspReportInterval,
+                             , const unsigned int            cspReportInterval,
                                const union sockaddr_union*   cspReportAddress
 #endif
                                )
@@ -165,30 +170,31 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       registrar->MaxHRRate                             = REGISTRAR_DEFAULT_MAX_HR_RATE;
       registrar->MaxEURate                             = REGISTRAR_DEFAULT_MAX_EU_RATE;
 
-      registrar->ActionLogFile          = actionLogFile;
-      registrar->ActionLogBZFile        = actionLogBZFile;
-      registrar->ActionLogLine          = 0;
-      registrar->ActionLogLastActivity  = 0;
-      registrar->ActionLogStartTime     = getMicroTime();
-      registrar->StatsFile              = statsFile;
-      registrar->StatsBZFile            = statsBZFile;
-      registrar->StatsInterval          = statsInterval;
-      registrar->StatsStartTime         = 0;
-      registrar->StatsLine              = 0;
-      registrar->RegistrationCount      = 0;
-      registrar->ReregistrationCount    = 0;
-      registrar->DeregistrationCount    = 0;
-      registrar->HandleResolutionCount  = 0;
-      registrar->FailureReportCount     = 0;
-      registrar->SynchronizationCount   = 0;
-      registrar->HandleUpdateCount      = 0;
-      registrar->EndpointKeepAliveCount = 0;
-
-      registrar->NeedsWeightedStatValues = false;
-      initWeightedStatValue(&registrar->PoolsCount, registrar->ActionLogStartTime);
-      initWeightedStatValue(&registrar->PoolElementsCount, registrar->ActionLogStartTime);
-      initWeightedStatValue(&registrar->OwnedPoolElementsCount, registrar->ActionLogStartTime);
-      initWeightedStatValue(&registrar->PeersCount, registrar->ActionLogStartTime);
+#ifdef ENABLE_REGISTRAR_STATISTICS
+      registrar->ActionLogFile                         = actionLogFile;
+      registrar->ActionLogBZFile                       = actionLogBZFile;
+      registrar->StatsFile                             = statsFile;
+      registrar->StatsBZFile                           = statsBZFile;
+      registrar->Stats.StatsInterval                   = statsInterval;
+      registrar->Stats.ActionLogLine                   = 0;
+      registrar->Stats.ActionLogLastActivity           = 0;
+      registrar->Stats.ActionLogStartTime              = getMicroTime();
+      registrar->Stats.StatsStartTime                  = 0;
+      registrar->Stats.StatsLine                       = 0;
+      registrar->Stats.RegistrationCount               = 0;
+      registrar->Stats.ReregistrationCount             = 0;
+      registrar->Stats.DeregistrationCount             = 0;
+      registrar->Stats.HandleResolutionCount           = 0;
+      registrar->Stats.FailureReportCount              = 0;
+      registrar->Stats.SynchronizationCount            = 0;
+      registrar->Stats.HandleUpdateCount               = 0;
+      registrar->Stats.EndpointKeepAliveCount          = 0;
+      registrar->Stats.NeedsWeightedStatValues         = needsWeightedStatValues;
+      initWeightedStatValue(&registrar->Stats.PoolsCount, registrar->Stats.ActionLogStartTime);
+      initWeightedStatValue(&registrar->Stats.PoolElementsCount, registrar->Stats.ActionLogStartTime);
+      initWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, registrar->Stats.ActionLogStartTime);
+      initWeightedStatValue(&registrar->Stats.PeersCount, registrar->Stats.ActionLogStartTime);
+#endif
 
       autoCloseTimeout = (registrar->AutoCloseTimeout / 1000000);
       if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
@@ -283,7 +289,8 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       }
 #endif
 
-      if(registrar->StatsInterval > 0) {
+#ifdef ENABLE_REGISTRAR_STATISTICS
+      if(registrar->Stats.StatsInterval > 0) {
          timerNew(&registrar->StatsTimer,
                   &registrar->StateMachine,
                   statisticsCallback,
@@ -291,6 +298,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
          timerStart(&registrar->StatsTimer, 0);
       }
       registrarBeginActionLog(registrar);
+#endif
    }
 
    return(registrar);
@@ -301,9 +309,11 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
 void registrarDelete(struct Registrar* registrar)
 {
    if(registrar) {
+#ifdef ENABLE_REGISTRAR_STATISTICS
       if(registrar->StatsFile) {
          timerDelete(&registrar->StatsTimer);
       }
+#endif
       fdCallbackDelete(&registrar->ENRPUnicastSocketFDCallback);
       fdCallbackDelete(&registrar->ASAPSocketFDCallback);
       ST_CLASS(peerListManagementDelete)(&registrar->Peers);
@@ -367,6 +377,7 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 }
 
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
 #ifdef LINUX
 /* ###### Get system uptime (in microseconds) ############################ */
 static unsigned long long getUptime()
@@ -461,7 +472,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    size_t                   poolElements;
    size_t                   ownedPoolElements;
 
-   if(registrar->StatsLine == 0) {
+   if(registrar->Stats.StatsLine == 0) {
       header = "AbsTime RelTime Runtime UserTime SystemTime   Peers Pools PoolElements OwnedPoolElements   Registrations Reregistrations Deregistrations HandleResolutions FailureReports Synchronizations HandleUpdates EndpointKeepAlives\n";
       if(registrar->StatsBZFile) {
          BZ2_bzWrite(&bzerror, registrar->StatsBZFile, (char*)header, strlen(header));
@@ -469,8 +480,8 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
       else {
          fputs(header, registrar->StatsFile);
       }
-      registrar->StatsLine      = 1;
-      registrar->StatsStartTime = now;
+      registrar->Stats.StatsLine      = 1;
+      registrar->Stats.StatsStartTime = now;
    }
 
 #ifdef LINUX
@@ -493,9 +504,9 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
 
    snprintf((char*)&str, sizeof(str),
             "%06llu %1.6f %1.6f   %1.6f %1.6f %1.6f   %llu %llu %llu %llu   %llu %llu %llu %llu %llu %llu %llu %llu\n",
-            registrar->StatsLine++,
+            registrar->Stats.StatsLine++,
             now / 1000000.0,
-            (now - registrar->StatsStartTime) / 1000000.0,
+            (now - registrar->Stats.StatsStartTime) / 1000000.0,
 
             runtime / 1000000.0,
             userTime / 1000000.0,
@@ -506,14 +517,14 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
             (unsigned long long)poolElements,
             (unsigned long long)ownedPoolElements,
 
-            registrar->RegistrationCount,
-            registrar->ReregistrationCount,
-            registrar->DeregistrationCount,
-            registrar->HandleResolutionCount,
-            registrar->FailureReportCount,
-            registrar->SynchronizationCount,
-            registrar->HandleUpdateCount,
-            registrar->EndpointKeepAliveCount);
+            registrar->Stats.RegistrationCount,
+            registrar->Stats.ReregistrationCount,
+            registrar->Stats.DeregistrationCount,
+            registrar->Stats.HandleResolutionCount,
+            registrar->Stats.FailureReportCount,
+            registrar->Stats.SynchronizationCount,
+            registrar->Stats.HandleUpdateCount,
+            registrar->Stats.EndpointKeepAliveCount);
    if(registrar->StatsBZFile) {
       BZ2_bzWrite(&bzerror, registrar->StatsBZFile, str, strlen(str));
    }
@@ -522,7 +533,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
       fflush(registrar->StatsFile);
    }
 
-   timerStart(timer, getMicroTime() + (1000ULL * registrar->StatsInterval));
+   timerStart(timer, getMicroTime() + (1000ULL * registrar->Stats.StatsInterval));
 }
 
 
@@ -534,21 +545,95 @@ void registrarPrintScalarStatistics(struct Registrar* registrar,
    const unsigned long long now = getMicroTime();
 
    fputs("run 1 \"scenario\"\n", fh);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Registrations\"        %8llu\n", objectName, registrar->RegistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Reregistrations\"      %8llu\n", objectName, registrar->ReregistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Deregistrations\"      %8llu\n", objectName, registrar->DeregistrationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Resolutions\"   %8llu\n", objectName, registrar->HandleResolutionCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Failure Reports\"      %8llu\n", objectName, registrar->FailureReportCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Synchronizations\"     %8llu\n", objectName, registrar->SynchronizationCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Updates\"       %8llu\n", objectName, registrar->HandleUpdateCount);
-   fprintf(fh, "scalar \"%s\" \"Registrar Total Endpoint Keep Alives\" %8llu\n", objectName, registrar->EndpointKeepAliveCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Registrations\"        %8llu\n", objectName, registrar->Stats.RegistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Reregistrations\"      %8llu\n", objectName, registrar->Stats.ReregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Deregistrations\"      %8llu\n", objectName, registrar->Stats.DeregistrationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Resolutions\"   %8llu\n", objectName, registrar->Stats.HandleResolutionCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Failure Reports\"      %8llu\n", objectName, registrar->Stats.FailureReportCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Synchronizations\"     %8llu\n", objectName, registrar->Stats.SynchronizationCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Handle Updates\"       %8llu\n", objectName, registrar->Stats.HandleUpdateCount);
+   fprintf(fh, "scalar \"%s\" \"Registrar Total Endpoint Keep Alives\" %8llu\n", objectName, registrar->Stats.EndpointKeepAliveCount);
 
-   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pools\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolsCount, now));
-   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pool Elements\"       %1.6f\n", objectName, averageWeightedStatValue(&registrar->PoolElementsCount, now));
-   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Owned Pool Elements\" %1.6f\n", objectName, averageWeightedStatValue(&registrar->OwnedPoolElementsCount, now));
-   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Peers\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->PeersCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pools\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->Stats.PoolsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Pool Elements\"       %1.6f\n", objectName, averageWeightedStatValue(&registrar->Stats.PoolElementsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Owned Pool Elements\" %1.6f\n", objectName, averageWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, now));
+   fprintf(fh, "scalar \"%s\" \"Registrar Average Number Of Peers\"               %1.6f\n", objectName, averageWeightedStatValue(&registrar->Stats.PeersCount, now));
 }
 
+
+/* ###### Write action log header line ################################### */
+void registrarBeginActionLog(struct Registrar* registrar)
+{
+   const char* header;
+   int         bzerror;
+
+   if(registrar->ActionLogFile) {
+      header = "AbsTime RelTime   Direction Protocol Action Reason   Flags Counter Time   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n";
+      if(registrar->ActionLogBZFile) {
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, (char*)header, strlen(header));
+      }
+      else {
+         fputs(header, registrar->ActionLogFile);
+         fflush(registrar->ActionLogFile);
+      }
+   }
+}
+
+
+/* ###### Write action log entry ######################################### */
+void registrarWriteActionLog(struct Registrar*         registrar,
+                             const char*               direction,
+                             const char*               protocol,
+                             const char*               action,
+                             const char*               reason,
+                             const uint32_t            flags,
+                             const unsigned long long  counter,
+                             const unsigned long long  timeValue,
+                             const struct PoolHandle*  poolHandle,
+                             PoolElementIdentifierType poolElementID,
+                             RegistrarIdentifierType   senderID,
+                             RegistrarIdentifierType   receiverID,
+                             RegistrarIdentifierType   targetID,
+                             unsigned int              errorCode)
+{
+   char str1[1024];
+   char str2[1024];
+   char str3[256];
+   int  bzerror;
+
+   if(registrar->ActionLogFile) {
+      registrar->Stats.ActionLogLastActivity = getMicroTime();
+      registrar->Stats.ActionLogLine++;
+      snprintf((char*)&str1, sizeof(str1),
+               "%06llu   %1.6f %1.6f   \"%s\" \"%s\" \"%s\" \"%s\"   0x%x %llu %1.6f   \"",
+               registrar->Stats.ActionLogLine,
+               registrar->Stats.ActionLogLastActivity / 1000000.0,
+               (registrar->Stats.ActionLogLastActivity - registrar->Stats.ActionLogStartTime) / 1000000.0,
+               direction, protocol, action, reason, flags, counter, timeValue / 1000000.0);
+      if(poolHandle) {
+         poolHandleGetDescription(poolHandle, (char*)&str2, sizeof(str2));
+      }
+      else {
+         str2[0] = 0x00;
+      }
+      snprintf((char*)&str3, sizeof(str3),
+               "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
+               poolElementID, senderID, receiverID, targetID, errorCode);
+
+      if(registrar->ActionLogBZFile) {
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str1, strlen(str1));
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str2, strlen(str2));
+         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str3, strlen(str3));
+      }
+      else {
+         fputs(str1, registrar->ActionLogFile);
+         fputs(str2, registrar->ActionLogFile);
+         fputs(str3, registrar->ActionLogFile);
+         fflush(registrar->ActionLogFile);
+      }
+   }
+}
+#endif
 
 
 #ifdef ENABLE_CSP
@@ -713,79 +798,5 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
    }
    else {
       *distance = 0;
-   }
-}
-
-
-/* ###### Write action log header line ################################### */
-void registrarBeginActionLog(struct Registrar* registrar)
-{
-   const char* header;
-   int         bzerror;
-
-   if(registrar->ActionLogFile) {
-      header = "AbsTime RelTime   Direction Protocol Action Reason   Flags Counter Time   PoolHandle PoolElementID   SenderID ReceiverID TargetID   ErrorCode\n";
-      if(registrar->ActionLogBZFile) {
-         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, (char*)header, strlen(header));
-      }
-      else {
-         fputs(header, registrar->ActionLogFile);
-         fflush(registrar->ActionLogFile);
-      }
-   }
-}
-
-
-/* ###### Write action log entry ######################################### */
-void registrarWriteActionLog(struct Registrar*         registrar,
-                             const char*               direction,
-                             const char*               protocol,
-                             const char*               action,
-                             const char*               reason,
-                             const uint32_t            flags,
-                             const unsigned long long  counter,
-                             const unsigned long long  timeValue,
-                             const struct PoolHandle*  poolHandle,
-                             PoolElementIdentifierType poolElementID,
-                             RegistrarIdentifierType   senderID,
-                             RegistrarIdentifierType   receiverID,
-                             RegistrarIdentifierType   targetID,
-                             unsigned int              errorCode)
-{
-   char str1[1024];
-   char str2[1024];
-   char str3[256];
-   int  bzerror;
-
-   if(registrar->ActionLogFile) {
-      registrar->ActionLogLastActivity = getMicroTime();
-      registrar->ActionLogLine++;
-      snprintf((char*)&str1, sizeof(str1),
-               "%06llu   %1.6f %1.6f   \"%s\" \"%s\" \"%s\" \"%s\"   0x%x %llu %1.6f   \"",
-               registrar->ActionLogLine,
-               registrar->ActionLogLastActivity / 1000000.0,
-               (registrar->ActionLogLastActivity - registrar->ActionLogStartTime) / 1000000.0,
-               direction, protocol, action, reason, flags, counter, timeValue / 1000000.0);
-      if(poolHandle) {
-         poolHandleGetDescription(poolHandle, (char*)&str2, sizeof(str2));
-      }
-      else {
-         str2[0] = 0x00;
-      }
-      snprintf((char*)&str3, sizeof(str3),
-               "\" 0x%x   0x%x 0x%x 0x%x   %x\n",
-               poolElementID, senderID, receiverID, targetID, errorCode);
-
-      if(registrar->ActionLogBZFile) {
-         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str1, strlen(str1));
-         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str2, strlen(str2));
-         BZ2_bzWrite(&bzerror, registrar->ActionLogBZFile, str3, strlen(str3));
-      }
-      else {
-         fputs(str1, registrar->ActionLogFile);
-         fputs(str2, registrar->ActionLogFile);
-         fputs(str3, registrar->ActionLogFile);
-         fflush(registrar->ActionLogFile);
-      }
    }
 }

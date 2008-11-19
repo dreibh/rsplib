@@ -56,8 +56,10 @@ void registrarHandleENRPInitTakeover(struct Registrar*       registrar,
            message->SenderID,
            message->RegistrarIdentifier);
    LOG_END
+#ifdef ENABLE_REGISTRAR_STATISTICS
    registrarWriteActionLog(registrar, "Recv", "ENRP", "InitTakeover", "", 0, 0, 0,
                            NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
    /* ====== We are the takeover target -> try to stop it by Peer Presence */
    if(message->RegistrarIdentifier == registrar->ServerID) {
@@ -158,8 +160,10 @@ void registrarSendENRPInitTakeoverToAllPeers(struct Registrar*             regis
       message->ReceiverID   = 0;
       message->RegistrarIdentifier = targetID;
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
       registrarWriteActionLog(registrar, "Send", "ENRP", "InitTakeover", "", 0, 0, 0,
                               NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
       peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrar->Peers);
       while(peerListNode != NULL) {
@@ -213,8 +217,10 @@ void registrarHandleENRPInitTakeoverAck(struct Registrar*       registrar,
                                             message->RegistrarIdentifier,
                                             message->SenderID);
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
       registrarWriteActionLog(registrar, "Recv", "ENRP", "InitTakeoverAck", "", 0, acksToGo, 0,
                               NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
       if(acksToGo > 0) {
          LOG_ACTION
@@ -271,8 +277,10 @@ void registrarSendENRPInitTakeoverAck(struct Registrar*             registrar,
               message->RegistrarIdentifier,
               message->ReceiverID);
       LOG_END
+#ifdef ENABLE_REGISTRAR_STATISTICS
       registrarWriteActionLog(registrar, "Send", "ENRP", "InitTakeoverAck", "", 0, 0, 0,
                               NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, 0, 0, 0, message) == false) {
@@ -374,8 +382,10 @@ void registrarHandleENRPTakeoverServer(struct Registrar*       registrar,
            message->RegistrarIdentifier);
    LOG_END
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
    registrarWriteActionLog(registrar, "Recv", "ENRP", "TakeoverServer", "", 0, 0, 0,
                            NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
 
    /* ====== Update PEs' home PR identifier ============================== */
@@ -427,8 +437,10 @@ static void registrarSendENRPTakeoverServer(struct Registrar*             regist
       message->ReceiverID          = receiverID;
       message->RegistrarIdentifier = targetID;
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
       registrarWriteActionLog(registrar, "Send", "ENRP", "TakeoverServer", "", 0, 0, 0,
                               NULL, 0, message->SenderID, message->ReceiverID, message->RegistrarIdentifier, 0);
+#endif
 
       if(rserpoolMessageSend(IPPROTO_SCTP,
                              sd, assocID, msgSendFlags, 0, 0, message) == false) {

@@ -79,7 +79,9 @@ void registrarHandleMessage(struct Registrar*       registrar,
                             struct RSerPoolMessage* message,
                             int                     sd)
 {
+#ifdef ENABLE_REGISTRAR_STATISTICS
    unsigned long long now;
+#endif
 
    if(sd == registrar->ENRPMulticastInputSocket) {
       if(message->Type == EHT_PRESENCE) {
@@ -154,13 +156,15 @@ void registrarHandleMessage(struct Registrar*       registrar,
       }
    }
 
-   if(registrar->NeedsWeightedStatValues) {
+#ifdef ENABLE_REGISTRAR_STATISTICS
+   if(registrar->Stats.NeedsWeightedStatValues) {
       now = getMicroTime();
-      updateWeightedStatValue(&registrar->PoolsCount, now, ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace));
-      updateWeightedStatValue(&registrar->PoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace));
-      updateWeightedStatValue(&registrar->OwnedPoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace));
-      updateWeightedStatValue(&registrar->PeersCount, now, ST_CLASS(peerListManagementGetPeers)(&registrar->Peers));
+      updateWeightedStatValue(&registrar->Stats.PoolsCount, now, ST_CLASS(poolHandlespaceManagementGetPools)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->Stats.PoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetPoolElements)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, now, ST_CLASS(poolHandlespaceManagementGetOwnedPoolElements)(&registrar->Handlespace));
+      updateWeightedStatValue(&registrar->Stats.PeersCount, now, ST_CLASS(peerListManagementGetPeers)(&registrar->Peers));
    }
+#endif
 }
 
 

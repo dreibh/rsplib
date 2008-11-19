@@ -29,6 +29,11 @@
 
 #include "registrar.h"
 
+/*
+#define FAST_BREAK
+*/
+#define REGISTRAR_FAILURE_TEST
+
 
 /* ###### Add peer ####################################################### */
 static void addPeer(struct Registrar* registrar, char* arg)
@@ -250,10 +255,20 @@ static void getSocketPair(const char*                   sctpAddressParameter,
 }
 
 
-
 /* ###### Main program ################################################### */
+#ifdef REGISTRAR_FAILURE_TEST
+int main2(int argc, char** argv,
+          const unsigned long long          uptime,
+          const struct RegistrarStatistics* inStats,
+          struct RegistrarStatistics*       outStats)
+{
+   const unsigned long long      endTimeStamp                  = (uptime > 0) ? (getMicroTime() + uptime) : 0;
+   unsigned long long            now;
+#else
 int main(int argc, char** argv)
 {
+#endif
+
    struct Registrar*             registrar;
    uint32_t                      serverID                      = 0;
    bool                          quiet                         = false;
@@ -281,26 +296,10 @@ int main(int argc, char** argv)
    int                           enrpMulticastInputSocket      = -1;
    bool                          enrpAnnounceViaMulticast      = false;
 
-   const char*                   objectName = "registrar";
-   const char*                   scalarName = NULL;
-   FILE*                         scalarFH   = NULL;
-
    bool                          useIPv6                       = checkIPv6();
    const char*                   daemonPIDFile                 = NULL;
    FILE*                         fh;
    pid_t                         childProcess;
-   int                           bzerror;
-
-#ifdef ENABLE_CSP
-   union sockaddr_union          cspReportAddress;
-   unsigned long long            cspReportInterval = 0;
-#endif
-
-   FILE*                         actionLogFile   = NULL;
-   BZFILE*                       actionLogBZFile = NULL;
-   FILE*                         statsFile       = NULL;
-   BZFILE*                       statsBZFile     = NULL;
-   int                           statsInterval   = -1;
 
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];
@@ -308,6 +307,23 @@ int main(int argc, char** argv)
    int                           timeout;
    int                           result;
    int                           i;
+
+#ifdef ENABLE_CSP
+   union sockaddr_union          cspReportAddress;
+   unsigned long long            cspReportInterval = 0;
+#endif
+
+#ifdef ENABLE_REGISTRAR_STATISTICS
+   FILE*                         actionLogFile   = NULL;
+   BZFILE*                       actionLogBZFile = NULL;
+   FILE*                         statsFile       = NULL;
+   BZFILE*                       statsBZFile     = NULL;
+   int                           statsInterval   = -1;
+   int                           bzerror;
+   const char*                   objectName = "registrar";
+   const char*                   scalarName = NULL;
+   FILE*                         scalarFH   = NULL;
+#endif
 
 
    /* ====== Get arguments =============================================== */
@@ -351,6 +367,10 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-maxhresitems=", 14))) ||
                (!(strncmp(argv[i], "-maxhrrate=", 11))) ||
                (!(strncmp(argv[i], "-maxeurate=", 11))) ||
+#ifdef REGISTRAR_FAILURE_TEST
+               (!(strncmp(argv[i], "-uptime=", 8))) ||
+               (!(strncmp(argv[i], "-downtime=", 10))) ||
+#endif
                (!(strncmp(argv[i], "-maxelementsperhtrequest=", 25))) ) {
          /* to be handled later */
       }
@@ -394,6 +414,11 @@ int main(int argc, char** argv)
             enrpAnnounceViaMulticast      = true;
          }
       }
+      else if(!(strncmp(argv[i], "-log",4))) {
+         if(initLogging(argv[i]) == false) {
+            exit(1);
+         }
+      }
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
       }
@@ -403,6 +428,7 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
          daemonPIDFile = (const char*)&argv[i][15];
       }
+#ifdef ENABLE_REGISTRAR_STATISTICS
       else if(!(strncmp(argv[i], "-actionlogfile=", 15))) {
          if(actionLogBZFile) {
             BZ2_bzWriteClose(&bzerror, actionLogBZFile, 0, NULL, NULL);
@@ -456,11 +482,7 @@ int main(int argc, char** argv)
             statsInterval = 36000000;
          }
       }
-      else if(!(strncmp(argv[i], "-log",4))) {
-         if(initLogging(argv[i]) == false) {
-            exit(1);
-         }
-      }
+#endif
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-cspinterval=", 13))) {
          cspReportInterval = 1000ULL * atol((char*)&argv[i][13]);
@@ -500,7 +522,9 @@ int main(int argc, char** argv)
             "{-minaddressscope=loopback|sitelocal|global} "
             "{-peerheartbeatcycle=milliseconds} {-peermaxtimelastheard=milliseconds} {-peermaxtimenoresponse=milliseconds} "
             "{-supporttakeoversuggestion} {-takeoverexpiryinterval=milliseconds} {-mentorhuntinterval=milliseconds} "
+#ifdef ENABLE_REGISTRAR_STATISTICS
             "{-actionlogfile=file} {-statsfile=file} {-statsinterval=millisecs} {-scalar=file} {-object=ID} "
+#endif
             "{-daemonpidfile=file}"
             "\n",argv[0]);
          exit(1);
@@ -550,8 +574,10 @@ int main(int argc, char** argv)
                             enrpMulticastInputSocket,
                             enrpMulticastOutputSocket,
                             asapSendAnnounces, (const union sockaddr_union*)&asapAnnounceAddress->AddressArray[0],
-                            enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0],
-                            actionLogFile, actionLogBZFile, statsFile, statsBZFile, statsInterval
+                            enrpAnnounceViaMulticast, (const union sockaddr_union*)&enrpMulticastAddress->AddressArray[0]
+#ifdef ENABLE_REGISTRAR_STATISTICS
+                            , actionLogFile, actionLogBZFile, statsFile, statsBZFile, statsInterval, (scalarName != NULL)
+#endif
 #ifdef ENABLE_CSP
                             , cspReportInterval, &cspReportAddress
 #endif
@@ -560,9 +586,11 @@ int main(int argc, char** argv)
       fprintf(stderr, "ERROR: Unable to initialize Registrar object!\n");
       exit(1);
    }
-   if(scalarName) {
-      registrar->NeedsWeightedStatValues = true;   /* Compute only if necessary! */
+#ifdef ENABLE_REGISTRAR_STATISTICS
+   if(inStats) {
+      registrar->Stats = *inStats;
    }
+#endif
    for(i = 1;i < argc;i++) {
       if(!(strncmp(argv[i], "-peer=",6))) {
          addPeer(registrar, (char*)&argv[i][6]);
@@ -738,14 +766,14 @@ int main(int argc, char** argv)
          puts("(none)");
       }
       printf("ASAP/ENRP Announce TTL: %d\n", registrar->AnnounceTTL);
-   #ifdef ENABLE_CSP
+#ifdef ENABLE_CSP
       if(cspReportInterval > 0) {
          printf("CSP Report Address:     ");
          fputaddress((struct sockaddr*)&cspReportAddress, true, stdout);
          puts("");
          printf("CSP Report Interval:    %lldms\n", cspReportInterval / 1000);
       }
-   #endif
+#endif
       printf("Auto-Close Timeout:     %llus\n", registrar->AutoCloseTimeout / 1000000);
       printf("Min Address Scope:      ");
       if(registrar->MinEndpointAddressScope <= AS_LOOPBACK) {
@@ -757,6 +785,7 @@ int main(int argc, char** argv)
       else {
          puts("global");
       }
+#ifdef ENABLE_REGISTRAR_STATISTICS
       if(statsFile) {
          printf("Statistics Interval:    %ums\n", statsInterval);
       }
@@ -767,6 +796,7 @@ int main(int argc, char** argv)
          printf("Scalar File:            %s\n", scalarName);
          printf("Object ID:              %s\n", objectName);
       }
+#endif
       printf("Daemon Mode:            %s\n", (daemonPIDFile == NULL) ? "off" : daemonPIDFile);
 
       puts("\nASAP Parameters:");
@@ -831,7 +861,7 @@ int main(int argc, char** argv)
       dispatcherGetPollParameters(&registrar->StateMachine,
                                   (struct pollfd*)&ufds, &nfds, &timeout,
                                   &pollTimeStamp);
-      if((timeout < 0) || (timeout > 250)) {
+      if((timeout < 0) || (timeout > 500)) {
          timeout = 500;
       }
       result = ext_poll((struct pollfd*)&ufds, nfds, timeout);
@@ -841,12 +871,29 @@ int main(int argc, char** argv)
          }
          break;
       }
+#ifdef REGISTRAR_FAILURE_TEST
+      if( (endTimeStamp > 0) && (endTimeStamp <= getMicroTime()) ) {
+         puts("Shutdown by timer!");
+         break;
+      }
+#endif
       dispatcherHandlePollResult(&registrar->StateMachine, result,
                                  (struct pollfd*)&ufds, nfds, timeout,
                                  pollTimeStamp);
    }
 
    /* ====== Clean up ==================================================== */
+#ifdef ENABLE_REGISTRAR_STATISTICS
+   if(outStats) {
+      if(registrar->Stats.NeedsWeightedStatValues) {
+         now = getMicroTime();
+         updateWeightedStatValue(&registrar->Stats.PoolsCount, now, 0);
+         updateWeightedStatValue(&registrar->Stats.PoolElementsCount, now, 0);
+         updateWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, now, 0);
+         updateWeightedStatValue(&registrar->Stats.PeersCount, now, 0);
+      }
+      *outStats = registrar->Stats;
+   }
    if(scalarName) {
        scalarFH = fopen(scalarName, "w");
        if(scalarFH) {
@@ -857,8 +904,6 @@ int main(int argc, char** argv)
           fprintf(stderr, "ERROR: Unable to create scalar file \"%s\"!\n", scalarName);
        }
    }
-   registrarDelete(registrar);
-   finishLogging();
    if(statsBZFile) {
       BZ2_bzWriteClose(&bzerror, statsBZFile, 0, NULL, NULL);
       statsBZFile = NULL;
@@ -873,8 +918,70 @@ int main(int argc, char** argv)
    if(actionLogFile) {
       fclose(actionLogFile);
    }
+#endif
+   registrarDelete(registrar);
+   finishLogging();
    if(!quiet) {
       puts("\nTerminated!");
    }
    return(0);
 }
+
+
+#ifdef REGISTRAR_FAILURE_TEST
+/* This is a new main() function which provides the functionality of starting
+   and stopping the PR for failure test purposes. It actually calls the real
+   main function "main2" ...
+*/
+int main(int argc, char** argv)
+{
+   struct RegistrarStatistics stats;
+   double                     uptime   = 0.0;
+   double                     downtime = 0.0;
+   double                     t;
+   int i;
+   for(i = 1;i < argc;i++) {
+      if(!(strncmp(argv[i], "-uptime=", 8))) {
+         uptime = atof((const char*)&argv[i][8]);
+      }
+      else if(!(strncmp(argv[i], "-downtime=", 10))) {
+         downtime = atof((const char*)&argv[i][10]);
+      }
+   }
+   if(uptime < 0.0) {
+      uptime = 0.0;
+   }
+   if(downtime < 0.001) {
+      downtime = 0.001;
+   }
+
+   if(uptime < 0.000001) {
+      /* Only one run */
+      main2(argc, argv, 0, NULL, NULL);
+   }
+   else {
+      printf("Uptime   = %1.3f [s]\n", uptime);
+      printf("Downtime = %1.3f [s]\n", uptime);
+      i = 1;
+      for(;;) {
+         t = randomExpDouble(uptime);
+         printf("\nRun #%d: Running registrar for %1.3fs ...\n\n", i, t);
+         main2(argc, argv,
+               (unsigned long long)rint(t * 1000000.0),
+               ((i == 1) ? NULL : &stats), &stats);
+
+         if(breakDetected()) {
+            break;
+         }
+#ifndef FAST_BREAK
+         uninstallBreakDetector();
+#endif
+
+         t = randomExpDouble(downtime);
+         printf("\nWaiting for %1.3fs ...\n", t);
+         usleep((unsigned long long)rint(t * 1000000.0));
+         i++;
+      }
+   }
+}
+#endif

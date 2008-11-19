@@ -49,7 +49,10 @@
 #include <ext_socket.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#define ENABLE_REGISTRAR_STATISTICS
+#ifdef ENABLE_REGISTRAR_STATISTICS
 #include <bzlib.h>
+#endif
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
@@ -79,6 +82,34 @@
 #define REGISTRAR_DEFAULT_MAX_EU_RATE                                    -1.0   /* unlimited */
 
 
+#ifdef ENABLE_REGISTRAR_STATISTICS
+struct RegistrarStatistics
+{
+   unsigned long long                         StatsLine;
+   unsigned long long                         StatsStartTime;
+   unsigned long long                         ActionLogLine;
+   unsigned long long                         ActionLogLastActivity;
+   unsigned long long                         ActionLogStartTime;
+   int                                        StatsInterval;
+
+   unsigned long long                         RegistrationCount;
+   unsigned long long                         ReregistrationCount;
+   unsigned long long                         DeregistrationCount;
+   unsigned long long                         HandleResolutionCount;
+   unsigned long long                         FailureReportCount;
+   unsigned long long                         SynchronizationCount;
+   unsigned long long                         HandleUpdateCount;
+   unsigned long long                         EndpointKeepAliveCount;
+
+   bool                                       NeedsWeightedStatValues;
+   struct WeightedStatValue                   PoolsCount;
+   struct WeightedStatValue                   PoolElementsCount;
+   struct WeightedStatValue                   OwnedPoolElementsCount;
+   struct WeightedStatValue                   PeersCount;
+};
+#endif
+
+
 struct Registrar
 {
    RegistrarIdentifierType                    ServerID;
@@ -88,7 +119,7 @@ struct Registrar
    struct ST_CLASS(PeerListManagement)        Peers;
    struct Timer                               HandlespaceActionTimer;
    struct Timer                               PeerActionTimer;
-
+   struct ST_CLASS(PoolUserList)              PoolUsers;
    struct MessageBuffer*                      UDPMessageBuffer;
 
    int                                        ASAPAnnounceSocket;
@@ -132,42 +163,22 @@ struct Registrar
    unsigned long long                         PeerMaxTimeNoResponse;
    unsigned long long                         MentorDiscoveryTimeout;
    unsigned long long                         TakeoverExpiryInterval;
-
-   FILE*                                      ActionLogFile;
-   BZFILE*                                    ActionLogBZFile;
-   unsigned long long                         ActionLogLine;
-   unsigned long long                         ActionLogLastActivity;
-   unsigned long long                         ActionLogStartTime;
-   FILE*                                      StatsFile;
-   BZFILE*                                    StatsBZFile;
-   struct Timer                               StatsTimer;
-   unsigned long long                         StatsLine;
-   unsigned long long                         StatsStartTime;
-   int                                        StatsInterval;
-   unsigned long long                         RegistrationCount;
-   unsigned long long                         ReregistrationCount;
-   unsigned long long                         DeregistrationCount;
-   unsigned long long                         HandleResolutionCount;
-   unsigned long long                         FailureReportCount;
-   unsigned long long                         SynchronizationCount;
-   unsigned long long                         HandleUpdateCount;
-   unsigned long long                         EndpointKeepAliveCount;
-
-   bool                                       NeedsWeightedStatValues;
-   struct WeightedStatValue                   PoolsCount;
-   struct WeightedStatValue                   PoolElementsCount;
-   struct WeightedStatValue                   OwnedPoolElementsCount;
-   struct WeightedStatValue                   PeersCount;
-
    double                                     MaxHRRate;
    double                                     MaxEURate;
-
-   struct ST_CLASS(PoolUserList)              PoolUsers;
 
 #ifdef ENABLE_CSP
    struct CSPReporter                         CSPReporter;
    unsigned int                               CSPReportInterval;
    union sockaddr_union                       CSPReportAddress;
+#endif
+
+#ifdef ENABLE_REGISTRAR_STATISTICS
+   struct RegistrarStatistics                 Stats;
+   FILE*                                      ActionLogFile;
+   BZFILE*                                    ActionLogBZFile;
+   FILE*                                      StatsFile;
+   BZFILE*                                    StatsBZFile;
+   struct Timer                               StatsTimer;
 #endif
 };
 
@@ -182,14 +193,17 @@ struct Registrar* registrarNew(const RegistrarIdentifierType  serverID,
                                const bool                     asapSendAnnounces,
                                const union sockaddr_union*    asapAnnounceAddress,
                                const bool                     enrpAnnounceViaMulticast,
-                               const union sockaddr_union*    enrpMulticastAddress,
-                               FILE*                          actionLogFile,
+                               const union sockaddr_union*    enrpMulticastAddress
+#ifdef ENABLE_REGISTRAR_STATISTICS
+                             , FILE*                          actionLogFile,
                                BZFILE*                        actionLogBZFile,
                                FILE*                          statsFile,
                                BZFILE*                        statsBZFile,
-                               unsigned int                   statsInterval
+                               const unsigned int             statsInterval,
+                               const bool                     needsWeightedStatValues
+#endif
 #ifdef ENABLE_CSP
-                               , const unsigned int           cspReportInterval,
+                             , const unsigned int             cspReportInterval,
                                const union sockaddr_union*    cspReportAddress
 #endif
                                );
@@ -198,10 +212,6 @@ unsigned int registrarAddStaticPeer(
                 struct Registrar*                   registrar,
                 const RegistrarIdentifierType       identifier,
                 const struct TransportAddressBlock* transportAddressBlock);
-
-void registrarPrintScalarStatistics(struct Registrar* registrar,
-                                    FILE*             fh,
-                                    const char*       objectName);
 
 unsigned long long registrarRandomizeCycle(const unsigned long long interval);
 unsigned int registrarRoundDistance(const unsigned int distance,
@@ -215,7 +225,11 @@ void registrarUpdateDistance(struct Registrar*                       registrar,
                              unsigned int*                           distance);
 
 
-/* ###### Action Log ##################################################### */
+/* ###### Statistics ##################################################### */
+#ifdef ENABLE_REGISTRAR_STATISTICS
+void registrarPrintScalarStatistics(struct Registrar* registrar,
+                                    FILE*             fh,
+                                    const char*       objectName);
 void registrarBeginActionLog(struct Registrar* registrar);
 void registrarWriteActionLog(struct Registrar*         registrar,
                              const char*               direction,
@@ -231,6 +245,7 @@ void registrarWriteActionLog(struct Registrar*         registrar,
                              RegistrarIdentifierType   receiverID,
                              RegistrarIdentifierType   targetID,
                              unsigned int              errorCode);
+#endif
 
 
 /* ###### Core ########################################################### */
