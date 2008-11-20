@@ -105,7 +105,7 @@ plotVariables <- list(
            "Attack Interval{A}[s]",
            NA, "black"),
    list("AttackFrequency",
-           "Attack Frequency{A}[1/s]",
+           "Attack Frequency{F}[1/s]",
            "1.0 / data1$AttackInterval", "black"),
    list("AttackReportUnreachableProbability",
            "Unreachable Probability{u}[%]",

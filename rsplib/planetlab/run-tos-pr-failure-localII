@@ -1,8 +1,8 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        attack-handleResolution-countermeasure-planetlabI
-# Description: PU-based attack countermeasure (PlanetLab measurements)
-# Revision:    $Id$
+# Name:        tos-pr-failure-localII
+# Description: Takeover Suggestion evaluation
+# Revision:    $Id: run-attack-registration-localI 1970 2008-09-29 04:04:21Z dreibh $
 # ###########################################################################
 
 
@@ -12,38 +12,45 @@ export SSH_KEY=$PLANETLAB_KEY
 export SERVICE_DIRECTORY="bin"
 export SERVICE_PRE_PROGRAM="sudo"
 
-# export SSH_USER="network"
-# export SSH_KEY="/home/network/.ssh/id_dsa"
+# export SSH_USER="dreibh"
+# export SSH_KEY="/home/dreibh/.ssh/test-key"
 # export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 # export SERVICE_PRE_PROGRAM=""
-export OPT_CSP="-cspserver=132.252.151.151:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
 
-export PRNodeList="`cat PL-USA.hosts`"
-export PENodeList="`cat PL-USA.hosts`"
-export PUNodeList="`cat PL-USA.hosts`"
-export AttackerNodeList="`cat PL-USA.hosts`"
+export PRNodeList="localhost"
+export PENodeList="localhost"
+export PUNodeList="localhost"
+export AttackerNodeList="localhost"
 
-export PortBase=7333
+export PortBase=1888
 
-export Measurement=attack-handleResolution-countermeasure-planetlabI
-export Duration=900
-export PRs=1
-export PEs=10
-export PUs=30
+. ./attack-scenario3 init
+export Measurement=tos-pr-failureI
+export Duration=300
+export PRs=3
+export PEs=25
+export PUs=75
+export PR1UptimeOverride=0
+export PRAllUptime=0
+export PRAllDowntime=30
+export UsePEMasterPR="true"
+export UsePUMasterPR="false"
 export AttackInterval=1
 export Policy="LeastUsed"
-export LoadDegOverride=0.1
+export LoadDegOverride=0
 export MaxBadPEReports=3
-export MaxHRRate=1
-export MaxEURate=1
+export MaxHRRate=-1
+export MaxEURate=-1
+export UseTakeoverSuggestion="false"
 export Capacity=1000000
 export ReregInterval=30000
 export JobInterval=60.0
 export JobSize=10000000
-export Attackers=1
-export AttackType="handleresolution"
+export Attackers=0
+export AttackType="registration"
 export AttackIdentifier=0
-export AttackReportUnreachableProbability=1.0
+export AttackReportUnreachableProbability=0.0
 
 
 if [ ! -e "$Measurement" ] ; then
@@ -56,17 +63,17 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 1 2 3 4 5 6 7 8 9 A B C D ; do
-   for Policy in LeastUsed "LeastUsedDegradation:0.1" RoundRobin Random ; do
-      for AttackInterval in 0.5 0.625 1 2 5 10 ; do   # 0.77
-         for AttackReportUnreachableProbability in 0.0 1.0 ; do
+for Run in 0 ; do
+   for Policy in LeastUsed ; do   # "LeastUsedDegradation:0.1" RoundRobin Random
+      for PRAllUptime in 60 1000 ; do
+         for UseTakeoverSuggestion in "true" "false" ; do
 
-            ID=$Duration-$Policy-$AttackInterval-$AttackReportUnreachableProbability
+            ID=$Duration-$Policy-$PRAllUptime-$UseTakeoverSuggestion
             if [ $Run != "0" ] ; then
                ID=Run$Run-$ID
             fi
-            VARIABLES="Run Duration Policy Capacity JobSize JobInterval AttackInterval AttackReportUnreachableProbability"
-            VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $AttackInterval $AttackReportUnreachableProbability"
+            VARIABLES="Run Duration Policy Capacity JobSize JobInterval PRAllUptime UseTakeoverSuggestion "
+            VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $PRAllUptime $UseTakeoverSuggestion"
 
 
             echo ID=$ID
@@ -77,7 +84,7 @@ for Run in 0 1 2 3 4 5 6 7 8 9 A B C D ; do
 
             cd "$Measurement/$ID"
             if [ ! -e status.txt ] ; then
-               ../../attack-scenario2 && touch status.txt
+               ../../attack-scenario3 && touch status.txt
             else
                echo "Skipping $ID -> already complete."
             fi
