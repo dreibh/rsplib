@@ -381,11 +381,9 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
                   registrar->Stats.ReregistrationCount++;   /* We have a re-registration here */
 #endif
                }
-               else {
 #ifdef ENABLE_REGISTRAR_STATISTICS
-                  registrar->Stats.RegistrationCount++;   /* We have a new registration here */
+               registrar->Stats.RegistrationCount++;   /* New registration or re-registration */
 #endif
-               }
                ST_CLASS(poolHandlespaceNodeActivateTimer)(
                   &registrar->Handlespace.Handlespace,
                   poolElementNode,

@@ -44,6 +44,9 @@ if [ "$1" = "init" ] ; then
    export PRs=1
    export PEs=10
    export PUs=30
+   export PR1UptimeOverride="auto"
+   export PRAllUptime=0
+   export PRAllDowntime=0
    export UsePEMasterPR="false"
    export UsePUMasterPR="false"
    export AttackInterval=1
@@ -126,6 +129,9 @@ else
    check_variable PRs $PRs
    check_variable PEs $PEs
    check_variable PUs $PUs
+   check_variable PR1UptimeOverride $PR1UptimeOverride
+   check_variable PRAllUptime $PRAllUptime
+   check_variable PRAllDowntime $PRAllDowntime
    check_variable UsePEMasterPR $UsePEMasterPR
    check_variable UsePUMasterPR $UsePUMasterPR
    check_variable LoadDegOverride $LoadDegOverride
@@ -232,9 +238,17 @@ else
       useTakeoverSuggestion="-supporttakeoversuggestion"
    fi
    for node in $PRList ; do
-      echo "PR=$node"
+      uptime=$PRAllUptime
+      downtime=$PRAllDowntime
+      if [ $id -eq 1 ] ; then
+         if [ "$PR1UptimeOverride" != "auto" ] ; then
+            uptime=$PR1UptimeOverride
+         fi
+      fi
+
+      echo "PR=$node  uptime=$uptime  downtime=$downtime"
       $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
+         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
       let asapPort=$asapPort+1
       let enrpPort=$enrpPort+1

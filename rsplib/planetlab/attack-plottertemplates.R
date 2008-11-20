@@ -20,6 +20,45 @@ plotVariables <- list(
    #             (measurementDirectory/Results/....data.tar.bz2 is added!)
    # ------------------------------------------------------------------------
 
+   list("registrar-RegistrarAverageNumberOfPoolElements",
+           "Average Number of PEs [1]",
+           "data1$registrar.RegistrarAverageNumberOfPoolElements",
+           "yellow4",
+           list("registrar-RegistrarAverageNumberOfPoolElements")),
+   list("registrar-RegistrarAverageNumberOfOwnedPoolElements",
+           "Average Number of Owned PEs [1]",
+           "data1$registrar.RegistrarAverageNumberOfOwnedPoolElements",
+           "green4",
+           list("registrar-RegistrarAverageNumberOfOwnedPoolElements")),
+
+   list("registrar-RegistrarTotalEndpointKeepAlives",
+           "Total Number of Endpoint Keep-Alives [1]",
+           "data1$registrar.RegistrarTotalEndpointKeepAlives",
+           "yellow4",
+           list("registrar-RegistrarTotalEndpointKeepAlives")),
+   list("registrar-RegistrarTotalRegistrations",
+           "Total Number of Registrations [1]",
+           "data1$registrar.RegistrarTotalRegistrations",
+           "yellow4",
+           list("registrar-RegistrarTotalRegistrations")),
+   list("registrar-RegistrarTotalReregistrations",
+           "Total Number of Reregistrations [1]",
+           "data1$registrar.RegistrarTotalReregistrations",
+           "yellow4",
+           list("registrar-RegistrarTotalReregistrations")),
+   list("registrar-RegistrarTotalHandleResolutions",
+           "Total Number of Handle Resolutions [1]",
+           "data1$registrar.RegistrarTotalHandleResolutions",
+           "yellow4",
+           list("registrar-RegistrarTotalHandleResolutions")),
+
+   list("registrar-X",
+           "Average Number of PEs [1]",
+           "data1$registrar.X",
+           "yellow4",
+           list("registrar-X")),
+
+
    list("calcAppPoolElement-CalcAppPEUtilization",
            "Average System Utilization [%]",
            "100.0 * data1$calcAppPoolElement.CalcAppPEUtilization",
@@ -52,6 +91,10 @@ plotVariables <- list(
            "green4",
            list("calcAppPoolUser-CalcAppPUTotalJobsCompleted")),
 
+   list("PRAllUptime",
+           "PR MTBF{M}",
+           NA, "black"),
+
    list("Policy",
            "Pool Policy{p}",
            NA, "black"),
@@ -66,5 +109,12 @@ plotVariables <- list(
            "1.0 / data1$AttackInterval", "black"),
    list("AttackReportUnreachableProbability",
            "Unreachable Probability{u}[%]",
-           "100.0 * data1$AttackReportUnreachableProbability", "black")
+           "100.0 * data1$AttackReportUnreachableProbability", "black"),
+   list("UseTakeoverSuggestion",
+           "Use Takeover Suggestion{:tau:}",
+           "data1$UseTakeoverSuggestion", "black"),
+
+   list("registrar",
+           "Registrar Number {:rho:}[#]",
+           "data1$registrar", "black")
 )
