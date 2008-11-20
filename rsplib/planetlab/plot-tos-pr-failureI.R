@@ -32,6 +32,15 @@ plotConfigurations <- list(
    #      "a-Axis Variable", "b-Axis Variable", "p-Axis Variable")
    # ------------------------------------------------------------------------
 
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-Utilization.pdf"),
+        "Provider's Perspective", NA, list(seq(0,60,10)), list(1,0),
+        "PRAllUptime", "calcAppPoolElement-CalcAppPEUtilization",
+        "Policy", "UseTakeoverSuggestion"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
+        "User's Perspective", NA, list(seq(0,80,10)), list(1,0),
+        "PRAllUptime", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
+        "Policy", "UseTakeoverSuggestion"),
+
    list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarAverageNumberOfPoolElements.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PRAllUptime", "registrar-RegistrarAverageNumberOfPoolElements",
@@ -41,11 +50,11 @@ plotConfigurations <- list(
         "PRAllUptime", "registrar-RegistrarAverageNumberOfOwnedPoolElements",
         "Policy", "registrar", "", "UseTakeoverSuggestion"),
 
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalEndpointKeepAlives.pdf"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalRegistrations.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PRAllUptime", "registrar-RegistrarTotalRegistrations",
         "Policy", "registrar", "", "UseTakeoverSuggestion"),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalEndpointKeepAlives.pdf"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalReregistrations.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PRAllUptime", "registrar-RegistrarTotalReregistrations",
         "Policy", "registrar", "", "UseTakeoverSuggestion"),
@@ -53,32 +62,10 @@ plotConfigurations <- list(
         "Provider's Perspective", NA, NA, list(1,1),
         "PRAllUptime", "registrar-RegistrarTotalEndpointKeepAlives",
         "Policy", "registrar", "", "UseTakeoverSuggestion"),
-   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalEndpointKeepAlives.pdf"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-RegistrarTotalHandleResolutions.pdf"),
         "Provider's Perspective", NA, NA, list(1,1),
         "PRAllUptime", "registrar-RegistrarTotalHandleResolutions",
         "Policy", "registrar", "", "UseTakeoverSuggestion")
-
-#    list(measurementDirectory, paste(sep="", measurementDirectory, "-Utilization.pdf"),
-#         "Provider's Perspective", NA, list(seq(0,60,10)), list(1,0),
-#         "AttackInterval", "calcAppPoolElement-CalcAppPEUtilization",
-#         "Policy", ""),
-#    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
-#         "User's Perspective", NA, list(seq(0,80,10)), list(1,0),
-#         "AttackInterval", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
-#         "Policy", "")
-
-#    list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsQueued.pdf"),
-#         "User's Perspective", NA, NA, list(0,1),
-#         "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsQueued",
-#         "Policy", ""),
-#    list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsStarted.pdf"),
-#         "User's Perspective", NA, NA, list(0,1),
-#         "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsStarted",
-#         "Policy", ""),
-#    list(measurementDirectory, paste(sep="", measurementDirectory, "-CalcAppPUTotalJobsCompleted.pdf"),
-#         "User's Perspective", NA, NA, list(0,1),
-#         "AttackInterval", "calcAppPoolUser-CalcAppPUTotalJobsCompleted",
-#         "Policy", "")
 )
 
 # ###########################################################################

@@ -248,7 +248,7 @@ else
 
       echo "PR=$node  uptime=$uptime  downtime=$downtime"
       $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
+         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate -peerheartbeatcycle=30000 -peermaxtimelastheard=61000 $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
       let asapPort=$asapPort+1
       let enrpPort=$enrpPort+1

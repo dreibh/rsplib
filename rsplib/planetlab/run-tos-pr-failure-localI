@@ -23,12 +23,14 @@ export PENodeList="localhost"
 export PUNodeList="localhost"
 export AttackerNodeList="localhost"
 
+export PortBase=1888
+
 . ./attack-scenario3 init
 export Measurement=tos-pr-failureI
-export Duration=120
+export Duration=300
 export PRs=3
 export PEs=25
-export PUs=1
+export PUs=75
 export PR1UptimeOverride=0
 export PRAllUptime=0
 export PRAllDowntime=30
