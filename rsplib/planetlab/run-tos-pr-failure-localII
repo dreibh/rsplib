@@ -6,16 +6,16 @@
 # ###########################################################################
 
 
-. ./planetlab-config
-export SSH_USER=$PLANETLAB_USER
-export SSH_KEY=$PLANETLAB_KEY
-export SERVICE_DIRECTORY="bin"
-export SERVICE_PRE_PROGRAM="sudo"
+# . ./planetlab-config
+# export SSH_USER=$PLANETLAB_USER
+# export SSH_KEY=$PLANETLAB_KEY
+# export SERVICE_DIRECTORY="bin"
+# export SERVICE_PRE_PROGRAM="sudo"
 
-# export SSH_USER="dreibh"
-# export SSH_KEY="/home/dreibh/.ssh/test-key"
-# export SERVICE_DIRECTORY="src/rsplib2/rsplib"
-# export SERVICE_PRE_PROGRAM=""
+export SSH_USER="demo"
+export SSH_KEY=~/.ssh/test-key
+export SERVICE_DIRECTORY="src/rsplib2/rsplib"
+export SERVICE_PRE_PROGRAM=""
 export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
 
 export PRNodeList="localhost"
@@ -26,9 +26,9 @@ export AttackerNodeList="localhost"
 export PortBase=1888
 
 . ./attack-scenario3 init
-export Measurement=tos-pr-failureI
+export Measurement=tos-pr-failure-localII
 export Duration=300
-export PRs=3
+export PRs=5
 export PEs=25
 export PUs=75
 export PR1UptimeOverride=0
@@ -63,9 +63,9 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 ; do
-   for Policy in LeastUsed ; do   # "LeastUsedDegradation:0.1" RoundRobin Random
-      for PRAllUptime in 60 1000 ; do
+for Run in 0 1 2 3 ; do
+   for Policy in LeastUsed RoundRobin Random ; do
+      for PRAllUptime in 60 200 300 500 625 775 1000 ; do
          for UseTakeoverSuggestion in "true" "false" ; do
 
             ID=$Duration-$Policy-$PRAllUptime-$UseTakeoverSuggestion

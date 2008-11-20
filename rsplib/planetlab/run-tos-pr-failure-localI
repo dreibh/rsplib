@@ -26,7 +26,7 @@ export AttackerNodeList="localhost"
 export PortBase=1888
 
 . ./attack-scenario3 init
-export Measurement=tos-pr-failureI
+export Measurement=tos-pr-failure-localI
 export Duration=300
 export PRs=3
 export PEs=25
