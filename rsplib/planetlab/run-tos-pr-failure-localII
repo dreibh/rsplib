@@ -63,9 +63,9 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 1 2 3 ; do
+for Run in 0 ; do
    for Policy in LeastUsed RoundRobin Random ; do
-      for PRAllUptime in 60 200 300 500 625 775 1000 ; do
+      for PRAllUptime in 60 200 500 1000 ; do   #  300  625  775 
          for UseTakeoverSuggestion in "true" "false" ; do
 
             ID=$Duration-$Policy-$PRAllUptime-$UseTakeoverSuggestion
