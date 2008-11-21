@@ -982,6 +982,7 @@ int main(int argc, char** argv)
          usleep((unsigned long long)rint(t * 1000000.0));
          i++;
       }
+      puts("\nTerminated! ---");
    }
 }
 #endif

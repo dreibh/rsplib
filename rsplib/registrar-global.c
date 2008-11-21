@@ -345,6 +345,10 @@ void registrarDelete(struct Registrar* registrar)
          ext_close(registrar->ASAPAnnounceSocket);
          registrar->ASAPAnnounceSocket = -1;
       }
+      if(registrar->ASAPSocket >= 0) {
+         ext_close(registrar->ASAPSocket);
+         registrar->ASAPSocket = -1;
+      }
       dispatcherDelete(&registrar->StateMachine);
       messageBufferDelete(registrar->ENRPUnicastMessageBuffer);
       registrar->ENRPUnicastMessageBuffer = NULL;
