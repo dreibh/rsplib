@@ -51,6 +51,11 @@ plotVariables <- list(
            "data1$registrar.RegistrarTotalHandleResolutions",
            "yellow4",
            list("registrar-RegistrarTotalHandleResolutions")),
+   list("registrar-RegistrarTotalHandleUpdates",
+           "Number of Handle Updatess [1]",
+           "data1$registrar.RegistrarTotalHandleUpdates",
+           "yellow4",
+           list("registrar-RegistrarTotalHandleUpdates")),
 
    list("registrar-X",
            "Average Number of PEs [1]",
@@ -111,7 +116,7 @@ plotVariables <- list(
            "Unreachable Probability{u}[%]",
            "100.0 * data1$AttackReportUnreachableProbability", "black"),
    list("UseTakeoverSuggestion",
-           "Use Takeover Suggestion{:tau:}",
+           "Use Takeover Suggestion {:tau:}",
            "data1$UseTakeoverSuggestion", "black"),
 
    list("registrar",
