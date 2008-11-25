@@ -77,6 +77,7 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
 {
    struct Registrar*     registrar;
    int                   autoCloseTimeout;
+   int                   noDelayOn;
 #ifdef HAVE_SCTP_DELAYED_SACK
    struct sctp_sack_info sctpSACKInfo;
 #endif
@@ -205,6 +206,17 @@ struct Registrar* registrarNew(const RegistrarIdentifierType serverID,
       if(ext_setsockopt(registrar->ENRPUnicastSocket, IPPROTO_SCTP, SCTP_AUTOCLOSE, &autoCloseTimeout, sizeof(autoCloseTimeout)) < 0) {
          LOG_ERROR
          logerror("setsockopt() for SCTP_AUTOCLOSE failed");
+         LOG_END
+      }
+      noDelayOn = 1;
+      if(ext_setsockopt(registrar->ASAPSocket, IPPROTO_SCTP, SCTP_NODELAY, &noDelayOn, sizeof(noDelayOn)) < 0) {
+         LOG_ERROR
+         logerror("setsockopt() for SCTP_NODELAY failed");
+         LOG_END
+      }
+      if(ext_setsockopt(registrar->ENRPUnicastSocket, IPPROTO_SCTP, SCTP_NODELAY, &noDelayOn, sizeof(noDelayOn)) < 0) {
+         LOG_ERROR
+         logerror("setsockopt() for SCTP_NODELAY failed");
          LOG_END
       }
 #ifdef HAVE_SCTP_DELAYED_SACK
