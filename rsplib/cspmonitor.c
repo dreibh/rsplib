@@ -191,7 +191,7 @@ struct CSPObject* findCSPObject(struct SimpleRedBlackTree* objectStorage,
 
 
 /* ###### Purge out-of-date CSPObject in storage ######################### */
-void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage)
+void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage, const unsigned long long purgeInterval)
 {
    struct CSPObject* cspObject;
    struct CSPObject* nextCSPObject;
@@ -199,7 +199,7 @@ void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage)
    cspObject = (struct CSPObject*)simpleRedBlackTreeGetFirst(objectStorage);
    while(cspObject != NULL) {
       nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->Node);
-      if(cspObject->LastReportTimeStamp + (10 * cspObject->ReportInterval) < getMicroTime()) {
+      if(cspObject->LastReportTimeStamp + min(purgeInterval, (10 * cspObject->ReportInterval)) < getMicroTime()) {
          CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->Node) == &cspObject->Node);
          free(cspObject->AssociationArray);
          free(cspObject);
@@ -289,6 +289,7 @@ int main(int argc, char** argv)
    unsigned long long        now;
    unsigned long long        lastUpdate;
    unsigned long long        updateInterval = 1000000;
+   unsigned long long        purgeInterval  = 30000000;
    size_t                    lastElements   = 0;
    size_t                    elements;
    int                       result;
@@ -315,6 +316,12 @@ int main(int argc, char** argv)
          updateInterval = 1000 * atol((char*)&argv[n][16]);
          if(updateInterval < 100000) {
             updateInterval = 100000;
+         }
+      }
+      else if(!(strncmp(argv[n], "-purge=", 7))) {
+         purgeInterval = 1000 * atol((const char*)&argv[n][7]);
+         if(purgeInterval < 1000000) {
+            purgeInterval = 1000000;
          }
       }
       else if(!(strcmp(argv[n], "-compact"))) {
@@ -368,7 +375,7 @@ int main(int argc, char** argv)
             handleMessage(sd, &objectStorage);
          }
       }
-      purgeCSPObjects(&objectStorage);
+      purgeCSPObjects(&objectStorage, purgeInterval);
 
       elements = simpleRedBlackTreeGetElements(&objectStorage);
 
