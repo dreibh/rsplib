@@ -22,15 +22,21 @@
 
 CmdFile=""
 Command=""
-if [ $1 = "WriteCmd" ] ; then
+if [ $1 = "WriteCmd" -o $1 = "WriteCmdParallel" ] ; then
    Command="$1"
    CmdFile="$2"
    (
+      echo "("
       while read cmd ; do
-        echo "$cmd"
+        echo "   $cmd"
       done
+      if [ $1 = "WriteCmdParallel" ] ; then
+         echo ") &"
+      else
+         echo ")"
+      fi
    ) >>$CmdFile
-elif [ $1 = "RunCmd" ] ; then
+elif [ $1 = "RunCmd" -o $1 = "RunCmdParallel" ] ; then
    Command="$1"
    CmdFile="$2"
    shift ; shift
@@ -38,6 +44,9 @@ elif [ $1 = "RunCmd" ] ; then
    SC_SSH_USER="$2"
    SC_SSH_KEY="$3"
    SC_SSH_OPTS="-oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
+   if [ $1 = "RunCmdParallel" ] ; then
+      echo "wait" >>$CmdFile
+   fi
    ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <$CmdFile
 else
    (

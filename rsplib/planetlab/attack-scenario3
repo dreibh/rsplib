@@ -78,38 +78,21 @@ else
    }
 
 
-   # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
-   # SSH_USER="dreibh"
-   # SSH_KEY="/home/dreibh/.ssh/test-key"
-   # SERVICE_DIRECTORY="src/rsplib2/rsplib"
-   # SERVICE_PRE_PROGRAM=""
-   # OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
-   #
-   # PRNodeList="localhost"
-   # PENodeList="localhost"
-   # PUNodeList="localhost"
-   # AttackerNodeList="localhost"
-   #
-   # PortBase=0
-   # Measurement=Test
-   # Duration=15
-   # PRs=3
-   # PEs=3
-   # PUs=3
-   # Policy=RoundRobin
-   # MaxBadPEReports=3
-   # MaxHRRate=-1
-   # MaxEURate=-1
-   # Capacity=1000000
-   # ReregInterval=30000
-   # JobInterval=60.0
-   # JobSize=10000000
-   # Attackers=1
-   # AttackType=handleresolution
-   # AttackInterval=50
-   # AttackIdentifier=0
-   # AttackReportUnreachableProbability=1.0
-   # echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
+#    echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
+#    SSH_USER="dreibh"
+#    SSH_KEY="/home/dreibh/.ssh/test-key"
+#    SERVICE_DIRECTORY="src/rsplib2/rsplib"
+#    SERVICE_PRE_PROGRAM=""
+#    OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
+#
+#    PRNodeList="localhost"
+#    PENodeList="localhost"
+#    PUNodeList="localhost"
+#    AttackerNodeList="localhost"
+#
+#    . ./$0 init
+#    PRs=5
+#    echo "==== TEST ONLY ==== !!!!!!!!!!!!!!!!!!!!"
 
 
    check_variable SSH_USER $SSH_USER
@@ -247,16 +230,16 @@ else
          fi
       fi
 
-      echo "PR=$node   ASAP=$asapPort ENRP=$enrpPort   uptime=$uptime  downtime=$downtime"
+      echo "PR=$node   ASAP=$asapPort ENRP=$enrpPort   uptime=$uptime  downtime=$downtime   MiscOptions=$useTakeoverSuggestion"
 # -peerheartbeatcycle=30000 -peermaxtimelastheard=61000
-      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
+      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
          "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
       let asapPort=$asapPort+1
       let enrpPort=$enrpPort+1
    done
    for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pr-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pr-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -274,12 +257,12 @@ else
          let aid=$AttackIdentifier+$id-1
       fi
       let aport=$AttackerPortBase+$id
-      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
+      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-attacker-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker \
          "-type=$AttackType -interval=$AttackInterval -port=$aport -identifier=$aid -policy=$Policy -loaddegoverride=$LoadDegOverride -poolhandle=$POOLHANDLE -reportunreachableprobability=$AttackReportUnreachableProbability -asapannounce=off $OPT_CSP $PE_PROpt"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-attacker-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-attacker-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -292,13 +275,13 @@ else
    done
    for node in $PEList ; do
       echo "PE=$node"
-      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
+      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
          "-loglevel=4 -logcolor=off -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=$POOLHANDLE -rereginterval=$ReregInterval -capcapacity=$Capacity "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    v=1
    for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pe-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pe-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
       let v=$v+1
    done
    wait
@@ -312,12 +295,12 @@ else
    done
    for node in $PUList ; do
    echo "PU=$node"
-      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
+      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
          "-loglevel=4 -logcolor=off -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=$POOLHANDLE "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pu-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pu-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -334,11 +317,11 @@ else
       rm -f $node-pu-stop.cmd
    done
    for node in $PUList ; do
-      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmd $node-pu-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient ""   "$SERVICE_PRE_PROGRAM"
+      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmdParallel $node-pu-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient ""   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $PUList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pu-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pu-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -349,11 +332,11 @@ else
       rm -f $node-pe-stop.cmd
    done
    for node in $PEList ; do
-      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmd $node-pe-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server ""   "$SERVICE_PRE_PROGRAM"
+      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmdParallel $node-pe-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server ""   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $PEList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pe-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pe-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -364,11 +347,11 @@ else
       rm -f $node-attacker-stop.cmd
    done
    for node in $AttackerList ; do
-      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmd $node-attacker-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker ""   "$SERVICE_PRE_PROGRAM"
+      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmdParallel $node-attacker-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY attacker ""   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $AttackerList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-attacker-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-attacker-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
@@ -379,11 +362,11 @@ else
       rm -f $node-pr-stop.cmd
    done
    for node in $PRList ; do
-      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmd $node-pr-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar ""   "$SERVICE_PRE_PROGRAM"
+      $SERVICE_CONTROL_CMD stop  "$SSH_TOOL_CMD WriteCmdParallel $node-pr-stop.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar ""   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pr-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pr-stop.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 

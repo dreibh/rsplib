@@ -90,7 +90,7 @@ uint32_t random32()
    const double value = uniform(0.0, (double)0xffffffff);
    return((uint32_t)rint(value));
 #else
-  uint32_t number;
+   uint32_t number;
 
    switch(RandomSource) {
       case RS_DEVICE:
