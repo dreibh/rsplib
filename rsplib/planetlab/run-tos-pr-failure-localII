@@ -27,7 +27,7 @@ export PortBase=1888
 
 . ./attack-scenario3 init
 export Measurement=tos-pr-failure-localII
-export Duration=300
+export Duration=900
 export PRs=5
 export PEs=25
 export PUs=75
@@ -40,6 +40,8 @@ export AttackInterval=1
 export Policy="LeastUsed"
 export LoadDegOverride=0
 export MaxBadPEReports=3
+export EKATransmissionInterval=500
+export EKATimeoutInterval=1000
 export MaxHRRate=-1
 export MaxEURate=-1
 export UseTakeoverSuggestion="false"
@@ -63,18 +65,18 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0; do   #  1 2 3 4 5 6 7 8 9 A B C D
+for Run in 0 1 2 3 4 5 6 7 8 9 A B C D ; do
    for Policy in LeastUsed RoundRobin Random ; do
-      for PRAllUptime in 60 1000 ; do   # 200 350 500 750 
+      for PRAllUptime in 60 200 350 500 750 1000 ; do
          for UseTakeoverSuggestion in "true" "false" ; do
-            for ReregInterval in 2000 ; do   # !!!!!!!!!!!!!!!!!!!!!!
+            for ReregInterval in 2000 ; do
 
-               ID=$Duration-$Policy-$PRAllUptime-$UseTakeoverSuggestion-$ReregInterval
+               ID=$Duration-$Policy-$PRAllUptime-$UseTakeoverSuggestion-$ReregInterval-$EKATransmissionInterval
                if [ $Run != "0" ] ; then
                   ID=Run$Run-$ID
                fi
-               VARIABLES="Run Duration Policy Capacity JobSize JobInterval PRAllUptime UseTakeoverSuggestion ReregInterval"
-               VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $PRAllUptime $UseTakeoverSuggestion $ReregInterval"
+               VARIABLES="Run Duration Policy Capacity JobSize JobInterval PRAllUptime UseTakeoverSuggestion ReregInterval EKATransmissionInterval"
+               VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $PRAllUptime $UseTakeoverSuggestion $ReregInterval $EKATransmissionInterval"
 
 
                echo ID=$ID

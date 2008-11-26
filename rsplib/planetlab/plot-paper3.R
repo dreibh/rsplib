@@ -15,7 +15,7 @@ plotLegendSizeFactor  <- 0.8
 plotOwnOutput         <- FALSE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
-plotWidth             <- 10
+plotWidth             <- 20
 plotHeight            <- 10
 plotConfidence        <- 0.95
 
@@ -27,43 +27,43 @@ plotConfigurations <- list(
         "Provider's Perspective", NA, list(seq(0,60,10)), list(1,0),
         "PRAllUptime-Num2to5", "calcAppPoolElement-CalcAppPEUtilization",
         "Policy", "UseTakeoverSuggestion", "",
-        "", "", ""),
+        "ReregInterval", "", ""),
    list("tos-pr-failure-localII", "tos-pr-failure-localII-HandlingSpeed.pdf",
         "User's Perspective", NA, NA, list(1,0),
         "PRAllUptime-Num2to5", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "UseTakeoverSuggestion", "",
-        "", "", ""),
+        "ReregInterval", "", ""),
 
    list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarAverageNumberOfPoolElements.pdf",
         "Providers's Perspective", NA, NA, list(1,0),
         "PRAllUptime-Num2to5", "registrar-RegistrarAverageNumberOfPoolElements",
         "registrar", "UseTakeoverSuggestion", "",
-        "", "", "",
+        "ReregInterval", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
    list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarAverageNumberOfOwnedPoolElements.pdf",
         "Providers's Perspective", NA, NA, list(1,0.75),
         "PRAllUptime-Num2to5", "registrar-RegistrarAverageNumberOfOwnedPoolElements",
         "registrar", "UseTakeoverSuggestion", "",
-        "", "", "",
+        "ReregInterval", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
 
    list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalEndpointKeepAlivesSent.pdf",
         "Providers's Perspective", NA, NA, list(1,1),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalEndpointKeepAlives",
         "registrar", "UseTakeoverSuggestion", "",
-        "", "", "",
+        "ReregInterval", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
    list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalHandleUpdates.pdf",
         "Providers's Perspective", NA, NA, list(1,1),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalHandleUpdates",
         "registrar", "UseTakeoverSuggestion", "Policy",
-        "", "", "",
+        "ReregInterval", "", "",
         "(data1$Policy==\"LeastUsed\")&((data1$registrar == 1)|(data1$registrar == 5))"),
    list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalRegistrations.pdf",
         "Providers's Perspective", NA, NA, list(1,1),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalRegistrations",
         "registrar", "UseTakeoverSuggestion", "Policy",
-        "", "", "",
+        "ReregInterval", "", "",
         "(data1$Policy==\"LeastUsed\")&((data1$registrar == 1)|(data1$registrar == 5))")
 )
 
