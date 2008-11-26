@@ -97,7 +97,9 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
                echo "\$PID_$UUID has already stopped -> only removing PID file."
             fi
             rm -f $SC_SERVICE_PIDFILE
-            bzip2 -f $SC_SERVICE_LOGFILE
+            if [ -e $SC_SERVICE_LOGFILE ] ; then
+               bzip2 -f $SC_SERVICE_LOGFILE
+            fi
          fi
       fi
 

@@ -170,9 +170,6 @@ else
    get_nodes "$PUNodeList" $PUs             ; PUList=$NodeList
    get_nodes "$AttackerNodeList" $Attackers ; AttackerList=$NodeList
 
-
-   MasterPR="`echo $PRList | head -n1`"
-
    let ENRPPortBase=$PortBase+1024
    let ASAPPortBase=$PortBase+2048
    let AttackerPortBase=$PortBase+3072
@@ -187,7 +184,7 @@ else
    PU_PROpt=""
    asapPort=$ASAPPortBase
    enrpPort=$ENRPPortBase
-   MasterPR="`echo $PRList | xargs -n1 echo | head -n1`"
+   MasterPR="`(echo $PRList | xargs -n1 echo | head -n1) 2>/dev/null`"
    for pr in $PRList ; do
       PR_PROpt="$PR_PROpt -peer=$pr:$enrpPort "
       PE_PROpt="$PE_PROpt -registrar=$pr:$asapPort "
@@ -206,7 +203,6 @@ else
    echo PR_PROpt=$PR_PROpt
    echo PE_PROpt=$PE_PROpt
    echo PU_PROpt=$PU_PROpt
-
 
    rm -f *.log *.cmd *.sca *.log.bz2 *.cmd.bz2 *.sca.bz2
 
@@ -244,7 +240,7 @@ else
    done
    wait
 
-   sleep 10   ## !!!!!!!!!!
+   sleep 30
 
    echo "`date` ###### Starting attackers #############################################"
    id=1
