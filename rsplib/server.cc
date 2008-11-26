@@ -68,6 +68,7 @@ int main(int argc, char** argv)
    unsigned int        runtimeLimit  = 0;
    unsigned int        service       = SERVICE_ECHO;
    const char*         poolHandle    = NULL;
+   const char*         daemonPIDFile = NULL;
    bool                policyChanged = false;
    bool                quiet         = false;
 
@@ -105,6 +106,9 @@ int main(int argc, char** argv)
          if(reregInterval < 10) {
             reregInterval = 10;
          }
+      }
+      else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
+         daemonPIDFile = (const char*)&argv[i][15];
       }
       else if(!(strncmp(argv[i], "-policy=" ,8))) {
          double dpf;
@@ -245,6 +249,23 @@ int main(int argc, char** argv)
          printf("Character Generator");
       }
       puts("...");
+   }
+
+
+   if(daemonPIDFile != NULL) {
+      const pid_t childProcess = fork();
+      if(childProcess != 0) {
+         FILE* fh = fopen(daemonPIDFile, "w");
+         if(fh) {
+            fprintf(fh, "%d\n", childProcess);
+            fclose(fh);
+         }
+         else {
+            kill(childProcess, SIGKILL);
+            fprintf(stderr, "ERROR: Unable to create PID file \"%s\"!\n", daemonPIDFile);
+         }
+         exit(0);
+      }
    }
 
 

@@ -30,7 +30,7 @@ if [ $1 = "WriteCmd" -o $1 = "WriteCmdParallel" ] ; then
       while read cmd ; do
         echo "   $cmd"
       done
-      if [ $1 = "WriteCmdParallel" ] ; then
+      if [ "$Command" = "WriteCmdParallel" ] ; then
          echo ") &"
       else
          echo ")"
@@ -44,7 +44,7 @@ elif [ $1 = "RunCmd" -o $1 = "RunCmdParallel" ] ; then
    SC_SSH_USER="$2"
    SC_SSH_KEY="$3"
    SC_SSH_OPTS="-oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
-   if [ $1 = "RunCmdParallel" ] ; then
+   if [ "$Command" = "RunCmdParallel" ] ; then
       echo "wait" >>$CmdFile
    fi
    ssh -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE <$CmdFile

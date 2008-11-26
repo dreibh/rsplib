@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <signal.h>
 #include <ext_socket.h>
 #include <iostream>
 
@@ -757,6 +758,7 @@ finished:
 int main(int argc, char** argv)
 {
    struct rsp_info    info;
+   const char*        daemonPIDFile     = NULL;
    const char*        poolHandle        = "CalcAppPool";
    const char*        vectorFileName    = "CalcAppPU.vec";
    const char*        scalarFileName    = "CalcAppPU.sca";
@@ -805,6 +807,9 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-runtime=" ,9))) {
          Runtime = (unsigned long long)rint(1000000.0 * atof((char*)&argv[i][9]));
       }
+      else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
+         daemonPIDFile = (const char*)&argv[i][15];
+      }
       else if(!(strncmp(argv[i],"-log",4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
@@ -834,6 +839,23 @@ int main(int argc, char** argv)
         << "Keep-Alive Timeout Int. = " << (KeepAliveTimeoutInterval / 1000000.0) << " [s]" << endl
         << "Runtime                 = " << (Runtime / 1000000.0) << " [s]" << endl
         << endl;
+
+
+   if(daemonPIDFile != NULL) {
+      const pid_t childProcess = fork();
+      if(childProcess != 0) {
+         FILE* fh = fopen(daemonPIDFile, "w");
+         if(fh) {
+            fprintf(fh, "%d\n", childProcess);
+            fclose(fh);
+         }
+         else {
+            kill(childProcess, SIGKILL);
+            fprintf(stderr, "ERROR: Unable to create PID file \"%s\"!\n", daemonPIDFile);
+         }
+         exit(0);
+      }
+   }
 
 
    if(rsp_initialize(&info) < 0) {

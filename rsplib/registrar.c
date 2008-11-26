@@ -29,6 +29,9 @@
 
 #include "registrar.h"
 
+#include <signal.h>
+
+
 /*
 #define FAST_BREAK
 */
@@ -255,6 +258,31 @@ static void getSocketPair(const char*                   sctpAddressParameter,
 }
 
 
+/* ###### Enter daemon mode, if requested ################################ */
+static void goIntoDaemonMode(const char* daemonPIDFile)
+{
+   FILE* fh;
+   pid_t childProcess;
+
+   if(daemonPIDFile != NULL) {
+      childProcess = fork();
+      if(childProcess != 0) {
+         fh = fopen(daemonPIDFile, "w");
+         if(fh) {
+            fprintf(fh, "%d\n", childProcess);
+            fclose(fh);
+         }
+         else {
+            kill(childProcess, SIGKILL);
+            fprintf(stderr, "ERROR: Unable to create PID file \"%s\"!\n", daemonPIDFile);
+         }
+         exit(0);
+      }
+   }
+}
+
+
+
 /* ###### Main program ################################################### */
 #ifdef REGISTRAR_FAILURE_TEST
 int main2(int argc, char** argv,
@@ -298,8 +326,6 @@ int main(int argc, char** argv)
 
    bool                          useIPv6                       = checkIPv6();
    const char*                   daemonPIDFile                 = NULL;
-   FILE*                         fh;
-   pid_t                         childProcess;
 
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];
@@ -531,6 +557,12 @@ int main(int argc, char** argv)
       }
    }
    beginLogging();
+
+#ifndef HAVE_KERNEL_SCTP
+   /* For userland SCTP: go into daemon mode now. This mode must be entered
+      before any SCTP is used (fork() limitation for userland SCTP)! */
+   goIntoDaemonMode(daemonPIDFile);
+#endif
 
    if(!strcmp(asapAnnounceAddressParameter, "auto")) {
       asapAnnounceAddressParameter = ASAP_ANNOUNCE_MULTICAST_ADDRESS;
@@ -840,21 +872,9 @@ int main(int argc, char** argv)
    fputs("Registrar started. Going into initialization phase...\n", stdlog);
    LOG_END
 
-
-   if(daemonPIDFile != NULL) {
-      childProcess = fork();
-      if(childProcess != 0) {
-         fh = fopen(daemonPIDFile, "w");
-         if(fh) {
-            fprintf(fh, "%d\n", childProcess);
-            fclose(fh);
-         }
-         else {
-            fprintf(stderr, "ERROR: Unable to create PID file \"%s\"!\n", daemonPIDFile);
-         }
-         exit(0);
-      }
-   }
+#ifdef HAVE_KERNEL_SCTP
+   goIntoDaemonMode(daemonPIDFile);
+#endif
 
    /* ====== Main loop =================================================== */
    while(!breakDetected()) {

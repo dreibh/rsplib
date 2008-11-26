@@ -54,6 +54,8 @@ if [ "$1" = "init" ] ; then
    export LoadDegOverride=0
    export UseTakeoverSuggestion="false"
    export MaxBadPEReports=3
+   export EKATransmissionInterval=5000
+   export EKATimeoutInterval=1000
    export MaxHRRate=-1
    export MaxEURate=-1
    export Capacity=1000000
@@ -122,6 +124,8 @@ else
    check_variable Policy $Policy
    check_variable UseTakeoverSuggestion $UseTakeoverSuggestion
    check_variable MaxBadPEReports $MaxBadPEReports
+   check_variable EKATransmissionInterval $EKATransmissionInterval
+   check_variable EKATimeoutInterval $EKATimeoutInterval
    check_variable Capacity $Capacity
    check_variable ReregInterval $ReregInterval
    check_variable JobInterval $JobInterval
@@ -230,7 +234,7 @@ else
       echo "PR=$node   ASAP=$asapPort ENRP=$enrpPort   uptime=$uptime  downtime=$downtime   MiscOptions=$useTakeoverSuggestion"
 # -peerheartbeatcycle=30000 -peermaxtimelastheard=61000
       $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
-         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data.bz2 -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data.bz2 -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
+         "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -endpointkeepalivetransmissioninterval=$EKATransmissionInterval -endpointkeepalivetimeoutinterval=$EKATimeoutInterval -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data.bz2 -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data.bz2 -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
       let asapPort=$asapPort+1
       let enrpPort=$enrpPort+1
@@ -384,7 +388,7 @@ else
 
    for node in $allNodes ; do
       echo "N=$node"
-      scp -C -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
+      scp -qC -i $SSH_KEY -oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no "$SSH_USER@$node:$SERVICE_DIRECTORY/$ID-*.*" . &
    done
    wait
    bzip2 *.cmd *.sca
