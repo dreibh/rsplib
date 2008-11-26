@@ -229,14 +229,14 @@ else
 
       echo "PR=$node   ASAP=$asapPort ENRP=$enrpPort   uptime=$uptime  downtime=$downtime   MiscOptions=$useTakeoverSuggestion"
 # -peerheartbeatcycle=30000 -peermaxtimelastheard=61000
-      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmd $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
+      $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pr-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY registrar \
          "-loglevel=4 -logcolor=off -asap=[::]:$asapPort -enrp=[::]:$enrpPort -asapannounce=off -enrpannounce=off $useTakeoverSuggestion -maxbadpereports=$MaxBadPEReports -maxhrrate=$MaxHRRate -maxeurate=$MaxEURate $OPT_CSP $PR_PROpt -statsfile=$ID-pr-$id-stats.data.bz2 -statsinterval=1000 -actionlogfile=$ID-pr-$id-action.data.bz2 -uptime=$uptime -downtime=$downtime "-object=scenario.registrar[$id]" -scalar=$ID-pr-$id.sca"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
       let asapPort=$asapPort+1
       let enrpPort=$enrpPort+1
    done
    for node in `echo $PRList | xargs -n1 echo | sort -u` ; do
-      $SSH_TOOL_CMD RunCmd $node-pr-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
+      $SSH_TOOL_CMD RunCmdParallel $node-pr-start.cmd  $node  $SSH_NODE $SSH_USER $SSH_KEY &
    done
    wait
 
