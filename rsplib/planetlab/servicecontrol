@@ -118,7 +118,7 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
          if [ \$DoStartup -eq 1 ] ; then
             if [ -e ./$SC_SERVICE_PROGRAM ] ; then
                ulimit -c unlimited
-               $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS >$SC_SERVICE_LOGFILE 2>&1 &
+               $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS 2>&1 | bzip2 >$SC_SERVICE_LOGFILE.bz2 &
                PID=\$!
                echo \$PID >$SC_SERVICE_PIDFILE
 
