@@ -981,7 +981,7 @@ int main(int argc, char** argv)
    }
    else {
       printf("Uptime   = %1.3f [s]\n", uptime);
-      printf("Downtime = %1.3f [s]\n", uptime);
+      printf("Downtime = %1.3f [s]\n", downtime);
       i = 1;
       for(;;) {
          t = randomExpDouble(uptime);
