@@ -15,7 +15,7 @@ plotLegendSizeFactor  <- 0.8
 plotOwnOutput         <- FALSE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
-plotWidth             <- 20
+plotWidth             <- 10
 plotHeight            <- 10
 plotConfidence        <- 0.95
 
