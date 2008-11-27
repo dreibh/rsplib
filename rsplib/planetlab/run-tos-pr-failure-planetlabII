@@ -27,7 +27,7 @@ export PortBase=1888
 
 . ./attack-scenario3 init
 export Measurement=tos-pr-failure-planetlabII
-export Duration=900
+export Duration=300
 export PRs=5
 export PEs=25
 export PUs=75
@@ -66,8 +66,8 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Run in 0 1 2 3 4 5 6 7 8 9 A B C D ; do
-   for Policy in LeastUsed RoundRobin Random ; do
-      for PRAllUptime in 60 200 350 500 750 1000 ; do
+   for Policy in RoundRobin LeastUsed Random ; do
+      for PRAllUptime in 60 200 350 500 750 1000 ; do 
          for UseTakeoverSuggestion in "true" "false" ; do
             for ReregInterval in 2000 ; do
 

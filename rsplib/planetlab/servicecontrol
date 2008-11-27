@@ -78,7 +78,8 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
          if [ -e $SC_SERVICE_PIDFILE ] ; then
             echo -e "\\\x1b[034m\`date\`: Stopping $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[030m"
             PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
-            if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                $SC_SERVICE_PRE_PROGRAM kill -INT \$PID_$UUID
                sleep 0.1
                i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
@@ -96,7 +97,7 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
             else
                echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has already stopped -> only removing PID file."
             fi
-echo "   \`date\`: => removing $SC_SERVICE_PIDFILE on \$HOSTNAME (PID is \$PID_$UUID)"
+            echo "   \`date\`: => removing $SC_SERVICE_PIDFILE on \$HOSTNAME (PID is \$PID_$UUID)"
             rm -f $SC_SERVICE_PIDFILE
             if [ -e $SC_SERVICE_LOGFILE ] ; then
                bzip2 -f $SC_SERVICE_LOGFILE
