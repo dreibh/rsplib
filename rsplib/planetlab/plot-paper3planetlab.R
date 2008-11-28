@@ -1,5 +1,5 @@
 # ###########################################################################
-# Name:        plot-paper3
+# Name:        plot-paper3planetlab
 # Description: Paper Plots
 # Revision:    $Id$
 # ###########################################################################
@@ -8,11 +8,11 @@ source("attack-plottertemplates.R")
 
 
 # ------ Plotter Settings ---------------------------------------------------
-measurementDirectory <- "paper3"
+measurementDirectory <- "paper3planetlab"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- TRUE
+plotOwnOutput         <- FALSE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
@@ -23,43 +23,43 @@ plotConfidence        <- 0.95
 
 # ------ Plots --------------------------------------------------------------
 plotConfigurations <- list(
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-Utilization.pdf",
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-Utilization.pdf",
         "Provider's Perspective", NA, list(seq(0,60,10)), list(1,0),
         "PRAllUptime-Num2to5", "calcAppPoolElement-CalcAppPEUtilization",
         "Policy", "UseTakeoverSuggestion", "",
         "", "", ""),
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-HandlingSpeed.pdf",
-        "User's Perspective", NA, list(seq(20,90,10)), list(0.5,1),
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-HandlingSpeed.pdf",
+        "User's Perspective", NA, list(seq(20,90,10)), list(0.5,0),
         "PRAllUptime-Num2to5", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
         "Policy", "UseTakeoverSuggestion", "",
         "", "", ""),
 
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarAverageNumberOfPoolElements.pdf",
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-RegistrarAverageNumberOfPoolElements.pdf",
         "Providers's Perspective", NA, list(seq(0,24,2)), list(1,0),
         "PRAllUptime-Num2to5", "registrar-RegistrarAverageNumberOfPoolElements",
         "registrar", "UseTakeoverSuggestion", "",
         "", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarAverageNumberOfOwnedPoolElements.pdf",
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-RegistrarAverageNumberOfOwnedPoolElements.pdf",
         "Providers's Perspective", NA, list(seq(0,24,2)), list(1,0.75),
         "PRAllUptime-Num2to5", "registrar-RegistrarAverageNumberOfOwnedPoolElements",
         "registrar", "UseTakeoverSuggestion", "",
         "", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
 
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalEndpointKeepAlivesSent.pdf",
-        "Providers's Perspective", NA, NA, list(1,0.5),
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-RegistrarTotalEndpointKeepAlivesSent.pdf",
+        "Providers's Perspective", NA, NA, list(1,0.7),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalEndpointKeepAlives",
         "registrar", "UseTakeoverSuggestion", "",
         "", "", "",
         "(data1$registrar == 1)|(data1$registrar == 5)"),
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalHandleUpdates.pdf",
-        "Providers's Perspective", NA, NA, list(1,0.5),
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-RegistrarTotalHandleUpdates.pdf",
+        "Providers's Perspective", NA, NA, list(1,0),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalHandleUpdates",
         "registrar", "UseTakeoverSuggestion", "Policy",
         "", "", "",
         "(data1$Policy==\"LeastUsed\")&((data1$registrar == 1)|(data1$registrar == 5))"),
-   list("tos-pr-failure-localII", "tos-pr-failure-localII-RegistrarTotalRegistrations.pdf",
+   list("tos-pr-failure-planetlabII", "tos-pr-failure-planetlabII-RegistrarTotalRegistrations.pdf",
         "Providers's Perspective", NA, NA, list(1,0.7),
         "PRAllUptime-Num2to5", "registrar-RegistrarTotalRegistrations",
         "registrar", "UseTakeoverSuggestion", "Policy",

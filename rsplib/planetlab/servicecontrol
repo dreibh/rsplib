@@ -83,14 +83,16 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
                $SC_SERVICE_PRE_PROGRAM kill -INT \$PID_$UUID
                sleep 0.1
                i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
-                  if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  # --- if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  if ! grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                      i_$UUID=$SC_SERVICE_SHUTDOWN_TIMEOUT
                   else
                      sleep 1
                   fi
                   let i_$UUID=\$i_$UUID+1
                done
-               if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                   echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has not stopped yet -> sending SIGKILL."
                   $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID_$UUID
                fi
@@ -111,7 +113,8 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
          if [ -e $SC_SERVICE_PIDFILE ] ; then
             echo "$SC_SERVICE_PIDFILE already exisits."
             PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
-            if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME is still running!"
                DoStartup=0
             else
@@ -128,7 +131,8 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
 
                # Wait some time, for sudo/nice etc. to start the actual program
                i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
-                  if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+                  if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                      i_$UUID=$SC_SERVICE_STARTUP_TIMEOUT
                   else
                      sleep 1
@@ -136,7 +140,8 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
                   let i_$UUID=\$i_$UUID+1
                done
 
-               if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               # --- if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               if ! grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                   $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID_$UUID   # Just to make sure it is gone
                   let ExitCode_$UUID=\$ExitCode_$UUID+1
                fi
@@ -150,7 +155,8 @@ $SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NOD
       if [ "$SC_ACTION" = "status" ] ; then
          if [ -e $SC_SERVICE_PIDFILE ] ; then
             PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
-            if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
                echo -e "\\\x1b[032m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
             else
                echo -e "\\\x1b[031m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
