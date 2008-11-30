@@ -12,7 +12,7 @@ measurementDirectory <- "paper3planetlab"
 plotColorMode         <- cmColor
 plotHideLegend        <- FALSE
 plotLegendSizeFactor  <- 0.8
-plotOwnOutput         <- FALSE
+plotOwnOutput         <- TRUE
 plotFontFamily        <- "Helvetica"
 plotFontPointsize     <- 22
 plotWidth             <- 10
