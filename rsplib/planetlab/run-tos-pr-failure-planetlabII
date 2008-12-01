@@ -65,7 +65,7 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 1 2 3 4 5  6 7 8 9 A B C D ; do
+for Run in 0 1 2 3 4 5  6 7 8 9 A B C D  E F G H I ; do
    for Policy in RoundRobin LeastUsed Random ; do
       for PRAllUptime in 60 200 350 500 750 1000 ; do 
          for UseTakeoverSuggestion in "true" "false" ; do
