@@ -125,6 +125,10 @@ plotVariables <- list(
            "Probability of a Clean Shutdown[%]",
            "100.0 * data1$CleanShutdownProbability", "black"),
 
+   list("CookieMaxCalculationsReqSizeRatio",
+           "Cookie Max Calculations:Request Size Ratio[1]",
+           "data1$CookieMaxCalculations / data1$JobSize", "black")
+
    list("registrar",
            "Registrar Number {:rho:}[#]",
            "data1$registrar", "black")
