@@ -94,12 +94,12 @@ void CalcAppServer::printParameters()
    printf("   Vector File Name        = %s\n", VectorFileName.c_str());
    printf("   Scalar File Name        = %s\n", ScalarFileName.c_str());
    printf("   Max Jobs                = %u\n", (unsigned int)MaxJobs);
-   printf("   Capacity                = %1.1f [Calculations/s]\n", Capacity);
-   printf("   Clean Shutdown Prob.    = %1.2f [%%]\n", 100.0 * CleanShutdownProbability);
-   printf("   KA Transmission Interv. = %llu [us]\n", KeepAliveTransmissionInterval);
-   printf("   KA Timeout Interval     = %llu [us]\n", KeepAliveTimeoutInterval);
-   printf("   Cookie Max Time         = %llu [us]\n", CookieMaxTime);
-   printf("   Cookie Max Calculations = %1.0f [Calculations]\n", CookieMaxCalculations);
+   printf("   Capacity                = %1.1f Calculations/s\n", Capacity);
+   printf("   Clean Shutdown Prob.    = %1.2f%%\n", 100.0 * CleanShutdownProbability);
+   printf("   KA Transmission Interv. = %llums\n", KeepAliveTransmissionInterval / 1000);
+   printf("   KA Timeout Interval     = %llums\n", KeepAliveTimeoutInterval / 1000);
+   printf("   Cookie Max Time         = %1.3fs\n", CookieMaxTime / 1000000.0);
+   printf("   Cookie Max Calculations = %1.0f Calculations\n", CookieMaxCalculations);
 }
 
 

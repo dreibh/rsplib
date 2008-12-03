@@ -77,11 +77,11 @@ void FractalGeneratorServer::fractalGeneratorPrintParameters(const void* userDat
    const FractalGeneratorServerSettings* settings = (const FractalGeneratorServerSettings*)userData;
 
    puts("Fractal Generator Parameters:");
-   printf("   Data Max Time           = %u [ms]\n", (unsigned int)(settings->DataMaxTime / 1000ULL));
-   printf("   Cookie Max Time         = %u [ms]\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
-   printf("   Cookie Max Packets      = %u [Packets]\n", (unsigned int)settings->CookieMaxPackets);
-   printf("   Transmit Timeout        = %u [ms]\n", (unsigned int)settings->TransmitTimeout);
-   printf("   Failure After           = %u [Packets]\n", (unsigned int)settings->FailureAfter);
+   printf("   Transmit Timeout        = %ums\n", (unsigned int)settings->TransmitTimeout);
+   printf("   Data Max Time           = %ums\n", (unsigned int)(settings->DataMaxTime / 1000ULL));
+   printf("   Cookie Max Time         = %ums\n", (unsigned int)(settings->CookieMaxTime / 1000ULL));
+   printf("   Cookie Max Packets      = %u Packets\n", (unsigned int)settings->CookieMaxPackets);
+   printf("   Failure After           = %u Packets\n", (unsigned int)settings->FailureAfter);
    printf("   Test Mode               = %s\n", (settings->TestMode == true) ? "on" : "off");
 }
 

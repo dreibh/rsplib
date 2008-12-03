@@ -2,7 +2,7 @@
 # ###########################################################################
 # Name:        wp2-dynpool-mtbf-localI
 # Description: PE MTBF Variation
-# Revision:    $Id: run-tos-pr-failure-localI 2020 2008-11-24 09:10:19Z dreibh $
+# Revision:    $Id$
 # ###########################################################################
 
 
@@ -49,8 +49,8 @@ export MaxEURate=-1
 export UseTakeoverSuggestion="false"
 export Capacity=1000000
 export ReregInterval=30000
-export SKATransmissionInterval=1000000
-export SKATimeoutInterval=1000000
+export SKATransmissionInterval=1000
+export SKATimeoutInterval=1000
 export CookieMaxCalculations=5000000
 export CleanShutdownProbability=0.0
 export JobInterval=60.0

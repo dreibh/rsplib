@@ -194,7 +194,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
          puts("\n\nGeneral Parameters:");
          printf("   Pool Handle             = %s\n", poolHandle);
-         printf("   Reregistration Interval = %1.3f [s]\n", reregInterval / 1000.0);
+         printf("   Reregistration Interval = %1.3fs\n", reregInterval / 1000.0);
          printf("   Runtime Limit           = ");
          if(runtimeLimit > 0) {
             printf("%1.3f [s]\n", runtimeLimit / 1000.0);
@@ -204,10 +204,10 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          }
          puts("   Policy Settings");
          printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-         printf("      Load Degradation     = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
-         printf("      Load DPF             = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
+         printf("      Load Degradation     = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+         printf("      Load DPF             = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
          printf("      Weight               = %u\n", loadinfo->rli_weight);
-         printf("      Weight DPF           = %1.3f [%%]\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
+         printf("      Weight DPF           = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
          printParameters();
       }
 

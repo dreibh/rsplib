@@ -127,7 +127,7 @@ plotVariables <- list(
 
    list("CookieMaxCalculationsReqSizeRatio",
            "Cookie Max Calculations:Request Size Ratio[1]",
-           "data1$CookieMaxCalculations / data1$JobSize", "black")
+           "data1$CookieMaxCalculations / data1$JobSize", "black"),
 
    list("registrar",
            "Registrar Number {:rho:}[#]",

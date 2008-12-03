@@ -434,13 +434,13 @@ start:
             }
          }
          else if(!(strncmp(argv[i], "-capkeepalivetransmissioninterval=" ,34))) {
-            keepAliveTransmissionInterval = atol((const char*)&argv[i][34]);
+            keepAliveTransmissionInterval = 1000ULL * atol((const char*)&argv[i][34]);
             if(keepAliveTransmissionInterval < 100000) {
                keepAliveTransmissionInterval = 100000;
             }
          }
          else if(!(strncmp(argv[i], "-capkeepalivetimeoutinterval=" ,29))) {
-            keepAliveTimeoutInterval = atol((const char*)&argv[i][29]);
+            keepAliveTimeoutInterval = 1000ULL * atol((const char*)&argv[i][29]);
             if(keepAliveTimeoutInterval < 100000) {
                keepAliveTimeoutInterval = 100000;
             }
@@ -458,7 +458,7 @@ start:
             }
          }
          else if(!(strncmp(argv[i], "-capcookiemaxtime=" ,18))) {
-            cookieMaxTime = atol((const char*)&argv[i][18]);
+            cookieMaxTime = (unsigned long long)rint(1000000.0 * atof((const char*)&argv[i][18]));
             if(cookieMaxTime < 100000) {
                cookieMaxTime = 100000;
             }

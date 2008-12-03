@@ -2,7 +2,7 @@
 # ###########################################################################
 # Name:        wp2-cookies-localI
 # Description: Cookie-based failover
-# Revision:    $Id: run-tos-pr-failure-localI 2020 2008-11-24 09:10:19Z dreibh $
+# Revision:    $Id$
 # ###########################################################################
 
 
@@ -49,9 +49,10 @@ export MaxEURate=-1
 export UseTakeoverSuggestion="false"
 export Capacity=1000000
 export ReregInterval=30000
-export SKATransmissionInterval=1000000
-export SKATimeoutInterval=1000000
+export SKATransmissionInterval=1000
+export SKATimeoutInterval=1000
 export CookieMaxCalculations=5000000
+export CookieMaxTime=604800
 export CleanShutdownProbability=0.0
 export JobInterval=60.0
 export JobSize=10000000
@@ -73,7 +74,7 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 for Run in 0 ; do
    for Policy in Random ; do   #  LeastUsed RoundRobin 
-      for PEAllUptime in 50 ; do
+      for PEAllUptime in 10 ; do
          for CookieMaxCalculations in 1000000 10000000 ; do
 
 
