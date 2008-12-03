@@ -73,8 +73,8 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Run in 0 ; do
-   for Policy in Random ; do   #  LeastUsed RoundRobin 
-      for PEAllUptime in 10 ; do
+   for Policy in Random ; do   #  LeastUsed RoundRobin
+      for PEAllUptime in 0 2 10 ; do
          for CookieMaxCalculations in 1000000 10000000 ; do
 
 

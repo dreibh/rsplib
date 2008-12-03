@@ -123,7 +123,7 @@ uint32_t random32()
 /* ###### Get double random value ######################################## */
 double randomDouble()
 {
-   return( (double)random32() / (double)4294967296ULL );
+   return( (double)random32() / (double)4294967296.0 );
 }
 
 

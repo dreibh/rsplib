@@ -123,7 +123,7 @@ CalcAppServer::CalcAppServerJob* CalcAppServer::addJob(rserpool_session_t sessio
          job->JobCompleteTimeStamp           = ~0ULL;
          job->CookieTransmissionTimeStamp    = ~0ULL;
          job->LastUpdateAt                   = getMicroTime();
-         job->LastCookieAt                   = 0;
+         job->LastCookieAt                   = job->LastUpdateAt;
          job->LastCookieCompleted            = 0.0;
          FirstJob = job;
          Jobs++;
@@ -183,7 +183,8 @@ void CalcAppServer::removeJob(CalcAppServer::CalcAppServerJob* removedJob)
 void CalcAppServer::removeAllJobs()
 {
    // ====== Clean shutdown: send cookies to all PUs ========================
-   if(randomDouble() <= CleanShutdownProbability) {
+   const double r = randomDouble();
+   if(r <= CleanShutdownProbability) {
       CalcAppServerJob* job = FirstJob;
       while(job != NULL) {
          CalcAppServerJob* next = job->Next;
@@ -213,12 +214,12 @@ void CalcAppServer::updateCalculations()
          const double completedCalculations = elapsed * capacityPerJob;
          if(job->Completed + completedCalculations < job->JobSize) {
             Stats->TotalUsedCalculations += completedCalculations;
-            job->Completed              += completedCalculations;
+            job->Completed               += completedCalculations;
          }
          else {
             CHECK(job->JobSize - job->Completed >= 0.0);
             Stats->TotalUsedCalculations += job->JobSize - job->Completed;
-            job->Completed               = job->JobSize;
+            job->Completed                = job->JobSize;
          }
          job->LastUpdateAt = now;
 
@@ -246,7 +247,7 @@ void CalcAppServer::scheduleJobs()
 
          // When is the time to send the next cookie?
          const double calculationsSinceLastCookie = job->Completed - job->LastCookieCompleted;
-         const double timeSinceLastCookie         = now - job->LastCookieAt;
+         const double timeSinceLastCookie         = (double)now - (double)job->LastCookieAt;
          const unsigned long long nextByCalculations =
             (unsigned long long)rint(max(0.0, CookieMaxCalculations - calculationsSinceLastCookie) / capacityPerJob);
          const unsigned long long nextByTime =
