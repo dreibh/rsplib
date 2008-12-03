@@ -1,7 +1,7 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        tos-pr-failure-localI
-# Description: Takeover Suggestion evaluation
+# Name:        wp2-dynpool-mtbf-localI
+# Description: PE MTBF Variation
 # Revision:    $Id: run-tos-pr-failure-localI 2020 2008-11-24 09:10:19Z dreibh $
 # ###########################################################################
 
@@ -12,8 +12,8 @@
 # export SERVICE_DIRECTORY="bin"
 # export SERVICE_PRE_PROGRAM="sudo"
 
-export SSH_USER="dreibh"
-export SSH_KEY="/home/dreibh/.ssh/test-key"
+export SSH_USER=$USER
+export SSH_KEY=/home/$SSH_USER/.ssh/test-key
 export SERVICE_DIRECTORY="src/rsplib2/rsplib"
 export SERVICE_PRE_PROGRAM=""
 export OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
@@ -26,14 +26,14 @@ export AttackerNodeList="localhost"
 export PortBase=8473
 
 . ./attack-scenario4 init
-export Measurement=test1
-export Duration=120
-export PRs=3
+export Measurement=wp2-dynpool-mtbf-localI
+export Duration=900
+export PRs=1
 export PEs=25
 export PUs=75
 export PR1UptimeOverride=0
 export PEAllUptime=0
-export PEAllDowntime=0.001
+export PEAllDowntime=0
 export PRAllUptime=0
 export PRAllDowntime=30
 export UsePEMasterPR="true"
@@ -41,12 +41,17 @@ export UsePUMasterPR="false"
 export AttackInterval=1
 export Policy="LeastUsed"
 export LoadDegOverride=0
+export EKATransmissionInterval=1000
+export EKATimeoutInterval=1000
 export MaxBadPEReports=3
 export MaxHRRate=-1
 export MaxEURate=-1
 export UseTakeoverSuggestion="false"
 export Capacity=1000000
 export ReregInterval=30000
+export SKATransmissionInterval=1000000
+export SKATimeoutInterval=1000000
+export CookieMaxCalculations=5000000
 export CleanShutdownProbability=0.0
 export JobInterval=60.0
 export JobSize=10000000
@@ -66,18 +71,18 @@ fi
 echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
-for Run in 0 ; do
-   for Policy in LeastUsed ; do   # "LeastUsedDegradation:0.1" RoundRobin Random
-      for PEAllUptime in 10 50 ; do
+for Run in 0 1 2 3 ; do
+   for Policy in LeastUsed RoundRobin Random ; do
+      for PEAllUptime in 1 5 10 25 50 ; do
          for CleanShutdownProbability in 1.0 ; do
 
 
-            ID=$Duration-$Policy-$PEAllUptime-$CleanShutdownProbability
+            ID=$Duration-$Policy-$PEAllUptime-$CleanShutdownProbability-$MaxBadPEReports-$EKATransmissionInterval-$SKATransmissionInterval-$CookieMaxCalculations
             if [ $Run != "0" ] ; then
                ID=Run$Run-$ID
             fi
-            VARIABLES="Run Duration Policy Capacity JobSize JobInterval PEAllUptime CleanShutdownProbability "
-            VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $PEAllUptime $CleanShutdownProbability"
+            VARIABLES="Run Duration Policy Capacity JobSize JobInterval PEAllUptime CleanShutdownProbability MaxBadPEReports EKATransmissionInterval SKATransmissionInterval CookieMaxCalculations"
+            VALUES="$Run $Duration \"$Policy\" $Capacity $JobSize $JobInterval $PEAllUptime $CleanShutdownProbability $MaxBadPEReports $EKATransmissionInterval $SKATransmissionInterval $CookieMaxCalculations"
 
 
             echo ID=$ID

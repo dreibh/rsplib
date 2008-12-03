@@ -62,6 +62,9 @@ if [ "$1" = "init" ] ; then
    export MaxEURate=-1
    export Capacity=1000000
    export ReregInterval=30000
+   export SKATransmissionInterval=2500000
+   export SKATimeoutInterval=2500000
+   export CookieMaxCalculations=5000000
    export CleanShutdownProbability=0.0
    export JobInterval=60.0
    export JobSize=10000000
@@ -133,6 +136,9 @@ else
    check_variable EKATimeoutInterval $EKATimeoutInterval
    check_variable Capacity $Capacity
    check_variable ReregInterval $ReregInterval
+   check_variable SKATransmissionInterval $SKATransmissionInterval
+   check_variable SKATimeoutInterval $SKATimeoutInterval
+   check_variable CookieMaxCalculations $CookieMaxCalculations
    check_variable CleanShutdownProbability $CleanShutdownProbability
    check_variable JobInterval $JobInterval
    check_variable JobSize $JobSize
@@ -283,7 +289,7 @@ else
    for node in $PEList ; do
       echo "PE=$node"
       $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pe-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY server \
-         "-loglevel=4 -logcolor=off -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=$POOLHANDLE -rereginterval=$ReregInterval -capcapacity=$Capacity -uptime=$PEAllUptime -downtime=$PEAllDowntime -capcleanshutdownprobability=$CleanShutdownProbability "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+         "-loglevel=4 -logcolor=off -calcapp -capcapacity=1000000 -policy=$Policy -poolhandle=$POOLHANDLE -rereginterval=$ReregInterval -capcapacity=$Capacity -capkeepalivetimeoutinterval=$SKATimeoutInterval -capkeepalivetransmissioninterval=$SKATransmissionInterval -capcookiemaxcalculations=$CookieMaxCalculations -uptime=$PEAllUptime -downtime=$PEAllDowntime -capcleanshutdownprobability=$CleanShutdownProbability "-capobject=scenario.calcAppPoolElement[$id]" -capscalar=$ID-pe-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    v=1

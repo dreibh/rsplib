@@ -99,6 +99,9 @@ plotVariables <- list(
    list("PRAllUptime",
            "PR MTBF{M}",
            NA, "black"),
+   list("PEAllUptime",
+           "PE MTBF{M}",
+           NA, "black"),
 
    list("Policy",
            "Pool Policy{p}",
@@ -118,6 +121,9 @@ plotVariables <- list(
    list("UseTakeoverSuggestion",
            "Use Takeover Suggestion {:tau:}",
            "data1$UseTakeoverSuggestion", "black"),
+   list("CleanShutdownProbability",
+           "Probability of a Clean Shutdown[%]",
+           "100.0 * data1$CleanShutdownProbability", "black"),
 
    list("registrar",
            "Registrar Number {:rho:}[#]",
