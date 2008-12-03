@@ -79,7 +79,7 @@ bool ScriptingServer::start()
 
 
 // ###### Create a Scripting thread #########################################
-TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData)
+TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData, const uint32_t peIdentifier)
 {
    return(new ScriptingServer(sd, (ScriptingServerSettings*)userData));
 }

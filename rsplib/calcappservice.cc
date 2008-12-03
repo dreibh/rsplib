@@ -49,7 +49,9 @@ CalcAppServer::CalcAppServer(const size_t             maxJobs,
                              const unsigned long long keepAliveTransmissionInterval,
                              const unsigned long long keepAliveTimeoutInterval,
                              const unsigned long long cookieMaxTime,
-                             const double             cookieMaxCalculations)
+                             const double             cookieMaxCalculations,
+                             CalcAppServerStatistics* statistics,
+                             const bool               resetStatistics)
 {
    FirstJob                      = NULL;
    ObjectName                    = objectName;
@@ -58,19 +60,20 @@ CalcAppServer::CalcAppServer(const size_t             maxJobs,
    VectorFH                      = NULL;
    ScalarFH                      = NULL;
    MaxJobs                       = maxJobs;
-   TotalUsedCalculations         = 0.0;
    Capacity                      = capacity;
    KeepAliveTimeoutInterval      = keepAliveTimeoutInterval;
    KeepAliveTransmissionInterval = keepAliveTransmissionInterval;
    CookieMaxTime                 = cookieMaxTime;
    CookieMaxCalculations         = cookieMaxCalculations;
-   StartupTimeStamp              = getMicroTime();
-
-   TotalJobsAccepted             = 0;
-   TotalJobsRejected             = 0;
-
-   VectorLine                    = 0;
    Jobs                          = 0;
+   Stats                         = statistics;
+   if(resetStatistics) {
+      Stats->StartupTimeStamp      = getMicroTime();
+      Stats->TotalUsedCalculations = 0.0;
+      Stats->TotalJobsAccepted     = 0;
+      Stats->TotalJobsRejected     = 0;
+      Stats->VectorLine            = 0;
+   }
 }
 
 
@@ -201,13 +204,13 @@ void CalcAppServer::updateCalculations()
          const unsigned long long elapsed   = now - job->LastUpdateAt;
          const double completedCalculations = elapsed * capacityPerJob;
          if(job->Completed + completedCalculations < job->JobSize) {
-            TotalUsedCalculations += completedCalculations;
-            job->Completed += completedCalculations;
+            Stats->TotalUsedCalculations += completedCalculations;
+            job->Completed              += completedCalculations;
          }
          else {
             CHECK(job->JobSize - job->Completed >= 0.0);
-            TotalUsedCalculations += job->JobSize - job->Completed;
-            job->Completed = job->JobSize;
+            Stats->TotalUsedCalculations += job->JobSize - job->Completed;
+            job->Completed               = job->JobSize;
          }
          job->LastUpdateAt = now;
 
@@ -268,9 +271,11 @@ void CalcAppServer::scheduleNextTimerEvent()
 
 
 // ###### Initialize ########################################################
-EventHandlingResult CalcAppServer::initializeService(int sd)
+EventHandlingResult CalcAppServer::initializeService(int sd, const uint32_t peIdentifier)
 {
-   VectorFH = fopen(VectorFileName.c_str(), "w");
+   Identifier = peIdentifier;
+
+   VectorFH = fopen(VectorFileName.c_str(), (Stats->VectorLine > 0) ? "a" : "w");
    if(VectorFH == NULL) {
       cout << " Unable to open output file " << VectorFileName << endl;
       return(EHR_Abort);
@@ -295,11 +300,11 @@ void CalcAppServer::finishService(int sd, EventHandlingResult initializeResult)
 
    if(ScalarFH) {
       unsigned long long       shutdownTimeStamp     = getMicroTime();
-      const unsigned long long serviceUptime         = shutdownTimeStamp - StartupTimeStamp;
+      const unsigned long long serviceUptime         = shutdownTimeStamp - Stats->StartupTimeStamp;
       const double             availableCalculations = serviceUptime * Capacity / 1000000.0;
-      const double             utilization           = TotalUsedCalculations / availableCalculations;
+      const double             utilization           = Stats->TotalUsedCalculations / availableCalculations;
 
-      const double             totalUsedCapacity     = TotalUsedCalculations;
+      const double             totalUsedCapacity     = Stats->TotalUsedCalculations;
       const double             totalWastedCapacity   = serviceUptime - totalUsedCapacity;
 
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Service Uptime\"        %1.6f\n", ObjectName.c_str(), serviceUptime / 1000000.0);
@@ -309,8 +314,8 @@ void CalcAppServer::finishService(int sd, EventHandlingResult initializeResult)
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Used Capacity\"   %1.0f\n", ObjectName.c_str(), totalUsedCapacity);
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Wasted Capacity\" %1.0f\n", ObjectName.c_str(), totalWastedCapacity);
 
-      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Accepted\"   %llu\n",  ObjectName.c_str(), TotalJobsAccepted);
-      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Rejected\"   %llu\n",  ObjectName.c_str(), TotalJobsRejected);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Accepted\"   %llu\n",  ObjectName.c_str(), Stats->TotalJobsAccepted);
+      fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Total Jobs Rejected\"   %llu\n",  ObjectName.c_str(), Stats->TotalJobsRejected);
 
       fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPE Utilization\"           %1.6f\n", ObjectName.c_str(), utilization);
 
@@ -375,7 +380,7 @@ EventHandlingResult CalcAppServer::handleCookieEcho(rserpool_session_t sessionID
 // ###### Send CalcAppAccept ################################################
 void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 {
-   TotalJobsAccepted++;
+   Stats->TotalJobsAccepted++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type   = CALCAPP_ACCEPT;
@@ -394,7 +399,7 @@ void CalcAppServer::sendCalcAppAccept(CalcAppServer::CalcAppServerJob* job)
 // ###### Send CalcAppReject ################################################
 void CalcAppServer::sendCalcAppReject(rserpool_session_t sessionID, uint32_t jobID)
 {
-   TotalJobsRejected++;
+   Stats->TotalJobsRejected++;
    struct CalcAppMessage message;
    memset(&message, 0, sizeof(message));
    message.Type   = CALCAPP_REJECT;
@@ -438,20 +443,21 @@ void CalcAppServer::sendCalcAppComplete(CalcAppServer::CalcAppServerJob* job)
    }
 
    unsigned long long       shutdownTimeStamp     = getMicroTime();
-   const unsigned long long serviceUptime         = shutdownTimeStamp - StartupTimeStamp;
+   const unsigned long long serviceUptime         = shutdownTimeStamp - Stats->StartupTimeStamp;
    const double             availableCalculations = serviceUptime * Capacity / 1000000.0;
-   const double             utilization           = TotalUsedCalculations / availableCalculations;
+   const double             utilization           = Stats->TotalUsedCalculations / availableCalculations;
    if(VectorFH) {
-      if(VectorLine == 0) {
-         fprintf(VectorFH, "ObjectName PID CurrentTimeStamp Runtime   AvailableCalculations UsedCalculations Utilization   CurrentJobs MaxJobs\n");
+      if(Stats->VectorLine == 0) {
+         fprintf(VectorFH, "ObjectName PID PoolElementIdentifier CurrentTimeStamp Runtime   AvailableCalculations UsedCalculations Utilization   CurrentJobs MaxJobs\n");
       }
-      fprintf(VectorFH,"%06u %s %u %1.6f %1.6f   %1.0f %1.0f %1.6f   %u %u\n",
-            ++VectorLine,
+      fprintf(VectorFH,"%06llu %s %u 0x%08x %1.6f   %1.6f   %1.0f %1.0f %1.6f   %u %u\n",
+            ++Stats->VectorLine,
             ObjectName.c_str(),
             (unsigned int)getpid(),
+            Identifier,
             getMicroTime() / 1000000.0,
             serviceUptime / 1000000.0,
-            availableCalculations, TotalUsedCalculations, utilization,
+            availableCalculations, Stats->TotalUsedCalculations, utilization,
             (unsigned int)Jobs, (unsigned int)MaxJobs);
       // fflush(VectorFH);
    }

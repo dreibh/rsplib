@@ -40,6 +40,15 @@
 class CalcAppServer : public UDPLikeServer
 {
    public:
+   struct CalcAppServerStatistics {
+      unsigned long long StartupTimeStamp;
+      double             TotalUsedCalculations;
+      unsigned long long TotalJobsAccepted;
+      unsigned long long TotalJobsRejected;
+      unsigned long long VectorLine;
+   };
+
+   public:
    CalcAppServer(const size_t             maxJobs,
                  const char*              objectName,
                  const char*              vectorFileName,
@@ -48,11 +57,13 @@ class CalcAppServer : public UDPLikeServer
                  const unsigned long long keepAliveTransmissionInterval,
                  const unsigned long long keepAliveTimeoutInterval,
                  const unsigned long long cookieMaxTime,
-                 const double             cookieMaxCalculations);
+                 const double             cookieMaxCalculations,
+                 CalcAppServerStatistics* statistics,
+                 const bool               resetStatistics);
    virtual ~CalcAppServer();
 
    protected:
-   virtual EventHandlingResult initializeService(int sd);
+   virtual EventHandlingResult initializeService(int sd, const uint32_t peIdentifier);
    virtual void finishService(int sd, EventHandlingResult result);
    virtual void printParameters();
    virtual EventHandlingResult handleMessage(rserpool_session_t sessionID,
@@ -118,27 +129,22 @@ class CalcAppServer : public UDPLikeServer
    void handleCookieTransmissionTimer(CalcAppServerJob* job);
 
 
-   std::string        ObjectName;
-   std::string        VectorFileName;
-   std::string        ScalarFileName;
-   FILE*              VectorFH;
-   FILE*              ScalarFH;
-   unsigned int       VectorLine;
+   std::string              ObjectName;
+   std::string              VectorFileName;
+   std::string              ScalarFileName;
+   FILE*                    VectorFH;
+   FILE*                    ScalarFH;
+   CalcAppServerJob*        FirstJob;
+   CalcAppServerStatistics* Stats;
 
-   size_t             MaxJobs;
-   double             Capacity;
-   unsigned long long KeepAliveTimeoutInterval;
-   unsigned long long KeepAliveTransmissionInterval;
-   unsigned long long CookieMaxTime;
-   double             CookieMaxCalculations;
-
-   double             TotalUsedCalculations;
-   unsigned long long TotalJobsAccepted;
-   unsigned long long TotalJobsRejected;
-
-   unsigned long long StartupTimeStamp;
-   size_t             Jobs;
-   CalcAppServerJob*  FirstJob;
+   size_t                   MaxJobs;
+   double                   Capacity;
+   unsigned long long       KeepAliveTimeoutInterval;
+   unsigned long long       KeepAliveTransmissionInterval;
+   unsigned long long       CookieMaxTime;
+   double                   CookieMaxCalculations;
+   size_t                   Jobs;
+   uint32_t                 Identifier;
 };
 
 #endif

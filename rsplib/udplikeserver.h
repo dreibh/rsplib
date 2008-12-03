@@ -42,7 +42,7 @@ class UDPLikeServer
    UDPLikeServer();
    virtual ~UDPLikeServer();
 
-   virtual EventHandlingResult initializeService(int sd);
+   virtual EventHandlingResult initializeService(int sd, const uint32_t peIdentifier);
    virtual void finishService(int sd, EventHandlingResult initializeResult);
 
    virtual void poolElement(const char*          programTitle,

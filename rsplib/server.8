@@ -45,6 +45,8 @@
 .Op Fl registrar=address:port
 .Op Fl rereginterval=milliseconds
 .Op Fl runtime=milliseconds
+.Op Fl uptime=seconds
+.Op Fl downtime=seconds
 .Op Fl logcolor=on|off
 .Op Fl logappend=filename
 .Op Fl logfile=filename
@@ -160,6 +162,10 @@ Sets the PE's re-registration interval.
 .It Fl runtime=seconds
 After the configured number of seconds, the service is shut down.
 Floating-point values (e.g. 30.125) are possible.
+.It Fl uptime=seconds
+After negative exponential randomized uptime, the PE service goes down for a configured downtime. After that, it comes up again. This option can be used for testing the failure handling procedures.
+.It Fl downtime=seconds
+After negative exponential randomized downtime, the PE service comes up again. This option can be used for testing the failure handling procedures.
 .El
 .\" ====== Logging ==========================================================
 .It Logging Parameters:

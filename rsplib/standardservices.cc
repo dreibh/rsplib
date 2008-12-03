@@ -191,7 +191,7 @@ EventHandlingResult CharGenServer::initializeSession()
 
 
 // ###### Create a CharGenServer thread #####################################
-TCPLikeServer* CharGenServer::charGenServerFactory(int sd, void* userData)
+TCPLikeServer* CharGenServer::charGenServerFactory(int sd, void* userData, const uint32_t peIdentifier)
 {
    return(new CharGenServer(sd));
 }
@@ -225,7 +225,7 @@ PingPongServer::~PingPongServer()
 
 
 // ###### Create a PingServer thread ########################################
-TCPLikeServer* PingPongServer::pingPongServerFactory(int sd, void* userData)
+TCPLikeServer* PingPongServer::pingPongServerFactory(int sd, void* userData, const uint32_t peIdentifier)
 {
    return(new PingPongServer(sd, (PingPongServer::PingPongServerSettings*)userData));
 }

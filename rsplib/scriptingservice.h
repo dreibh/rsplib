@@ -51,7 +51,7 @@ class ScriptingServer : public TCPLikeServer
                    ScriptingServerSettings* settings);
    ~ScriptingServer();
 
-   static TCPLikeServer* scriptingServerFactory(int sd, void* userData);
+   static TCPLikeServer* scriptingServerFactory(int sd, void* userData, const uint32_t peIdentifier);
    static void scriptingPrintParameters(const void* userData);
 
    protected:

@@ -35,7 +35,6 @@
 /*
 #define FAST_BREAK
 */
-#define REGISTRAR_FAILURE_TEST
 
 
 /* ###### Add peer ####################################################### */
@@ -284,48 +283,45 @@ static void goIntoDaemonMode(const char* daemonPIDFile)
 
 
 /* ###### Main program ################################################### */
-#ifdef REGISTRAR_FAILURE_TEST
-int main2(int argc, char** argv,
-          const unsigned long long          uptime,
-          const struct RegistrarStatistics* inStats,
-          struct RegistrarStatistics*       outStats)
-{
-   const unsigned long long      endTimeStamp                  = (uptime > 0) ? (getMicroTime() + uptime) : 0;
-   unsigned long long            now;
-#else
 int main(int argc, char** argv)
 {
-#endif
-
-   struct Registrar*             registrar;
-   uint32_t                      serverID                      = 0;
-   bool                          quiet                         = false;
-
    char                          asapUnicastAddressBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* asapUnicastAddress            = (struct TransportAddressBlock*)&asapUnicastAddressBuffer;
-   const char*                   asapUnicastAddressParameter   = "auto";
-   int                           asapUnicastSocket             = -1;
+   const char*                   asapUnicastAddressParameter;
+   int                           asapUnicastSocket;
 
    char                          asapAnnounceAddressBuffer[transportAddressBlockGetSize(1)];
    struct TransportAddressBlock* asapAnnounceAddress           = (struct TransportAddressBlock*)&asapAnnounceAddressBuffer;
-   const char*                   asapAnnounceAddressParameter  = "auto";
-   int                           asapAnnounceSocket            = -1;
-   bool                          asapSendAnnounces             = false;
+   const char*                   asapAnnounceAddressParameter;
+   int                           asapAnnounceSocket;
+   bool                          asapSendAnnounces;
 
    char                          enrpUnicastAddressBuffer[transportAddressBlockGetSize(MAX_PE_TRANSPORTADDRESSES)];
    struct TransportAddressBlock* enrpUnicastAddress            = (struct TransportAddressBlock*)&enrpUnicastAddressBuffer;
-   const char*                   enrpUnicastAddressParameter   = "auto";
-   int                           enrpUnicastSocket             = -1;
+   const char*                   enrpUnicastAddressParameter;
+   int                           enrpUnicastSocket;
 
    char                          enrpMulticastAddressBuffer[transportAddressBlockGetSize(1)];
-   struct TransportAddressBlock* enrpMulticastAddress          = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
-   const char*                   enrpMulticastAddressParameter = "auto";
-   int                           enrpMulticastOutputSocket     = -1;
-   int                           enrpMulticastInputSocket      = -1;
-   bool                          enrpAnnounceViaMulticast      = false;
+   struct TransportAddressBlock* enrpMulticastAddress = (struct TransportAddressBlock*)&enrpMulticastAddressBuffer;
+   const char*                   enrpMulticastAddressParameter;
+   int                           enrpMulticastOutputSocket;
+   int                           enrpMulticastInputSocket;
+   bool                          enrpAnnounceViaMulticast;
 
-   bool                          useIPv6                       = checkIPv6();
-   const char*                   daemonPIDFile                 = NULL;
+   struct Registrar*             registrar;
+   struct RegistrarStatistics    statistics;
+   uint32_t                      serverID ;
+   bool                          quiet;
+
+   bool                          useIPv6;
+   const char*                   daemonPIDFile;
+
+   unsigned int                  run;
+   double                        uptime;
+   double                        downtime;
+   double                        t;
+   unsigned long long            endTimeStamp;
+   unsigned long long            now;
 
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];
@@ -340,17 +336,36 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef ENABLE_REGISTRAR_STATISTICS
+   const char*                   objectName      = "registrar";
+   const char*                   scalarName      = NULL;
+   FILE*                         scalarFH        = NULL;
    FILE*                         actionLogFile   = NULL;
    BZFILE*                       actionLogBZFile = NULL;
    FILE*                         statsFile       = NULL;
    BZFILE*                       statsBZFile     = NULL;
    int                           statsInterval   = -1;
    int                           bzerror;
-   const char*                   objectName = "registrar";
-   const char*                   scalarName = NULL;
-   FILE*                         scalarFH   = NULL;
 #endif
 
+   run                           = 1;
+   uptime                        = 0.0;
+   downtime                      = 0.0;
+start:
+   serverID                      = 0;
+   quiet                         = false;
+   useIPv6                       = checkIPv6();
+   daemonPIDFile                 = NULL;
+   asapUnicastAddressParameter   = "auto";
+   asapUnicastSocket             = -1;
+   asapAnnounceAddressParameter  = "auto";
+   asapAnnounceSocket            = -1;
+   asapSendAnnounces             = false;
+   enrpUnicastAddressParameter   = "auto";
+   enrpUnicastSocket             = -1;
+   enrpMulticastAddressParameter = "auto";
+   enrpMulticastOutputSocket     = -1;
+   enrpMulticastInputSocket      = -1;
+   enrpAnnounceViaMulticast      = false;
 
    /* ====== Get arguments =============================================== */
 #ifdef ENABLE_CSP
@@ -393,10 +408,6 @@ int main(int argc, char** argv)
                (!(strncmp(argv[i], "-maxhresitems=", 14))) ||
                (!(strncmp(argv[i], "-maxhrrate=", 11))) ||
                (!(strncmp(argv[i], "-maxeurate=", 11))) ||
-#ifdef REGISTRAR_FAILURE_TEST
-               (!(strncmp(argv[i], "-uptime=", 8))) ||
-               (!(strncmp(argv[i], "-downtime=", 10))) ||
-#endif
                (!(strncmp(argv[i], "-maxelementsperhtrequest=", 25))) ) {
          /* to be handled later */
       }
@@ -454,6 +465,12 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-daemonpidfile=", 15))) {
          daemonPIDFile = (const char*)&argv[i][15];
       }
+      else if(!(strncmp(argv[i], "-uptime=", 8))) {
+         uptime = atof((const char*)&argv[i][8]);
+      }
+      else if(!(strncmp(argv[i], "-downtime=", 10))) {
+         downtime = atof((const char*)&argv[i][10]);
+      }
 #ifdef ENABLE_REGISTRAR_STATISTICS
       else if(!(strncmp(argv[i], "-actionlogfile=", 15))) {
          if(actionLogBZFile) {
@@ -463,7 +480,7 @@ int main(int argc, char** argv)
          if(actionLogFile) {
             fclose(actionLogFile);
          }
-         actionLogFile = fopen((const char*)&argv[i][15], "w");
+         actionLogFile = fopen((const char*)&argv[i][15], (run > 1) ? "a" : "w");
          if(actionLogFile == NULL) {
             fprintf(stderr, "ERROR: Unable to create action log file \"%s\"!\n",
                     (char*)&argv[i][11]);
@@ -486,7 +503,7 @@ int main(int argc, char** argv)
          if(statsFile) {
             fclose(statsFile);
          }
-         statsFile = fopen((const char*)&argv[i][11], "w");
+         statsFile = fopen((const char*)&argv[i][11], (run > 1) ? "a" : "w");
          if(statsFile == NULL) {
             fprintf(stderr, "ERROR: Unable to create statistics file \"%s\"!\n",
                     (char*)&argv[i][11]);
@@ -556,6 +573,25 @@ int main(int argc, char** argv)
          exit(1);
       }
    }
+
+   /* ====== Failure test mode =========================================== */
+   if(uptime < 0.001) {
+      uptime = 0.001;
+   }
+   if(downtime < 0.001) {
+      downtime = 0.001;
+   }
+   if(uptime > 0.000001) {
+      printf("Uptime   = %1.3f [s]\n", uptime);
+      printf("Downtime = %1.3f [s]\n", downtime);
+      t = randomExpDouble(uptime);
+      printf("\nRun #%u: Running registrar for %1.3fs ...\n\n", run, t);
+      endTimeStamp = getMicroTime() + (unsigned long long)rint(t * 1000000.0);
+   }
+   else {
+      endTimeStamp = (uptime > 0) ? (getMicroTime() + uptime) : 0;
+   }
+
    beginLogging();
 
 #ifndef HAVE_KERNEL_SCTP
@@ -619,8 +655,8 @@ int main(int argc, char** argv)
       exit(1);
    }
 #ifdef ENABLE_REGISTRAR_STATISTICS
-   if(inStats) {
-      registrar->Stats = *inStats;
+   if(run > 1) {
+      registrar->Stats = statistics;
    }
 #endif
    for(i = 1;i < argc;i++) {
@@ -866,7 +902,6 @@ int main(int argc, char** argv)
       puts("");
    }
 
-
    /* ====== We are ready! =============================================== */
    LOG_NOTE
    fputs("Registrar started. Going into initialization phase...\n", stdlog);
@@ -891,12 +926,10 @@ int main(int argc, char** argv)
          }
          break;
       }
-#ifdef REGISTRAR_FAILURE_TEST
       if( (endTimeStamp > 0) && (endTimeStamp <= getMicroTime()) ) {
          puts("Shutdown by timer!");
          break;
       }
-#endif
       dispatcherHandlePollResult(&registrar->StateMachine, result,
                                  (struct pollfd*)&ufds, nfds, timeout,
                                  pollTimeStamp);
@@ -904,16 +937,14 @@ int main(int argc, char** argv)
 
    /* ====== Clean up ==================================================== */
 #ifdef ENABLE_REGISTRAR_STATISTICS
-   if(outStats) {
-      if(registrar->Stats.NeedsWeightedStatValues) {
-         now = getMicroTime();
-         updateWeightedStatValue(&registrar->Stats.PoolsCount, now, 0);
-         updateWeightedStatValue(&registrar->Stats.PoolElementsCount, now, 0);
-         updateWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, now, 0);
-         updateWeightedStatValue(&registrar->Stats.PeersCount, now, 0);
-      }
-      *outStats = registrar->Stats;
+   if(registrar->Stats.NeedsWeightedStatValues) {
+      now = getMicroTime();
+      updateWeightedStatValue(&registrar->Stats.PoolsCount, now, 0);
+      updateWeightedStatValue(&registrar->Stats.PoolElementsCount, now, 0);
+      updateWeightedStatValue(&registrar->Stats.OwnedPoolElementsCount, now, 0);
+      updateWeightedStatValue(&registrar->Stats.PeersCount, now, 0);
    }
+   statistics = registrar->Stats;
    if(scalarName) {
        scalarFH = fopen(scalarName, "w");
        if(scalarFH) {
@@ -930,6 +961,7 @@ int main(int argc, char** argv)
    }
    if(statsFile) {
       fclose(statsFile);
+      statsFile = NULL;
    }
    if(actionLogBZFile) {
       BZ2_bzWriteClose(&bzerror, actionLogBZFile, 0, NULL, NULL);
@@ -941,68 +973,22 @@ int main(int argc, char** argv)
 #endif
    registrarDelete(registrar);
    finishLogging();
+#ifndef FAST_BREAK
+    uninstallBreakDetector();
+#endif
+
+   if((!breakDetected()) && (uptime > 0.000001)) {
+      t = randomExpDouble(downtime);
+      printf("\nWaiting for %1.3fs ...\n", t);
+      usleep((unsigned long long)rint(t * 1000000.0));
+      if(!breakDetected()) {
+         run++;
+         goto start;
+      }
+   }
+
    if(!quiet) {
       puts("\nTerminated!");
    }
    return(0);
 }
-
-
-#ifdef REGISTRAR_FAILURE_TEST
-/* This is a new main() function which provides the functionality of starting
-   and stopping the PR for failure test purposes. It actually calls the real
-   main function "main2" ...
-*/
-int main(int argc, char** argv)
-{
-   struct RegistrarStatistics stats;
-   double                     uptime   = 0.0;
-   double                     downtime = 0.0;
-   double                     t;
-   int i;
-   for(i = 1;i < argc;i++) {
-      if(!(strncmp(argv[i], "-uptime=", 8))) {
-         uptime = atof((const char*)&argv[i][8]);
-      }
-      else if(!(strncmp(argv[i], "-downtime=", 10))) {
-         downtime = atof((const char*)&argv[i][10]);
-      }
-   }
-   if(uptime < 0.0) {
-      uptime = 0.0;
-   }
-   if(downtime < 0.001) {
-      downtime = 0.001;
-   }
-
-   if(uptime < 0.000001) {
-      /* Only one run */
-      main2(argc, argv, 0, NULL, NULL);
-   }
-   else {
-      printf("Uptime   = %1.3f [s]\n", uptime);
-      printf("Downtime = %1.3f [s]\n", downtime);
-      i = 1;
-      for(;;) {
-         t = randomExpDouble(uptime);
-         printf("\nRun #%d: Running registrar for %1.3fs ...\n\n", i, t);
-         main2(argc, argv,
-               (unsigned long long)rint(t * 1000000.0),
-               ((i == 1) ? NULL : &stats), &stats);
-
-         if(breakDetected()) {
-            break;
-         }
-#ifndef FAST_BREAK
-         uninstallBreakDetector();
-#endif
-
-         t = randomExpDouble(downtime);
-         printf("\nWaiting for %1.3fs ...\n", t);
-         usleep((unsigned long long)rint(t * 1000000.0));
-         i++;
-      }
-      puts("\nTerminated! ---");
-   }
-}
-#endif

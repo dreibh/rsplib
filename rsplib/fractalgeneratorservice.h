@@ -52,7 +52,7 @@ class FractalGeneratorServer : public TCPLikeServer
                           FractalGeneratorServerSettings* settings);
    ~FractalGeneratorServer();
 
-   static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData);
+   static TCPLikeServer* fractalGeneratorServerFactory(int sd, void* userData, const uint32_t peIdentifier);
    static void fractalGeneratorPrintParameters(const void* userData);
 
    protected:

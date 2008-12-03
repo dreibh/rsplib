@@ -276,7 +276,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
                                 size_t               maxThreads,
-                                TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                                TCPLikeServer*       (*threadFactory)(int sd, void* userData, const uint32_t peIdentifier),
                                 void                 (*printParameters)(const void* userData),
                                 bool                 (*initializeService)(void* userData),
                                 void                 (*finishService)(void* userData),
@@ -333,10 +333,10 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
                   puts("\n\nGeneral Parameters:");
                   printf("   Pool Handle             = %s\n", poolHandle);
-                  printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+                  printf("   Reregistration Interval = %1.3f [s]\n", reregInterval / 1000.0);
                   printf("   Runtime Limit           = ");
                   if(runtimeLimit > 0) {
-                     printf("%u [s]\n", runtimeLimit);
+                     printf("%1.3f [s]\n", runtimeLimit / 1000.0);
                   }
                   else {
                      puts("off");
@@ -357,9 +357,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                if(rsp_register_tags(rserpoolSocket,
                                     (const unsigned char*)poolHandle, strlen(poolHandle),
                                     loadinfo, reregInterval, 0, tags) == 0) {
-                  if(!quiet) {
-                     uint32_t identifier;
-                     if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+                  uint32_t identifier = 0;
+                  if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+                     if(!quiet) {
                         puts("Registration");
                         printf("   Identifier              = $%08x\n\n", identifier);
                      }
@@ -398,7 +398,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                             int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
                             if(newRSerPoolSocket >= 0) {
                                if(serverSet.hasCapacity()) {
-                                  TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData);
+                                  TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData, identifier);
                                   if(serviceThread) {
                                      if(serverSet.add(serviceThread)) {
                                         if(serviceThread->start()) {
@@ -471,6 +471,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   // ====== Clean up ========================================
                   serverSet.removeAll();
                   rsp_deregister(rserpoolSocket, 0);
+                  uninstallBreakDetector();
                }
                if(finishService != NULL) {
                   finishService(userData);

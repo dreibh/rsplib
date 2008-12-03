@@ -31,6 +31,7 @@
 #include "breakdetector.h"
 #include "tagitem.h"
 #include "netutilities.h"
+#include "randomizer.h"
 #include "standardservices.h"
 #include "fractalgeneratorservice.h"
 #include "calcappservice.h"
@@ -71,7 +72,10 @@ int main(int argc, char** argv)
    const char*         daemonPIDFile = NULL;
    bool                policyChanged = false;
    bool                quiet         = false;
+   double              uptime        = 0.0;
+   double              downtime      = 0.0;
 
+start:
    /* ====== Read parameters ============================================= */
    rsp_initinfo(&info);
    tags[0].Tag  = TAG_PoolElement_Identifier;
@@ -230,11 +234,24 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[i], "-quiet"))) {
          quiet = true;
       }
+      else if(!(strncmp(argv[i], "-uptime=", 8))) {
+         uptime = atof((const char*)&argv[i][8]);
+      }
+      else if(!(strncmp(argv[i], "-downtime=", 10))) {
+         downtime = atof((const char*)&argv[i][10]);
+      }
+   }
+   if(uptime > 0.000001) {
+      runtimeLimit = (unsigned long long)rint(1000.0 * randomExpDouble(uptime));
    }
 
 
    /* ====== Print startup message ======================================= */
    if(!quiet) {
+      if(uptime > 0.000001) {
+         printf("Uptime   = %1.3f [s]\n", uptime);
+         printf("Downtime = %1.3f [s]\n", downtime);
+      }
       printf("Starting service ");
       if(service == SERVICE_ECHO) {
          printf("Echo");
@@ -388,6 +405,8 @@ int main(int argc, char** argv)
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CALCAPP) {
+      static CalcAppServer::CalcAppServerStatistics stats;
+      static bool        resetStatistics               = true;
       const char*        objectName                    = "scenario.calcapppoolelement[0]";
       const char*        vectorFileName                = "calcapppoolelement.vec";
       const char*        scalarFileName                = "calcapppoolelement.sca";
@@ -448,12 +467,14 @@ int main(int argc, char** argv)
       CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName,
                                   capacity,
                                   keepAliveTransmissionInterval, keepAliveTimeoutInterval,
-                                  cookieMaxTime, cookieMaxCalculations);
+                                  cookieMaxTime, cookieMaxCalculations,
+                                  &stats, resetStatistics);
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                                 &info, &loadInfo,
                                 reregInterval, runtimeLimit, quiet,
                                 (struct TagItem*)&tags);
+      resetStatistics = false;
    }
    else if(service == SERVICE_SCRIPTING) {
       size_t maxThreads = 1;
@@ -492,5 +513,15 @@ int main(int argc, char** argv)
    }
 
    rsp_freeinfo(&info);
+
+   // ====== Restart ========================================================
+   if((uptime > 0.000001) && (!breakDetected())) {
+      const double t = randomExpDouble(downtime);
+      printf("\nWaiting for %1.3fs ...\n", t);
+      usleep((unsigned long long)rint(t * 1000000.0));
+      if(!breakDetected()) {
+         goto start;
+      }
+   }
    return(0);
 }

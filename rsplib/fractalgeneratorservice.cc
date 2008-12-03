@@ -65,7 +65,7 @@ FractalGeneratorServer::~FractalGeneratorServer()
 
 
 // ###### Create a FractalGenerator thread ##################################
-TCPLikeServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, void* userData)
+TCPLikeServer* FractalGeneratorServer::fractalGeneratorServerFactory(int sd, void* userData, const uint32_t peIdentifier)
 {
    return(new FractalGeneratorServer(sd, (FractalGeneratorServerSettings*)userData));
 }

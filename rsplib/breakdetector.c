@@ -99,8 +99,9 @@ void uninstallBreakDetector()
    PrintedKill   = false;
    LastDetection = (unsigned long long)-1;
 #endif
-   DetectedBreak = false;
-   PrintedBreak  = false;
+   /* No reset here!
+      DetectedBreak = false;
+      PrintedBreak  = false; */
    Quiet         = false;
 }
 

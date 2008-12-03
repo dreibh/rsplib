@@ -87,7 +87,7 @@ class CharGenServer : public TCPLikeServer
    CharGenServer(int rserpoolSocketDescriptor);
    ~CharGenServer();
 
-   static TCPLikeServer* charGenServerFactory(int sd, void* userData);
+   static TCPLikeServer* charGenServerFactory(int sd, void* userData, const uint32_t peIdentifier);
 
    protected:
    virtual EventHandlingResult initializeSession();
@@ -106,7 +106,7 @@ class PingPongServer : public TCPLikeServer
                   PingPongServer::PingPongServerSettings* settings);
    ~PingPongServer();
 
-   static TCPLikeServer* pingPongServerFactory(int sd, void* userData);
+   static TCPLikeServer* pingPongServerFactory(int sd, void* userData, const uint32_t peIdentifier);
 
    protected:
    EventHandlingResult handleCookieEcho(const char* buffer, size_t bufferSize);

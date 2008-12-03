@@ -125,7 +125,7 @@ void UDPLikeServer::handleTimer()
 
 
 // ###### Startup ###########################################################
-EventHandlingResult UDPLikeServer::initializeService(int sd)
+EventHandlingResult UDPLikeServer::initializeService(int sd, const uint32_t peIdentifier)
 {
    return(EHR_Okay);
 }
@@ -194,10 +194,10 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
          puts("\n\nGeneral Parameters:");
          printf("   Pool Handle             = %s\n", poolHandle);
-         printf("   Reregistration Interval = %u [ms]\n", reregInterval);
+         printf("   Reregistration Interval = %1.3f [s]\n", reregInterval / 1000.0);
          printf("   Runtime Limit           = ");
          if(runtimeLimit > 0) {
-            printf("%u [s]\n", runtimeLimit);
+            printf("%1.3f [s]\n", runtimeLimit / 1000.0);
          }
          else {
             puts("off");
@@ -215,9 +215,9 @@ void UDPLikeServer::poolElement(const char*          programTitle,
       if(rsp_register_tags(RSerPoolSocketDescriptor,
                            (const unsigned char*)poolHandle, strlen(poolHandle),
                            loadinfo, reregInterval, 0, tags) == 0) {
-         if(!quiet) {
-            uint32_t identifier;
-            if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
+         uint32_t identifier = 0;
+         if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
+            if(!quiet) {
                puts("Registration");
                printf("   Identifier              = $%08x\n\n", identifier);
             }
@@ -225,7 +225,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)PPV_MAX_LOAD);
 
          // ====== Startup ==================================================
-         const EventHandlingResult initializeResult = initializeService(RSerPoolSocketDescriptor);
+         const EventHandlingResult initializeResult = initializeService(RSerPoolSocketDescriptor, identifier);
          if(initializeResult == EHR_Okay) {
 
             // ====== Main loop =============================================
@@ -321,6 +321,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                   }
                }
             }
+            uninstallBreakDetector();
          }
 
          // ====== Shutdown =================================================

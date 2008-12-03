@@ -107,7 +107,7 @@ class TCPLikeServer : public TDThread
                            struct rsp_info*     info,
                            struct rsp_loadinfo* loadinfo,
                            size_t               maxThreads,
-                           TCPLikeServer*       (*threadFactory)(int sd, void* userData),
+                           TCPLikeServer*       (*threadFactory)(int sd, void* userData, uint32_t peIdentifier),
                            void                 (*printParameters)(const void* userData),
                            bool                 (*initializeService)(void* userData),
                            void                 (*finishService)(void* userData),
