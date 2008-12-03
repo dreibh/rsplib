@@ -575,11 +575,11 @@ start:
    }
 
    /* ====== Failure test mode =========================================== */
-   if(uptime < 0.001) {
-      uptime = 0.001;
+   if(uptime < 0.000001) {
+      uptime = 0.0;
    }
-   if(downtime < 0.001) {
-      downtime = 0.001;
+   if(downtime < 0.000001) {
+      downtime = 0.000001;
    }
    if(uptime > 0.000001) {
       printf("Uptime   = %1.3f [s]\n", uptime);
