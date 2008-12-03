@@ -34,6 +34,7 @@
 #include "netutilities.h"
 #include "timeutilities.h"
 #include "stringutilities.h"
+#include "randomizer.h"
 #include "loglevel.h"
 
 
@@ -50,6 +51,7 @@ CalcAppServer::CalcAppServer(const size_t             maxJobs,
                              const unsigned long long keepAliveTimeoutInterval,
                              const unsigned long long cookieMaxTime,
                              const double             cookieMaxCalculations,
+                             const double             cleanShutdownProbability,
                              CalcAppServerStatistics* statistics,
                              const bool               resetStatistics)
 {
@@ -65,6 +67,7 @@ CalcAppServer::CalcAppServer(const size_t             maxJobs,
    KeepAliveTransmissionInterval = keepAliveTransmissionInterval;
    CookieMaxTime                 = cookieMaxTime;
    CookieMaxCalculations         = cookieMaxCalculations;
+   CleanShutdownProbability      = cleanShutdownProbability;
    Jobs                          = 0;
    Stats                         = statistics;
    if(resetStatistics) {
@@ -91,7 +94,8 @@ void CalcAppServer::printParameters()
    printf("   Vector File Name        = %s\n", VectorFileName.c_str());
    printf("   Scalar File Name        = %s\n", ScalarFileName.c_str());
    printf("   Max Jobs                = %u\n", (unsigned int)MaxJobs);
-   printf("   Capacity                = %1.1f [Calculations/s]\n",Capacity);
+   printf("   Capacity                = %1.1f [Calculations/s]\n", Capacity);
+   printf("   Clean Shutdown Prob.    = %1.2f [%%]\n", 100.0 * CleanShutdownProbability);
    printf("   KA Transmission Interv. = %llu [us]\n", KeepAliveTransmissionInterval);
    printf("   KA Timeout Interval     = %llu [us]\n", KeepAliveTimeoutInterval);
    printf("   Cookie Max Time         = %llu [us]\n", CookieMaxTime);
@@ -178,13 +182,17 @@ void CalcAppServer::removeJob(CalcAppServer::CalcAppServerJob* removedJob)
 // ###### Remove all jobs ###################################################
 void CalcAppServer::removeAllJobs()
 {
-   CalcAppServerJob* job = FirstJob;
-   while(job != NULL) {
-      CalcAppServerJob* next = job->Next;
-      sendCookie(job);   // Note, this may all removeJob()!
-      job = next;
+   // ====== Clean shutdown: send cookies to all PUs ========================
+   if(randomDouble() <= CleanShutdownProbability) {
+      CalcAppServerJob* job = FirstJob;
+      while(job != NULL) {
+         CalcAppServerJob* next = job->Next;
+         sendCookie(job);   // Note: this function may call removeJob()!
+         job = next;
+      }
    }
 
+   // ====== Remove all jobs ================================================
    while(FirstJob) {
       removeJob(FirstJob);
    }

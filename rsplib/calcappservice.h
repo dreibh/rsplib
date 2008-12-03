@@ -58,6 +58,7 @@ class CalcAppServer : public UDPLikeServer
                  const unsigned long long keepAliveTimeoutInterval,
                  const unsigned long long cookieMaxTime,
                  const double             cookieMaxCalculations,
+                 const double             cleanShutdownProbability,
                  CalcAppServerStatistics* statistics,
                  const bool               resetStatistics);
    virtual ~CalcAppServer();
@@ -143,6 +144,7 @@ class CalcAppServer : public UDPLikeServer
    unsigned long long       KeepAliveTransmissionInterval;
    unsigned long long       CookieMaxTime;
    double                   CookieMaxCalculations;
+   double                   CleanShutdownProbability;
    size_t                   Jobs;
    uint32_t                 Identifier;
 };

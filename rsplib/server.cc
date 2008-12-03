@@ -103,10 +103,10 @@ start:
 #endif
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
-         poolHandle = (char*)&argv[i][12];
+         poolHandle = (const char*)&argv[i][12];
       }
       else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
-         reregInterval = atol((char*)&argv[i][15]);
+         reregInterval = atol((const char*)&argv[i][15]);
          if(reregInterval < 10) {
             reregInterval = 10;
          }
@@ -415,6 +415,7 @@ start:
       unsigned long long keepAliveTimeoutInterval      = 2500000;
       unsigned long long cookieMaxTime                 = 5000000;
       double             cookieMaxCalculations         = 5000000.0;
+      double             cleanShutdownProbability      = 1.0;
       size_t             maxJobs                       = 10;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-capobject=" ,11))) {
@@ -427,39 +428,48 @@ start:
             scalarFileName = (const char*)&argv[i][11];
          }
          else if(!(strncmp(argv[i], "-capmaxjobs=" ,12))) {
-            maxJobs = atol((char*)&argv[i][12]);
+            maxJobs = atol((const char*)&argv[i][12]);
             if(maxJobs < 1) {
                maxJobs = 1;
             }
          }
          else if(!(strncmp(argv[i], "-capkeepalivetransmissioninterval=" ,34))) {
-            keepAliveTransmissionInterval = atol((char*)&argv[i][34]);
+            keepAliveTransmissionInterval = atol((const char*)&argv[i][34]);
             if(keepAliveTransmissionInterval < 100000) {
                keepAliveTransmissionInterval = 100000;
             }
          }
          else if(!(strncmp(argv[i], "-capkeepalivetimeoutinterval=" ,29))) {
-            keepAliveTimeoutInterval = atol((char*)&argv[i][29]);
+            keepAliveTimeoutInterval = atol((const char*)&argv[i][29]);
             if(keepAliveTimeoutInterval < 100000) {
                keepAliveTimeoutInterval = 100000;
             }
          }
          else if(!(strncmp(argv[i], "-capcapacity=" ,13))) {
-            capacity = atof((char*)&argv[i][13]);
+            capacity = atof((const char*)&argv[i][13]);
             if(capacity < 1.0) {
                capacity = 1.0;
             }
          }
          else if(!(strncmp(argv[i], "-capcookiemaxcalculations=" ,26))) {
-            cookieMaxCalculations = atof((char*)&argv[i][26]);
+            cookieMaxCalculations = atof((const char*)&argv[i][26]);
             if(cookieMaxCalculations < 1.0) {
                cookieMaxCalculations = 1.0;
             }
          }
          else if(!(strncmp(argv[i], "-capcookiemaxtime=" ,18))) {
-            cookieMaxTime = atol((char*)&argv[i][18]);
+            cookieMaxTime = atol((const char*)&argv[i][18]);
             if(cookieMaxTime < 100000) {
                cookieMaxTime = 100000;
+            }
+         }
+         else if(!(strncmp(argv[i], "-capcleanshutdownprobability=" , 29))) {
+            cleanShutdownProbability = atof((const char*)&argv[i][29]);
+            if(cleanShutdownProbability < 0.0) {
+               cleanShutdownProbability = 0.0;
+            }
+            else if(cleanShutdownProbability > 1.0) {
+               cleanShutdownProbability = 1.0;
             }
          }
       }
@@ -467,7 +477,7 @@ start:
       CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName,
                                   capacity,
                                   keepAliveTransmissionInterval, keepAliveTimeoutInterval,
-                                  cookieMaxTime, cookieMaxCalculations,
+                                  cookieMaxTime, cookieMaxCalculations, cleanShutdownProbability,
                                   &stats, resetStatistics);
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "CalcAppPool",

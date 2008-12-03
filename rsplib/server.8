@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd January 31, 2008
+.Dd December 3, 2008
 .Dt Server 8
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -56,6 +56,7 @@
 .Nm server
 .Op Fl calcapp
 .Op Fl capcapacity=calculations_per_second
+.Op Fl capcleanshutdownprobability=probability
 .Op Fl capcookiemaxcalculations=calculations
 .Op Fl capcookiemaxtime=microseconds
 .Op Fl capkeepalivetransmissioninterval=microseconds
@@ -202,6 +203,8 @@ Starts the CalcApp service.
 .Bl -tag -width indent
 .It Fl capcapacity=calculations_per_second
 Sets the service capacity in calculations per second.
+.It Fl capcleanshutdownprobability=probability
+Sets the probability for sending state cookies to all sessions before shutting down.
 .It Fl capcookiemaxcalculations=calculations
 Sets the cookie interval in calculations.
 .It Fl capcookiemaxtime=microseconds
