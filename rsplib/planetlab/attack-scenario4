@@ -311,7 +311,7 @@ else
    for node in $PUList ; do
    echo "PU=$node"
       $SERVICE_CONTROL_CMD restart   "$SSH_TOOL_CMD WriteCmdParallel $node-pu-start.cmd"  $node  $SSH_NODE $SSH_USER $SSH_KEY   $ID-$id $SERVICE_DIRECTORY calcappclient \
-         "-loglevel=4 -logcolor=off -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetransmissioninterval=10000000 -keepalivetimeoutinterval=10000000 -poolhandle=$POOLHANDLE "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
+         "-loglevel=4 -logcolor=off -jobsize=$JobSize -jobinterval=$JobInterval -keepalivetimeoutinterval=$SKATimeoutInterval -keepalivetransmissioninterval=$SKATransmissionInterval -poolhandle=$POOLHANDLE "-object=scenario.calcAppPoolUser[$id]" -scalar=$ID-pu-$id.sca $PE_PROpt -asapannounce=off $OPT_CSP"   "$SERVICE_PRE_PROGRAM"
       let id=$id+1
    done
    for node in `echo $PUList | xargs -n1 echo | sort -u` ; do

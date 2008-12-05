@@ -185,6 +185,11 @@ void CalcAppServer::removeAllJobs()
    // ====== Clean shutdown: send cookies to all PUs ========================
    const double r = randomDouble();
    if(r <= CleanShutdownProbability) {
+      // Update the jobs' progress
+      updateCalculations();
+      scheduleJobs();
+
+      // Send cookies
       CalcAppServerJob* job = FirstJob;
       while(job != NULL) {
          CalcAppServerJob* next = job->Next;

@@ -115,7 +115,7 @@ int main(int argc, char** argv)
          }
       }
       else {
-         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-items=Items} {-printresults} {-pause=microsecs} {-reportunreachableprobability=probability=probability} {-maxruns=Runs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-poolhandle=pool handle} {-items=Items} {-printresults} {-pause=microseconds} {-reportunreachableprobability=probability=probability} {-maxruns=Runs} {-statsfile=file} {-statsinterval=millisecs}\n", argv[0]);
          exit(1);
       }
    }

@@ -555,7 +555,7 @@ start:
          fprintf(stderr, "ERROR: Invalid argument <%s>!\n", argv[i]);
          fprintf(stderr, "Usage: %s {-asap=auto|address:port{,address}...} {[-asapannounce=auto|address:port}]} {-enrp=auto|address:port{,address}...} {[-enrpannounce=auto|address:port}]} {-logfile=file|-logappend=file|-logquiet} {-loglevel=level} {-logcolor=on|off} "
 #ifdef ENABLE_CSP
-            "{-cspserver=address} {-cspinterval=microseconds} "
+            "{-cspserver=address} {-cspinterval=milliseconds} "
 #endif
             "{-identifier=registrar identifier} "
             "{-disable-ipv6} {-quiet} "

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ###########################################################################
-# Name:        wp2-cookies-localI
+# Name:        wp2-shutdown-localI
 # Description: Cookie-based failover
 # Revision:    $Id$
 # ###########################################################################
@@ -26,8 +26,8 @@ export AttackerNodeList="localhost"
 export PortBase=1333
 
 . ./attack-scenario4 init
-export Measurement=wp2-cookies-localI
-export Duration=900
+export Measurement=wp2-shutdown-localI
+export Duration=120
 export PRs=1
 export PEs=10
 export PUs=30
@@ -51,7 +51,7 @@ export Capacity=1000000
 export ReregInterval=30000
 export SKATransmissionInterval=1000
 export SKATimeoutInterval=1000
-export CookieMaxCalculations=5000000
+export CookieMaxCalculations=10000000
 export CookieMaxTime=604800
 export CleanShutdownProbability=0.0
 export JobInterval=50.0   # U=60%, r=3, jsToSC=10
@@ -73,9 +73,9 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Run in 0 ; do
-   for Policy in LeastUsed Random ; do   #  LeastUsed RoundRobin
-      for PEAllUptime in 10 100 ; do
-         for CookieMaxCalculations in 1000000 10000000 100000000 ; do
+   for Policy in LeastUsed Random ; do   #  LeastUsed RoundRobin Random
+      for PEAllUptime in 2 10 ; do
+         for CleanShutdownProbability in 0.0 1.0 ; do
 
 
             ID=$Duration-$Policy-$PEAllUptime-$CleanShutdownProbability-$MaxBadPEReports-$EKATransmissionInterval-$SKATransmissionInterval-$CookieMaxCalculations

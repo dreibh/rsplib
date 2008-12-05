@@ -793,13 +793,13 @@ int main(int argc, char** argv)
          JobSize = atof((char*)&argv[i][9]);
       }
       else if(!(strncmp(argv[i], "-keepalivetransmissioninterval=" ,31))) {
-         KeepAliveTransmissionInterval = atol((char*)&argv[i][31]);
+         KeepAliveTransmissionInterval = 1000ULL * atol((char*)&argv[i][31]);
          if(KeepAliveTransmissionInterval < 100000) {
             KeepAliveTransmissionInterval = 100000;
          }
       }
       else if(!(strncmp(argv[i], "-keepalivetimeoutinterval=" ,26))) {
-         KeepAliveTimeoutInterval = atol((char*)&argv[i][26]);
+         KeepAliveTimeoutInterval = 1000ULL * atol((char*)&argv[i][26]);
          if(KeepAliveTimeoutInterval < 100000) {
             KeepAliveTimeoutInterval = 100000;
          }

@@ -40,8 +40,8 @@
 .Op Fl poolhandle=pool_handle
 .Op Fl jobinterval=seconds
 .Op Fl jobsize=calculations
-.Op Fl keepalivetransmissioninterval=microseconds
-.Op Fl keepalivetimeoutinterval=microseconds
+.Op Fl keepalivetransmissioninterval=milliseconds
+.Op Fl keepalivetimeoutinterval=milliseconds
 .Op Fl object=name
 .Op Fl runtime=seconds
 .Op Fl scalar=scalar_file
@@ -76,10 +76,10 @@ Floating-point values (e.g. 30.125) are possible.
 .It Fl jobsize=seconds
 Sets the job size in seconds.
 Floating-point values (e.g. 8.75) are possible.
-.It Fl keepalivetransmissioninterval=microseconds
-Sets the session keep-alive interval in microseconds.
-.It Fl keepalivetimeoutinterval=microseconds
-Sets the session keep-alive timeout in microseconds.
+.It Fl keepalivetransmissioninterval=milliseconds
+Sets the session keep-alive interval in milliseconds.
+.It Fl keepalivetimeoutinterval=milliseconds
+Sets the session keep-alive timeout in milliseconds.
 .It Fl object=name
 Sets the object name for scalar hierarchy.
 .It Fl runtime=seconds
