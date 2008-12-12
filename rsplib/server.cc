@@ -45,7 +45,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-
+#include <sys/types.h>
+#include <signal.h>
+      
 
 #define SERVICE_ECHO      1
 #define SERVICE_DISCARD   2
