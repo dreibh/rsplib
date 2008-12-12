@@ -185,7 +185,7 @@ void CalcAppServer::removeAllJobs()
    // ====== Clean shutdown: send cookies to all PUs ========================
    const double r = randomDouble();
    if(r <= CleanShutdownProbability) {
-      // Update the jobs' progress
+      // Update the jobs' progress to send correct cookies!
       updateCalculations();
       scheduleJobs();
 
@@ -244,8 +244,8 @@ void CalcAppServer::scheduleJobs()
       const double capacityPerJob = Capacity / ((double)Jobs * 1000000.0);
       while(job != NULL) {
          // When is the current session's job completed?
-         const double calculationsToGo         = job->JobSize - job->Completed;
-         const unsigned long long timeToGo     = (unsigned long long)ceil(calculationsToGo / capacityPerJob);
+         const double calculationsToGo     = job->JobSize - job->Completed;
+         const unsigned long long timeToGo = (unsigned long long)ceil(calculationsToGo / capacityPerJob);
 
          // job->JobCompleteTimeStamp = now + timeToGo;
          job->JobCompleteTimeStamp = job->LastUpdateAt + timeToGo;

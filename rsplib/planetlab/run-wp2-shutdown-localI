@@ -27,7 +27,7 @@ export PortBase=1333
 
 . ./attack-scenario4 init
 export Measurement=wp2-shutdown-localI
-export Duration=120
+export Duration=900
 export PRs=1
 export PEs=10
 export PUs=30
@@ -48,6 +48,7 @@ export MaxHRRate=-1
 export MaxEURate=-1
 export UseTakeoverSuggestion="false"
 export Capacity=1000000
+export MaxJobs=10
 export ReregInterval=30000
 export SKATransmissionInterval=1000
 export SKATimeoutInterval=1000
@@ -73,8 +74,8 @@ echo "--resultsdirectory=$Measurement/Results" >$Measurement/summary.input
 
 
 for Run in 0 ; do
-   for Policy in LeastUsed Random ; do   #  LeastUsed RoundRobin Random
-      for PEAllUptime in 2 10 ; do
+   for Policy in LeastUsed Random RoundRobin ; do   #  LeastUsed RoundRobin Random
+      for PEAllUptime in 10 ; do
          for CleanShutdownProbability in 0.0 1.0 ; do
 
 

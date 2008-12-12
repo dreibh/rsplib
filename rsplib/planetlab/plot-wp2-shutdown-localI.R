@@ -39,6 +39,19 @@ plotConfigurations <- list(
    list(measurementDirectory, paste(sep="", measurementDirectory, "-HandlingSpeed.pdf"),
         "User's Perspective", NA, NA, list(1,0),
         "CleanShutdownProbability", "calcAppPoolUser-CalcAppPUAverageHandlingSpeedPercent",
+        "Policy", "PEAllUptime"),
+
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-JobsQueued.pdf"),
+        "User's Perspective", NA, NA, list(1,0),
+        "CleanShutdownProbability", "calcAppPoolUser-CalcAppPUTotalJobsQueued",
+        "Policy", "PEAllUptime"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-JobsStarted.pdf"),
+        "User's Perspective", NA, NA, list(1,0),
+        "CleanShutdownProbability", "calcAppPoolUser-CalcAppPUTotalJobsStarted",
+        "Policy", "PEAllUptime"),
+   list(measurementDirectory, paste(sep="", measurementDirectory, "-JobsCompleted.pdf"),
+        "User's Perspective", NA, NA, list(1,0),
+        "CleanShutdownProbability", "calcAppPoolUser-CalcAppPUTotalJobsCompleted",
         "Policy", "PEAllUptime")
 )
 
