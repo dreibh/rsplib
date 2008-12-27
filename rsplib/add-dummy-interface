@@ -28,6 +28,9 @@
 # Contact: dreibh@iem.uni-due.de
 
 
+modprobe dummy
+
+
 # dummy0 abschalten
 ip addr flush dev dummy0
 ip link set dummy0 down
@@ -41,7 +44,7 @@ ip link set dummy0 up multicast on
 ip addr add 10.255.255.1/24 dev dummy0
 
 # IPv6-Adresse
-# ip addr add 3ffe:ab:cd:ef:123:45:67:89a/64 dev dummy0
+ip addr add 3ffe:ab:cd:ef:123:45:67:89a/64 dev dummy0
 
 
 # IPv4-Adresse und Route; Default-Metrik: 0
