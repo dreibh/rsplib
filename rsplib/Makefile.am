@@ -149,17 +149,6 @@ bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient c
 EXTRA_DIST = fractalpooluser.cc fractalpooluser.h add-dummy-interface
 endif
 
-if BUILD_QT_PROGRAMS
-%.moc.cc: %.h
-	$(MOC) -o $@ $<
-
-%.h: %.ui
-	$(UIC) -o $@ $<
-
-%.cc: %.ui
-	$(UIC) -o $@ -impl $*.h $<
-endif
-
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
 registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm $(bz2_LIBS)
 
@@ -185,10 +174,17 @@ cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 
 if BUILD_QT_PROGRAMS
-fractalpooluser_MOC      = fractalpooluser.moc.cc
-fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h $(fractalpooluser_MOC)
-fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
+FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
+CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
+
+%_moc.cc: %.h
+	$(MOC) -o $@ $<
+
+fractalpooluser_DEPENDENCIES = $(FRACTALPOOLUSERMOCEDFILES)
+fractalpooluser_CXXFLAGS     = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
+fractalpooluser_SOURCES      = fractalpooluser.cc fractalpooluser.h
+fractalpooluser_LDADD        = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 endif
 
 

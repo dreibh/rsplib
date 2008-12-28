@@ -65,8 +65,8 @@
 #include "componentstatuspackets.h"
 #endif
 
+#include "fractalpooluser_moc.cc"
 
-using namespace std;
 
 
 #define DEFAULT_FPU_WIDTH             400
@@ -122,7 +122,7 @@ FractalPU::FractalPU(const size_t       width,
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName, "*.fsf", QDir::Name, QDir::Files);
    if(ConfigDirectory.exists() != TRUE) {
-      cerr << "WARNING: Configuration directory " << configDirName << " does not exist!" << endl;
+      std::cerr << "WARNING: Configuration directory " << configDirName << " does not exist!" << std::endl;
       ConfigDirectory = QDir::current();
    }
    else {
@@ -185,10 +185,10 @@ void FractalPU::getNextParameters()
 
    QString parameterFileName(ConfigList[element]);
    QDomDocument doc("XMLFractalSave");
-   cout << "Getting parameters from " << (const char*)(ConfigDirectory.filePath(parameterFileName).toLocal8Bit().constData()) << "..." << endl;
+   std::cout << "Getting parameters from " << (const char*)(ConfigDirectory.filePath(parameterFileName).toLocal8Bit().constData()) << "..." << std::endl;
    QFile parameterFile(ConfigDirectory.filePath(parameterFileName));
    if(!parameterFile.open(QIODevice::ReadOnly)) {
-      cerr << "WARNING: Cannot open parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << "!" << endl;
+      std::cerr << "WARNING: Cannot open parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << "!" << std::endl;
       return;
    }
 
@@ -196,8 +196,8 @@ void FractalPU::getNextParameters()
    int line, column;
    if(!doc.setContent(&parameterFile, false, &error, &line, &column)) {
       parameterFile.close();
-      cerr << "WARNING: Error in parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << ":" << endl
-           << (const char*)(error.toLocal8Bit().constData()) << " in line " << line << ", column " << column << endl;
+      std::cerr << "WARNING: Error in parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << ":" << std::endl
+                << (const char*)(error.toLocal8Bit().constData()) << " in line " << line << ", column " << column << std::endl;
       return;
    }
    parameterFile.close();
@@ -211,8 +211,8 @@ void FractalPU::getNextParameters()
       Parameter.AlgorithmID = FGPA_MANDELBROT;
    }
    else {
-      cerr << "WARNING: Unknown algorithm name in parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << "!" << endl
-           << "Assuming Mandelbrot..." << endl;
+      std::cerr << "WARNING: Unknown algorithm name in parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << "!" << std::endl
+                << "Assuming Mandelbrot..." << std::endl;
       Parameter.AlgorithmID = FGPA_MANDELBROT;
    }
 
@@ -264,7 +264,7 @@ void FractalPU::startNextJob()
    // ====== Start job distribution =========================================
    Status = FPU_CalcInProgress;
 
-   cout << "Starting job distribution ..." << endl;
+   // std::cout << "Starting job distribution ..." << std::endl;
    Display->setCursor(Qt::WaitCursor);
    statusBar()->showMessage("Starting job distribution ...");
 
@@ -334,7 +334,7 @@ void FractalPU::startNextJob()
    Display->update();
 
    // ====== Wait for job completion ========================================
-   cout << "Waiting for job completion ..." << endl;
+   // std::cout << "Waiting for job completion ..." << std::endl;
    if(CurrentThreads > 1) {
       statusBar()->showMessage("Waiting for job completion ...");
    }
@@ -676,7 +676,7 @@ void FractalCalculationThread::run()
                                  goto finish;
                               break;
                               case Invalid:
-                                 cerr << "ERROR: Invalid data block received!" << endl;
+                                 std::cerr << "ERROR: Invalid data block received!" << std::endl;
                               break;
                               default:
                                  packets++;
