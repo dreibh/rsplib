@@ -31,7 +31,7 @@
 AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.6.0~alpha4.1)
+AM_INIT_AUTOMAKE(rsplib, 2.6.0~alpha4.2)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -566,6 +566,8 @@ echo "   CFLAGS                          : $CFLAGS"
 echo "   CXXFLAGS                        : $CXXFLAGS"
 echo "   LDFLAGS                         : $LDFLAGS"
 echo "   glib_CFLAGS                     : $glib_CFLAGS"
+echo ""
 echo "   QTDIR                           : $QTDIR"
+echo "   MOC                             : $MOC"
 echo "   QT_CXXFLAGS                     : $QT_CXXFLAGS"
 echo "   QT_LDFLAGS                      : $QT_LDADD"

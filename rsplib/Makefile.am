@@ -181,10 +181,13 @@ CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
 %_moc.cc: %.h
 	$(MOC) -o $@ $<
 
-fractalpooluser_DEPENDENCIES = $(FRACTALPOOLUSERMOCEDFILES)
-fractalpooluser_CXXFLAGS     = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES      = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD        = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+# To compile (i.e. generate object files), first create MOC file.
+# This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
+$(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
+
+fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
+fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 endif
 
 
