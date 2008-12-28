@@ -137,7 +137,7 @@ FractalPU::FractalPU(const size_t       width,
    setWindowTitle("Fractal Pool User");
    statusBar()->showMessage("Welcome to Fractal PU!", 3000);
    show();
-   startNextJob();
+   QTimer::singleShot(100, this, SLOT(startNextJob()));
 }
 
 
@@ -244,6 +244,8 @@ void FractalPU::getNextParameters()
 /* ###### Start next fractal PU job ###################################### */
 void FractalPU::startNextJob()
 {
+   CHECK(Status != FPU_CalcInProgress);
+
    // ====== Initialize image object and timeout timer ======================
    Run++;
    Display->initialize(Display->width(), Display->height());
@@ -260,6 +262,8 @@ void FractalPU::startNextJob()
 
 
    // ====== Start job distribution =========================================
+   Status = FPU_CalcInProgress;
+
    cout << "Starting job distribution ..." << endl;
    Display->setCursor(Qt::WaitCursor);
    statusBar()->showMessage("Starting job distribution ...");
@@ -271,6 +275,8 @@ void FractalPU::startNextJob()
       CalculationThreadArray[i] = NULL;
    }
 
+
+   // ====== Initialize configured number of sessions =======================
    QColor       color;
    const size_t yCount = (size_t)floor(sqrt((double)CurrentThreads));
    const size_t yStep  = (size_t)rint((double)Parameter.Height / yCount);
@@ -282,13 +288,27 @@ void FractalPU::startNextJob()
       if(xCount > 0) {
          const size_t xStep = (size_t)rint(Parameter.Width / xCount);
          remaining -= xCount;
+
+         // ====== Initialize rectange for next session =====================
+         const QPen numberPen(Qt::red);
+         QPainter   painter;
+         painter.begin(Display->Image);
+         painter.setPen(numberPen);
          for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
-            if((CurrentThreads > 1) && (ColorMarks)) {
-               color.setHsv(((5 * number) % 72) * 5, 100, 255);
-               Display->fillRect(xPosition * xStep, yPosition * yStep,
-                                 xStep, yStep, color.rgb());
+            // ====== Mark rectange for next session ========================
+            if(CurrentThreads > 1) {
+               if(ColorMarks) {
+                  color.setHsv(((5 * number) % 72) * 5, 100, 255);
+                  Display->fillRect(xPosition * xStep, yPosition * yStep,
+                                    xStep, yStep, color.rgb());
+               }
+               char str[64];
+               snprintf((char*)&str, sizeof(str), "%u", number + 1);
+               const QString numberString(str);
+               painter.drawText(xPosition * xStep, yPosition * yStep, xStep, yStep, Qt::AlignCenter, numberString);
             }
 
+            // ====== Start new session =====================================
             CalculationThreadArray[number] =
                new FractalCalculationThread(this, number,
                       xPosition * xStep, yPosition * yStep, xStep, yStep,
@@ -305,11 +325,12 @@ void FractalPU::startNextJob()
             CalculationThreadArray[number]->start();
             number++;
          }
+         painter.end();
       }
    }
    CHECK(number == CurrentThreads);
-   Status = FPU_CalcInProgress;
 
+   // ====== Make everything visible ========================================
    Display->update();
 
    // ====== Wait for job completion ========================================
@@ -350,10 +371,12 @@ void FractalPU::handleCompletedSession()
 
          // ====== Pause before next image ==================================
          if(Status == FPU_CalcInProgress) {
+            Status = FPU_Completed;
             CountDown = InterImageTime;
             QTimer::singleShot(0, this, SLOT(countDown()));
          }
          else if(Status == FPU_CalcAborted) {
+            Status = FPU_Completed;
             statusBar()->showMessage("Restarting ...");
             QTimer::singleShot(500, this, SLOT(startNextJob()));
          }
@@ -402,7 +425,9 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
 {
    QMenu menu(this);
 
-   static unsigned int sessionsEntries[] = {1, 2, 3, 4, 6, 8, 10,
+   static unsigned int sessionsEntries[] = {1,
+                                            0,
+                                            2, 3, 4, 6, 8, 10,
                                             0,
                                             9, 16, 25, 36, 49, 64, 81, 100,
                                             0,
@@ -410,7 +435,6 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
 
    QAction* showFailovers = menu.addAction("Show Failovers");
    Q_CHECK_PTR(showFailovers);
-   showFailovers->setShortcut(QKeySequence("Ctrl+F"));
    showFailovers->setCheckable(true);
    showFailovers->setChecked(ColorMarks);
    connect(showFailovers, SIGNAL(toggled(bool)), this, SLOT(changeColorMarks(bool)));
@@ -438,7 +462,7 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
    menu.addSeparator();
    menu.addAction("About", this, SLOT(about()));
    menu.addSeparator();
-   menu.addAction("Quit", this, SLOT(quit()), QKeySequence("Ctrl+Q"));
+   menu.addAction("Quit", this, SLOT(quit()));
 
    menu.exec(event->globalPos());
 }
@@ -465,8 +489,8 @@ void FractalPU::changeThreads(QAction* action)
 /* ###### About ########################################################## */
 void FractalPU::about()
 {
-   QMessageBox::about(this, "Fractal Pool User",
-      "<center><b>Fractal Pool User</b><br>Copyright (C) 2009 by Thomas Dreibholz</center>");
+   QMessageBox::about(this, "About Fractal Pool User",
+      "<center><b>Fractal Pool User</b><br>Copyright (C) 2002-2009 by Thomas Dreibholz</center>");
 }
 
 
