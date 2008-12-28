@@ -1,8 +1,8 @@
 /* packet-componentstatus.c
  * Routines for the Component Status Protocol of the rsplib RSerPool implementation
- * http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
+ * http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
  *
- * Copyright 2006 by Thomas Dreibholz <dreibh [AT] exp-math.uni-essen.de>
+ * Copyright 2006 by Thomas Dreibholz <dreibh [AT].iem.uni-due.de>
  *
  * $Id$
  *

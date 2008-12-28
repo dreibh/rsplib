@@ -3,7 +3,7 @@
 //             Thomas Dreibholz's R Simulation Scripts Collection
 //                  Copyright (C) 2004-2008 Thomas Dreibholz
 //
-//           Author: Thomas Dreibholz, dreibh@exp-math.uni-essen.de
+//           Author: Thomas Dreibholz, dreibh@iem.uni-due.de
 // ###########################################################################
 //
 // This program is free software: you can redistribute it and/or modify

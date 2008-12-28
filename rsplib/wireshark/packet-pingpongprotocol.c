@@ -1,9 +1,9 @@
 /* packet-pingpongprotocol.c
  * Routines for the Ping Pong Protocol, a test application of the
  * rsplib RSerPool implementation
- * http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/
+ * http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
  *
- * Copyright 2006 by Thomas Dreibholz <dreibh [AT] exp-math.uni-essen.de>
+ * Copyright 2006 by Thomas Dreibholz <dreibh [AT].iem.uni-due.de>
  *
  * $Id$
  *
