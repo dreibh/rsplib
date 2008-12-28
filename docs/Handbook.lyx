@@ -1,5 +1,5 @@
-#LyX 1.5.5 created this file. For more info see http://www.lyx.org/
-\lyxformat 276
+#LyX 1.6.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
 \begin_document
 \begin_header
 \textclass article
@@ -32,6 +32,7 @@ colorlinks=true]{hyperref}
 ,citecolor=darkblue,
 ,filecolor=darkgreen}
 \end_preamble
+\use_default_options false
 \language english
 \inputencoding auto
 \font_roman times
@@ -42,9 +43,11 @@ colorlinks=true]{hyperref}
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
+
 \graphics default
 \paperfontsize 11
 \spacing single
+\use_hyperref false
 \papersize a4paper
 \use_geometry false
 \use_amsmath 1
@@ -69,26 +72,31 @@ colorlinks=true]{hyperref}
 \begin_body
 
 \begin_layout Title
-The 
+The
 \noun on
-rsplib
+ rsplib
 \noun default
- RSerPool Prototype Handbook
+ RSerPool Implementation Handbook
 \end_layout
 
 \begin_layout Author
 Thomas Dreibholz
-\newline
+\begin_inset Newline newline
+\end_inset
+
 Institute for Experimental Mathematics
-\newline
-Ellernstraße 29, 45326
- Essen
-\newline
-Mail: 
+\begin_inset Newline newline
+\end_inset
+
+Ellernstraße 29, 45326 Essen
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset ERT
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 
 \backslash
@@ -101,11 +109,12 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-June 17, 2008
+December 28, 2008
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand tableofcontents
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
 
 \end_inset
 
@@ -117,27 +126,39 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-This is the documentation for the 
+This is the documentation for the
 \noun on
-rsplib
+ rsplib
 \noun default
  RSerPool package.
- It contains information how to install and make use of 
+ It contains information how to install and make use of
 \noun on
-rsplib
+ rsplib
 \noun default
 .
- For a detailed introduction to RSerPool and its concepts itself, see\InsetSpace ~
+ For a detailed introduction to RSerPool and its concepts itself, see
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Dre2006"
 
 \end_inset
 
 .
- For questions about RSerPool and rsplib, see our mailing lists at\InsetSpace ~
+ For questions about RSerPool and 
+\noun on
+rsplib
+\noun default
+, see our mailing lists at
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "RSerPoolPage"
 
 \end_inset
@@ -155,7 +176,7 @@ wide false
 sideways false
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \align center
 \begin_inset Graphics
 	filename EN-RSerPool-Scenario-with-PPE.pdf
@@ -167,11 +188,12 @@ status collapsed
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Caption
 
-\begin_layout Standard
-\begin_inset LatexCommand label
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
 name "cap:The-RSerPool-Architecture"
 
 \end_inset
@@ -192,7 +214,7 @@ wide false
 sideways false
 status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \align center
 \begin_inset Graphics
 	filename EN-RSerPool-ProtocolStack.pdf
@@ -204,11 +226,12 @@ status collapsed
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Caption
 
-\begin_layout Standard
-\begin_inset LatexCommand label
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
 name "cap:The-RSerPool-Protocol-Stack"
 
 \end_inset
@@ -223,82 +246,115 @@ The RSerPool Protocol Stack
 
 \end_inset
 
-Figure\InsetSpace ~
+Figure
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cap:The-RSerPool-Architecture"
 
 \end_inset
 
- provides an illustration of the Reliable Server Pooling\InsetSpace ~
-(RSerPool) architecture
- as defined by the Internet Draft\InsetSpace ~
+ provides an illustration of the Reliable Server Pooling
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "draft-ietf-rserpool-arch"
+(RSerPool) architecture as defined by the Internet Draft
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "rfc-rserpool-overview"
 
 \end_inset
 
-; the protocol stack of RSerPool is shown in figure\InsetSpace ~
+; the protocol stack of RSerPool is shown in figure
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "cap:The-RSerPool-Protocol-Stack"
 
 \end_inset
 
 .
- An RSerPool scenario consists of three component classes\InsetSpace ~
+ An RSerPool scenario consists of three component classes
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "draft-ietf-rserpool-overview"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "rfc-rserpool-overview"
 
 \end_inset
 
-: servers of a pool are called 
+: servers of a pool are called
 \emph on
-pool elements
+ pool elements
 \emph default
-\InsetSpace ~
+
+\begin_inset space ~
+\end_inset
+
 (PE).
- Each pool is identified by a unique 
+ Each pool is identified by a unique
 \emph on
-pool handle
+ pool handle
 \emph default
-\InsetSpace ~
+
+\begin_inset space ~
+\end_inset
+
 (PH) in the handlespace, which is the set of all pools.
- The handlespace is managed by 
+ The handlespace is managed by
 \emph on
-pool registrars
+ pool registrars
 \emph default
  (PR).
- PRs of an 
+ PRs of an
 \emph on
-operation scope
+ operation scope
 \emph default
- (the domain which is covered by the handlespace, e.g.\InsetSpace ~
-an organization or building)
- synchronize their view of the handlespace using the Endpoint haNdlespace
- Redundancy Protocol (ENRP\InsetSpace ~
+ (the domain which is covered by the handlespace, e.g.
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "draft-ietf-rserpool-enrp,draft-ietf-rserpool-common-param"
+an organization or building) synchronize their view of the handlespace using
+ the Endpoint haNdlespace Redundancy Protocol (ENRP
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "rfc-rserpool-enrp,draft-dreibholz-rserpool-enrp-takeover,rfc-rserpool-common-param"
 
 \end_inset
 
-), transported via SCTP\InsetSpace ~
+), transported via SCTP
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "RFC2960,Jun2005,JST2000b,SCI2002a"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "RFC4960,Jun2005,JST2000b,SCI2002a"
 
 \end_inset
 
 .
- 
 \end_layout
 
 \begin_layout Standard
 Unlike already available solutions in the area of GRID and high-performance
- computing, the fundamental property of RSerPool is to be 
+ computing, the fundamental property of RSerPool is to be
 \begin_inset Quotes eld
 \end_inset
 
@@ -306,26 +362,40 @@ lightweight
 \begin_inset Quotes erd
 \end_inset
 
-, i.e.\InsetSpace ~
-it must also be usable low-performance devices like telecommunications
- equipment or routers.
+, i.e.
+\begin_inset space ~
+\end_inset
+
+it must also be usable low-performance devices like telecommunications equipment
+ or routers.
  This property restricts the RSerPool architecture to the management of
  pools and sessions only, but on the other hand makes a very efficient realizati
-on possible\InsetSpace ~
+on possible
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "FGCN2007-HsMgt,Contel2005"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "IJHIT2008,FGCN2007-HsMgt,Contel2005"
 
 \end_inset
 
 .
- In particular, an operation scope has a limited range, e.g.\InsetSpace ~
-a company or organizat
-ion; RSerPool does not intend to scale to the whole Internet.
- Nevertheless, it is assumed that PEs can be distributed globally, for their
- service to survive localized disasters\InsetSpace ~
+ In particular, an operation scope has a limited range, e.g.
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+a company or organization; RSerPool does not intend to scale to the whole
+ Internet.
+ Nevertheless, it is assumed that PEs can be distributed globally, for their
+ service to survive localized disasters
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "KiVS2007"
 
 \end_inset
@@ -335,17 +405,23 @@ key "KiVS2007"
 
 \begin_layout Standard
 PEs choose an arbitrary PR to register into a pool by using the Aggregate
- Server Access Protocol (ASAP\InsetSpace ~
+ Server Access Protocol (ASAP
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param,draft-dreibholz-rserpool-asap-hropt"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "rfc-rserpool-asap,draft-dreibholz-rserpool-asap-hropt,rfc-rserpool-common-param"
 
 \end_inset
 
 ), again transported via SCTP.
- Upon registration at a PR, the chosen PR becomes the Home-PR\InsetSpace ~
-(PR-H) of the
- newly registered PE.
+ Upon registration at a PR, the chosen PR becomes the Home-PR
+\begin_inset space ~
+\end_inset
+
+(PR-H) of the newly registered PE.
  A PR-H is responsible for monitoring its PEs' availability by using ASAP
  Endpoint Keep-Alive messages (to be acknowledged by the PE within a given
  timeout) and propagates the information about its PEs to the other PRs
@@ -353,34 +429,47 @@ key "draft-ietf-rserpool-asap,draft-ietf-rserpool-common-param,draft-dreibholz-r
 \end_layout
 
 \begin_layout Standard
-A client is called 
+A client is called
 \emph on
 pool user
 \emph default
-\InsetSpace ~
+
+\begin_inset space ~
+\end_inset
+
 (PU) in RSerPool terminology.
  To access the service of a pool given by its PH, a PE has to be selected.
- This selection procedure -- called 
+ This selection procedure -- called
 \emph on
-handle resolution
+ handle resolution
 \emph default
  -- is performed by an arbitrary PR of the operation scope.
  A PU can request a handle resolution from a PR using the ASAP protocol.
  The PR selects PE identities by using a pool-specific server selection
  rule, denoted as 
-\backslash
-emph{pool policy}.
- A set of adaptive and non-adaptive pool policies is defined in\InsetSpace ~
+\emph on
+pool policy
+\emph default
+.
+ A set of adaptive and non-adaptive pool policies is defined in
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "draft-ietf-rserpool-policies,draft-dreibholz-rserpool-delay"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "rfc-rserpool-policies,draft-dreibholz-rserpool-delay"
 
 \end_inset
 
-; for a detailed discussion of these policies, see\InsetSpace ~
+; for a detailed discussion of these policies, see
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
-key "Dre2006,LCN2005,Tencon2005,Euromicro2007,Contel2005,ADCOM2007,FGCN2007-LoadBalancing"
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Dre2006,LCN2005,Tencon2005,Euromicro2007,ICDS2008-LUD,ICDS2008-Failover,ADCOM2007,AINTEC2007,FGCN2007-LoadBalancing"
 
 \end_inset
 
@@ -392,10 +481,10 @@ Installation
 \end_layout
 
 \begin_layout Standard
-In this section, the installation of the 
+In this section, the installation of the
 \emph on
 \noun on
-rsplib
+ rsplib
 \emph default
 \noun default
  package is described.
@@ -453,58 +542,70 @@ sudo apt-get install libsctp-dev
 \end_layout
 
 \begin_layout Subsubsection
-Installation of Userland SCTP 
+Installation of Userland SCTP
 \noun on
-sctplib/socketapi
+ sctplib/socketapi
 \end_layout
 
 \begin_layout Standard
-If you decide to use our userland SCTP implementation 
+If you decide to use our userland SCTP implementation
 \noun on
-sctplib
+ sctplib
 \noun default
-\InsetSpace ~
 
-\begin_inset LatexCommand cite
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "sctplib"
 
 \end_inset
 
 , the following steps have to be performed.
- The 
+ The
 \noun on
-sctplib
+ sctplib
 \noun default
- userland SCTP implementation consists of two packages: 
+ userland SCTP implementation consists of two packages:
 \noun on
-sctplib
+ sctplib
 \noun default
- containing the actual SCTP implementation and 
+ containing the actual SCTP implementation and
 \noun on
-socketapi
+ socketapi
 \noun default
- containing a BSD sockets API for 
+ containing a BSD sockets API for
 \noun on
-sctplib
+ sctplib
 \noun default
 .
  You need both.
- Get the latest versions from\InsetSpace ~
+ Get the latest versions from
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "RSerPoolPage"
 
 \end_inset
 
- (
-\begin_inset LatexCommand htmlurl
-name "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
-target "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
+ (http://tdrwww.iem.uni-due.de/dreibholz/rserpool 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool
+\end_layout
 
 \end_inset
 
 ).
- First, unpack, configure and install 
+ First, unpack, configure and install
 \noun on
 sctplib
 \noun default
@@ -518,9 +619,9 @@ tar xzf sctplib-<version>.tar.gz
 \end_layout
 
 \begin_layout Standard
-cd 
+cd
 \family typewriter
-sctplib-<version>
+ sctplib-<version>
 \end_layout
 
 \begin_layout Standard
@@ -556,18 +657,29 @@ Useful options are
 \end_inset
 
  to generate a static library with debug symbols.
- This is useful for debugging purposes (e.g.\InsetSpace ~
-memory leak detection using Valgrind\InsetSpace ~
+ This is useful for debugging purposes (e.g.
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+memory leak detection using Valgrind
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Valgrind"
 
 \end_inset
 
 ).
- To use SCTP over UDP (defined in\InsetSpace ~
+ To use SCTP over UDP (defined in
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "draft-tuexen-sctp-udp-encaps"
 
 \end_inset
@@ -651,23 +763,24 @@ Again, you can use
 \end_layout
 
 \begin_layout Subsection
-Installation of the 
+Installation of the
 \noun on
-rsplib
+ rsplib
 \noun default
  Package
 \end_layout
 
 \begin_layout Standard
-After installing SCTP support, the 
+After installing SCTP support, the
 \noun on
-rsplib
+ rsplib
 \noun default
  package can be installed.
 \end_layout
 
 \begin_layout Subsubsection
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "sub:Preparation-Work"
 
 \end_inset
@@ -676,8 +789,11 @@ Preparation Work
 \end_layout
 
 \begin_layout Standard
-In order to prepare your system for the installation of the rsplib package,
- it is recommended to do the following tasks:
+In order to prepare your system for the installation of the 
+\noun on
+rsplib
+\noun default
+ package, it is recommended to do the following tasks:
 \end_layout
 
 \begin_layout Itemize
@@ -687,37 +803,47 @@ Add the environment variable QTDIR, setting the path to the installation
  Without Qt and properly set QTDIR, the client's compilation can be skipped.
  The ./configure script expects the environment variable QTDIR set to the
  Qt directory.
- You may need to set it appropriately, e.g.\InsetSpace ~
-"export QTDIR=/usr/share/qt3" for
- Ubuntu Linux.
+ You may need to set it appropriately, e.g.
+\begin_inset space ~
+\end_inset
+
+"export QTDIR=/usr/share/qt4" for Ubuntu Linux.
  This setting depends on your distribution; use "locate qwidget.h" to find
  out the directory.
 \end_layout
 
 \begin_layout Itemize
-The Component Status Protocol\InsetSpace ~
-(CSP) can be used to send status messages of
- PRs, PEs and PUs to a central monitoring program (cspmonitor, to be explained
- later).
+The Component Status Protocol
+\begin_inset space ~
+\end_inset
+
+(CSP) can be used to send status messages of PRs, PEs and PUs to a central
+ monitoring program (cspmonitor, to be explained later).
  This is a helpful feature to keep an overview of large, distributed test
  setups.
  You can set a default address and report interval for CSP by defining two
  environment variables:
-\newline
+\begin_inset Newline newline
+\end_inset
+
 
 \family typewriter
 CSP_SERVER=<Address>:<Port>
-\newline
+\begin_inset Newline newline
+\end_inset
+
 CSP_INTERVAL=<Report interval in milliseconds>
 \family default
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 Useful settings are CSP_SERVER=127.0.0.1:2960 and CSP_INTERVAL=333.
 \end_layout
 
 \begin_layout Itemize
 For debugging, it is useful to turn on the generation of core dumps.
- Under the bash shell, this can be done by 
+ Under the bash shell, this can be done by
 \begin_inset Quotes eld
 \end_inset
 
@@ -743,7 +869,7 @@ To make all settings above permanent, you can append them to your shell
 \begin_layout Standard
 
 \family typewriter
-export QTDIR=/usr/share/qt3
+export QTDIR=/usr/share/qt4
 \end_layout
 
 \begin_layout Standard
@@ -766,9 +892,11 @@ ulimit -c unlimited
 
 \begin_layout Standard
 In order to use RSerPool, your host needs at least one multicast-capable
- network interface with at least a private IP address (i.e.\InsetSpace ~
-192.168.x.y; 10.a.b.c;
- 172.16.n.m - 172.31.i.j).
+ network interface with at least a private IP address (i.e.
+\begin_inset space ~
+\end_inset
+
+192.168.x.y; 10.a.b.c; 172.16.n.m - 172.31.i.j).
  If your host is already connected to a network and has an IP address, everythin
 g should be fine.
  For testing with a non-connected host, you can just set up a dummy interface:
@@ -802,9 +930,18 @@ iface dummy0
 \begin_layout Standard
 
 \family typewriter
-inet static address 172.31.249.1 netmask 255.255.255.252\InsetSpace ~
-\InsetSpace ~
-\InsetSpace ~
+inet static address 172.31.249.1 netmask 255.255.255.252
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
 
 \family default
 (You may need to change this!)
@@ -825,15 +962,16 @@ pre-down ip link set dummy0 up multicast off
 \begin_layout Standard
 After appending these lines, they will be loaded automatically each time
  a new bash shell is started.
- Your system should now be ready to install the 
+ Your system should now be ready to install the
 \noun on
-rsplib
+ rsplib
 \noun default
  package.
 \end_layout
 
 \begin_layout Subsubsection
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "sub:Configuration-and-Installation"
 
 \end_inset
@@ -842,20 +980,29 @@ Configuration and Installation
 \end_layout
 
 \begin_layout Standard
-In order to install 
+In order to install
 \noun on
-rsplib
+ rsplib
 \noun default
-, get the latest version from\InsetSpace ~
+, get the latest version from
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "RSerPoolPage"
 
 \end_inset
 
  (
-\begin_inset LatexCommand htmlurl
-target "http://tdrwww.iem.uni-due.de/dreibholz/rserpool"
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool
+\end_layout
 
 \end_inset
 
@@ -869,9 +1016,9 @@ tar xzf rsplib-<version>.tar.gz
 \end_layout
 
 \begin_layout Standard
-cd 
+cd
 \family typewriter
-rsplib-<version>
+ rsplib-<version>
 \end_layout
 
 \begin_layout Standard
@@ -889,9 +1036,18 @@ make
 \begin_layout Standard
 
 \family typewriter
-sudo make install\InsetSpace ~
-\InsetSpace ~
-\InsetSpace ~
+sudo make install
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
 
 \family default
 (This step is optional and not needed to run the examples!)
@@ -919,7 +1075,10 @@ default
 \family typewriter
 --disable-kernel-sctp
 \family default
- Use userland SCTP (i.e.\InsetSpace ~
+ Use userland SCTP (i.e.
+\begin_inset space ~
+\end_inset
+
 
 \noun on
 sctplib
@@ -940,9 +1099,11 @@ socketapi
  Without Qt, the client's compilation will be skipped.
  The ./configure script expects the environment variable QTDIR set to the
  Qt directory.
- You may need to set it appropriately, e.g.\InsetSpace ~
-"export QTDIR=/usr/share/qt3" for
- Ubuntu Linux.
+ You may need to set it appropriately, e.g.
+\begin_inset space ~
+\end_inset
+
+"export QTDIR=/usr/share/qt4" for Ubuntu Linux.
  This setting depends on your distribution; use "locate qwidget.h" to find
  out the directory.
  It is recommended to add the setting of QTDIR to your shell configuration
@@ -959,7 +1120,7 @@ default
 \family typewriter
 --disable-qt
 \family default
- Disables Qt usage; the Fractal Generator client will 
+ Disables Qt usage; the Fractal Generator client will
 \series bold
 not
 \series default
@@ -1009,7 +1170,7 @@ not
 \series bold
 default
 \series default
-) 
+)
 \end_layout
 
 \begin_layout Description
@@ -1063,13 +1224,12 @@ default
 --disable-csp
 \family default
  Turns the Component Status Protocol support off.
- 
 \end_layout
 
 \begin_layout Standard
-For learning how to work with 
+For learning how to work with
 \noun on
-rsplib
+ rsplib
 \noun default
 , the following options are highly recommended:
 \end_layout
@@ -1083,24 +1243,28 @@ rsplib
 
 \begin_layout Standard
 \noindent
-The 
+The
 \noun on
-rsplib
+ rsplib
 \noun default
- package also provides filter and coloring rules for 
+ package also provides filter and coloring rules for
 \noun on
-Wireshark
+ Wireshark
 \noun default
-\InsetSpace ~
 
-\begin_inset LatexCommand cite
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "WiresharkUsersGuide"
 
 \end_inset
 
 .
  You can find them in the rsplib/wireshark/ subdirectory.
- Just copy the files 
+ Just copy the files
 \begin_inset Quotes eld
 \end_inset
 
@@ -1108,7 +1272,7 @@ dfilters
 \begin_inset Quotes erd
 \end_inset
 
- and 
+ and
 \begin_inset Quotes eld
 \end_inset
 
@@ -1116,13 +1280,16 @@ colorfilters
 \begin_inset Quotes erd
 \end_inset
 
- to your 
+ to your
 \noun on
-Wireshark
+ Wireshark
 \noun default
  settings directory: ~/.wireshark (Ubuntu/Debian) or /root/.wireshark (you
- need root permission to do so, i.e.\InsetSpace ~
-use 
+ need root permission to do so, i.e.
+\begin_inset space ~
+\end_inset
+
+use
 \begin_inset Quotes eld
 \end_inset
 
@@ -1131,7 +1298,7 @@ sudo
 \end_inset
 
 !).
- Optionally, you can also copy the file 
+ Optionally, you can also copy the file
 \begin_inset Quotes eld
 \end_inset
 
@@ -1141,20 +1308,21 @@ preferences
 
  (if you do not have your own preferences configured yet, otherwise this
  would overwrite them!).
- You do 
+ You do
 \series bold
 not
 \series default
  need to install the provided dissectors, they have already contributed
- to the 
+ to the
 \noun on
-Wireshark
+ Wireshark
 \noun default
  developers and are included already!
 \end_layout
 
 \begin_layout Subsection
-\begin_inset LatexCommand label
+\begin_inset CommandInset label
+LatexCommand label
 name "sub:Testing-the-Installation"
 
 \end_inset
@@ -1164,9 +1332,9 @@ Testing the Installation
 
 \begin_layout Standard
 To perform a test of the installation, start the following programs in the
- rsplib/ subdirectory of the 
+ rsplib/ subdirectory of the
 \noun on
-rsplib
+ rsplib
 \noun default
  package:
 \end_layout
@@ -1176,7 +1344,9 @@ Start the CSP monitor, it will print out useful information about the components
  started:
 \family typewriter
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 ./cspmonitor
 \end_layout
 
@@ -1184,7 +1354,9 @@ Start the CSP monitor, it will print out useful information about the components
 First, start a registrar:
 \family typewriter
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 ./registrar
 \end_layout
 
@@ -1192,25 +1364,38 @@ First, start a registrar:
 Start a PE for the Fractal Generator service:
 \family typewriter
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 ./server -fractal
-\newline
+\begin_inset Newline newline
+\end_inset
+
 
 \family default
-The PE should find the PR and show its PE\InsetSpace ~
+The PE should find the PR and show its PE
+\begin_inset space ~
+\end_inset
+
 ID upon startup.
  When it shows the ID, it has successfully registered.
  If something does not work, use the parameter -loglevel=5 to increase the
  verbosity of the log output.
- Also refer to subsection\InsetSpace ~
+ Also refer to subsection
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "sub:Preparation-Work"
 
 \end_inset
 
  to check your system configuration.
-\newline
+\begin_inset Newline newline
+\end_inset
+
 Have a look at the CSP monitor output.
  It should show the PR and PE.
 \end_layout
@@ -1219,18 +1404,22 @@ Have a look at the CSP monitor output.
 Start a PU for the Fractal Generator service:
 \family typewriter
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 ./fractalpooluser
 \family default
 
-\newline
+\begin_inset Newline newline
+\end_inset
+
 You should now see the calculation progress in the PU's window.
  Also have a look at the CSP monitor output; it should show the PU.
 \end_layout
 
 \begin_layout Enumerate
 Start more PEs, PUs and PRs.
- You can turn on the 
+ You can turn on the
 \begin_inset Quotes eld
 \end_inset
 
@@ -1245,11 +1434,11 @@ unreliable mode
 \end_layout
 
 \begin_layout Enumerate
-Start 
+Start
 \noun on
-Wireshark
+ Wireshark
 \noun default
-, sniff on the 
+, sniff on the
 \begin_inset Quotes eld
 \end_inset
 
@@ -1257,7 +1446,7 @@ lo
 \begin_inset Quotes erd
 \end_inset
 
- (loopback, only local traffic) or the 
+ (loopback, only local traffic) or the
 \begin_inset Quotes erd
 \end_inset
 
@@ -1266,9 +1455,13 @@ any
 \end_inset
 
  interface.
- If you have set up the filter and coloring rules (see subsection\InsetSpace ~
+ If you have set up the filter and coloring rules (see subsection
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "sub:Testing-the-Installation"
 
 \end_inset
@@ -1283,7 +1476,10 @@ The Programs
 
 \begin_layout Standard
 All installable programs in the rsplib/ subdirectory also have a manual
- page (suffix:\InsetSpace ~
+ page (suffix:
+\begin_inset space ~
+\end_inset
+
 .8).
  You can view the manual page in the rsplib/ directory using
 \end_layout
@@ -1296,9 +1492,13 @@ man ./<program name>.8
 
 \begin_layout Standard
 \noindent
-After installation (make install, see subsection\InsetSpace ~
+After installation (make install, see subsection
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand ref
+
+\begin_inset CommandInset ref
+LatexCommand ref
 reference "sub:Configuration-and-Installation"
 
 \end_inset
@@ -1334,9 +1534,13 @@ hsdump A ENRP-based test utility to dump the handlespace of a PR.
 
 \begin_layout Description
 pingpongclient A simple PU for a request-response example service with cookie-ba
-sed failover\InsetSpace ~
+sed failover
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "LCN2002"
 
 \end_inset
@@ -1346,9 +1550,13 @@ key "LCN2002"
 
 \begin_layout Description
 calcappclient The PU for the CalcApp service used for performance measurements
- (see\InsetSpace ~
+ (see
+\begin_inset space ~
+\end_inset
 
-\begin_inset LatexCommand cite
+
+\begin_inset CommandInset citation
+LatexCommand cite
 key "Dre2006,KiVS2007"
 
 \end_inset
@@ -1366,9 +1574,9 @@ scriptingclient The PU for the scripting service (remote script execution
 \end_layout
 
 \begin_layout Section
-The 
+The
 \noun on
-rsplib
+ rsplib
 \noun default
  API
 \end_layout
@@ -1378,9 +1586,10 @@ rsplib
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand bibtex
-options "bibtotoc,acm"
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
 bibfiles "Referenzarchiv"
+options "bibtotoc,acm"
 
 \end_inset
 

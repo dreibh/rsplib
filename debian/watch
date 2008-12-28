@@ -1,3 +1,3 @@
 version=3
-http://tdrwww.exp-math.uni-essen.de/dreibholz/rserpool/index.html    download/rsplib-(.*)\.tar\.gz
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/index.html    download/rsplib-(.*)\.tar\.gz
 # Search rsplib on homepage; download archives are in the "download" directory.
