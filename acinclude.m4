@@ -13,33 +13,31 @@ AC_ARG_WITH([qt-dir],
    [QTPATHS="$withval"],
    [QTPATHS="/usr/local/qt4 /usr/share/qt4"])
 
-AC_ARG_WITH([qt-include],
-   AC_HELP_STRING([--with-qt-include=/path/to/Qt-4.x include],
-      [to specify the path to the Qt-4. include directory]),
-   [QTEXTRAINC="$withval"],
-   [QTEXTRAINC="/usr/include/qt4"])
-
 for x in $QTPATHS; do
     if test -d $x ; then
        QTDIR="$x"
     fi
 done
 
+AC_ARG_WITH([qt-include],
+   AC_HELP_STRING([--with-qt-include=/path/to/Qt-4.x include],
+      [to specify the path to the Qt-4. include directory]),
+   [QTEXTRAINC="$withval"],
+   [QTEXTRAINC="/usr/include/qt4"])
 
-AC_MSG_CHECKING(Qt4.x directory)
-
+AC_MSG_CHECKING(Qt 4.x directory)
 if test $QTDIR = xxx ; then
    AC_MSG_ERROR(Could not locate QT 4.x)
 fi
 
 AC_MSG_RESULT($QTDIR)
-AC_MSG_CHECKING(Qt4.x lib)
+AC_MSG_CHECKING(Qt 4.x libraries)
 
 AC_ARG_WITH([qt-lib],
    AC_HELP_STRING([--with-qt-lib=/path/to/Qt-4.x lib],
-      [to specify the path to the Qt-4. lib directory]),
+      [to specify the path to the Qt-4.x lib directory]),
    [QTEXTRALIB="$withval"],
-   [QTEXTRALIB="$QTDIR/lib"])
+   [QTEXTRALIB="/usr/lib"])
 
 AC_MSG_RESULT($QTEXTRALIB)
 
@@ -49,7 +47,7 @@ QT_CXXFLAGS="-I$QTEXTRAINC -I$QTEXTRAINC/QtGui -I$QTEXTRAINC/QtXml -I$QTEXTRAINC
 QTBIN="$QTDIR/bin"
 
 
-AC_MSG_CHECKING(Qt4.x includes)
+AC_MSG_CHECKING(Qt 4.x includes)
 AC_MSG_RESULT($QT_CXXFLAGS $QTEXTRAINC)
 
 ADM_QT_LDADD="$QT_LDADD"

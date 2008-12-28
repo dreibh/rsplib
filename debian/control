@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
 Homepage: http://tdrwww.iem.uni-due.de/dreibholz/rserpool/index.html
-Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.5), libbz2-dev (>= 1.0), libqt4-dev, libqt4-xml
+Build-Depends: debhelper (>= 5), autotools-dev, libsctp-dev (>= 1.0.5), libbz2-dev (>= 1.0), libqt4-dev
 Standards-Version: 3.8.0
 
 Package: librsplib2
@@ -98,7 +98,7 @@ Package: rsplib-services
 Section: net
 Priority: optional
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools, libqt4-xml
+Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
 Recommends: rsplib-fgp-cfgfiles
 Description: RSerPool example services
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a
