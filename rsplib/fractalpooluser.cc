@@ -303,7 +303,7 @@ void FractalPU::startNextJob()
                                     xStep, yStep, color.rgb());
                }
                char str[64];
-               snprintf((char*)&str, sizeof(str), "%u", number + 1);
+               snprintf((char*)&str, sizeof(str), "%u", (unsigned int)number + 1);
                const QString numberString(str);
                painter.drawText(xPosition * xStep, yPosition * yStep, xStep, yStep, Qt::AlignCenter, numberString);
             }
