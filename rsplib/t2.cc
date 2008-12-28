@@ -29,6 +29,8 @@
 
 #include <QApplication>
 #include <QStatusBar>
+#include <QMenu>
+#include <QMessageBox>
 #include <QLayout>
 #include <QThread>
 #include <QTimer>
@@ -114,7 +116,7 @@ FractalPU::FractalPU(const size_t       width,
    InterImageTime     = interImageTime;
    ImageStoragePrefix = QString(imageStoragePrefix);
    ColorMarks         = colorMarks;
-   Threads            = threads;
+   ConfiguredThreads  = threads;
    FileNumber         = 0;
 
    // ====== Initialize file and directory names ============================
@@ -144,7 +146,7 @@ FractalPU::~FractalPU()
 {
    Status = FPU_Shutdown;
    if(CalculationThreadArray) {
-      for(size_t i = 0;i < Threads;i++) {
+      for(size_t i = 0;i < CurrentThreads;i++) {
          CalculationThreadArray[i]->wait();
          delete CalculationThreadArray[i];
          CalculationThreadArray[i] = NULL;
@@ -154,14 +156,14 @@ FractalPU::~FractalPU()
    }
    delete Display;
    Display = NULL;
+   CurrentThreads = 0;
 }
 
 
 /* ###### Handle Close event ############################################# */
 void FractalPU::closeEvent(QCloseEvent* closeEvent)
 {
-   Status = FPU_Shutdown;
-   qApp->exit(0);
+   quit();
 }
 
 
@@ -262,17 +264,18 @@ void FractalPU::startNextJob()
    Display->setCursor(Qt::WaitCursor);
    statusBar()->showMessage("Starting job distribution ...");
 
-   CalculationThreadArray = new FractalCalculationThread*[Threads];
+   CurrentThreads = ConfiguredThreads;
+   CalculationThreadArray = new FractalCalculationThread*[CurrentThreads];
    Q_CHECK_PTR(CalculationThreadArray);
-   for(size_t i = 0;i < Threads;i++) {
+   for(size_t i = 0;i < CurrentThreads;i++) {
       CalculationThreadArray[i] = NULL;
    }
 
    QColor       color;
-   const size_t yCount = (size_t)floor(sqrt((double)Threads));
+   const size_t yCount = (size_t)floor(sqrt((double)CurrentThreads));
    const size_t yStep  = (size_t)rint((double)Parameter.Height / yCount);
 
-   size_t remaining = Threads;
+   size_t remaining = CurrentThreads;
    size_t number    = 0;
    for(size_t yPosition = 0;yPosition < yCount;yPosition++) {
       const size_t xCount = (yPosition < yCount - 1) ? min(remaining, yCount) : remaining;
@@ -280,7 +283,7 @@ void FractalPU::startNextJob()
          const size_t xStep = (size_t)rint(Parameter.Width / xCount);
          remaining -= xCount;
          for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
-            if((Threads > 1) && (ColorMarks)) {
+            if((CurrentThreads > 1) && (ColorMarks)) {
                color.setHsv(((5 * number) % 72) * 5, 100, 255);
                Display->fillRect(xPosition * xStep, yPosition * yStep,
                                  xStep, yStep, color.rgb());
@@ -289,7 +292,7 @@ void FractalPU::startNextJob()
             CalculationThreadArray[number] =
                new FractalCalculationThread(this, number,
                       xPosition * xStep, yPosition * yStep, xStep, yStep,
-                      (Threads == 1), ColorMarks);
+                      (CurrentThreads == 1));
             Q_CHECK_PTR(CalculationThreadArray[number]);
 
             connect(CalculationThreadArray[number], SIGNAL(updateImage(int, int)),
@@ -304,14 +307,14 @@ void FractalPU::startNextJob()
          }
       }
    }
-   CHECK(number == Threads);
+   CHECK(number == CurrentThreads);
    Status = FPU_CalcInProgress;
 
    Display->update();
 
    // ====== Wait for job completion ========================================
    cout << "Waiting for job completion ..." << endl;
-   if(Threads > 1) {
+   if(CurrentThreads > 1) {
       statusBar()->showMessage("Waiting for job completion ...");
    }
 }
@@ -323,7 +326,7 @@ void FractalPU::handleCompletedSession()
    if(CalculationThreadArray) {
       // ====== Count active sessions =======================================
       size_t active = 0;
-      for(size_t i = 0;i < Threads;i++) {
+      for(size_t i = 0;i < CurrentThreads;i++) {
          if( (CalculationThreadArray[i] != NULL) && (!CalculationThreadArray[i]->isFinished()) ) {
             active++;
          }
@@ -334,7 +337,7 @@ void FractalPU::handleCompletedSession()
          Display->setCursor(Qt::ArrowCursor);
 
          Success = true;
-         for(size_t i = 0;i < Threads;i++) {
+         for(size_t i = 0;i < CurrentThreads;i++) {
             CalculationThreadArray[i]->wait();
             if(!CalculationThreadArray[i]->getSuccess()) {
                Success = false;
@@ -394,6 +397,87 @@ void FractalPU::changeStatus(QString statusText)
 }
 
 
+/* ###### Context menu ################################################### */
+void FractalPU::contextMenuEvent(QContextMenuEvent* event)
+{
+   QMenu menu(this);
+
+   static unsigned int sessionsEntries[] = {1, 2, 3, 4, 6, 8, 10,
+                                            0,
+                                            9, 16, 25, 36, 49, 64, 81, 100,
+                                            0,
+                                            144, 225, 256, 400};
+
+   QAction* showFailovers = menu.addAction("Show Failovers");
+   Q_CHECK_PTR(showFailovers);
+   showFailovers->setShortcut(QKeySequence("Ctrl+F"));
+   showFailovers->setCheckable(true);
+   showFailovers->setChecked(ColorMarks);
+   connect(showFailovers, SIGNAL(toggled(bool)), this, SLOT(changeColorMarks(bool)));
+
+   QMenu* sessionsMenu = menu.addMenu("Sessions");
+   Q_CHECK_PTR(sessionsMenu);
+   for(size_t i = 0;i < sizeof(sessionsEntries) / sizeof(sessionsEntries[0]);i++) {
+      if(sessionsEntries[i] > 0) {
+         char str[64];
+         snprintf((char*)&str, sizeof(str), "%u", sessionsEntries[i]);
+         QAction* action = sessionsMenu->addAction(str);
+         Q_CHECK_PTR(action);
+         action->setCheckable(true);
+         if(sessionsEntries[i] == ConfiguredThreads) {
+            action->setChecked(true);
+         }
+         action->setData(sessionsEntries[i]);
+      }
+      else {
+         sessionsMenu->addSeparator();
+      }
+   }
+   connect(sessionsMenu, SIGNAL(triggered(QAction*)), this, SLOT(changeThreads(QAction*)));
+
+   menu.addSeparator();
+   menu.addAction("About", this, SLOT(about()));
+   menu.addSeparator();
+   menu.addAction("Quit", this, SLOT(quit()), QKeySequence("Ctrl+Q"));
+
+   menu.exec(event->globalPos());
+}
+
+
+/* ###### Change ColorMarks setting ###################################### */
+void FractalPU::changeColorMarks(bool checked)
+{
+   ColorMarks = checked;
+}
+
+
+/* ###### Change Threads setting ######################################### */
+void FractalPU::changeThreads(QAction* action)
+{
+   const unsigned int newThreads = action->data().toInt();
+   if(newThreads >= 1) {
+      ConfiguredThreads = newThreads;
+      Status = FPU_CalcAborted;
+   }
+}
+
+
+/* ###### About ########################################################## */
+void FractalPU::about()
+{
+   QMessageBox::about(this, "Fractal Pool User",
+      "<center><b>Fractal Pool User</b><br>Copyright (C) 2009 by Thomas Dreibholz</center>");
+}
+
+
+/* ###### Quit ########################################################### */
+void FractalPU::quit()
+{
+   Status = FPU_Shutdown;
+   qApp->exit(0);
+}
+
+
 
 /* ###### Fractal PU thread constructor ################################## */
 FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
@@ -402,8 +486,7 @@ FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
                                                    const size_t       viewY,
                                                    const size_t       viewWidth,
                                                    const size_t       viewHeight,
-                                                   const bool         showStatus,
-                                                   const bool         colorMarks)
+                                                   const bool         showStatus)
 
 {
    ThreadID   = threadID;
@@ -413,7 +496,6 @@ FractalCalculationThread::FractalCalculationThread(FractalPU*         fractalPU,
    ViewWidth  = viewWidth;
    ViewHeight = viewHeight;
    ShowStatus = showStatus;
-   ColorMarks = colorMarks;
    Session    = -1;
    Success    = false;
 }
@@ -484,7 +566,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
             goto finished;
          }
          uint32_t point = ntohl(data->Buffer[p]);
-         if(ColorMarks) {
+         if(Master->ColorMarks) {
             point = (point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5;
          }
          else {
