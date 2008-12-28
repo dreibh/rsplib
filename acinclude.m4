@@ -1,216 +1,151 @@
 # Check for Qt compiler flags, linker flags, and binary packages
 AC_DEFUN([gw_CHECK_QT],
 [
-AC_REQUIRE([AC_PROG_CXX])
-AC_REQUIRE([AC_PATH_X])
+QTDIR=xxx
 
-AC_MSG_CHECKING([QTDIR])
-AC_ARG_WITH([qtdir], [  --with-qtdir=DIR        Qt installation directory [default=$QTDIR]], QTDIR=$withval)
-# Check that QTDIR is defined or that --with-qtdir given
-if test x"$QTDIR" = x ; then
-    AC_MSG_RESULT([QTDIR not set.])
-    AC_MSG_CHECKING([Trying some common Qt installation locations])
-    QT_SEARCH="/usr/lib/qt31 /usr/local/qt31 /usr/lib/qt3 /usr/local/qt3 /usr/lib/qt2 /usr/local/qt2 /usr/lib/qt /usr/local/qt /usr/share/qt /usr/share/qt3"
-    for i in $QT_SEARCH; do
-        if test -f $i/include/qglobal.h -a x$QTDIR = x; then QTDIR=$i; fi
-    done
-fi
-if test x"$QTDIR" = x ; then
-    AC_MSG_ERROR([*** QTDIR must be defined, or --with-qtdir option given])
-fi
-AC_MSG_RESULT([$QTDIR])
+QTPOSTFIX=""
+QTEXTRAINC="/usr/include/qt4"
+QTEXTRALIB="/usr/share/qt4"
 
-# Change backslashes in QTDIR to forward slashes to prevent escaping
-# problems later on in the build process, mainly for Cygwin build
-# environment using MSVC as the compiler
-# TODO: Use sed instead of perl
-QTDIR=`echo $QTDIR | perl -p -e 's/\\\\/\\//g'`
+AC_ARG_WITH([qt-dir],
+   AC_HELP_STRING([--with-qt-dir=/path/to/Qt-4.x.0],
+      [to specify the path to the Qt-4.x.0 directory.]),
+   [QTPATHS="$withval"],
+   [QTPATHS="/usr/local/qt4 /usr/share/qt4"])
 
-# Figure out which version of Qt we are using
-AC_MSG_CHECKING([Qt version])
-QT_VER=`grep 'define.*QT_VERSION_STR\W' $QTDIR/include/qglobal.h | perl -p -e 's/\D//g'`
-case "${QT_VER}" in
-    2*)
-        QT_MAJOR="2"
-    ;;
-    3*)
-        QT_MAJOR="3"
-    ;;
-    *)
-        AC_MSG_ERROR([*** Don't know how to handle this Qt major version])
-    ;;
-esac
-AC_MSG_RESULT([$QT_VER ($QT_MAJOR)])
+AC_ARG_WITH([qt-include],
+   AC_HELP_STRING([--with-qt-include=/path/to/Qt-4.x include],
+      [to specify the path to the Qt-4. include directory]),
+   [QTEXTRAINC="$withval"],
+   [QTEXTRAINC="/usr/include/qt4"])
 
-# Check that moc is in path
-AC_CHECK_PROG(MOC, moc, moc)
-if test x$MOC = x ; then
-        AC_MSG_ERROR([*** moc must be in path])
+for x in $QTPATHS; do
+    if test -d $x ; then
+       QTDIR="$x"
+    fi
+done
+
+
+AC_MSG_CHECKING(Qt4.x directory)
+
+if test $QTDIR = xxx ; then
+   AC_MSG_ERROR(Could not locate QT 4.x)
 fi
 
-# uic is the Qt user interface compiler
-AC_CHECK_PROG(UIC, uic, uic)
-if test x$UIC = x ; then
-        AC_MSG_ERROR([*** uic must be in path])
+AC_MSG_RESULT($QTDIR)
+AC_MSG_CHECKING(Qt4.x lib)
+
+AC_ARG_WITH([qt-lib],
+   AC_HELP_STRING([--with-qt-lib=/path/to/Qt-4.x lib],
+      [to specify the path to the Qt-4. lib directory]),
+   [QTEXTRALIB="$withval"],
+   [QTEXTRALIB="$QTDIR/lib"])
+
+AC_MSG_RESULT($QTEXTRALIB)
+
+
+QT_LDADD="-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB -lQtGui -lQtXml -lQtCore $X_LIBS -lX11 -lXext -lXmu -lXt -lXi $X_EXTRA_LIBS  -lpthread"
+QT_CXXFLAGS="-I$QTEXTRAINC -I$QTEXTRAINC/QtGui -I$QTEXTRAINC/QtXml -I$QTEXTRAINC/QtCore -I$QTEXTRAINC/QtOpenGL $X_CFLAGS -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED -I$QTEXTRAINC"
+QTBIN="$QTDIR/bin"
+
+
+AC_MSG_CHECKING(Qt4.x includes)
+AC_MSG_RESULT($QT_CXXFLAGS $QTEXTRAINC)
+
+ADM_QT_LDADD="$QT_LDADD"
+ADM_QT_CXXFLAGSLUDES="$QT_CXXFLAGS"
+ADM_QTCFLAGS="$QT_CXXFLAGS"
+
+MOC="$QTBIN/moc$QTPOSTFIX"
+UIC="$QTBIN/uic$QTPOSTFIX"
+RCC="$QTBIN/rcc"
+AC_SUBST(MOC)
+AC_SUBST(UIC)
+AC_SUBST(RCC)
+
+# Now we check whether we can actually build a Qt app.
+cat > myqt.h << EOF
+   #include <QObject>
+
+   class Test : public QObject
+   {
+      Q_OBJECT
+
+      public:
+         Test() {}
+         ~Test() {}
+
+      public slots:
+         void receive() {}
+
+      signals:
+         void send();
+   };
+EOF
+
+cat > myqt.cpp << EOF
+   #include "myqt.h"
+   #include <QApplication>
+
+   int main( int argc, char **argv )
+   {
+      QApplication app( argc, argv );
+      Test t;
+      QObject::connect( &t, SIGNAL(send()), &t, SLOT(receive()) );
+   }
+EOF
+
+
+AC_MSG_CHECKING(for working moc)
+test_command_1="$MOC myqt.h -o moc_myqt.cpp"
+AC_TRY_EVAL(test_command_1)
+
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(moc call failed)
 fi
 
-# qembed is the Qt data embedding utility.
-# It is located in $QTDIR/tools/qembed, and must be compiled and installed
-# manually, we'll let it slide if it isn't present
-AC_CHECK_PROG(QEMBED, qembed, qembed)
+AC_MSG_RESULT(yes)
+AC_MSG_CHECKING(whether C++-compiling the moc-generated program works)
+test_command_2="$CXX $QT_CXXFLAGS -c $CXXFLAGS -o moc_myqt.o moc_myqt.cpp"
+AC_TRY_EVAL(test_command_2)
 
-
-# Calculate Qt include path
-QT_CXXFLAGS="-I$QTDIR/include"
-
-QT_IS_EMBEDDED="no"
-# On unix, figure out if we're doing a static or dynamic link
-case "${host}" in
-    *-cygwin)
-	AC_DEFINE_UNQUOTED(WIN32, "", Defined if on Win32 platform)
-        if test -f "$QTDIR/lib/qt.lib" ; then
-            QT_LIB="qt.lib"
-            QT_IS_STATIC="yes"
-            QT_IS_MT="no"
-        elif test -f "$QTDIR/lib/qt-mt.lib" ; then
-            QT_LIB="qt-mt.lib"
-            QT_IS_STATIC="yes"
-            QT_IS_MT="yes"
-        elif test -f "$QTDIR/lib/qt$QT_VER.lib" ; then
-            QT_LIB="qt$QT_VER.lib"
-            QT_IS_STATIC="no"
-            QT_IS_MT="no"
-        elif test -f "$QTDIR/lib/qt-mt$QT_VER.lib" ; then
-            QT_LIB="qt-mt$QT_VER.lib"
-            QT_IS_STATIC="no"
-            QT_IS_MT="yes"
-        fi
-        ;;
-
-    *)
-        QT_IS_STATIC=`ls $QTDIR/lib/*.a 2> /dev/null`
-        if test "x$QT_IS_STATIC" = x; then
-            QT_IS_STATIC="no"
-        else
-            QT_IS_STATIC="yes"
-        fi
-        if test x$QT_IS_STATIC = xno ; then
-            QT_IS_DYNAMIC=`ls $QTDIR/lib/*.so 2> /dev/null`
-            if test "x$QT_IS_DYNAMIC" = x;  then
-                AC_MSG_ERROR([*** Couldn't find any Qt libraries])
-            fi
-        fi
-
-        if test "x`ls $QTDIR/lib/libqt.* 2> /dev/null`" != x ; then
-            QT_LIB="-lqt"
-            QT_IS_MT="no"
-        elif test "x`ls $QTDIR/lib/libqt-mt.* 2> /dev/null`" != x ; then
-            QT_LIB="-lqt-mt"
-            QT_IS_MT="yes"
-        elif test "x`ls $QTDIR/lib/libqte.* 2> /dev/null`" != x ; then
-            QT_LIB="-lqte"
-            QT_IS_MT="no"
-            QT_IS_EMBEDDED="yes"
-        elif test "x`ls $QTDIR/lib/libqte-mt.* 2> /dev/null`" != x ; then
-            QT_LIB="-lqte-mt"
-            QT_IS_MT="yes"
-            QT_IS_EMBEDDED="yes"
-        fi
-        ;;
-esac
-AC_MSG_CHECKING([if Qt is static])
-AC_MSG_RESULT([$QT_IS_STATIC])
-AC_MSG_CHECKING([if Qt is multithreaded])
-AC_MSG_RESULT([$QT_IS_MT])
-AC_MSG_CHECKING([if Qt is embedded])
-AC_MSG_RESULT([$QT_IS_EMBEDDED])
-
-QT_GUILINK=""
-QASSISTANTCLIENT_LDADD="-lqassistantclient"
-case "${host}" in
-    *irix*)
-        QT_LIBS="$QT_LIB"
-        if test $QT_IS_STATIC = yes ; then
-            QT_LIBS="$QT_LIBS -L$x_libraries -lXext -lX11 -lm -lSM -lICE"
-        fi
-        ;;
-
-    *linux*)
-        QT_LIBS="$QT_LIB"
-        if test $QT_IS_STATIC = yes && test $QT_IS_EMBEDDED = no; then
-            QT_LIBS="$QT_LIBS -L$x_libraries -lXext -lX11 -lm -lSM -lICE -ldl -ljpeg"
-        fi
-        ;;
-
-    *freebsd*)
-        QT_LIBS="$QT_LIB"
-        if test $QT_IS_STATIC = yes && test $QT_IS_EMBEDDED = no; then
-            QT_LIBS="$QT_LIBS -L$x_libraries -lXext -lX11 -lm -lSM -lICE -ljpeg"
-        fi
-        ;;
-
-    *osf*)
-        # Digital Unix (aka DGUX aka Tru64)
-        QT_LIBS="$QT_LIB"
-        if test $QT_IS_STATIC = yes ; then
-            QT_LIBS="$QT_LIBS -L$x_libraries -lXext -lX11 -lm -lSM -lICE"
-        fi
-        ;;
-
-    *solaris*)
-        QT_LIBS="$QT_LIB"
-        if test $QT_IS_STATIC = yes ; then
-            QT_LIBS="$QT_LIBS -L$x_libraries -lXext -lX11 -lm -lSM -lICE -lresolv -lsocket -lnsl"
-        fi
-        ;;
-
-
-    *win*)
-        # linker flag to suppress console when linking a GUI app on Win32
-        QT_GUILINK="/subsystem:windows"
-
-	if test $QT_MAJOR = "3" ; then
-	    if test $QT_IS_MT = yes ; then
-        	QT_LIBS="/nodefaultlib:libcmt"
-            else
-            	QT_LIBS="/nodefaultlib:libc"
-            fi
-        fi
-
-        if test $QT_IS_STATIC = yes ; then
-            QT_LIBS="$QT_LIBS $QT_LIB kernel32.lib user32.lib gdi32.lib comdlg32.lib ole32.lib shell32.lib imm32.lib advapi32.lib wsock32.lib winspool.lib winmm.lib netapi32.lib"
-            if test $QT_MAJOR = "3" ; then
-                QT_LIBS="$QT_LIBS qtmain.lib"
-            fi
-        else
-            QT_LIBS="$QT_LIBS $QT_LIB"
-            if test $QT_MAJOR = "3" ; then
-                QT_CXXFLAGS="$QT_CXXFLAGS -DQT_DLL"
-                QT_LIBS="$QT_LIBS qtmain.lib qui.lib user32.lib netapi32.lib"
-            fi
-        fi
-        QASSISTANTCLIENT_LDADD="qassistantclient.lib"
-        ;;
-
-esac
-
-
-if test x"$QT_IS_EMBEDDED" = "xyes" ; then
-        QT_CXXFLAGS="-DQWS $QT_CXXFLAGS"
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(moc-generated test program C++-compilation failed)
 fi
 
-if test x"$QT_IS_MT" = "xyes" ; then
-        QT_CXXFLAGS="$QT_CXXFLAGS -D_REENTRANT -DQT_THREAD_SUPPORT"
+
+AC_MSG_RESULT(yes)
+AC_MSG_CHECKING(whether C++-compiling a test program works)
+test_command_3="$CXX $QT_CXXFLAGS -c $CXXFLAGS -o myqt.o myqt.cpp"
+AC_TRY_EVAL(test_command_3)
+
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(test program C++-compilation failed)
 fi
 
-QT_LDADD="-L$QTDIR/lib $QT_LIBS"
 
-if test x$QT_IS_STATIC = xyes ; then
-    OLDLIBS="$LIBS"
-    LIBS="$QT_LDADD"
-    AC_CHECK_LIB(Xft, XftFontOpen, QT_LDADD="$QT_LDADD -lXft")
-    LIBS="$LIBS"
+AC_MSG_RESULT(yes)
+AC_MSG_CHECKING(whether linking works)
+nv_try_4="$CXX $LIBS $ADM_QT_LDADD -o myqt myqt.o moc_myqt.o"
+AC_TRY_EVAL(test_command_4)
+
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(linking failed)
 fi
+
+
+AC_MSG_RESULT(yes)
+AC_MSG_CHECKING(for mkoctfile)
+AC_TRY_EVAL(mkoctfile)
+
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(mkoctfile is not in the path)
+fi
+
+AC_MSG_RESULT(yes)
+rm -f moc_myqt.cpp myqt.h myqt.cpp myqt.o myqt moc_myqt.o
+])
+
 
 AC_MSG_CHECKING([QT_CXXFLAGS])
 AC_MSG_RESULT([$QT_CXXFLAGS])
@@ -219,7 +154,3 @@ AC_MSG_RESULT([$QT_LDADD])
 
 AC_SUBST(QT_CXXFLAGS)
 AC_SUBST(QT_LDADD)
-AC_SUBST(QT_GUILINK)
-AC_SUBST(QASSISTANTCLIENT_LDADD)
-
-])

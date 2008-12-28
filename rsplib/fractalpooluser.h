@@ -30,11 +30,18 @@
 #ifndef FRACTALPOOLUSER_H
 #define FRACTALPOOLUSER_H
 
+// #define FRACTALPOOLUSER_USE_KDE
 
-#include <qthread.h>
-#include <qimage.h>
-#include <qdir.h>
-#include <qstatusbar.h>
+#ifdef FRACTALPOOLUSER_USE_KDE
+#include <kapplication.h>
+#include <kmainwindow.h>
+#endif
+
+#include <QMainWindow>
+#include <QThread>
+#include <QMutex>
+#include <QImage>
+#include <QDir>
 
 #include "tdtypes.h"
 #include "rserpool.h"
@@ -44,60 +51,16 @@
 class FractalPU;
 
 
-class FractalCalculationThread : public QThread
-{
-   public:
-   FractalCalculationThread(FractalPU*         fractalPU,
-                            const unsigned int threadID,
-                            const size_t       viewX,
-                            const size_t       viewY,
-                            const size_t       viewWidth,
-                            const size_t       viewHeight,
-                            const bool         showStatus,
-                            const bool         colorMarks);
-   virtual void run();
-
-   inline bool getSuccess() const {
-      return(Success);
-   }
-
-   private:
-   enum DataStatus {
-      Okay      = 0,
-      Finalizer = 1,
-      Invalid   = 2
-   };
-
-   bool sendParameterMessage();
-   DataStatus handleDataMessage(const FGPData* data,
-                                const size_t   size);
-
-   unsigned int ThreadID;
-   FractalPU*   Master;
-   size_t       ViewX;
-   size_t       ViewY;
-   size_t       ViewWidth;
-   size_t       ViewHeight;
-   bool         ShowStatus;
-   bool         ColorMarks;
-   bool         Success;
-   int          Session;
-   size_t       PoolElementUsages;
-};
-
-
 class ImageDisplay : public QWidget
 {
    Q_OBJECT
 
    public:
-   ImageDisplay(QWidget*    parent = NULL,
-                const char* name   = NULL);
+   ImageDisplay(QWidget* parent = NULL);
    ~ImageDisplay();
 
    void initialize(const size_t width, const size_t height);
    void destroy();
-   void paintImage(const size_t startY, const size_t endY);
 
    inline unsigned int getPixel(const size_t x, const size_t y) {
       return(Image->pixel(x, y));
@@ -122,16 +85,75 @@ class ImageDisplay : public QWidget
       }
    }
 
+   inline void lock() {
+      ImageMutex.lock();
+   }
+
+   inline void unlock() {
+      ImageMutex.unlock();
+   }
+
    protected:
    void paintEvent(QPaintEvent* paintEvent);
 
    public:
    QImage* Image;
+   QMutex  ImageMutex;
 };
 
 
-class FractalPU : public QWidget,
-                  public QThread
+class FractalCalculationThread : public QThread
+{
+   Q_OBJECT
+
+   public:
+   FractalCalculationThread(FractalPU*         fractalPU,
+                            const unsigned int threadID,
+                            const size_t       viewX,
+                            const size_t       viewY,
+                            const size_t       viewWidth,
+                            const size_t       viewHeight,
+                            const bool         showStatus);
+   virtual void run();
+
+   inline bool getSuccess() const {
+      return(Success);
+   }
+
+   signals:
+   void updateImage(int start, int end);
+   void updateStatus(QString statusText);
+
+   private:
+   enum DataStatus {
+      Okay      = 0,
+      Finalizer = 1,
+      Invalid   = 2
+   };
+
+   bool sendParameterMessage();
+   DataStatus handleDataMessage(const FGPData* data,
+                                const size_t   size);
+
+   unsigned int ThreadID;
+   FractalPU*   Master;
+   size_t       ViewX;
+   size_t       ViewY;
+   size_t       ViewWidth;
+   size_t       ViewHeight;
+   bool         ShowStatus;
+   bool         Success;
+   int          Session;
+   size_t       PoolElementUsages;
+};
+
+
+class FractalPU
+#ifdef FRACTALPOOLUSER_USE_KDE
+   : public KMainWindow
+#else
+   : public QMainWindow
+#endif
 {
    Q_OBJECT
 
@@ -148,18 +170,27 @@ class FractalPU : public QWidget,
              const char*        imageStoragePrefix,
              const bool         colorMarks,
              const size_t       threads,
-             QWidget*           parent = NULL,
-             const char*        name   = NULL);
+             QWidget*           parent = NULL);
    ~FractalPU();
 
 
    protected:
    void closeEvent(QCloseEvent* closeEvent);
    void resizeEvent(QResizeEvent* resizeEvent);
+   void contextMenuEvent(QContextMenuEvent* event);
 
+   public slots:
+   void countDown();
+   void startNextJob();
+   void handleCompletedSession();
+   void redrawImage(int start, int end);
+   void changeStatus(QString statusText);
+   void changeColorMarks(bool checked);
+   void changeThreads(QAction* action);
+   void about();
+   void quit();
 
    private:
-   virtual void run();
    void getNextParameters();
 
    struct FractalParameter
@@ -178,14 +209,14 @@ class FractalPU : public QWidget,
    enum FractalGeneratorStatus {
       FPU_Shutdown       = 0,
       FPU_CalcAborted    = 1,
-      FPU_CalcInProgress = 2
+      FPU_CalcInProgress = 2,
+      FPU_Completed      = 3
    };
 
    FractalCalculationThread** CalculationThreadArray;
    FractalParameter           Parameter;
    FractalGeneratorStatus     Status;
    ImageDisplay*              Display;
-   QStatusBar*                StatusBar;
    size_t                     Run;
 
    const unsigned char*       PoolHandle;
@@ -194,12 +225,15 @@ class FractalPU : public QWidget,
    unsigned int               RecvTimeout;
    unsigned int               InterImageTime;
    bool                       ColorMarks;
-   size_t                     Threads;
+   size_t                     ConfiguredThreads;
+   size_t                     CurrentThreads;
 
    QStringList                ConfigList;
    QDir                       ConfigDirectory;
    QString                    ImageStoragePrefix;
    size_t                     FileNumber;
+   bool                       Success;
+   unsigned int               CountDown;
 };
 
 
