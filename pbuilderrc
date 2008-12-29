@@ -1,0 +1,13 @@
+# this is your configuration file for pbuilder.
+# the file in /usr/share/pbuilder/pbuilderrc is the default template.
+# /etc/pbuilderrc is the one meant for overwritting defaults in
+# the default template
+#
+# read pbuilderrc.5 document for notes on specific options.
+
+MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
+DISTRIBUTION=jaunty
+COMPONENTS="main universe"
+OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu dapper main"
+# NOTE: Upon changes, run "sudo pbuilder --override-config" to update
+#       repositories!
