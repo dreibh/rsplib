@@ -89,8 +89,12 @@ QTEXTRALIB=""
 for x in $QT_LIBRARY_PATHS ; do
     echo -n "$x?   "
     if test -d $x ; then
-       QTEXTRALIB="$x"
-       break
+       # The libraries directory must contain libQtCore. Otherwise,
+       # this directory is not the right one!
+       if test -f $x/libQtCore.so -o -f $x/libQtCore.a ; then
+          QTEXTRALIB="$x"
+          break
+       fi
     fi
 done
 if test x$QTEXTRALIB = x ; then
