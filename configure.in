@@ -9,7 +9,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2008 by Thomas Dreibholz
+# Copyright (C) 2002-2009 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,8 +30,9 @@
 # ###### Basic setup ########################################################
 AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
+AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.6.0~alpha4.2)
+AM_INIT_AUTOMAKE(rsplib, 2.6.0~alpha4.3)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -502,9 +503,7 @@ esac
 # ###### Check for Qt, if it is requested ###################################
 AM_CONDITIONAL(BUILD_QT_PROGRAMS, test x$enable_qt = xyes)
 if test "${enable_qt}" = "yes"; then
-   gw_CHECK_QT
-   LIBS=$OLDLIBS
-
+   TD_CHECK_QT4
    AC_DEFINE(ENABLE_QT, 1, [QT is usable])
 else
    echo "Skipping checks for QT, since it is not requested."

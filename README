@@ -31,13 +31,8 @@ How to set up a simple test of the rsplib-2.5.0 release:
          (Only necessary if you want an installation; as root!)
 
       Optional "configure" Parameters:
-      --enable-qt: Enables Qt usage; this is necessary for the Fractal Generator
+      --enable-qt: Enables Qt 4.x usage; this is necessary for the Fractal Generator
                    client! Without Qt, the client's compilation will be skipped.
-                   The ./configure script expects the environment variable QTDIR
-                   set to the Qt directory. You may need to set it appropriately,
-                   e.g. "export QTDIR=/usr/share/qt3" for Ubuntu Linux!
-                   This settings depends on your distribution; use
-                   "locate qwidget.h" to find out the directory!
       --disable-qt: Disables Qt usage; the Fractal Generator client will *not*
                     be available. (DEFAULT)
 
@@ -348,4 +343,4 @@ Visit http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ for more information
 ==================================================================================
 
 
-08.02.2008 Thomas Dreibholz, dreibh@iem.uni-due.de
+07.01.2009 Thomas Dreibholz, dreibh@iem.uni-due.de
