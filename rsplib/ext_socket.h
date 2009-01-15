@@ -2,7 +2,7 @@
  *  $Id$
  *
  * SocketAPI implementation for the sctplib.
- * Copyright (C) 1999-2006 by Thomas Dreibholz
+ * Copyright (C) 1999-2009 by Thomas Dreibholz
  *
  * Realized in co-operation between
  * - Siemens AG
@@ -14,17 +14,18 @@
  * Forschung (BMBF) of the Federal Republic of Germany (Foerderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * There are two mailinglists available at http://www.sctp.de which should be
- * used for any discussion related to this implementation.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Contact: discussion@sctp.de
  *          dreibh@iem.uni-due.de
@@ -83,10 +84,10 @@
 #define MSG_ADDR_OVER     MSG_MORE
 #define MSG_SEND_TO_ALL   MSG_PROXY
 #else
-#define MSG_ABORT         MSG_HOLD
-#define MSG_PR_SCTP_TTL   MSG_FLUSH
-#define MSG_ADDR_OVER     MSG_SEND
-#define MSG_SEND_TO_ALL   MSG_HAVEMORE
+#define MSG_ABORT         0x200
+#define MSG_PR_SCTP_TTL   0x400
+#define MSG_ADDR_OVER     0x800
+#define MSG_SEND_TO_ALL   0xc00
 #endif
 
 #define SCTP_UNORDERED    MSG_UNORDERED
