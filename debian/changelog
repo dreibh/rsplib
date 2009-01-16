@@ -1,8 +1,8 @@
-rsplib (2.6.0~rc1.0-1ubuntu0) intrepid; urgency=low
+rsplib (2.6.0~rc1.1-1ubuntu0) intrepid; urgency=low
 
   * Updated Ubuntu package.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 15 Jan 2008 10:21:12 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2008 10:21:12 +0200
 
 
 rsplib (2.5.0-0ubuntu1) intrepid; urgency=low

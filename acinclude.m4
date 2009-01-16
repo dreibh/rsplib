@@ -23,8 +23,8 @@ AC_DEFUN([TD_CHECK_QT4],
 
 QT_REQUIRED_COMPONENTS="QtCore QtGui QtXml"
 QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt4/include /usr/local/include/qt4 /usr/include/qt4"
-QT_DEFAULT_LIBRARY_PATHS="/usr/share/qt4/lib /usr/local/qt4/lib /usr/local/lib/qt4 /usr/local/lib /usr/lib"
-QT_DEFAULT_BINARY_PATHS="/usr/share/qt4/bin /usr/local/qt4/bin /usr/local/bin /usr/bin"
+QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt4/lib /usr/local/lib/qt4 /usr/share/qt4/lib"
+QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt4/bin /usr/share/qt4/bin"
 QTPOSTFIX="-qt4"
 
 QTEXTRAINC=""
