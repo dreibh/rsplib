@@ -1,13 +1,15 @@
-rsplib (2.6.0-0ubuntu1) intrepid; urgency=low
+rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
 
-  * Updated Ubuntu package to latest release.
+  * Updated Ubuntu package to latest release (LP: #324959).
+  * Updated watch file (updated URL from tdrwww.exp-math.uni-essen.de to
+    www.iem.uni-due.de)
   * Used Qt 4.x instead of Qt 3.x for fractal demo pool user now.
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2008 10:21:12 +0200
 
 
-rsplib (2.5.0-0ubuntu1) intrepid; urgency=low
+rsplib (2.5.0~rc1-0ubuntu1) intrepid; urgency=low
 
   * Initial Ubuntu package (LP: #190435).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 29 Aug 2008 13:49:32 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 26 Aug 2008 20:09:31 +0200
