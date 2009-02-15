@@ -110,9 +110,8 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
    # debuild -b
 
    # Including signature!
-   debuild -sa -S -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
-   # echo $MAINTAINER | xargs -n1 -i§ debuild -sa -S -k'§'
-   # debuild -sa -S "-k$MAINTAINER"
+   # debuild -sa -S -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
+   debuild -sa -S "-k$MAINTAINER"
 
 
    # Important: In /etc/pbuilderrc, set COMPONENTS="main universe"!
@@ -149,10 +148,10 @@ echo ""
 
 echo "Build test:"
 for DISTRIBUTION in $DISTRIBUTIONS ; do
-   if [ $DISTRIBUTION != "unstable" -o $DISTRIBUTION != "testing" -o $DISTRIBUTION != "stable" ] ; then
-      echo "   sudo pbuilder build `ls $PACKAGE*-[0-9]*.dsc`"
+   if [ $DISTRIBUTION = "unstable" -o $DISTRIBUTION = "testing" -o $DISTRIBUTION = "stable" ] ; then
+      echo "   sudo pbuilder build `ls $PACKAGE*-[0-9].dsc`"
    else
-      echo "   sudo pbuilder build `ls $PACKAGE*$DISTRIBUTION*.dsc`"
+      echo "   sudo pbuilder build `ls $PACKAGE*$DISTRIBUTION[0-9].dsc`"
    fi
 done
 echo ""
