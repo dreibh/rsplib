@@ -1,3 +1,9 @@
+rsplib (2.6.0-1ubuntu1) jaunty; urgency=low
+
+  * Updated packaging script.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 15 Feb 2008 15:21:12 +0200
+
 rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
 
   * Updated Ubuntu package to latest release (LP: #324959).
