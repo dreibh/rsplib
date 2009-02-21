@@ -1,8 +1,10 @@
-rsplib (2.6.0-1ubuntu1) jaunty; urgency=low
+rsplib (2.6.0-2ubuntu1) jaunty; urgency=low
 
+  * Removed unnecessary setting of rpath by Qt 4.x detection code.
+  * Fixed too-long lines in debian/control.
   * Updated packaging script.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 15 Feb 2008 15:21:12 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 21 Feb 2009 13:21:12 +0200
 
 rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
 
@@ -11,7 +13,7 @@ rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
     www.iem.uni-due.de)
   * Used Qt 4.x instead of Qt 3.x for fractal demo pool user now.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2008 10:21:12 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2009 10:21:12 +0200
 
 
 rsplib (2.5.0~rc1-0ubuntu1) intrepid; urgency=low

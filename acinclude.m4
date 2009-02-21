@@ -105,7 +105,7 @@ AC_MSG_RESULT([-->   $QTEXTRALIB])
 
 # ====== Components =========================================================
 QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC"
-QT_LDADD="-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
+QT_LDADD="-L$QTEXTRALIB"   # OLD: "-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
 for x in $QT_REQUIRED_COMPONENTS ; do
    AC_MSG_CHECKING([Qt 4.x component $x])
    if ! test -e $QTEXTRALIB/lib$x.so ; then
