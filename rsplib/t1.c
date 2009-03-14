@@ -76,9 +76,9 @@ int main(int argc, char** argv)
                   else {
                      /* Regular data message -> echo it back */
                      printf("Echoing %d bytes\n", (int)received);
-                     rsp_sendmsg(fd, buffer, received, 0,
-                                 rinfo.rinfo_session, rinfo.rinfo_ppid, rinfo.rinfo_stream,
-                                 0, 0, 0);
+                     sent = rsp_sendmsg(fd, buffer, received, 0,
+                                        rinfo.rinfo_session, rinfo.rinfo_ppid, rinfo.rinfo_stream,
+                                        0, 0, 0);
                   }
                }
             }
@@ -95,4 +95,5 @@ int main(int argc, char** argv)
 
 
    rsp_cleanup();
+   return 0;
 }
