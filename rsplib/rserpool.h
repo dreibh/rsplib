@@ -35,9 +35,9 @@
 #include <netdb.h>
 #include <sys/time.h>
 #include <sys/poll.h>
-#include <ext_socket.h>
 
 #include "rserpool-policytypes.h"
+#include "rserpool-csp.h"
 
 
 #ifdef __cplusplus

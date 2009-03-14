@@ -36,9 +36,6 @@
 #include "fractalgeneratorservice.h"
 #include "calcappservice.h"
 #include "scriptingservice.h"
-#ifdef ENABLE_CSP
-#include "componentstatuspackets.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +44,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <signal.h>
-      
+
 
 #define SERVICE_ECHO      1
 #define SERVICE_DISCARD   2

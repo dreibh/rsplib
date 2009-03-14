@@ -37,9 +37,6 @@
 #include "timeutilities.h"
 #include "loglevel.h"
 #include "debug.h"
-#ifdef ENABLE_CSP
-#include "componentstatuspackets.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

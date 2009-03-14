@@ -61,9 +61,6 @@
 #include "netutilities.h"
 #include "loglevel.h"
 #include "debug.h"
-#ifdef ENABLE_CSP
-#include "componentstatuspackets.h"
-#endif
 
 #include "fractalpooluser_moc.cc"
 

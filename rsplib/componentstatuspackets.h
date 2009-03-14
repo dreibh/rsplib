@@ -30,23 +30,13 @@
 #ifndef COMPONENTSTATUSPACKETS_H
 #define COMPONENTSTATUSPACKETS_H
 
+#include "rserpool-csp.h"
 #include "tdtypes.h"
 
 
-#define CSP_VERSION        0x0200
+#define CSP_VERSION 0x0200
+#define CSPT_REPORT   0x01
 
-
-#define CID_GROUP(id)  (((uint64_t)id >> 56) & (0xffffULL))
-#define CID_OBJECT(id) ((uint64_t)id & 0xffffffffffffffULL)
-
-#define CID_GROUP_REGISTRAR   0x0001
-#define CID_GROUP_POOLELEMENT 0x0002
-#define CID_GROUP_POOLUSER    0x0003
-
-#define CID_COMPOUND(group, object)  ((((uint64_t)(group & 0xffff)) << 56) | CID_OBJECT((uint64_t)object))
-
-
-#define CSPT_REPORT           0x01
 
 struct ComponentStatusCommonHeader
 {

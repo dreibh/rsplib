@@ -1,3 +1,9 @@
+rsplib (2.6.1~rc1-1ubuntu1) jaunty; urgency=low
+
+  *  Updated Ubuntu package to latest release (LP: #xxxxxx).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 14 Feb 2009 12:55:12 +0200
+
 rsplib (2.6.0-3ubuntu1) jaunty; urgency=low
 
   * Removed unnecessary setting of rpath by Qt 4.x detection code.

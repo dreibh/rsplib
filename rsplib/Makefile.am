@@ -4,7 +4,7 @@ lib_LTLIBRARIES = librsplib.la libcpprspserver.la
 
 # ###### rsplib library #####################################################
 librsplibincludedir      = $(prefix)/include/rserpool
-librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h rserpool-internals.h tagitem.h
+librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h rserpool-csp.h rserpool-internals.h tagitem.h
 librsplib_la_SOURCES = \
 asapinstance.c \
 asapinstance.h \
