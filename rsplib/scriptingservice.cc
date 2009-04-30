@@ -102,17 +102,16 @@ EventHandlingResult ScriptingServer::initializeSession()
 // ###### Clean up session ##################################################
 void ScriptingServer::finishSession(EventHandlingResult result)
 {
-   char cmd[128];
+   char sscmd[128];
+   char callcmd[384];
    int  success;
 
-   snprintf((char*)&cmd, sizeof(cmd), "./scriptingcontrol cleanup %s %d %s",
+   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol cleanup %s %d %s",
             Directory, ChildProcess,
             (Settings.KeepTempDirs == true) ? "keeptempdirs" : "");
-   success = system(cmd);
-   if(success != 0) {
-      success = system((const char*)&cmd[2]);   // without "./"  ...
-   }
+   snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
 
+   success = system(callcmd);
    if(success != 0) {
       printTimeStamp(stdout);
       printf("S%04d: ERROR: Unable to clean up directory \"%s\": %s!\n",

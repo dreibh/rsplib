@@ -1,4 +1,225 @@
 ------------------------------------------------------------------------
+r2115 | dreibh | 2009-04-24 16:12:03 +0200 (Fri, 24 Apr 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2114 | dreibh | 2009-03-14 14:25:27 +0100 (Sat, 14 Mar 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/t1.c
+
+
+------------------------------------------------------------------------
+r2113 | dreibh | 2009-03-14 13:37:26 +0100 (Sat, 14 Mar 2009) | 1 line
+Changed paths:
+   A /trunk/rsplib2/rsplib/t1.c
+
+
+------------------------------------------------------------------------
+r2112 | dreibh | 2009-03-14 13:01:35 +0100 (Sat, 14 Mar 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/calcappclient.cc
+   M /trunk/rsplib2/rsplib/componentstatuspackets.h
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   A /trunk/rsplib2/rsplib/rserpool-csp.h
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+Fixed installed include files: CSP is in rserpool-csp.h now, ext_socket.h is not included any more.
+
+------------------------------------------------------------------------
+r2111 | dreibh | 2009-02-23 15:43:11 +0100 (Mon, 23 Feb 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+Added Debian ITP number.
+
+------------------------------------------------------------------------
+r2108 | dreibh | 2009-02-21 13:54:25 +0100 (Sat, 21 Feb 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Debian script fixes.
+
+------------------------------------------------------------------------
+r2107 | dreibh | 2009-02-15 19:43:31 +0100 (Sun, 15 Feb 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+
+------------------------------------------------------------------------
+r2106 | dreibh | 2009-02-15 19:32:38 +0100 (Sun, 15 Feb 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/make-deb
+   D /trunk/rsplib2/pbuilderrc
+   A /trunk/rsplib2/pbuilderrc.debian
+   A /trunk/rsplib2/pbuilderrc.ubuntu (from /trunk/rsplib2/pbuilderrc:2105)
+
+Updated Debian scripts.
+
+------------------------------------------------------------------------
+r2105 | dreibh | 2009-02-04 14:24:44 +0100 (Wed, 04 Feb 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Debian script fixes.
+
+------------------------------------------------------------------------
+r2104 | dreibh | 2009-01-29 13:42:10 +0100 (Thu, 29 Jan 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib.lsm
+
+
+------------------------------------------------------------------------
+r2099 | dreibh | 2009-01-16 12:31:52 +0100 (Fri, 16 Jan 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Qt 4.x detection updated.
+Do not look in /usr/share/... for libQt* first. This directory is only available in development environments. Package build will fail to detect the library dependency -> pbuilder will fail.
+
+------------------------------------------------------------------------
+r2097 | dreibh | 2009-01-15 11:22:31 +0100 (Thu, 15 Jan 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+
+------------------------------------------------------------------------
+r2092 | dreibh | 2009-01-15 11:18:28 +0100 (Thu, 15 Jan 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/clean-deb
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/make-deb
+   M /trunk/rsplib2/rsplib/debug.h
+   M /trunk/rsplib2/rsplib/ext_socket.h
+   M /trunk/rsplib2/rsplib/registrar.8
+   M /trunk/rsplib2/rsplib/rserpool-policytypes.h
+   D /trunk/rsplib2/rsplib/t1.cc
+   D /trunk/rsplib2/rsplib/t2.cc
+   D /trunk/rsplib2/rsplib/t2.h
+   D /trunk/rsplib2/rsplib/tests
+
+Header updates.
+
+------------------------------------------------------------------------
+r2088 | dreibh | 2009-01-07 13:51:56 +0100 (Wed, 07 Jan 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+
+
+------------------------------------------------------------------------
+r2087 | dreibh | 2009-01-07 13:43:10 +0100 (Wed, 07 Jan 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+
+FreeBSD 7.1 Qt 4.x detection improved.
+
+------------------------------------------------------------------------
+r2086 | dreibh | 2009-01-07 11:29:41 +0100 (Wed, 07 Jan 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/UpdateDoc1.sed
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/autogen.sh
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/add-dummy-interface
+   M /trunk/rsplib2/rsplib/breakdetector.c
+   M /trunk/rsplib2/rsplib/combinesummaries.cc
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+   M /trunk/rsplib2/rsplib/createsummary.cc
+   M /trunk/rsplib2/rsplib/debug.h
+   M /trunk/rsplib2/rsplib/doublelinkedringlist.c
+   M /trunk/rsplib2/rsplib/doublelinkedringlist.h
+   M /trunk/rsplib2/rsplib/leaflinkedredblacktree.c
+   M /trunk/rsplib2/rsplib/leaflinkedredblacktree.h
+   M /trunk/rsplib2/rsplib/make-rootshell
+   M /trunk/rsplib2/rsplib/peerlist-template.h
+   M /trunk/rsplib2/rsplib/peerlist-template_impl.h
+   M /trunk/rsplib2/rsplib/peerlistmanagement-template.h
+   M /trunk/rsplib2/rsplib/peerlistmanagement-template_impl.h
+   M /trunk/rsplib2/rsplib/peerlistnode-template.h
+   M /trunk/rsplib2/rsplib/peerlistnode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolelementnode-template.h
+   M /trunk/rsplib2/rsplib/poolelementnode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolhandle.c
+   M /trunk/rsplib2/rsplib/poolhandle.h
+   M /trunk/rsplib2/rsplib/poolhandlespacechecksum.c
+   M /trunk/rsplib2/rsplib/poolhandlespacechecksum.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-basics.c
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-basics.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-template.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-template_impl.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement.c
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement.h
+   M /trunk/rsplib2/rsplib/poolhandlespacenode-template.h
+   M /trunk/rsplib2/rsplib/poolhandlespacenode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolnode-template.h
+   M /trunk/rsplib2/rsplib/poolnode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolpolicy-template.h
+   M /trunk/rsplib2/rsplib/poolpolicy-template_impl.h
+   M /trunk/rsplib2/rsplib/poolpolicysettings.c
+   M /trunk/rsplib2/rsplib/poolpolicysettings.h
+   M /trunk/rsplib2/rsplib/pooluserlist-template.h
+   M /trunk/rsplib2/rsplib/pooluserlist-template_impl.h
+   M /trunk/rsplib2/rsplib/poolusernode-template.h
+   M /trunk/rsplib2/rsplib/poolusernode-template_impl.h
+   M /trunk/rsplib2/rsplib/randomizer.c
+   M /trunk/rsplib2/rsplib/randomizer.h
+   M /trunk/rsplib2/rsplib/redblacktree.h
+   M /trunk/rsplib2/rsplib/redblacktree_impl.h
+   M /trunk/rsplib2/rsplib/registrar-debug
+   M /trunk/rsplib2/rsplib/reniceall
+   M /trunk/rsplib2/rsplib/rserpool-policytypes.h
+   M /trunk/rsplib2/rsplib/rserpoolerror.c
+   M /trunk/rsplib2/rsplib/rserpoolerror.h
+   M /trunk/rsplib2/rsplib/scriptingcontrol
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+   M /trunk/rsplib2/rsplib/simpleredblacktree.c
+   M /trunk/rsplib2/rsplib/simpleredblacktree.h
+   M /trunk/rsplib2/rsplib/sockaddrunion.h
+   M /trunk/rsplib2/rsplib/ss-pr
+   M /trunk/rsplib2/rsplib/ss-server
+   M /trunk/rsplib2/rsplib/ss-server-150
+   M /trunk/rsplib2/rsplib/stringutilities.c
+   M /trunk/rsplib2/rsplib/stringutilities.h
+   M /trunk/rsplib2/rsplib/takeoverprocess.c
+   M /trunk/rsplib2/rsplib/takeoverprocess.h
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+   M /trunk/rsplib2/rsplib/tdtypes.h
+   M /trunk/rsplib2/rsplib/timestamphashtable.c
+   M /trunk/rsplib2/rsplib/timestamphashtable.h
+   M /trunk/rsplib2/rsplib/timeutilities.c
+   M /trunk/rsplib2/rsplib/timeutilities.h
+   M /trunk/rsplib2/rsplib/transportaddressblock.c
+   M /trunk/rsplib2/rsplib/transportaddressblock.h
+
+Qt 4.x detection improved.
+
+------------------------------------------------------------------------
 r2085 | dreibh | 2008-12-29 11:19:31 +0100 (Mon, 29 Dec 2008) | 1 line
 Changed paths:
    A /trunk/rsplib2/pbuilderrc
