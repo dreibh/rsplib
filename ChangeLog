@@ -1,4 +1,26 @@
 ------------------------------------------------------------------------
+r2117 | dreibh | 2009-04-30 10:56:33 +0200 (Thu, 30 Apr 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/docs/EN-RSerPool-ProtocolStack.pdf
+   M /trunk/rsplib2/docs/EN-RSerPool-Scenario-with-PPE.pdf
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+- Minor bugfix in scripting service: avoid printing of "false positive" error message if scriptingcontrol is not found in current directory but found in search path.
+- Updated handbook.
+
+------------------------------------------------------------------------
+r2116 | dreibh | 2009-04-25 14:14:50 +0200 (Sat, 25 Apr 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
 r2115 | dreibh | 2009-04-24 16:12:03 +0200 (Fri, 24 Apr 2009) | 1 line
 Changed paths:
    M /trunk/rsplib2/configure.in
