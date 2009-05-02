@@ -102,26 +102,28 @@ EventHandlingResult ScriptingServer::initializeSession()
 // ###### Clean up session ##################################################
 void ScriptingServer::finishSession(EventHandlingResult result)
 {
-   char sscmd[128];
-   char callcmd[384];
-   int  success;
+   if(Directory[0] != 0x00) {   // If there is no upload, there is no directory to clean up
+      char sscmd[128];
+      char callcmd[384];
+      int  success;
 
-   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol cleanup %s %d %s",
-            Directory, ChildProcess,
-            (Settings.KeepTempDirs == true) ? "keeptempdirs" : "");
-   snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
+      snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol cleanup %s %d %s",
+               Directory, ChildProcess,
+               (Settings.KeepTempDirs == true) ? "keeptempdirs" : "");
+      snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
 
-   success = system(callcmd);
-   if(success != 0) {
-      printTimeStamp(stdout);
-      printf("S%04d: ERROR: Unable to clean up directory \"%s\": %s!\n",
-             RSerPoolSocketDescriptor, Directory, strerror(errno));
-   }
+      success = system(callcmd);
+      if(success != 0) {
+         printTimeStamp(stdout);
+         printf("S%04d: ERROR: Unable to clean up directory \"%s\": %s!\n",
+               RSerPoolSocketDescriptor, Directory, strerror(errno));
+      }
 
-   if(ChildProcess) {
-      kill(ChildProcess, SIGKILL);   // Just to be really sure ...
-      waitpid(ChildProcess, NULL, 0);
-      ChildProcess = 0;
+      if(ChildProcess) {
+         kill(ChildProcess, SIGKILL);   // Just to be really sure ...
+         waitpid(ChildProcess, NULL, 0);
+         ChildProcess = 0;
+      }
    }
 }
 
