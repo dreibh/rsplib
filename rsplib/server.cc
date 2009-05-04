@@ -56,6 +56,29 @@
 #define SERVICE_SCRIPTING 8
 
 
+/* ###### Count the number of CPUs/cores ################################# */
+size_t getNumberOfCPUs()
+{
+   size_t       numberOfCPUs = 0;
+
+#ifdef __linux__
+   char         buffer[258];
+   unsigned int id;
+   FILE*        fh = fopen("/proc/cpuinfo", "r");
+   if(fh != NULL) {
+
+      while( fgets((char*)&buffer, sizeof(buffer) - 1, fh) != NULL ) {
+         if(sscanf(buffer, "processor\t: %u", &id) == 1) {
+            numberOfCPUs++;
+         }
+      }
+   }
+#endif
+
+   return( (numberOfCPUs > 0) ? numberOfCPUs : 1 );
+}
+
+
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
@@ -486,7 +509,7 @@ start:
       resetStatistics = false;
    }
    else if(service == SERVICE_SCRIPTING) {
-      size_t maxThreads = 1;
+      size_t maxThreads = getNumberOfCPUs();
       ScriptingServer::ScriptingServerSettings settings;
       settings.KeepTempDirs    = false;
       settings.TransmitTimeout = 60000;

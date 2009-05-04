@@ -1,8 +1,14 @@
-rsplib (2.6.2-1ubuntu1) karmic; urgency=low
+rsplib (2.6.3-0ubuntu1) karmic; urgency=low
 
-  *  Updated Ubuntu package to latest release (LP: #366631).
+  *  Updated Ubuntu package to latest release (LP: #xxxxxx).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 2 May 2009 10:43:00 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 4 May 2009 8:54:00 +0200
+
+rsplib (2.6.1-0ubuntu1) karmic; urgency=low
+
+  * Updated Ubuntu package to latest release (LP: #366631).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 25 Apr 2009 12:00:00 +0200
 
 rsplib (2.6.0-3ubuntu1) jaunty; urgency=low
 
