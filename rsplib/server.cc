@@ -59,8 +59,8 @@
 /* ###### Count the number of CPUs/cores ################################# */
 size_t getNumberOfCPUs()
 {
-   size_t       numberOfCPUs = 0;
-
+   const size_t numberOfCPUs = sysconf(_SC_NPROCESSORS_ONLN);
+/*
 #ifdef __linux__
    char         buffer[258];
    unsigned int id;
@@ -74,7 +74,7 @@ size_t getNumberOfCPUs()
       }
    }
 #endif
-
+*/
    return( (numberOfCPUs > 0) ? numberOfCPUs : 1 );
 }
 
