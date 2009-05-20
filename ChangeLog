@@ -1,4 +1,41 @@
 ------------------------------------------------------------------------
+r2122 | dreibh | 2009-05-04 09:50:14 +0200 (Mon, 04 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/server.cc
+
+Made code for detecting number of CPUs/cores portable by using sysconf instead of reading /proc/cpuinfo. Works now also under FreeBSD and MacOS X.
+
+------------------------------------------------------------------------
+r2121 | dreibh | 2009-05-04 09:38:10 +0200 (Mon, 04 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/server.cc
+
+Scripting Service default parameter improvement: ssmaxthreads=number of CPUs/cores.
+
+------------------------------------------------------------------------
+r2120 | dreibh | 2009-05-02 18:17:15 +0200 (Sat, 02 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Another scripting service bugfix: only run clean-up script if there is a temporary directory to clean up.
+
+------------------------------------------------------------------------
+r2119 | dreibh | 2009-05-02 10:44:46 +0200 (Sat, 02 May 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+
+------------------------------------------------------------------------
+r2118 | dreibh | 2009-05-02 10:43:53 +0200 (Sat, 02 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian.conf
+
+Updated Debian configuration to Karmic Koala.
+
+------------------------------------------------------------------------
 r2117 | dreibh | 2009-04-30 10:56:33 +0200 (Thu, 30 Apr 2009) | 3 lines
 Changed paths:
    M /trunk/rsplib2/ChangeLog
