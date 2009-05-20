@@ -115,6 +115,7 @@ FractalPU::FractalPU(const size_t       width,
    ColorMarks         = colorMarks;
    ConfiguredThreads  = threads;
    FileNumber         = 0;
+   Run                = 0;
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName, "*.fsf", QDir::Name, QDir::Files);
@@ -295,7 +296,7 @@ void FractalPU::startNextJob()
             // ====== Mark rectange for next session ========================
             if(CurrentThreads > 1) {
                if(ColorMarks) {
-                  color.setHsv(((5 * number) % 72) * 5, 100, 255);
+                  color.setHsv((((5 * number) % 72) * 5) % 256, 100, 255);
                   Display->fillRect(xPosition * xStep, yPosition * yStep,
                                     xStep, yStep, color.rgb());
                }
@@ -588,13 +589,12 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
          }
          uint32_t point = ntohl(data->Buffer[p]);
          if(Master->ColorMarks) {
-            point = (point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5;
+            point = ((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5) % 256;
          }
          else {
-            point = (point % 72) * 5;
+            point = ((point % 72) * 5 % 256);
          }
          color.setHsv(point, 255, 255);
-         // color.setRgb(150,150,point % 255);
          Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
 

@@ -1,10 +1,10 @@
-rsplib (2.6.3-1ubuntu1) karmic; urgency=low
+rsplib (2.6.4-0ubuntu1) karmic; urgency=low
 
   * Updated Ubuntu package to latest release (LP: #xxxxxx).
   * Improved init file for rsplib-registrar (turn on IPv6 by default and
     write logfile).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 4 May 2009 8:54:00 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 20 May 2009 13:23:00 +0200
 
 rsplib (2.6.1-0ubuntu1) karmic; urgency=low
 
