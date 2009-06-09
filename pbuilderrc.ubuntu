@@ -8,6 +8,6 @@
 MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
 DISTRIBUTION=karmic
 COMPONENTS="main universe"
-OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu karmic main"
+OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu $DISTRIBUTION main"
 # NOTE: Upon changes, run "sudo pbuilder --override-config" to update
 #       repositories!
