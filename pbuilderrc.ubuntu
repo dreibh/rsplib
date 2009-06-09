@@ -6,8 +6,8 @@
 # read pbuilderrc.5 document for notes on specific options.
 
 MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
-DISTRIBUTION=jaunty
+DISTRIBUTION=karmic
 COMPONENTS="main universe"
-OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu dapper main"
+OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu karmic main"
 # NOTE: Upon changes, run "sudo pbuilder --override-config" to update
 #       repositories!
