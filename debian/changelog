@@ -1,3 +1,10 @@
+rsplib (2.6.4-1ubuntu1) karmic; urgency=low
+
+  * Turned off DH_VERBOSE.
+  * Updated debian/copyright to cover packaging.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 13 Jun 2009 10:36:00 +0200
+
 rsplib (2.6.4-0ubuntu1) karmic; urgency=low
 
   * Updated Ubuntu package to latest release (LP: #378689).
