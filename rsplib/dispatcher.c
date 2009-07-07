@@ -41,6 +41,7 @@
 #include "netutilities.h"
 
 #include <string.h>
+#include <math.h>
 #include <netinet/in.h>
 #include <ext_socket.h>
 
@@ -190,7 +191,7 @@ void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
       if(node != NULL) {
          timer = (struct Timer*)node;
          timeToNextEvent = max((long long)0, (long long)timer->TimeStamp - (long long)*pollTimeStamp);
-         *timeout = (int)(timeToNextEvent / 1000);
+         *timeout = (int)ceil((double)timeToNextEvent / 1000.0);
       }
       else {
          *timeout = -1;

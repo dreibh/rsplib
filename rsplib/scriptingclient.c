@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 #include <errno.h>
 
 
@@ -435,7 +436,7 @@ int main(int argc, char** argv)
       ufds.events = POLLIN;
       now         = getMicroTime();
       events = rsp_poll(&ufds, 1,
-                        (nextTimer <= now) ? 0 : (int)((nextTimer - now) / 1000));
+                        (nextTimer <= now) ? 0 : (int)ceil((double)(nextTimer - now) / 1000.0));
 
       /* ====== Handle results ===================================== */
       if( (events > 0) && (ufds.revents & POLLIN) ) {

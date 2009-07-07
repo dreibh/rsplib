@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <math.h>
 #ifdef SOLARIS
 #include <sys/sockio.h>
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
@@ -1400,7 +1401,7 @@ int sendtoplus(int                      sockfd,
          pfd.fd      = sockfd;
          pfd.events  = POLLOUT;
          pfd.revents = 0;
-         result = ext_poll((struct pollfd*)&pfd, 1, (int)(remainingTimeout / 1000));
+         result = ext_poll((struct pollfd*)&pfd, 1, (int)ceil((double)remainingTimeout / 1000.0));
          if( (result > 0) && (pfd.revents = POLLOUT) ) {
             LOG_VERBOSE4
             fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
@@ -1509,7 +1510,7 @@ int recvfromplus(int                      sockfd,
       pfd.fd      = sockfd;
       pfd.events  = POLLIN;
       pfd.revents = 0;
-      result = ext_poll((struct pollfd*)&pfd, 1, (int)(timeout / 1000));
+      result = ext_poll((struct pollfd*)&pfd, 1, (int)ceil((double)timeout / 1000.0));
       if( (result > 0) && (pfd.revents = POLLIN) ) {
          LOG_VERBOSE5
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",

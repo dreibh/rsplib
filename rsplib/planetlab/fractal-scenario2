@@ -29,8 +29,8 @@ PE_LIST=`cat alive-planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
 
 
 TESTID=fractal-scenario2
-PR_MISCOPT="-asapannounce=off -enrpannounce=off -endpointkeepalivetransmissioninterval=30000 -endpointkeepalivetimeoutinterval=15000 -cspinterval=1000 -loglevel=3"
-PE_MISCOPT="-asapannounce=off -cspinterval=0 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=3 "
+PR_MISCOPT="-asapannounce=off -enrpannounce=off -endpointkeepalivetransmissioninterval=30000 -endpointkeepalivetimeoutinterval=15000 -cspinterval=1000 -loglevel=1"
+PE_MISCOPT="-asapannounce=off -cspinterval=0 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=1 "
 PU_MISCOPT=""
 VALGRIND=""  # "/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
 

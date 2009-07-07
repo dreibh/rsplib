@@ -443,7 +443,7 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
    }
 
    /* ====== Call poll() and propagate results to fdsets ================= */
-   waitingTime = (1000 * timeout->tv_sec) + (timeout->tv_usec / 1000);
+   waitingTime = (1000 * timeout->tv_sec) + (int)ceil((double)timeout->tv_usec / 1000.0);
    result = rsp_poll((struct pollfd*)&ufds, nfds, waitingTime);
    if(result > 0) {
       for(i = 0;i < nfds;i++) {

@@ -40,6 +40,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 /* ###### Main program ################################################### */
@@ -118,10 +119,10 @@ int main(int argc, char** argv)
    while(!breakDetected()) {
       ufds.fd     = sd;
       ufds.events = POLLIN;
-      nextPing = lastPing + pingInterval;
-      now      = getMicroTime();
+      nextPing    = lastPing + pingInterval;
+      now         = getMicroTime();
       result = rsp_poll(&ufds, 1,
-                        (nextPing <= now) ? 0 : (int)((nextPing - now) / 1000));
+                        (nextPing <= now) ? 0 : (int)ceil((double)(nextPing - now) / 1000.0));
 
       /* ###### Handle Pong message ###################################### */
       if(result > 0) {
