@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 11, 2007
+.Dd July 7, 2009
 .Dt FractalPoolUser 8
 .Os FractalGenerator Pool User
 .\" ###### Name #############################################################
@@ -50,6 +50,8 @@
 .Op Fl imagestorageprefix=file_name_prefix
 .Op Fl colormarks
 .Op Fl nocolormarks
+.Op Fl sessions
+.Op Fl nosessions
 .Op Fl cspinterval=milliseconds
 .Op Fl cspserver=address:port
 .Op Fl logappend=filename
@@ -100,6 +102,10 @@ with a 6-digit file number added.
 Turns on color change on session failover.
 .It Fl nocolormarks
 Turns off color change on session failover.
+.It Fl sessions
+Turns on color change between different sessions.
+.It Fl nosessions
+Turns off color change between different sessions.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:

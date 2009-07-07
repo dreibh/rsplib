@@ -36,5 +36,7 @@ done \
 ) | sort -u`
 
 for POV_FILE in $POV_FILE_LIST ; do
-   ./povray-distribute 1600 1200 $POV_FILE &
+   ./povray-distribute 1024 768 $POV_FILE &
 done
+
+wait

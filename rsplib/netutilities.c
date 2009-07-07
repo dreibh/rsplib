@@ -157,11 +157,11 @@ ssize_t sctp_sendx(int                           sd,
 int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 {
    // ====== Prepare timeout setting ========================================
-   struct timeval  timeout;
-   struct timeval* to;
-   int    fdcount = 0;
-   int tsize;
-   int       result;
+   struct       timeval  timeout;
+   struct       timeval* to;
+   int          fdcount = 0;
+   int          n;
+   int          result;
    unsigned int i;
 
    if(time < 0)
@@ -179,29 +179,27 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
    FD_ZERO(&readfdset);
    FD_ZERO(&writefdset);
    FD_ZERO(&exceptfdset);
+   n = 0;
    for(i = 0; i < count; i++) {
       if(fdlist[i].fd < 0) {
          continue;
       }
       if(fdlist[i].events & POLLIN) {
-         FD_SET(fdlist[i].fd,&readfdset);
+         FD_SET(fdlist[i].fd, &readfdset);
       }
       if(fdlist[i].events & POLLOUT) {
-         FD_SET(fdlist[i].fd,&writefdset);
+         FD_SET(fdlist[i].fd, &writefdset);
       }
-      FD_SET(fdlist[i].fd,&exceptfdset);
+      FD_SET(fdlist[i].fd, &exceptfdset);
+      n = max(n, fdlist[i].fd);
       fdcount++;
-   }
-   if(fdcount == 0) {
-      return(0);
    }
    for(i = 0;i < count;i++) {
       fdlist[i].revents = 0;
    }
 
    // ====== Do ext_select() ================================================
-   tsize  = getdtablesize();
-   result = ext_select(tsize,&readfdset,&writefdset,&exceptfdset,to);
+   result = ext_select(n + 1, &readfdset, &writefdset ,&exceptfdset, to);
    if(result < 0) {
       return(result);
    }

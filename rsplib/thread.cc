@@ -38,6 +38,9 @@
 TDThread::TDThread()
 {
    MyThread = 0;
+   lock();
+   Stopping = false;
+   unlock();
 }
 
 
@@ -63,6 +66,9 @@ void* TDThread::startRoutine(void* object)
 bool TDThread::start()
 {
    if(MyThread == 0) {
+      lock();
+      Stopping = false;
+      unlock();
       if(pthread_create(&MyThread, NULL, startRoutine, (void*)this) == 0) {
          return(true);
       }
@@ -70,9 +76,18 @@ bool TDThread::start()
       fputs("ERROR: Unable to start new thread!\n", stderr);
    }
    else {
-      fputs("ERROR: TDThread already running!\n", stderr);
+      fputs("ERROR: Thread already running!\n", stderr);
    }
    return(false);
+}
+
+
+// ###### Stop thread #######################################################
+void TDThread::stop()
+{
+   lock();
+   Stopping = true;
+   unlock();
 }
 
 

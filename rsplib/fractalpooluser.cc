@@ -73,13 +73,14 @@
 #define DEFAULT_FPU_INTER_IMAGE_TIME    5
 #define DEFAULT_FPU_THREADS             1
 
-#define DEFAULT_FPU_CAPTION     NULL
-#define DEFAULT_FPU_POOLHANDLE  "FractalGeneratorPool"
+#define DEFAULT_FPU_CAPTION          NULL
+#define DEFAULT_FPU_POOLHANDLE       "FractalGeneratorPool"
 #ifndef DEFAULT_FPU_CONFIGDIR
-#define DEFAULT_FPU_CONFIGDIR   "fgpconfig"
+#define DEFAULT_FPU_CONFIGDIR        "fgpconfig"
 #endif
-#define DEFAULT_FPU_IMAGEPREFIX ""
-#define DEFAULT_FPU_COLORMARKS  TRUE
+#define DEFAULT_FPU_IMAGEPREFIX      ""
+#define DEFAULT_FPU_SHOWCOLORMARKS   TRUE
+#define DEFAULT_FPU_SHOWSESSIONS     TRUE
 
 
 
@@ -92,7 +93,8 @@ FractalPU::FractalPU(const size_t       width,
                      const unsigned int recvTimeout,
                      const unsigned int interImageTime,
                      const char*        imageStoragePrefix,
-                     const bool         colorMarks,
+                     const bool         showFailoverMarks,
+                     const bool         showSessions,
                      const size_t       threads,
                      QWidget*           parent)
 #ifdef FRACTALPOOLUSER_USE_KDE
@@ -112,7 +114,8 @@ FractalPU::FractalPU(const size_t       width,
    SendTimeout        = recvTimeout;
    InterImageTime     = interImageTime;
    ImageStoragePrefix = QString(imageStoragePrefix);
-   ColorMarks         = colorMarks;
+   ShowFailoverMarks     = showFailoverMarks;
+   ShowSessions       = showSessions;
    ConfiguredThreads  = threads;
    FileNumber         = 0;
    Run                = 0;
@@ -295,7 +298,7 @@ void FractalPU::startNextJob()
          for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
             // ====== Mark rectange for next session ========================
             if(CurrentThreads > 1) {
-               if(ColorMarks) {
+               if(ShowFailoverMarks) {
                   color.setHsv((((5 * number) % 72) * 5) % 256, 100, 255);
                   Display->fillRect(xPosition * xStep, yPosition * yStep,
                                     xStep, yStep, color.rgb());
@@ -434,9 +437,15 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
    QAction* showFailovers = menu.addAction("Show Failovers");
    Q_CHECK_PTR(showFailovers);
    showFailovers->setCheckable(true);
-   showFailovers->setChecked(ColorMarks);
-   connect(showFailovers, SIGNAL(toggled(bool)), this, SLOT(changeColorMarks(bool)));
+   showFailovers->setChecked(ShowFailoverMarks);
+   connect(showFailovers, SIGNAL(toggled(bool)), this, SLOT(changeShowFailoverMarks(bool)));
 
+   QAction* showSessions = menu.addAction("Show Sessions");
+   Q_CHECK_PTR(showSessions);
+   showSessions->setCheckable(true);
+   showSessions->setChecked(ShowSessions);
+   connect(showSessions, SIGNAL(toggled(bool)), this, SLOT(changeShowSessions(bool)));
+   
    QMenu* sessionsMenu = menu.addMenu("Sessions");
    Q_CHECK_PTR(sessionsMenu);
    for(size_t i = 0;i < sizeof(sessionsEntries) / sizeof(sessionsEntries[0]);i++) {
@@ -466,10 +475,17 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
 }
 
 
-/* ###### Change ColorMarks setting ###################################### */
-void FractalPU::changeColorMarks(bool checked)
+/* ###### Change FailoverMarks setting ###################################### */
+void FractalPU::changeShowFailoverMarks(bool checked)
 {
-   ColorMarks = checked;
+   ShowFailoverMarks = checked;
+}
+
+
+/* ###### Change FailoverMarks setting ###################################### */
+void FractalPU::changeShowSessions(bool checked)
+{
+   ShowSessions = checked;
 }
 
 
@@ -588,12 +604,13 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
             goto finished;
          }
          uint32_t point = ntohl(data->Buffer[p]);
-         if(Master->ColorMarks) {
-            point = ((point + (2 * Master->Run) + (3 * ThreadID) + (5 * PoolElementUsages) % 72) * 5) % 256;
+         if(Master->ShowFailoverMarks) {
+            point += (2 * Master->Run) + (5 * PoolElementUsages);
          }
-         else {
-            point = ((point % 72) * 5 % 256);
+         if(Master->ShowSessions) {
+            point += (3 * ThreadID);
          }
+         point = ((point % 72) * 5) % 360;
          color.setHsv(point, 255, 255);
          Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
@@ -806,7 +823,8 @@ int main(int argc, char** argv)
    unsigned int    recvTimeout        = DEFAULT_FPU_RECV_TIMEOUT;
    unsigned int    interImageTime     = DEFAULT_FPU_INTER_IMAGE_TIME;
    const char*     imageStoragePrefix = DEFAULT_FPU_IMAGEPREFIX;
-   bool            colorMarks         = DEFAULT_FPU_COLORMARKS;
+   bool            showFailoverMarks  = DEFAULT_FPU_SHOWCOLORMARKS;
+   bool            showSessions       = DEFAULT_FPU_SHOWSESSIONS;
    unsigned int    identifier;
    int             i;
 
@@ -859,11 +877,17 @@ int main(int argc, char** argv)
       else if(!(strncmp(argv[i], "-imagestorageprefix=" ,20))) {
          imageStoragePrefix = (const char*)&argv[i][20];
       }
+      else if(!(strcmp(argv[i], "-sessions"))) {
+         showSessions = TRUE;
+      }
+      else if(!(strcmp(argv[i], "-nosessions"))) {
+         showSessions = TRUE;
+      }
       else if(!(strcmp(argv[i], "-colormarks"))) {
-         colorMarks = TRUE;
+         showFailoverMarks = TRUE;
       }
       else if(!(strcmp(argv[i], "-nocolormarks"))) {
-         colorMarks = FALSE;
+         showFailoverMarks = FALSE;
       }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
@@ -905,7 +929,8 @@ int main(int argc, char** argv)
    printf("Receive Timeout      = %u [ms]\n", recvTimeout);
    printf("Inter Image Time     = %u [s]\n", interImageTime);
    printf("Image Storage Prefix = %s\n", imageStoragePrefix);
-   printf("Color Marks          = %s\n", (colorMarks == TRUE) ? "on" : "off");
+   printf("Show Color Marks     = %s\n", (showFailoverMarks == TRUE) ? "on" : "off");
+   printf("Show Sessions        = %s\n", (showSessions == TRUE) ? "on" : "off");
    printf("Threads              = %u\n\n", (unsigned int)threads);
 
 
@@ -929,7 +954,8 @@ int main(int argc, char** argv)
 #endif
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
                                         sendTimeout, recvTimeout, interImageTime,
-                                        imageStoragePrefix, colorMarks, threads);
+                                        imageStoragePrefix,
+                                        showFailoverMarks, showSessions, threads);
    Q_CHECK_PTR(fractalPU);
    if(caption) {
       fractalPU->setWindowTitle(caption);

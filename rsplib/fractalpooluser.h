@@ -168,7 +168,8 @@ class FractalPU
              const unsigned int recvTimeout,
              const unsigned int interImageTime,
              const char*        imageStoragePrefix,
-             const bool         colorMarks,
+             const bool         showFailoverMarks,
+             const bool         showSessions,
              const size_t       threads,
              QWidget*           parent = NULL);
    ~FractalPU();
@@ -185,7 +186,8 @@ class FractalPU
    void handleCompletedSession();
    void redrawImage(int start, int end);
    void changeStatus(QString statusText);
-   void changeColorMarks(bool checked);
+   void changeShowFailoverMarks(bool checked);
+   void changeShowSessions(bool checked);
    void changeThreads(QAction* action);
    void about();
    void quit();
@@ -224,7 +226,8 @@ class FractalPU
    unsigned int               SendTimeout;
    unsigned int               RecvTimeout;
    unsigned int               InterImageTime;
-   bool                       ColorMarks;
+   bool                       ShowFailoverMarks;
+   bool                       ShowSessions;
    size_t                     ConfiguredThreads;
    size_t                     CurrentThreads;
 
