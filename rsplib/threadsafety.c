@@ -32,9 +32,8 @@
 #include "threadsafety.h"
 
 #include <unistd.h>
+#include <assert.h>
 
-
-static unsigned long long gMutexCounter = 0;
 
 
 /* ###### Constructor #################################################### */
@@ -44,7 +43,7 @@ void threadSafetyNew(struct ThreadSafety* threadSafety,
 #if !defined(__APPLE__) && !defined(__FreeBSD__)
    pthread_mutexattr_t attr;
    pthread_mutexattr_init(&attr);
-   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
    pthread_mutex_init(&threadSafety->Mutex, &attr);
    pthread_mutexattr_destroy(&attr);
 #else
@@ -52,41 +51,19 @@ void threadSafetyNew(struct ThreadSafety* threadSafety,
    threadSafety->MutexRecursionLevel = 0;
    pthread_mutex_init(&threadSafety->Mutex, NULL);
 #endif
-   snprintf((char*)&threadSafety->Name, sizeof(threadSafety->Name), "%llu-%s",
-            gMutexCounter++, name);
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-      fprintf(stdlog, "Created mutex \"%s\"\n", threadSafety->Name);
-      LOG_END
-   }
 }
 
 
 /* ###### Destructor ##################################################### */
 void threadSafetyDelete(struct ThreadSafety* threadSafety)
 {
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-      fprintf(stdlog, "Destroying mutex \"%s\"...\n", threadSafety->Name);
-      LOG_END
-   }
    pthread_mutex_destroy(&threadSafety->Mutex);
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-      fprintf(stdlog, "Destroyed mutex \"%s\"\n", threadSafety->Name);
-      LOG_END
-   }
 }
 
 
 /* ###### Lock ########################################################### */
 void threadSafetyLock(struct ThreadSafety* threadSafety)
 {
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-      fprintf(stdlog, "Locking mutex \"%s\"...\n", threadSafety->Name);
-      LOG_END
-   }
 #ifndef __APPLE__
    pthread_mutex_lock(&threadSafety->Mutex);
 #else
@@ -96,57 +73,21 @@ void threadSafetyLock(struct ThreadSafety* threadSafety)
    }
    threadSafety->MutexRecursionLevel++;
 #endif
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-#ifndef __APPLE__
-      fprintf(stdlog, "Locked mutex \"%s\"\n", threadSafety->Name);
-#else
-      fprintf(stdlog, "Locked mutex \"%s\", recursion level %d\n",
-              threadSafety->Name, threadSafety->MutexRecursionLevel);
-#endif
-      LOG_END
-   }
 }
 
 
 /* ###### Unlock ######################################################### */
 void threadSafetyUnlock(struct ThreadSafety* threadSafety)
 {
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-#ifndef __APPLE__
-      fprintf(stdlog, "Unlocking mutex \"%s\"...\n", threadSafety->Name);
-#else
-      fprintf(stdlog, "Unlocking mutex \"%s\", recursion level %d...\n",
-              threadSafety->Name, threadSafety->MutexRecursionLevel);
-#endif
-      LOG_END
-   }
 #ifndef __APPLE__
    pthread_mutex_unlock(&threadSafety->Mutex);
 #else
+   assert(threadSafety->MutexRecursionLevel > 0);
+   assert(pthread_equal(threadSafety->MutexOwner, pthread_self()));
+   threadSafety->MutexRecursionLevel--;
    if(threadSafety->MutexRecursionLevel == 0) {
-      LOG_ERROR
-      fputs("Mutex is already unlocked!\n",stdlog);
-      LOG_END
-      exit(1);
-   }
-   if(pthread_equal(threadSafety->MutexOwner, pthread_self())) {
-      threadSafety->MutexRecursionLevel--;
-      if(threadSafety->MutexRecursionLevel == 0) {
-         threadSafety->MutexOwner = 0;
-         pthread_mutex_unlock(&threadSafety->Mutex);
-      }
-   }
-   else {
-      LOG_ERROR
-      fputs("Mutex is not owned!\n",stdlog);
-      LOG_END
+      threadSafety->MutexOwner = 0;
+      pthread_mutex_unlock(&threadSafety->Mutex);
    }
 #endif
-   if(threadSafety != &gLogMutex) {
-      LOG_MUTEX
-      fprintf(stdlog, "Unlocked mutex \"%s\"\n", threadSafety->Name);
-      LOG_END
-   }
 }

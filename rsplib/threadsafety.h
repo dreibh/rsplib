@@ -47,7 +47,6 @@ struct ThreadSafety
    pthread_t       MutexOwner;
    unsigned int    MutexRecursionLevel;
 #endif
-   char            Name[32];
 };
 
 
