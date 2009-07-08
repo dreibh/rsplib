@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "valgrind $@"
+echo "NOTE: Install libqt4-dbg and set G_SLICE=always-malloc to debug Qt/glib programs!"
+G_SLICE=always-malloc valgrind --tool=helgrind $@
