@@ -47,11 +47,13 @@ struct ASAPInterThreadMessage
    struct RSerPoolMessage*       Response;
    size_t                        TransmissionTrials;
    unsigned int                  Error;
-   bool                          ResponseExpected;
-   unsigned long long            ResponseTimeoutTimeStamp;
   
    unsigned long long            CreationTimeStamp;
    unsigned long long            TransmissionTimeStamp;
+
+   unsigned long long            ResponseTimeoutTimeStamp;
+   bool                          ResponseExpected;
+   bool                          ResponseTimeoutNeedsScheduling;
 };
 
 

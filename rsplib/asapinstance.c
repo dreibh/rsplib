@@ -1285,6 +1285,8 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
 {
    struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
 
+puts("HANDLE REG TO!!!!!!!!!!!");
+
    CHECK(asapInstance->LastAITM != NULL);
    LOG_WARNING
    fputs("Request(s) to registrar timed out!\n", stdlog);
@@ -1375,11 +1377,15 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
                asapInstance->LastAITM = aitm;
 
                /* Schedule timeout */
-               aitm->ResponseTimeoutTimeStamp = getMicroTime() + asapInstance->RegistrarResponseTimeout;
-               if(!timerIsRunning(&asapInstance->RegistrarTimeoutTimer)) {
-                  timerStart(&asapInstance->RegistrarTimeoutTimer,
-                             aitm->ResponseTimeoutTimeStamp);
-               }
+               aitm->ResponseTimeoutTimeStamp       = getMicroTime() + asapInstance->RegistrarResponseTimeout;
+               aitm->ResponseTimeoutNeedsScheduling = true;
+               // NOTE:
+               // The timer cannot be scheduled here, because a lock for
+               // asapInstance->StateMachine is required to do this.
+               // asapInstance->StateMachine cannot be locked here, since
+               // asapInstance->MainLoopPort is already locked. Trying to
+               // lock asapInstance->MainLoopPort would violate the locking
+               // order!
             }
          }
       }
@@ -1387,6 +1393,26 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
       aitm = nextAITM;
    }
    interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+
+
+   /* ====== Set timeout ================================================= */
+   dispatcherLock(asapInstance->StateMachine);
+   interThreadMessagePortLock(&asapInstance->MainLoopPort);
+   aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort);
+   while(aitm != NULL) {
+      if( (aitm->ResponseExpected) && (aitm->ResponseTimeoutNeedsScheduling) ) {
+         if(!timerIsRunning(&asapInstance->RegistrarTimeoutTimer)) {
+            // Now, the AITM's timer can be scheduled, since asapInstance->StateMachine
+            // and asapInstance->MainLoopPort are locked.
+            timerStart(&asapInstance->RegistrarTimeoutTimer,
+                       aitm->ResponseTimeoutTimeStamp);
+         }
+      }
+      aitm->ResponseTimeoutNeedsScheduling = false;         
+      aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
+   }
+   interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+   dispatcherUnlock(asapInstance->StateMachine);
 }
 
 
