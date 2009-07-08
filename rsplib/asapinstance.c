@@ -1465,9 +1465,9 @@ static void* asapInstanceMainLoop(void* args)
       ufds[pipeIndex].fd      = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events  = POLLIN;
       ufds[pipeIndex].revents = 0;
-      if(interThreadMessagePortIsFirstMessage(&asapInstance->MainLoopPort,
-                                              asapInstance->LastAITM)) {
-         /* First message in AITM queue is LastAITM:
+      if(!interThreadMessagePortIsFirstMessage(&asapInstance->MainLoopPort,
+                                               asapInstance->LastAITM)) {
+         /* First message in AITM queue is not LastAITM:
             There are new AITM messages to be handled.
             Do not block if there are no socket events! */
          timeout = 0;
