@@ -216,7 +216,9 @@ void asapInstanceDelete(struct ASAPInstance* asapInstance)
 
    if(asapInstance) {
       if(asapInstance->MainLoopThread != 0) {
+         dispatcherLock(asapInstance->StateMachine);
          asapInstance->MainLoopShutdown = true;
+         dispatcherUnlock(asapInstance->StateMachine);
          asapInstanceNotifyMainLoop(asapInstance);
          CHECK(pthread_join(asapInstance->MainLoopThread, NULL) == 0);
          asapInstance->MainLoopThread = 0;
@@ -1421,6 +1423,16 @@ static void asapInstanceNotifyMainLoop(struct ASAPInstance* asapInstance)
 }
 
 
+/* ###### Check whether ASAP instance is shutting down ################### */
+static bool asapInstanceIsShuttingDown(struct ASAPInstance* asapInstance)
+{
+   dispatcherLock(asapInstance->StateMachine);
+   const bool isShuttingDown = asapInstance->MainLoopShutdown;
+   dispatcherUnlock(asapInstance->StateMachine);
+   return(isShuttingDown);
+}
+
+
 /* ###### ASAP Instance main loop thread ################################# */
 static void* asapInstanceMainLoop(void* args)
 {
@@ -1435,10 +1447,11 @@ static void* asapInstanceMainLoop(void* args)
 
    asapInstanceConnectToRegistrar(asapInstance, -1);
 
-   while(!asapInstance->MainLoopShutdown) {
+   while(!asapInstanceIsShuttingDown(asapInstance)) {
       /* ====== Collect data for ext_select() call ======================= */
       dispatcherGetPollParameters(asapInstance->StateMachine,
-                                  (struct pollfd*)&ufds, &nfds, &timeout, &pollTimeStamp);
+                                  (struct pollfd*)&ufds, &nfds, &timeout,
+                                  &pollTimeStamp);
       pipeIndex = nfds;
       ufds[pipeIndex].fd      = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events  = POLLIN;

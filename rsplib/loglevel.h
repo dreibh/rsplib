@@ -65,9 +65,8 @@ extern "C" {
 #define LOGLEVEL_VERBOSE3  7
 #define LOGLEVEL_VERBOSE4  8
 #define LOGLEVEL_VERBOSE5  9
-#define LOGLEVEL_MUTEX    10
 
-#define MAX_LOGLEVEL 10
+#define MAX_LOGLEVEL       LOGLEVEL_VERBOSE5
 
 
 extern unsigned int        gLogLevel;
@@ -170,13 +169,6 @@ void setLogColor(const unsigned int color);
 #else
 #define LOG_VERBOSE5 if(0) {
 #endif
-
-#if (LOG_MUTEX <= MAX_LOGLEVEL)
-#define LOG_MUTEX if(gLogLevel >= LOGLEVEL_MUTEX)           LOG_BEGIN("",7,7)
-#else
-#define LOG_MUTEX if(0) {
-#endif
-
 
 
 /**
