@@ -118,6 +118,12 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
   */
 void asapInstanceDelete(struct ASAPInstance* asapInstance);
 
+/**
+  * Start ASAP main loop thread.
+  *
+  * @param asapInstance ASAPInstance.
+  */
+bool asapInstanceStartThread(struct ASAPInstance* asapInstance);
 
 /**
   * Register pool element.

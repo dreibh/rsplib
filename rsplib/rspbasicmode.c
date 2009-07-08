@@ -153,10 +153,13 @@ int rsp_initialize(struct rsp_info* info)
             }
 #endif
 
-            LOG_NOTE
-            fputs("rsplib is ready\n", stdlog);
-            LOG_END
-            return(0);
+            /* ====== Start the main loop thread ========================= */
+            if(asapInstanceStartThread(gAsapInstance)) {
+               LOG_NOTE
+               fputs("rsplib is ready\n", stdlog);
+               LOG_END
+               return(0);
+            }
          }
          else {
             LOG_ERROR

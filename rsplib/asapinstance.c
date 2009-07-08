@@ -198,14 +198,23 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
          }
          setNonBlocking(asapInstance->MainLoopPipe[0]);
          setNonBlocking(asapInstance->MainLoopPipe[1]);
-         if(pthread_create(&asapInstance->MainLoopThread, NULL, &asapInstanceMainLoop, asapInstance) != 0) {
-            logerror("Unable to create ASAP main loop thread");
-            asapInstanceDelete(asapInstance);
-            return(NULL);
-         }
+         /* The ASAP main loop thread cannot be started here, since the
+            static registrar entries are still missing. The can be added
+            later. After that, asapInstanceStartThread() has to be called. */
       }
    }
    return(asapInstance);
+}
+
+
+/* ###### Constructor #################################################### */
+bool asapInstanceStartThread(struct ASAPInstance* asapInstance)
+{
+   if(pthread_create(&asapInstance->MainLoopThread, NULL, &asapInstanceMainLoop, asapInstance) != 0) {
+      logerror("Unable to create ASAP main loop thread");
+      return(false);
+   }
+   return(true);
 }
 
 
