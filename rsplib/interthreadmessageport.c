@@ -63,6 +63,20 @@ void interThreadMessagePortUnlock(struct InterThreadMessagePort* itmPort)
 
 
 /* ###### Get first message ############################################## */
+bool interThreadMessagePortIsFirstMessage(struct InterThreadMessagePort* itmPort,
+                                          struct InterThreadMessageNode* message)
+{
+   bool result;
+
+   threadSignalLock(&itmPort->Signal);
+   result = (interThreadMessagePortGetFirstMessage(itmPort) == message);
+   threadSignalUnlock(&itmPort->Signal);
+
+   return(result);
+}
+
+
+/* ###### Get first message ############################################## */
 struct InterThreadMessageNode* interThreadMessagePortGetFirstMessage(struct InterThreadMessagePort* itmPort)
 {
    struct DoubleLinkedRingListNode* node;
@@ -76,7 +90,7 @@ struct InterThreadMessageNode* interThreadMessagePortGetFirstMessage(struct Inte
 
 /* ###### Get next message ############################################### */
 struct InterThreadMessageNode* interThreadMessagePortGetNextMessage(struct InterThreadMessagePort* itmPort,
-                                                                    struct InterThreadMessageNode*     message)
+                                                                    struct InterThreadMessageNode* message)
 {
    struct DoubleLinkedRingListNode* node;
    node = message->Node.Next;

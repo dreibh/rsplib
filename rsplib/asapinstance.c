@@ -1285,8 +1285,6 @@ static void asapInstanceHandleRegistrarTimeout(struct Dispatcher* dispatcher,
 {
    struct ASAPInstance* asapInstance = (struct ASAPInstance*)userData;
 
-puts("HANDLE REG TO!!!!!!!!!!!");
-
    CHECK(asapInstance->LastAITM != NULL);
    LOG_WARNING
    fputs("Request(s) to registrar timed out!\n", stdlog);
@@ -1445,9 +1443,10 @@ static void* asapInstanceMainLoop(void* args)
       ufds[pipeIndex].fd      = asapInstance->MainLoopPipe[0];
       ufds[pipeIndex].events  = POLLIN;
       ufds[pipeIndex].revents = 0;
-      if((struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(&asapInstance->MainLoopPort) !=
-            asapInstance->LastAITM) {
-         /* There are new AITM messages to be handled.
+      if(interThreadMessagePortIsFirstMessage(&asapInstance->MainLoopPort,
+                                              asapInstance->LastAITM)) {
+         /* First message in AITM queue is LastAITM:
+            There are new AITM messages to be handled.
             Do not block if there are no socket events! */
          timeout = 0;
       }

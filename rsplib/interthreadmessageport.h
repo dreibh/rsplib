@@ -59,6 +59,8 @@ void interThreadMessagePortNew(struct InterThreadMessagePort* itmPort);
 void interThreadMessagePortDelete(struct InterThreadMessagePort* itmPort);
 void interThreadMessagePortLock(struct InterThreadMessagePort* itmPort);
 void interThreadMessagePortUnlock(struct InterThreadMessagePort* itmPort);
+bool interThreadMessagePortIsFirstMessage(struct InterThreadMessagePort* itmPort,
+                                          struct InterThreadMessageNode* message);
 struct InterThreadMessageNode* interThreadMessagePortGetFirstMessage(struct InterThreadMessagePort* itmPort);
 struct InterThreadMessageNode* interThreadMessagePortGetNextMessage(struct InterThreadMessagePort* itmPort,
                                                                     struct InterThreadMessageNode* message);
