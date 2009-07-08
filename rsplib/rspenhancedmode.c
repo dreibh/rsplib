@@ -251,6 +251,7 @@ int rsp_close(int sd)
       rserpoolSocket->MsgBuffer = NULL;
    }
    threadSafetyDelete(&rserpoolSocket->SessionSetMutex);
+   threadSafetyLock(&rserpoolSocket->Mutex);
    threadSafetyDelete(&rserpoolSocket->Mutex);
    free(rserpoolSocket);
    return(0);
