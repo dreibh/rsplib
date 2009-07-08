@@ -1227,7 +1227,7 @@ ssize_t rsp_recvmsg(int                    sd,
                rserpoolSocket->ConnectedSession->IsFailed = true;
             }
          }
-         threadSafetyLock(&rserpoolSocket->Mutex);
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
       }
 
       /* ====== Handle result =============================================== */
@@ -1444,14 +1444,14 @@ ssize_t rsp_send_cookie(int                  sd,
          message->Type       = AHT_COOKIE;
          message->CookiePtr  = (char*)cookie;
          message->CookieSize = (size_t)cookieSize;
-         threadSafetyLock(&rserpoolSocket->Mutex);
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
          result = rserpoolMessageSend(IPPROTO_SCTP,
                                       rserpoolSocket->Socket,
                                       session->AssocID,
                                       0, 0,
                                       (1000ULL * timeout),
                                       message);
-         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         threadSafetyLock(&rserpoolSocket->Mutex);
          rserpoolMessageDelete(message);
       }
    }
