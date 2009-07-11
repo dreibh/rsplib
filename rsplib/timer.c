@@ -105,14 +105,14 @@ bool timerIsRunning(struct Timer* timer)
 void timerStop(struct Timer* timer)
 {
    struct SimpleRedBlackTreeNode* result;
+   dispatcherLock(timer->Master);
    if(simpleRedBlackTreeNodeIsLinked(&timer->Node)) {
-      dispatcherLock(timer->Master);
       result = simpleRedBlackTreeRemove(&timer->Master->TimerStorage,
                                         &timer->Node);
       CHECK(result == &timer->Node);
-      dispatcherUnlock(timer->Master);
       timer->TimeStamp = 0;
    }
+   dispatcherUnlock(timer->Master);
 }
 
 
