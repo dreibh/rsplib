@@ -295,8 +295,11 @@ EventHandlingResult FractalGeneratorServer::advanceX(const unsigned int color)
 
 
    // ====== Send Data/Cookie due to expired timer ==========================
-   if(unlikely(Alert)) {
-      Alert = 0;
+   lock();
+   const bool alerted = Alert;
+   Alert = false;
+   unlock();
+   if(unlikely(alerted)) {
       const unsigned long long now = getMicroTime();
 
       // ====== Send Data ===================================================
@@ -356,7 +359,9 @@ void FractalGeneratorServer::scheduleTimer()
 // ###### Handle cookie/transmission timer ##################################
 void FractalGeneratorServer::asyncTimerEvent(const unsigned long long now)
 {
-   Alert = 1;
+   lock();
+   Alert = true;
+   unlock();
 }
 
 
@@ -374,7 +379,9 @@ EventHandlingResult FractalGeneratorServer::calculateImage()
    size_t               i;
    const unsigned int   algorithm = (Settings.TestMode) ? 0 : Status.Parameter.AlgorithmID;
 
-   Alert       = 0;
+   lock();
+   Alert = false;
+   unlock();
    DataPackets = 0;
    Data.Points = 0;
    const double c1real = networkToDouble(Status.Parameter.C1Real);

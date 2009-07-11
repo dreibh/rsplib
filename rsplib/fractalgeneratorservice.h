@@ -80,7 +80,7 @@ class FractalGeneratorServer : public TCPLikeServer
 
    struct FGPData                 Data;
    size_t                         DataPackets;
-   int                            Alert;
+   bool                           Alert;
 
    FractalGeneratorStatus         Status;
    FractalGeneratorServerSettings Settings;

@@ -79,17 +79,27 @@ class TCPLikeServer : public TDThread
    TCPLikeServer(int rserpoolSocketDescriptor);
    ~TCPLikeServer();
 
-   inline bool hasFinished() const {
-      return(Finished);
+   inline bool hasFinished() {
+      lock();
+      const bool finished = Finished;
+      unlock();
+      return(finished);
    }
-   inline bool isShuttingDown() const {
-      return(Shutdown);
+   inline bool isShuttingDown() {
+      lock();
+      const bool shutdown = Shutdown;
+      unlock();
+      return(shutdown);
    }
    inline void setSyncTimer(const unsigned long long timeStamp) {
+      lock();
       SyncTimerTimeStamp = timeStamp;
+      unlock();
    }
    inline void setAsyncTimer(const unsigned long long timeStamp) {
+      lock();
       AsyncTimerTimeStamp = timeStamp;
+      unlock();
    }
    inline TCPLikeServerList* getServerList() const {
       return(ServerList);

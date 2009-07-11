@@ -145,7 +145,7 @@ FractalPU::FractalPU(const size_t       width,
 /* ###### Destructor ##################################################### */
 FractalPU::~FractalPU()
 {
-   Status = FPU_Shutdown;
+   setStatus(FPU_Shutdown);
    if(CalculationThreadArray) {
       for(size_t i = 0;i < CurrentThreads;i++) {
          CalculationThreadArray[i]->wait();
@@ -171,7 +171,7 @@ void FractalPU::closeEvent(QCloseEvent* closeEvent)
 /* ###### Handle Resize event ############################################ */
 void FractalPU::resizeEvent(QResizeEvent* resizeEvent)
 {
-   Status = FPU_CalcAborted;
+   setStatus(FPU_CalcAborted);
 }
 
 
@@ -245,7 +245,7 @@ void FractalPU::getNextParameters()
 /* ###### Start next fractal PU job ###################################### */
 void FractalPU::startNextJob()
 {
-   CHECK(Status != FPU_CalcInProgress);
+   CHECK(getStatus() != FPU_CalcInProgress);
 
    // ====== Initialize image object and timeout timer ======================
    Run++;
@@ -263,7 +263,7 @@ void FractalPU::startNextJob()
 
 
    // ====== Start job distribution =========================================
-   Status = FPU_CalcInProgress;
+   setStatus(FPU_CalcInProgress);
 
    // std::cout << "Starting job distribution ..." << std::endl;
    Display->setCursor(Qt::WaitCursor);
@@ -278,6 +278,7 @@ void FractalPU::startNextJob()
 
 
    // ====== Initialize configured number of sessions =======================
+   Display->lock();
    QColor       color;
    const size_t yCount = (size_t)floor(sqrt((double)CurrentThreads));
    const size_t yStep  = (size_t)rint((double)Parameter.Height / yCount);
@@ -333,6 +334,7 @@ void FractalPU::startNextJob()
 
    // ====== Make everything visible ========================================
    Display->update();
+   Display->unlock();
 
    // ====== Wait for job completion ========================================
    // std::cout << "Waiting for job completion ..." << std::endl;
@@ -371,13 +373,13 @@ void FractalPU::handleCompletedSession()
          CalculationThreadArray = NULL;
 
          // ====== Pause before next image ==================================
-         if(Status == FPU_CalcInProgress) {
-            Status = FPU_Completed;
+         if(getStatus() == FPU_CalcInProgress) {
+            setStatus(FPU_Completed);
             CountDown = InterImageTime;
             QTimer::singleShot(0, this, SLOT(countDown()));
          }
-         else if(Status == FPU_CalcAborted) {
-            Status = FPU_Completed;
+         else if(getStatus() == FPU_CalcAborted) {
+            setStatus(FPU_Completed);
             statusBar()->showMessage("Restarting ...");
             QTimer::singleShot(500, this, SLOT(startNextJob()));
          }
@@ -495,7 +497,7 @@ void FractalPU::changeThreads(QAction* action)
    const unsigned int newThreads = action->data().toInt();
    if(newThreads >= 1) {
       ConfiguredThreads = newThreads;
-      Status = FPU_CalcAborted;
+      setStatus(FPU_CalcAborted);
    }
 }
 
@@ -511,7 +513,7 @@ void FractalPU::about()
 /* ###### Quit ########################################################### */
 void FractalPU::quit()
 {
-   Status = FPU_Shutdown;
+   setStatus(FPU_Shutdown);
    qApp->exit(0);
 }
 

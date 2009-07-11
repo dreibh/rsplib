@@ -83,7 +83,9 @@ void TCPLikeServer::finishSession(EventHandlingResult result)
 // ###### Shutdown thread ###################################################
 void TCPLikeServer::shutdown()
 {
+   lock();
    Shutdown = true;
+   unlock();
 }
 
 
@@ -97,26 +99,32 @@ double TCPLikeServer::getLoad() const
 // ##### Set load ###########################################################
 void TCPLikeServer::setLoad(double load)
 {
+   ServerList->lock();
+   
    CHECK(ServerList != NULL);
    CHECK(ServerList->LoadSum >= Load);
    if((load < 0.0) || (load > 1.0)) {
       fputs("ERROR: Invalid load setting!\n", stderr);
+      ServerList->unlock();
       return;
    }
    const unsigned int newLoad = (unsigned int)floor(load * (double)PPV_MAX_LOAD);
    if((long long)ServerList->LoadSum - (long long)Load + (long long)newLoad > PPV_MAX_LOAD) {
       fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stderr);
+      ServerList->unlock();
       return;
    }
 
-   ServerList->lock();
    const double oldTotalLoad = ServerList->getTotalLoad();
 
    ServerList->LoadSum -= Load;
+   lock();
    Load = newLoad;
+   unlock();
    ServerList->LoadSum += Load;
 
    const double newTotalLoad = ServerList->getTotalLoad();
+
    ServerList->unlock();
 
    if(oldTotalLoad != newTotalLoad) {
@@ -186,7 +194,7 @@ void TCPLikeServer::run()
 
    eventHandlingResult = initializeSession();
    if(eventHandlingResult == EHR_Okay) {
-      while(!Shutdown) {
+      while(!isShuttingDown()) {
          flags    = 0;
          unsigned long long nextTimerEvent;
          if(SyncTimerTimeStamp > 0) {
@@ -266,7 +274,9 @@ void TCPLikeServer::run()
                   (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                   0);
    }
+   lock();
    Finished = true;
+   unlock();
 }
 
 

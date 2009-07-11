@@ -207,8 +207,15 @@ class FractalPU
    inline const FractalParameter& getParameters() const {
       return(Parameter);
    }
+   inline void setStatus(const FractalGeneratorStatus status) {
+      StatusMutex.lock();
+      Status = status;
+      StatusMutex.unlock();
+   }
    inline const FractalGeneratorStatus getStatus() {
+      StatusMutex.lock();
       const FractalGeneratorStatus status = Status;
+      StatusMutex.unlock();
       return(status);
    }
    inline ImageDisplay* getDisplay() {
@@ -265,6 +272,7 @@ class FractalPU
    FractalCalculationThread** CalculationThreadArray;
    FractalParameter           Parameter;
    FractalGeneratorStatus     Status;
+   QMutex                     StatusMutex;
    ImageDisplay*              Display;
    size_t                     Run;
 
