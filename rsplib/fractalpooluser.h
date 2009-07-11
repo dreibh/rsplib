@@ -55,6 +55,7 @@ class ImageDisplay : public QWidget
 {
    Q_OBJECT
 
+   // ====== Public methods =================================================
    public:
    ImageDisplay(QWidget* parent = NULL);
    ~ImageDisplay();
@@ -93,10 +94,14 @@ class ImageDisplay : public QWidget
       ImageMutex.unlock();
    }
 
+
+   // ====== Protected methods ==============================================
    protected:
    void paintEvent(QPaintEvent* paintEvent);
 
-   public:
+   
+   // ====== Private data ===================================================
+   public:   // ?????????????????
    QImage* Image;
    QMutex  ImageMutex;
 };
@@ -106,6 +111,7 @@ class FractalCalculationThread : public QThread
 {
    Q_OBJECT
 
+   // ====== Public methods =================================================
    public:
    FractalCalculationThread(FractalPU*         fractalPU,
                             const unsigned int threadID,
@@ -120,10 +126,12 @@ class FractalCalculationThread : public QThread
       return(Success);
    }
 
+   // ====== Signals ========================================================
    signals:
    void updateImage(int start, int end);
    void updateStatus(QString statusText);
 
+   // ====== Private methods and data =======================================
    private:
    enum DataStatus {
       Okay      = 0,
@@ -157,8 +165,30 @@ class FractalPU
 {
    Q_OBJECT
 
-   friend class FractalCalculationThread;
+   // ====== Definitions ====================================================
+   public:
+   enum FractalGeneratorStatus {
+      FPU_Shutdown       = 0,
+      FPU_CalcAborted    = 1,
+      FPU_CalcInProgress = 2,
+      FPU_Completed      = 3
+   };
 
+   struct FractalParameter
+   {
+      unsigned int Width;
+      unsigned int Height;
+      unsigned int MaxIterations;
+      unsigned int AlgorithmID;
+      double       C1Real;
+      double       C1Imag;
+      double       C2Real;
+      double       C2Imag;
+      double       N;
+   };
+
+   
+   // ====== Public methods =================================================
    public:
    FractalPU(const size_t       width,
              const size_t       height,
@@ -174,12 +204,47 @@ class FractalPU
              QWidget*           parent = NULL);
    ~FractalPU();
 
+   inline const FractalParameter& getParameters() const {
+      return(Parameter);
+   }
+   inline const FractalGeneratorStatus getStatus() {
+      const FractalGeneratorStatus status = Status;
+      return(status);
+   }
+   inline ImageDisplay* getDisplay() {
+      return(Display);
+   }
+   inline bool getShowFailoverMarks() const {
+      return(ShowFailoverMarks);
+   }
+   inline bool getShowSessions() const {
+      return(ShowSessions);
+   }
+   inline size_t getRun() const {
+      return(Run);
+   }
+   inline const unsigned char* getPoolHandle() const {
+      return(PoolHandle);
+   }
+   inline size_t getPoolHandleSize() const {
+      return(PoolHandleSize);
+   }
+   inline unsigned int getSendTimeout() const {
+      return(SendTimeout);
+   }
+   inline unsigned int getRecvTimeout() const {
+      return(RecvTimeout);
+   }
+   
 
+   // ====== Protected methods ==============================================
    protected:
    void closeEvent(QCloseEvent* closeEvent);
    void resizeEvent(QResizeEvent* resizeEvent);
    void contextMenuEvent(QContextMenuEvent* event);
 
+   
+   // ====== Slots ==========================================================
    public slots:
    void countDown();
    void startNextJob();
@@ -192,28 +257,10 @@ class FractalPU
    void about();
    void quit();
 
+   
+   // ====== Private methods and data =======================================
    private:
    void getNextParameters();
-
-   struct FractalParameter
-   {
-      unsigned int Width;
-      unsigned int Height;
-      unsigned int MaxIterations;
-      unsigned int AlgorithmID;
-      double       C1Real;
-      double       C1Imag;
-      double       C2Real;
-      double       C2Imag;
-      double       N;
-   };
-
-   enum FractalGeneratorStatus {
-      FPU_Shutdown       = 0,
-      FPU_CalcAborted    = 1,
-      FPU_CalcInProgress = 2,
-      FPU_Completed      = 3
-   };
 
    FractalCalculationThread** CalculationThreadArray;
    FractalParameter           Parameter;

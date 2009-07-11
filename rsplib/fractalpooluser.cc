@@ -545,26 +545,26 @@ bool FractalCalculationThread::sendParameterMessage()
    FGPParameter parameter;
    ssize_t      sent;
 
-   const double c1real = Master->Parameter.C1Real + (double)ViewX * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width;
-   const double c1imag = Master->Parameter.C1Imag + (double)ViewY * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height;
-   const double c2real = Master->Parameter.C1Real + (double)(ViewX + ViewWidth) * (Master->Parameter.C2Real - Master->Parameter.C1Real) / (double)Master->Parameter.Width;
-   const double c2imag = Master->Parameter.C1Imag + (double)(ViewY + ViewHeight) * (Master->Parameter.C2Imag - Master->Parameter.C1Imag) / (double)Master->Parameter.Height;
+   const double c1real = Master->getParameters().C1Real + (double)ViewX * (Master->getParameters().C2Real - Master->getParameters().C1Real) / (double)Master->getParameters().Width;
+   const double c1imag = Master->getParameters().C1Imag + (double)ViewY * (Master->getParameters().C2Imag - Master->getParameters().C1Imag) / (double)Master->getParameters().Height;
+   const double c2real = Master->getParameters().C1Real + (double)(ViewX + ViewWidth) * (Master->getParameters().C2Real - Master->getParameters().C1Real) / (double)Master->getParameters().Width;
+   const double c2imag = Master->getParameters().C1Imag + (double)(ViewY + ViewHeight) * (Master->getParameters().C2Imag - Master->getParameters().C1Imag) / (double)Master->getParameters().Height;
 
    parameter.Header.Type   = FGPT_PARAMETER;
    parameter.Header.Flags  = 0x00;
    parameter.Header.Length = htons(sizeof(parameter));
    parameter.Width         = htonl(ViewWidth);
    parameter.Height        = htonl(ViewHeight);
-   parameter.AlgorithmID   = htonl(Master->Parameter.AlgorithmID);
-   parameter.MaxIterations = htonl(Master->Parameter.MaxIterations);
+   parameter.AlgorithmID   = htonl(Master->getParameters().AlgorithmID);
+   parameter.MaxIterations = htonl(Master->getParameters().MaxIterations);
    parameter.C1Real        = doubleToNetwork(c1real);
    parameter.C1Imag        = doubleToNetwork(c1imag);
    parameter.C2Real        = doubleToNetwork(c2real);
    parameter.C2Imag        = doubleToNetwork(c2imag);
-   parameter.N             = doubleToNetwork(Master->Parameter.N);
+   parameter.N             = doubleToNetwork(Master->getParameters().N);
 
    sent = rsp_sendmsg(Session, (char*)&parameter, sizeof(parameter), 0,
-                      0, htonl(PPID_FGP), 0, 0, 0, Master->SendTimeout);
+                      0, htonl(PPID_FGP), 0, 0, 0, Master->getSendTimeout());
    return(sent > 0);
 }
 
@@ -596,7 +596,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
       return(Invalid);
    }
 
-   Master->Display->lock();
+   Master->getDisplay()->lock();
    QColor color;
    while(y < ViewHeight) {
       while(x < ViewWidth) {
@@ -604,15 +604,15 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
             goto finished;
          }
          uint32_t point = ntohl(data->Buffer[p]);
-         if(Master->ShowFailoverMarks) {
-            point += (2 * Master->Run) + (5 * PoolElementUsages);
+         if(Master->getShowFailoverMarks()) {
+            point += (2 * Master->getRun()) + (5 * PoolElementUsages);
          }
-         if(Master->ShowSessions) {
+         if(Master->getShowSessions()) {
             point += (3 * ThreadID);
          }
          point = ((point % 72) * 5) % 360;
          color.setHsv(point, 255, 255);
-         Master->Display->setPixel(x + ViewX, y + ViewY, color.rgb());
+         Master->getDisplay()->setPixel(x + ViewX, y + ViewY, color.rgb());
          p++;
 
          x++;
@@ -622,7 +622,7 @@ FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage
    }
 
 finished:
-   Master->Display->unlock();
+   Master->getDisplay()->unlock();
    emit updateImage(ntohl(data->StartY) + ViewY, y + ViewY);
    return(Okay);
 }
@@ -637,7 +637,7 @@ void FractalCalculationThread::run()
 
    Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(Session >= 0) {
-      if(rsp_connect(Session, Master->PoolHandle, Master->PoolHandleSize, 0) == 0) {
+      if(rsp_connect(Session, Master->getPoolHandle(), Master->getPoolHandleSize(), 0) == 0) {
 
          // ====== Begin image calculation ==================================
          do {
@@ -658,7 +658,7 @@ void FractalCalculationThread::run()
                   ssize_t received;
 
                   received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                             &rinfo, &flags, Master->RecvTimeout);
+                                             &rinfo, &flags, Master->getRecvTimeout());
                   while(received > 0) {
                      // ====== Handle notification ==========================
                      if(flags & MSG_RSERPOOL_NOTIFICATION) {
@@ -709,13 +709,13 @@ void FractalCalculationThread::run()
                         }
                      }
 
-                     if(Master->Status != FractalPU::FPU_CalcInProgress) {
+                     if(Master->getStatus() != FractalPU::FPU_CalcInProgress) {
                         goto finish;
                      }
 
                      flags = 0;
                      received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
-                                                &rinfo, &flags, Master->RecvTimeout);
+                                                &rinfo, &flags, Master->getRecvTimeout());
                   }
                   if(Success == false) {
                      printTimeStamp(stdout);
