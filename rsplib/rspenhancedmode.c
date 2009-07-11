@@ -914,9 +914,12 @@ int rsp_forcefailover_tags(int                sd,
       LOG_END
       sendabort(rserpoolSocket->Socket,
                 rserpoolSocket->ConnectedSession->AssocID);
-      rserpoolSocket->ConnectedSession->AssocID = 0;
       ext_close(rserpoolSocket->Socket);
+      
+      threadSafetyLock(&rserpoolSocket->SessionSetMutex);
+      rserpoolSocket->ConnectedSession->AssocID = 0;
       rserpoolSocket->Socket = -1;
+      threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
    }
 
    /* ====== Do handle resolution ======================================== */
@@ -935,16 +938,20 @@ int rsp_forcefailover_tags(int                sd,
       if(result > 0) {
          if(rspAddrInfo->ai_protocol == rserpoolSocket->SocketProtocol) {
             /* ====== Establish connection ================================== */
+            threadSafetyLock(&rserpoolSocket->SessionSetMutex);
             rserpoolSocket->ConnectedSession->ConnectedPE = rspAddrInfo->ai_pe_id;
+            threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
             rserpoolSocket->Socket = connectToPE(rserpoolSocket,
                                                  rspAddrInfo->ai_addr,
                                                  rspAddrInfo->ai_addrs);
             if(rserpoolSocket->Socket >= 0) {
                success = true;
+               threadSafetyLock(&rserpoolSocket->SessionSetMutex);
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
                                            0);
+               threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
             }
 
             /* ====== Free handle resolution result ====================== */
@@ -1201,7 +1208,9 @@ ssize_t rsp_recvmsg(int                    sd,
                   notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
                   notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieSize > 0);
                }
+               threadSafetyLock(&rserpoolSocket->SessionSetMutex);
                rserpoolSocket->ConnectedSession->IsFailed = true;
+               threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
             }
             threadSafetyUnlock(&rserpoolSocket->Mutex);
          }
@@ -1571,8 +1580,8 @@ int rsp_csp_setstatus(int                sd,
    int                    result = 0;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
 
-   threadSafetyLock(&rserpoolSocket->Mutex);
    session = findSession(rserpoolSocket, sessionID, 0);
    if(session != NULL) {
       safestrcpy((char*)&session->StatusText,
@@ -1583,7 +1592,8 @@ int rsp_csp_setstatus(int                sd,
       errno  = EINVAL;
       result = -1;
    }
-   threadSafetyUnlock(&rserpoolSocket->Mutex);
+
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
    return(result);
 #else
    errno = EPROTONOSUPPORT;

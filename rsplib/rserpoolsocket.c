@@ -108,6 +108,7 @@ void deletePoolElement(struct PoolElement* poolElement,
 {
    int result;
 
+   threadSafetyLock(&poolElement->Mutex);
    /* Delete timer first; this ensures that the doRegistration() function
       will not be called while the PE is going to be deleted! */
    timerDelete(&poolElement->ReregistrationTimer);
@@ -126,6 +127,7 @@ void deletePoolElement(struct PoolElement* poolElement,
       }
    }
 
+   threadSafetyUnlock(&poolElement->Mutex);
    threadSafetyDelete(&poolElement->Mutex);
    free(poolElement);
 }
