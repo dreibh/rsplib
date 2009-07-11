@@ -108,11 +108,11 @@ void deletePoolElement(struct PoolElement* poolElement,
 {
    int result;
 
-   threadSafetyLock(&poolElement->Mutex);
    /* Delete timer first; this ensures that the doRegistration() function
       will not be called while the PE is going to be deleted! */
    timerDelete(&poolElement->ReregistrationTimer);
 
+   threadSafetyLock(&poolElement->Mutex);
    if(poolElement->Identifier != 0x00000000) {
       result = rsp_pe_deregistration_tags((unsigned char*)&poolElement->Handle.Handle,
                                           poolElement->Handle.Size,

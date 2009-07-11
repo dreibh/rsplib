@@ -19,7 +19,7 @@
  * (Förderkennzeichen 01AK045).
  * The authors alone are responsible for the contents.
  *
- * This program is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it 1113and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -301,8 +301,9 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
+   RegistrarIdentifierType registrarIdentifier;
 #ifdef HAVE_SCTP_DELAYED_SACK
-   struct sctp_sack_info sctpSACKInfo;
+   struct sctp_sack_info   sctpSACKInfo;
 #endif
 
    if(asapInstance->RegistrarSocket < 0) {
@@ -315,8 +316,11 @@ static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
             sd = registrarTableGetRegistrar(asapInstance->RegistrarSet,
                                             asapInstance->RegistrarHuntSocket,
                                             asapInstance->RegistrarHuntMessageBuffer,
-                                            &asapInstance->RegistrarIdentifier);
+                                            &registrarIdentifier);
          }
+         dispatcherLock(asapInstance->StateMachine);
+         asapInstance->RegistrarIdentifier = registrarIdentifier;
+         dispatcherUnlock(asapInstance->StateMachine);
          if(sd < 0) {
             LOG_ACTION
             fputs("Unable to connect to a registrar\n", stdlog);
@@ -365,8 +369,10 @@ static void asapInstanceDisconnectFromRegistrar(struct ASAPInstance* asapInstanc
                                                 bool                 sendAbort)
 {
    if(asapInstance->RegistrarSocket >= 0) {
+      dispatcherLock(asapInstance->StateMachine);
       timerStop(&asapInstance->RegistrarTimeoutTimer);
       fdCallbackDelete(&asapInstance->RegistrarFDCallback);
+      dispatcherUnlock(asapInstance->StateMachine);
       if(sendAbort) {
          sendabort(asapInstance->RegistrarSocket, 0);
       }
@@ -395,7 +401,9 @@ static unsigned int asapInstanceSendRequest(struct ASAPInstance*    asapInstance
       return(RSPERR_OUT_OF_MEMORY);
    }
 
+// ???   dispatcherLock(asapInstance->StateMachine);
    interThreadMessagePortEnqueue(&asapInstance->MainLoopPort, &aitm->Node, NULL);
+// ???   dispatcherUnlock(asapInstance->StateMachine);
    asapInstanceNotifyMainLoop(asapInstance);
    return(RSPERR_OKAY);
 }
@@ -413,7 +421,9 @@ static unsigned int asapInstanceBeginIO(struct ASAPInstance*           asapInsta
       return(RSPERR_OUT_OF_MEMORY);
    }
 
+// ???   dispatcherLock(asapInstance->StateMachine);
    interThreadMessagePortEnqueue(&asapInstance->MainLoopPort, &aitm->Node, itmPort);
+// ???   dispatcherUnlock(asapInstance->StateMachine);
    asapInstanceNotifyMainLoop(asapInstance);
 
    return(RSPERR_OKAY);
@@ -1131,6 +1141,7 @@ static void asapInstanceHandleResponseFromRegistrar(
          }
 
          /* Schedule next response's timeout */
+         dispatcherLock(asapInstance->StateMachine);
          interThreadMessagePortLock(&asapInstance->MainLoopPort);
          if(asapInstance->LastAITM != NULL) {
             nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(
@@ -1140,6 +1151,7 @@ static void asapInstanceHandleResponseFromRegistrar(
                        nextAITM->ResponseTimeoutTimeStamp);
          }
          interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+         dispatcherUnlock(asapInstance->StateMachine);
       }
       else {
          LOG_ERROR
@@ -1372,7 +1384,9 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
                LOG_WARNING
                logerror("Failed to send message to registrar");
                LOG_END
+               interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
                asapInstanceDisconnectFromRegistrar(asapInstance, true);
+               interThreadMessagePortLock(&asapInstance->MainLoopPort);
                break;
             }
             aitm->TransmissionTimeStamp = getMicroTime();
@@ -1466,7 +1480,7 @@ static void* asapInstanceMainLoop(void* args)
       ufds[pipeIndex].events  = POLLIN;
       ufds[pipeIndex].revents = 0;
       if(!interThreadMessagePortIsFirstMessage(&asapInstance->MainLoopPort,
-                                               asapInstance->LastAITM)) {
+                                               &asapInstance->LastAITM->Node)) {
          /* First message in AITM queue is not LastAITM:
             There are new AITM messages to be handled.
             Do not block if there are no socket events! */

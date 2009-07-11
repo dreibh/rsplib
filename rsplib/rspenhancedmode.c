@@ -857,7 +857,10 @@ static void rsp_send_failure_report(struct RSerPoolSocket* rserpoolSocket,
                        rserpoolSocket->ConnectedSession->Handle.Size,
                        rserpoolSocket->ConnectedSession->ConnectedPE,
                        tags);
+
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
    rserpoolSocket->ConnectedSession->ConnectedPE = 0;
+   threadSafetyUnlock(&gRSerPoolSocketSetMutex);
 }
 
 
@@ -871,6 +874,7 @@ int rsp_forcefailover_tags(int                sd,
    struct rsp_addrinfo*     rspAddrInfo;
    struct NotificationNode* notificationNode;
    int                      result;
+   int                      newSD;
    bool                     success = false;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
@@ -894,7 +898,9 @@ int rsp_forcefailover_tags(int                sd,
 
    /* When next rsp_sendmsg() fails, a new FAILOVER_NECESSARY notification
       has to be sent. */
+   threadSafetyLock(&gRSerPoolSocketSetMutex);
    rserpoolSocket->ConnectedSession->IsFailed = false;
+   threadSafetyUnlock(&gRSerPoolSocketSetMutex);
    /* But for now, remove all queued notifications - they are out of date! */
    notificationQueueClear(&rserpoolSocket->Notifications);
 
@@ -941,18 +947,20 @@ int rsp_forcefailover_tags(int                sd,
             threadSafetyLock(&rserpoolSocket->SessionSetMutex);
             rserpoolSocket->ConnectedSession->ConnectedPE = rspAddrInfo->ai_pe_id;
             threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
-            rserpoolSocket->Socket = connectToPE(rserpoolSocket,
-                                                 rspAddrInfo->ai_addr,
-                                                 rspAddrInfo->ai_addrs);
+            newSD = connectToPE(rserpoolSocket,
+                                rspAddrInfo->ai_addr,
+                                rspAddrInfo->ai_addrs);
+            threadSafetyLock(&rserpoolSocket->SessionSetMutex);
+            rserpoolSocket->Socket = newSD;
             if(rserpoolSocket->Socket >= 0) {
                success = true;
-               threadSafetyLock(&rserpoolSocket->SessionSetMutex);
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
                                            0);
-               threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
             }
+            rserpoolSocket->Socket = newSD;
+            threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
 
             /* ====== Free handle resolution result ====================== */
             rsp_freeaddrinfo(rspAddrInfo);
@@ -1090,7 +1098,9 @@ ssize_t rsp_sendmsg(int                sd,
                notificationNode->Content.rn_failover.rf_has_cookie = (session->CookieSize > 0);
             }
 
+            threadSafetyLock(&gRSerPoolSocketSetMutex);
             session->IsFailed = true;
+            threadSafetyUnlock(&gRSerPoolSocketSetMutex);
             /* =========================================================== */
 
             result = -1;
@@ -1233,7 +1243,9 @@ ssize_t rsp_recvmsg(int                    sd,
                   notificationNode->Content.rn_failover.rf_session    = rserpoolSocket->ConnectedSession->SessionID;
                   notificationNode->Content.rn_failover.rf_has_cookie = (rserpoolSocket->ConnectedSession->CookieSize > 0);
                }
+               threadSafetyLock(&rserpoolSocket->SessionSetMutex);
                rserpoolSocket->ConnectedSession->IsFailed = true;
+               threadSafetyUnlock(&rserpoolSocket->SessionSetMutex);
             }
          }
          threadSafetyUnlock(&rserpoolSocket->Mutex);
