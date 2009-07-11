@@ -81,6 +81,7 @@ void timerStart(struct Timer*            timer,
    result = simpleRedBlackTreeInsert(&timer->Master->TimerStorage,
                                      &timer->Node);
    CHECK(result == &timer->Node);
+   timer->Master->AddRemove = true;
    dispatcherUnlock(timer->Master);
 }
 
@@ -111,6 +112,7 @@ void timerStop(struct Timer* timer)
                                         &timer->Node);
       CHECK(result == &timer->Node);
       timer->TimeStamp = 0;
+      timer->Master->AddRemove = true;
    }
    dispatcherUnlock(timer->Master);
 }

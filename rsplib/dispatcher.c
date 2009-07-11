@@ -118,38 +118,6 @@ static void dispatcherDefaultUnlock(struct Dispatcher* dispatcher, void* userDat
 }
 
 
-/* ###### Handle timer events ############################################ */
-static void dispatcherHandleTimerEvents(struct Dispatcher* dispatcher)
-{
-   struct SimpleRedBlackTreeNode* node;
-   struct Timer*                  timer;
-   unsigned long long             now;
-
-   dispatcherLock(dispatcher);
-
-   node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
-   while(node != NULL) {
-      timer = (struct Timer*)node;
-      now   = getMicroTime();
-
-      if(now >= timer->TimeStamp) {
-         timer->TimeStamp = 0;
-         simpleRedBlackTreeRemove(&dispatcher->TimerStorage,
-                                  &timer->Node);
-         if(timer->Callback != NULL) {
-            timer->Callback(dispatcher, timer, timer->UserData);
-         }
-      }
-      else {
-         break;
-      }
-      node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
-   }
-
-   dispatcherUnlock(dispatcher);
-}
-
-
 /* ###### Get poll() parameters ########################################## */
 void dispatcherGetPollParameters(struct Dispatcher*  dispatcher,
                                  struct pollfd*      ufds,
@@ -226,11 +194,15 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
                                 int                timeout,
                                 unsigned long long pollTimeStamp)
 {
-   struct FDCallback* fdCallback;
-   unsigned int       i;
+   unsigned long long             now;
+   struct SimpleRedBlackTreeNode* node;
+   struct Timer*                  timer;
+   struct FDCallback*             fdCallback;
+   unsigned int                   i;
 
    if(dispatcher != NULL) {
       dispatcherLock(dispatcher);
+      dispatcher->AddRemove = false;
 
       /* ====== Handle events ============================================ */
       /* We handle the FD callbacks first, because their corresponding FD's
@@ -258,9 +230,14 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
                            fprintf(stdlog,"Executing callback for event $%04x of socket %d\n",
                                  ufds[i].revents, fdCallback->FD);
                            LOG_END
+                           dispatcherUnlock(dispatcher);
                            fdCallback->Callback(dispatcher,
                                                 fdCallback->FD, ufds[i].revents,
                                                 fdCallback->UserData);
+                           dispatcherLock(dispatcher);
+                           if(dispatcher->AddRemove == true) {
+                              break;
+                           }
                         }
                      }
                   }
@@ -279,13 +256,36 @@ void dispatcherHandlePollResult(struct Dispatcher* dispatcher,
          }
       }
 
+      /* ====== Handle timer events ====================================== */
       /* Timers must be handled after the FD callbacks, since
          they might modify the FDs' states (e.g. completely
          reading their buffers, establishing new associations, ...)! */
       LOG_VERBOSE4
       fputs("Handling timer events...\n", stdlog);
       LOG_END
-      dispatcherHandleTimerEvents(dispatcher);
+      now  = getMicroTime();
+      node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      while(node != NULL) {
+         timer = (struct Timer*)node;
+
+         if(dispatcher->AddRemove == true) {
+            break;
+         }
+         if(now >= timer->TimeStamp) {
+            timer->TimeStamp = 0;
+            simpleRedBlackTreeRemove(&dispatcher->TimerStorage,
+                                     &timer->Node);
+            if(timer->Callback != NULL) {
+               dispatcherUnlock(dispatcher);
+               timer->Callback(dispatcher, timer, timer->UserData);
+               dispatcherLock(dispatcher);
+            }
+         }
+         else {
+            break;
+         }
+         node = simpleRedBlackTreeGetFirst(&dispatcher->TimerStorage);
+      }
 
       dispatcherUnlock(dispatcher);
    }

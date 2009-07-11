@@ -64,7 +64,7 @@ void fdCallbackNew(struct FDCallback* fdCallback,
 
    dispatcherLock(fdCallback->Master);
    result = simpleRedBlackTreeInsert(&fdCallback->Master->FDCallbackStorage,
-                                         &fdCallback->Node);
+                                     &fdCallback->Node);
    CHECK(result == &fdCallback->Node);
    fdCallback->Master->AddRemove = true;
    dispatcherUnlock(fdCallback->Master);
