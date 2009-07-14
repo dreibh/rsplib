@@ -458,7 +458,7 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
       LOG_END
    }
    else {
-      LOG_ERROR
+      LOG_VERBOSE
       fprintf(stdlog, "Assoc %u peel-off failed: %s\n", assocID, strerror(errno));
       LOG_END
       sendabort(registrarHuntFD, assocID);
