@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd December 3, 2008
+.Dd July 31, 2009
 .Dt Server 8
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -130,7 +130,7 @@ The following options are available:
 .\" ====== Common parameters ================================================
 .It Common Pool Element Parameters:
 .Bl -tag -width indent
-.It Fl asapannounce=address:port
+.It Fl asapannounce=address:port|auto|off
 Sets the multicast address and port the ASAP instance listens for ASAP
 Server Announces on.
 .It Fl identifier=PE_identifier
@@ -155,9 +155,6 @@ Sets the PH to a non-default value; otherwise, the default setting is the
 service-specific default.
 .It Fl quiet
 Do not print startup and shutdown messages.
-.It Fl registrar=address:port
-Adds a static PR entry into the Registrar Table.
-It is possible to add multiple entries.
 .It Fl rereginterval=milliseconds
 Sets the PE's re-registration interval.
 .It Fl runtime=seconds
@@ -181,6 +178,25 @@ Write logging output to a file (default is stdout); given file will be overwritt
 Sets the logging verbosity from 0 (none) to 9 (very verbose).
 It is recommended to use at least a value of 2 to see possibly
 important error messages and warnings.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:

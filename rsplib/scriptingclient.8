@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd January 31, 2008
+.Dd July 31, 2009
 .Dt ScriptingClient 8
 .Os Scripting Client
 .\" ###### Name #############################################################
@@ -94,6 +94,25 @@ Sets the transmission timeout in milliseconds.
 Sets the keep-alive interval in milliseconds.
 .It Fl keepalivetimeout=milliseconds
 Sets the keep-alive timeout in milliseconds.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:

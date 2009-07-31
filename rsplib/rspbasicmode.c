@@ -50,7 +50,7 @@ struct ASAPInstance*       gAsapInstance = NULL;
 struct Dispatcher          gDispatcher;
 static struct ThreadSafety gThreadSafety;
 #ifdef ENABLE_CSP
-static struct CSPReporter* gCSPReporter  = NULL;
+struct CSPReporter*        gCSPReporter = NULL;
 #endif
 
 struct SimpleRedBlackTree  gRSerPoolSocketSet;
@@ -86,6 +86,8 @@ int rsp_initialize(struct rsp_info* info)
    static const char* buildDate = __DATE__;
    static const char* buildTime = __TIME__;
    struct rsp_info    emptyinfo;
+   struct TagItem     tagList[16];
+   size_t             i;
 
    beginLogging();
 
@@ -102,6 +104,40 @@ int rsp_initialize(struct rsp_info* info)
       return(0);
    }
 
+   /* ====== Handle tuning parameters ==================================== */
+   i = 0;
+   if(info->ri_registrar_announce_timeout > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarAnnounceTimeout;
+      tagList[i].Data = (tagdata_t)1000 * (tagdata_t)info->ri_registrar_announce_timeout;
+      i++;
+   }
+   if(info->ri_registrar_connect_timeout > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarConnectTimeout;
+      tagList[i].Data = (tagdata_t)1000 * (tagdata_t)info->ri_registrar_connect_timeout;
+      i++;
+   }
+   if(info->ri_registrar_connect_max_trials > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarConnectMaxTrials;
+      tagList[i].Data = (tagdata_t)info->ri_registrar_connect_max_trials;
+      i++;
+   }
+   if(info->ri_registrar_request_timeout > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarRequestTimeout;
+      tagList[i].Data = (tagdata_t)1000 * (tagdata_t)info->ri_registrar_request_timeout;
+      i++;
+   }
+   if(info->ri_registrar_response_timeout > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarResponseTimeout;
+      tagList[i].Data = (tagdata_t)1000 * (tagdata_t)info->ri_registrar_response_timeout;
+      i++;
+   }
+   if(info->ri_registrar_request_max_trials > 0) {
+      tagList[i].Tag  = TAG_RspLib_RegistrarRequestMaxTrials;
+      tagList[i].Data = (tagdata_t)info->ri_registrar_request_max_trials;
+      i++;
+   }
+   tagList[i].Tag = TAG_DONE;
+   
    /* ====== Initialize ASAP instance ==================================== */
    threadSafetyNew(&gThreadSafety, "RsplibInstance");
    threadSafetyNew(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
@@ -109,7 +145,7 @@ int rsp_initialize(struct rsp_info* info)
    gAsapInstance = asapInstanceNew(&gDispatcher,
                                    (info->ri_disable_autoconfig == 0),
                                    (union sockaddr_union*)info->ri_registrar_announce,
-                                   NULL);
+                                   (struct TagItem*)&tagList);
    if(gAsapInstance) {
       if(info) {
          info->ri_version    = RSPLIB_VERSION;

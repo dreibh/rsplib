@@ -290,9 +290,9 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
    /* ====== Show results =================================================== */
    LOG_VERBOSE3
    fputs("New ASAP instance's configuration:\n", stdlog);
-   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",     (unsigned int)asapInstance->RegistrarRequestMaxTrials);
    fprintf(stdlog, "registrar.request.timeout     = %lluus\n", asapInstance->RegistrarRequestTimeout);
    fprintf(stdlog, "registrar.response.timeout    = %lluus\n", asapInstance->RegistrarResponseTimeout);
+   fprintf(stdlog, "registrar.request.maxtrials   = %u\n",     (unsigned int)asapInstance->RegistrarRequestMaxTrials);
    LOG_END
 }
 
@@ -1154,10 +1154,18 @@ static void asapInstanceHandleResponseFromRegistrar(
          dispatcherUnlock(asapInstance->StateMachine);
       }
       else {
-         LOG_ERROR
-         fprintf(stdlog, "Got unexpected response ($%04x) for request ($%04x) from registrar\n",
-                 response->Type, aitm->Request->Type);
-         LOG_END
+         if(response->Type == AHT_ERROR) {
+            LOG_ERROR
+            fprintf(stdlog, "Got ASAP_ERROR ($%04x) for request ($%04x) from registrar\n",
+                    response->OperationErrorCode, aitm->Request->Type);
+            LOG_END
+         }
+         else {
+            LOG_ERROR
+            fprintf(stdlog, "Got unexpected response ($%04x) for request ($%04x) from registrar\n",
+                    response->Type, aitm->Request->Type);
+            LOG_END
+         }
          asapInstanceDisconnectFromRegistrar(asapInstance, true);
          rserpoolMessageDelete(response);
       }

@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 12, 2008
+.Dd July 31, 2009
 .Dt CalcAppClient 8
 .Os CalcApp Client
 .\" ###### Name #############################################################
@@ -89,6 +89,25 @@ Floating-point values (e.g. 30.125) are possible.
 Sets the name of vector scalar file.
 .It Fl vector=vector_file
 Sets the name of vector output file.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:

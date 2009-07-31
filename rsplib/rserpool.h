@@ -85,6 +85,13 @@ struct rsp_info
    int                        ri_disable_autoconfig;
    struct sockaddr*           ri_registrar_announce;
 
+   unsigned int               ri_registrar_announce_timeout;
+   unsigned int               ri_registrar_connect_timeout;
+   unsigned int               ri_registrar_connect_max_trials;
+   unsigned int               ri_registrar_request_timeout;
+   unsigned int               ri_registrar_response_timeout;
+   unsigned int               ri_registrar_request_max_trials;
+   
    uint64_t                   ri_csp_identifier;
    struct sockaddr*           ri_csp_server;
    unsigned int               ri_csp_interval;

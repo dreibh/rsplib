@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd July 7, 2009
+.Dd July 31, 2009
 .Dt FractalPoolUser 8
 .Os FractalGenerator Pool User
 .\" ###### Name #############################################################
@@ -106,6 +106,25 @@ Turns off color change on session failover.
 Turns on color change between different sessions.
 .It Fl nosessions
 Turns off color change between different sessions.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
 .El
 .\" ====== Component Status Protocol ========================================
 .It Component Status Protocol (CSP) Parameters:
