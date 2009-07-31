@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.6.5~rc3)
+AM_INIT_AUTOMAKE(rsplib, 2.7.0~rc1)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -529,7 +529,7 @@ fi
 
 # ###### Version information ################################################
 RSPLIB_CURRENT=2
-RSPLIB_REVISION=4
+RSPLIB_REVISION=7
 RSPLIB_AGE=0
 
 AC_SUBST(RSPLIB_CURRENT)
