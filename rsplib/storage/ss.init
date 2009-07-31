@@ -1,0 +1,97 @@
+#!/bin/sh
+# $Id: rsplib-registrar.init 2123 2009-05-12 10:04:48Z dreibh $
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2008 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+
+### BEGIN INIT INFO
+# Provides:          ss
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: RSerPool Scripting Service
+# Description:       This service provides the RSerPool Scripting Service.
+### END INIT INFO
+
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=ss
+DESC="RSerPool Scripting Service"
+DAEMON=/usr/bin/server
+PRs="-registrar=[132.252.151.78]:3863"
+CSP="-cspserver=[2001:638:501:4ef1:217:31ff:fe66:97ab]"
+DAEMON_OPTS="-scripting $PRs $CSP -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
+
+test -x $DAEMON || exit 0
+
+# make sure SCTP module is loaded.
+modprobe sctp > /dev/null 2>&1
+
+# Include rsplib defaults if available
+if [ -f /etc/default/rsplib-registrar ] ; then
+   . /etc/default/rsplib-registrar
+fi
+
+set -e
+
+case "$1" in
+  start)
+   echo -n "Starting $DESC: "
+   start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
+      --exec $DAEMON -- $DAEMON_OPTS
+   echo "$NAME."
+   ;;
+  stop)
+   echo -n "Stopping $DESC: "
+   start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+      --exec $DAEMON
+   echo "$NAME."
+   ;;
+  force-reload)
+   start-stop-daemon --stop --test --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON \
+   && $0 restart \
+   || exit 0
+   ;;
+  restart)
+    echo -n "Restarting $DESC: "
+   start-stop-daemon --stop --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON
+   sleep 1
+   start-stop-daemon --start --quiet --pidfile \
+      /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+   echo "$NAME."
+   ;;
+  *)
+   N=/etc/init.d/$NAME
+   echo "Usage: $N {start|stop|restart|force-reload}" >&2
+   exit 1
+   ;;
+esac
+
+exit 0
