@@ -127,6 +127,7 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
    cspReporter->CSPIdentifier                = cspIdentifier;
    cspReporter->CSPGetReportFunction         = cspGetReportFunction;
    cspReporter->CSPGetReportFunctionUserData = cspGetReportFunctionUserData;
+   cspReporter->StatusTextOverride           = NULL;
    timerNew(&cspReporter->CSPReportTimer,
             cspReporter->StateMachine,
             cspReporterCallback,
@@ -202,12 +203,9 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
 
 
 /* ###### Report status ################################################## */
-static void cspReporterCallback(struct Dispatcher* dispatcher,
-                                struct Timer*      timer,
-                                void*              userData)
+static void sendCSPReport(struct CSPReporter* cspReporter)
 {
-   struct CSPReporter*          cspReporter = (struct CSPReporter*)userData;
-   struct ComponentAssociation* caeArray    = NULL;
+   struct ComponentAssociation* caeArray = NULL;
    char                         statusText[CSPR_STATUS_SIZE];
    char                         componentLocation[CSPR_LOCATION_SIZE];
    size_t                       caeArraySize;
@@ -228,7 +226,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
       componentStatusSend(&cspReporter->CSPReportAddress,
                           cspReporter->CSPReportInterval,
                           cspReporter->CSPIdentifier,
-                          statusText,
+                          (cspReporter->StatusTextOverride != NULL) ? cspReporter->StatusTextOverride : statusText,
                           componentLocation,
                           workload,
                           caeArray, caeArraySize);
@@ -237,10 +235,30 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
       deleteComponentAssociationArray(caeArray);
    }
 
-   timerStart(&cspReporter->CSPReportTimer,
-              getMicroTime() + cspReporter->CSPReportInterval);
-
    LOG_VERBOSE4
    fputs("Sending CSP report completed\n", stdlog);
    LOG_END
+}
+
+
+/* ###### Timer callback to report status ################################ */
+static void cspReporterCallback(struct Dispatcher* dispatcher,
+                                struct Timer*      timer,
+                                void*              userData)
+{
+   struct CSPReporter* cspReporter = (struct CSPReporter*)userData;
+
+   sendCSPReport(cspReporter);
+   timerStart(&cspReporter->CSPReportTimer,
+           getMicroTime() + cspReporter->CSPReportInterval);
+}
+
+
+/* ###### Report status during registrar search ########################## */
+void cspReporterHandleTimerDuringRegistrarSearch(struct CSPReporter* cspReporter)
+{
+   cspReporter->StatusTextOverride = "Looking for Registrar ...";
+   timerStop(&cspReporter->CSPReportTimer);
+   cspReporterCallback(cspReporter->StateMachine, &cspReporter->CSPReportTimer, cspReporter);
+   cspReporter->StatusTextOverride = NULL;
 }

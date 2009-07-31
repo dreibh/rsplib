@@ -104,7 +104,7 @@ start:
    tags[0].Data = 0;
    tags[1].Tag  = TAG_DONE;
 #ifdef ENABLE_CSP
-   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, 0);
+   info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, random32());
 #endif
    memset(&loadInfo, 0, sizeof(loadInfo));
    loadInfo.rli_policy = PPT_ROUNDROBIN;

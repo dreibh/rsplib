@@ -44,10 +44,16 @@
 #include "netutilities.h"
 #include "randomizer.h"
 #include "loglevel.h"
+#ifdef ENABLE_CSP
+#include "componentstatusreporter.h"
+#endif
 
 #include <ext_socket.h>
 #include <sys/time.h>
 
+#ifdef ENABLE_CSP
+extern struct CSPReporter* gCSPReporter;
+#endif
 
 
 /* Maximum number of simultaneous registrar connection trials */
@@ -209,6 +215,12 @@ struct RegistrarTable* registrarTableNew(struct Dispatcher*          dispatcher,
                                                                                    ASAP_DEFAULT_REGISTRAR_CONNECT_TIMEOUT);
       registrarTable->RegistrarAnnounceTimeout = (unsigned long long)tagListGetData(tags, TAG_RspLib_RegistrarAnnounceTimeout,
                                                                                     ASAP_DEFAULT_REGISTRAR_ANNOUNCE_TIMEOUT);
+      LOG_VERBOSE3
+      fputs("New ASAP registrar table's configuration:\n", stdlog);
+      fprintf(stdlog, "registrartable.announce.timeout    = %lluus\n", registrarTable->RegistrarAnnounceTimeout);
+      fprintf(stdlog, "registrartable.connect.timeout     = %lluus\n", registrarTable->RegistrarConnectTimeout);
+      fprintf(stdlog, "registrartable.connect.maxtrials   = %u\n",     registrarTable->RegistrarConnectMaxTrials);
+      LOG_END
 
       if(enableAutoConfig) {
          if(registrarAnnounceAddress == NULL) {
@@ -644,7 +656,9 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    struct ST_CLASS(PeerListNode)* peerListNode;
    sctp_assoc_t                   assocID;
    ssize_t                        received;
+   unsigned long long             now;
    unsigned long long             start;
+   unsigned long long             stop;
    unsigned long long             nextTimeout;
    unsigned long long             lastTrialTimeStamp;
    fd_set                         rfdset;
@@ -748,26 +762,45 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       }
 
       /* ====== Wait for event =========================================== */
-      FD_ZERO(&rfdset);
-      FD_SET(registrarHuntFD, &rfdset);
-      n = registrarHuntFD;
-      if(registrarTable->AnnounceSocket >= 0) {
-         FD_SET(registrarTable->AnnounceSocket, &rfdset);
-         n = max(n, registrarTable->AnnounceSocket);
-      }
-      nextTimeout = registrarTable->RegistrarConnectTimeout;
-      selectTimeout.tv_sec  = nextTimeout / (unsigned long long)1000000;
-      selectTimeout.tv_usec = nextTimeout % (unsigned long long)1000000;
+      stop = getMicroTime() + nextTimeout;
+      do {
+         FD_ZERO(&rfdset);
+         FD_SET(registrarHuntFD, &rfdset);
+         n = registrarHuntFD;
+         if(registrarTable->AnnounceSocket >= 0) {
+            FD_SET(registrarTable->AnnounceSocket, &rfdset);
+            n = max(n, registrarTable->AnnounceSocket);
+         }
+         nextTimeout = registrarTable->RegistrarConnectTimeout;
+#ifdef ENABLE_CSP
+         if(gCSPReporter != NULL) {
+            now = getMicroTime();
+            if(gCSPReporter->CSPReportTimer.TimeStamp >= now) {
+               nextTimeout = min(nextTimeout, gCSPReporter->CSPReportTimer.TimeStamp - now);
+            }
+            else {
+               nextTimeout = 0;
+            }
+         }
+#endif
+         selectTimeout.tv_sec  = nextTimeout / (unsigned long long)1000000;
+         selectTimeout.tv_usec = nextTimeout % (unsigned long long)1000000;
 
-      LOG_VERBOSE4
-      fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
-      LOG_END
-      result = ext_select(n + 1,
-                          &rfdset, NULL, NULL,
-                          &selectTimeout);
-      LOG_VERBOSE4
-      fprintf(stdlog, "select() result=%d\n", result);
-      LOG_END
+         LOG_VERBOSE4
+         fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
+         LOG_END
+         result = ext_select(n + 1,
+                             &rfdset, NULL, NULL,
+                             &selectTimeout);
+#ifdef ENABLE_CSP
+         if(gCSPReporter != NULL) {
+            cspReporterHandleTimerDuringRegistrarSearch(gCSPReporter);
+         }
+#endif
+         LOG_VERBOSE4
+         fprintf(stdlog, "select() result=%d\n", result);
+         LOG_END
+      } while( (result == 0) && (getMicroTime() < stop));
 
       if((result < 0) && (errno == EINTR)) {
          LOG_VERBOSE3

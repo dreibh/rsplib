@@ -60,6 +60,7 @@ struct CSPReporter
    union sockaddr_union CSPReportAddress;
    unsigned int         CSPReportInterval;
    struct Timer         CSPReportTimer;
+   const char*          StatusTextOverride;
 
    size_t               (*CSPGetReportFunction)(
                            void*                         userData,
@@ -87,6 +88,7 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
                     void*                  cspGetReportFunctionUserData);
 void cspReporterDelete(struct CSPReporter* cspReporter);
 
+void cspReporterHandleTimerDuringRegistrarSearch(struct CSPReporter* cspReporter);
 
 #ifdef __cplusplus
 }
