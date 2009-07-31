@@ -204,6 +204,24 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
       }
       return(1);
    }
+   else if(!(strncmp(arg, "-registrarannouncetimeout=", 26))) {
+      info->ri_registrar_announce_timeout = atol((const char*)&arg[26]);
+   }
+   else if(!(strncmp(arg, "-registrarconnecttimeout=", 25))) {
+      info->ri_registrar_connect_timeout = atol((const char*)&arg[25]);
+   }
+   else if(!(strncmp(arg, "-registrarconnectmaxtrials=", 27))) {
+      info->ri_registrar_connect_max_trials = atol((const char*)&arg[27]);
+   }
+   else if(!(strncmp(arg, "-registrarrequesttimeout=", 25))) {
+      info->ri_registrar_request_timeout = atol((const char*)&arg[25]);
+   }
+   else if(!(strncmp(arg, "-registrarresponsetimeout=", 26))) {
+      info->ri_registrar_response_timeout = atol((const char*)&arg[26]);
+   }
+   else if(!(strncmp(arg, "-registrarrequestmaxtrials=", 27))) {
+      info->ri_registrar_request_max_trials = atol((const char*)&arg[27]);
+   }
    else if(!(strncmp(arg, "-asapannounce=", 14))) {
       if(!(strcasecmp((const char*)&arg[14], "auto"))) {
          info->ri_registrar_announce = NULL;
