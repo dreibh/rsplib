@@ -305,6 +305,10 @@ start:
          }
          exit(0);
       }
+      else {
+//         signal(SIGPIPE, SIG_IGN);
+         signal(SIGHUP, SIG_IGN);
+      }
    }
 
 

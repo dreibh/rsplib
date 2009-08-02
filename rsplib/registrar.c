@@ -277,6 +277,9 @@ static void goIntoDaemonMode(const char* daemonPIDFile)
          }
          exit(0);
       }
+      else {
+         signal(SIGHUP, SIG_IGN);      
+      }
    }
 }
 
