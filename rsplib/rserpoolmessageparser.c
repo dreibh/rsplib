@@ -483,7 +483,16 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
          message->Error = RSPERR_OKAY;
          break;
       }
-      addresses++;
+      /* Link-local scoped addresses will be skipped => it is not possible to
+         determine the right network interface! */
+      if(getScope(&addressArray[addresses].sa) > AS_UNICAST_LINKLOCAL) {
+         addresses++;
+      }
+      else {
+         LOG_VERBOSE3
+         fputs("Skipping link-local address in Transport Parameter\n", stdlog);
+         LOG_END
+      }
 
       LOG_VERBOSE3
       fprintf(stdlog, "Scanned address %u.\n", (unsigned int)addresses);
@@ -491,7 +500,7 @@ static bool scanTransportParameter(struct RSerPoolMessage*       message,
    }
    if(addresses < 1) {
       LOG_WARNING
-      fputs("No addresses given!\n", stdlog);
+      fputs("No (usable) transport addresses given!\n", stdlog);
       LOG_END
       message->Error = RSPERR_INVALID_VALUE;
       return(false);
