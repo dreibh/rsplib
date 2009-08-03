@@ -213,7 +213,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
       }
       else {
          /* --- Check for buggy SCTP implementation ----- */
-         if( (getPort(&sctpLocalAddressArray[0].sa) == 0)                  ||
+         if( (getPort(&sctpLocalAddressArray[0].sa) == 0)           ||
              ( ((sctpLocalAddressArray[0].sa.sa_family == AF_INET) &&
                 (sctpLocalAddressArray[0].in.sin_addr.s_addr == 0)) ||
              ( ((sctpLocalAddressArray[0].sa.sa_family == AF_INET6) &&
@@ -223,6 +223,16 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
             LOG_END_FATAL
          }
          /* --------------------------------------------- */
+
+         /* ====== Filter out link-local addresses ======================= */
+         sctpLocalAddresses = filterAddressesByScope(sctpLocalAddressArray, sctpLocalAddresses,
+                                                     AS_UNICAST_SITELOCAL);
+         if(sctpLocalAddresses == 0) {
+            LOG_ERROR
+            fputs("No addresses of at least site-local scope found -> No registration possible\n", stdlog);
+            LOG_END
+            return(false);
+         }
 
          packedAddressArray = pack_sockaddr_union(sctpLocalAddressArray, sctpLocalAddresses);
          if(packedAddressArray != NULL) {
@@ -239,6 +249,17 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
       if(localAddresses == 0) {
          LOG_ERROR
          fputs("Unable to find out local addresses -> No registration possible\n", stdlog);
+         LOG_END
+         free(rspAddrInfo);
+         return(false);
+      }
+
+      /* ====== Filter out link-local addresses ========================= */
+      localAddresses = filterAddressesByScope(&localAddressArray, localAddresses,
+                                              AS_UNICAST_SITELOCAL);
+      if(localAddresses == 0) {
+         LOG_ERROR
+         fputs("No addresses of at least site-local scope available -> No registration possible\n", stdlog);
          LOG_END
          free(rspAddrInfo);
          return(false);

@@ -244,6 +244,18 @@ unsigned int getScope(const struct sockaddr* address);
 const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
                                             int                    addrcnt);
 
+/**
+  * Filter out addresses lower than a given scope.
+  *
+  * @param addressArray Address array.
+  * @param inputAddresses Number of input addresses.
+  * @param minScope Minimum scope.
+  * @return Number of output addresses.
+  */
+size_t filterAddressesByScope(union sockaddr_union* addressArray,
+                              const size_t          inputAddresses,
+                              const unsigned int    minScope);
+                              
 
 /**
   * Get padding for given data size and alignment.

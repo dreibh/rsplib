@@ -522,17 +522,17 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                   dispatcherLock(asapInstance->StateMachine);
 
                   handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                                          &asapInstance->OwnPoolElements,
-                                          poolHandle,
-                                          message->PoolElementPtr->HomeRegistrarIdentifier,
-                                          message->PoolElementPtr->Identifier,
-                                          message->PoolElementPtr->RegistrationLife,
-                                          &message->PoolElementPtr->PolicySettings,
-                                          message->PoolElementPtr->UserTransport,
-                                          NULL,
-                                          -1, 0,
-                                          getMicroTime(),
-                                          &newPoolElementNode);
+                                            &asapInstance->OwnPoolElements,
+                                            poolHandle,
+                                            message->PoolElementPtr->HomeRegistrarIdentifier,
+                                            message->PoolElementPtr->Identifier,
+                                            message->PoolElementPtr->RegistrationLife,
+                                            &message->PoolElementPtr->PolicySettings,
+                                            message->PoolElementPtr->UserTransport,
+                                            NULL,
+                                            -1, 0,
+                                            getMicroTime(),
+                                            &newPoolElementNode);
                   if(handlespaceMgtResult == RSPERR_OKAY) {
                      newPoolElementNode->UserData = (void*)asapInstance;
                      if(response->Identifier != poolElementNode->Identifier) {
@@ -572,13 +572,13 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                newUserTransport = transportAddressBlockDuplicate(message->PoolElementPtr->UserTransport);
                if(newUserTransport != NULL) {
                   ST_CLASS(poolElementNodeNew)(newPoolElementNode,
-                                             message->PoolElementPtr->Identifier,
-                                             message->PoolElementPtr->HomeRegistrarIdentifier,
-                                             message->PoolElementPtr->RegistrationLife,
-                                             &message->PoolElementPtr->PolicySettings,
-                                             newUserTransport,
-                                             NULL,
-                                             -1, 0);
+                                               message->PoolElementPtr->Identifier,
+                                               message->PoolElementPtr->HomeRegistrarIdentifier,
+                                               message->PoolElementPtr->RegistrationLife,
+                                               &message->PoolElementPtr->PolicySettings,
+                                               newUserTransport,
+                                               NULL,
+                                               -1, 0);
                   message->PoolElementPtr           = newPoolElementNode;
                   message->PoolElementPtrAutoDelete = true;
                   result = asapInstanceSendRequest(asapInstance, message, true);

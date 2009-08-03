@@ -627,6 +627,26 @@ void deleteAddressArray(union sockaddr_union* addressArray)
 }
 
 
+/* ###### Filter address array by scope ################################## */
+size_t filterAddressesByScope(union sockaddr_union* addressArray,
+                              const size_t          inputAddresses,
+                              const unsigned int    minScope)
+{
+   size_t outputAddresses = 0;
+   size_t i;
+   
+   for(i = 0;i < inputAddresses;i++) {
+      if(getScope(&addressArray[i].sa) >= minScope) {
+         if(outputAddresses != 0) {
+            memcpy((void*)&addressArray[outputAddresses], (void*)&addressArray[i], sizeof(union sockaddr_union));
+         }
+         outputAddresses++;
+      }
+   }
+   return(outputAddresses);
+}
+
+
 /* ###### Duplicate address array ######################################## */
 union sockaddr_union* duplicateAddressArray(const union sockaddr_union* addressArray,
                                             const size_t                addresses)
