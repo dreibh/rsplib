@@ -509,7 +509,32 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                      oldPoolElementNode);
       }
       else {
-         result = RSPERR_OKAY;
+LOG_ERROR
+fprintf(stdlog,"ADD %08x!\n",message->PoolElementPtr->Identifier);
+LOG_END
+         result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
+                     &asapInstance->OwnPoolElements,
+                     poolHandle,
+                     message->PoolElementPtr->HomeRegistrarIdentifier,
+                     message->PoolElementPtr->Identifier,
+                     message->PoolElementPtr->RegistrationLife,
+                     &message->PoolElementPtr->PolicySettings,
+                     message->PoolElementPtr->UserTransport,
+                     NULL,
+                     -1, 0,
+                     getMicroTime(),
+                     &newPoolElementNode);
+         if(result == RSPERR_OKAY) {
+            newPoolElementNode->UserData = (void*)asapInstance;
+         }
+         else {
+            LOG_ERROR
+            fprintf(stdlog, "Unable to register pool element $%08x of pool ",
+                    poolElementNode->Identifier);
+            poolHandlePrint(poolHandle, stdlog);
+            fputs(" to OwnPoolElements\n", stdlog);
+            LOG_END_FATAL
+         }
       }
       dispatcherUnlock(asapInstance->StateMachine);
 
@@ -525,52 +550,14 @@ LOG_END
             if(result == RSPERR_OKAY) {
                dispatcherLock(asapInstance->StateMachine);
 
-LOG_ERROR
-fprintf(stdlog,"######################################## %x   DM=%d\n",response->Error, daemonMode);
-ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
-LOG_END         
-
                if( (response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
-                  /* Add new PE into list of owned PEs if:
-                     - Successful registration OR
-                     - Daemon mode (may have failed to register, but try again later) */
-LOG_ERROR
-fprintf(stdlog,"ADD %08x!\n",message->PoolElementPtr->Identifier);
-LOG_END
-                  handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
-                                            &asapInstance->OwnPoolElements,
-                                            poolHandle,
-                                            message->PoolElementPtr->HomeRegistrarIdentifier,
-                                            message->PoolElementPtr->Identifier,
-                                            message->PoolElementPtr->RegistrationLife,
-                                            &message->PoolElementPtr->PolicySettings,
-                                            message->PoolElementPtr->UserTransport,
-                                            NULL,
-                                            -1, 0,
-                                            getMicroTime(),
-                                            &newPoolElementNode);
-               }
-                                            
-               if( (response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
-                  if(handlespaceMgtResult == RSPERR_OKAY) {
-                     newPoolElementNode->UserData = (void*)asapInstance;
-                     if(response->Identifier != poolElementNode->Identifier) {
-                        LOG_ERROR
-                        fprintf(stdlog, "Tried to register PE $%08x, got response for PE $%08x\n",
-                              poolElementNode->Identifier,
-                              response->Identifier);
-                        LOG_END_FATAL
-                     }
-                  }
-                  else {
+                  if(response->Identifier != poolElementNode->Identifier) {
                      LOG_ERROR
-                     fprintf(stdlog, "Unable to register pool element $%08x of pool ",
-                           poolElementNode->Identifier);
-                     poolHandlePrint(poolHandle, stdlog);
-                     fputs(" to OwnPoolElements\n", stdlog);
-                     LOG_END_FATAL
+                     fprintf(stdlog, "Tried to register PE $%08x, got response for PE $%08x\n",
+                             poolElementNode->Identifier,
+                             response->Identifier);
+                     LOG_END
                   }
-
                }
                else {
                   result = (unsigned int)response->Error;
