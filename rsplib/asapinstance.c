@@ -516,6 +516,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
       /* ====== Send registration ======================================== */
       if(result == RSPERR_OKAY) {
 LOG_ERROR
+fprintf(stdlog,"REG %08x\n", message->PoolElementPtr->Identifier);
 ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
 LOG_END
        
@@ -529,8 +530,7 @@ fprintf(stdlog,"######################################## %x   DM=%d\n",response-
 ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
 LOG_END         
 
-               if( (daemonMode) ||
-                   ((response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT))) ) {
+               if( (response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
                   /* Add new PE into list of owned PEs if:
                      - Successful registration OR
                      - Daemon mode (may have failed to register, but try again later) */
