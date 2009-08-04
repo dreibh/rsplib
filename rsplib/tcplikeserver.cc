@@ -295,6 +295,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
                                 const bool           quiet,
+                                const bool           daemonMode, 
                                 struct TagItem*      tags)
 {
    if(rsp_initialize(info) < 0) {
@@ -366,7 +367,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                // ====== Register PE ========================================
                if(rsp_register_tags(rserpoolSocket,
                                     (const unsigned char*)poolHandle, strlen(poolHandle),
-                                    loadinfo, reregInterval, 0, tags) == 0) {
+                                    loadinfo, reregInterval,
+                                    (daemonMode == true) ? REGF_DAEMONMODE : 0,
+                                    tags) == 0) {
                   uint32_t identifier = 0;
                   if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
                      if(!quiet) {

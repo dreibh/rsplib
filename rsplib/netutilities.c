@@ -637,7 +637,7 @@ size_t filterAddressesByScope(union sockaddr_union* addressArray,
    
    for(i = 0;i < inputAddresses;i++) {
       if(getScope(&addressArray[i].sa) >= minScope) {
-         if(outputAddresses != 0) {
+         if(outputAddresses != i) {
             memcpy((void*)&addressArray[outputAddresses], (void*)&addressArray[i], sizeof(union sockaddr_union));
          }
          outputAddresses++;

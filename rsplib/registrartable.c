@@ -586,13 +586,18 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
    ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
    LOG_END
-
+   
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                         &registrarTable->RegistrarList,
                         *lastRegistrarIdentifier,
                         *lastTransportAddressBlock);
-
+      /* If there is no nearest next node, try the first node. */
+      if((peerListNode == NULL) && (i == 0)) {
+         peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrarTable->RegistrarList);
+         i = MAX_SIMULTANEOUS_REQUESTS;
+      }
+                        
       if(peerListNode != NULL) {
          *lastRegistrarIdentifier = peerListNode->Identifier;
          if(*lastTransportAddressBlock) {
@@ -618,8 +623,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
             result = connectplus(registrarHuntFD,
                                  transportAddressBlock->AddressArray,
                                  transportAddressBlock->Addresses);
-            if((result < 0) &&
-               (errno != EINPROGRESS) && (errno != EISCONN)) {
+            if((result < 0) && (errno != EINPROGRESS) && (errno != EISCONN)) {
                LOG_WARNING
                fputs("Connection to registrar ",  stdlog);
                transportAddressBlockPrint(transportAddressBlock, stdlog);
@@ -649,7 +653,6 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                                struct MessageBuffer*    registrarHuntMessageBuffer,
                                RegistrarIdentifierType* registrarIdentifier)
 {
-   struct timeval                 selectTimeout;
    const union sctp_notification* notification;
    RegistrarIdentifierType        lastRegistrarIdentifier;
    struct TransportAddressBlock*  lastTransportAddressBlock;
@@ -661,7 +664,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
    unsigned long long             stop;
    unsigned long long             nextTimeout;
    unsigned long long             lastTrialTimeStamp;
-   fd_set                         rfdset;
+   struct pollfd                  pollFDs[2];
    unsigned int                   trials;
    int                            result;
    int                            flags;
@@ -762,16 +765,22 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       }
 
       /* ====== Wait for event =========================================== */
-      stop = getMicroTime() + nextTimeout;
+      stop = getMicroTime() + registrarTable->RegistrarConnectTimeout;
       do {
-         FD_ZERO(&rfdset);
-         FD_SET(registrarHuntFD, &rfdset);
-         n = registrarHuntFD;
+         pollFDs[0].fd      = registrarHuntFD;
+         pollFDs[0].events  = POLLIN;
+         pollFDs[0].revents = 0;
          if(registrarTable->AnnounceSocket >= 0) {
-            FD_SET(registrarTable->AnnounceSocket, &rfdset);
-            n = max(n, registrarTable->AnnounceSocket);
+            pollFDs[1].fd      = registrarTable->AnnounceSocket;
+            pollFDs[1].events  = POLLIN;
+            pollFDs[1].revents = 0;
+            n = 2;
          }
-         nextTimeout = registrarTable->RegistrarConnectTimeout;
+         else {
+            n = 1;
+         }
+         now         = getMicroTime();
+         nextTimeout = (now <= stop) ? (stop - now) : 0;
 #ifdef ENABLE_CSP
          if(gCSPReporter != NULL) {
             now = getMicroTime();
@@ -783,22 +792,18 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             }
          }
 #endif
-         selectTimeout.tv_sec  = nextTimeout / (unsigned long long)1000000;
-         selectTimeout.tv_usec = nextTimeout % (unsigned long long)1000000;
 
          LOG_VERBOSE4
-         fprintf(stdlog, "select() with timeout %lld\n", nextTimeout);
+         fprintf(stdlog, "poll() with timeout %d\n", (int)ceil((double)nextTimeout / 1000.0));
          LOG_END
-         result = ext_select(n + 1,
-                             &rfdset, NULL, NULL,
-                             &selectTimeout);
+         result = ext_poll((struct pollfd*)&pollFDs, n, (int)ceil((double)nextTimeout / 1000.0));
 #ifdef ENABLE_CSP
          if(gCSPReporter != NULL) {
             cspReporterHandleTimerDuringRegistrarSearch(gCSPReporter);
          }
 #endif
          LOG_VERBOSE4
-         fprintf(stdlog, "select() result=%d\n", result);
+         fprintf(stdlog, "poll() result=%d\n", result);
          LOG_END
       } while( (result == 0) && (getMicroTime() < stop));
 
@@ -815,11 +820,10 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
       /* ====== Handle events ============================================ */
       if(result != 0) {
-         if( (registrarTable->AnnounceSocket > 0) &&
-             (FD_ISSET(registrarTable->AnnounceSocket, &rfdset)) ) {
+         if((registrarTable->AnnounceSocket > 0) && (pollFDs[1].revents & POLLIN)) {
             handleRegistrarAnnounceCallback(registrarTable, registrarTable->AnnounceSocket);
          }
-         if(FD_ISSET(registrarHuntFD, &rfdset)) {
+         if(pollFDs[0].revents & POLLIN) {
             flags    = MSG_PEEK;
             received = messageBufferRead(registrarHuntMessageBuffer, registrarHuntFD, &flags,
                                          NULL, 0,

@@ -450,7 +450,8 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
       }
 #ifdef ENABLE_REGISTRAR_STATISTICS
       registrarWriteActionLog(registrar, "Recv", "ASAP", "RegistrationResponse", "Requested", 0, 0, 0,
-                              &message->Handle, message->PoolElementPtr->Identifier, registrar->ServerID, 0, 0, message->Error);
+                              &message->Handle, message->PoolElementPtr->Identifier, registrar->ServerID,
+                              0, 0, message->Error);
 #endif
       if(rserpoolMessageSend(IPPROTO_SCTP, fd, assocID, 0, 0, 0, message) == false) {
          LOG_WARNING

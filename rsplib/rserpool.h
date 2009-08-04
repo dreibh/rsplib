@@ -109,6 +109,7 @@ struct rsp_loadinfo
 
 #define REGF_DONTWAIT         (1 << 0)   /* Do not wait for Registration Response   */
 #define REGF_CONTROLCHANNEL   (1 << 1)   /* Pool Element has Control Channel        */
+#define REGF_DAEMONMODE       (1 << 2)   /* Daemon mode: don not stop on errors     */
 
 #define DEREGF_DONTWAIT       (1 << 0)   /* Do not wait for Deregistration Response */
 

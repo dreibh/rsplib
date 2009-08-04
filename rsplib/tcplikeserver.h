@@ -126,6 +126,7 @@ class TCPLikeServer : public TDThread
                            unsigned int         reregInterval = 30000,
                            unsigned int         runtimeLimit  = 0,
                            const bool           quiet         = false,
+                           const bool           daemonMode    = false,
                            struct TagItem*      tags          = NULL);
 
    protected:

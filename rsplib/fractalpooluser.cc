@@ -294,7 +294,7 @@ void FractalPU::startNextJob()
          // ====== Initialize rectange for next session =====================
          const QPen numberPen(Qt::red);
          QPainter   painter;
-         painter.begin(Display->Image);
+         painter.begin(Display->getImage());
          painter.setPen(numberPen);
          for(size_t xPosition = 0;xPosition < xCount;xPosition++) {
             // ====== Mark rectange for next session ========================
@@ -307,7 +307,8 @@ void FractalPU::startNextJob()
                char str[64];
                snprintf((char*)&str, sizeof(str), "%u", (unsigned int)number + 1);
                const QString numberString(str);
-               painter.drawText(xPosition * xStep, yPosition * yStep, xStep, yStep, Qt::AlignCenter, numberString);
+               painter.drawText(xPosition * xStep, yPosition * yStep, xStep, yStep,
+                                Qt::AlignCenter, numberString);
             }
 
             // ====== Start new session =====================================
@@ -351,7 +352,8 @@ void FractalPU::handleCompletedSession()
       // ====== Count active sessions =======================================
       size_t active = 0;
       for(size_t i = 0;i < CurrentThreads;i++) {
-         if( (CalculationThreadArray[i] != NULL) && (!CalculationThreadArray[i]->isFinished()) ) {
+         if( (CalculationThreadArray[i] != NULL) &&
+             (!CalculationThreadArray[i]->isFinished()) ) {
             active++;
          }
       }
@@ -430,7 +432,7 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
 
    static unsigned int sessionsEntries[] = {1,
                                             0,
-                                            2, 3, 4, 6, 8, 10,
+                                            2, 3, 4, 6, 8,
                                             0,
                                             9, 16, 25, 36, 49, 64, 81, 100,
                                             0,

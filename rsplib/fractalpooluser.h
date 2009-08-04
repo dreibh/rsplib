@@ -89,9 +89,11 @@ class ImageDisplay : public QWidget
    inline void lock() {
       ImageMutex.lock();
    }
-
    inline void unlock() {
       ImageMutex.unlock();
+   }
+   inline QImage* getImage() {
+      return(Image);
    }
 
 
@@ -101,7 +103,7 @@ class ImageDisplay : public QWidget
 
    
    // ====== Private data ===================================================
-   public:   // ?????????????????
+   private:
    QImage* Image;
    QMutex  ImageMutex;
 };

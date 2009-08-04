@@ -49,12 +49,15 @@ DAEMON_OPTS="-scripting $PRs $CSP -quiet -daemonpidfile=/var/run/$NAME.pid -logf
 
 test -x $DAEMON || exit 0
 
-# make sure SCTP module is loaded.
+# Make sure that SCTP is available
 modprobe sctp > /dev/null 2>&1
+sysctl net.sctp.addip_enable=1
+sysctl net.sctp.auth_enable=1
 
-# Include rsplib defaults if available
-if [ -f /etc/default/rsplib-registrar ] ; then
-   . /etc/default/rsplib-registrar
+
+# Include scripting service defaults if available
+if [ -f /etc/default/ss ] ; then
+   . /etc/default/ss
 fi
 
 set -e

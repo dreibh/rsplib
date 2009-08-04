@@ -591,10 +591,12 @@ int rsp_register_tags(int                        sd,
          LOG_ERROR
          fputs("Unable to obtain registration information -> Creating pool element not possible\n", stdlog);
          LOG_END
-         deletePoolElement(rserpoolSocket->PoolElement, flags, tags);
-         rserpoolSocket->PoolElement = NULL;
-         threadSafetyUnlock(&rserpoolSocket->Mutex);
-         return(-1);
+         if(!(flags & REGF_DAEMONMODE)) {
+            deletePoolElement(rserpoolSocket->PoolElement, flags, tags);
+            rserpoolSocket->PoolElement = NULL;
+            threadSafetyUnlock(&rserpoolSocket->Mutex);
+            return(-1);
+         }
       }
 
       /* ====== start reregistration timer ================================== */

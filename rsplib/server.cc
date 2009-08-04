@@ -306,7 +306,6 @@ start:
          exit(0);
       }
       else {
-//         signal(SIGPIPE, SIG_IGN);
          signal(SIGHUP, SIG_IGN);
       }
    }
@@ -318,7 +317,7 @@ start:
       echoServer.poolElement("Echo Server - Version 1.0",
                              (poolHandle != NULL) ? poolHandle : "EchoPool",
                              &info, &loadInfo,
-                             reregInterval, runtimeLimit, quiet,
+                             reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                              (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DISCARD) {
@@ -326,7 +325,7 @@ start:
       discardServer.poolElement("Discard Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DiscardPool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit, quiet,
+                                reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_DAYTIME) {
@@ -334,7 +333,7 @@ start:
       daytimeServer.poolElement("Daytime Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DaytimePool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit, quiet,
+                                reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CHARGEN) {
@@ -351,7 +350,7 @@ start:
                                   maxThreads,
                                   CharGenServer::charGenServerFactory,
                                   NULL, NULL, NULL, NULL, NULL,
-                                  reregInterval, runtimeLimit, quiet,
+                                  reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                   (struct TagItem*)&tags);
    }
    else if(service == SERVICE_PINGPONG) {
@@ -374,7 +373,7 @@ start:
                                  PingPongServer::pingPongServerFactory,
                                  NULL, NULL, NULL, NULL,
                                  (void*)&settings,
-                                 reregInterval, runtimeLimit, quiet,
+                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_FRACTAL) {
@@ -427,7 +426,7 @@ start:
                                  FractalGeneratorServer::fractalGeneratorPrintParameters,
                                  NULL, NULL, NULL,
                                  (void*)&settings,
-                                 reregInterval, runtimeLimit, quiet,
+                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }
    else if(service == SERVICE_CALCAPP) {
@@ -508,7 +507,7 @@ start:
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                                 &info, &loadInfo,
-                                reregInterval, runtimeLimit, quiet,
+                                reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
       resetStatistics = false;
    }
@@ -544,7 +543,7 @@ start:
                                  ScriptingServer::scriptingPrintParameters,
                                  NULL, NULL, NULL,
                                  (void*)&settings,
-                                 reregInterval, runtimeLimit, quiet,
+                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }
 

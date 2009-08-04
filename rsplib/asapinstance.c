@@ -1112,11 +1112,12 @@ static void asapInstanceHandleResponseFromRegistrar(
 
    aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortDequeue(&asapInstance->MainLoopPort);
    if(aitm != NULL) {
+      /* No timeout occurred -> stop timeout timer */
+      timerStop(&asapInstance->RegistrarTimeoutTimer);
+
       if( ((response->Type == AHT_REGISTRATION_RESPONSE)      && (aitm->Request->Type == AHT_REGISTRATION))   ||
           ((response->Type == AHT_DEREGISTRATION_RESPONSE)    && (aitm->Request->Type == AHT_DEREGISTRATION)) ||
           ((response->Type == AHT_HANDLE_RESOLUTION_RESPONSE) && (aitm->Request->Type == AHT_HANDLE_RESOLUTION)) ) {
-         /* No timeout occurred -> stop timeout timer */
-         timerStop(&asapInstance->RegistrarTimeoutTimer);
 
          LOG_VERBOSE
          fprintf(stdlog, "Successfully got response ($%04x) for request ($%04x) from registrar\n"
@@ -1125,39 +1126,39 @@ static void asapInstanceHandleResponseFromRegistrar(
                  getMicroTime() - aitm->CreationTimeStamp,
                  aitm->TransmissionTimeStamp - aitm->CreationTimeStamp);
          LOG_END
-
-         aitm->Response = response;
-         if(asapInstance->LastAITM == aitm) {
-            /* No more responses are expected. */
-            asapInstance->LastAITM = NULL;
+         
+         /* Asynchronous message: print errors here! */
+         if(aitm->Node.ReplyPort == NULL) {
+            if( (response->Type == AHT_REGISTRATION_RESPONSE) &&
+                ((response->Error != RSPERR_OKAY) || (response->Flags & AHF_REGISTRATION_REJECT)) ) {
+               LOG_ERROR
+               fprintf(stdlog, "Unable to register pool element $%08x of pool ",
+                       response->Identifier);
+               poolHandlePrint(&response->Handle, stdlog);
+               fputs(": ", stdlog);
+               rserpoolErrorPrint(response->Error, stdlog);
+               fputs("\n", stdlog);
+               LOG_END
+               
+               /* If no addresses are usable, try to re-connect. May be, the
+                  host has got some usable addresses then. */
+               if( (response->Error == RSPERR_NO_USABLE_USER_ADDRESSES) ||
+                   (response->Error == RSPERR_NO_USABLE_ASAP_ADDRESSES) ) {
+                  LOG_NOTE
+                  fputs("Trying to re-connect to a registrar ...\n", stdlog);   
+                  LOG_END
+                  asapInstanceDisconnectFromRegistrar(asapInstance, true);
+               }
+            }
          }
-         if(aitm->Node.ReplyPort) {
-             /* Reply to requesting thread, if reply is desired. */
-            interThreadMessageReply(&aitm->Node);
-         }
-         else {
-            /* Sender is not interested in result, throw it away. */
-            asapInterThreadMessageDelete(aitm);
-         }
-
-         /* Schedule next response's timeout */
-         dispatcherLock(asapInstance->StateMachine);
-         interThreadMessagePortLock(&asapInstance->MainLoopPort);
-         if(asapInstance->LastAITM != NULL) {
-            nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(
-                                                          &asapInstance->MainLoopPort);
-            CHECK(nextAITM != NULL);
-            timerStart(&asapInstance->RegistrarTimeoutTimer,
-                       nextAITM->ResponseTimeoutTimeStamp);
-         }
-         interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
-         dispatcherUnlock(asapInstance->StateMachine);
       }
       else {
          if(response->Type == AHT_ERROR) {
             LOG_ERROR
-            fprintf(stdlog, "Got ASAP_ERROR ($%04x) for request ($%04x) from registrar\n",
+            fprintf(stdlog, "Got ASAP_ERROR ($%04x) for request ($%04x) from registrar: ",
                     response->OperationErrorCode, aitm->Request->Type);
+            rserpoolErrorPrint(response->OperationErrorCode, stdlog);
+            fputs("\n", stdlog);
             LOG_END
          }
          else {
@@ -1167,8 +1168,34 @@ static void asapInstanceHandleResponseFromRegistrar(
             LOG_END
          }
          asapInstanceDisconnectFromRegistrar(asapInstance, true);
-         rserpoolMessageDelete(response);
       }
+
+      aitm->Response = response;
+      if(asapInstance->LastAITM == aitm) {
+         /* No more responses are expected. */
+         asapInstance->LastAITM = NULL;
+      }
+      if(aitm->Node.ReplyPort) {
+          /* Reply to requesting thread, if reply is desired. */
+         interThreadMessageReply(&aitm->Node);
+      }
+      else {
+         /* Sender is not interested in result, throw it away. */
+         asapInterThreadMessageDelete(aitm);
+      }
+
+      /* Schedule next response's timeout */
+      dispatcherLock(asapInstance->StateMachine);
+      interThreadMessagePortLock(&asapInstance->MainLoopPort);
+      if(asapInstance->LastAITM != NULL) {
+         nextAITM = (struct ASAPInterThreadMessage*)interThreadMessagePortGetFirstMessage(
+                                                       &asapInstance->MainLoopPort);
+         CHECK(nextAITM != NULL);
+         timerStart(&asapInstance->RegistrarTimeoutTimer,
+                    nextAITM->ResponseTimeoutTimeStamp);
+      }
+      interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
+      dispatcherUnlock(asapInstance->StateMachine);
    }
    else {
       LOG_ERROR
