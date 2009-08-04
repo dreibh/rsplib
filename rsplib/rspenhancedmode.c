@@ -585,6 +585,7 @@ int rsp_register_tags(int                        sd,
       rserpoolSocket->PoolElement->ReregistrationInterval = reregistrationInterval;
       rserpoolSocket->PoolElement->RegistrationLife       = 3 * rserpoolSocket->PoolElement->ReregistrationInterval;
       rserpoolSocket->PoolElement->HasControlChannel      = true;
+      rserpoolSocket->PoolElement->InDaemonMode           = (flags & REGF_DAEMONMODE);
 
       /* ====== Do registration ============================================= */
       if(doRegistration(rserpoolSocket, true) == false) {

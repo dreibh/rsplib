@@ -529,10 +529,7 @@ unsigned int rsp_pe_registration_tags(const unsigned char*       poolHandle,
          LOG_END
 
          result = asapInstanceRegister(gAsapInstance, &myPoolHandle, &myPoolElementNode,
-                                       !(flags & REGF_DONTWAIT));
-         if(result != RSPERR_OKAY) {
-            rspAddrInfo->ai_pe_id = UNDEFINED_POOL_ELEMENT_IDENTIFIER;
-         }
+                                       !(flags & REGF_DONTWAIT), (flags & REGF_DAEMONMODE));
          free(unpackedAddrs);
       }
       else {

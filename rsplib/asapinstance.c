@@ -471,7 +471,8 @@ static unsigned int asapInstanceDoIO(struct ASAPInstance*     asapInstance,
 unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance,
                                   struct PoolHandle*                poolHandle,
                                   struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                  const bool                        waitForResponse)
+                                  const bool                        waitForResponse,
+                                  const bool                        daemonMode)
 {
    struct RSerPoolMessage*           message;
    struct RSerPoolMessage*           response;
@@ -514,13 +515,24 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 
       /* ====== Send registration ======================================== */
       if(result == RSPERR_OKAY) {
+         /* ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0); */
+       
          if(waitForResponse) {
             result = asapInstanceDoIO(asapInstance, message, &response);
             if(result == RSPERR_OKAY) {
-               if( (response->Error == RSPERR_OKAY) &&
-                   (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
-                  dispatcherLock(asapInstance->StateMachine);
-
+               dispatcherLock(asapInstance->StateMachine);
+/* ???
+static int xxx=0;xxx++;
+if(xxx<2) response->Error = 0x1234;  // ??????
+ printf("######################################## %x   DM=%d\n",response->Error, daemonMode);
+// ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0);*/
+               
+               if( (daemonMode) ||
+                   ((response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT))) ) {
+                  /* Add new PE into list of owned PEs if:
+                     - Successful registration OR
+                     - Daemon mode (may have failed to register, but try again later) */
+// puts("ADD!");
                   handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                                             &asapInstance->OwnPoolElements,
                                             poolHandle,
@@ -533,6 +545,9 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                                             -1, 0,
                                             getMicroTime(),
                                             &newPoolElementNode);
+               }
+                                            
+               if( (response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT)) ) {
                   if(handlespaceMgtResult == RSPERR_OKAY) {
                      newPoolElementNode->UserData = (void*)asapInstance;
                      if(response->Identifier != poolElementNode->Identifier) {
@@ -552,11 +567,12 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                      LOG_END_FATAL
                   }
 
-                  dispatcherUnlock(asapInstance->StateMachine);
                }
                else {
                   result = (unsigned int)response->Error;
                }
+               dispatcherUnlock(asapInstance->StateMachine);
+               
                if(response) {
                   rserpoolMessageDelete(response);
                }

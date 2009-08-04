@@ -748,7 +748,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
             lastTrialTimeStamp = 0;
             start = getMicroTime();
-            LOG_WARNING
+            LOG_VERBOSE3
             fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
          }

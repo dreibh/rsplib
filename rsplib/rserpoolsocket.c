@@ -319,6 +319,9 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
    if(rserpoolSocket->PoolElement->HasControlChannel) {
       flags |= REGF_CONTROLCHANNEL;
    }
+   if(rserpoolSocket->PoolElement->InDaemonMode) {
+      flags |= REGF_DAEMONMODE;
+   }
 
    /* ====== Do registration ================================================ */
    result = rsp_pe_registration(
@@ -328,8 +331,9 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
                &rserpoolSocket->PoolElement->LoadInfo,
                rserpoolSocket->PoolElement->RegistrationLife,
                flags);
+   /* Keep identifier chosen by rsp_pe_registration()! */
+   rserpoolSocket->PoolElement->Identifier = rspAddrInfo->ai_pe_id;
    if(result == RSPERR_OKAY) {
-      rserpoolSocket->PoolElement->Identifier = rspAddrInfo->ai_pe_id;
       LOG_VERBOSE2
       fprintf(stdlog, "(Re-)Registration successful, ID is $%08x\n",
               rserpoolSocket->PoolElement->Identifier);

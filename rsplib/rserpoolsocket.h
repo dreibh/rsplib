@@ -62,6 +62,7 @@ struct PoolElement
    unsigned int        ReregistrationInterval;
 
    bool                HasControlChannel;
+   bool                InDaemonMode;
 };
 
 struct RSerPoolSocket

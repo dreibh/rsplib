@@ -132,12 +132,15 @@ bool asapInstanceStartThread(struct ASAPInstance* asapInstance);
   * @param asapInstance ASAPInstance.
   * @param poolHandle Pool handle.
   * @param poolElement Pool Element.
+  * @param waitForResponse Set to true to wait for registrar's response.
+  * @param daemonMode Set to true to use daemon mode.
   * @return RSPERR_OKAY in case of success; error code otherwise.
   */
 unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance,
                                   struct PoolHandle*                poolHandle,
                                   struct ST_CLASS(PoolElementNode)* poolElementNode,
-                                  const bool                        waitForResponse);
+                                  const bool                        waitForResponse,
+                                  const bool                        daemonMode);
 
 /**
   * Deregister pool element.
