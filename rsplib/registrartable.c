@@ -579,6 +579,18 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    int                            result;
    size_t                         i;
 
+
+   if( (registrarTable->AnnounceAddress.sa.sa_family != 0) &&
+       (!multicastGroupControl(registrarTable->AnnounceSocket,
+                               &registrarTable->AnnounceAddress,
+                               true)) ) {
+      LOG_WARNING
+      fputs("Joining multicast group ",  stdlog);
+      fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
+      fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
+      LOG_END
+   }
+
    i = ST_CLASS(peerListManagementPurgeExpiredPeerListNodes)(
          &registrarTable->RegistrarList,
          getMicroTime());
@@ -736,20 +748,9 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
 
             lastTrialTimeStamp = 0;
             start = getMicroTime();
-            LOG_VERBOSE2
+            LOG_WARNING
             fprintf(stdlog, "Trial #%u...\n", trials);
             LOG_END
-
-            if( (registrarTable->AnnounceAddress.sa.sa_family != 0) &&
-                (!multicastGroupControl(registrarTable->AnnounceSocket,
-                                        &registrarTable->AnnounceAddress,
-                                        true)) ) {
-               LOG_WARNING
-               fputs("Joining multicast group ",  stdlog);
-               fputaddress(&registrarTable->AnnounceAddress.sa, true, stdlog);
-               fputs(" failed. Check routing (is default route set?) and firewall settings!\n",  stdlog);
-               LOG_END
-            }
          }
       }
 
