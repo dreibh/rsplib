@@ -515,24 +515,28 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
 
       /* ====== Send registration ======================================== */
       if(result == RSPERR_OKAY) {
-         /* ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0); */
+LOG_ERROR
+ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
+LOG_END
        
          if(waitForResponse) {
             result = asapInstanceDoIO(asapInstance, message, &response);
             if(result == RSPERR_OKAY) {
                dispatcherLock(asapInstance->StateMachine);
 
-//static int xxx=0;xxx++;
-//if(xxx<2) response->Error = 0x1234;  // ??????
-printf("######################################## %x   DM=%d\n",response->Error, daemonMode);
-ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0);
-               
+LOG_ERROR
+fprintf(stdlog,"######################################## %x   DM=%d\n",response->Error, daemonMode);
+ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
+LOG_END         
+
                if( (daemonMode) ||
                    ((response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT))) ) {
                   /* Add new PE into list of owned PEs if:
                      - Successful registration OR
                      - Daemon mode (may have failed to register, but try again later) */
-puts("ADD!");
+LOG_ERROR
+fprintf(stdlog,"ADD %08x!\n",message->PoolElementPtr->Identifier);
+LOG_END
                   handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                                             &asapInstance->OwnPoolElements,
                                             poolHandle,
