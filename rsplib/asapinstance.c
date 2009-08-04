@@ -1072,6 +1072,11 @@ static void asapInstanceHandleEndpointKeepAlive(
                                     0, 0, 0, 0,
                                     message);
       }
+      else {
+         LOG_WARNING
+         fprintf(stdlog, "KeepAlive for unknown pool element $%08x -> ignoring it\n",message->Identifier);
+         LOG_END
+      }
    }
    else {
       poolNode = ST_CLASS(poolHandlespaceNodeGetFirstPoolNode)(&asapInstance->OwnPoolElements.Handlespace);
