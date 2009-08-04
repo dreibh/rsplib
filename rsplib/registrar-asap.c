@@ -124,7 +124,10 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
             registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "KeepAliveTimeoutTimer", 0, 0, registrar->EndpointKeepAliveTimeoutInterval,
                                     &poolElementNode->OwnerPoolNode->Handle, poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
 #endif
-}
+            /* Send SCTP ABORT to PE! */
+            sendabort(poolElementNode->ConnectionSocketDescriptor,
+                      poolElementNode->ConnectionAssocID);
+         }
          else {
             LOG_ACTION
             fprintf(stdlog, "Expiry timeout expired for pool element $%08x of pool ",
