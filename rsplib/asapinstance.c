@@ -521,18 +521,18 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
             result = asapInstanceDoIO(asapInstance, message, &response);
             if(result == RSPERR_OKAY) {
                dispatcherLock(asapInstance->StateMachine);
-/* ???
-static int xxx=0;xxx++;
-if(xxx<2) response->Error = 0x1234;  // ??????
- printf("######################################## %x   DM=%d\n",response->Error, daemonMode);
-// ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0);*/
+
+//static int xxx=0;xxx++;
+//if(xxx<2) response->Error = 0x1234;  // ??????
+printf("######################################## %x   DM=%d\n",response->Error, daemonMode);
+ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdout,~0);
                
                if( (daemonMode) ||
                    ((response->Error == RSPERR_OKAY) && (!(response->Flags & AHF_REGISTRATION_REJECT))) ) {
                   /* Add new PE into list of owned PEs if:
                      - Successful registration OR
                      - Daemon mode (may have failed to register, but try again later) */
-// puts("ADD!");
+puts("ADD!");
                   handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                                             &asapInstance->OwnPoolElements,
                                             poolHandle,
