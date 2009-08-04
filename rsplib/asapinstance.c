@@ -509,9 +509,6 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                      oldPoolElementNode);
       }
       else {
-LOG_ERROR
-fprintf(stdlog,"ADD %08x!\n",message->PoolElementPtr->Identifier);
-LOG_END
          result = ST_CLASS(poolHandlespaceManagementRegisterPoolElement)(
                      &asapInstance->OwnPoolElements,
                      poolHandle,
@@ -540,11 +537,6 @@ LOG_END
 
       /* ====== Send registration ======================================== */
       if(result == RSPERR_OKAY) {
-LOG_ERROR
-fprintf(stdlog,"REG %08x\n", message->PoolElementPtr->Identifier);
-ST_CLASS(poolHandlespaceManagementPrint)(&asapInstance->OwnPoolElements,stdlog,~0);
-LOG_END
-       
          if(waitForResponse) {
             result = asapInstanceDoIO(asapInstance, message, &response);
             if(result == RSPERR_OKAY) {
