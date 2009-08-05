@@ -412,5 +412,11 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
    printTimeStamp(stdout);
    printf("S%04d: Received unexpected message $%02x in state #%u!\n",
           RSerPoolSocketDescriptor, header->Type, State);
+   printf("Dump: ");
+   unsigned char* ptr = (unsigned char*)buffer;
+   for(size_t i = 0;i < bufferSize;i++) {
+       printf("%02x ", ptr[i]);
+   }
+   puts("");
    return(EHR_Abort);
 }
