@@ -146,7 +146,7 @@ bin_PROGRAMS = fractalpooluser registrar server terminal hsdump pingpongclient s
 EXTRA_DIST = add-dummy-interface
 else
 bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
-EXTRA_DIST = fractalpooluser.cc fractalpooluser.h add-dummy-interface
+EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts add-dummy-interface
 endif
 
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
@@ -186,13 +186,13 @@ CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
 $(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts
 fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
 endif
 
 
 # ###### Test programs ######################################################
-noinst_PROGRAMS = hrestest testregistrator createsummary combinesummaries fork gettimestamp exectime execalarm subnetcalc rootshell attacker
+noinst_PROGRAMS = hrestest testregistrator createsummary combinesummaries fork gettimestamp exectime execalarm rootshell attacker
 # t1
 
 hrestest_SOURCES = hrestest.c
@@ -218,9 +218,6 @@ execalarm_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_
 
 gettimestamp_SOURCES = gettimestamp.c
 gettimestamp_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-subnetcalc_SOURCES = subnetcalc.cc
-subnetcalc_LDADD   =
 
 rootshell_SOURCES = rootshell.c
 rootshell_LDADD   =

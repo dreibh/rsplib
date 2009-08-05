@@ -255,7 +255,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
       }
 
       /* ====== Filter out link-local addresses ========================= */
-      localAddresses = filterAddressesByScope(&localAddressArray, localAddresses,
+      localAddresses = filterAddressesByScope(localAddressArray, localAddresses,
                                               AS_UNICAST_SITELOCAL);
       if(localAddresses == 0) {
          LOG_ERROR

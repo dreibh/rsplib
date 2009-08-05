@@ -328,7 +328,8 @@ static void addRegistrarAssocID(struct RegistrarTable* registrarTable,
                                 int                    registrarHuntFD,
                                 sctp_assoc_t           assocID)
 {
-   struct RegistrarAssocIDNode* node = (struct RegistrarAssocIDNode*)malloc(sizeof(struct RegistrarAssocIDNode));
+   struct RegistrarAssocIDNode* node =
+      (struct RegistrarAssocIDNode*)malloc(sizeof(struct RegistrarAssocIDNode));
    if(node != NULL) {
       simpleRedBlackTreeNodeNew(&node->Node);
       node->Node.Value = 1;
@@ -421,7 +422,8 @@ static int selectRegistrar(struct RegistrarTable*   registrarTable,
          LOG_END
 
          /* ====== Get registrar's entry ================================= */
-         struct TransportAddressBlock* registrarAddressBlock = (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
+         struct TransportAddressBlock* registrarAddressBlock =
+            (struct TransportAddressBlock*)malloc(transportAddressBlockGetSize(n));
          if(registrarAddressBlock) {
             transportAddressBlockNew(registrarAddressBlock,
                                      IPPROTO_SCTP,
@@ -482,10 +484,11 @@ int registrarTablePeelOffRegistrarAssocID(struct RegistrarTable* registrarTable,
 
 
 /* ###### Handle notification on registrar hunt socket ################### */
-void registrarTableHandleNotificationOnRegistrarHuntSocket(struct RegistrarTable*         registrarTable,
-                                                           int                            registrarHuntFD,
-                                                           struct MessageBuffer*          registrarHuntMessageBuffer,
-                                                           const union sctp_notification* notification)
+void registrarTableHandleNotificationOnRegistrarHuntSocket(
+        struct RegistrarTable*         registrarTable,
+        int                            registrarHuntFD,
+        struct MessageBuffer*          registrarHuntMessageBuffer,
+        const union sctp_notification* notification)
 {
    union sockaddr_union* peerAddressArray;
    size_t                n;
@@ -604,12 +607,6 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
                         &registrarTable->RegistrarList,
                         *lastRegistrarIdentifier,
                         *lastTransportAddressBlock);
-      /* If there is no nearest next node, try the first node. */
-      if((peerListNode == NULL) && (i == 0)) {
-         peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(&registrarTable->RegistrarList);
-         i = MAX_SIMULTANEOUS_REQUESTS;
-      }
-                        
       if(peerListNode != NULL) {
          *lastRegistrarIdentifier = peerListNode->Identifier;
          if(*lastTransportAddressBlock) {
@@ -717,6 +714,10 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
       fputs("\n", stdlog);
       LOG_END
+      
+      /* Subtract one, in order to select this node, if it is the first one!
+         => Increased connection establishment speed. */
+      lastRegistrarIdentifier--;
    }
 
    lastTrialTimeStamp = 0;
@@ -729,7 +730,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
             - A new registrar announce has been added to the list AND
                  there are no outstanding connects
             - The current trial has been running for at least
-               registrarTable->RegistrarConnectTimeout
+                 registrarTable->RegistrarConnectTimeout
          */
          if( (start == 0) ||
              ((registrarTable->LastAnnounceHeard >= start) && (registrarTable->OutstandingConnects == 0)) ||
@@ -851,7 +852,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                         }
                         LOG_VERBOSE3
                         fprintf(stdlog, "Failed to establish registrar connection, outstanding=%u\n",
-                                 (unsigned int)registrarTable->OutstandingConnects);
+                                (unsigned int)registrarTable->OutstandingConnects);
                         LOG_END
                      }
                   }
@@ -880,8 +881,8 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
                           (unsigned int)assocID);
                   LOG_END
 
-                  sd = registrarTablePeelOffRegistrarAssocID(registrarTable, registrarHuntFD, registrarHuntMessageBuffer,
-                                                             assocID);
+                  sd = registrarTablePeelOffRegistrarAssocID(
+                          registrarTable, registrarHuntFD, registrarHuntMessageBuffer, assocID);
                   if(sd >= 0) {
                      LOG_ACTION
                      fprintf(stdlog, "Taking assoc %u as new registrar => socket %d\n", (unsigned int)assocID, sd);

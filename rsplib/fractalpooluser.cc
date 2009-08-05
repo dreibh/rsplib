@@ -40,7 +40,8 @@
 #include <QStringList>
 #include <QPaintEvent>
 #include <QDomDocument>
-#include <QMutex>
+#include <QTranslator>
+#include <QLocale>
 #include <iostream>
 #include <complex>
 
@@ -136,7 +137,7 @@ FractalPU::FractalPU(const size_t       width,
 
    // ====== Initialize widget and PU thread ================================
    setWindowTitle("Fractal Pool User");
-   statusBar()->showMessage("Welcome to Fractal PU!", 3000);
+   statusBar()->showMessage(tr("Welcome to FractalPoolUser!"), 3000);
    show();
    QTimer::singleShot(100, this, SLOT(startNextJob()));
 }
@@ -393,13 +394,10 @@ void FractalPU::handleCompletedSession()
 /* ###### Wait until start of next job ################################### */
 void FractalPU::countDown()
 {
-   char str[128];
-
-   snprintf((char*)&str, sizeof(str),
-            "%s - Waiting for %u seconds ...",
-            (Success == true) ? "Image completed" : "Image calculation failed",
-            CountDown);
-   statusBar()->showMessage(str);
+   const QString status =
+      ((Success == true) ? tr("Image completed") : tr("Image calculation failed")) +
+      " - " + tr("Waiting for ") + QString::number(CountDown) + tr(" seconds ...");
+   statusBar()->showMessage(status);
    if(CountDown > 0) {
       CountDown--;
       QTimer::singleShot(1000, this, SLOT(countDown()));
@@ -438,25 +436,23 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
                                             0,
                                             144, 225, 256, 400};
 
-   QAction* showFailovers = menu.addAction("Show Failovers");
+   QAction* showFailovers = menu.addAction(tr("Show &Failovers"));
    Q_CHECK_PTR(showFailovers);
    showFailovers->setCheckable(true);
    showFailovers->setChecked(ShowFailoverMarks);
    connect(showFailovers, SIGNAL(toggled(bool)), this, SLOT(changeShowFailoverMarks(bool)));
 
-   QAction* showSessions = menu.addAction("Show Sessions");
+   QAction* showSessions = menu.addAction(tr("Show &Sessions"));
    Q_CHECK_PTR(showSessions);
    showSessions->setCheckable(true);
    showSessions->setChecked(ShowSessions);
    connect(showSessions, SIGNAL(toggled(bool)), this, SLOT(changeShowSessions(bool)));
    
-   QMenu* sessionsMenu = menu.addMenu("Sessions");
+   QMenu* sessionsMenu = menu.addMenu(tr("Sessions"));
    Q_CHECK_PTR(sessionsMenu);
    for(size_t i = 0;i < sizeof(sessionsEntries) / sizeof(sessionsEntries[0]);i++) {
       if(sessionsEntries[i] > 0) {
-         char str[64];
-         snprintf((char*)&str, sizeof(str), "%u", sessionsEntries[i]);
-         QAction* action = sessionsMenu->addAction(str);
+         QAction* action = sessionsMenu->addAction(QString::number(sessionsEntries[i]));
          Q_CHECK_PTR(action);
          action->setCheckable(true);
          if(sessionsEntries[i] == ConfiguredThreads) {
@@ -471,22 +467,22 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
    connect(sessionsMenu, SIGNAL(triggered(QAction*)), this, SLOT(changeThreads(QAction*)));
 
    menu.addSeparator();
-   menu.addAction("About", this, SLOT(about()));
+   menu.addAction(tr("&About"), this, SLOT(about()));
    menu.addSeparator();
-   menu.addAction("Quit", this, SLOT(quit()));
+   menu.addAction(tr("&Quit"), this, SLOT(quit()));
 
    menu.exec(event->globalPos());
 }
 
 
-/* ###### Change FailoverMarks setting ###################################### */
+/* ###### Change FailoverMarks setting ################################### */
 void FractalPU::changeShowFailoverMarks(bool checked)
 {
    ShowFailoverMarks = checked;
 }
 
 
-/* ###### Change FailoverMarks setting ###################################### */
+/* ###### Change FailoverMarks setting ################################### */
 void FractalPU::changeShowSessions(bool checked)
 {
    ShowSessions = checked;
@@ -507,8 +503,11 @@ void FractalPU::changeThreads(QAction* action)
 /* ###### About ########################################################## */
 void FractalPU::about()
 {
-   QMessageBox::about(this, "About Fractal Pool User",
-      "<center><b>Fractal Pool User</b><br>Copyright (C) 2002-2009 by Thomas Dreibholz</center>");
+   QMessageBox::about(this, tr("About Fractal Pool User"),
+      "<center>"
+         "<b>Fractal Pool User</b><br>"
+         "Copyright (C) 2002-2009 by Thomas Dreibholz"
+      "</center>");
 }
 
 
@@ -574,8 +573,9 @@ bool FractalCalculationThread::sendParameterMessage()
 
 
 /* ###### Handle Data message ############################################ */
-FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage(const FGPData* data,
-                                                                                 const size_t   size)
+FractalCalculationThread::DataStatus FractalCalculationThread::handleDataMessage(
+                                                                  const FGPData* data,
+                                                                  const size_t   size)
 {
    if(size < getFGPDataSize(0)) {
       return(Invalid);
@@ -635,8 +635,6 @@ finished:
 /* ###### Fractal PU thread implementation ############################### */
 void FractalCalculationThread::run()
 {
-   char statusText[128];
-
    PoolElementUsages = 0;
 
    Session = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
@@ -646,9 +644,10 @@ void FractalCalculationThread::run()
          // ====== Begin image calculation ==================================
          do {
             if(ShowStatus) {
-               rsp_csp_setstatus(Session, 0, "Sending parameter command ...");
+               const QString status = tr("Requesting calculation ...");
+               rsp_csp_setstatus(Session, 0, status.toLocal8Bit().data());
                // cout << "Sending parameter command ..." << endl;
-               emit updateStatus("Sending parameter command ...");
+               emit updateStatus(status);
             }
 
             if(sendParameterMessage()) {
@@ -699,13 +698,11 @@ void FractalCalculationThread::run()
                               default:
                                  packets++;
                                  if(ShowStatus) {
+                                    char statusText[128];
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed packet #%03u; PE is $%08x",
+                                             tr("Processed packet #%u; PE is $%08x").toLocal8Bit().data(),
                                              (unsigned int)packets, rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
-                                    snprintf((char*)&statusText, sizeof(statusText),
-                                             "Processed packet #%03u from PE $%08x ...",
-                                             (unsigned int)packets, rinfo.rinfo_pe_id);
                                     emit updateStatus(QString(statusText));
                                  }
                               break;
@@ -723,7 +720,8 @@ void FractalCalculationThread::run()
                   }
                   if(Success == false) {
                      printTimeStamp(stdout);
-                     printf("FAILOVER (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
+                     printf("FAILOVER (cookie=%s)...\n",
+                            (rsp_has_cookie(Session)) ? "yes" : "NO!");
                      rsp_forcefailover(Session, FFF_NONE, 0);
                   }
 
@@ -731,15 +729,17 @@ void FractalCalculationThread::run()
             }
             else {
                printTimeStamp(stdout);
-               printf("FAILOVER AFTER FAILED sendParameterMessage() (cookie=%s)...\n", (rsp_has_cookie(Session)) ? "yes" : "NO!");
+               printf("FAILOVER AFTER FAILED sendParameterMessage() (cookie=%s)...\n",
+                      (rsp_has_cookie(Session)) ? "yes" : "NO!");
                rsp_forcefailover(Session, FFF_UNREACHABLE, 0);
             }
          } while(Success == false);
 
          // ====== Image calculation completed ==============================
          if(ShowStatus) {
-            const char* statusText = (Success == true) ? "Image completed!" : "Image calculation failed!";
-            rsp_csp_setstatus(Session, 0, statusText);
+            const QString status = (Success == true) ? tr("Image completed!") :
+                                                       tr("Image calculation failed!");
+            rsp_csp_setstatus(Session, 0, status.toLocal8Bit().data());
          }
       }
       else {
@@ -955,6 +955,9 @@ int main(int argc, char** argv)
    KApplication application;
 #else
    QApplication application(argc, argv);
+   QTranslator applicationTranslator;
+   applicationTranslator.load("fractalpooluser_" + QLocale::system().name());
+   application.installTranslator(&applicationTranslator);
 #endif
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
                                         sendTimeout, recvTimeout, interImageTime,

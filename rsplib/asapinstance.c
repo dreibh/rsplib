@@ -480,7 +480,6 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct TransportAddressBlock*     newUserTransport;
    unsigned int                      result;
-   unsigned int                      handlespaceMgtResult;
 
    LOG_VERBOSE
    fputs("Trying to register to pool ", stdlog);
@@ -627,7 +626,6 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
    struct RSerPoolMessage* message;
    struct RSerPoolMessage* response;
    unsigned int            result;
-   unsigned int            handlespaceMgtResult;
 
    LOG_VERBOSE
    fprintf(stdlog, "Trying to deregister $%08x from pool ",identifier);
@@ -635,48 +633,50 @@ unsigned int asapInstanceDeregister(struct ASAPInstance*            asapInstance
    fputs("\n", stdlog);
    LOG_END
 
-   message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
-   if(message != NULL) {
-      message->Type       = AHT_DEREGISTRATION;
-      message->Flags      = 0x00;
-      message->Handle     = *poolHandle;
-      message->Identifier = identifier;
-
-      if(waitForResponse) {
-         result = asapInstanceDoIO(asapInstance, message, &response);
-         if((result == RSPERR_OKAY) && (response->Error == RSPERR_OKAY)) {
-            if(identifier != response->Identifier) {
-               LOG_ERROR
-               fprintf(stdlog, "Tried to deregister PE $%08x, got response for PE $%08x\n",
-                       identifier,
-                       message->Identifier);
-               LOG_END_FATAL
-            }
-
-            handlespaceMgtResult = ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
-                                      &asapInstance->OwnPoolElements,
-                                      poolHandle,
-                                      identifier);
-            if(handlespaceMgtResult != RSPERR_OKAY) {
-               LOG_ERROR
-               fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
-                       identifier);
-               poolHandlePrint(poolHandle, stdlog);
-               fputs(" from OwnPoolElements\n", stdlog);
-               LOG_END
-            }
-            if(response) {
-               rserpoolMessageDelete(response);
-            }
-         }
-         rserpoolMessageDelete(message);
-      }
-      else {
-         result = asapInstanceSendRequest(asapInstance, message, true);
-      }
+   result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
+                     &asapInstance->OwnPoolElements,
+                     poolHandle,
+                     identifier);
+   if(result != RSPERR_OKAY) {
+      LOG_ERROR
+      fprintf(stdlog, "Unable to deregister pool element $%08x of pool ",
+              identifier);
+      poolHandlePrint(poolHandle, stdlog);
+      fputs(" from OwnPoolElements\n", stdlog);
+      LOG_END
    }
    else {
-      result = RSPERR_OUT_OF_MEMORY;
+      message = rserpoolMessageNew(NULL, ASAP_BUFFER_SIZE);
+      if(message != NULL) {
+         message->Type       = AHT_DEREGISTRATION;
+         message->Flags      = 0x00;
+         message->Handle     = *poolHandle;
+         message->Identifier = identifier;
+
+         if(waitForResponse) {
+            result = asapInstanceDoIO(asapInstance, message, &response);
+            if((result == RSPERR_OKAY) && (response->Error == RSPERR_OKAY)) {
+               if(identifier != response->Identifier) {
+                  LOG_ERROR
+                  fprintf(stdlog, "Tried to deregister PE $%08x, got response for PE $%08x\n",
+                          identifier,
+                          message->Identifier);
+                  LOG_END_FATAL
+               }
+
+               if(response) {
+                  rserpoolMessageDelete(response);
+               }
+            }
+            rserpoolMessageDelete(message);
+         }
+         else {
+            result = asapInstanceSendRequest(asapInstance, message, true);
+         }
+      }
+      else {
+         result = RSPERR_OUT_OF_MEMORY;
+      }
    }
 
    LOG_VERBOSE
