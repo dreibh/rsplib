@@ -222,7 +222,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
          uint32_t identifier = 0;
          if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
             if(!quiet) {
-               puts("Registration");
+               puts("Registration:");
                printf("   Identifier              = $%08x\n\n", identifier);
             }
          }

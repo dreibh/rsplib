@@ -43,6 +43,7 @@
 #define SPT_STATUS             0x06
 
 #define SD_MAX_DATASIZE        1400
+#define SR_MAX_INFOSIZE          64
 
 struct ScriptingCommonHeader
 {
@@ -55,6 +56,7 @@ struct ScriptingCommonHeader
 struct Ready
 {
    struct ScriptingCommonHeader Header;
+   char                         Info[];
 } __attribute__((packed));
 
 struct Upload

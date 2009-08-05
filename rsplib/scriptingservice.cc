@@ -38,6 +38,7 @@
 #include <assert.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 
 
 #define INPUT_NAME  "input.data"
@@ -56,6 +57,14 @@ ScriptingServer::ScriptingServer(
    UploadFile   = NULL;
    ChildProcess = 0;
    Directory[0] = 0x00;
+   
+   utsname systemInfo;
+   if(uname(&systemInfo) == 0) {
+      snprintf((char*)&InfoString, sizeof(InfoString), "%s", systemInfo.nodename);
+   }
+   else {
+      InfoString[0] = 0x00;
+   }
 }
 
 
@@ -88,14 +97,19 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData, c
 // ###### Initialize session ################################################
 EventHandlingResult ScriptingServer::initializeSession()
 {
-   Ready ready;
-   ready.Header.Type   = SPT_READY;
-   ready.Header.Flags  = 0x00;
-   ready.Header.Length = htons(sizeof(ready));
+   char buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
+
+   Ready* ready = (Ready*)&buffer;
+   ready->Header.Type   = SPT_READY;
+   ready->Header.Flags  = 0x00;
+   ready->Header.Length = htons(sizeof(ready));
+   snprintf((char*)&ready->Info, SR_MAX_INFOSIZE, "%s", InfoString);
+   const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info);
+
    const ssize_t sent  = rsp_sendmsg(RSerPoolSocketDescriptor,
-                                     (const char*)&ready, sizeof(ready), 0,
+                                     (const char*)ready, readyLength, 0,
                                      0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-   return((sent == sizeof(ready)) ? EHR_Okay : EHR_Abort);
+   return((sent == readyLength) ? EHR_Okay : EHR_Abort);
 }
 
 
@@ -136,6 +150,7 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    puts("Scripting Parameters:");
    printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
    printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
+   printf("   Verbose Mode            = %s\n", (settings->VerboseMode == true) ? "yes" : "no");
 }
 
 
@@ -174,6 +189,10 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
    const Upload* upload = (const Upload*)buffer;
    const size_t length = bufferSize - sizeof(ScriptingCommonHeader);
    if(length > 0) {
+      if(Settings.VerboseMode) {
+         printf(".");
+         fflush(stdout);
+      }
       if(fwrite(&upload->Data, length, 1, UploadFile) != 1) {
          printTimeStamp(stdout);
          printf("S%04d: Write error for input file in directory \"%s\": %s!\n",
@@ -182,6 +201,9 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       }
    }
    else {
+      if(Settings.VerboseMode) {
+         puts("");
+      }
       fclose(UploadFile);
       UploadFile = NULL;
       return(startWorking());
@@ -199,10 +221,10 @@ EventHandlingResult ScriptingServer::sendStatus(const int exitStatus)
    status.Header.Flags  = 0x00;
    status.Header.Length = htons(sizeof(status));
    status.Status        = htonl((uint32_t)exitStatus);
-   ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                              (const char*)&status, sizeof(status), 0,
-                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-   if(sent <= 0) {
+   const ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                                    (const char*)&status, sizeof(status), 0,
+                                    0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+   if(sent != sizeof(status)) {
       printTimeStamp(stdout);
       printf("S%04d: Status transmission error: %s\n",
              RSerPoolSocketDescriptor, strerror(errno));
@@ -230,10 +252,14 @@ EventHandlingResult ScriptingServer::performDownload()
             download.Header.Type   = SPT_DOWNLOAD;
             download.Header.Flags  = 0x00;
             download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+            if(Settings.VerboseMode) {
+               printf(".");
+               fflush(stdout);
+            }
             sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                                (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                                0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-            if(sent <= 0) {
+            if(sent != (ssize_t)(dataLength + sizeof(struct ScriptingCommonHeader))) {
                fclose(fh);
                printTimeStamp(stdout);
                printf("S%04d: Download data transmission error: %s\n",
@@ -244,6 +270,9 @@ EventHandlingResult ScriptingServer::performDownload()
          if(dataLength <= 0) {
             break;
          }
+      }
+      if(Settings.VerboseMode) {
+         puts("");
       }
       fclose(fh);
    } else {
@@ -342,30 +371,43 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
                                                    uint32_t    ppid,
                                                    uint16_t    streamID)
 {
-   const ScriptingCommonHeader* header = (const ScriptingCommonHeader*)buffer;
-   if( (ppid == ntohl(PPID_SP)) &&
-       (bufferSize >= sizeof(ScriptingCommonHeader)) &&
-       (ntohs(header->Length) == bufferSize) ) {
-      switch(State) {
-         case SS_Upload:
-            if(header->Type == SPT_UPLOAD) {
-               return(handleUploadMessage(buffer, bufferSize));
-            }
-          break;
-         case SS_Working:
-            if(header->Type == SPT_KEEPALIVE) {
-               return(handleKeepAliveMessage());
-            }
-          break;
-         default:
-             // All messages here are unexpected!
-          break;
-      }
-   }
-   else {
+   /* ====== Check message header ======================================== */
+   if(ntohl(ppid) != PPID_SP) {
       printTimeStamp(stdout);
-      printf("S%04d: Received invalid message!\n", RSerPoolSocketDescriptor);
+      printf("S%04d: Received message has wrong PPID $%08x!\n",
+             RSerPoolSocketDescriptor, ntohl(ppid));
       return(EHR_Abort);
+   }
+   if(bufferSize < sizeof(struct ScriptingCommonHeader)) {
+      printTimeStamp(stdout);
+      printf("S%04d: Received message of %u bytes does not even contain header!\n",
+             RSerPoolSocketDescriptor, (unsigned int)bufferSize);
+      return(EHR_Abort);
+   }
+   const ScriptingCommonHeader* header = (const ScriptingCommonHeader*)buffer;
+   if(ntohs(header->Length) != bufferSize) {
+      printTimeStamp(stdout);
+      printf("S%04d: Received message has %u bytes but %u bytes are expected!\n",
+             RSerPoolSocketDescriptor,
+             (unsigned int)bufferSize, ntohs(header->Length));
+      return(EHR_Abort);
+   }
+
+   // ====== Handle message =================================================
+   switch(State) {
+      case SS_Upload:
+         if(header->Type == SPT_UPLOAD) {
+            return(handleUploadMessage(buffer, bufferSize));
+         }
+       break;
+      case SS_Working:
+         if(header->Type == SPT_KEEPALIVE) {
+            return(handleKeepAliveMessage());
+         }
+       break;
+      default:
+          // All messages here are unexpected!
+       break;
    }
    printTimeStamp(stdout);
    printf("S%04d: Received unexpected message $%02x in state #%u!\n",

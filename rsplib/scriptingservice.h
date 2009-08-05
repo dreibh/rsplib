@@ -45,6 +45,7 @@ class ScriptingServer : public TCPLikeServer
    {
       unsigned int TransmitTimeout;
       bool         KeepTempDirs;
+      bool         VerboseMode;
    };
 
    ScriptingServer(int                      rserpoolSocketDescriptor,
@@ -81,6 +82,7 @@ class ScriptingServer : public TCPLikeServer
 
    ScriptingState          State;
    ScriptingServerSettings Settings;
+   char                    InfoString[SR_MAX_INFOSIZE];
    char                    Directory[128];
    char                    InputName[256];
    char                    OutputName[256];

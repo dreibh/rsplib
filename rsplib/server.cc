@@ -516,6 +516,7 @@ start:
       ScriptingServer::ScriptingServerSettings settings;
       settings.KeepTempDirs    = false;
       settings.TransmitTimeout = 60000;
+      settings.VerboseMode     = false;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
@@ -525,6 +526,9 @@ start:
          }
          else if(!(strcmp(argv[i], "-sskeeptempdirs"))) {
             settings.KeepTempDirs = true;
+         }
+         else if(!(strcmp(argv[i], "-ssverbose"))) {
+            settings.VerboseMode = true;
          }
          else if(!(strncmp(argv[i], "-sstransmittimeout=", 19))) {
             settings.TransmitTimeout = atol((const char*)&argv[i][19]);

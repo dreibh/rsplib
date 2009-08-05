@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include <errno.h>
 
@@ -54,20 +55,20 @@
 #define SSCS_DOWNLOAD    3
 
 
-static unsigned int       Status            = SSCS_WAIT_READY;
+static unsigned int       State             = SSCS_WAIT_READY;
 static const char*        InputName         = NULL;
 static const char*        OutputName        = NULL;
 static FILE*              OutputFile        = NULL;
-static bool               Quiet             =  false;
+static bool               Quiet             = false;
 static unsigned int       MaxRetry          = 3;
 static unsigned long long TransmitTimeout   = 60000000;
 static unsigned long long KeepAliveInterval =  5000000;
 static unsigned long long KeepAliveTimeout  =  5000000;
 static unsigned long long RetryDelay        = 10000000;
-
 static const char*        RunID             = NULL;
 static unsigned int       Trial             = 1;
 static uint32_t           ExitStatus        = 0;
+static char               InfoString[SR_MAX_INFOSIZE + 1] = "";
 static bool               KeepAliveTransmitted;
 static unsigned long long LastKeepAlive;
 
@@ -77,7 +78,12 @@ static void newLogLine(FILE* fh)
 {
    printTimeStamp(fh);
    if(RunID) {
-      fprintf(fh, "[%s] ", RunID);
+      if(InfoString[0] != 0x00) {
+         fprintf(fh, "[%s@%s] ", RunID, InfoString);
+      }
+      else {
+         fprintf(fh, "[%s] ", RunID);
+      }
    }
 }
 
@@ -107,7 +113,7 @@ static unsigned int performUpload(int sd)
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                             0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
-         if(sent <= 0) {
+         if(sent != dataLength + sizeof(struct ScriptingCommonHeader)) {
             newLogLine(stdout);
             printf("Upload error: %s\n", strerror(errno));
             fflush(stdout);
@@ -176,10 +182,10 @@ static unsigned int sendKeepAlive(int sd)
    keepAlive.Header.Length = htons(sizeof(keepAlive));
    sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
                       0, htonl(PPID_SP), 0, 0, 0, 0);
-   if(sent <= 0) {
-      if(Status != SSCS_WAIT_READY) {
+   if(sent != sizeof(keepAlive)) {
+      if(State != SSCS_WAIT_READY) {
          newLogLine(stdout);
-         printf("Keep-Alive transmission error in state #%u: %s\n", Status, strerror(errno));
+         printf("Keep-Alive transmission error in state #%u: %s\n", State, strerror(errno));
          fflush(stdout);
       }
       else {
@@ -192,6 +198,38 @@ static unsigned int sendKeepAlive(int sd)
    KeepAliveTransmitted = true;
    LastKeepAlive        = getMicroTime();
    return(SSCR_OKAY);
+}
+
+
+/* ###### Handle Ready message ########################################### */
+static unsigned int handleReady(const int           sd,
+                                const struct Ready* ready,
+                                const size_t        length,
+                                const uint32_t      ppid)
+{
+   if( (ppid != PPID_SP) || (length < sizeof(struct Ready)) ) {
+      newLogLine(stdout);
+      puts("Received invalid message!");
+      fflush(stdout);
+      return(SSCR_FAILOVER);
+   }
+   
+   /* ====== Get info string ============================================= */
+   int i;
+   for(i = 0;i < (length - sizeof(struct Ready));i++) {
+      if(i == SR_MAX_INFOSIZE) {
+         break;
+      }
+      InfoString[i] = isprint(ready->Info[i]) ? ready->Info[i] : '.';
+   }
+   InfoString[i] = 0x00;
+
+   /* ====== Proceed with uploading the work package ===================== */
+   State = SSCS_PROCESSING;
+   newLogLine(stdout);
+   printf("Server is ready: %s\n", InfoString);
+   fflush(stdout);
+   return(performUpload(sd));
 }
 
 
@@ -246,27 +284,33 @@ static unsigned int handleMessage(int                                 sd,
                                   const uint32_t                      ppid)
 {
    /* ====== Check message header ======================================== */
-   if( (ppid != PPID_SP) ||
-       (length < sizeof(struct ScriptingCommonHeader)) ) {
+   if(ppid != PPID_SP) {
       newLogLine(stdout);
-      puts("Received invalid message!");
+      printf("Received message has wrong PPID $%08x!\n", ppid);
       fflush(stdout);
       return(SSCR_FAILOVER);
    }
-
+   if(length < sizeof(struct ScriptingCommonHeader)) {
+      newLogLine(stdout);
+      printf("Received message of %u bytes does not even contain header!\n",
+             (unsigned int)length);
+      fflush(stdout);
+   }
+   if(ntohs(header->Length) != length) {
+      newLogLine(stdout);
+      printf("Received message has %u bytes but %u bytes are expected!\n",
+             (unsigned int)length, ntohs(header->Length));
+      fflush(stdout);
+   }
 
    /* ====== Handle message ============================================== */
-   switch(Status) {
+   switch(State) {
 
       /* ====== Wait for Ready message =================================== */
       case SSCS_WAIT_READY:
          switch(header->Type) {
             case SPT_READY:
-               Status = SSCS_PROCESSING;
-               newLogLine(stdout);
-               puts("Server is ready");
-               fflush(stdout);
-               return(performUpload(sd));
+               return(handleReady(sd, (const struct Ready*)header, length, ppid));
              break;
          }
         break;
@@ -280,7 +324,7 @@ static unsigned int handleMessage(int                                 sd,
                return(SSCR_OKAY);
              break;
             case SPT_STATUS:
-               Status = SSCS_DOWNLOAD;
+               State = SSCS_DOWNLOAD;
                return(handleStatus((const struct Status*)header, length));
              break;
          }
@@ -305,7 +349,7 @@ static unsigned int handleMessage(int                                 sd,
    /* ====== Unexpected message ========================================== */
    newLogLine(stdout);
    printf("Unexpected message $%02x in state #%u (length=%u, ppid=$%08x)\n",
-          header->Type, Status, (unsigned int)length, ppid);
+          header->Type, State, (unsigned int)length, ppid);
    fflush(stdout);
    return(SSCR_FAILOVER);
 }
@@ -414,7 +458,7 @@ int main(int argc, char** argv)
    }
 
    newLogLine(stdout);
-   puts("Connecting to pool ...");
+   printf("Connecting to pool %s ...\n", poolHandle);
    fflush(stdout);
 
    if(rsp_connect(sd, (unsigned char*)poolHandle, strlen(poolHandle), 0) < 0) {
@@ -498,7 +542,7 @@ int main(int argc, char** argv)
             usleep(500000);
          } while( (getMicroTime() < nextTimer) && (!breakDetected()) );
          unlink(OutputName);
-         Status = SSCS_WAIT_READY;
+         State = SSCS_WAIT_READY;
          rsp_forcefailover(sd, FFF_NONE, 0);
       }
    }
