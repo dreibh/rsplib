@@ -100,11 +100,11 @@ EventHandlingResult ScriptingServer::initializeSession()
    char buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
 
    Ready* ready = (Ready*)&buffer;
-   ready->Header.Type   = SPT_READY;
-   ready->Header.Flags  = 0x00;
-   ready->Header.Length = htons(sizeof(ready));
    snprintf((char*)&ready->Info, SR_MAX_INFOSIZE, "%s", InfoString);
    const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info);
+   ready->Header.Type   = SPT_READY;
+   ready->Header.Flags  = 0x00;
+   ready->Header.Length = htons(readyLength);
 
    const ssize_t sent  = rsp_sendmsg(RSerPoolSocketDescriptor,
                                      (const char*)ready, readyLength, 0,

@@ -321,12 +321,14 @@ static unsigned int handleMessage(int                                 sd,
       printf("Received message of %u bytes does not even contain header!\n",
              (unsigned int)length);
       fflush(stdout);
+      return(SSCR_FAILOVER);
    }
    if(ntohs(header->Length) != length) {
       newLogLine(stdout);
       printf("Received message has %u bytes but %u bytes are expected!\n",
              (unsigned int)length, ntohs(header->Length));
       fflush(stdout);
+      return(SSCR_FAILOVER);
    }
 
    /* ====== Handle message ============================================== */
@@ -548,7 +550,7 @@ int main(int argc, char** argv)
       }
 
       /* ====== Handle timers ====================================== */
-      if(nextTimer <= getMicroTime()) {
+      if( (result == SSCR_OKAY) && (nextTimer <= getMicroTime()) ) {
          /* ====== KeepAlive transmission ========================== */
          if(!KeepAliveTransmitted) {
             result = sendKeepAlive(sd);
