@@ -50,20 +50,21 @@
 #define SSCR_COMPLETE    1
 #define SSCR_FAILOVER    2
 
-#define SSCS_WAIT_READY  1
-#define SSCS_PROCESSING  2
-#define SSCS_DOWNLOAD    3
+#define SSCS_WAIT_SERVER_READY     1
+#define SSCS_WAIT_START_PROCESSING 2
+#define SSCS_PROCESSING            3
+#define SSCS_DOWNLOAD              4
 
 
-static unsigned int       State             = SSCS_WAIT_READY;
+static unsigned int       State             = SSCS_WAIT_SERVER_READY;
 static const char*        InputName         = NULL;
 static const char*        OutputName        = NULL;
 static FILE*              OutputFile        = NULL;
 static bool               Quiet             = false;
 static unsigned int       MaxRetry          = 3;
-static unsigned long long TransmitTimeout   = 60000000;
-static unsigned long long KeepAliveInterval =  5000000;
-static unsigned long long KeepAliveTimeout  =  5000000;
+static unsigned long long TransmitTimeout   = 59500000;
+static unsigned long long KeepAliveInterval = 10000000;
+static unsigned long long KeepAliveTimeout  = 10000000;
 static unsigned long long RetryDelay        = 10000000;
 static const char*        RunID             = NULL;
 static unsigned int       Trial             = 1;
@@ -183,7 +184,8 @@ static unsigned int sendKeepAlive(int sd)
    sent = rsp_sendmsg(sd, (const char*)&keepAlive, sizeof(keepAlive), 0,
                       0, htonl(PPID_SP), 0, 0, 0, 0);
    if(sent != sizeof(keepAlive)) {
-      if(State != SSCS_WAIT_READY) {
+      if((State != SSCS_WAIT_SERVER_READY) &&
+         (State != SSCS_WAIT_START_PROCESSING)) {
          newLogLine(stdout);
          printf("Keep-Alive transmission error in state #%u: %s\n", State, strerror(errno));
          fflush(stdout);
@@ -204,12 +206,11 @@ static unsigned int sendKeepAlive(int sd)
 /* ###### Handle Ready message ########################################### */
 static unsigned int handleReady(const int           sd,
                                 const struct Ready* ready,
-                                const size_t        length,
-                                const uint32_t      ppid)
+                                const size_t        length)
 {
-   if( (ppid != PPID_SP) || (length < sizeof(struct Ready)) ) {
+   if(length < sizeof(struct Ready)) {
       newLogLine(stdout);
-      puts("Received invalid message!");
+      puts("Received invalid Ready message!");
       fflush(stdout);
       return(SSCR_FAILOVER);
    }
@@ -225,11 +226,36 @@ static unsigned int handleReady(const int           sd,
    InfoString[i] = 0x00;
 
    /* ====== Proceed with uploading the work package ===================== */
-   State = SSCS_PROCESSING;
-   newLogLine(stdout);
-   printf("Server is ready: %s\n", InfoString);
-   fflush(stdout);
+   State = SSCS_WAIT_START_PROCESSING;
    return(performUpload(sd));
+}
+
+
+/* ###### Handle Status message ########################################## */
+static unsigned int serverStartsProcessing(const int            sd,
+                                           const struct Status* status,
+                                           const size_t         length)
+{
+   if(length < sizeof(struct Status)) {
+      newLogLine(stdout);
+      puts("Received invalid Status message!");
+      fflush(stdout);
+      return(SSCR_FAILOVER);
+   }
+   
+   if(ntohl(status->Status) == 0) {
+      State = SSCS_PROCESSING;
+      newLogLine(stdout);
+      printf("Server is ready: %s\n", InfoString);
+      fflush(stdout);
+   }
+   else {
+      State = SSCR_FAILOVER;
+      newLogLine(stdout);
+      printf("Server did not accept upload; status was %u\n", ntohl(status->Status));
+      fflush(stdout);
+   }
+   return(SSCR_OKAY);
 }
 
 
@@ -306,15 +332,24 @@ static unsigned int handleMessage(int                                 sd,
    /* ====== Handle message ============================================== */
    switch(State) {
 
-      /* ====== Wait for Ready message =================================== */
-      case SSCS_WAIT_READY:
+      /* ====== Wait for Ready message to start upload =================== */
+      case SSCS_WAIT_SERVER_READY:
          switch(header->Type) {
             case SPT_READY:
-               return(handleReady(sd, (const struct Ready*)header, length, ppid));
+               return(handleReady(sd, (const struct Ready*)header, length));
              break;
          }
         break;
 
+      /* ====== Wait for Ready message to start upload =================== */
+      case SSCS_WAIT_START_PROCESSING:
+         switch(header->Type) {
+            case SPT_STATUS:
+               return(serverStartsProcessing(sd, (const struct Status*)header, length));
+             break;
+         }
+        break;
+        
       /* ====== Processing =============================================== */
       case SSCS_PROCESSING:
          switch(header->Type) {
@@ -469,10 +504,10 @@ int main(int argc, char** argv)
 
    installBreakDetector();
    result = SSCR_OKAY;
+   KeepAliveTransmitted = false;
+   LastKeepAlive        = getMicroTime();
    while( (!breakDetected()) && (result != SSCR_COMPLETE) ) {
-      KeepAliveTransmitted = false;
-      LastKeepAlive        = getMicroTime();
-      result               = SSCR_OKAY;
+      result = SSCR_OKAY;
 
       /* ====== Wait for results and regularly send keep-alives ======= */
       nextTimer   = LastKeepAlive + (KeepAliveTransmitted ? KeepAliveTimeout : KeepAliveInterval);
@@ -542,8 +577,10 @@ int main(int argc, char** argv)
             usleep(500000);
          } while( (getMicroTime() < nextTimer) && (!breakDetected()) );
          unlink(OutputName);
-         State = SSCS_WAIT_READY;
+         State = SSCS_WAIT_SERVER_READY;
          rsp_forcefailover(sd, FFF_NONE, 0);
+         KeepAliveTransmitted = false;
+         LastKeepAlive        = getMicroTime();
       }
    }
 

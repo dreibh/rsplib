@@ -1422,10 +1422,10 @@ int sendtoplus(int                      sockfd,
          pfd.events  = POLLOUT;
          pfd.revents = 0;
          result = ext_poll((struct pollfd*)&pfd, 1, (int)ceil((double)remainingTimeout / 1000.0));
-         if( (result > 0) && (pfd.revents = POLLOUT) ) {
+         if( (result > 0) && (pfd.revents & POLLOUT) ) {
             LOG_VERBOSE4
             fprintf(stdlog, "retrying sendmsg(%d/A%u, %u bytes)...\n",
-                  sockfd, (unsigned int)assocID, (unsigned int)length);
+                    sockfd, (unsigned int)assocID, (unsigned int)length);
             LOG_END
             if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
                if(toaddrs) {
@@ -1433,8 +1433,8 @@ int sendtoplus(int                      sockfd,
                   fputs("Calling sctp_sendx() with addresses...\n", stdlog);
                   LOG_END
                   result = sctp_sendx(sockfd, buffer, length,
-                                    (struct sockaddr*)&addressArray, addresses,
-                                    &sri, flags);
+                                      (struct sockaddr*)&addressArray, addresses,
+                                      &sri, flags);
                }
                else {
                   LOG_VERBOSE5
@@ -1448,7 +1448,7 @@ int sendtoplus(int                      sockfd,
                fputs("Calling sctp_sendto()...\n", stdlog);
                LOG_END
                result = ext_sendto(sockfd, buffer, length, flags,
-                                 (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
+                                   (struct sockaddr*)toaddrs, (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
             }
          }
          if( (result >= 0) || (errno != EWOULDBLOCK) ) {

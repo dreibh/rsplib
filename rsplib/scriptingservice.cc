@@ -199,6 +199,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
                 RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      return(EHR_Okay);
    }
    else {
       if(Settings.VerboseMode) {
@@ -206,10 +207,12 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       }
       fclose(UploadFile);
       UploadFile = NULL;
-      return(startWorking());
+      EventHandlingResult result = sendStatus(0);
+      if(result == 0) {
+         return(startWorking());
+      }
+      return(result);
    }
-
-   return(EHR_Okay);
 }
 
 

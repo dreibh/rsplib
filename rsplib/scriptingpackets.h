@@ -65,20 +65,10 @@ struct Upload
    char                         Data[SD_MAX_DATASIZE];
 } __attribute__((packed));
 
-struct UploadComplete
-{
-   struct ScriptingCommonHeader Header;
-} __attribute__((packed));
-
 struct Download
 {
    struct ScriptingCommonHeader Header;
    char                         Data[SD_MAX_DATASIZE];
-} __attribute__((packed));
-
-struct DownloadComplete
-{
-   struct ScriptingCommonHeader Header;
 } __attribute__((packed));
 
 struct KeepAlive
