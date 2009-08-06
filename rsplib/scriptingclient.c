@@ -227,6 +227,9 @@ static unsigned int handleReady(const int           sd,
 
    /* ====== Proceed with uploading the work package ===================== */
    State = SSCS_WAIT_START_PROCESSING;
+   newLogLine(stdout);
+   printf("Server %s is ready!\n", InfoString);
+   fflush(stdout);
    return(performUpload(sd));
 }
 
@@ -246,7 +249,7 @@ static unsigned int serverStartsProcessing(const int            sd,
    if(ntohl(status->Status) == 0) {
       State = SSCS_PROCESSING;
       newLogLine(stdout);
-      printf("Server is ready: %s\n", InfoString);
+      printf("Server %s is processing ...\n", InfoString);
       fflush(stdout);
    }
    else {
