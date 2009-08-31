@@ -1,4 +1,564 @@
 ------------------------------------------------------------------------
+r2196 | dreibh | 2009-08-06 12:37:19 +0200 (Thu, 06 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+
+------------------------------------------------------------------------
+r2195 | dreibh | 2009-08-06 10:42:21 +0200 (Thu, 06 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+
+
+------------------------------------------------------------------------
+r2194 | dreibh | 2009-08-06 10:36:19 +0200 (Thu, 06 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Scripting Service fixes.
+
+------------------------------------------------------------------------
+r2193 | dreibh | 2009-08-06 09:33:22 +0200 (Thu, 06 Aug 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/autogen.sh
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Fix in Scripting Service: send Status after Upload is complete to tell the PU that now the PE is starting processing.
+Fix in netutilities.c: sendtoplus(): "revents & POLLOUT", not "revents = POLLOUT" in if() clause!
+
+------------------------------------------------------------------------
+r2192 | dreibh | 2009-08-05 22:15:55 +0200 (Wed, 05 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+
+------------------------------------------------------------------------
+r2191 | dreibh | 2009-08-05 21:15:39 +0200 (Wed, 05 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+- Improved message checking for scripting service.
+
+------------------------------------------------------------------------
+r2190 | dreibh | 2009-08-05 09:43:39 +0200 (Wed, 05 Aug 2009) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   A /trunk/rsplib2/rsplib/fractalpooluser.ts
+   D /trunk/rsplib2/rsplib/registrar-debug
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+   D /trunk/rsplib2/rsplib/ss-pr
+   D /trunk/rsplib2/rsplib/ss-server
+   D /trunk/rsplib2/rsplib/ss-server-150
+   D /trunk/rsplib2/rsplib/subnetcalc.cc
+
+- Improved RegistrarTable's selection of PR.
+- Added translation support into FractalPoolUser.
+- Cleaned up directory.
+
+------------------------------------------------------------------------
+r2189 | dreibh | 2009-08-04 15:58:26 +0200 (Tue, 04 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+Removed debug output code.
+
+------------------------------------------------------------------------
+r2188 | dreibh | 2009-08-04 15:39:36 +0200 (Tue, 04 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+Daemon mode fixes in ASAPInstance.
+
+------------------------------------------------------------------------
+r2187 | dreibh | 2009-08-04 15:16:45 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+
+------------------------------------------------------------------------
+r2186 | dreibh | 2009-08-04 15:06:16 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+
+------------------------------------------------------------------------
+r2185 | dreibh | 2009-08-04 14:57:52 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+
+------------------------------------------------------------------------
+r2184 | dreibh | 2009-08-04 14:43:29 +0200 (Tue, 04 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/asapinstance.h
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+   M /trunk/rsplib2/rsplib/rserpoolsocket.h
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Fixed daemon mode handling: must register PE to owned PEs even upon registration failure -> in order to retry later!
+
+------------------------------------------------------------------------
+r2183 | dreibh | 2009-08-04 13:45:08 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+
+------------------------------------------------------------------------
+r2182 | dreibh | 2009-08-04 13:26:17 +0200 (Tue, 04 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+
+Aborting ASAP connection upon EndpointKeepAlive timeout.
+
+------------------------------------------------------------------------
+r2181 | dreibh | 2009-08-04 10:44:50 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrartable.c
+
+
+------------------------------------------------------------------------
+r2180 | dreibh | 2009-08-04 09:36:36 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+
+
+------------------------------------------------------------------------
+r2179 | dreibh | 2009-08-04 09:30:05 +0200 (Tue, 04 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/autogen.sh
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+
+
+------------------------------------------------------------------------
+r2178 | dreibh | 2009-08-04 09:29:58 +0200 (Tue, 04 Aug 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/storage/ss.init
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.h
+
+- Improved PE handling: in daemon mode, the server is not aborted -> retrying instead.
+- Improved RegistrarTable. Also using poll() instead of select() now.
+
+------------------------------------------------------------------------
+r2177 | dreibh | 2009-08-03 18:53:33 +0200 (Mon, 03 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/netutilities.h
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+
+Filter out all addresses of scope less than site local before registration.
+
+------------------------------------------------------------------------
+r2176 | dreibh | 2009-08-03 18:22:49 +0200 (Mon, 03 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+Reverted change: Do not parse link-local transport addresses, since their scope is unknown!
+
+------------------------------------------------------------------------
+r2175 | dreibh | 2009-08-03 17:37:01 +0200 (Mon, 03 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+
+scanTransportParameter(): Do not care for address scope here. This will be checked within the registrar's core anyway.
+
+------------------------------------------------------------------------
+r2174 | dreibh | 2009-08-02 20:42:46 +0200 (Sun, 02 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/server.cc
+
+Ignore SIGHUP in daemon mode (registrar, server).
+
+------------------------------------------------------------------------
+r2173 | dreibh | 2009-07-31 23:52:39 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r2172 | dreibh | 2009-07-31 23:52:24 +0200 (Fri, 31 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+   M /trunk/rsplib2/rsplib/componentstatusreporter.h
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/server.cc
+
+Call CSP Reporter's report function also during registrar search => better scenario overview!
+
+------------------------------------------------------------------------
+r2171 | dreibh | 2009-07-31 23:42:03 +0200 (Fri, 31 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Reverted to revision 2142 -> added locking caused deadlocks ...
+
+------------------------------------------------------------------------
+r2170 | dreibh | 2009-07-31 23:38:44 +0200 (Fri, 31 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.h
+
+Using more useful defaults for registrar timeout settings.
+
+------------------------------------------------------------------------
+r2169 | dreibh | 2009-07-31 23:32:21 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rsputilities.c
+
+
+------------------------------------------------------------------------
+r2168 | dreibh | 2009-07-31 23:32:08 +0200 (Fri, 31 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/calcappclient.8
+   M /trunk/rsplib2/rsplib/fractalpooluser.8
+   M /trunk/rsplib2/rsplib/pingpongclient.8
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/scriptingclient.8
+   M /trunk/rsplib2/rsplib/server.8
+   M /trunk/rsplib2/rsplib/terminal.8
+
+Added parameters to set ASAP request/response/connect timeouts.
+
+------------------------------------------------------------------------
+r2167 | dreibh | 2009-07-31 13:56:28 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/docs/Handbook.lyx
+
+
+------------------------------------------------------------------------
+r2166 | dreibh | 2009-07-31 13:11:00 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2165 | dreibh | 2009-07-31 12:37:50 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   A /trunk/rsplib2/rsplib/storage/ss-registrar.init
+
+
+------------------------------------------------------------------------
+r2164 | dreibh | 2009-07-31 12:35:40 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2163 | dreibh | 2009-07-31 12:34:11 +0200 (Fri, 31 Jul 2009) | 1 line
+Changed paths:
+   A /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2161 | dreibh | 2009-07-14 11:50:45 +0200 (Tue, 14 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrartable.c
+
+Changed loglevel for failed peeloff() -> ERROR to VERBOSE. This is a more useful setting, since a peeloff problem occurs when the association is down before peeloff.
+
+------------------------------------------------------------------------
+r2159 | dreibh | 2009-07-11 18:15:14 +0200 (Sat, 11 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r2158 | dreibh | 2009-07-11 18:14:12 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/combinesummaries.cc
+
+Fixed buffer overflow in combinesummaries.
+
+------------------------------------------------------------------------
+r2157 | dreibh | 2009-07-11 16:57:37 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Fixed a set of mutex problems found by Helgrind.
+
+------------------------------------------------------------------------
+r2156 | dreibh | 2009-07-11 16:52:40 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+
+Moved error log from LOG_ERROR to LOG_VERBOSE. This is much more useful.
+
+------------------------------------------------------------------------
+r2155 | dreibh | 2009-07-11 16:52:04 +0200 (Sat, 11 Jul 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/dispatcher.c
+   M /trunk/rsplib2/rsplib/fdcallback.c
+   M /trunk/rsplib2/rsplib/timer.c
+
+- Behaviour change: within the callback function, the Dispatcher is not locked any more. Because of this, whenever a Timer/Socket is modified, the handling is aborted until next round.
+- At timer event handling, getMicroTime() is called only once. This should reduce system calls.
+
+------------------------------------------------------------------------
+r2154 | dreibh | 2009-07-11 14:39:46 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalgeneratorservice.cc
+   M /trunk/rsplib2/rsplib/fractalgeneratorservice.h
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+
+Fixed mutex problems found by Helgrind.
+
+------------------------------------------------------------------------
+r2153 | dreibh | 2009-07-11 14:18:50 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/timer.c
+
+Fixed race condition.
+
+------------------------------------------------------------------------
+r2152 | dreibh | 2009-07-11 13:53:16 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+
+Improved mutex handling for FractalPoolUser.
+
+------------------------------------------------------------------------
+r2151 | dreibh | 2009-07-11 13:52:44 +0200 (Sat, 11 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Fixed mutex problems found by Helgrind.
+
+------------------------------------------------------------------------
+r2150 | dreibh | 2009-07-08 21:33:12 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+Fixed bug in ASAP Instance handling (introduced by mutex change before).
+
+------------------------------------------------------------------------
+r2147 | dreibh | 2009-07-08 16:08:52 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+
+Removed support for glib 1.2. This library is really out of date now. All recent systems by default have already glib 2.0.
+
+------------------------------------------------------------------------
+r2146 | dreibh | 2009-07-08 16:04:42 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/asapinstance.h
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+
+Fixed race condition: ASAP main loop thread may not start before all static registrars have been added! asapInstanceNew() now only initializes the ASAPInstance, the new function asapInstanceStartThread() actually starts the main loop thread.
+
+------------------------------------------------------------------------
+r2145 | dreibh | 2009-07-08 15:52:26 +0200 (Wed, 08 Jul 2009) | 1 line
+Changed paths:
+   D /trunk/rsplib2/rsplib/debug
+   A /trunk/rsplib2/rsplib/debug.helgrind (from /trunk/rsplib2/rsplib/debug:2137)
+   A /trunk/rsplib2/rsplib/debug.memcheck (from /trunk/rsplib2/rsplib/debug:2137)
+
+
+------------------------------------------------------------------------
+r2144 | dreibh | 2009-07-08 15:20:18 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/loglevel.h
+
+Fixed mutex locking warning on ASAPInstance's shutdown status variable.
+
+------------------------------------------------------------------------
+r2143 | dreibh | 2009-07-08 15:19:14 +0200 (Wed, 08 Jul 2009) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/threadsafety.c
+   M /trunk/rsplib2/rsplib/threadsafety.h
+
+Removed Name filed in ThreadSafety, also removed logging of mutex actions.
+=> Helgrind is much more useful for debugging mutex problems.
+=> Safes 32 bytes per ThreadSafety + overhead.
+
+------------------------------------------------------------------------
+r2142 | dreibh | 2009-07-08 15:02:29 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Fixed invalid locking/unlocking of RSerPool socket's mutex. This bug resulted in Helgrind reporting the socket as still locked on rsp_close().
+
+------------------------------------------------------------------------
+r2141 | dreibh | 2009-07-08 14:50:10 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/interthreadmessageport.c
+   M /trunk/rsplib2/rsplib/interthreadmessageport.h
+
+Fixed locking problem in ASAP main loop.
+
+------------------------------------------------------------------------
+r2140 | dreibh | 2009-07-08 14:11:27 +0200 (Wed, 08 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+
+------------------------------------------------------------------------
+r2139 | dreibh | 2009-07-08 14:00:27 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/asapinterthreadmessage.c
+   M /trunk/rsplib2/rsplib/asapinterthreadmessage.h
+
+Fixed locking order for AITM handling: before scheduling a timer for an AITM, the Dispatcher must be locked!
+
+------------------------------------------------------------------------
+r2138 | dreibh | 2009-07-08 12:51:22 +0200 (Wed, 08 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Added threadSafetyUnlock() before threadSafetyDelete() -> removes Helgrind warning.
+
+------------------------------------------------------------------------
+r2137 | dreibh | 2009-07-07 16:15:31 +0200 (Tue, 07 Jul 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+
+
+------------------------------------------------------------------------
+r2136 | dreibh | 2009-07-07 15:51:07 +0200 (Tue, 07 Jul 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   A /trunk/rsplib2/make-ppa
+   M /trunk/rsplib2/rsplib/dispatcher.c
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/pingpongclient.c
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Improved poll() timeout calculation: microseconds/1000 may result in 0 -> busy loop until timeout is reached. Using now (int)ceil(microseconds/1000.0).
+
+------------------------------------------------------------------------
+r2135 | dreibh | 2009-07-07 11:20:40 +0200 (Tue, 07 Jul 2009) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/fractalpooluser.8
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/povray/run-povray-for-files
+   M /trunk/rsplib2/rsplib/thread.cc
+   M /trunk/rsplib2/rsplib/thread.h
+
+- Fix for ext_poll() wrapper on MacOS: do not return when there are no sockets. ext_poll() may be used for waiting only.
+- Updated TDThread class.
+- Added "Show Sessions" option to fractalpooluser.
+
+------------------------------------------------------------------------
+r2132 | dreibh | 2009-06-13 10:52:33 +0200 (Sat, 13 Jun 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/copyright
+   M /trunk/rsplib2/debian/rules
+
+Updated Debian files.
+
+------------------------------------------------------------------------
+r2131 | dreibh | 2009-06-09 10:54:42 +0200 (Tue, 09 Jun 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+
+
+------------------------------------------------------------------------
+r2130 | dreibh | 2009-06-09 10:53:01 +0200 (Tue, 09 Jun 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+
+
+------------------------------------------------------------------------
+r2127 | dreibh | 2009-05-21 11:28:06 +0200 (Thu, 21 May 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r2126 | dreibh | 2009-05-20 13:34:17 +0200 (Wed, 20 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/README
+
+Updated README.
+
+------------------------------------------------------------------------
+r2125 | dreibh | 2009-05-20 13:33:14 +0200 (Wed, 20 May 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated LSM entry.
+
+------------------------------------------------------------------------
+r2124 | dreibh | 2009-05-20 13:30:26 +0200 (Wed, 20 May 2009) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Fixes for FractalPU:
+- Variable "Run" was not initialized on startup
+- setHsv() may have been called with h>255 -> Qt error message and wrong pixel color.
+
+------------------------------------------------------------------------
+r2123 | dreibh | 2009-05-12 12:04:48 +0200 (Tue, 12 May 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+
+
+------------------------------------------------------------------------
 r2122 | dreibh | 2009-05-04 09:50:14 +0200 (Mon, 04 May 2009) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/server.cc
