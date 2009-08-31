@@ -114,7 +114,7 @@ static unsigned int performUpload(int sd)
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
          sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
                             0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
-         if(sent != dataLength + sizeof(struct ScriptingCommonHeader)) {
+         if(sent != (ssize_t)dataLength + (ssize_t)sizeof(struct ScriptingCommonHeader)) {
             newLogLine(stdout);
             printf("Upload error: %s\n", strerror(errno));
             fflush(stdout);
@@ -216,7 +216,7 @@ static unsigned int handleReady(const int           sd,
    }
    
    /* ====== Get info string ============================================= */
-   int i;
+   size_t i;
    for(i = 0;i < (length - sizeof(struct Ready));i++) {
       if(i == SR_MAX_INFOSIZE) {
          break;

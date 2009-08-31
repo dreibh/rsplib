@@ -1,8 +1,8 @@
-rsplib (2.7.0~rc6-1ubuntu1) karmic; urgency=low
+rsplib (2.7.0~rc7-1ubuntu1) karmic; urgency=low
 
   * New upstream version.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 05 Aug 2009 22:17:53 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 31 Aug 2009 08:37:53 +0200
 
 rsplib (2.6.4-1ubuntu1) karmic; urgency=low
 
