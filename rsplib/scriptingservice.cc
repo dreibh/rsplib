@@ -206,6 +206,8 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
          puts("");
       }
       fclose(UploadFile);
+      printf("S%04d: Starting work in directory \"%s\"...\n",
+             RSerPoolSocketDescriptor, Directory);
       UploadFile = NULL;
       EventHandlingResult result = sendStatus(0);
       if(result == 0) {
