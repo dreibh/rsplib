@@ -43,8 +43,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME=ss
 DESC="RSerPool Scripting Service"
 DAEMON=/usr/bin/server
-PRs="-registrar=[132.252.151.78]:3863"
-CSP="-cspserver=132.252.151.151 -cspinterval=1000"
+PRs=""
+CSP="-cspserver=[2001:638:501:4ef3:20c:29ff:fecc:3728] -cspinterval=1000"
 DAEMON_OPTS="-scripting $PRs $CSP -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
 
 test -x $DAEMON || exit 0
