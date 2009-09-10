@@ -51,8 +51,8 @@ test -x $DAEMON || exit 0
 
 # Make sure that SCTP is available
 modprobe sctp > /dev/null 2>&1
-sysctl net.sctp.addip_enable=1
-sysctl net.sctp.auth_enable=1
+# sysctl net.sctp.addip_enable=1
+# sysctl net.sctp.auth_enable=1
 
 
 # Include scripting service defaults if available
