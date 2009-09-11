@@ -462,8 +462,8 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
 
 
 /* ###### Unpack sockaddr blocks to sockaddr_union array ################## */
-union sockaddr_union* unpack_sockaddr(struct sockaddr* addrArray,
-                                      const size_t     addrs)
+union sockaddr_union* unpack_sockaddr(const struct sockaddr* addrArray,
+                                      const size_t            addrs)
 {
    union sockaddr_union* newArray;
    size_t                i;

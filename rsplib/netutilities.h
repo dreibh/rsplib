@@ -485,8 +485,8 @@ struct sockaddr* pack_sockaddr_union(const union sockaddr_union* addrArray,
   * @param addrs Number of addresses.
   * @return Point sockaddr_union array.
   */
-union sockaddr_union* unpack_sockaddr(struct sockaddr* addrArray,
-                                      const size_t     addrs);
+union sockaddr_union* unpack_sockaddr(const struct sockaddr* addrArray,
+                                      const size_t            addrs);
 
 /**
   * Wrapper to sctp_getladdrs() using sockaddr_union array instead of
