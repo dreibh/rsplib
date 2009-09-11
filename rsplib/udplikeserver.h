@@ -49,11 +49,13 @@ class UDPLikeServer
                             const char*          poolHandle,
                             struct rsp_info*     info,
                             struct rsp_loadinfo* loadinfo,
-                            unsigned int         reregInterval = 30000,
-                            unsigned int         runtimeLimit  = 0,
-                            const bool           quiet         = false,
-                            const bool           daemonMode    = false,
-                            struct TagItem*      tags          = NULL);
+                            const sockaddr*      localAddressSet = NULL,
+                            const size_t         localAddresses  = 0,
+                            unsigned int         reregInterval   = 30000,
+                            unsigned int         runtimeLimit    = 0,
+                            const bool           quiet           = false,
+                            const bool           daemonMode      = false,
+                            struct TagItem*      tags            = NULL);
 
    double getLoad() const;
    void setLoad(double load);

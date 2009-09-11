@@ -31,6 +31,7 @@
 #include "breakdetector.h"
 #include "tagitem.h"
 #include "netutilities.h"
+#include "stringutilities.h"
 #include "randomizer.h"
 #include "standardservices.h"
 #include "fractalgeneratorservice.h"
@@ -57,27 +58,14 @@
 
 
 /* ###### Count the number of CPUs/cores ################################# */
-size_t getNumberOfCPUs()
+static size_t getNumberOfCPUs()
 {
    const size_t numberOfCPUs = sysconf(_SC_NPROCESSORS_ONLN);
-/*
-#ifdef __linux__
-   char         buffer[258];
-   unsigned int id;
-   FILE*        fh = fopen("/proc/cpuinfo", "r");
-   if(fh != NULL) {
-
-      while( fgets((char*)&buffer, sizeof(buffer) - 1, fh) != NULL ) {
-         if(sscanf(buffer, "processor\t: %u", &id) == 1) {
-            numberOfCPUs++;
-         }
-      }
-   }
-#endif
-*/
    return( (numberOfCPUs > 0) ? numberOfCPUs : 1 );
 }
 
+
+#define MAX_PE_TRANSPORTADDRESSES 64
 
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
@@ -85,17 +73,20 @@ int main(int argc, char** argv)
    struct rsp_info     info;
    struct rsp_loadinfo loadInfo;
    struct TagItem      tags[8];
+   char                localAddressBuffer[sizeof(union sockaddr_union) * MAX_PE_TRANSPORTADDRESSES];
+   struct sockaddr*    localAddressSet = (struct sockaddr*)&localAddressBuffer;
+   size_t              localAddresses  = 0;
+   unsigned int        reregInterval   = 30000;
+   unsigned int        runtimeLimit    = 0;
+   unsigned int        service         = SERVICE_ECHO;
+   const char*         poolHandle      = NULL;
+   const char*         daemonPIDFile   = NULL;
+   bool                policyChanged   = false;
+   bool                quiet           = false;
+   double              uptime          = 0.0;
+   double              downtime        = 0.0;
    double              degradation;
    unsigned int        identifier;
-   unsigned int        reregInterval = 30000;
-   unsigned int        runtimeLimit  = 0;
-   unsigned int        service       = SERVICE_ECHO;
-   const char*         poolHandle    = NULL;
-   const char*         daemonPIDFile = NULL;
-   bool                policyChanged = false;
-   bool                quiet         = false;
-   double              uptime        = 0.0;
-   double              downtime      = 0.0;
 
 start:
    /* ====== Read parameters ============================================= */
@@ -123,6 +114,30 @@ start:
 #ifdef ENABLE_CSP
          info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, tags[0].Data);
 #endif
+      }
+      else if(!(strncmp(argv[i], "-local=" ,7))) {
+         localAddresses = 0;
+         sockaddr* addressPtr    = localAddressSet;
+         char*     addressString = (char*)&argv[i][7];
+         while(localAddresses < MAX_PE_TRANSPORTADDRESSES) {
+            char* idx = strindex(addressString, ',');
+            if(idx) {
+               *idx = 0x00;
+            }
+            if(!string2address(addressString, (union sockaddr_union*)addressPtr)) {
+               fprintf(stderr, "ERROR: Bad local address %s! Use format <address:port>.\n", addressString);
+               exit(1);
+            }
+            localAddresses++;
+            if(idx) {
+               addressString = idx;
+               addressString++;
+            }
+            else {
+               break;
+            }
+            addressPtr = (struct sockaddr*)((long)addressPtr + (long)getSocklen(addressPtr));
+         }
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (const char*)&argv[i][12];
@@ -317,6 +332,7 @@ start:
       echoServer.poolElement("Echo Server - Version 1.0",
                              (poolHandle != NULL) ? poolHandle : "EchoPool",
                              &info, &loadInfo,
+                             localAddressSet, localAddresses,
                              reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                              (struct TagItem*)&tags);
    }
@@ -325,6 +341,7 @@ start:
       discardServer.poolElement("Discard Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DiscardPool",
                                 &info, &loadInfo,
+                                localAddressSet, localAddresses,
                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
    }
@@ -333,6 +350,7 @@ start:
       daytimeServer.poolElement("Daytime Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "DaytimePool",
                                 &info, &loadInfo,
+                                localAddressSet, localAddresses,
                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
    }
@@ -350,6 +368,7 @@ start:
                                   maxThreads,
                                   CharGenServer::charGenServerFactory,
                                   NULL, NULL, NULL, NULL, NULL,
+                                  localAddressSet, localAddresses,
                                   reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                   (struct TagItem*)&tags);
    }
@@ -373,6 +392,7 @@ start:
                                  PingPongServer::pingPongServerFactory,
                                  NULL, NULL, NULL, NULL,
                                  (void*)&settings,
+                                 localAddressSet, localAddresses,
                                  reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }
@@ -426,6 +446,7 @@ start:
                                  FractalGeneratorServer::fractalGeneratorPrintParameters,
                                  NULL, NULL, NULL,
                                  (void*)&settings,
+                                 localAddressSet, localAddresses,
                                  reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }
@@ -507,6 +528,7 @@ start:
       calcAppServer.poolElement("CalcApp Server - Version 1.0",
                                 (poolHandle != NULL) ? poolHandle : "CalcAppPool",
                                 &info, &loadInfo,
+                                localAddressSet, localAddresses,
                                 reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                 (struct TagItem*)&tags);
       resetStatistics = false;
@@ -547,6 +569,7 @@ start:
                                  ScriptingServer::scriptingPrintParameters,
                                  NULL, NULL, NULL,
                                  (void*)&settings,
+                                 localAddressSet, localAddresses,
                                  reregInterval, runtimeLimit, quiet, (daemonPIDFile != NULL),
                                  (struct TagItem*)&tags);
    }

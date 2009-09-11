@@ -29,6 +29,7 @@
 
 #include "udplikeserver.h"
 #include "timeutilities.h"
+#include "netutilities.h"
 #include "loglevel.h"
 #include "breakdetector.h"
 #include "tagitem.h"
@@ -163,6 +164,8 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                                 const char*          poolHandle,
                                 struct rsp_info*     info,
                                 struct rsp_loadinfo* loadinfo,
+                                const sockaddr*      localAddressSet,
+                                const size_t         localAddresses,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
                                 const bool           quiet,
@@ -175,167 +178,191 @@ void UDPLikeServer::poolElement(const char*          programTitle,
    }
 
    RSerPoolSocketDescriptor = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
-   if( (RSerPoolSocketDescriptor >= 0) &&
-       (rsp_listen(RSerPoolSocketDescriptor, 10) == 0) ) {
-      // ====== Initialize PE settings ======================================
-      struct rsp_loadinfo dummyLoadinfo;
-      if(loadinfo == NULL) {
-         memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
-         loadinfo = &dummyLoadinfo;
-         loadinfo->rli_policy = PPT_ROUNDROBIN;
-      }
-      loadinfo->rli_load = (unsigned int)rint(getLoad() * (double)PPV_MAX_LOAD);
-      Load = loadinfo->rli_load;
+   if(RSerPoolSocketDescriptor >= 0) {
+      if(rsp_bind(RSerPoolSocketDescriptor, localAddressSet, localAddresses) == 0) {
+         if(rsp_listen(RSerPoolSocketDescriptor, 10) == 0) {
+            // ====== Initialize PE settings ======================================
+            struct rsp_loadinfo dummyLoadinfo;
+            if(loadinfo == NULL) {
+               memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
+               loadinfo = &dummyLoadinfo;
+               loadinfo->rli_policy = PPT_ROUNDROBIN;
+            }
+            loadinfo->rli_load = (unsigned int)rint(getLoad() * (double)PPV_MAX_LOAD);
+            Load = loadinfo->rli_load;
 
-      // ====== Print program title =========================================
-      if(!quiet) {
-         puts(programTitle);
-         for(size_t i = 0;i < strlen(programTitle);i++) {
-            printf("=");
-         }
-         const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
-         puts("\n\nGeneral Parameters:");
-         printf("   Pool Handle             = %s\n", poolHandle);
-         printf("   Reregistration Interval = %1.3fs\n", reregInterval / 1000.0);
-         printf("   Runtime Limit           = ");
-         if(runtimeLimit > 0) {
-            printf("%1.3f [s]\n", runtimeLimit / 1000.0);
+            // ====== Print program title =========================================
+            if(!quiet) {
+               puts(programTitle);
+               for(size_t i = 0;i < strlen(programTitle);i++) {
+                  printf("=");
+               }
+               const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
+               puts("\n\nGeneral Parameters:");
+               printf("   Pool Handle             = %s\n", poolHandle);
+               printf("   Reregistration Interval = %1.3fs\n", reregInterval / 1000.0);
+               printf("   Local Addresses         = { ");
+               if(localAddresses == 0) {
+                  printf("all");
+               }
+               else {
+                  const sockaddr* addressPtr = localAddressSet;
+                  for(size_t i = 0;i < localAddresses;i++) {
+                     if(i > 0) {
+                        printf(", ");
+                     }
+                     fputaddress(addressPtr, (i == 0), stdout);
+                     addressPtr = (const sockaddr*)((long)addressPtr + (long)getSocklen(addressPtr));
+                  }
+               }
+               printf(" }\n");
+               printf("   Runtime Limit           = ");
+               if(runtimeLimit > 0) {
+                  printf("%1.3f [s]\n", runtimeLimit / 1000.0);
+               }
+               else {
+                  puts("off");
+               }
+               puts("   Policy Settings");
+               printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+               printf("      Load Degradation     = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+               printf("      Load DPF             = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
+               printf("      Weight               = %u\n", loadinfo->rli_weight);
+               printf("      Weight DPF           = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
+               printParameters();
+            }
+
+            // ====== Register PE =================================================
+            if(rsp_register_tags(RSerPoolSocketDescriptor,
+                                 (const unsigned char*)poolHandle, strlen(poolHandle),
+                                 loadinfo, reregInterval,
+                                 daemonMode ? REGF_DAEMONMODE : 0,
+                                 tags) == 0) {
+               uint32_t identifier = 0;
+               if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
+                  if(!quiet) {
+                     puts("Registration:");
+                     printf("   Identifier              = $%08x\n\n", identifier);
+                  }
+               }
+               double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)PPV_MAX_LOAD);
+
+               // ====== Startup ==================================================
+               const EventHandlingResult initializeResult = initializeService(RSerPoolSocketDescriptor, identifier);
+               if(initializeResult == EHR_Okay) {
+
+                  // ====== Main loop =============================================
+                  const unsigned long long autoStopTimeStamp =
+                     (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
+                  installBreakDetector();
+                  while(!breakDetected()) {
+
+                     // ====== Read from socket ===================================
+                     char                     buffer[65536];
+                     int                      flags = 0;
+                     struct rsp_sndrcvinfo rinfo;
+                     unsigned long long timeout = 500000;
+                     if(NextTimerTimeStamp > 0) {
+                        const unsigned long long now = getMicroTime();
+                        if(NextTimerTimeStamp <= now) {
+                           timeout = 0;
+                        }
+                        else {
+                           timeout = min(timeout, NextTimerTimeStamp - now);
+                        }
+                     }
+
+                     // ====== Wait for action on RSerPool socket =================
+                     if(waitForAction(timeout)) {
+
+                        // ====== Read from socket ================================
+                        ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
+                                                           (char*)&buffer, sizeof(buffer),
+                                                           &rinfo, &flags, 0);
+
+                        // ====== Handle data =====================================
+                        if(received > 0) {
+                           // ====== Handle event =================================
+                           EventHandlingResult eventHandlingResult;
+                           if(flags & MSG_RSERPOOL_NOTIFICATION) {
+                              handleNotification((const union rserpool_notification*)&buffer);
+                              /*
+                                 We cannot shutdown or abort, since the session ID is not
+                                 inserted into rinfo!
+                                 Should we dissect the notification for the ID here?
+                              */
+                              eventHandlingResult = EHR_Okay;
+                           }
+                           else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
+                              eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
+                                                                     (char*)&buffer, received);
+                           }
+                           else {
+                              eventHandlingResult = handleMessage(rinfo.rinfo_session,
+                                                                  (char*)&buffer, received,
+                                                                  rinfo.rinfo_ppid,
+                                                                  rinfo.rinfo_stream);
+                           }
+
+                           // ====== Check for problems ===========================
+                           if((eventHandlingResult == EHR_Abort) ||
+                              (eventHandlingResult == EHR_Shutdown)) {
+                              rsp_sendmsg(RSerPoolSocketDescriptor,
+                                          NULL, 0, 0,
+                                          rinfo.rinfo_session, 0, 0, 0,
+                                          ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF), 0);
+                           }
+                        }
+                     }
+
+                     // ====== Handle timer =======================================
+                     if((NextTimerTimeStamp > 0) &&
+                        (getMicroTime() > NextTimerTimeStamp)) {
+                        NextTimerTimeStamp = 0;
+                        handleTimer();
+                     }
+
+                     // ====== Auto-stop ==========================================
+                     if((autoStopTimeStamp > 0) &&
+                        (getMicroTime() > autoStopTimeStamp)) {
+                        puts("Auto-stop reached!");
+                        break;
+                     }
+
+                     // ====== Do reregistration on load changes ==================
+                     if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+                        const double newLoad = getLoad();
+                        if(fabs(newLoad - oldLoad) >= 0.01) {
+                           oldLoad = newLoad;
+                           loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
+                           if(rsp_register_tags(
+                                 RSerPoolSocketDescriptor,
+                                 (const unsigned char*)poolHandle, strlen(poolHandle),
+                                 loadinfo, reregInterval, REGF_DONTWAIT, tags) != 0) {
+                              puts("ERROR: Failed to re-register PE with new load setting!");
+                           }
+                        }
+                     }
+                  }
+                  uninstallBreakDetector();
+               }
+
+               // ====== Shutdown =================================================
+               finishService(RSerPoolSocketDescriptor, initializeResult);
+
+               // ====== Clean up =================================================
+               rsp_deregister(RSerPoolSocketDescriptor, 0);
+            }
+            else {
+               printf("ERROR: Failed to register PE to pool %s\n", poolHandle);
+            }
          }
          else {
-            puts("off");
+            perror("Unable to put RSerPool socket into listening mode");
          }
-         puts("   Policy Settings");
-         printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-         printf("      Load Degradation     = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
-         printf("      Load DPF             = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
-         printf("      Weight               = %u\n", loadinfo->rli_weight);
-         printf("      Weight DPF           = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
-         printParameters();
-      }
-
-      // ====== Register PE =================================================
-      if(rsp_register_tags(RSerPoolSocketDescriptor,
-                           (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, reregInterval,
-                           daemonMode ? REGF_DAEMONMODE : 0,
-                           tags) == 0) {
-         uint32_t identifier = 0;
-         if(rsp_getsockname(RSerPoolSocketDescriptor, NULL, NULL, &identifier) == 0) {
-            if(!quiet) {
-               puts("Registration:");
-               printf("   Identifier              = $%08x\n\n", identifier);
-            }
-         }
-         double oldLoad = (unsigned int)rint((double)loadinfo->rli_load / (double)PPV_MAX_LOAD);
-
-         // ====== Startup ==================================================
-         const EventHandlingResult initializeResult = initializeService(RSerPoolSocketDescriptor, identifier);
-         if(initializeResult == EHR_Okay) {
-
-            // ====== Main loop =============================================
-            const unsigned long long autoStopTimeStamp =
-               (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
-            installBreakDetector();
-            while(!breakDetected()) {
-
-               // ====== Read from socket ===================================
-               char                     buffer[65536];
-               int                      flags = 0;
-               struct rsp_sndrcvinfo rinfo;
-               unsigned long long timeout = 500000;
-               if(NextTimerTimeStamp > 0) {
-                  const unsigned long long now = getMicroTime();
-                  if(NextTimerTimeStamp <= now) {
-                     timeout = 0;
-                  }
-                  else {
-                     timeout = min(timeout, NextTimerTimeStamp - now);
-                  }
-               }
-
-               // ====== Wait for action on RSerPool socket =================
-               if(waitForAction(timeout)) {
-
-                  // ====== Read from socket ================================
-                  ssize_t received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
-                                                     (char*)&buffer, sizeof(buffer),
-                                                     &rinfo, &flags, 0);
-
-                  // ====== Handle data =====================================
-                  if(received > 0) {
-                     // ====== Handle event =================================
-                     EventHandlingResult eventHandlingResult;
-                     if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                        handleNotification((const union rserpool_notification*)&buffer);
-                        /*
-                           We cannot shutdown or abort, since the session ID is not
-                           inserted into rinfo!
-                           Should we dissect the notification for the ID here?
-                        */
-                        eventHandlingResult = EHR_Okay;
-                     }
-                     else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-                        eventHandlingResult = handleCookieEcho(rinfo.rinfo_session,
-                                                               (char*)&buffer, received);
-                     }
-                     else {
-                        eventHandlingResult = handleMessage(rinfo.rinfo_session,
-                                                            (char*)&buffer, received,
-                                                            rinfo.rinfo_ppid,
-                                                            rinfo.rinfo_stream);
-                     }
-
-                     // ====== Check for problems ===========================
-                     if((eventHandlingResult == EHR_Abort) ||
-                        (eventHandlingResult == EHR_Shutdown)) {
-                        rsp_sendmsg(RSerPoolSocketDescriptor,
-                                    NULL, 0, 0,
-                                    rinfo.rinfo_session, 0, 0, 0,
-                                    ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF), 0);
-                     }
-                  }
-               }
-
-               // ====== Handle timer =======================================
-               if((NextTimerTimeStamp > 0) &&
-                  (getMicroTime() > NextTimerTimeStamp)) {
-                  NextTimerTimeStamp = 0;
-                  handleTimer();
-               }
-
-               // ====== Auto-stop ==========================================
-               if((autoStopTimeStamp > 0) &&
-                  (getMicroTime() > autoStopTimeStamp)) {
-                  puts("Auto-stop reached!");
-                  break;
-               }
-
-               // ====== Do reregistration on load changes =====================
-               if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
-                  const double newLoad = getLoad();
-                  if(fabs(newLoad - oldLoad) >= 0.01) {
-                     oldLoad = newLoad;
-                     loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
-                     if(rsp_register_tags(
-                           RSerPoolSocketDescriptor,
-                           (const unsigned char*)poolHandle, strlen(poolHandle),
-                           loadinfo, reregInterval, REGF_DONTWAIT, tags) != 0) {
-                        puts("ERROR: Failed to re-register PE with new load setting!");
-                     }
-                  }
-               }
-            }
-            uninstallBreakDetector();
-         }
-
-         // ====== Shutdown =================================================
-         finishService(RSerPoolSocketDescriptor, initializeResult);
-
-         // ====== Clean up =================================================
-         rsp_deregister(RSerPoolSocketDescriptor, 0);
       }
       else {
-         printf("ERROR: Failed to register PE to pool %s\n", poolHandle);
+         perror("Unable to bind RSerPool socket");
       }
       rsp_close(RSerPoolSocketDescriptor);
    }

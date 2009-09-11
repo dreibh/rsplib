@@ -292,6 +292,8 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 void                 (*finishService)(void* userData),
                                 double               (*loadUpdateHook)(const double load),
                                 void*                userData,
+                                const sockaddr*      localAddressSet,
+                                const size_t         localAddresses,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
                                 const bool           quiet,
@@ -304,210 +306,234 @@ void TCPLikeServer::poolElement(const char*          programTitle,
    }
 
    int rserpoolSocket = rsp_socket(0, SOCK_STREAM, IPPROTO_SCTP);
-   if( (rserpoolSocket >= 0) &&
-       (rsp_listen(rserpoolSocket, (int)maxThreads) == 0) ) {
-      // ====== Initialize notification pipe ================================
-      int systemNotificationPipe[2];
-      int rspNotificationPipe[2];
-      if(ext_pipe((int*)&systemNotificationPipe) == 0) {
-         rspNotificationPipe[0] = rsp_mapsocket(systemNotificationPipe[0], -1);
-         rspNotificationPipe[1] = rsp_mapsocket(systemNotificationPipe[1], -1);
-         if( (setNonBlocking(systemNotificationPipe[0])) && (rspNotificationPipe[0] > 0) &&
-             (setNonBlocking(systemNotificationPipe[1])) && (rspNotificationPipe[1] > 0) ) {
+   if(rserpoolSocket >= 0) {
+      if(rsp_bind(rserpoolSocket, localAddressSet, localAddresses) == 0) {
+         if(rsp_listen(rserpoolSocket, (int)maxThreads) == 0) {
+            // ====== Initialize notification pipe ================================
+            int systemNotificationPipe[2];
+            int rspNotificationPipe[2];
+            if(ext_pipe((int*)&systemNotificationPipe) == 0) {
+               rspNotificationPipe[0] = rsp_mapsocket(systemNotificationPipe[0], -1);
+               rspNotificationPipe[1] = rsp_mapsocket(systemNotificationPipe[1], -1);
+               if( (setNonBlocking(systemNotificationPipe[0])) && (rspNotificationPipe[0] > 0) &&
+                   (setNonBlocking(systemNotificationPipe[1])) && (rspNotificationPipe[1] > 0) ) {
 
-            // ====== Initialize PE settings ================================
-            struct rsp_loadinfo dummyLoadinfo;
-            if(loadinfo == NULL) {
-               memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
-               loadinfo = &dummyLoadinfo;
-               loadinfo->rli_policy = PPT_ROUNDROBIN;
-            }
-
-            // ====== Server startup ========================================
-            if((initializeService == NULL) || (initializeService(userData))) {
-               double oldLoad = 0.0;
-               if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
-                  if(loadUpdateHook) {
-                     double newLoad = loadUpdateHook(0.0);
-                     CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
-                     loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
-                     oldLoad = newLoad;
-                  }
-               }
-
-               // ====== Print program title ================================
-               if(!quiet) {
-                  puts(programTitle);
-                  for(size_t i = 0;i < strlen(programTitle);i++) {
-                     printf("=");
-                  }
-                  const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
-                  puts("\n\nGeneral Parameters:");
-                  printf("   Pool Handle             = %s\n", poolHandle);
-                  printf("   Reregistration Interval = %1.3fs\n", reregInterval / 1000.0);
-                  printf("   Runtime Limit           = ");
-                  if(runtimeLimit > 0) {
-                     printf("%1.3f [s]\n", runtimeLimit / 1000.0);
-                  }
-                  else {
-                     puts("off");
-                  }
-                  printf("   Max Threads             = %u\n", (unsigned int)maxThreads);
-                  puts("   Policy Settings");
-                  printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
-                  printf("      Load Degradation     = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
-                  printf("      Load DPF             = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
-                  printf("      Weight               = %u\n", loadinfo->rli_weight);
-                  printf("      Weight DPF           = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
-                  if(printParameters) {
-                     printParameters(userData);
-                  }
-               }
-
-               // ====== Register PE ========================================
-               if(rsp_register_tags(rserpoolSocket,
-                                    (const unsigned char*)poolHandle, strlen(poolHandle),
-                                    loadinfo, reregInterval,
-                                    (daemonMode == true) ? REGF_DAEMONMODE : 0,
-                                    tags) == 0) {
-                  uint32_t identifier = 0;
-                  if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
-                     if(!quiet) {
-                        puts("Registration:");
-                        printf("   Identifier              = $%08x\n\n", identifier);
-                     }
+                  // ====== Initialize PE settings ================================
+                  struct rsp_loadinfo dummyLoadinfo;
+                  if(loadinfo == NULL) {
+                     memset(&dummyLoadinfo, 0, sizeof(dummyLoadinfo));
+                     loadinfo = &dummyLoadinfo;
+                     loadinfo->rli_policy = PPT_ROUNDROBIN;
                   }
 
-                  // ====== Main loop =======================================
-                  TCPLikeServerList        serverSet(maxThreads, systemNotificationPipe[1]);
-                  const unsigned long long autoStopTimeStamp =
-                     (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
-                  installBreakDetector();
-                  while(!breakDetected()) {
-                     // ====== Wait for actions =============================
-                     struct pollfd pollfds[2];
-                     pollfds[0].fd      = rserpoolSocket;
-                     pollfds[0].events  = POLLIN;
-                     pollfds[0].revents = 0;
-                     pollfds[1].fd      = rspNotificationPipe[0];
-                     pollfds[1].events  = POLLIN;
-                     pollfds[1].revents = 0;
-                     const int result = rsp_poll((struct pollfd*)&pollfds, 2, 2500);
-
-                     // ====== Clean-up session list ========================
-                     // Possible, some sessions have finished working during
-                     // waiting time. Therefore, cleaning them up is useful
-                     // before accepting new sessions.
-                     if(serverSet.handleRemovalsAndTimers() > 0) {
-                        int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
-                        if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
-                           perror("Unable to update backlog using rsp_listen()");
+                  // ====== Server startup ========================================
+                  if((initializeService == NULL) || (initializeService(userData))) {
+                     double oldLoad = 0.0;
+                     if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+                        if(loadUpdateHook) {
+                           double newLoad = loadUpdateHook(0.0);
+                           CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+                           loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
+                           oldLoad = newLoad;
                         }
                      }
 
-                     // ====== Wait for incoming sessions ===================
-                     if(result > 0) {
-                        if(pollfds[0].revents & POLLIN) {
-                            int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
-                            if(newRSerPoolSocket >= 0) {
-                               if(serverSet.hasCapacity()) {
-                                  TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData, identifier);
-                                  if(serviceThread) {
-                                     if(serverSet.add(serviceThread)) {
-                                        if(serviceThread->start()) {
-                                           int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
-                                           if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
-                                              perror("Unable to update backlog using rsp_listen()");
+                     // ====== Print program title ================================
+                     if(!quiet) {
+                        puts(programTitle);
+                        for(size_t i = 0;i < strlen(programTitle);i++) {
+                           printf("=");
+                        }
+                        const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
+                        puts("\n\nGeneral Parameters:");
+                        printf("   Pool Handle             = %s\n", poolHandle);
+                        printf("   Reregistration Interval = %1.3fs\n", reregInterval / 1000.0);
+                        printf("   Local Addresses         = { ");
+                        if(localAddresses == 0) {
+                           printf("all");
+                        }
+                        else {
+                           const sockaddr* addressPtr = localAddressSet;
+                           for(size_t i = 0;i < localAddresses;i++) {
+                              if(i > 0) {
+                                 printf(", ");
+                              }
+                              fputaddress(addressPtr, (i == 0), stdout);
+                              addressPtr = (const sockaddr*)((long)addressPtr + (long)getSocklen(addressPtr));
+                           }
+                        }
+                        printf(" }\n");
+                        printf("   Runtime Limit           = ");
+                        if(runtimeLimit > 0) {
+                           printf("%1.3f [s]\n", runtimeLimit / 1000.0);
+                        }
+                        else {
+                           puts("off");
+                        }
+                        printf("   Max Threads             = %u\n", (unsigned int)maxThreads);
+                        puts("   Policy Settings");
+                        printf("      Policy Type          = %s\n", (policyName != NULL) ? policyName : "?");
+                        printf("      Load Degradation     = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_degradation / (double)PPV_MAX_LOAD_DEGRADATION));
+                        printf("      Load DPF             = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_load_dpf / (double)PPV_MAX_LOADDPF));
+                        printf("      Weight               = %u\n", loadinfo->rli_weight);
+                        printf("      Weight DPF           = %1.3f%%\n", 100.0 * ((double)loadinfo->rli_weight_dpf / (double)PPV_MAX_WEIGHTDPF));
+                        if(printParameters) {
+                           printParameters(userData);
+                        }
+                     }
+
+                     // ====== Register PE ========================================
+                     if(rsp_register_tags(rserpoolSocket,
+                                          (const unsigned char*)poolHandle, strlen(poolHandle),
+                                          loadinfo, reregInterval,
+                                          (daemonMode == true) ? REGF_DAEMONMODE : 0,
+                                          tags) == 0) {
+                        uint32_t identifier = 0;
+                        if(rsp_getsockname(rserpoolSocket, NULL, NULL, &identifier) == 0) {
+                           if(!quiet) {
+                              puts("Registration:");
+                              printf("   Identifier              = $%08x\n\n", identifier);
+                           }
+                        }
+
+                        // ====== Main loop =======================================
+                        TCPLikeServerList        serverSet(maxThreads, systemNotificationPipe[1]);
+                        const unsigned long long autoStopTimeStamp =
+                           (runtimeLimit > 0) ? (getMicroTime() + (1000ULL * runtimeLimit)) : 0;
+                        installBreakDetector();
+                        while(!breakDetected()) {
+                           // ====== Wait for actions =============================
+                           struct pollfd pollfds[2];
+                           pollfds[0].fd      = rserpoolSocket;
+                           pollfds[0].events  = POLLIN;
+                           pollfds[0].revents = 0;
+                           pollfds[1].fd      = rspNotificationPipe[0];
+                           pollfds[1].events  = POLLIN;
+                           pollfds[1].revents = 0;
+                           const int result = rsp_poll((struct pollfd*)&pollfds, 2, 2500);
+
+                           // ====== Clean-up session list ========================
+                           // Possible, some sessions have finished working during
+                           // waiting time. Therefore, cleaning them up is useful
+                           // before accepting new sessions.
+                           if(serverSet.handleRemovalsAndTimers() > 0) {
+                              int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                              if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
+                                 perror("Unable to update backlog using rsp_listen()");
+                              }
+                           }
+
+                           // ====== Wait for incoming sessions ===================
+                           if(result > 0) {
+                              if(pollfds[0].revents & POLLIN) {
+                                  int newRSerPoolSocket = rsp_accept(rserpoolSocket, 0);
+                                  if(newRSerPoolSocket >= 0) {
+                                     if(serverSet.hasCapacity()) {
+                                        TCPLikeServer* serviceThread = threadFactory(newRSerPoolSocket, userData, identifier);
+                                        if(serviceThread) {
+                                           if(serverSet.add(serviceThread)) {
+                                              if(serviceThread->start()) {
+                                                 int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                                                 if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
+                                                    perror("Unable to update backlog using rsp_listen()");
+                                                 }
+                                              }
+                                              else {
+                                                 printTimeStamp(stderr);
+                                                 fputs("ERROR: Unable to start up service thread\n", stderr);
+                                                 serverSet.remove(serviceThread);
+                                                 delete serviceThread;
+                                              }
+                                           }
+                                           else {
+                                              delete serviceThread;
+                                              printTimeStamp(stderr);
+                                              puts("Unable to add new service thread");
                                            }
                                         }
                                         else {
+                                           rsp_close(newRSerPoolSocket);
                                            printTimeStamp(stderr);
-                                           fputs("ERROR: Unable to start up service thread\n", stderr);
-                                           serverSet.remove(serviceThread);
-                                           delete serviceThread;
+                                           puts("Unable to create new service thread");
                                         }
                                      }
                                      else {
-                                        delete serviceThread;
-                                        printTimeStamp(stderr);
-                                        puts("Unable to add new service thread");
+                                        rsp_close(newRSerPoolSocket);
+                                        printTimeStamp(stdout);
+                                        puts("Rejected new session, since server is fully loaded");
                                      }
                                   }
-                                  else {
-                                     rsp_close(newRSerPoolSocket);
-                                     printTimeStamp(stderr);
-                                     puts("Unable to create new service thread");
-                                  }
-                               }
-                               else {
-                                  rsp_close(newRSerPoolSocket);
-                                  printTimeStamp(stdout);
-                                  puts("Rejected new session, since server is fully loaded");
-                               }
-                            }
-                        }
+                              }
 
-                        // ====== Do reregistration on load changes =========
-                        if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
-                           double newLoad = serverSet.getTotalLoad();
-                           if(loadUpdateHook) {
-                              newLoad = loadUpdateHook(newLoad);
-                              CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+                              // ====== Do reregistration on load changes =========
+                              if(PPT_IS_ADAPTIVE(loadinfo->rli_policy)) {
+                                 double newLoad = serverSet.getTotalLoad();
+                                 if(loadUpdateHook) {
+                                    newLoad = loadUpdateHook(newLoad);
+                                    CHECK((newLoad >= 0.0) && (newLoad <= 1.0));
+                                 }
+                                 if(fabs(newLoad - oldLoad) >= 0.01) {
+                                    // printf("NEW LOAD = %1.6f\n", newLoad);
+                                    oldLoad = newLoad;
+                                    loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
+                                    rsp_register_tags(rserpoolSocket,
+                                                      (const unsigned char*)poolHandle, strlen(poolHandle),
+                                                      loadinfo, reregInterval, REGF_DONTWAIT,
+                                                      tags);
+                                 }
+                              }
+
+                              // ====== Clear notification pipe ===================
+                              if(pollfds[1].revents & POLLIN) {
+                                 char buffer[1024];
+                                 ext_read(systemNotificationPipe[0], (char*)&buffer, sizeof(buffer));
+                              }
+
                            }
-                           if(fabs(newLoad - oldLoad) >= 0.01) {
-                              // printf("NEW LOAD = %1.6f\n", newLoad);
-                              oldLoad = newLoad;
-                              loadinfo->rli_load = (unsigned int)rint(newLoad * (double)PPV_MAX_LOAD);
-                              rsp_register_tags(rserpoolSocket,
-                                                (const unsigned char*)poolHandle, strlen(poolHandle),
-                                                loadinfo, reregInterval, REGF_DONTWAIT,
-                                                tags);
+
+                           // ====== Auto-stop ====================================
+                           if((autoStopTimeStamp > 0) &&
+                              (getMicroTime() > autoStopTimeStamp)) {
+                              puts("Auto-stop reached!");
+                              break;
                            }
                         }
 
-                        // ====== Clear notification pipe ===================
-                        if(pollfds[1].revents & POLLIN) {
-                           char buffer[1024];
-                           ext_read(systemNotificationPipe[0], (char*)&buffer, sizeof(buffer));
-                        }
-
+                        // ====== Clean up ========================================
+                        serverSet.removeAll();
+                        rsp_deregister(rserpoolSocket, 0);
+                        uninstallBreakDetector();
                      }
-
-                     // ====== Auto-stop ====================================
-                     if((autoStopTimeStamp > 0) &&
-                        (getMicroTime() > autoStopTimeStamp)) {
-                        puts("Auto-stop reached!");
-                        break;
+                     if(finishService != NULL) {
+                        finishService(userData);
                      }
                   }
-
-                  // ====== Clean up ========================================
-                  serverSet.removeAll();
-                  rsp_deregister(rserpoolSocket, 0);
-                  uninstallBreakDetector();
+                  else {
+                     fprintf(stderr, "ERROR: Failed to register PE to pool %s\n", poolHandle);
+                  }
+                  if(rspNotificationPipe[0] > 0) {
+                     rsp_unmapsocket(rspNotificationPipe[0]);
+                  }
+                  if(rspNotificationPipe[1] > 0) {
+                     rsp_unmapsocket(rspNotificationPipe[1]);
+                  }
                }
-               if(finishService != NULL) {
-                  finishService(userData);
+               else {
+                  perror("Unable to map notification pipe FDs");
                }
+               ext_close(systemNotificationPipe[0]);
+               ext_close(systemNotificationPipe[1]);
             }
             else {
-               fprintf(stderr, "ERROR: Failed to register PE to pool %s\n", poolHandle);
-            }
-            if(rspNotificationPipe[0] > 0) {
-               rsp_unmapsocket(rspNotificationPipe[0]);
-            }
-            if(rspNotificationPipe[1] > 0) {
-               rsp_unmapsocket(rspNotificationPipe[1]);
+               perror("Unable to create notification pipe");
             }
          }
          else {
-            perror("Unable to map notification pipe FDs");
+            perror("Unable to put RSerPool socket into listening mode");
          }
-         ext_close(systemNotificationPipe[0]);
-         ext_close(systemNotificationPipe[1]);
       }
       else {
-         perror("Unable to create notification pipe");
+         perror("Unable to bind RSerPool socket");
       }
       rsp_close(rserpoolSocket);
    }

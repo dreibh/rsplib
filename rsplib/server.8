@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd July 31, 2009
+.Dd September 11, 2009
 .Dt Server 8
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -37,6 +37,7 @@
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
 .Nm server
+.Op Fl local=address:port,address,...
 .Op Fl asapannounce=address:port
 .Op Fl identifier=PE_identifier
 .Op Fl policy=policy_specification
@@ -130,6 +131,8 @@ The following options are available:
 .\" ====== Common parameters ================================================
 .It Common Pool Element Parameters:
 .Bl -tag -width indent
+.It Fl local=address:port,address,...
+Sets the local endpoint address(es).
 .It Fl asapannounce=address:port|auto|off
 Sets the multicast address and port the ASAP instance listens for ASAP
 Server Announces on.

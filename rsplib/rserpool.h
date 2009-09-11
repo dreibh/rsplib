@@ -322,7 +322,7 @@ int rsp_socket(int domain, int type, int protocol);
   * @param addrcnt Number of addresses in address array.
   * @return 0 in case of success; -1 in case of an error.
   */
-int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt);
+int rsp_bind(int sd, const struct sockaddr* addrs, int addrcnt);
 
 /**
   * Put RSerPool socket (PE only) into listening mode.

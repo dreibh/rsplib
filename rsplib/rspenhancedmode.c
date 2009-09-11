@@ -465,27 +465,35 @@ int rsp_select(int n, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
 
 
 /* ###### Bind RSerPool socket ########################################### */
-int rsp_bind(int sd, struct sockaddr* addrs, int addrcnt)
+int rsp_bind(int sd, const struct sockaddr* addrs, int addrcnt)
 {
    struct RSerPoolSocket* rserpoolSocket;
+   union sockaddr_union*  unpackedAddresses;
    union sockaddr_union   localAddress;
+   int                    result;
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    /* ====== Bind socket ================================================= */
-   if(addrs == NULL) {
+   if(addrcnt < 1) {
       addrs   = (struct sockaddr*)&localAddress;
       addrcnt = 1;
       memset((void*)&localAddress, 0, sizeof(localAddress));
       ((struct sockaddr*)&localAddress)->sa_family = rserpoolSocket->SocketDomain;
    }
-   if(bindplus(rserpoolSocket->Socket, (union sockaddr_union*)addrs, addrcnt) == false) {
+   unpackedAddresses = unpack_sockaddr(addrs, addrcnt);
+   if(unpackedAddresses == NULL) {
+      errno = ENOMEM;
+      return(-1);
+   }
+   result = bindplus(rserpoolSocket->Socket, unpackedAddresses, addrcnt);
+   free(unpackedAddresses);
+   if(result == false) {
       LOG_ERROR
       logerror("Unable to bind socket for new pool element");
       LOG_END
       return(-1);
    }
-
    return(0);
 }
 
