@@ -63,8 +63,6 @@
 #include "loglevel.h"
 #include "debug.h"
 
-#include "fractalpooluser_moc.cc"
-
 
 
 #define DEFAULT_FPU_WIDTH             400

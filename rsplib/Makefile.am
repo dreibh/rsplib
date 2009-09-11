@@ -1,44 +1,149 @@
+# $Id$
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2009 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
 SUBDIRS = fgpconfig wireshark
 
-lib_LTLIBRARIES = librsplib.la libcpprspserver.la
+# NOTE: The order of the libraries is important!
+rspmgt_LIBS = libtdtimeutilities.la libtdstringutilities.la libtdthreadsafety.la libtdcppthread.la libtdloglevel.la libtdtagitem.la libtdstorage.la libtdnetutilities.la librsphsmgt.la librspdispatcher.la librspmessaging.la librspcsp.la
+lib_LTLIBRARIES = $(rspmgt_LIBS) librsplib.la libtdrandomizer.la libtdbreakdetector.la libcpprspserver.la
 
-# ###### rsplib library #####################################################
-librsplibincludedir      = $(prefix)/include/rserpool
-librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h rserpool-csp.h rserpool-internals.h tagitem.h
-librsplib_la_SOURCES = \
-asapinstance.c \
-asapinstance.h \
-asapinterthreadmessage.c \
-asapinterthreadmessage.h \
-breakdetector.c \
-breakdetector.h \
-componentstatuspackets.h \
-componentstatusreporter.h \
-componentstatusreporter.c \
-debug.h \
-dispatcher.c \
-dispatcher.h \
+
+# ###### tdtimeutilities library ############################################
+# libtdtimeutilitiesincludedir      = $(prefix)/include/tdutilities
+# libtdtimeutilitiesinclude_HEADERS = timeutilities.h
+libtdtimeutilities_la_SOURCES     = timeutilities.c timeutilities.h
+libtdtimeutilities_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdrandomizer library ############################################
+# libtdrandomizerincludedir      = $(prefix)/include/tdutilities
+# libtdrandomizerinclude_HEADERS = randomizer.h
+libtdrandomizer_la_SOURCES       = randomizer.c randomizer.h
+libtdrandomizer_la_LIBADD        = libtdtimeutilities.la -lm
+libtdrandomizer_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdstringutilities library ##########################################
+# libtdstringutilitiesincludedir      = $(prefix)/include/tdutilities
+# libtdstringutilitiesinclude_HEADERS = stringutilities.h
+libtdstringutilities_la_SOURCES     = stringutilities.c stringutilities.h
+libtdstringutilities_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdloglevel library #################################################
+# libtdloglevelincludedir      = $(prefix)/include/tdutilities
+# libtdloglevelinclude_HEADERS = loglevel.h
+libtdloglevel_la_SOURCES     = loglevel.c loglevel.h
+libtdloglevel_la_LIBADD      = libtdtimeutilities.la libtdthreadsafety.la
+libtdloglevel_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdtagitem library ##################################################
+# libtdtagitemincludedir      = $(prefix)/include/tdutilities
+# libtdtagiteminclude_HEADERS = tagitem.h
+libtdtagitem_la_SOURCES     = tagitem.c tagitem.h
+libtdtagitem_la_LIBADD      = libtdloglevel.la
+libtdtagitem_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdbreakdetector library ############################################
+# libtdbreakdetectorincludedir      = $(prefix)/include/tdutilities
+# libtdbreakdetectorinclude_HEADERS = breakdetector.h
+libtdbreakdetector_la_SOURCES     = breakdetector.c breakdetector.h
+libtdbreakdetector_la_LIBADD      = libtdtimeutilities.la
+libtdbreakdetector_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdthreadsafety library #############################################
+# libtdthreadsafetyincludedir      = $(prefix)/include/tdutilities
+# libtdthreadsafetyinclude_HEADERS = threadsafety.h threadsignal.h
+libtdthreadsafety_la_SOURCES = \
+threadsafety.c \
+threadsafety.h \
+threadsignal.c \
+threadsignal.h
+libtdthreadsafety_la_LIBADD  = $(thread_LIBS)
+libtdthreadsafety_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdcppthread library #############################################
+# libtdcppthreadincludedir      = $(prefix)/include/tdutilities
+# libtdcppthreadinclude_HEADERS = cppthread.h threadsignal.h
+libtdcppthread_la_SOURCES = \
+mutex.cc \
+mutex.h \
+thread.cc \
+thread.h
+libtdcppthread_la_LIBADD  = libtdthreadsafety.la
+libtdcppthread_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdstorage library ##################################################
+# libtdstorageincludedir      = $(prefix)/include/tdutilities
+# libtdstorageinclude_HEADERS = doublelinkedringlist.h leaflinkedredblacktree.h simpleredblacktree.h
+libtdstorage_la_SOURCES     = \
 doublelinkedringlist.h \
 doublelinkedringlist.c \
-ext_socket.h \
-fdcallback.c \
-fdcallback.h \
-identifierbitmap.c \
-identifierbitmap.h \
-interthreadmessageport.c \
-interthreadmessageport.h \
-poolhandlespacechecksum.c \
-poolhandlespacechecksum.h \
 leaflinkedredblacktree.c \
 leaflinkedredblacktree.h \
-loglevel.c \
-loglevel.h \
+redblacktree.h \
+redblacktree_impl.h \
+simpleredblacktree.h \
+simpleredblacktree.c
+libtdstorage_la_LIBADD  = 
+libtdstorage_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+# ###### tdnetutilities library #############################################
+# libtdnetutilitiesincludedir      = $(prefix)/include/tdutilities
+# libtdnetutilitiesinclude_HEADERS = ext_socket.h messagebuffer.h netutilities.h netdouble.h sockaddrunion.h
+libtdnetutilities_la_SOURCES     = \
+ext_socket.h \
 messagebuffer.h \
 messagebuffer.c \
 netutilities.c \
 netutilities.h \
-notificationqueue.c \
-notificationqueue.h \
+netdouble.c \
+netdouble.h \
+sockaddrunion.h
+libtdnetutilities_la_LIBADD  = libtdrandomizer.la libtdstringutilities.la libtdloglevel.la libtdtagitem.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
+libtdnetutilities_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+
+# ###### rsphsmgt library ###################################################
+# librsphsmgtincludedir      = $(prefix)/include/rserpool
+# librsphsmgtinclude_HEADERS =
+librsphsmgt_la_SOURCES = \
+rserpoolerror.c \
+rserpoolerror.h \
+poolhandlespacechecksum.c \
+poolhandlespacechecksum.h \
 peerlistmanagement-template.h \
 peerlistmanagement-template_impl.h \
 peerlistnode-template.h \
@@ -67,10 +172,72 @@ pooluserlist-template.h \
 pooluserlist-template_impl.h \
 poolusernode-template.h \
 poolusernode-template_impl.h \
-randomizer.c \
-randomizer.h \
-redblacktree.h \
-redblacktree_impl.h \
+timestamphashtable.c \
+timestamphashtable.h \
+transportaddressblock.c \
+transportaddressblock.h
+librsphsmgt_la_LIBADD  = libtdstorage.la libtdnetutilities.la -lm
+librsphsmgt_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+
+# ###### rspmessaging library ###############################################
+# librspmessagingincludedir      = $(prefix)/include/tdutilities
+# librspmessaginginclude_HEADERS = rserpoolmessage.h rserpoolmessagecreator.h rserpoolmessageparser.h
+librspmessaging_la_SOURCES     = \
+rserpoolmessage.c \
+rserpoolmessage.h \
+rserpoolmessagecreator.c \
+rserpoolmessagecreator.h \
+rserpoolmessageparser.c \
+rserpoolmessageparser.h
+librspmessaging_la_LIBADD  = libtdnetutilities.la librsphsmgt.la
+librspmessaging_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+
+# ###### rspdispatcher library #############################################
+# librspdispatcherincludedir      = $(prefix)/include/tdutilities
+# librspdispatcherinclude_HEADERS = ext_socket.h netutilities.h netdouble.h
+librspdispatcher_la_SOURCES     = \
+dispatcher.c \
+dispatcher.h \
+fdcallback.c \
+fdcallback.h \
+timer.c \
+timer.h
+librspdispatcher_la_LIBADD  = libtdnetutilities.la libtdstorage.la
+librspdispatcher_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+
+# ###### rspcsp library #####################################################
+# librspcspincludedir      = $(prefix)/include/tdutilities
+# librspcspinclude_HEADERS = ext_socket.h netutilities.h netdouble.h
+librspcsp_la_SOURCES     = \
+componentstatuspackets.h \
+componentstatusreporter.h \
+componentstatusreporter.c
+librspcsp_la_LIBADD  = librspdispatcher.la libtdnetutilities.la
+librspcsp_la_LDFLAGS = \
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+
+
+# ###### rsplib library #####################################################
+librsplibincludedir      = $(prefix)/include/rserpool
+librsplibinclude_HEADERS = rserpool.h rserpool-policytypes.h rserpool-csp.h rserpool-internals.h tagitem.h
+librsplib_la_SOURCES = \
+asapinstance.c \
+asapinstance.h \
+asapinterthreadmessage.c \
+asapinterthreadmessage.h \
+debug.h \
+identifierbitmap.c \
+identifierbitmap.h \
+interthreadmessageport.c \
+interthreadmessageport.h \
+notificationqueue.c \
+notificationqueue.h \
 registrartable.c \
 registrartable.h \
 rserpool.h \
@@ -78,14 +245,6 @@ rserpool-internals.h \
 rserpool-policytypes.h \
 rserpoolsocket.c \
 rserpoolsocket.h \
-rserpoolerror.c \
-rserpoolerror.h \
-rserpoolmessage.c \
-rserpoolmessage.h \
-rserpoolmessagecreator.c \
-rserpoolmessagecreator.h \
-rserpoolmessageparser.c \
-rserpoolmessageparser.h \
 rspbasicmode.c \
 rspenhancedmode.c \
 rsputilities.c \
@@ -94,31 +253,11 @@ sessionstorage.c \
 sessionstorage.h \
 sessioncontrol.c \
 sessioncontrol.h \
-simpleredblacktree.h \
-simpleredblacktree.c \
-stringutilities.c \
-stringutilities.h \
-sockaddrunion.h \
-timeutilities.c \
-timeutilities.h \
-tagitem.c \
-tagitem.h \
-tdtypes.h \
-threadsafety.c \
-threadsafety.h \
-threadsignal.c \
-threadsignal.h \
-timer.c \
-timer.h \
-timestamphashtable.c \
-timestamphashtable.h \
-transportaddressblock.c \
-transportaddressblock.h \
-netdouble.c \
-netdouble.h
+tdtypes.h
+librsplib_la_LIBADD  = libtdrandomizer.la libtdtimeutilities.la libtdstringutilities.la libtdloglevel.la libtdtagitem.la libtdstorage.la librsphsmgt.la librspmessaging.la librspcsp.la
 librsplib_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
+   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
 
 
 # ###### cpprspserver library ###############################################
@@ -126,18 +265,14 @@ libcpprspserverincludedir      = $(prefix)/include/rserpool
 libcpprspserverinclude_HEADERS = mutex.h thread.h cpprspserver.h udplikeserver.h tcplikeserver.h
 libcpprspserver_la_SOURCES     = \
 cpprspserver.h \
-mutex.cc \
-mutex.h \
 tcplikeserver.cc \
 tcplikeserver.h \
-thread.cc \
-thread.h \
 udplikeserver.cc \
 udplikeserver.h
-libcpprspserver_la_LIBADD  = librsplib.la
+libcpprspserver_la_LIBADD  = libtdcppthread.la librsplib.la libtdbreakdetector.la
 libcpprspserver_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) -lm
+   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
 
 
 # ###### Main programs ######################################################
@@ -150,83 +285,86 @@ EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts add-dummy-i
 endif
 
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm $(bz2_LIBS)
+registrar_LDADD   = libtdbreakdetector.la $(rspmgt_LIBS) $(bz2_LIBS)
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
-server_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+server_LDADD   = libtdbreakdetector.la libcpprspserver.la
 
 terminal_SOURCES = terminal.c
-terminal_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+terminal_LDADD   = libtdbreakdetector.la librsplib.la
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+hsdump_LDADD   = $(rspmgt_LIBS)
 
 pingpongclient_SOURCES = pingpongclient.c
-pingpongclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 scriptingclient_SOURCES = scriptingclient.c
-scriptingclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+calcappclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 cspmonitor_SOURCES = cspmonitor.c
-cspmonitor_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm
 
 if BUILD_QT_PROGRAMS
-FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
-FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
-CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
+# FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
+# FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
+# CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
+# 
+# %_moc.cc: %.h
+# 	$(MOC) -o $@ $<
+# 
+# # To compile (i.e. generate object files), first create MOC file.
+# # This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
+# $(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
 
-%_moc.cc: %.h
-	$(MOC) -o $@ $<
-
-# To compile (i.e. generate object files), first create MOC file.
-# This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
-$(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
+fractalpooluser_moc.cc: fractalpooluser.h
+	$(MOC) -o fractalpooluser_moc.cc fractalpooluser.h
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts
-fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser_moc.cc fractalpooluser.h fractalpooluser.ts
+fractalpooluser_LDADD    = $(QT_LDADD) libtdcppthread.la librsplib.la
 endif
 
 
 # ###### Test programs ######################################################
-noinst_PROGRAMS = hrestest testregistrator createsummary combinesummaries fork gettimestamp exectime execalarm rootshell attacker
-# t1
+if BUILD_TEST_PROGRAMS
+noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker
+# t2
+else
+noinst_PROGRAMS =
+endif
 
+if BUILD_TEST_PROGRAMS
 hrestest_SOURCES = hrestest.c
-hrestest_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+hrestest_LDADD   = libtdbreakdetector.la librsplib.la
 
 testregistrator_SOURCES = testregistrator.c
-testregistrator_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
-
-createsummary_SOURCES = createsummary.cc
-createsummary_LDADD   = $(bz2_LIBS) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS)
-
-combinesummaries_SOURCES = combinesummaries.cc
-combinesummaries_LDADD   = $(bz2_LIBS)
+testregistrator_LDADD   = libtdbreakdetector.la  librsplib.la
 
 fork_SOURCES = fork.c
-fork_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+fork_LDADD   = libtdtimeutilities.la libtdrandomizer.la -lm
 
 exectime_SOURCES = exectime.cc
-exectime_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+exectime_LDADD   = libtdcppthread.la libtdtimeutilities.la
 
 execalarm_SOURCES = execalarm.cc
-execalarm_LDADD   = libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+execalarm_LDADD   = libtdtimeutilities.la
 
 gettimestamp_SOURCES = gettimestamp.c
-gettimestamp_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+gettimestamp_LDADD   = libtdtimeutilities.la
 
 rootshell_SOURCES = rootshell.c
 rootshell_LDADD   =
 
 attacker_SOURCES = attacker.cc
-attacker_LDADD   = librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+attacker_LDADD   = libtdbreakdetector.la librsplib.la
 
-# t1_SOURCES = t1.cc
-# t1_LDADD   = librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS) $(glib_LIBS) -lm
+# t2_SOURCES = t2.cc
+# t2_LDADD   = libtdnetutilities.la
+endif
 
 
 # ###### Scripts ############################################################

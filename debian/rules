@@ -53,6 +53,9 @@ install-arch:
 #	dh_clean -k -s
 	dh_installdirs -s
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	echo "======================="
+	find $(CURDIR)/ -name "*"
+	echo "======================="
 	dh_install -s
 
 binary-common:

@@ -1,1 +1,13 @@
+debian/tmp/usr/lib/librspcsp.so.*
+debian/tmp/usr/lib/librspdispatcher.so.*
+debian/tmp/usr/lib/librsphsmgt.so.*
 debian/tmp/usr/lib/librsplib.so.*
+debian/tmp/usr/lib/librspmessaging.so.*
+debian/tmp/usr/lib/libtdbreakdetector.so.*
+debian/tmp/usr/lib/libtdloglevel.so.*
+debian/tmp/usr/lib/libtdnetutilities.so.*
+debian/tmp/usr/lib/libtdrandomizer.so.*
+debian/tmp/usr/lib/libtdstorage.so.*
+debian/tmp/usr/lib/libtdstringutilities.so.*
+debian/tmp/usr/lib/libtdtagitem.so.*
+debian/tmp/usr/lib/libtdtimeutilities.so.*
