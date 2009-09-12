@@ -46,6 +46,8 @@
 #include <complex>
 
 #include "fractalpooluser.h"
+#include "fractalpooluser_moc.cc"
+
 
 #ifdef FRACTALPOOLUSER_USE_KDE
 #include <kcmdlineargs.h>

@@ -322,22 +322,19 @@ cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm
 
 if BUILD_QT_PROGRAMS
-# FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
-# FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
-# CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
-# 
-# %_moc.cc: %.h
-# 	$(MOC) -o $@ $<
-# 
-# # To compile (i.e. generate object files), first create MOC file.
-# # This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
-# $(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
+FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
+FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
+CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
 
-fractalpooluser_moc.cc: fractalpooluser.h
-	$(MOC) -o fractalpooluser_moc.cc fractalpooluser.h
+%_moc.cc: %.h
+	$(MOC) -o $@ $<
+
+# To compile (i.e. generate object files), first create MOC file.
+# This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
+$(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser_moc.cc fractalpooluser.h fractalpooluser.ts
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts
 fractalpooluser_LDADD    = $(QT_LDADD) libtdcppthread.la librsplib.la
 endif
 
