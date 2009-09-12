@@ -66,7 +66,10 @@ extern "C" {
 #define LOGLEVEL_VERBOSE4  8
 #define LOGLEVEL_VERBOSE5  9
 
-#define MAX_LOGLEVEL       LOGLEVEL_VERBOSE5
+#ifndef MAX_LOGLEVEL
+#wanring MAX_LOGLEVEL should be defined in config.h!
+#define MAX_LOGLEVEL LOGLEVEL_VERBOSE5
+#endif
 
 
 extern unsigned int        gLogLevel;
@@ -115,60 +118,16 @@ void setLogColor(const unsigned int color);
    }
 
 
-#if (LOG_ERROR <= MAX_LOGLEVEL)
-#define LOG_ERROR    if(gLogLevel >= LOGLEVEL_ERROR)        LOG_BEGIN("Error: ",9,1)
-#else
-#define LOG_ERROR    if(0) {
-#endif
-
-#if (LOG_ACTION <= MAX_LOGLEVEL)
-#define LOG_ACTION   if(gLogLevel >= LOGLEVEL_ACTION)       LOG_BEGIN("",12,4)
-#else
-#define LOG_ACTION   if(0) {
-#endif
-
-#if (LOG_WARNING <= MAX_LOGLEVEL)
-#define LOG_WARNING  if(gLogLevel >= LOGLEVEL_WARNING)      LOG_BEGIN("Warning: ",13,5)
-#else
-#define LOG_WARNING  if(0) {
-#endif
-
-#if (LOG_NOTE <= MAX_LOGLEVEL)
-#define LOG_NOTE     if(gLogLevel >= LOGLEVEL_NOTE)         LOG_BEGIN("",10,2)
-#else
-#define LOG_NOTE     if(0) {
-#endif
-
-#if (LOG_VERBOSE1 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE1 if(gLogLevel >= LOGLEVEL_VERBOSE1)     LOG_BEGIN("",10,3)
-#else
-#define LOG_VERBOSE1 if(0) {
-#endif
-#define LOG_VERBOSE LOG_VERBOSE1
-
-#if (LOG_VERBOSE2 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE2 if(gLogLevel >= LOGLEVEL_VERBOSE2)     LOG_BEGIN("",14,6)
-#else
-#define LOG_VERBOSE2 if(0) {
-#endif
-
-#if (LOG_VERBOSE3 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE3 if(gLogLevel >= LOGLEVEL_VERBOSE3)     LOG_BEGIN("",3,3)
-#else
-#define LOG_VERBOSE3 if(0) {
-#endif
-
-#if (LOG_VERBOSE4 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE4 if(gLogLevel >= LOGLEVEL_VERBOSE4)     LOG_BEGIN("",6,6)
-#else
-#define LOG_VERBOSE4 if(0) {
-#endif
-
-#if (LOG_VERBOSE5 <= MAX_LOGLEVEL)
-#define LOG_VERBOSE5 if(gLogLevel >= LOGLEVEL_VERBOSE5)     LOG_BEGIN("",7,7)
-#else
-#define LOG_VERBOSE5 if(0) {
-#endif
+#define LOG_ERROR    if((LOGLEVEL_ERROR    <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_ERROR))     LOG_BEGIN("Error: ", 9, 1)
+#define LOG_WARNING  if((LOGLEVEL_WARNING  <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_WARNING))   LOG_BEGIN("Warning: ", 13, 5)
+#define LOG_ACTION   if((LOGLEVEL_ACTION   <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_ACTION))    LOG_BEGIN("", 12, 4)
+#define LOG_NOTE     if((LOGLEVEL_NOTE     <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_NOTE))      LOG_BEGIN("", 10, 2)
+#define LOG_VERBOSE  LOG_VERBOSE1
+#define LOG_VERBOSE1 if((LOGLEVEL_VERBOSE1 <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_VERBOSE1))  LOG_BEGIN("", 10, 3)
+#define LOG_VERBOSE2 if((LOGLEVEL_VERBOSE2 <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_VERBOSE2))  LOG_BEGIN("", 14, 6)
+#define LOG_VERBOSE3 if((LOGLEVEL_VERBOSE3 <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_VERBOSE3))  LOG_BEGIN("", 3, 3)
+#define LOG_VERBOSE4 if((LOGLEVEL_VERBOSE4 <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_VERBOSE4))  LOG_BEGIN("", 6, 6)
+#define LOG_VERBOSE5 if((LOGLEVEL_VERBOSE5 <= MAX_LOGLEVEL) && (gLogLevel >= LOGLEVEL_VERBOSE5))  LOG_BEGIN("", 7, 7)
 
 
 /**

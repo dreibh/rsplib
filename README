@@ -1,6 +1,6 @@
 A. FIRST STEPS
 
-How to set up a simple test of the rsplib-2.6.x release:
+How to set up a simple test of the rsplib-2.7.x release:
 
 1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
    implementation, do the following two steps first:
@@ -343,4 +343,4 @@ Visit http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ for more information
 ==================================================================================
 
 
-15.01.2009 Thomas Dreibholz, dreibh@iem.uni-due.de
+12.09.2009 Thomas Dreibholz, dreibh@iem.uni-due.de

@@ -109,7 +109,7 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-April 30, 2009
+September 12, 2009
 \end_layout
 
 \begin_layout Standard
@@ -1187,6 +1187,20 @@ default
 \begin_layout Description
 
 \family typewriter
+--with-max-loglevel
+\family default
+ Allows for reduction of the maximum logging verbosity.
+ Setting a lower value here makes the programs smaller, at cost of reduces
+ logging capabilities (
+\series bold
+default: 9
+\series default
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 --enable-hsmgtverify
 \family default
  Enable Handlespace Management verification.
@@ -1310,7 +1324,7 @@ preferences
  would overwrite them!).
  You do
 \series bold
-not
+ not
 \series default
  need to install the provided dissectors, they have already contributed
  to the
