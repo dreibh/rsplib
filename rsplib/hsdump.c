@@ -30,7 +30,6 @@
 #include "tdtypes.h"
 #include "loglevel.h"
 #include "netutilities.h"
-#include "dispatcher.h"
 #include "timer.h"
 
 #include "rserpoolmessage.h"

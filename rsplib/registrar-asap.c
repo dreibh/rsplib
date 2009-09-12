@@ -31,6 +31,200 @@
 #include "poolhandle.h"
 
 
+#if 0
+#include "tagitem.h"
+
+#define TAG_TuneSCTP_MinRTO      (TAG_USER + 15000)
+#define TAG_TuneSCTP_MaxRTO      (TAG_USER + 15001)
+#define TAG_TuneSCTP_InitialRTO  (TAG_USER + 15002)
+#define TAG_TuneSCTP_Heartbeat   (TAG_USER + 15003)
+#define TAG_TuneSCTP_PathMaxRXT  (TAG_USER + 15004)
+#define TAG_TuneSCTP_AssocMaxRXT (TAG_USER + 15006)
+#define TAG_TuneSCTP_LocalRWND   (TAG_USER + 15007)
+#define TAG_TuneSCTP_CookieLife  (TAG_USER + 15008)
+
+/**
+  * Tune SCTP parameters for given association.
+  *
+  * @param sockfd Socket.
+  * @param assocID Association ID (0 for TCP-like).
+  * @param tags Parameters as tag items.
+  * @return true in case of success; false otherwise.
+  */
+bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags);
+
+
+/* ###### Tune SCTP parameters ############################################ */
+static bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags)
+{
+   struct sctp_rtoinfo     rtoinfo;
+   struct sctp_paddrparams peerParams;
+   struct sctp_assocparams assocParams;
+   union sockaddr_union*   addrs = NULL;
+   socklen_t               size;
+   int                     i, n;
+   bool                    result = true;
+
+   size = (socklen_t)sizeof(rtoinfo);
+   rtoinfo.srto_assoc_id = assocID;
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, &size) == 0) {
+      LOG_VERBOSE3
+      fprintf(stdlog, "  Current RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
+      fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
+      fprintf(stdlog, "  Min SRTO:     %u\n", rtoinfo.srto_min);
+      fprintf(stdlog, "  Max SRTO:     %u\n", rtoinfo.srto_max);
+      LOG_END
+
+      rtoinfo.srto_min     = tagListGetData(tags, TAG_TuneSCTP_MinRTO,     rtoinfo.srto_min);
+      rtoinfo.srto_max     = tagListGetData(tags, TAG_TuneSCTP_MaxRTO,     rtoinfo.srto_max);
+      rtoinfo.srto_initial = tagListGetData(tags, TAG_TuneSCTP_InitialRTO, rtoinfo.srto_initial);
+
+      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t)sizeof(rtoinfo)) < 0) {
+         result = false;
+         LOG_WARNING
+         logerror("SCTP_RTOINFO");
+         fprintf(stdlog, "Unable to update RTO info of socket %d, assoc %u\n", sockfd, (unsigned int)assocID);
+         LOG_END
+      }
+      else {
+         LOG_VERBOSE2
+         fprintf(stdlog, "  New RTO info of socket %d, assoc %u:\n", sockfd, (unsigned int)rtoinfo.srto_assoc_id);
+         fprintf(stdlog, "  Initial SRTO: %u\n", rtoinfo.srto_initial);
+         fprintf(stdlog, "  Min SRTO:     %u\n", rtoinfo.srto_min);
+         fprintf(stdlog, "  Max SRTO:     %u\n", rtoinfo.srto_max);
+         LOG_END
+      }
+   }
+   else {
+      LOG_VERBOSE2
+      logerror("Cannot get RTO info -> Skipping RTO info configuration");
+      LOG_END
+   }
+
+   size = (socklen_t)sizeof(assocParams);
+   assocParams.sasoc_assoc_id = assocID;
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, &size) == 0) {
+      LOG_VERBOSE3
+      fprintf(stdlog, "Current Assoc info of socket %d, assoc %u:\n", sockfd, (unsigned int)assocParams.sasoc_assoc_id);
+      fprintf(stdlog, "  AssocMaxRXT:       %u\n", assocParams.sasoc_asocmaxrxt);
+      fprintf(stdlog, "  Peer Destinations: %u\n", assocParams.sasoc_number_peer_destinations);
+      fprintf(stdlog, "  Peer RWND:         %u\n", assocParams.sasoc_peer_rwnd);
+      fprintf(stdlog, "  Local RWND:        %u\n", assocParams.sasoc_local_rwnd);
+      fprintf(stdlog, "  Cookie Life:       %u\n", assocParams.sasoc_cookie_life);
+      LOG_END
+
+      assocParams.sasoc_asocmaxrxt  = tagListGetData(tags, TAG_TuneSCTP_AssocMaxRXT, assocParams.sasoc_asocmaxrxt);
+      assocParams.sasoc_local_rwnd  = tagListGetData(tags, TAG_TuneSCTP_LocalRWND,   assocParams.sasoc_local_rwnd);
+      assocParams.sasoc_cookie_life = tagListGetData(tags, TAG_TuneSCTP_CookieLife,  assocParams.sasoc_cookie_life);
+
+      if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t)sizeof(assocParams)) < 0) {
+         result = false;
+         LOG_WARNING
+         logerror("SCTP_ASSOCINFO");
+         fprintf(stdlog, "Unable to update Assoc info of socket %d, assoc %u\n", sockfd, (unsigned int)assocID);
+         LOG_END
+      }
+      else {
+         LOG_VERBOSE2
+         fprintf(stdlog, "New Assoc info of socket %d, assoc %u:\n", sockfd, (unsigned int)assocParams.sasoc_assoc_id);
+         fprintf(stdlog, "  AssocMaxRXT:       %u\n", assocParams.sasoc_asocmaxrxt);
+         fprintf(stdlog, "  Peer Destinations: %u\n", assocParams.sasoc_number_peer_destinations);
+         fprintf(stdlog, "  Peer RWND:         %u\n", assocParams.sasoc_peer_rwnd);
+         fprintf(stdlog, "  Local RWND:        %u\n", assocParams.sasoc_local_rwnd);
+         fprintf(stdlog, "  Cookie Life:       %u\n", assocParams.sasoc_cookie_life);
+         LOG_END
+      }
+   }
+   else {
+      LOG_VERBOSE2
+      logerror("Cannot get Assoc info -> Skipping Assoc info configuration");
+      LOG_END
+   }
+
+   n = getpaddrsplus(sockfd, assocID, &addrs);
+   if(n >= 0) {
+      for(i = 0;i < n;i++) {
+         memset(&peerParams, 0, sizeof(peerParams));
+         peerParams.spp_assoc_id = assocID;
+         memcpy((void*)&(peerParams.spp_address),
+                (const void*)&addrs[i], sizeof(union sockaddr_union));
+         size = (socklen_t)sizeof(peerParams);
+
+         if(sctp_opt_info(sockfd, assocID, SCTP_PEER_ADDR_PARAMS,
+                          (void*)&peerParams, &size) == 0) {
+            LOG_VERBOSE3
+            fputs("Old peer parameters for address ", stdlog);
+            fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
+#ifdef HAVE_SPP_FLAGS
+            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
+                    sockfd, (unsigned int)assocID,
+                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
+#else
+            fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                    sockfd, (unsigned int)assocID,
+                    peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+#endif
+            LOG_END
+
+            peerParams.spp_hbinterval = tagListGetData(tags, TAG_TuneSCTP_Heartbeat,  peerParams.spp_hbinterval);
+#ifdef HAVE_SPP_FLAGS
+            if(peerParams.spp_hbinterval > 0) {
+               peerParams.spp_flags |= SPP_HB_ENABLE;
+            }
+            else {
+               peerParams.spp_flags |= SPP_HB_DISABLE;
+            }
+#endif
+            peerParams.spp_pathmaxrxt = tagListGetData(tags, TAG_TuneSCTP_PathMaxRXT, peerParams.spp_pathmaxrxt);;
+
+            if(sctp_opt_info(sockfd, 0, SCTP_PEER_ADDR_PARAMS,
+                             (void *)&peerParams, &size) < 0) {
+               LOG_VERBOSE2
+               fputs("Unable to set peer parameters for address ", stdlog);
+               fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
+               fprintf(stdlog, " on socket %d, assoc %u\n",
+                       sockfd, (unsigned int)assocID);
+               LOG_END
+            }
+            else {
+               LOG_VERBOSE2
+               fputs("New peer parameters for address ", stdlog);
+               fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
+#ifdef HAVE_SPP_FLAGS
+                fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d flags=$%x\n",
+                        sockfd, (unsigned int)assocID,
+                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt, peerParams.spp_flags);
+#else
+                fprintf(stdlog, " on socket %d, assoc %u: hb=%d maxrxt=%d\n",
+                        sockfd, (unsigned int)assocID,
+                        peerParams.spp_hbinterval, peerParams.spp_pathmaxrxt);
+#endif
+               LOG_END
+            }
+         }
+         else {
+            LOG_VERBOSE2
+            fputs("Unable to get peer parameters for address ", stdlog);
+            fputaddress((struct sockaddr*)&(peerParams.spp_address), false, stdlog);
+            fprintf(stdlog, " on socket %d, assoc %u\n",
+                    sockfd, (unsigned int)assocID);
+            LOG_END
+         }
+      }
+      free(addrs);
+   }
+   else {
+      result = false;
+      LOG_VERBOSE2
+      fputs("No peer addresses -> skipping peer parameters\n", stdlog);
+      LOG_END
+   }
+
+   return(result);
+}
+#endif
+
+
 /* ###### ASAP Announce timer ############################################ */
 void registrarHandleASAPAnnounceTimer(struct Dispatcher* dispatcher,
                                       struct Timer*      timer,
@@ -350,9 +544,8 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
                fputs("\n", stdlog);
                LOG_END
 
-
+#if 0
                /* ====== Tune SCTP association ============================== */
-/*
                tags[0].Tag = TAG_TuneSCTP_MinRTO;
                tags[0].Data = 500;
                tags[1].Tag = TAG_TuneSCTP_MaxRTO;
@@ -372,7 +565,7 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
                         (unsigned int)assocID);
                   LOG_END
                }
-*/
+#endif
 
                /* ====== Activate keep alive timer ========================== */
                if(STN_METHOD(IsLinked)(&poolElementNode->PoolElementTimerStorageNode)) {

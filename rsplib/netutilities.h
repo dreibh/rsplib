@@ -40,12 +40,12 @@
 
 
 #include "tdtypes.h"
-#include "tagitem.h"
 #include "sockaddrunion.h"
 
+#include <stdio.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <poll.h>
 #include <ext_socket.h>
 
 
@@ -442,26 +442,6 @@ size_t sendmulticast(int                    sockfd,
   * @return true for success; false otherwise.
   */
 bool setReusable(int sd, int on);
-
-
-#define TAG_TuneSCTP_MinRTO      (TAG_USER + 15000)
-#define TAG_TuneSCTP_MaxRTO      (TAG_USER + 15001)
-#define TAG_TuneSCTP_InitialRTO  (TAG_USER + 15002)
-#define TAG_TuneSCTP_Heartbeat   (TAG_USER + 15003)
-#define TAG_TuneSCTP_PathMaxRXT  (TAG_USER + 15004)
-#define TAG_TuneSCTP_AssocMaxRXT (TAG_USER + 15006)
-#define TAG_TuneSCTP_LocalRWND   (TAG_USER + 15007)
-#define TAG_TuneSCTP_CookieLife  (TAG_USER + 15008)
-
-/**
-  * Tune SCTP parameters for given association.
-  *
-  * @param sockfd Socket.
-  * @param assocID Association ID (0 for TCP-like).
-  * @param tags Parameters as tag items.
-  * @return true in case of success; false otherwise.
-  */
-bool tuneSCTP(int sockfd, sctp_assoc_t assocID, struct TagItem* tags);
 
 
 /**

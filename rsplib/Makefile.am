@@ -29,8 +29,23 @@
 SUBDIRS = fgpconfig wireshark
 
 # NOTE: The order of the libraries is important!
-rspmgt_LIBS = libtdtimeutilities.la libtdstringutilities.la libtdthreadsafety.la libtdcppthread.la libtdloglevel.la libtdtagitem.la libtdstorage.la libtdnetutilities.la librsphsmgt.la librspdispatcher.la librspmessaging.la librspcsp.la
-lib_LTLIBRARIES = $(rspmgt_LIBS) librsplib.la libtdrandomizer.la libtdbreakdetector.la libcpprspserver.la
+lib_LTLIBRARIES = \
+   libtdtimeutilities.la \
+   libtdstringutilities.la \
+   libtdthreadsafety.la \
+   libtdloglevel.la \
+   libtdstorage.la \
+   libtdnetutilities.la \
+   librsphsmgt.la \
+   librspmessaging.la \
+   libtdtagitem.la  \
+   librspdispatcher.la  \
+   librspcsp.la  \
+   librsplib.la  \
+   libtdrandomizer.la  \
+   libtdbreakdetector.la \
+   libtdcppthread.la \
+   libcpprspserver.la
 
 
 # ###### tdtimeutilities library ############################################
@@ -131,7 +146,7 @@ netutilities.h \
 netdouble.c \
 netdouble.h \
 sockaddrunion.h
-libtdnetutilities_la_LIBADD  = libtdrandomizer.la libtdstringutilities.la libtdloglevel.la libtdtagitem.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
+libtdnetutilities_la_LIBADD  = libtdrandomizer.la libtdstringutilities.la libtdloglevel.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
 libtdnetutilities_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -256,8 +271,7 @@ sessioncontrol.h \
 tdtypes.h
 librsplib_la_LIBADD  = libtdrandomizer.la libtdtimeutilities.la libtdstringutilities.la libtdloglevel.la libtdtagitem.la libtdstorage.la librsphsmgt.la librspmessaging.la librspcsp.la
 librsplib_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
 
 # ###### cpprspserver library ###############################################
@@ -271,8 +285,7 @@ udplikeserver.cc \
 udplikeserver.h
 libcpprspserver_la_LIBADD  = libtdcppthread.la librsplib.la libtdbreakdetector.la
 libcpprspserver_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) \
-   $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
 
 # ###### Main programs ######################################################
@@ -285,7 +298,7 @@ EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts add-dummy-i
 endif
 
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la $(rspmgt_LIBS) $(bz2_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS)
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
 server_LDADD   = libtdbreakdetector.la libcpprspserver.la
@@ -294,7 +307,7 @@ terminal_SOURCES = terminal.c
 terminal_LDADD   = libtdbreakdetector.la librsplib.la
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = $(rspmgt_LIBS)
+hsdump_LDADD   = librsphsmgt.la librspmessaging.la
 
 pingpongclient_SOURCES = pingpongclient.c
 pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la
