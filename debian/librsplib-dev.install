@@ -14,6 +14,7 @@ debian/tmp/usr/lib/libtdrandomizer*.so
 debian/tmp/usr/lib/libtdstorage*.so
 debian/tmp/usr/lib/libtdstringutilities*.so
 debian/tmp/usr/lib/libtdtagitem*.so
+debian/tmp/usr/lib/libtdthreadsafety*.so
 debian/tmp/usr/lib/libtdtimeutilities*.so
 debian/tmp/usr/lib/librspcsp*.a
 debian/tmp/usr/lib/librspdispatcher*.a
@@ -27,6 +28,7 @@ debian/tmp/usr/lib/libtdrandomizer*.a
 debian/tmp/usr/lib/libtdstorage*.a
 debian/tmp/usr/lib/libtdstringutilities*.a
 debian/tmp/usr/lib/libtdtagitem*.a
+debian/tmp/usr/lib/libtdthreadsafety*.a
 debian/tmp/usr/lib/libtdtimeutilities*.a
 debian/tmp/usr/lib/librspcsp*.la
 debian/tmp/usr/lib/librspdispatcher*.la
@@ -40,4 +42,5 @@ debian/tmp/usr/lib/libtdrandomizer*.la
 debian/tmp/usr/lib/libtdstorage*.la
 debian/tmp/usr/lib/libtdstringutilities*.la
 debian/tmp/usr/lib/libtdtagitem*.la
+debian/tmp/usr/lib/libtdthreadsafety*.la
 debian/tmp/usr/lib/libtdtimeutilities*.la

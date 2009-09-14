@@ -10,4 +10,5 @@ debian/tmp/usr/lib/libtdrandomizer.so.*
 debian/tmp/usr/lib/libtdstorage.so.*
 debian/tmp/usr/lib/libtdstringutilities.so.*
 debian/tmp/usr/lib/libtdtagitem.so.*
+debian/tmp/usr/lib/libtdthreadsafety.so.*
 debian/tmp/usr/lib/libtdtimeutilities.so.*
