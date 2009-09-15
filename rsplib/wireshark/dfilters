@@ -17,3 +17,5 @@
 "RSerPool Application FractalGeneratorProtocol" fractalgeneratorprotocol || (asap.message_type == 0x0b) || (asap.message_type == 0x0c)
 "RSerPool Application PingPongProtocol" pingpongprotocol || (asap.message_type == 0x0b) || (asap.message_type == 0x0c)
 "RSerPool Application ScriptingServiceProtocol" ssp || (asap.message_type == 0x0b) || (asap.message_type == 0x0c)
+"NetPerfMeter Control Traffic" sctp.data_payload_proto_id == 688485893
+"NetPerfMeter Data Traffic" sctp.data_payload_proto_id == 688485894
