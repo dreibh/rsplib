@@ -69,7 +69,7 @@ binary-common:
 	dh_fixperms
 	dh_makeshlibs
 	dh_installdeb
-	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):$(CURDIR)/debian/tmp/usr/lib" dh_shlibdeps -- --ignore-missing-info
+	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

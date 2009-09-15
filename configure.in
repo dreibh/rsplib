@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA4.1)
+AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA4.3)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -376,6 +376,7 @@ int main(int argc, char** argv)
 
 else
    # ====== Kernel SCTP =====================================================
+   oldLIBS=$LIBS
    AC_CHECK_FUNCS(sctp_sendmsg, ,  AC_CHECK_LIB(sctp, sctp_sendmsg))
    AC_CHECK_FUNCS(sctp_connectx, , AC_CHECK_LIB(sctp, sctp_connectx))
    AC_CHECK_FUNCS(sctp_send, ,     AC_CHECK_LIB(sctp, sctp_send))
@@ -404,6 +405,7 @@ else
                   [AC_MSG_RESULT(yes)
                    AC_DEFINE(HAVE_SCTP_DELAYED_SACK, 1, [Define to 1 if SCTP_DELAYED_SACK with sctp_sack_info is available.])],
                   AC_MSG_RESULT(no))
+   LIBS=$oldLIBS
 
    # ====== Check for Valgrind ==============================================
    # Needed to avoid false positives for sctp_getladdrs()/sctp_getpaddrs()
@@ -574,6 +576,7 @@ echo ""
 echo "   CFLAGS                          : $CFLAGS"
 echo "   CXXFLAGS                        : $CXXFLAGS"
 echo "   LDFLAGS                         : $LDFLAGS"
+echo "   LIBS                            : $LIBS"
 echo "   glib_CFLAGS                     : $glib_CFLAGS"
 echo ""
 echo "   QTDIR                           : $QTDIR"
