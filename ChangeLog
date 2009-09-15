@@ -1,4 +1,154 @@
 ------------------------------------------------------------------------
+r2215 | dreibh | 2009-09-14 19:53:19 +0200 (Mon, 14 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/libcpprspserver-dev.install
+   M /trunk/rsplib2/debian/libcpprspserver2.install
+   M /trunk/rsplib2/debian/librsplib-dev.install
+   M /trunk/rsplib2/debian/librsplib2.install
+   M /trunk/rsplib2/make-ppa
+
+Fixed Debian files (some libraries missing).
+
+------------------------------------------------------------------------
+r2214 | dreibh | 2009-09-12 11:57:24 +0200 (Sat, 12 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+
+Fixed .moc dependency for fractalpooluser in Makefile.am.
+
+------------------------------------------------------------------------
+r2213 | dreibh | 2009-09-12 11:09:20 +0200 (Sat, 12 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/make-ppa
+
+
+------------------------------------------------------------------------
+r2212 | dreibh | 2009-09-12 10:55:09 +0200 (Sat, 12 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Updated Debian scripts.
+
+------------------------------------------------------------------------
+r2211 | dreibh | 2009-09-12 10:20:53 +0200 (Sat, 12 Sep 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+   M /trunk/rsplib2/rsplib/loglevel.h
+
+- Added configure option to set maximum logging level.
+- Updated documentation.
+
+------------------------------------------------------------------------
+r2210 | dreibh | 2009-09-12 09:49:43 +0200 (Sat, 12 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/hsdump.c
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/netutilities.h
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+
+Updated Debian scripts.
+
+------------------------------------------------------------------------
+r2209 | dreibh | 2009-09-12 00:13:16 +0200 (Sat, 12 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+   M /trunk/rsplib2/autogen.sh
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/librsplib-dev.install
+   M /trunk/rsplib2/debian/librsplib2.install
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/docs/Makefile.am
+   M /trunk/rsplib2/rsplib/Makefile.am
+   A /trunk/rsplib2/rsplib/combinesummaries
+   D /trunk/rsplib2/rsplib/combinesummaries.cc
+   A /trunk/rsplib2/rsplib/createsummary
+   D /trunk/rsplib2/rsplib/createsummary.cc
+   M /trunk/rsplib2/rsplib/fgpconfig/Makefile.am
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/wireshark/Makefile.am
+
+Code and installation clean-up: splitted librsplib into several libraries so that programs only need to link what they need => smaller programs.
+
+------------------------------------------------------------------------
+r2208 | dreibh | 2009-09-11 12:09:32 +0200 (Fri, 11 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/netutilities.h
+
+Added missing "const".
+
+------------------------------------------------------------------------
+r2207 | dreibh | 2009-09-11 11:48:04 +0200 (Fri, 11 Sep 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/server.8
+   M /trunk/rsplib2/rsplib/server.cc
+   A /trunk/rsplib2/rsplib/storage/ssclient.c (from /trunk/rsplib2/rsplib/scriptingclient.c:2197)
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.h
+
+- Fixed rsp_bind() to use packed addresses (as sctp_bindx does).
+- Added option to set local endpoint addresses for server.
+
+------------------------------------------------------------------------
+r2206 | dreibh | 2009-09-10 15:04:18 +0200 (Thu, 10 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+
+------------------------------------------------------------------------
+r2205 | dreibh | 2009-09-10 13:33:56 +0200 (Thu, 10 Sep 2009) | 1 line
+Changed paths:
+   A /trunk/rsplib2/rsplib/storage/rsplib-registrar
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2204 | dreibh | 2009-09-10 13:02:49 +0200 (Thu, 10 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2203 | dreibh | 2009-09-08 17:38:13 +0200 (Tue, 08 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2202 | dreibh | 2009-08-31 08:44:51 +0200 (Mon, 31 Aug 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+
+------------------------------------------------------------------------
+r2197 | dreibh | 2009-08-31 08:41:54 +0200 (Mon, 31 Aug 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Fixed signed/unsigned problems found by g++.
+
+------------------------------------------------------------------------
 r2196 | dreibh | 2009-08-06 12:37:19 +0200 (Thu, 06 Aug 2009) | 1 line
 Changed paths:
    M /trunk/rsplib2/rsplib/scriptingclient.c
