@@ -294,7 +294,7 @@ bin_PROGRAMS = fractalpooluser registrar server terminal hsdump pingpongclient s
 EXTRA_DIST = add-dummy-interface
 else
 bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
-EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts add-dummy-interface
+EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-dummy-interface
 endif
 
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
@@ -321,6 +321,8 @@ calcappclient_LDADD   = libtdbreakdetector.la librsplib.la
 cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm
 
+
+# ###### FractalPoolUser program ############################################
 if BUILD_QT_PROGRAMS
 FRACTALPOOLUSERMOCHEADER = fractalpooluser.h
 FRACTALPOOLUSERMOCEDFILES = $(FRACTALPOOLUSERMOCHEADER:%.h=%_moc.cc)
@@ -333,9 +335,12 @@ CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
 # This MOC file is included by fractalpooluser.cc, so no compile step is necessary.
 $(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
 
+fractalpooluserdir = $(datadir)/fractalpooluser
+dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
+
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
-fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h fractalpooluser.ts
-fractalpooluser_LDADD    = $(QT_LDADD) libtdcppthread.la librsplib.la
+fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
+fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la
 endif
 
 

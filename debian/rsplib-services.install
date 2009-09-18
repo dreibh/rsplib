@@ -1,5 +1,6 @@
 debian/tmp/usr/bin/calcappclient
 debian/tmp/usr/bin/fractalpooluser
+debian/tmp/usr/share/fractalpooluser/*.qm
 debian/tmp/usr/bin/pingpongclient
 debian/tmp/usr/bin/scriptingclient
 debian/tmp/usr/bin/scriptingcontrol

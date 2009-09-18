@@ -268,7 +268,7 @@ void FractalPU::startNextJob()
 
    // std::cout << "Starting job distribution ..." << std::endl;
    Display->setCursor(Qt::WaitCursor);
-   statusBar()->showMessage("Starting job distribution ...");
+   statusBar()->showMessage(tr("Starting job distribution ..."));
 
    CurrentThreads = ConfiguredThreads;
    CalculationThreadArray = new FractalCalculationThread*[CurrentThreads];
@@ -700,8 +700,11 @@ void FractalCalculationThread::run()
                                  if(ShowStatus) {
                                     char statusText[128];
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             tr("Processed packet #%u; PE is $%08x").toLocal8Bit().data(),
-                                             (unsigned int)packets, rinfo.rinfo_pe_id);
+                                             "%s%u%s $%08x",
+                                             tr("Processed packet #").toLocal8Bit().data(),
+                                             (unsigned int)packets,
+                                             tr(" of PE $%08x").toLocal8Bit().data(),
+                                             rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
                                     emit updateStatus(QString(statusText));
                                  }
@@ -956,7 +959,8 @@ int main(int argc, char** argv)
 #else
    QApplication application(argc, argv);
    QTranslator applicationTranslator;
-   applicationTranslator.load("fractalpooluser_" + QLocale::system().name());
+   applicationTranslator.load("fractalpooluser_" + QLocale::system().name(),
+                              "/usr/share/fractalpooluser");
    application.installTranslator(&applicationTranslator);
 #endif
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
