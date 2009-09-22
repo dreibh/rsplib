@@ -230,12 +230,10 @@ struct TransportAddressBlock* transportAddressBlockDuplicate(const struct Transp
       duplicate = (struct TransportAddressBlock*)malloc(size);
       if(duplicate) {
          memcpy(duplicate, transportAddressBlock, size);
+         return(duplicate);
       }
    }
-   else {
-      duplicate = NULL;
-   }
-   return(duplicate);
+   return(NULL);
 }
 
 
