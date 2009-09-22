@@ -39,9 +39,8 @@ void ST_CLASS(peerListIndexStorageNodePrint)(const void* nodePtr, FILE* fd)
 int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
                                                  const void* nodePtr2)
 {
-   const struct ST_CLASS(PeerListNode)* node1 = (struct ST_CLASS(PeerListNode)*)nodePtr1;
-   const struct ST_CLASS(PeerListNode)* node2 = (struct ST_CLASS(PeerListNode)*)nodePtr2;
-   int                                  result;
+   const struct ST_CLASS(PeerListNode)* node1 = ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)((void*)nodePtr1);
+   const struct ST_CLASS(PeerListNode)* node2 = ST_CLASS(getPeerListNodeFromPeerListIndexStorageNode)((void*)nodePtr2);
 
    /* Compare IDs */
    if(node1->Identifier < node2->Identifier) {
@@ -55,9 +54,7 @@ int ST_CLASS(peerListIndexStorageNodeComparison)(const void* nodePtr1,
       the addresses completely to get a sorting order. */
    if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) &&
       (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
-      result = transportAddressBlockComparison(node1->AddressBlock,
-                                               node2->AddressBlock);
-      return(result);
+      return(transportAddressBlockComparison(node1->AddressBlock, node2->AddressBlock));
    }
    return(0);
 }
@@ -81,14 +78,29 @@ int ST_CLASS(peerListTimerStorageNodeComparison)(const void* nodePtr1,
    const struct ST_CLASS(PeerListNode)* node2 =
       ST_CLASS(getPeerListNodeFromPeerListTimerStorageNode)((void*)nodePtr2);
 
+   /* Compare time stamps */
    if(node1->TimerTimeStamp < node2->TimerTimeStamp) {
       return(-1);
    }
    else if(node1->TimerTimeStamp > node2->TimerTimeStamp) {
       return(1);
    }
-   /* Same timestamps => use regular comparison */
-   return(ST_CLASS(peerListIndexStorageNodeComparison)(nodePtr1, nodePtr2));
+
+   /* Compare IDs */
+   if(node1->Identifier < node2->Identifier) {
+      return(-1);
+   }
+   else if(node1->Identifier > node2->Identifier) {
+      return(1);
+   }
+
+   /* The IDs are equal. If both IDs are undefined, we compare
+      the addresses completely to get a sorting order. */
+   if((node1->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER) &&
+      (node2->Identifier == UNDEFINED_REGISTRAR_IDENTIFIER)) {
+      return(transportAddressBlockComparison(node1->AddressBlock, node2->AddressBlock));
+   }
+   return(0);
 }
 
 
