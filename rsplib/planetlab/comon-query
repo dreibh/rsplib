@@ -59,7 +59,7 @@ if [ $QUIET -ne 1 ] ; then
    echo "Sorted by:    $SORT"
 fi
 
-wget -q -O$FILE "http://summer.cs.princeton.edu/status/tabulator.cgi?table=table_nodeviewshort&format=$FORMAT&select='$QUERY'&format=$FORMAT&sort=$SORT&dumpcols='$DUMPCOLS'"
+wget -q -O$FILE "http://comon.cs.princeton.edu/status/tabulator.cgi?table=table_nodeviewshort&format=$FORMAT&select='$QUERY'&format=$FORMAT&sort=$SORT&dumpcols='$DUMPCOLS'"
 
 if [ $QUIET -ne 1 ] ; then
    wc --lines $FILE
