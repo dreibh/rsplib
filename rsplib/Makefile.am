@@ -298,28 +298,28 @@ EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-d
 endif
 
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
-server_LDADD   = libtdbreakdetector.la libcpprspserver.la
+server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 terminal_SOURCES = terminal.c
-terminal_LDADD   = libtdbreakdetector.la librsplib.la
+terminal_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsphsmgt.la librspmessaging.la
+hsdump_LDADD   = librsphsmgt.la librspmessaging.la  $(socketapi_LIBS) $(sctplib_LIBS)
 
 pingpongclient_SOURCES = pingpongclient.c
-pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la
+pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
 
 scriptingclient_SOURCES = scriptingclient.c
-scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la
+scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = libtdbreakdetector.la librsplib.la
+calcappclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
 
 cspmonitor_SOURCES = cspmonitor.c
-cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm
+cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm  $(socketapi_LIBS) $(sctplib_LIBS)
 
 
 # ###### FractalPoolUser program ############################################
@@ -340,7 +340,7 @@ dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la
+fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
@@ -354,10 +354,10 @@ endif
 
 if BUILD_TEST_PROGRAMS
 hrestest_SOURCES = hrestest.c
-hrestest_LDADD   = libtdbreakdetector.la librsplib.la
+hrestest_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 testregistrator_SOURCES = testregistrator.c
-testregistrator_LDADD   = libtdbreakdetector.la  librsplib.la
+testregistrator_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 fork_SOURCES = fork.c
 fork_LDADD   = libtdtimeutilities.la libtdrandomizer.la -lm
@@ -375,7 +375,7 @@ rootshell_SOURCES = rootshell.c
 rootshell_LDADD   =
 
 attacker_SOURCES = attacker.cc
-attacker_LDADD   = libtdbreakdetector.la librsplib.la
+attacker_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 # t2_SOURCES = t2.cc
 # t2_LDADD   = libtdnetutilities.la
