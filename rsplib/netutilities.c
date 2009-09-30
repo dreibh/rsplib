@@ -2012,8 +2012,11 @@ size_t getladdrsplus(const int              fd,
       return((size_t)addrs);
    }
    else {
-      assert(false);   // ????? This should now happen!
-      sctp_freeladdrs(packedAddresses);
+      if(packedAddresses) {
+         /* LK-SCTP may allocate memory even when the number of addresses is 0.
+            => free it here if packedAddresses is set. */
+         sctp_freeladdrs(packedAddresses);
+      }
    }
    return(0);
 }
