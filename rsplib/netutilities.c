@@ -55,6 +55,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <math.h>
+#include <assert.h>
 #ifdef SOLARIS
 #include <sys/sockio.h>
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
@@ -2009,6 +2010,10 @@ size_t getladdrsplus(const int              fd,
       }
       LOG_END
       return((size_t)addrs);
+   }
+   else {
+      assert(false);   // ????? This should now happen!
+      sctp_freeladdrs(packedAddresses);
    }
    return(0);
 }
