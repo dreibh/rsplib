@@ -47,6 +47,7 @@
 /* ###### Global variables ############################################### */
 static bool   DetectedBreak = false;
 static bool   PrintedBreak  = false;
+static int    BreakSignal   = 0;
 static bool   Quiet         = false;
 static pid_t  MainThreadPID = 0;
 #ifdef KILL_AFTER_TIMEOUT
@@ -58,6 +59,7 @@ static unsigned long long LastDetection = (unsigned long long)-1;
 /* ###### Handler for SIGINT ############################################# */
 void breakDetector(int signum)
 {
+   BreakSignal   = signum;
    DetectedBreak = true;
 
 #ifdef KILL_AFTER_TIMEOUT
@@ -68,8 +70,8 @@ void breakDetector(int signum)
       }
       else if(now - LastDetection >= 2000000) {
          PrintedKill = true;
-         fprintf(stderr,"\x1b[0m\n*** Kill ***\n\n");
-         kill(MainThreadPID,SIGKILL);
+         fprintf(stderr, "\x1b[0m\n*** Kill ***\n\n");
+         kill(MainThreadPID, SIGKILL);
       }
    }
 #endif
@@ -79,6 +81,7 @@ void breakDetector(int signum)
 /* ###### Install break detector ######################################### */
 void installBreakDetector()
 {
+   BreakSignal   = 0;
    DetectedBreak = false;
    PrintedBreak  = false;
    Quiet         = false;
@@ -87,14 +90,16 @@ void installBreakDetector()
    PrintedKill   = false;
    LastDetection = (unsigned long long)-1;
 #endif
-   signal(SIGINT,&breakDetector);
+   signal(SIGINT,  &breakDetector);
+   signal(SIGTERM, &breakDetector);
 }
 
 
 /* ###### Unnstall break detector ######################################## */
 void uninstallBreakDetector()
 {
-   signal(SIGINT,SIG_DFL);
+   signal(SIGINT,  SIG_DFL);
+   signal(SIGTERM, SIG_DFL);
 #ifdef KILL_AFTER_TIMEOUT
    PrintedKill   = false;
    LastDetection = (unsigned long long)-1;
@@ -111,7 +116,7 @@ bool breakDetected()
 {
    if((DetectedBreak) && (!PrintedBreak)) {
       if(!Quiet) {
-         fprintf(stderr,"\x1b[0m\n*** Break ***    Signal #%d\n\n",SIGINT);
+         fprintf(stderr, "\x1b[0m\n*** Break ***    Signal #%d\n\n",  PrintedBreak);
       }
       PrintedBreak = getMicroTime();
    }
@@ -123,5 +128,5 @@ bool breakDetected()
 void sendBreak(const bool quiet)
 {
    Quiet = quiet;
-   kill(MainThreadPID,SIGINT);
+   kill(MainThreadPID, SIGINT);
 }
