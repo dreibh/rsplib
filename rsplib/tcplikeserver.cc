@@ -49,8 +49,9 @@ TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
    Load                     = 0;
    SyncTimerTimeStamp       = 0;
    AsyncTimerTimeStamp      = 0;
-   printTimeStamp(stdout);
-   printf("New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "New thread for RSerPool socket %d.\n", RSerPoolSocketDescriptor);
+   fflush(stdlog);
 }
 
 
@@ -58,8 +59,9 @@ TCPLikeServer::TCPLikeServer(int rserpoolSocketDescriptor)
 TCPLikeServer::~TCPLikeServer()
 {
    CHECK(ServerList == NULL);
-   printTimeStamp(stdout);
-   printf("Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "Thread for RSerPool socket %d has been stopped.\n", RSerPoolSocketDescriptor);
+   fflush(stdlog);
    if(RSerPoolSocketDescriptor >= 0) {
       rsp_close(RSerPoolSocketDescriptor);
       RSerPoolSocketDescriptor = -1;
@@ -104,13 +106,15 @@ void TCPLikeServer::setLoad(double load)
    CHECK(ServerList != NULL);
    CHECK(ServerList->LoadSum >= Load);
    if((load < 0.0) || (load > 1.0)) {
-      fputs("ERROR: Invalid load setting!\n", stderr);
+      fputs("ERROR: Invalid load setting!\n", stdlog);
+      fflush(stdlog);
       ServerList->unlock();
       return;
    }
    const unsigned int newLoad = (unsigned int)floor(load * (double)PPV_MAX_LOAD);
    if((long long)ServerList->LoadSum - (long long)Load + (long long)newLoad > PPV_MAX_LOAD) {
-      fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stderr);
+      fputs("ERROR: Something is wrong with load settings. Total load would exceed 100%!\n", stdlog);
+      fflush(stdlog);
       ServerList->unlock();
       return;
    }
@@ -137,8 +141,9 @@ void TCPLikeServer::setLoad(double load)
 EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer,
                                                     size_t      bufferSize)
 {
-   printTimeStamp(stdout);
-   puts("COOKIE ECHO");
+   printTimeStamp(stdlog);
+   fputs("COOKIE ECHO\n", stdlog);
+   fflush(stdout);
    return(EHR_Okay);
 }
 
@@ -147,10 +152,11 @@ EventHandlingResult TCPLikeServer::handleCookieEcho(const char* buffer,
 EventHandlingResult TCPLikeServer::handleNotification(
                        const union rserpool_notification* notification)
 {
-   printTimeStamp(stdout);
-   printf("NOTIFICATION: ");
-   rsp_print_notification(notification, stdout);
-   puts("");
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "NOTIFICATION: ");
+   rsp_print_notification(notification, stdlog);
+   fputs("\n", stdlog);
+   fflush(stdout);
    return(EHR_Okay);
 }
 
@@ -158,8 +164,9 @@ EventHandlingResult TCPLikeServer::handleNotification(
 // ###### Handle synchronous timer ##########################################
 EventHandlingResult TCPLikeServer::syncTimerEvent(const unsigned long long now)
 {
-   printTimeStamp(stdout);
-   puts("SyncTimer");
+   printTimeStamp(stdlog);
+   fputs("SyncTimer\n", stdlog);
+   fflush(stdout);
    return(EHR_Okay);
 }
 
@@ -167,8 +174,9 @@ EventHandlingResult TCPLikeServer::syncTimerEvent(const unsigned long long now)
 // ###### Handle asynchronous timer #########################################
 void TCPLikeServer::asyncTimerEvent(const unsigned long long now)
 {
-   printTimeStamp(stdout);
-   puts("AsyncTimer");
+   printTimeStamp(stdlog);
+   fputs("AsyncTimer\n", stdlog);
+   fflush(stdout);
 }
 
 
@@ -225,8 +233,9 @@ void TCPLikeServer::run()
                   eventHandlingResult = handleCookieEcho((char*)&buffer, received);
                }
                else {
-                  printTimeStamp(stdout);
-                  puts("Dropped unexpected ASAP COOKIE_ECHO!");
+                  printTimeStamp(stdlog);
+                  fputs("Dropped unexpected ASAP COOKIE_ECHO!\n", stdlog);
+                  fflush(stdlog);
                   eventHandlingResult = EHR_Abort;
                }
             }
@@ -301,7 +310,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 struct TagItem*      tags)
 {
    if(rsp_initialize(info) < 0) {
-      fputs("ERROR: Unable to initialize rsplib Library!\n", stderr);
+      fputs("ERROR: Unable to initialize rsplib Library!\n", stdlog);
       return;
    }
 
@@ -419,7 +428,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            if(serverSet.handleRemovalsAndTimers() > 0) {
                               int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
                               if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
-                                 perror("Unable to update backlog using rsp_listen()");
+                                 logerror("Unable to update backlog using rsp_listen()");                                 
                               }
                            }
 
@@ -435,32 +444,37 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                               if(serviceThread->start()) {
                                                  int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
                                                  if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
-                                                    perror("Unable to update backlog using rsp_listen()");
+                                                    logerror("Unable to update backlog using rsp_listen()");
+                                                    fflush(stdlog);
                                                  }
                                               }
                                               else {
-                                                 printTimeStamp(stderr);
+                                                 printTimeStamp(stdlog);
                                                  fputs("ERROR: Unable to start up service thread\n", stderr);
+                                                 fflush(stdlog);
                                                  serverSet.remove(serviceThread);
                                                  delete serviceThread;
                                               }
                                            }
                                            else {
                                               delete serviceThread;
-                                              printTimeStamp(stderr);
-                                              puts("Unable to add new service thread");
+                                              printTimeStamp(stdlog);
+                                              fputs("Unable to add new service thread\n", stdlog);
+                                              fflush(stdlog);
                                            }
                                         }
                                         else {
                                            rsp_close(newRSerPoolSocket);
-                                           printTimeStamp(stderr);
-                                           puts("Unable to create new service thread");
+                                           printTimeStamp(stdlog);
+                                           fputs("Unable to create new service thread\n", stdlog);
+                                           fflush(stdlog);
                                         }
                                      }
                                      else {
                                         rsp_close(newRSerPoolSocket);
-                                        printTimeStamp(stdout);
-                                        puts("Rejected new session, since server is fully loaded");
+                                        printTimeStamp(stdlog);
+                                        fputs("Rejected new session, since server is fully loaded\n", stdlog);
+                                        fflush(stdlog);
                                      }
                                   }
                               }
@@ -494,7 +508,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            // ====== Auto-stop ====================================
                            if((autoStopTimeStamp > 0) &&
                               (getMicroTime() > autoStopTimeStamp)) {
-                              puts("Auto-stop reached!");
+                              fputs("Auto-stop reached!\n", stdlog);
                               break;
                            }
                         }
@@ -509,7 +523,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                      }
                   }
                   else {
-                     fprintf(stderr, "ERROR: Failed to register PE to pool %s\n", poolHandle);
+                     fprintf(stdlog, "ERROR: Failed to register PE to pool %s\n", poolHandle);
                   }
                   if(rspNotificationPipe[0] > 0) {
                      rsp_unmapsocket(rspNotificationPipe[0]);
@@ -519,26 +533,26 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                   }
                }
                else {
-                  perror("Unable to map notification pipe FDs");
+                  logerror("Unable to map notification pipe FDs");
                }
                ext_close(systemNotificationPipe[0]);
                ext_close(systemNotificationPipe[1]);
             }
             else {
-               perror("Unable to create notification pipe");
+               logerror("Unable to create notification pipe");
             }
          }
          else {
-            perror("Unable to put RSerPool socket into listening mode");
+            logerror("Unable to put RSerPool socket into listening mode");
          }
       }
       else {
-         perror("Unable to bind RSerPool socket");
+         logerror("Unable to bind RSerPool socket");
       }
       rsp_close(rserpoolSocket);
    }
    else {
-      perror("Unable to create RSerPool socket");
+      logerror("Unable to create RSerPool socket");
    }
 
    rsp_cleanup();

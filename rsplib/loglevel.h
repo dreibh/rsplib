@@ -82,7 +82,7 @@ void setLogColor(const unsigned int color);
 
 
 #define stdlog (*gStdLog)
-#define logerror(text) fprintf(stdlog,"%s: %s\n", text, strerror(errno))
+#define logerror(text) fprintf(stdlog, "%s: %s\n", text, strerror(errno))
 
 
 #define LOG_BEGIN(prefix,c1,c2)                \

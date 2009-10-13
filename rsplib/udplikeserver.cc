@@ -66,7 +66,8 @@ double UDPLikeServer::getLoad() const
 void UDPLikeServer::setLoad(double load)
 {
    if((load < 0.0) || (load > 1.0)) {
-      fputs("ERROR: Invalid load setting!\n", stderr);
+      fputs("ERROR: Invalid load setting!\n", stdlog);
+      fflush(stdlog);
       return;
    }
    Load = (unsigned int)rint(load * (double)PPV_MAX_LOAD);
@@ -93,8 +94,9 @@ EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID
                                                     const char*        buffer,
                                                     size_t             bufferSize)
 {
-   printTimeStamp(stdout);
-   printf("COOKIE ECHO for session %u\n", sessionID);
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "COOKIE ECHO for session %u\n", sessionID);
+   fflush(stdlog);
    return(EHR_Okay);
 }
 
@@ -102,10 +104,11 @@ EventHandlingResult UDPLikeServer::handleCookieEcho(rserpool_session_t sessionID
 // ###### Handle notification ###############################################
 void UDPLikeServer::handleNotification(const union rserpool_notification* notification)
 {
-   printTimeStamp(stdout);
-   printf("NOTIFICATION: ");
-   rsp_print_notification(notification, stdout);
-   puts("");
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "NOTIFICATION: ");
+   rsp_print_notification(notification, stdlog);
+   fputs("\n", stdlog);
+   fflush(stdlog);
 }
 
 
@@ -354,15 +357,15 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                rsp_deregister(RSerPoolSocketDescriptor, 0);
             }
             else {
-               printf("ERROR: Failed to register PE to pool %s\n", poolHandle);
+               fprintf(stdlog, "ERROR: Failed to register PE to pool %s\n", poolHandle);
             }
          }
          else {
-            perror("Unable to put RSerPool socket into listening mode");
+            logerror("Unable to put RSerPool socket into listening mode");
          }
       }
       else {
-         perror("Unable to bind RSerPool socket");
+         logerror("Unable to bind RSerPool socket");
       }
       rsp_close(RSerPoolSocketDescriptor);
    }
