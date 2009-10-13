@@ -556,7 +556,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
    }
 
    rsp_cleanup();
-   puts("\nTerminated!");
+   fputs("\nTerminated!\n", stdlog);
 }
 
 

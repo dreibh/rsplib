@@ -61,7 +61,7 @@ if [ -f /etc/default/ss ] ; then
    . /etc/default/ss
 fi
 
-DAEMON_OPTS="-scripting -poolhandle=$SS_POOLHANDLE -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=$SS_LOGLEVEL -logcolor=on -quiet"
+DAEMON_OPTS="-scripting -poolhandle=$SS_POOLHANDLE -daemonpidfile=/var/run/$NAME.pid -logappend=/var/log/$NAME.log -loglevel=$SS_LOGLEVEL -logcolor=on -quiet"
 for pr in $PRs ; do
    DAEMON_OPTS="$DAEMON_OPTS -registrar=$pr"
 done
@@ -91,16 +91,17 @@ set -e
 case "$1" in
     start)
        echo -n "Starting $DESC: "
-       touch /var/log/$NAME.log
-       chown $SS_USER:$SS_GROUP /var/log/$NAME.log
+       touch /var/log/$NAME.log /var/run/$NAME.pid
+       chown $SS_USER:$SS_GROUP /var/log/$NAME.log /var/run/$NAME.pid
        start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
-                         --user $SS_USER --group $SS_GROUP --nicelevel $SS_NICELEVEL \
+                         --chuid $SS_USER:$SS_GROUP --nicelevel $SS_NICELEVEL \
                          --exec $DAEMON -- $DAEMON_OPTS
        echo "$NAME."
      ;;
     stop)
        echo -n "Stopping $DESC: "
        start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+                         --retry 30 \
                          --exec $DAEMON
        echo "$NAME."
      ;;
@@ -111,13 +112,8 @@ case "$1" in
        || exit 0
      ;;
     restart)
-       echo -n "Restarting $DESC: "
-       start-stop-daemon --stop --quiet --pidfile \
-                         /var/run/$NAME.pid --exec $DAEMON
-       sleep 1
-       start-stop-daemon --start --quiet --pidfile \
-                         /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
-       echo "$NAME."
+       $0 stop || true
+       $0 start
      ;;
     *)
        N=/etc/init.d/$NAME
