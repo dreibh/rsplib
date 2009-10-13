@@ -38,21 +38,20 @@
 # Description:       This service provides the RSerPool Scripting Service.
 ### END INIT INFO
 
-
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME=ss
 DESC="RSerPool Scripting Service"
 DAEMON=/usr/bin/server
-PRs=""
-CSP="-cspserver=[2001:638:501:4ef5:21b:21ff:fe34:de42] -cspinterval=1000"
-DAEMON_OPTS="-scripting $PRs $CSP -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
 
-test -x $DAEMON || exit 0
-
-# Make sure that SCTP is available
-modprobe sctp > /dev/null 2>&1
-# sysctl net.sctp.addip_enable=1
-# sysctl net.sctp.auth_enable=1
+# ====== Scripting Service Options ==========================================
+SS_USER="nobody"                                       # User to run scripts
+SS_GROUP="nogroup"                                     # Group to run scripts
+SS_PRs=""                                              # Space-separated list of PRs
+SS_CSPSERVER="[2001:638:501:4ef5:21b:21ff:fe34:de42]"  # CSP server address
+SS_CSPINTERVAL=1000                                    # CSP reporting interval (ms)
+SS_LOGLEVEL=4
+SS_MISCOPTS=""
+# ===========================================================================
 
 
 # Include scripting service defaults if available
@@ -60,41 +59,69 @@ if [ -f /etc/default/ss ] ; then
    . /etc/default/ss
 fi
 
+DAEMON_OPTS="-scripting -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=$SS_LOGLEVEL -logcolor=on -quiet"
+for pr in $PRs ; do
+   DAEMON_OPTS="$DAEMON_OPTS -registrar=$pr"
+done
+if [ "$SS_CSPSERVER" != "" ] ; then
+   DAEMON_OPTS="$DAEMON_OPTS -cspserver=$SS_CSPSERVER"
+fi
+if [ "$SS_CSPINTERVAL" != "" ] ; then
+   DAEMON_OPTS="$DAEMON_OPTS -cspinterval=$SS_CSPINTERVAL"
+fi
+DAEMON_OPTS="$DAEMON_OPTS $SS_MISCOPTS"
+
+
+test -x $DAEMON || exit 0
+
+
+# ====== SCTP Tuning ========================================================
+# Make sure that SCTP is available
+modprobe sctp > /dev/null 2>&1
+# WARNING: The follow options may make the system unstable!
+# sysctl net.sctp.addip_enable=1
+# sysctl net.sctp.auth_enable=1
+# ===========================================================================
+
+
 set -e
 
 case "$1" in
-  start)
-   echo -n "Starting $DESC: "
-   start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
-      --exec $DAEMON -- $DAEMON_OPTS
-   echo "$NAME."
-   ;;
-  stop)
-   echo -n "Stopping $DESC: "
-   start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
-      --exec $DAEMON
-   echo "$NAME."
-   ;;
-  force-reload)
-   start-stop-daemon --stop --test --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON \
-   && $0 restart \
-   || exit 0
-   ;;
-  restart)
-    echo -n "Restarting $DESC: "
-   start-stop-daemon --stop --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON
-   sleep 1
-   start-stop-daemon --start --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
-   echo "$NAME."
-   ;;
-  *)
-   N=/etc/init.d/$NAME
-   echo "Usage: $N {start|stop|restart|force-reload}" >&2
-   exit 1
-   ;;
+    start)
+       echo -n "Starting $DESC: "
+       touch /var/log/$NAME.log
+       chown $SS_USER:$SS_GROUP /var/log/$NAME.log
+       start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
+                         --user $SS_USER --group $SS_GROUP \
+                         --exec $DAEMON -- $DAEMON_OPTS
+       echo "$NAME."
+     ;;
+    stop)
+       echo -n "Stopping $DESC: "
+       start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+                         --exec $DAEMON
+       echo "$NAME."
+     ;;
+    force-reload)
+       start-stop-daemon --stop --test --quiet --pidfile \
+                         /var/run/$NAME.pid --exec $DAEMON \
+       && $0 restart \
+       || exit 0
+     ;;
+    restart)
+       echo -n "Restarting $DESC: "
+       start-stop-daemon --stop --quiet --pidfile \
+                         /var/run/$NAME.pid --exec $DAEMON
+       sleep 1
+       start-stop-daemon --start --quiet --pidfile \
+                         /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+       echo "$NAME."
+     ;;
+    *)
+       N=/etc/init.d/$NAME
+       echo "Usage: $N {start|stop|restart|force-reload}" >&2
+       exit 1
+     ;;
 esac
 
 exit 0
