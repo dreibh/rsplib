@@ -46,7 +46,7 @@ DAEMON=/usr/bin/server
 # ====== Scripting Service Options ==========================================
 SS_USER="nobody"                                       # User to run scripts
 SS_GROUP="nogroup"                                     # Group to run scripts
-SS_NICELEVEL=1                                         # Nice level for service
+SS_NICELEVEL=5                                         # Nice level for service
 SS_PRs=""                                              # Space-separated list of PRs
 SS_CSPSERVER="[2001:638:501:4ef5:21b:21ff:fe34:de42]"  # CSP server address
 SS_CSPINTERVAL=1000                                    # CSP reporting interval (ms)
@@ -101,7 +101,7 @@ case "$1" in
     stop)
        echo -n "Stopping $DESC: "
        start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
-                         --retry 30 \
+                         --retry 60 \
                          --exec $DAEMON
        echo "$NAME."
      ;;
