@@ -116,7 +116,7 @@ bool breakDetected()
 {
    if((DetectedBreak) && (!PrintedBreak)) {
       if(!Quiet) {
-         fprintf(stderr, "\x1b[0m\n*** Break ***    Signal #%d\n\n",  PrintedBreak);
+         fprintf(stderr, "\x1b[0m\n*** Break ***    Signal #%d\n\n",  BreakSignal);
       }
       PrintedBreak = getMicroTime();
    }
