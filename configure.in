@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA4.6)
+AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA4.9)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -78,6 +78,14 @@ AC_ARG_ENABLE([qt],
 AC_ARG_ENABLE([maintainer-mode],
 [  --enable-maintainer-mode            enable maintainer mode ]
 [default=yes]],enable_maintainer_mode=$enableval,enable_maintainer_mode=yes)
+
+AC_ARG_ENABLE([registrar-statistics],
+[  --enable-registrar-statistics       enable registrar statistics logging option (requires libbz2) ]
+[default=yes]],enable_registrar_statistics=$enableval,enable_registrar_statistics=yes)
+if test "${enable_registrar_statistics}" = "yes"; then
+   AC_DEFINE(VERIFY, 1, "Define to 1 to enable registrar statistics logging option.")
+fi
+AM_CONDITIONAL(ENABLE_REGISTRAR_STATISTICS, test x$enable_registrar_statistics = xyes)
 
 AC_ARG_ENABLE([test-programs],
 [  --enable-test-programs              build with batch test programs ]
@@ -565,6 +573,7 @@ echo "   Build with HS Management Verify : $enable_hsmgtverify"
 echo "   Build with Batch Test Programs  : $enable_test_programs"
 echo "   Build with Kernel SCTP          : $enable_kernel_sctp"
 echo "   Build with CSP Support          : $enable_csp"
+echo "   Build with Registrar Statistics : $enable_registrar_statistics"
 echo "   Build with Qt-based Examples    : $enable_qt"
 echo ""
 echo "   sctplib Libraries               : $sctplib_LIBS"
