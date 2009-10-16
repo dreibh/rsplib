@@ -312,7 +312,6 @@ int main(int argc, char** argv)
    bool                          enrpAnnounceViaMulticast;
 
    struct Registrar*             registrar;
-   struct RegistrarStatistics    statistics;
    uint32_t                      serverID ;
    bool                          quiet;
 
@@ -339,6 +338,7 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef ENABLE_REGISTRAR_STATISTICS
+   struct RegistrarStatistics    statistics;
    const char*                   objectName      = "registrar";
    const char*                   scalarName      = NULL;
    FILE*                         scalarFH        = NULL;

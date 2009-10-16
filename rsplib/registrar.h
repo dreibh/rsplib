@@ -49,7 +49,6 @@
 #include <ext_socket.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#define ENABLE_REGISTRAR_STATISTICS
 #ifdef ENABLE_REGISTRAR_STATISTICS
 #include <bzlib.h>
 #endif
