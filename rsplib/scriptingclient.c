@@ -275,14 +275,6 @@ static unsigned int serverStartsProcessing(const int            sd,
       newLogLine(stdout);
       printf("Server %s is processing ...\n", InfoString);
       fflush(stdout);
-      
-      rsp_sendmsg(sd,
-                  NULL, 0, 0,
-                  0, 0, 0, 0,
-                  SCTP_ABORT,
-                  0);
-abort();
-
    }
    else {
       State = SSCR_FAILOVER;
