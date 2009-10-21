@@ -213,9 +213,11 @@ void TCPLikeServer::run()
             nextTimerEvent = 5000000;
          }
          now      = getMicroTime();
+fprintf(stdlog,"r<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
                                     &rinfo, &flags, (int)(nextTimerEvent / 1000));
+fprintf(stdlog,"R<%d:l=%d>",RSerPoolSocketDescriptor,(int)received);fflush(stdlog);
 
          if(received > 0) {
             /*
@@ -254,6 +256,7 @@ void TCPLikeServer::run()
             }
          }
          else if(received == 0) {
+            fprintf(stdlog,"SHUTDOWN<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
             break;
          }
 
@@ -274,7 +277,9 @@ void TCPLikeServer::run()
    // temporary files for Scripting Service), we finish the session *before*
    // actually closing the association. Then, the PU waits until being finished
    // before actually trying to distribute the next session.
+   fprintf(stdlog,"FIN1<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    finishSession(eventHandlingResult);
+   fprintf(stdlog,"FIN2<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    if((eventHandlingResult == EHR_Abort) ||
       (eventHandlingResult == EHR_Shutdown)) {
       rsp_sendmsg(RSerPoolSocketDescriptor,
@@ -283,9 +288,11 @@ void TCPLikeServer::run()
                   (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                   0);
    }
+   fprintf(stdlog,"FIN3<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    lock();
    Finished = true;
    unlock();
+   fprintf(stdlog,"FIN4<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
 }
 
 
@@ -297,6 +304,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 size_t               maxThreads,
                                 TCPLikeServer*       (*threadFactory)(int sd, void* userData, const uint32_t peIdentifier),
                                 void                 (*printParameters)(const void* userData),
+                                void                 (*rejectNewSession)(int sd),
                                 bool                 (*initializeService)(void* userData),
                                 void                 (*finishService)(void* userData),
                                 double               (*loadUpdateHook)(const double load),
@@ -471,6 +479,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                         }
                                      }
                                      else {
+                                        if(rejectNewSession) {
+                                           rejectNewSession(newRSerPoolSocket);
+                                        }
                                         rsp_close(newRSerPoolSocket);
                                         printTimeStamp(stdlog);
                                         fputs("Rejected new session, since server is fully loaded\n", stdlog);

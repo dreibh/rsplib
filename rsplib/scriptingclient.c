@@ -204,6 +204,30 @@ static unsigned int sendKeepAlive(int sd)
 
 
 /* ###### Handle Ready message ########################################### */
+static unsigned int handleNotReady(const int              sd,
+                                   const struct NotReady* notReady,
+                                   const size_t           length)
+{
+   char infoString[SR_MAX_INFOSIZE + 1] = "";
+ 
+   if(length >= sizeof(NotReady)) {
+      /* ====== Get info string ========================================== */
+      size_t i;
+      for(i = 0;i < (length - sizeof(struct NotReady));i++) {
+         if(i == SR_MAX_INFOSIZE) {
+            break;
+         }
+         infoString[i] = isprint(notReady->Info[i]) ? notReady->Info[i] : '.';
+      }
+      infoString[i] = 0x00;
+   }
+   newLogLine(stdout);
+   printf("Server %s is not ready yet => trying another one.\n", infoString);
+   fflush(stdout);
+}
+
+
+/* ###### Handle Ready message ########################################### */
 static unsigned int handleReady(const int           sd,
                                 const struct Ready* ready,
                                 const size_t        length)
@@ -251,6 +275,14 @@ static unsigned int serverStartsProcessing(const int            sd,
       newLogLine(stdout);
       printf("Server %s is processing ...\n", InfoString);
       fflush(stdout);
+      
+      rsp_sendmsg(sd,
+                  NULL, 0, 0,
+                  0, 0, 0, 0,
+                  SCTP_ABORT,
+                  0);
+abort();
+
    }
    else {
       State = SSCR_FAILOVER;
@@ -342,6 +374,10 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_READY:
                return(handleReady(sd, (const struct Ready*)header, length));
+             break;
+            case SPT_NOTREADY:
+               handleNotReady(sd, (const struct NotReady*)header, length);
+               return(SSCR_FAILOVER);
              break;
          }
         break;

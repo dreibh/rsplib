@@ -16,6 +16,7 @@
 @NetPerfMeter Start@npmp.message_type==0x06@[0,65535,0][0,0,0]
 @NetPerfMeter Stop@npmp.message_type==0x07@[65535,0,0][0,0,0]
 @NetPerfMeter Results@npmp.message_type==0x08@[52428,52428,52428][0,0,0]
+@ScriptingServiceNotReady@ssprotocol.message_type==0x00@[59373,17486,54989][0,0,0]
 @ScriptingServiceReady@ssprotocol.message_type==0x01@[0,47288,9252][0,0,0]
 @ScriptingServiceStatus@ssprotocol.message_type==0x06@[64197,39343,10675][0,0,0]
 @ScriptingServiceUpload@ssprotocol.message_type==0x02@[29850,64871,36702][0,0,0]

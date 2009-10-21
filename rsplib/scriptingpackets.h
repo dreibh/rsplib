@@ -35,6 +35,7 @@
 
 #define PPID_SP          0x29097604
 
+#define SPT_NOTREADY           0x00
 #define SPT_READY              0x01
 #define SPT_UPLOAD             0x02
 #define SPT_DOWNLOAD           0x03
@@ -51,6 +52,17 @@ struct ScriptingCommonHeader
    uint8_t  Flags;
    uint16_t Length;
 } __attribute__((packed));
+
+
+struct NotReady
+{
+   struct ScriptingCommonHeader Header;
+   uint32_t                     Reason;
+   char                         Info[];
+} __attribute__((packed));
+
+#define SSNR_FULLY_LOADED     0x0000001
+#define SSNR_OUT_OF_RESOURCES 0x00000002
 
 
 struct Ready

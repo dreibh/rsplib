@@ -119,6 +119,7 @@ class TCPLikeServer : public TDThread
                            size_t               maxThreads,
                            TCPLikeServer*       (*threadFactory)(int sd, void* userData, uint32_t peIdentifier),
                            void                 (*printParameters)(const void* userData),
+                           void                 (*rejectNewSession)(int sd),
                            bool                 (*initializeService)(void* userData),
                            void                 (*finishService)(void* userData),
                            double               (*loadUpdateHook)(const double load),

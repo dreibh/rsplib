@@ -58,14 +58,6 @@ ScriptingServer::ScriptingServer(
    UploadFile   = NULL;
    ChildProcess = 0;
    Directory[0] = 0x00;
-   
-   utsname systemInfo;
-   if(uname(&systemInfo) == 0) {
-      snprintf((char*)&InfoString, sizeof(InfoString), "%s", systemInfo.nodename);
-   }
-   else {
-      InfoString[0] = 0x00;
-   }
 }
 
 
@@ -95,13 +87,43 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData, c
 }
 
 
+// ###### Reject new session when server is fully loaded ####################
+void ScriptingServer::rejectNewSession(int sd)
+{
+   char    buffer[sizeof(NotReady) + SR_MAX_INFOSIZE];
+   utsname systemInfo;
+
+   if(uname(&systemInfo) != 0) {
+      systemInfo.nodename[0] = 0x00;
+   }
+
+   NotReady* notReady = (NotReady*)&buffer;
+   memset((char*)&notReady->Info, 0x00, SR_MAX_INFOSIZE);
+   snprintf((char*)&notReady->Info, SR_MAX_INFOSIZE, "%s", systemInfo.nodename);
+   const ssize_t notReadyLength = sizeof(NotReady) + strlen(notReady->Info);
+   notReady->Header.Type   = SPT_NOTREADY;
+   notReady->Header.Flags  = 0x00;
+   notReady->Header.Length = htons(notReadyLength);
+   notReady->Reason        = htonl(SSNR_FULLY_LOADED);
+
+   rsp_sendmsg(sd, (const char*)notReady, notReadyLength, 0,
+                   0, htonl(PPID_SP), 0, 0, 0, 0);
+}
+
+
 // ###### Initialize session ################################################
 EventHandlingResult ScriptingServer::initializeSession()
 {
    char buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
+   utsname systemInfo;
+
+   if(uname(&systemInfo) != 0) {
+      systemInfo.nodename[0] = 0x00;
+   }
 
    Ready* ready = (Ready*)&buffer;
-   snprintf((char*)&ready->Info, SR_MAX_INFOSIZE, "%s", InfoString);
+   memset((char*)&ready->Info, 0x00, SR_MAX_INFOSIZE);
+   snprintf((char*)&ready->Info, SR_MAX_INFOSIZE, "%s", systemInfo.nodename);
    const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info);
    ready->Header.Type   = SPT_READY;
    ready->Header.Flags  = 0x00;

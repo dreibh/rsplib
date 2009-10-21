@@ -54,6 +54,7 @@ class ScriptingServer : public TCPLikeServer
 
    static TCPLikeServer* scriptingServerFactory(int sd, void* userData, const uint32_t peIdentifier);
    static void scriptingPrintParameters(const void* userData);
+   static void rejectNewSession(int sd);
 
    protected:
    virtual bool start();
@@ -82,7 +83,6 @@ class ScriptingServer : public TCPLikeServer
 
    ScriptingState          State;
    ScriptingServerSettings Settings;
-   char                    InfoString[SR_MAX_INFOSIZE];
    char                    Directory[128];
    char                    InputName[256];
    char                    OutputName[256];

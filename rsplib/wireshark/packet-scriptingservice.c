@@ -43,6 +43,7 @@ static int hf_message_flags  = -1;
 static int hf_message_length = -1;
 static int hf_message_status = -1;
 static int hf_message_data   = -1;
+static int hf_message_reason = -1;
 static int hf_message_info   = -1;
 
 /* Initialize the subtree pointers */
@@ -53,19 +54,23 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 
 
 /* Dissectors for messages. This is specific to ScriptingServiceProtocol */
-#define MESSAGE_TYPE_LENGTH       1
-#define MESSAGE_FLAGS_LENGTH      1
-#define MESSAGE_LENGTH_LENGTH     2
-#define MESSAGE_STATUS_LENGTH     4
+#define MESSAGE_TYPE_LENGTH          1
+#define MESSAGE_FLAGS_LENGTH         1
+#define MESSAGE_LENGTH_LENGTH        2
+#define MESSAGE_STATUS_LENGTH        4
+#define MESSAGE_NOTRDY_REASON_LENGTH 4
 
-#define MESSAGE_TYPE_OFFSET       0
-#define MESSAGE_FLAGS_OFFSET      (MESSAGE_TYPE_OFFSET    + MESSAGE_TYPE_LENGTH)
-#define MESSAGE_LENGTH_OFFSET     (MESSAGE_FLAGS_OFFSET   + MESSAGE_FLAGS_LENGTH)
-#define MESSAGE_STATUS_OFFSET     (MESSAGE_LENGTH_OFFSET  + MESSAGE_LENGTH_LENGTH)
-#define MESSAGE_DATA_OFFSET       (MESSAGE_LENGTH_OFFSET  + MESSAGE_LENGTH_LENGTH)
-#define MESSAGE_INFO_OFFSET       (MESSAGE_LENGTH_OFFSET  + MESSAGE_LENGTH_LENGTH)
+#define MESSAGE_TYPE_OFFSET          0
+#define MESSAGE_FLAGS_OFFSET         (MESSAGE_TYPE_OFFSET   + MESSAGE_TYPE_LENGTH)
+#define MESSAGE_LENGTH_OFFSET        (MESSAGE_FLAGS_OFFSET  + MESSAGE_FLAGS_LENGTH)
+#define MESSAGE_STATUS_OFFSET        (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
+#define MESSAGE_DATA_OFFSET          (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
+#define MESSAGE_RDY_INFO_OFFSET      (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
+#define MESSAGE_NOTRDY_REASON_OFFSET (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
+#define MESSAGE_NOTRDY_INFO_OFFSET   (MESSAGE_NOTRDY_REASON_OFFSET + MESSAGE_NOTRDY_REASON_LENGTH)
 
 
+#define SS_NOTREADY_TYPE       0
 #define SS_READY_TYPE          1
 #define SS_UPLOAD_TYPE         2
 #define SS_DOWNLOAD_TYPE       3
@@ -75,12 +80,20 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 
 
 static const value_string message_type_values[] = {
+  { SS_NOTREADY_TYPE,       "Not Ready" },
   { SS_READY_TYPE,          "Ready" },
   { SS_UPLOAD_TYPE,         "Upload" },
   { SS_DOWNLOAD_TYPE,       "Download" },
   { SS_KEEPALIVE_TYPE,      "Keep-Alive" },
   { SS_KAEEPALIVE_ACK_TYPE, "Keep-Alive Ack" },
   { SS_STATUS_TYPE,         "Status" },
+  { 0, NULL }
+};
+
+
+static const value_string notrdy_reason_values[] = {
+  { 0x00000001, "Fully Loaded" },
+  { 0x00000002, "Out of Resources" },
   { 0, NULL }
 };
 
@@ -106,15 +119,22 @@ dissect_ssprotocol_message(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree
      break;
     case SS_UPLOAD_TYPE:
     case SS_DOWNLOAD_TYPE:
-      data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - 4;
+      data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_DATA_OFFSET;
       if (data_length > 0) {
         proto_tree_add_item(ssprotocol_tree, hf_message_data, message_tvb, MESSAGE_DATA_OFFSET, data_length, FALSE);
       }
      break;
     case SS_READY_TYPE:
-      info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - 4;
+      info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_RDY_INFO_OFFSET;
       if (info_length > 0) {
-        proto_tree_add_item(ssprotocol_tree, hf_message_info, message_tvb, MESSAGE_INFO_OFFSET, info_length, FALSE);
+        proto_tree_add_item(ssprotocol_tree, hf_message_info, message_tvb, MESSAGE_RDY_INFO_OFFSET, info_length, FALSE);
+      }
+     break;
+    case SS_NOTREADY_TYPE:
+      info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_NOTRDY_INFO_OFFSET;
+      if (info_length > 0) {
+        proto_tree_add_item(ssprotocol_tree, hf_message_reason, message_tvb, MESSAGE_NOTRDY_REASON_OFFSET, MESSAGE_NOTRDY_REASON_LENGTH, FALSE);
+        proto_tree_add_item(ssprotocol_tree, hf_message_info,   message_tvb, MESSAGE_NOTRDY_INFO_OFFSET, info_length, FALSE);
       }
      break;
   }
@@ -153,12 +173,13 @@ proto_register_ssprotocol(void)
 
   /* Setup list of header fields */
   static hf_register_info hf[] = {
-    { &hf_message_type,      { "Type",       "ssprotocol.message_type",   FT_UINT8,  BASE_DEC, VALS(message_type_values), 0x0, NULL, HFILL } },
-    { &hf_message_flags,     { "Flags",      "ssprotocol.message_flags",  FT_UINT8,  BASE_DEC, NULL,                      0x0, NULL, HFILL } },
-    { &hf_message_length,    { "Length",     "ssprotocol.message_length", FT_UINT16, BASE_DEC, NULL,                      0x0, NULL, HFILL } },
-    { &hf_message_status,    { "Status",     "ssprotocol.message_status", FT_UINT32, BASE_DEC, NULL,                      0x0, NULL, HFILL } },
-    { &hf_message_data,      { "Data",       "ssprotocol.message_data",   FT_BYTES,  BASE_NONE, NULL,                     0x0, NULL, HFILL } },
-    { &hf_message_info,      { "Info",       "ssprotocol.message_info",   FT_STRING, BASE_NONE, NULL,                     0x0, NULL, HFILL } }
+    { &hf_message_type,      { "Type",   "ssprotocol.message_type",   FT_UINT8,  BASE_DEC,  VALS(message_type_values),  0x0, NULL, HFILL } },
+    { &hf_message_flags,     { "Flags",  "ssprotocol.message_flags",  FT_UINT8,  BASE_DEC,  NULL,                       0x0, NULL, HFILL } },
+    { &hf_message_length,    { "Length", "ssprotocol.message_length", FT_UINT16, BASE_DEC,  NULL,                       0x0, NULL, HFILL } },
+    { &hf_message_status,    { "Status", "ssprotocol.message_status", FT_UINT32, BASE_DEC,  NULL,                       0x0, NULL, HFILL } },
+    { &hf_message_reason,    { "Reason", "ssprotocol.message_reason", FT_UINT32, BASE_DEC,  VALS(notrdy_reason_values), 0x0, NULL, HFILL } },
+    { &hf_message_info,      { "Info",   "ssprotocol.message_info",   FT_STRING, BASE_NONE, NULL,                       0x0, NULL, HFILL } },
+    { &hf_message_data,      { "Data",   "ssprotocol.message_data",   FT_BYTES,  BASE_NONE, NULL,                       0x0, NULL, HFILL } }
   };
 
   /* Setup protocol subtree array */
