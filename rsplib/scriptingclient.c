@@ -210,7 +210,7 @@ static unsigned int handleNotReady(const int              sd,
 {
    char infoString[SR_MAX_INFOSIZE + 1] = "";
  
-   if(length >= sizeof(NotReady)) {
+   if(length >= sizeof(struct NotReady)) {
       /* ====== Get info string ========================================== */
       size_t i;
       for(i = 0;i < (length - sizeof(struct NotReady));i++) {
