@@ -69,6 +69,7 @@ static unsigned long long RetryDelay        = 10000000;
 static const char*        RunID             = NULL;
 static unsigned int       Trial             = 1;
 static uint32_t           ExitStatus        = 0;
+static bool               HasAssignedPE     = false;
 static char               InfoString[SR_MAX_INFOSIZE + 1] = "";
 static bool               KeepAliveTransmitted;
 static unsigned long long LastKeepAlive;
@@ -120,6 +121,7 @@ static unsigned int performUpload(int sd)
             fflush(stdout);
             return(SSCR_FAILOVER);
          }
+         
          if(dataLength == 0) {
             break;
          }
@@ -248,6 +250,7 @@ static unsigned int handleReady(const int           sd,
       InfoString[i] = isprint(ready->Info[i]) ? ready->Info[i] : '.';
    }
    InfoString[i] = 0x00;
+   HasAssignedPE = true;
 
    /* ====== Proceed with uploading the work package ===================== */
    State = SSCS_WAIT_START_PROCESSING;
@@ -558,13 +561,15 @@ int main(int argc, char** argv)
          if(received > 0) {
 
             /* ====== Notification ================================= */
-            if(flags & MSG_RSERPOOL_NOTIFICATION) {
+            if(flags & MSG_RSERPOOL_NOTIFICATION) {             
                notification = (union rserpool_notification*)&buffer;
-               newLogLine(stdout);
-               printf("\x1b[39;47mNotification: ");
-               rsp_print_notification(notification, stdout);
-               puts("\x1b[0m");
-               fflush(stdout);
+               if(HasAssignedPE == true) {   /* Skip printing if no PE has accepted the request yet. */
+                  newLogLine(stdout);
+                  printf("\x1b[39;47mNotification: ");
+                  rsp_print_notification(notification, stdout);
+                  puts("\x1b[0m");
+                  fflush(stdout);
+               }
                if((notification->rn_header.rn_type == RSERPOOL_FAILOVER) &&
                   (notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY)) {
                   result = SSCR_FAILOVER;
@@ -602,9 +607,11 @@ int main(int argc, char** argv)
             fclose(OutputFile);
             OutputFile = NULL;
          }
-         newLogLine(stdout);
-         puts("FAILOVER ...");
-         fflush(stdout);
+         if(HasAssignedPE == true) {   /* Skip printing if no PE has accepted the request yet. */
+            newLogLine(stdout);
+            puts("FAILOVER ...");
+            fflush(stdout);
+         }
          nextTimer = getMicroTime() + RetryDelay;
          do {
             usleep(500000);
