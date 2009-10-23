@@ -1344,8 +1344,8 @@ int sendtoplus(int                      sockfd,
    unsigned long long     remainingTimeout;
 
    LOG_VERBOSE4
-   fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u flags=$%x toaddrs=%p toaddrcnt=%u...\n",
-           sockfd, (unsigned int)assocID, (unsigned int)length, ppid, streamID, flags,toaddrs, (unsigned int)toaddrcnt);
+   fprintf(stdlog, "sendmsg(%d/A%u, %u bytes) PPID=$%08x streamID=%u flags=$%x sctpFlags=$%x toaddrs=%p toaddrcnt=%u...\n",
+           sockfd, (unsigned int)assocID, (unsigned int)length, ppid, streamID, flags, sctpFlags, toaddrs, (unsigned int)toaddrcnt);
    LOG_END
 
    setNonBlocking(sockfd);
