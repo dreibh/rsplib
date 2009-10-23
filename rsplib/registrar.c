@@ -323,7 +323,6 @@ int main(int argc, char** argv)
    double                        downtime;
    double                        t;
    unsigned long long            endTimeStamp;
-   unsigned long long            now;
 
    unsigned long long            pollTimeStamp;
    struct pollfd                 ufds[FD_SETSIZE];

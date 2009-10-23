@@ -209,6 +209,7 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
                                      const sctp_assoc_t      assocID,
                                      struct RSerPoolMessage* message)
 {
+   struct ST_CLASS(PoolElementNode)* delPoolElementNode;
    struct ST_CLASS(PoolElementNode)* newPoolElementNode;
    struct PoolPolicySettings         updatedPolicySettings;
    unsigned int                      distance;
@@ -259,6 +260,8 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
                      getMicroTime(),
                      &newPoolElementNode);
          if(result == RSPERR_OKAY) {
+            registrarRegistrationHook(registrar, newPoolElementNode);
+
             LOG_VERBOSE
             fputs("Successfully registered ", stdlog);
             poolHandlePrint(&message->Handle, stdlog);
@@ -328,31 +331,38 @@ void registrarHandleENRPHandleUpdate(struct Registrar*       registrar,
    }
 
    else if(message->Action == PNUP_DEL_PE) {
-      result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElement)(
-                  &registrar->Handlespace,
-                  &message->Handle,
-                  message->PoolElementPtr->Identifier);
-      if(result == RSPERR_OKAY) {
-         LOG_ACTION
-         fputs("Successfully deregistered ", stdlog);
-         poolHandlePrint(&message->Handle, stdlog);
-         fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
-         LOG_END
-      }
-      else {
-         LOG_WARNING
-         fprintf(stdlog, "Failed to deregister pool element $%08x from pool ",
-                 message->PoolElementPtr->Identifier);
-         poolHandlePrint(&message->Handle, stdlog);
-         fputs(": ", stdlog);
-         rserpoolErrorPrint(result, stdlog);
-         fputs("\n", stdlog);
-         LOG_END
-      }
+      delPoolElementNode = ST_CLASS(poolHandlespaceManagementFindPoolElement)(
+                              &registrar->Handlespace,
+                              &message->Handle,
+                              message->PoolElementPtr->Identifier);
+      if(delPoolElementNode != NULL) {
+         registrarDeregistrationHook(registrar, delPoolElementNode);
+
+         result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
+                     &registrar->Handlespace,
+                     delPoolElementNode);
+         if(result == RSPERR_OKAY) {
+            LOG_ACTION
+            fputs("Successfully deregistered ", stdlog);
+            poolHandlePrint(&message->Handle, stdlog);
+            fprintf(stdlog, "/$%08x\n", message->PoolElementPtr->Identifier);
+            LOG_END
+         }
+         else {
+            LOG_WARNING
+            fprintf(stdlog, "Failed to deregister pool element $%08x from pool ",
+                    message->PoolElementPtr->Identifier);
+            poolHandlePrint(&message->Handle, stdlog);
+            fputs(": ", stdlog);
+            rserpoolErrorPrint(result, stdlog);
+            fputs("\n", stdlog);
+            LOG_END
+         }
 #ifdef ENABLE_REGISTRAR_STATISTICS
-      registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "DelPE", 0, 0, 0,
-                              &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
+         registrarWriteActionLog(registrar, "Recv", "ENRP", "Update", "DelPE", 0, 0, 0,
+                                 &message->Handle, message->PoolElementPtr->Identifier, message->SenderID, message->ReceiverID, 0, result);
 #endif
+      }
    }
 
    else {
@@ -832,6 +842,8 @@ void registrarHandleENRPHandleTableResponse(struct Registrar*       registrar,
                            getMicroTime(),
                            &newPoolElementNode);
                if(result == RSPERR_OKAY) {
+                  registrarRegistrationHook(registrar, newPoolElementNode);
+
                   LOG_VERBOSE
                   fputs("Successfully registered ", stdlog);
                   poolHandlePrint(&message->Handle, stdlog);

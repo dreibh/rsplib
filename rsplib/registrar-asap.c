@@ -340,6 +340,8 @@ void registrarHandlePoolElementEvent(struct Dispatcher* dispatcher,
             registrarSendENRPHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
 
+         registrarDeregistrationHook(registrar, poolElementNode);
+
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                      &registrar->Handlespace,
                      poolElementNode);
@@ -418,6 +420,8 @@ void registrarRemovePoolElementsOfConnection(struct Registrar*  registrar,
          registrarWriteActionLog(registrar, "Send", "ASAP", "Deregistration", "Disconnect", 0, 0, 0,
                                  &poolElementNode->OwnerPoolNode->Handle, poolElementNode->Identifier, registrar->ServerID, 0, 0, 0);
 #endif
+
+         registrarDeregistrationHook(registrar, poolElementNode);
 
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                      &registrar->Handlespace,
@@ -533,6 +537,8 @@ void registrarHandleASAPRegistration(struct Registrar*       registrar,
                               &poolElementNode);
             if(message->Error == RSPERR_OKAY) {
                /* ====== Successful registration ============================ */
+               registrarRegistrationHook(registrar, poolElementNode);
+               
                LOG_ACTION
                fputs("Successfully registered ", stdlog);
                poolHandlePrint(&message->Handle, stdlog);
@@ -712,6 +718,8 @@ void registrarHandleASAPDeregistration(struct Registrar*       registrar,
       if((delPoolElementNode.UserTransport != NULL) &&
          (delPoolElementNode.RegistratorTransport != NULL)) {
 
+         registrarDeregistrationHook(registrar, poolElementNode);
+       
          message->Error = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                              &registrar->Handlespace,
                              poolElementNode);
@@ -1065,6 +1073,8 @@ void registrarHandleASAPEndpointUnreachable(struct Registrar*       registrar,
             /* We own this PE -> send HandleUpdate for its removal. */
             registrarSendENRPHandleUpdate(registrar, poolElementNode, PNUP_DEL_PE);
          }
+
+         registrarDeregistrationHook(registrar, poolElementNode);
 
          result = ST_CLASS(poolHandlespaceManagementDeregisterPoolElementByPtr)(
                      &registrar->Handlespace,

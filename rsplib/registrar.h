@@ -395,4 +395,10 @@ bool registrarPoolUserHasPermissionFor(struct Registrar*               registrar
                                        const struct PoolHandle*        poolHandle,
                                        const PoolElementIdentifierType peIdentifier);
 
+/* ###### Miscellaneous ################################################## */
+void registrarRegistrationHook(struct Registrar*                 registrar,
+                               struct ST_CLASS(PoolElementNode)* poolElementNode);
+void registrarDeregistrationHook(struct Registrar*                 registrar,
+                                 struct ST_CLASS(PoolElementNode)* poolElementNode);
+
 #endif
