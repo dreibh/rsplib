@@ -298,10 +298,10 @@ EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-d
 endif
 
 if ENABLE_REGISTRAR_STATISTICS
-registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
+registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
 registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
 else
-registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c takeoverprocess.c takeoverprocess.h
+registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
 registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
