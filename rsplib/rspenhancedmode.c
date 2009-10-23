@@ -1317,6 +1317,11 @@ ssize_t rsp_recvmsg(int                    sd,
          if(buffer != NULL) {
             received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, false);
             if(received2 > 0) {
+if(received == 0) {
+  LOG_ERROR
+  fputs("?????? Hiding R=0 ??????\n", stdlog);
+  LOG_END
+}
                received = received2;
             }
          }
