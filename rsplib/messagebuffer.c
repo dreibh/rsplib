@@ -43,9 +43,10 @@ struct MessageBuffer* messageBufferNew(size_t bufferSize, const bool useEOR)
          free(messageBuffer);
          return(NULL);
       }
-      messageBuffer->BufferSize = bufferSize;
-      messageBuffer->BufferPos  = 0;
-      messageBuffer->UseEOR     = useEOR;
+      messageBuffer->BufferSize   = bufferSize;
+      messageBuffer->BufferPos    = 0;
+      messageBuffer->UseEOR       = useEOR;
+      messageBuffer->Disconnected = false;
    }
    return(messageBuffer);
 }
@@ -76,16 +77,23 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
                           const unsigned long long timeout)
 {
    ssize_t result;
-   /* ssize_t i; */
 
    LOG_VERBOSE4
    fprintf(stdlog, "Reading into message buffer from socket %d: offset=%u, max=%u\n",
            sockfd, (unsigned int)messageBuffer->BufferPos, (unsigned int)messageBuffer->BufferSize);
    LOG_END
+   if(messageBuffer->Disconnected) {
+      LOG_ERROR
+      fprintf(stdlog,"????? Socket %d is disconnected!\n", sockfd);
+      LOG_END
+      return(0);
+   }
+printf("--r[%d]--\n",sockfd);   
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],
                          messageBuffer->BufferSize - messageBuffer->BufferPos,
                          flags, from, fromlen, ppid, assocID, streamID, timeout);
+printf("--R[%d:%04d]--\n",sockfd,result);   
    LOG_VERBOSE4
    fprintf(stdlog, "Read result for socket %d is %d, EOR=%s, NOTIFICATION=%s, useEOR=%s\n",
            sockfd, (int)result,
@@ -120,6 +128,9 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
    }
    else if(result < 0) {
       result = MBRead_Error;
+   }
+   else {
+      messageBuffer->Disconnected = true;
    }
    return(result);
 }
