@@ -82,12 +82,6 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
    fprintf(stdlog, "Reading into message buffer from socket %d: offset=%u, max=%u\n",
            sockfd, (unsigned int)messageBuffer->BufferPos, (unsigned int)messageBuffer->BufferSize);
    LOG_END
-   if(messageBuffer->Disconnected) {
-      LOG_ERROR
-      fprintf(stdlog,"????? Socket %d is disconnected!\n", sockfd);
-      LOG_END
-      return(0);
-   }
 fprintf(stdlog, "--r[%d]--\n",sockfd);   
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],
@@ -130,6 +124,12 @@ fprintf(stdlog, "--R[%d:%04d]--\n",sockfd,result);
       result = MBRead_Error;
    }
    else {
+      if(messageBuffer->Disconnected) {
+         LOG_ERROR
+         fprintf(stdlog, "????? Socket %d is disconnected!\n", sockfd);
+         LOG_END
+         result = MBRead_Error;
+      }
       messageBuffer->Disconnected = true;
    }
    return(result);
