@@ -32,6 +32,8 @@
 #include "netutilities.h"
 #include "loglevel.h"
 
+#include <string.h>
+
 
 /* ###### Constructor #################################################### */
 struct MessageBuffer* messageBufferNew(size_t bufferSize, const bool useEOR)
@@ -43,10 +45,9 @@ struct MessageBuffer* messageBufferNew(size_t bufferSize, const bool useEOR)
          free(messageBuffer);
          return(NULL);
       }
-      messageBuffer->BufferSize   = bufferSize;
-      messageBuffer->BufferPos    = 0;
-      messageBuffer->UseEOR       = useEOR;
-      messageBuffer->Disconnected = false;
+      messageBuffer->BufferSize = bufferSize;
+      messageBuffer->BufferPos  = 0;
+      messageBuffer->UseEOR     = useEOR;
    }
    return(messageBuffer);
 }
@@ -77,17 +78,18 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
                           const unsigned long long timeout)
 {
    ssize_t result;
+   /* ssize_t i; */
 
    LOG_VERBOSE4
    fprintf(stdlog, "Reading into message buffer from socket %d: offset=%u, max=%u\n",
            sockfd, (unsigned int)messageBuffer->BufferPos, (unsigned int)messageBuffer->BufferSize);
    LOG_END
-fprintf(stdlog, "--r[%d]--\n",sockfd);   
+   fprintf(stdlog, "--r[%d]--\n",sockfd);
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],
                          messageBuffer->BufferSize - messageBuffer->BufferPos,
                          flags, from, fromlen, ppid, assocID, streamID, timeout);
-fprintf(stdlog, "--R[%d:%04d]--\n",sockfd,result);   
+   fprintf(stdlog, "--R[%d:%04d:%s]--\n",sockfd,result,(result < 0)?strerror(errno):"");
    LOG_VERBOSE4
    fprintf(stdlog, "Read result for socket %d is %d, EOR=%s, NOTIFICATION=%s, useEOR=%s\n",
            sockfd, (int)result,
@@ -122,15 +124,6 @@ fprintf(stdlog, "--R[%d:%04d]--\n",sockfd,result);
    }
    else if(result < 0) {
       result = MBRead_Error;
-   }
-   else {
-      if(messageBuffer->Disconnected) {
-         LOG_ERROR
-         fprintf(stdlog, "????? Socket %d is disconnected!\n", sockfd);
-         LOG_END
-         result = MBRead_Error;
-      }
-      messageBuffer->Disconnected = true;
    }
    return(result);
 }

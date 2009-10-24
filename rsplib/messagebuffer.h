@@ -47,7 +47,6 @@ struct MessageBuffer
    size_t BufferSize;
    size_t BufferPos;
    bool   UseEOR;
-   bool   Disconnected;
 };
 
 
