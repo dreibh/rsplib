@@ -1167,6 +1167,9 @@ ssize_t rsp_recvmsg(int                    sd,
       }
    }
 
+if(rserpoolSocket->ConnectedSession->IsFailed) {
+   fprintf(stdlog, "??????????????????? ERRROR: failed=%d\n", rserpoolSocket->Socket);
+}
 
    /* ====== Read from socket ========================================= */
    startTimeStamp = getMicroTime();
