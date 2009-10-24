@@ -1216,6 +1216,7 @@ ssize_t rsp_recvmsg(int                    sd,
             }
             threadSafetyUnlock(&rserpoolSocket->Mutex);
          }
+	 printf("Q[%d:%d:%d:if=%d]\n", rserpoolSocket->Socket, (int)received, errorCode, rserpoolSocket->ConnectedSession->IsFailed);
       }
       else {
          LOG_VERBOSE
