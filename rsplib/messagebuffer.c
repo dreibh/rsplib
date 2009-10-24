@@ -88,12 +88,12 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
       LOG_END
       return(0);
    }
-printf("--r[%d]--\n",sockfd);   
+fprintf(stdlog, "--r[%d]--\n",sockfd);   
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],
                          messageBuffer->BufferSize - messageBuffer->BufferPos,
                          flags, from, fromlen, ppid, assocID, streamID, timeout);
-printf("--R[%d:%04d]--\n",sockfd,result);   
+fprintf(stdlog, "--R[%d:%04d]--\n",sockfd,result);   
    LOG_VERBOSE4
    fprintf(stdlog, "Read result for socket %d is %d, EOR=%s, NOTIFICATION=%s, useEOR=%s\n",
            sockfd, (int)result,
