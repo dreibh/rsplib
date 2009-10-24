@@ -1219,7 +1219,7 @@ if(rserpoolSocket->ConnectedSession->IsFailed) {
             }
             threadSafetyUnlock(&rserpoolSocket->Mutex);
          }
-	 printf("Q[%d:%d:%d:if=%d]\n", rserpoolSocket->Socket, (int)received, errorCode, rserpoolSocket->ConnectedSession->IsFailed);
+	 fprintf(stdlog, "Q[%d:%d:%d:if=%d]\n", rserpoolSocket->Socket, (int)received, errorCode, rserpoolSocket->ConnectedSession->IsFailed);
       }
       else {
          LOG_VERBOSE
