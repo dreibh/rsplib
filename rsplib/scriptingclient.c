@@ -75,6 +75,17 @@ static bool               KeepAliveTransmitted;
 static unsigned long long LastKeepAlive;
 
 
+/* ###### Randomize waiting time ######################################### */
+static unsigned long long randomizeWaitingTime(const unsigned long long interval)
+{
+   const double originalInterval = (double)interval;
+   const double variation    = 0.250 * originalInterval;
+   const double nextInterval = originalInterval - (variation / 2.0) +
+                                  variation * ((double)rand() / (double)RAND_MAX);
+   return((unsigned long long)nextInterval);
+}
+
+
 /* ###### Write new log line ############################################# */
 static void newLogLine(FILE* fh)
 {
@@ -205,10 +216,34 @@ static unsigned int sendKeepAlive(int sd)
 }
 
 
+/* ###### Handle KeepAliveAck message #################################### */
+static unsigned int handleKeepAliveAck()
+{
+   KeepAliveTransmitted = false;
+   LastKeepAlive        = getMicroTime();
+   return(SSCR_OKAY);
+}
+
+
+/* ###### Send KeepAliveAck message ###################################### */
+static unsigned int sendKeepAliveAck(int sd)
+{
+   struct KeepAlive keepAliveAck;
+   ssize_t          sent;
+
+   keepAliveAck.Header.Type   = SPT_KEEPALIVE_ACK;
+   keepAliveAck.Header.Flags  = 0x00;
+   keepAliveAck.Header.Length = htons(sizeof(keepAliveAck));
+   sent = rsp_sendmsg(sd, (const char*)&keepAliveAck, sizeof(keepAliveAck), 0,
+                      0, htonl(PPID_SP), 0, 0, 0, 0);
+   return( (sent == sizeof(keepAliveAck)) ? SSCR_OKAY : SSCR_FAILOVER );
+}
+
+
 /* ###### Handle Ready message ########################################### */
-static unsigned int handleNotReady(const int              sd,
-                                   const struct NotReady* notReady,
-                                   const size_t           length)
+static void handleNotReady(const int              sd,
+                           const struct NotReady* notReady,
+                           const size_t           length)
 {
    char infoString[SR_MAX_INFOSIZE + 1] = "";
  
@@ -390,9 +425,10 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_PROCESSING:
          switch(header->Type) {
             case SPT_KEEPALIVE_ACK:
-               KeepAliveTransmitted = false;
-               LastKeepAlive        = getMicroTime();
-               return(SSCR_OKAY);
+             return(handleKeepAliveAck());
+             break;
+            case SPT_KEEPALIVE:
+               return(sendKeepAliveAck(sd));
              break;
             case SPT_STATUS:
                State = SSCS_DOWNLOAD;
@@ -408,9 +444,7 @@ static unsigned int handleMessage(int                                 sd,
                return(handleDownload((const struct Download*)header, length));
              break;
             case SPT_KEEPALIVE_ACK:
-               KeepAliveTransmitted = false;
-               LastKeepAlive        = getMicroTime();
-               return(SSCR_OKAY);
+               return(handleKeepAliveAck());
              break;
          }
        break;
@@ -612,7 +646,7 @@ int main(int argc, char** argv)
             puts("FAILOVER ...");
             fflush(stdout);
          }
-         nextTimer = getMicroTime() + RetryDelay;
+         nextTimer = getMicroTime() + randomizeWaitingTime(RetryDelay);
          do {
             usleep(500000);
          } while( (getMicroTime() < nextTimer) && (!breakDetected()) );

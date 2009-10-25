@@ -536,9 +536,11 @@ start:
    else if(service == SERVICE_SCRIPTING) {
       size_t maxThreads = getNumberOfCPUs();
       ScriptingServer::ScriptingServerSettings settings;
-      settings.KeepTempDirs    = false;
-      settings.TransmitTimeout = 60000;
-      settings.VerboseMode     = false;
+      settings.KeepTempDirs      = false;
+      settings.VerboseMode       = false;
+      settings.TransmitTimeout   = 30000;
+      settings.KeepAliveInterval = 10000;
+      settings.KeepAliveTimeout  = 10000;
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
@@ -554,6 +556,12 @@ start:
          }
          else if(!(strncmp(argv[i], "-sstransmittimeout=", 19))) {
             settings.TransmitTimeout = atol((const char*)&argv[i][19]);
+         }
+         else if(!(strncmp(argv[i], "-sskeepaliveinterval=", 21))) {
+            settings.KeepAliveInterval = atol((const char*)&argv[i][21]);
+         }
+         else if(!(strncmp(argv[i], "-sskeepalivetimeout=", 20))) {
+            settings.KeepAliveTimeout = atol((const char*)&argv[i][20]);
          }
       }
       if(!policyChanged) {

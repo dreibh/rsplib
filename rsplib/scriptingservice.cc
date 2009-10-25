@@ -53,11 +53,13 @@ ScriptingServer::ScriptingServer(
    ScriptingServer::ScriptingServerSettings* settings)
    : TCPLikeServer(rserpoolSocketDescriptor)
 {
-   Settings     = *settings;
-   State        = SS_Upload;
-   UploadFile   = NULL;
-   ChildProcess = 0;
-   Directory[0] = 0x00;
+   Settings               = *settings;
+   State                  = SS_Upload;
+   UploadFile             = NULL;
+   ChildProcess           = 0;
+   Directory[0]           = 0x00;
+   LastKeepAliveTimeStamp = 0;
+   WaitingForKeepAliveAck = false;
 }
 
 
@@ -129,6 +131,9 @@ EventHandlingResult ScriptingServer::initializeSession()
    ready->Header.Flags  = 0x00;
    ready->Header.Length = htons(readyLength);
 
+   setSyncTimer(getMicroTime() + (1000ULL * Settings.TransmitTimeout));   // Timeout for first upload message
+
+   
    const ssize_t sent  = rsp_sendmsg(RSerPoolSocketDescriptor,
                                      (const char*)ready, readyLength, 0,
                                      0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
@@ -177,9 +182,11 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
 
    puts("Scripting Parameters:");
-   printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
    printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
    printf("   Verbose Mode            = %s\n", (settings->VerboseMode == true) ? "yes" : "no");
+   printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
+   printf("   Keep-Alive Interval     = %u [ms]\n", settings->KeepAliveInterval);
+   printf("   Keep-Alive Timeout      = %u [ms]\n", settings->KeepAliveTimeout);
 }
 
 
@@ -210,13 +217,13 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
          return(EHR_Abort);
       }
       printTimeStamp(stdlog);
-      fprintf(stdlog, "S%04d: Starting upload into directory \"%s\"...\n",
+      fprintf(stdlog, "S%04d: Starting upload into directory \"%s\" ...\n",
               RSerPoolSocketDescriptor, Directory);
    }
 
    // ====== Write to input file ============================================
    const Upload* upload = (const Upload*)buffer;
-   const size_t length = bufferSize - sizeof(ScriptingCommonHeader);
+   const size_t length  = bufferSize - sizeof(ScriptingCommonHeader);
    if(length > 0) {
       if(Settings.VerboseMode) {
          fputs(".", stdlog);
@@ -228,6 +235,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
                  RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      setSyncTimer(getMicroTime() + (1000ULL * Settings.TransmitTimeout));   // Timeout for next upload message
       return(EHR_Okay);
    }
    else {
@@ -235,7 +243,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
          fputs("\n", stdlog);
       }
       fclose(UploadFile);
-      fprintf(stdlog, "S%04d: Starting work in directory \"%s\"...\n",
+      fprintf(stdlog, "S%04d: Starting work in directory \"%s\" ...\n",
               RSerPoolSocketDescriptor, Directory);
       UploadFile = NULL;
       EventHandlingResult result = sendStatus(0);
@@ -278,7 +286,7 @@ EventHandlingResult ScriptingServer::performDownload()
    FILE* fh = fopen(OutputName, "r");
    if(fh != NULL) {
       printTimeStamp(stdlog);
-      fprintf(stdlog, "S%04d: Starting download of results in directory \"%s\"...\n",
+      fprintf(stdlog, "S%04d: Starting download of results in directory \"%s\" ...\n",
               RSerPoolSocketDescriptor, Directory);
       for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
@@ -326,7 +334,7 @@ EventHandlingResult ScriptingServer::startWorking()
    assert(ChildProcess == 0);
      
    printTimeStamp(stdlog);
-   fprintf(stdlog, "S%04d: Starting work in directory \"%s\"...\n",
+   fprintf(stdlog, "S%04d: Starting work in directory \"%s\" ...\n",
            RSerPoolSocketDescriptor, Directory);
    ChildProcess = fork();
    if(ChildProcess == 0) {
@@ -347,8 +355,8 @@ EventHandlingResult ScriptingServer::startWorking()
       exit(1);
    }
 
-   setSyncTimer(1);
    State = SS_Working;
+   setSyncTimer(1);
    return(EHR_Okay);
 }
 
@@ -372,19 +380,86 @@ bool ScriptingServer::hasFinishedWork(int& exitStatus)
 }
 
 
-// ###### Check, if work is already complete ################################
+// ###### Handle timer events ###############################################
 EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now)
 {
    EventHandlingResult result = EHR_Okay;
-   int                 exitStatus;
-   if(hasFinishedWork(exitStatus)) {
-      result = sendStatus(exitStatus);
-      if(result == EHR_Okay) {
-         result = performDownload();
-      }
+   
+   switch(State) {
+     case SS_Upload:
+        printTimeStamp(stdlog);
+        fprintf(stdlog, "S%04d: Reception timeout during upload to directory \"%s\" ...\n",
+                RSerPoolSocketDescriptor, Directory);
+        result = EHR_Abort;
+      break;
+      
+     case SS_Working:
+        // ====== Check whether work is complete ============================
+        int                 exitStatus;
+        if(hasFinishedWork(exitStatus)) {
+           result = sendStatus(exitStatus);
+           if(result == EHR_Okay) {
+              result = performDownload();
+           }
+        }
+        
+        // ====== Keep-Alive handling =======================================
+        else {
+           // ------ Send KeepAlive -----------------------------------------
+           if(WaitingForKeepAliveAck == false) {
+              if(now >= LastKeepAliveTimeStamp + (1000ULL * Settings.KeepAliveInterval)) {
+                 LastKeepAliveTimeStamp = now;
+                 WaitingForKeepAliveAck = true;
+                 result = sendKeepAliveMessage();
+              }
+           }
+           // ====== Handle KeepAlive timeout -------------------------------
+           else {
+              if(now >= LastKeepAliveTimeStamp + (1000ULL * Settings.KeepAliveTimeout)) {
+                 printTimeStamp(stdlog);
+                 fprintf(stdlog, "S%04d: Keep-alive timeout during processing in directory \"%s\" ...\n",
+                         RSerPoolSocketDescriptor, Directory);
+                 result = EHR_Abort;
+              }
+           }
+        }
+      break;
+      
+     default:
+      break;
    }
    setSyncTimer(now + 1000000);
    return(result);
+}
+
+
+// ###### Send KeppAlive message ############################################
+EventHandlingResult ScriptingServer::sendKeepAliveMessage()
+{
+   KeepAlive keepAlive;
+
+   keepAlive.Header.Type   = SPT_KEEPALIVE;
+   keepAlive.Header.Flags  = 0x00;
+   keepAlive.Header.Length = htons(sizeof(keepAlive));
+
+   const ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                                    (const char*)&keepAlive, sizeof(keepAlive), 0,
+                                    0, htonl(PPID_SP), 0, 0, 0, 0);
+   return( (sent == sizeof(keepAlive)) ? EHR_Okay : EHR_Abort );
+}
+
+
+// ###### Handle KeppAliveAck message #######################################
+EventHandlingResult ScriptingServer::handleKeepAliveAckMessage()
+{
+   if(LastKeepAliveTimeStamp == 0) {
+     printTimeStamp(stdlog);
+     fprintf(stdlog, "S%04d: Received unexpected KeepAliveAck message!\n",
+             RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+   WaitingForKeepAliveAck = false;
+   return(EHR_Okay);
 }
 
 
@@ -397,10 +472,9 @@ EventHandlingResult ScriptingServer::handleKeepAliveMessage()
    keepAliveAck.Header.Length = htons(sizeof(keepAliveAck));
    keepAliveAck.Status        = htonl(0);
 
-   ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                              (const char*)&keepAliveAck, sizeof(keepAliveAck), 0,
-                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-
+   const ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                                    (const char*)&keepAliveAck, sizeof(keepAliveAck), 0,
+                                    0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
    return( (sent == sizeof(keepAliveAck)) ? EHR_Okay : EHR_Abort );
 }
 
@@ -440,15 +514,20 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
             return(handleUploadMessage(buffer, bufferSize));
          }
        break;
-      case SS_Working:
+      case SS_Working:       
          if(header->Type == SPT_KEEPALIVE) {
             return(handleKeepAliveMessage());
+         }
+         else if(header->Type == SPT_KEEPALIVE_ACK) {
+            return(handleKeepAliveAckMessage());
          }
        break;
       default:
           // All messages here are unexpected!
        break;
    }
+   
+   // ====== Print unexpected message =======================================
    printTimeStamp(stdlog);
    fprintf(stdlog, "S%04d: Received unexpected message $%02x in state #%u!\n",
            RSerPoolSocketDescriptor, header->Type, State);

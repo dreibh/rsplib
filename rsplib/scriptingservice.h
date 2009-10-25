@@ -44,6 +44,8 @@ class ScriptingServer : public TCPLikeServer
    struct ScriptingServerSettings
    {
       unsigned int TransmitTimeout;
+      unsigned int KeepAliveInterval;
+      unsigned int KeepAliveTimeout;
       bool         KeepTempDirs;
       bool         VerboseMode;
    };
@@ -73,6 +75,8 @@ class ScriptingServer : public TCPLikeServer
    EventHandlingResult performDownload();
    EventHandlingResult handleUploadMessage(const char* buffer,
                                            size_t      bufferSize);
+   EventHandlingResult sendKeepAliveMessage();
+   EventHandlingResult handleKeepAliveAckMessage();
    EventHandlingResult handleKeepAliveMessage();
 
    enum ScriptingState {
@@ -89,6 +93,8 @@ class ScriptingServer : public TCPLikeServer
    char                    StatusName[256];
    FILE*                   UploadFile;
    pid_t                   ChildProcess;
+   bool                    WaitingForKeepAliveAck;
+   unsigned long long      LastKeepAliveTimeStamp;
 };
 
 
