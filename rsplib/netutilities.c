@@ -1552,12 +1552,21 @@ int recvfromplus(int                      sockfd,
          msg.msg_flags      = *flags;
          cc = ext_recvmsg(sockfd, &msg, *flags);
       }
-      else {
+      else if(result == 0) {   /* Timeout */
          LOG_VERBOSE5
          fprintf(stdlog, "recvmsg(%d) timed out\n", sockfd);
          LOG_END
          cc    = -1;
          errno = EWOULDBLOCK;
+	 fprintf(stdlog, "poll(%d,%lld) timeout\n", sockfd, timeout);
+      }
+      else {   /* Error */
+	 fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));   // ???????????
+	
+         LOG_ERROR
+	 fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
+	 LOG_END
+         cc = -1;
       }
    }
 
