@@ -213,11 +213,9 @@ void TCPLikeServer::run()
             nextTimerEvent = 5000000;
          }
          now      = getMicroTime();
-fprintf(stdlog,"r<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
                                     &rinfo, &flags, (int)(nextTimerEvent / 1000));
-fprintf(stdlog,"R<%d:l=%d>",RSerPoolSocketDescriptor,(int)received);fflush(stdlog);
 
          if(received > 0) {
             /*
@@ -256,7 +254,6 @@ fprintf(stdlog,"R<%d:l=%d>",RSerPoolSocketDescriptor,(int)received);fflush(stdlo
             }
          }
          else if(received == 0) {
-            fprintf(stdlog,"SHUTDOWN<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
             break;
          }
 
@@ -277,9 +274,7 @@ fprintf(stdlog,"R<%d:l=%d>",RSerPoolSocketDescriptor,(int)received);fflush(stdlo
    // temporary files for Scripting Service), we finish the session *before*
    // actually closing the association. Then, the PU waits until being finished
    // before actually trying to distribute the next session.
-   fprintf(stdlog,"FIN1<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    finishSession(eventHandlingResult);
-   fprintf(stdlog,"FIN2<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    if((eventHandlingResult == EHR_Abort) ||
       (eventHandlingResult == EHR_Shutdown)) {
       rsp_sendmsg(RSerPoolSocketDescriptor,
@@ -288,11 +283,9 @@ fprintf(stdlog,"R<%d:l=%d>",RSerPoolSocketDescriptor,(int)received);fflush(stdlo
                   (eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF,
                   0);
    }
-   fprintf(stdlog,"FIN3<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
    lock();
    Finished = true;
    unlock();
-   fprintf(stdlog,"FIN4<%d>",RSerPoolSocketDescriptor);fflush(stdlog);
 }
 
 

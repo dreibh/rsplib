@@ -1167,10 +1167,6 @@ ssize_t rsp_recvmsg(int                    sd,
       }
    }
 
-if(rserpoolSocket->ConnectedSession->IsFailed) {
-   fprintf(stdlog, "??????????????????? ERRROR: failed=%d\n", rserpoolSocket->Socket);
-}
-
    /* ====== Read from socket ========================================= */
    startTimeStamp = getMicroTime();
    do {
@@ -1219,7 +1215,6 @@ if(rserpoolSocket->ConnectedSession->IsFailed) {
             }
             threadSafetyUnlock(&rserpoolSocket->Mutex);
          }
-	 fprintf(stdlog, "Q[%d:%d:%d:if=%d]\n", rserpoolSocket->Socket, (int)received, errorCode, rserpoolSocket->ConnectedSession->IsFailed);
       }
       else {
          LOG_VERBOSE
@@ -1321,11 +1316,6 @@ if(rserpoolSocket->ConnectedSession->IsFailed) {
          if(buffer != NULL) {
             received2 = getCookieEchoOrNotification(rserpoolSocket, buffer, bufferLength, rinfo, msg_flags, false);
             if(received2 > 0) {
-if(received == 0) {
-  LOG_ERROR
-  fputs("?????? Hiding R=0 ??????\n", stdlog);
-  LOG_END
-}
                received = received2;
             }
          }
