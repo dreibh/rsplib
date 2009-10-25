@@ -84,12 +84,12 @@ ssize_t messageBufferRead(struct MessageBuffer*    messageBuffer,
    fprintf(stdlog, "Reading into message buffer from socket %d: offset=%u, max=%u\n",
            sockfd, (unsigned int)messageBuffer->BufferPos, (unsigned int)messageBuffer->BufferSize);
    LOG_END
-   fprintf(stdlog, "--r[%d]--\n",sockfd);
+   fprintf(stdlog, "--r[%d:A=%d]--\n",sockfd,(assocID != NULL) ? (int)*assocID : -1);
    result = recvfromplus(sockfd,
                          (char*)&messageBuffer->Buffer[messageBuffer->BufferPos],
                          messageBuffer->BufferSize - messageBuffer->BufferPos,
                          flags, from, fromlen, ppid, assocID, streamID, timeout);
-   fprintf(stdlog, "--R[%d:%04d:%s]--\n",sockfd,result,(result < 0)?strerror(errno):"");
+   fprintf(stdlog, "--R[%d:A=%d:%04d:%s]--\n",sockfd,(assocID != NULL) ? (int)*assocID : -1,result,(result < 0)?strerror(errno):"");
    LOG_VERBOSE4
    fprintf(stdlog, "Read result for socket %d is %d, EOR=%s, NOTIFICATION=%s, useEOR=%s\n",
            sockfd, (int)result,
