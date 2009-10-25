@@ -1522,7 +1522,7 @@ int recvfromplus(int                      sockfd,
 
    setNonBlocking(sockfd);
    cc = ext_recvmsg(sockfd, &msg, *flags);
-   if((timeout > 0) && ((cc < 0) && (errno == EWOULDBLOCK))) {
+   if((cc < 0) && (errno == EWOULDBLOCK) && (timeout > 0)) {
       LOG_VERBOSE5
       fprintf(stdlog, "recvmsg(%d) would block, waiting with timeout %lld [us]...\n",
               sockfd, timeout);
@@ -1558,14 +1558,11 @@ int recvfromplus(int                      sockfd,
          LOG_END
          cc    = -1;
          errno = EWOULDBLOCK;
-	 fprintf(stdlog, "poll(%d,%lld) timeout\n", sockfd, timeout);
       }
       else {   /* Error */
-	 fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));   // ???????????
-	
          LOG_ERROR
-	 fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
-	 LOG_END
+         fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
+         LOG_END
          cc = -1;
       }
    }
