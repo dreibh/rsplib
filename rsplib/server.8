@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 11, 2009
+.Dd October 25, 2009
 .Dt Server 8
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -92,6 +92,8 @@
 .Op Fl sskeeptempdirs
 .Op Fl ssmaxthreads=threads
 .Op Fl sstransmittimeout=milliseconds
+.Op Fl keepaliveinterval=milliseconds
+.Op Fl keepalivetimeout=milliseconds
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm server
@@ -296,6 +298,10 @@ Turns on keeping all temporary files for debugging. Handle with care!
 Sets an upper limit for the number of simultaneous sessions.
 .It Fl sstransmittimeout=milliseconds
 Sets the transmission timeout in milliseconds.
+.It Fl sskeepaliveinterval=milliseconds
+Sets the keep-alive interval in milliseconds.
+.It Fl sskeepalivetimeout=milliseconds
+Sets the keep-alive timeout in milliseconds.
 .El
 .El
 .El
