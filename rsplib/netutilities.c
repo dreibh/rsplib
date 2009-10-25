@@ -1532,7 +1532,7 @@ int recvfromplus(int                      sockfd,
       pfd.events  = POLLIN;
       pfd.revents = 0;
       result = ext_poll((struct pollfd*)&pfd, 1, (int)ceil((double)timeout / 1000.0));
-      if( (result > 0) && (pfd.revents = POLLIN) ) {
+      if( (result > 0) && (pfd.revents & POLLIN) ) {
          LOG_VERBOSE5
          fprintf(stdlog, "retrying recvmsg(%d, %u bytes)...\n",
                  sockfd, (unsigned int)iov.iov_len);
