@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA5.1)
+AM_INIT_AUTOMAKE(rsplib, 2.7.0~rcA5.2)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -531,11 +531,18 @@ fi
 # ###### Check for BZip2 library ############################################
 oldLIBS=$LIBS
 LIBS=
-AC_CHECK_HEADERS([bzlib.h])
-AC_SEARCH_LIBS([BZ2_bzReadOpen], [bz2])
+hasBZ2=yes   # Assume "yes"; will be set to "no" when one of the test fails.
+AC_CHECK_HEADERS([bzlib.h], [], [hasBZ2=no])
+AC_SEARCH_LIBS([BZ2_bzReadOpen], [bz2], [], [hasBZ2=no])
 bz2_LIBS=$LIBS
 AC_SUBST(bz2_LIBS)
 LIBS=$oldLIBS
+
+if test "${enable_registrar_statistics}" = "yes"; then
+   if test "${hasBZ2}" = "no"; then
+      AC_MSG_ERROR([No bzlib developer files found, but registrar statistics requested (--enable-registrar-statistics parameter)!])
+   fi
+fi
 
 
 # ###### Maintainer mode ####################################################
@@ -567,14 +574,14 @@ AC_OUTPUT(Makefile rsplib/Makefile rsplib/wireshark/Makefile rsplib/fgpconfig/Ma
 echo ""
 echo "The rsplib package has been configured with the following options:"
 echo ""
-echo "   Maximum loglevel                : $max_loglevel"
 echo "   Build with Maintainer Mode      : $enable_maintainer_mode"
-echo "   Build with HS Management Verify : $enable_hsmgtverify"
 echo "   Build with Batch Test Programs  : $enable_test_programs"
 echo "   Build with Kernel SCTP          : $enable_kernel_sctp"
 echo "   Build with CSP Support          : $enable_csp"
 echo "   Build with Registrar Statistics : $enable_registrar_statistics"
 echo "   Build with Qt-based Examples    : $enable_qt"
+echo "   Maximum loglevel                : $max_loglevel"
+echo "   Build with HS Mgt. Debugging    : $enable_hsmgtverify"
 echo ""
 echo "   sctplib Libraries               : $sctplib_LIBS"
 echo "   socketapi Libraries             : $socketapi_LIBS"

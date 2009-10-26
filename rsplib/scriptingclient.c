@@ -245,8 +245,6 @@ static void handleNotReady(const int              sd,
                            const struct NotReady* notReady,
                            const size_t           length)
 {
-   char infoString[SR_MAX_INFOSIZE + 1] = "";
- 
    if(length >= sizeof(struct NotReady)) {
       /* ====== Get info string ========================================== */
       size_t i;
@@ -254,12 +252,15 @@ static void handleNotReady(const int              sd,
          if(i == SR_MAX_INFOSIZE) {
             break;
          }
-         infoString[i] = isprint(notReady->Info[i]) ? notReady->Info[i] : '.';
+         InfoString[i] = isprint(notReady->Info[i]) ? notReady->Info[i] : '.';
       }
-      infoString[i] = 0x00;
+      InfoString[i] = 0x00;
+   }
+   else {
+      InfoString[0] = 0x00;
    }
    newLogLine(stdout);
-   printf("Server %s is not ready yet => trying another one.\n", infoString);
+   printf("Server %s is not ready yet => trying another one.\n", InfoString);
    fflush(stdout);
 }
 
@@ -641,16 +642,17 @@ int main(int argc, char** argv)
             fclose(OutputFile);
             OutputFile = NULL;
          }
+         unlink(OutputName);
          if(HasAssignedPE == true) {   /* Skip printing if no PE has accepted the request yet. */
             newLogLine(stdout);
             puts("FAILOVER ...");
             fflush(stdout);
          }
+         InfoString[0] = 0x00;
          nextTimer = getMicroTime() + randomizeWaitingTime(RetryDelay);
          do {
             usleep(500000);
          } while( (getMicroTime() < nextTimer) && (!breakDetected()) );
-         unlink(OutputName);
          State = SSCS_WAIT_SERVER_READY;
          rsp_forcefailover(sd, FFF_NONE, 0);
          KeepAliveTransmitted = false;

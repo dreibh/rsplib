@@ -1219,13 +1219,13 @@ static void handleNotificationOnRegistrarSocket(struct ASAPInstance*           a
    if( (notification->sn_header.sn_type == SCTP_ASSOC_CHANGE) &&
        ((notification->sn_assoc_change.sac_state == SCTP_COMM_LOST) ||
         (notification->sn_assoc_change.sac_state == SCTP_SHUTDOWN_COMP)) ) {
-      LOG_WARNING
+      LOG_NOTE
       fputs("Registrar connection lost\n", stdlog);
       LOG_END
       asapInstanceDisconnectFromRegistrar(asapInstance, true);
    }
    else if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
-      LOG_WARNING
+      LOG_NOTE
       fputs("Registrar connection is shutting down\n", stdlog);
       LOG_END
       asapInstanceDisconnectFromRegistrar(asapInstance, true);
