@@ -83,7 +83,7 @@ AC_ARG_ENABLE([registrar-statistics],
 [  --enable-registrar-statistics       enable registrar statistics logging option (requires libbz2) ]
 [default=yes]],enable_registrar_statistics=$enableval,enable_registrar_statistics=yes)
 if test "${enable_registrar_statistics}" = "yes"; then
-   AC_DEFINE(VERIFY, 1, "Define to 1 to enable registrar statistics logging option.")
+   AC_DEFINE(ENABLE_REGISTRAR_STATISTICS, 1, "Define to 1 to enable registrar statistics logging option.")
 fi
 AM_CONDITIONAL(ENABLE_REGISTRAR_STATISTICS, test x$enable_registrar_statistics = xyes)
 

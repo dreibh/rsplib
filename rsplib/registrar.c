@@ -347,6 +347,7 @@ int main(int argc, char** argv)
    BZFILE*                       statsBZFile     = NULL;
    int                           statsInterval   = -1;
    int                           bzerror;
+   unsigned long long            now;
 #endif
 
    run                           = 1;
