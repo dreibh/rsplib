@@ -31,6 +31,7 @@ SUBDIRS = fgpconfig wireshark
 # NOTE: The order of the libraries is important!
 lib_LTLIBRARIES = \
    libtdtimeutilities.la \
+   libtdrandomizer.la  \
    libtdstringutilities.la \
    libtdthreadsafety.la \
    libtdloglevel.la \
@@ -42,7 +43,6 @@ lib_LTLIBRARIES = \
    librspdispatcher.la  \
    librspcsp.la  \
    librsplib.la  \
-   libtdrandomizer.la  \
    libtdbreakdetector.la \
    libtdcppthread.la \
    libcpprspserver.la
@@ -82,7 +82,7 @@ libtdloglevel_la_LDFLAGS = \
 # libtdtagitemincludedir      = $(prefix)/include/tdutilities
 # libtdtagiteminclude_HEADERS = tagitem.h
 libtdtagitem_la_SOURCES     = tagitem.c tagitem.h
-libtdtagitem_la_LIBADD      = libtdloglevel.la
+libtdtagitem_la_LIBADD      = libtdtimeutilities.la libtdloglevel.la
 libtdtagitem_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -116,7 +116,7 @@ thread.cc \
 thread.h
 libtdcppthread_la_LIBADD  = libtdthreadsafety.la
 libtdcppthread_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) $(thread_LIBS)
 
 # ###### tdstorage library ##################################################
 # libtdstorageincludedir      = $(prefix)/include/tdutilities
@@ -146,9 +146,9 @@ netutilities.h \
 netdouble.c \
 netdouble.h \
 sockaddrunion.h
-libtdnetutilities_la_LIBADD  = libtdrandomizer.la libtdstringutilities.la libtdloglevel.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
+libtdnetutilities_la_LIBADD  = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdloglevel.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
 libtdnetutilities_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) -lm
 
 
 # ###### rsphsmgt library ###################################################
@@ -191,7 +191,7 @@ timestamphashtable.c \
 timestamphashtable.h \
 transportaddressblock.c \
 transportaddressblock.h
-librsphsmgt_la_LIBADD  = libtdstorage.la libtdnetutilities.la -lm
+librsphsmgt_la_LIBADD  = libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdnetutilities.la -lm
 librsphsmgt_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -206,7 +206,7 @@ rserpoolmessagecreator.c \
 rserpoolmessagecreator.h \
 rserpoolmessageparser.c \
 rserpoolmessageparser.h
-librspmessaging_la_LIBADD  = libtdnetutilities.la librsphsmgt.la
+librspmessaging_la_LIBADD  = libtdnetutilities.la libtdtimeutilities.la librsphsmgt.la libtdloglevel.la
 librspmessaging_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -221,9 +221,9 @@ fdcallback.c \
 fdcallback.h \
 timer.c \
 timer.h
-librspdispatcher_la_LIBADD  = libtdnetutilities.la libtdstorage.la
+librspdispatcher_la_LIBADD  = libtdtimeutilities.la libtdloglevel.la libtdnetutilities.la libtdstorage.la
 librspdispatcher_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) -lm
 
 
 # ###### rspcsp library #####################################################
@@ -233,9 +233,9 @@ librspcsp_la_SOURCES     = \
 componentstatuspackets.h \
 componentstatusreporter.h \
 componentstatusreporter.c
-librspcsp_la_LIBADD  = librspdispatcher.la libtdnetutilities.la
+librspcsp_la_LIBADD  = libtdtimeutilities.la libtdstringutilities.la libtdloglevel.la librspdispatcher.la libtdnetutilities.la
 librspcsp_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) -lm
 
 
 # ###### rsplib library #####################################################
@@ -269,9 +269,9 @@ sessionstorage.h \
 sessioncontrol.c \
 sessioncontrol.h \
 tdtypes.h
-librsplib_la_LIBADD  = libtdrandomizer.la libtdtimeutilities.la libtdstringutilities.la libtdloglevel.la libtdtagitem.la libtdstorage.la librsphsmgt.la librspmessaging.la librspcsp.la
+librsplib_la_LIBADD  = libtdrandomizer.la libtdtimeutilities.la libtdstringutilities.la libtdnetutilities.la libtdthreadsafety.la libtdloglevel.la libtdtagitem.la libtdstorage.la librsphsmgt.la librspdispatcher.la librspmessaging.la librspcsp.la
 librsplib_la_LDFLAGS = \
-   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
+   -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE) -lm $(socketapi_LIBS) $(sctplib_LIBS) $(thread_LIBS)
 
 
 # ###### cpprspserver library ###############################################
@@ -283,7 +283,7 @@ tcplikeserver.cc \
 tcplikeserver.h \
 udplikeserver.cc \
 udplikeserver.h
-libcpprspserver_la_LIBADD  = libtdcppthread.la librsplib.la libtdbreakdetector.la
+libcpprspserver_la_LIBADD  = libtdcppthread.la librsplib.la libtdthreadsafety.la libtdnetutilities.la libtdtimeutilities.la libtdloglevel.la libtdbreakdetector.la
 libcpprspserver_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -299,32 +299,32 @@ endif
 
 if ENABLE_REGISTRAR_STATISTICS
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS)
 else
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la
 endif
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
-server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
+server_LDADD   = libtdbreakdetector.la libcpprspserver.la
 
 terminal_SOURCES = terminal.c
-terminal_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+terminal_LDADD   = libtdbreakdetector.la librsplib.la
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsphsmgt.la librspmessaging.la  $(socketapi_LIBS) $(sctplib_LIBS)
+hsdump_LDADD   = librsphsmgt.la librspmessaging.la
 
 pingpongclient_SOURCES = pingpongclient.c
-pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
+pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 scriptingclient_SOURCES = scriptingclient.c
-scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
+scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = libtdbreakdetector.la librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
+calcappclient_LDADD   = libtdbreakdetector.la librsplib.la
 
 cspmonitor_SOURCES = cspmonitor.c
-cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm  $(socketapi_LIBS) $(sctplib_LIBS)
+cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm
 
 
 # ###### FractalPoolUser program ############################################
@@ -345,7 +345,7 @@ dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la  $(socketapi_LIBS) $(sctplib_LIBS)
+fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la
 endif
 
 

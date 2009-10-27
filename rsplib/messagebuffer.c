@@ -29,6 +29,7 @@
 
 #include "tdtypes.h"
 #include "messagebuffer.h"
+#include "timeutilities.h"
 #include "netutilities.h"
 #include "loglevel.h"
 
