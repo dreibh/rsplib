@@ -700,10 +700,10 @@ void FractalCalculationThread::run()
                                  if(ShowStatus) {
                                     char statusText[128];
                                     snprintf((char*)&statusText, sizeof(statusText),
-                                             "%s%u%s $%08x",
+                                             "%s%u %s $%08x",
                                              tr("Processed packet #").toLocal8Bit().data(),
                                              (unsigned int)packets,
-                                             tr(" of PE $%08x").toLocal8Bit().data(),
+                                             tr("of PE").toLocal8Bit().data(),
                                              rinfo.rinfo_pe_id);
                                     rsp_csp_setstatus(Session, 0, statusText);
                                     emit updateStatus(QString(statusText));
