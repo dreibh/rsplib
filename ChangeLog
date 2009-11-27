@@ -1,4 +1,435 @@
 ------------------------------------------------------------------------
+r2273 | dreibh | 2009-11-20 14:34:42 +0100 (Fri, 20 Nov 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rsplib-registrar
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Updated example init scripts.
+
+------------------------------------------------------------------------
+r2272 | dreibh | 2009-11-15 12:36:26 +0100 (Sun, 15 Nov 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.qm
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.ts
+
+Fixed translation problem in FractalPoolUser.
+
+------------------------------------------------------------------------
+r2269 | dreibh | 2009-11-05 13:16:54 +0100 (Thu, 05 Nov 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/make-ppa
+
+Version update.
+
+------------------------------------------------------------------------
+r2266 | dreibh | 2009-10-28 17:25:23 +0100 (Wed, 28 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+Dependencies "$(socketapi_LIBS) $(sctplib_LIBS)" are still needed in Makefile.am, since sctplib/socketapi functions are used in case of userland SCTP.
+
+------------------------------------------------------------------------
+r2265 | dreibh | 2009-10-27 23:35:58 +0100 (Tue, 27 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/rsplib/registrar.c
+
+Fixed configure.in to set ENABLE_REGISTRAR_STATISTICS in config.h.
+
+------------------------------------------------------------------------
+r2264 | dreibh | 2009-10-27 19:25:43 +0100 (Tue, 27 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+
+Fixed dependencies in Debian package.
+
+------------------------------------------------------------------------
+r2263 | dreibh | 2009-10-26 09:46:55 +0100 (Mon, 26 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+
+------------------------------------------------------------------------
+r2262 | dreibh | 2009-10-25 16:34:41 +0100 (Sun, 25 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r2261 | dreibh | 2009-10-25 15:59:06 +0100 (Sun, 25 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/server.8
+
+Updated manpage for server.
+
+------------------------------------------------------------------------
+r2260 | dreibh | 2009-10-25 15:57:10 +0100 (Sun, 25 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/server.cc
+
+Solved the scripting service problem on -1/EAGAIN for disconnected association by adding PE-side KeepAlive messages. They have to be answered by the PU.
+
+------------------------------------------------------------------------
+r2259 | dreibh | 2009-10-25 15:56:13 +0100 (Sun, 25 Oct 2009) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Removed debugging code.
+
+Under some rare circumstances, LK-SCTP -> recvmsg() -> recvfromplus() seems to return -1/EAGAIN even when the association is down. The scripting service then keeps a session which is actually failed.
+
+------------------------------------------------------------------------
+r2258 | dreibh | 2009-10-25 15:54:45 +0100 (Sun, 25 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Removed debugging code.
+
+------------------------------------------------------------------------
+r2257 | dreibh | 2009-10-25 09:32:25 +0100 (Sun, 25 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Added debug code.
+
+------------------------------------------------------------------------
+r2256 | dreibh | 2009-10-25 09:26:39 +0100 (Sun, 25 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Bugfix: replaced "(pfd.revents = POLLIN)" by "(pfd.revents & POLLIN)" in if-clause.
+
+------------------------------------------------------------------------
+r2255 | dreibh | 2009-10-25 09:05:45 +0100 (Sun, 25 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+
+
+------------------------------------------------------------------------
+r2254 | dreibh | 2009-10-24 17:14:06 +0200 (Sat, 24 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+
+------------------------------------------------------------------------
+r2253 | dreibh | 2009-10-24 16:58:37 +0200 (Sat, 24 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+
+------------------------------------------------------------------------
+r2252 | dreibh | 2009-10-24 16:49:40 +0200 (Sat, 24 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+
+------------------------------------------------------------------------
+r2251 | dreibh | 2009-10-24 11:47:36 +0200 (Sat, 24 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+   M /trunk/rsplib2/rsplib/messagebuffer.h
+
+Removed disconnect handling from MessageBuffer.
+
+------------------------------------------------------------------------
+r2250 | dreibh | 2009-10-24 10:55:07 +0200 (Sat, 24 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+
+Fix in MessageBuffer's disconnect handling.
+
+------------------------------------------------------------------------
+r2249 | dreibh | 2009-10-24 08:29:58 +0200 (Sat, 24 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+
+Added some debug outputs.
+
+------------------------------------------------------------------------
+r2248 | dreibh | 2009-10-23 07:47:35 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Added some debug messages.
+
+------------------------------------------------------------------------
+r2247 | dreibh | 2009-10-23 07:47:15 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+Added registrar-misc.c file.
+
+------------------------------------------------------------------------
+r2246 | dreibh | 2009-10-23 07:47:02 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Added printout for SCTP flags to sendtoplus().
+
+------------------------------------------------------------------------
+r2245 | dreibh | 2009-10-23 07:46:42 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrar-asap.c
+   M /trunk/rsplib2/rsplib/registrar-enrp.c
+   A /trunk/rsplib2/rsplib/registrar-misc.c
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/registrar.h
+
+Added registration/deregistration hooks to registrar.
+
+------------------------------------------------------------------------
+r2244 | dreibh | 2009-10-23 07:46:12 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+   M /trunk/rsplib2/rsplib/messagebuffer.h
+
+MessageBuffer: added flag to detect disconnect.
+
+------------------------------------------------------------------------
+r2243 | dreibh | 2009-10-23 07:45:31 +0200 (Fri, 23 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Printing failover message only on real failovers, not when the first PE still needs to accept the request.
+
+------------------------------------------------------------------------
+r2242 | dreibh | 2009-10-21 11:28:53 +0200 (Wed, 21 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Removed debug code in scriptingclient.c.
+
+------------------------------------------------------------------------
+r2241 | dreibh | 2009-10-21 10:22:34 +0200 (Wed, 21 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Added "struct" in C code to compile by plain C compiler.
+
+------------------------------------------------------------------------
+r2240 | dreibh | 2009-10-21 10:11:57 +0200 (Wed, 21 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+   M /trunk/rsplib2/rsplib/wireshark/colorfilters
+   M /trunk/rsplib2/rsplib/wireshark/packet-scriptingservice.c
+
+Improved scripting service by adding NotReady message => makes it easier to distinguish between loaded server and real failovers.
+
+------------------------------------------------------------------------
+r2239 | dreibh | 2009-10-16 22:45:37 +0200 (Fri, 16 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Updated version.
+
+------------------------------------------------------------------------
+r2238 | dreibh | 2009-10-16 22:45:24 +0200 (Fri, 16 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/registrar.c
+   M /trunk/rsplib2/rsplib/registrar.h
+
+Added configure script parameter to enable/disable registrar statistics option.
+
+------------------------------------------------------------------------
+r2237 | dreibh | 2009-10-13 09:20:34 +0200 (Tue, 13 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2236 | dreibh | 2009-10-13 09:15:31 +0200 (Tue, 13 Oct 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+- Improved scripting service logging.
+- Improved scripting service init script example.
+
+------------------------------------------------------------------------
+r2235 | dreibh | 2009-10-13 08:44:38 +0200 (Tue, 13 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/breakdetector.c
+
+Fixed signal number.
+
+------------------------------------------------------------------------
+r2234 | dreibh | 2009-10-13 08:43:36 +0200 (Tue, 13 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/breakdetector.c
+
+BreakDetector also handles SIGTERM now. This is necessary when using the program in init scripts.
+
+------------------------------------------------------------------------
+r2233 | dreibh | 2009-10-13 08:35:06 +0200 (Tue, 13 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/loglevel.h
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+Improved logging for scripting service PE.
+
+------------------------------------------------------------------------
+r2232 | dreibh | 2009-10-13 07:57:34 +0200 (Tue, 13 Oct 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Updated ss.init example.
+
+------------------------------------------------------------------------
+r2231 | dreibh | 2009-10-13 07:38:23 +0200 (Tue, 13 Oct 2009) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+- Scripting Service log is not written to stdlog -> logfile.
+- Improved Scripting Service init example.
+
+------------------------------------------------------------------------
+r2230 | dreibh | 2009-10-09 11:40:46 +0200 (Fri, 09 Oct 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rsplib-registrar
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2229 | dreibh | 2009-09-30 11:36:22 +0200 (Wed, 30 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Fixed lintian errors (weak library dependencies for dev packages).
+
+------------------------------------------------------------------------
+r2228 | dreibh | 2009-09-30 10:22:09 +0200 (Wed, 30 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+sctp_getladdrs() for LK-SCTP may allocate memory even when there are 0 addresses => added deallocation.
+
+------------------------------------------------------------------------
+r2227 | dreibh | 2009-09-30 08:03:10 +0200 (Wed, 30 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+
+------------------------------------------------------------------------
+r2226 | dreibh | 2009-09-23 11:55:32 +0200 (Wed, 23 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
+r2225 | dreibh | 2009-09-23 11:54:34 +0200 (Wed, 23 Sep 2009) | 1 line
+Changed paths:
+   D /trunk/rsplib2/autogen-test.sh
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2224 | dreibh | 2009-09-23 11:37:52 +0200 (Wed, 23 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/comon-query
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2223 | dreibh | 2009-09-22 18:24:59 +0200 (Tue, 22 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/transportaddressblock.c
+
+Code clean-up.
+
+------------------------------------------------------------------------
+r2222 | dreibh | 2009-09-22 18:19:42 +0200 (Tue, 22 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/peerlistnode-template_impl.h
+
+Fixed pointer problem in peerlistnode-template_impl.h: peerListTimerStorageNodeComparison() should compare time stamps first. If they are equal, it should behave like peerListIndexStorageNodeComparison() (index comparision). Calling peerListIndexStorageNodeComparison() should need pointers based on Index nodes instead of Timer nodes -> invalid address blocks. Fixed by copying comparison code from peerListIndexStorageNodeComparison() -> will also work faster, since no calls to pointer arithmetic functons are necessary any more.
+
+------------------------------------------------------------------------
+r2221 | dreibh | 2009-09-18 09:21:20 +0200 (Fri, 18 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rsplib-services.install
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   D /trunk/rsplib2/rsplib/fractalpooluser.ts
+   A /trunk/rsplib2/rsplib/fractalpooluser_de_DE.qm
+   A /trunk/rsplib2/rsplib/fractalpooluser_de_DE.ts (from /trunk/rsplib2/rsplib/fractalpooluser.ts:2219)
+   M /trunk/rsplib2/rsplib.lsm
+
+
+------------------------------------------------------------------------
+r2220 | dreibh | 2009-09-17 09:20:20 +0200 (Thu, 17 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/debug.helgrind
+   M /trunk/rsplib2/rsplib/debug.memcheck
+   M /trunk/rsplib2/rsplib/wireshark/packet-scriptingservice.c
+
+
+------------------------------------------------------------------------
+r2219 | dreibh | 2009-09-15 21:27:48 +0200 (Tue, 15 Sep 2009) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rules
+
+Fixed dependencies in Makefile.am/configure.in.
+
+------------------------------------------------------------------------
+r2218 | dreibh | 2009-09-15 18:19:21 +0200 (Tue, 15 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/wireshark/colorfilters
+   M /trunk/rsplib2/rsplib/wireshark/dfilters
+
+
+------------------------------------------------------------------------
+r2217 | dreibh | 2009-09-15 14:44:51 +0200 (Tue, 15 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+
+------------------------------------------------------------------------
+r2216 | dreibh | 2009-09-15 14:44:00 +0200 (Tue, 15 Sep 2009) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+
+------------------------------------------------------------------------
 r2215 | dreibh | 2009-09-14 19:53:19 +0200 (Mon, 14 Sep 2009) | 2 lines
 Changed paths:
    M /trunk/rsplib2/configure.in
