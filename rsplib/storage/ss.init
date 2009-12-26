@@ -47,6 +47,7 @@ DAEMON=/usr/bin/server
 SS_USER="nobody"                                       # User to run scripts
 SS_GROUP="nogroup"                                     # Group to run scripts
 SS_NICELEVEL=5                                         # Nice level for service
+SS_LOCAL=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -u | xargs echo`   # Space-separated list of local addresses
 SS_PRs=""                                              # Space-separated list of PRs
 SS_CSPSERVER="132.252.152.99"                          # CSP server address
 SS_CSPINTERVAL=1000                                    # CSP reporting interval (ms)
@@ -65,6 +66,17 @@ DAEMON_OPTS="-scripting -poolhandle=$SS_POOLHANDLE -daemonpidfile=/var/run/$NAME
 for pr in $PRs ; do
    DAEMON_OPTS="$DAEMON_OPTS -registrar=$pr"
 done
+if [ "$SS_LOCAL" != "" ] ; then
+   DAEMON_OPTS="$DAEMON_OPTS -local="
+   i=0
+   for a in $SS_LOCAL ; do
+      if [ $i -gt 0 ] ; then
+         DAEMON_OPTS="$DAEMON_OPTS"","
+      fi
+      DAEMON_OPTS="$DAEMON_OPTS$a"
+      i=1
+   done
+fi
 if [ "$SS_CSPSERVER" != "" ] ; then
    DAEMON_OPTS="$DAEMON_OPTS -cspserver=$SS_CSPSERVER"
 fi
