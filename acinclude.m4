@@ -1,7 +1,7 @@
 # $Id$
 # Check for Qt 4.x compiler flags, linker flags, and binary packages
 #
-# Copyright (C) 2002-2009 by Thomas Dreibholz
+# Copyright (C) 2002-2010 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
