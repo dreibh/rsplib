@@ -44,16 +44,15 @@ DESC="RSerPool Scripting Service"
 DAEMON=/usr/bin/server
 
 # ====== Scripting Service Options ==========================================
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# EXAMPLE: Use lowest IPv4 address. To use multi-homing, set SS_LOCAL=""!
+SS_LOCAL=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -u | xargs echo`   # Space-separated list of local addresses
+SS_LOCAL=`echo $SS_LOCAL | xargs -n1 2>/dev/null | head -n1`
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 SS_USER="nobody"                                       # User to run scripts
 SS_GROUP="nogroup"                                     # Group to run scripts
 SS_NICELEVEL=5                                         # Nice level for service
-
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# EXAMPLE: Just use eth0. To use multi-homing, set SS_LOCAL=""!
-SS_LOCAL=`env LANG=C ifconfig eth0 | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -u | xargs echo`   # Space-separated list of local addresses
-# SS_LOCAL=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -u | xargs echo`   # Space-separated list of local addresses
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 SS_PRs=""                                              # Space-separated list of PRs
 SS_CSPSERVER="132.252.152.99"                          # CSP server address
 SS_CSPINTERVAL=1000                                    # CSP reporting interval (ms)
