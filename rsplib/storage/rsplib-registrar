@@ -1,1 +1,1 @@
-DAEMON_OPTS="$DAEMON_OPTS -cspserver=132.252.152.99 -cspinterval=2000"
+DAEMON_OPTS="$DAEMON_OPTS -cspserver=132.252.152.68 -cspinterval=2000"
