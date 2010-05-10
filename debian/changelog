@@ -1,3 +1,9 @@
+rsplib (2.7.1~beta1-1ubuntu1) lucid; urgency=low
+
+  * New upstream version.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 9 May 2010 11:45:39 +0200
+
 rsplib (2.7.0-1ubuntu1) lucid; urgency=low
 
   * New upstream version.
