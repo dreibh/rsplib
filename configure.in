@@ -233,7 +233,7 @@ AC_SUBST(thread_LIBS)
 
 
 # ###### Networking declarations ############################################
-AC_CHECK_HEADERS(sys/types.h sys/socket.h netinet/in.h netinet/sctp.h)
+AC_CHECK_HEADERS(sys/types.h sys/socket.h netinet/in.h)
 
 AC_MSG_CHECKING(for socklen_t)
 AC_TRY_COMPILE([#ifdef HAVE_SYS_TYPES_H
