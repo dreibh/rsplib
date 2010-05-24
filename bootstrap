@@ -55,6 +55,8 @@ fi
 
 if [ -e /usr/bin/aclocal ] ; then
    /usr/bin/aclocal -I $ACLOCALDIR
+elif [ -e /usr/local/bin/aclocal ] ; then
+   /usr/local/bin/aclocal -I $ACLOCALDIR
 elif [ -e /usr/bin/aclocal-1.10 ] ; then
    /usr/bin/aclocal-1.10 -I $ACLOCALDIR
 else
@@ -64,12 +66,13 @@ fi
 
 autoheader
 if [ -e /usr/bin/automake ] ; then
-   automake --gnu --add-missing --copy
+   /usr/bin/automake --gnu --add-missing --copy
+elif [ -e /usr/local/bin/automake ] ; then
+   /usr/local/bin/automake --gnu --add-missing --copy
 elif [ -e /usr/bin/automake-1.10 ] ; then
-   automake-1.10 --gnu --add-missing --copy
+   /usr/bin/automake-1.10 --gnu --add-missing --copy
 else
    echo >&2 "ERROR: No automake installation found!"
    exit 1
 fi
 autoconf
-
