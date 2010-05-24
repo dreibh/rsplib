@@ -58,8 +58,12 @@
 #include <assert.h>
 #ifdef SOLARIS
 #include <sys/sockio.h>
+#ifndef CMSG_SPACE
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
+#endif
+#ifndef CMSG_LEN
 #define CMSG_LEN(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + (len))
+#endif
 #endif
 #ifdef HAVE_VALGRIND_MEMCHECK_H
 #include <valgrind/memcheck.h>
@@ -2051,21 +2055,35 @@ size_t getpaddrsplus(const int              fd,
 /* ###### Send SCTP ABORT ################################################ */
 int sendabort(int sockfd, sctp_assoc_t assocID)
 {
+#ifdef SOLARIS
+   /* The Solaris API has no SCTP_ABORT. Instead, it is a regular flag. */
+   return(sendtoplus(sockfd, NULL, 0,
+                     MSG_ABORT,
+                     NULL, 0,
+                     0, assocID, 0, 0, 0, 0));
+#else
    return(sendtoplus(sockfd, NULL, 0,
 #ifdef MSG_NOSIGNAL
                      MSG_NOSIGNAL,
 #else
                      0,
 #endif
-
                      NULL, 0,
                      0, assocID, 0, 0, SCTP_ABORT, 0));
+#endif
 }
 
 
 /* ###### Send SCTP SHUTDOWN ############################################# */
 int sendshutdown(int sockfd, sctp_assoc_t assocID)
 {
+#ifdef SOLARIS
+   /* The Solaris API has no SCTP_ABORT. Instead, it is a regular flag. */
+   return(sendtoplus(sockfd, NULL, 0,
+                     MSG_EOF,
+                     NULL, 0,
+                     0, assocID, 0, 0, 0, 0));
+#else
    return(sendtoplus(sockfd, NULL, 0,
 #ifdef MSG_NOSIGNAL
                      MSG_NOSIGNAL,
@@ -2074,6 +2092,7 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID)
 #endif
                      NULL, 0,
                      0, assocID, 0, 0, SCTP_EOF, 0));
+#endif
 }
 
 
