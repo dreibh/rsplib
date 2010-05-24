@@ -52,6 +52,10 @@ else
    echo >&2 "ERROR: No aclocal directory found!"
    exit 1
 fi
+if [ ! -e $ACLOCALDIR/pkg.m4 ] ; then
+   echo >&2 "ERROR: pkg.m4 not found in $ACLOCALDIR; install pkg-config first!"
+   exit 1
+fi
 
 if [ -e /usr/bin/aclocal ] ; then
    /usr/bin/aclocal -I $ACLOCALDIR
