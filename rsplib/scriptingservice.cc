@@ -92,8 +92,8 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData, c
 // ###### Reject new session when server is fully loaded ####################
 void ScriptingServer::rejectNewSession(int sd)
 {
-   char    buffer[sizeof(NotReady) + SR_MAX_INFOSIZE];
-   utsname systemInfo;
+   char           buffer[sizeof(NotReady) + SR_MAX_INFOSIZE];
+   struct utsname systemInfo;
 
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
@@ -116,8 +116,8 @@ void ScriptingServer::rejectNewSession(int sd)
 // ###### Initialize session ################################################
 EventHandlingResult ScriptingServer::initializeSession()
 {
-   char buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
-   utsname systemInfo;
+   char           buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
+   struct utsname systemInfo;
 
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
@@ -156,7 +156,7 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       int  success;
 
       snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol cleanup %s %d %s",
-               Directory, ChildProcess,
+               Directory, (int)ChildProcess,
                (Settings.KeepTempDirs == true) ? "keeptempdirs" : "");
       snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
 
