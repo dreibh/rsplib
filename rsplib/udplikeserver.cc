@@ -310,10 +310,18 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                            // ====== Check for problems ===========================
                            if((eventHandlingResult == EHR_Abort) ||
                               (eventHandlingResult == EHR_Shutdown)) {
+#ifdef SOLARIS
+                              rsp_sendmsg(RSerPoolSocketDescriptor,
+                                          NULL, 0,
+                                          ((eventHandlingResult == EHR_Abort) ? MSG_ABORT : MSG_EOF),
+                                          rinfo.rinfo_session, 0, 0, 0,
+                                          0, 0);
+#else
                               rsp_sendmsg(RSerPoolSocketDescriptor,
                                           NULL, 0, 0,
                                           rinfo.rinfo_session, 0, 0, 0,
                                           ((eventHandlingResult == EHR_Abort) ? SCTP_ABORT : SCTP_EOF), 0);
+#endif
                            }
                         }
                      }

@@ -142,11 +142,20 @@ void DaytimeServer::handleNotification(const union rserpool_notification* notifi
                          notification->rn_session_change.rsc_session,
                          0x00000000, 0,
                          0, 0, 0);
+#ifdef SOLARIS
+      rsp_sendmsg(RSerPoolSocketDescriptor,
+                  NULL, 0,
+                  MSG_EOF,
+                  notification->rn_session_change.rsc_session,
+                  0x00000000, 0,
+                  0, 0, 0);
+#else
       rsp_sendmsg(RSerPoolSocketDescriptor,
                   NULL, 0, 0,
                   notification->rn_session_change.rsc_session,
                   0x00000000, 0,
                   0, SCTP_EOF, 0);
+#endif
    }
 }
 
