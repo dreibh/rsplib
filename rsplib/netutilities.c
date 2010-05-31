@@ -639,7 +639,7 @@ size_t filterAddressesByScope(union sockaddr_union* addressArray,
 {
    size_t outputAddresses = 0;
    size_t i;
-   
+
    for(i = 0;i < inputAddresses;i++) {
       if(getScope(&addressArray[i].sa) >= minScope) {
          if(outputAddresses != i) {
@@ -1413,6 +1413,16 @@ int sendtoplus(int                      sockfd,
                           (struct sockaddr*)toaddrs,
                           (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
    }
+#ifdef LINUX
+#warning Using lksctp SCTP_EOF/SCTP_ABORT shutdown work-around for TCP-like sockets!
+   /* LK-SCTP refuses SCTP_EOF and SCTP_ABORT on TCP-like socket.
+      => using ext_shutdown() instead! */
+   if( (result < 0) &&
+       (assocID == 0) &&   /* TCP-like socket */
+       ((sctpFlags & SCTP_EOF) || (sctpFlags & SCTP_ABORT)) ) {
+      ext_shutdown(sockfd, 2);
+   }
+#endif
 
    if((timeout > 0) && ((result < 0) && (errno == EWOULDBLOCK))) {
       remainingTimeout = timeout;
