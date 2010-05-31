@@ -1,21 +1,29 @@
-rsplib (2.7.1~beta1-1ubuntu1) lucid; urgency=low
+rsplib (2.7.1~beta2-1ubuntu1) lucid; urgency=low
 
-  * New upstream version.
+  * New upstream release.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 9 May 2010 11:45:39 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 30 May 2010 12:45:39 +0200
 
-rsplib (2.7.0-1ubuntu1) lucid; urgency=low
+rsplib (2.7.0-0ubuntu1) lucid; urgency=low
 
-  * New upstream version.
+  [ Thomas Dreibholz ]
+  * New upstream release (LP: #492771).
+  * Updated Ubuntu package to latest release.
+  * Improved init file for rsplib-registrar (turn on IPv6 by default and
+    write logfile).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 27 Nov 2009 11:14:32 +0200
+  [ Alessio Treglia ]
+  * Bump Standards.
+  * Switch to debhelper 7.
+  * Install all new libraries.
+  * Update debian/copyright according to Debian DEP-5.
+  * debian/control:
+    - Don't duplicate Priority,Section fields.
+  * Add quilt support.
+  * debian/patches/01-spelling_error.patch:
+    - rsplib/asapinstance.c: s/succesful/successful/
 
-rsplib (2.6.4-1ubuntu1) karmic; urgency=low
-
-  * Turned off DH_VERBOSE.
-  * Updated debian/copyright to cover packaging.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 13 Jun 2009 10:36:00 +0200
+ -- Alessio Treglia <quadrispro@ubuntu.com>  Sat, 05 Dec 2009 10:10:30 +0100
 
 rsplib (2.6.4-0ubuntu1) karmic; urgency=low
 
