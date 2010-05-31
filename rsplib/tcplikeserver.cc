@@ -102,7 +102,7 @@ double TCPLikeServer::getLoad() const
 void TCPLikeServer::setLoad(double load)
 {
    ServerList->lock();
-   
+
    CHECK(ServerList != NULL);
    CHECK(ServerList->LoadSum >= Load);
    if((load < 0.0) || (load > 1.0)) {
@@ -315,7 +315,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                 unsigned int         reregInterval,
                                 unsigned int         runtimeLimit,
                                 const bool           quiet,
-                                const bool           daemonMode, 
+                                const bool           daemonMode,
                                 struct TagItem*      tags)
 {
    if(rsp_initialize(info) < 0) {
@@ -437,7 +437,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            if(serverSet.handleRemovalsAndTimers() > 0) {
                               int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
                               if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
-                                 logerror("Unable to update backlog using rsp_listen()");                                 
+                                 logerror("Unable to update backlog using rsp_listen()");
                               }
                            }
 
