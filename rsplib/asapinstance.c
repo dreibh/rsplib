@@ -554,7 +554,7 @@ unsigned int asapInstanceRegister(struct ASAPInstance*              asapInstance
                   result = (unsigned int)response->Error;
                }
                dispatcherUnlock(asapInstance->StateMachine);
-               
+
                if(response) {
                   rserpoolMessageDelete(response);
                }
@@ -913,7 +913,7 @@ unsigned int asapInstanceHandleResolution(
                   cacheElementTimeout);
       if(result != RSPERR_OKAY) {
          LOG_VERBOSE
-         fputs("Handle resolution not succesful\n", stdlog);
+         fputs("Handle resolution not successful\n", stdlog);
          LOG_END
       }
    }
@@ -1130,7 +1130,7 @@ static void asapInstanceHandleResponseFromRegistrar(
                  getMicroTime() - aitm->CreationTimeStamp,
                  aitm->TransmissionTimeStamp - aitm->CreationTimeStamp);
          LOG_END
-         
+
          /* Asynchronous message: print errors here! */
          if(aitm->Node.ReplyPort == NULL) {
             if( (response->Type == AHT_REGISTRATION_RESPONSE) &&
@@ -1143,13 +1143,13 @@ static void asapInstanceHandleResponseFromRegistrar(
                rserpoolErrorPrint(response->Error, stdlog);
                fputs("\n", stdlog);
                LOG_END
-               
+
                /* If no addresses are usable, try to re-connect. May be, the
                   host has got some usable addresses then. */
                if( (response->Error == RSPERR_NO_USABLE_USER_ADDRESSES) ||
                    (response->Error == RSPERR_NO_USABLE_ASAP_ADDRESSES) ) {
                   LOG_NOTE
-                  fputs("Trying to re-connect to a registrar ...\n", stdlog);   
+                  fputs("Trying to re-connect to a registrar ...\n", stdlog);
                   LOG_END
                   asapInstanceDisconnectFromRegistrar(asapInstance, true);
                }
@@ -1470,7 +1470,7 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
                        aitm->ResponseTimeoutTimeStamp);
          }
       }
-      aitm->ResponseTimeoutNeedsScheduling = false;         
+      aitm->ResponseTimeoutNeedsScheduling = false;
       aitm = (struct ASAPInterThreadMessage*)interThreadMessagePortGetNextMessage(&asapInstance->MainLoopPort, &aitm->Node);
    }
    interThreadMessagePortUnlock(&asapInstance->MainLoopPort);
