@@ -1989,7 +1989,10 @@ size_t getladdrsplus(const int              fd,
          ( ( (((struct sockaddr*)packedAddresses)->sa_family == AF_INET) &&
                 (((struct sockaddr_in*)packedAddresses)->sin_addr.s_addr == 0) ) ||
              ( (((struct sockaddr*)packedAddresses)->sa_family == AF_INET6) &&
-                (IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)packedAddresses)->sin6_addr))))) {
+                ( (IN6_IS_ADDR_UNSPECIFIED(&((struct sockaddr_in6*)packedAddresses)->sin6_addr)) ||
+                  ( ((IN6_IS_ADDR_V4MAPPED(&((struct sockaddr_in6*)packedAddresses)->sin6_addr) ||
+                     (IN6_IS_ADDR_V4COMPAT(&((struct sockaddr_in6*)packedAddresses)->sin6_addr))) &&
+                    (((struct sockaddr_in6*)packedAddresses)->sin6_addr.s6_addr32[3] == 0))))))) {
          port = getPort((struct sockaddr*)packedAddresses);
          sctp_freeladdrs(packedAddresses);
 
