@@ -12,8 +12,7 @@ Build-Depends: debhelper (>= 7.0.50),
  libx11-dev,
  libxext-dev,
  libxmu-dev,
- libxi-dev,
- quilt (>= 0.46-7)
+ libxi-dev
 Standards-Version: 3.8.3
 
 Package: librsplib2
