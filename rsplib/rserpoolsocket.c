@@ -172,6 +172,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
    struct rsp_addrinfo*  rspAddrInfo;
    struct rsp_addrinfo*  rspAddrInfo2;
    struct rsp_addrinfo*  next;
+   size_t                oldSctpLocalAddresses;
    size_t                sctpLocalAddresses;
    union sockaddr_union* sctpLocalAddressArray = NULL;
    union sockaddr_union* localAddressArray     = NULL;
@@ -225,11 +226,17 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
          /* --------------------------------------------- */
 
          /* ====== Filter out link-local addresses ======================= */
+         oldSctpLocalAddresses = sctpLocalAddresses;
          sctpLocalAddresses = filterAddressesByScope(sctpLocalAddressArray, sctpLocalAddresses,
                                                      AS_UNICAST_SITELOCAL);
          if(sctpLocalAddresses == 0) {
             LOG_ERROR
-            fputs("No addresses of at least site-local scope found -> No registration possible\n", stdlog);
+            fputs("No addresses of at least site-local scope found -> No registration possible. Addresses:\n", stdlog);
+            for(i = 0; i < oldSctpLocalAddresses;i++) {
+               fputs(" - ", stdlog);
+               fputaddress(&sctpLocalAddressArray[i].sa, true, stdlog);
+               fputs("\n", stdlog);
+            }
             LOG_END
             return(false);
          }
