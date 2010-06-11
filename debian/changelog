@@ -1,8 +1,10 @@
 rsplib (2.7.1~beta4.1-1ubuntu1) lucid; urgency=low
 
+  [ Thomas Dreibholz ]
   * New upstream release.
+  * Switch to dpkg-source 3.0 (quilt) format
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 11 Jun 2010 12:45:39 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 11 Jun 2010 15:55:38 +0200
 
 rsplib (2.7.0-0ubuntu1) lucid; urgency=low
 

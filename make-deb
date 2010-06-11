@@ -111,7 +111,7 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
 
    # Including signature!
    # debuild -sa -S -k'Thomas Dreibholz <dreibh@iem.uni-due.de>'
-   debuild -sa -S "-k$MAINTAINER"
+   debuild -sa -S "-k$MAINTAINER" -i   # -i to ignore .svn files!
 
 
    # Important: In /etc/pbuilderrc, set COMPONENTS="main universe"!
