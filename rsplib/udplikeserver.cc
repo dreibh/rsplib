@@ -197,7 +197,8 @@ void UDPLikeServer::poolElement(const char*          programTitle,
             // ====== Print program title =========================================
             if(!quiet) {
                puts(programTitle);
-               for(size_t i = 0;i < strlen(programTitle);i++) {
+               const size_t programTitleSize = strlen(programTitle);
+               for(size_t i = 0;i < programTitleSize;i++) {
                   printf("=");
                }
                const char* policyName = rsp_getpolicybytype(loadinfo->rli_policy);
