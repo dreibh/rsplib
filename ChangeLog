@@ -1,4 +1,138 @@
 ------------------------------------------------------------------------
+r2311 | dreibh | 2010-06-14 15:43:00 +0200 (Mon, 14 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/wireshark/colorfilters
+
+Extended Wireshark color filter by rules for SCTP data chunks.
+
+------------------------------------------------------------------------
+r2310 | dreibh | 2010-06-11 16:51:10 +0200 (Fri, 11 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/compat
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/make-deb
+
+Fixed Debian scripts to again work under Hardy and Jaunty.
+
+------------------------------------------------------------------------
+r2309 | dreibh | 2010-06-11 15:48:20 +0200 (Fri, 11 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/rules
+
+Fixed debian scripts to again work under Hardy and Jaunty.
+
+------------------------------------------------------------------------
+r2308 | dreibh | 2010-06-11 15:44:28 +0200 (Fri, 11 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+
+Small efficiency improvement.
+
+------------------------------------------------------------------------
+r2307 | dreibh | 2010-06-08 11:54:16 +0200 (Tue, 08 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2306 | dreibh | 2010-06-08 09:40:52 +0200 (Tue, 08 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/control
+
+Fixed dependency for hardy.
+
+------------------------------------------------------------------------
+r2305 | dreibh | 2010-06-07 15:06:29 +0200 (Mon, 07 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/create-binaries
+
+Fixed options in create-binaries script.
+
+------------------------------------------------------------------------
+r2304 | dreibh | 2010-06-07 12:28:45 +0200 (Mon, 07 Jun 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+
+------------------------------------------------------------------------
+r2303 | dreibh | 2010-06-03 21:11:45 +0200 (Thu, 03 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Removed dependency for quilt in debian/control.
+
+------------------------------------------------------------------------
+r2302 | dreibh | 2010-06-03 19:12:40 +0200 (Thu, 03 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+
+Improved debug output.
+
+------------------------------------------------------------------------
+r2301 | dreibh | 2010-06-02 10:33:15 +0200 (Wed, 02 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Bugfix in netutilities.c: also apply sctp_getladdrs() work-around for ANY address when returned address is ::ffff:0.0.0.0 or ::0.0.0.0.
+
+------------------------------------------------------------------------
+r2300 | dreibh | 2010-05-31 11:52:41 +0200 (Mon, 31 May 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+
+------------------------------------------------------------------------
+r2299 | dreibh | 2010-05-31 11:51:58 +0200 (Mon, 31 May 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/compat
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/copyright
+   A /trunk/rsplib2/debian/patches
+   A /trunk/rsplib2/debian/patches/series
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/debian/watch
+   M /trunk/rsplib2/rsplib.lsm
+
+- Updated debian scripts with changes from Ubuntu.
+- Version update.
+
+------------------------------------------------------------------------
+r2298 | dreibh | 2010-05-31 11:51:36 +0200 (Mon, 31 May 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+
+------------------------------------------------------------------------
+r2297 | dreibh | 2010-05-31 11:51:26 +0200 (Mon, 31 May 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+
+Typo fix.
+
+------------------------------------------------------------------------
+r2296 | dreibh | 2010-05-31 11:51:08 +0200 (Mon, 31 May 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Added lksctp SCTP_EOF/SCTP_ABORT shutdown work-around for TCP-like sockets.
+
+------------------------------------------------------------------------
 r2295 | dreibh | 2010-05-24 19:32:18 +0200 (Mon, 24 May 2010) | 1 line
 Changed paths:
    M /trunk/rsplib2/bootstrap
