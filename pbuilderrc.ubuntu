@@ -6,8 +6,9 @@
 # read pbuilderrc.5 document for notes on specific options.
 
 MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
-DISTRIBUTION=karmic
+DISTRIBUTION=maverick
 COMPONENTS="main universe"
-OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu $DISTRIBUTION main"
+OTHERMIRROR="deb http://de.archive.ubuntu.com/ubuntu/ karmic-backports main restricted universe multiverse"
+   # "deb http://ppa.launchpad.net/dreibh/ubuntu $DISTRIBUTION main"
 # NOTE: Upon changes, run "sudo pbuilder --override-config" to update
 #       repositories!
