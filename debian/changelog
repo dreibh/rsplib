@@ -1,9 +1,9 @@
-rsplib (2.7.1-1ubuntu1) maverick; urgency=low
+rsplib (2.7.1-2ubuntu1) maverick; urgency=low
 
   * New upstream release.
   * Updated debian/watch to use new homepage URL.
-  * Updated Ubuntu package to latest release (LP: #xxxxxx).
-  * Closes Debian ITP bug with wnpp (Closes: #xxxxxx).
+  * Updated Ubuntu package to latest release (LP: #596212).
+  * Closes Debian ITP bug with wnpp (Closes: #586405).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 19 Jun 2010 11:18:38 +0200
 
