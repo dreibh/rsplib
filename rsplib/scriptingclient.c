@@ -132,7 +132,7 @@ static unsigned int performUpload(int sd)
             fflush(stdout);
             return(SSCR_FAILOVER);
          }
-         
+
          if(dataLength == 0) {
             break;
          }
@@ -276,7 +276,7 @@ static unsigned int handleReady(const int           sd,
       fflush(stdout);
       return(SSCR_FAILOVER);
    }
-   
+
    /* ====== Get info string ============================================= */
    size_t i;
    for(i = 0;i < (length - sizeof(struct Ready));i++) {
@@ -308,7 +308,7 @@ static unsigned int serverStartsProcessing(const int            sd,
       fflush(stdout);
       return(SSCR_FAILOVER);
    }
-   
+
    if(ntohl(status->Status) == 0) {
       State = SSCS_PROCESSING;
       newLogLine(stdout);
@@ -375,6 +375,8 @@ static unsigned int handleMessage(int                                 sd,
                                   const size_t                        length,
                                   const uint32_t                      ppid)
 {
+   /* printf("Message %u in state %u ...\n", header->Type, State); */
+
    /* ====== Check message header ======================================== */
    if(ppid != PPID_SP) {
       newLogLine(stdout);
@@ -421,7 +423,7 @@ static unsigned int handleMessage(int                                 sd,
              break;
          }
         break;
-        
+
       /* ====== Processing =============================================== */
       case SSCS_PROCESSING:
          switch(header->Type) {
@@ -596,7 +598,7 @@ int main(int argc, char** argv)
          if(received > 0) {
 
             /* ====== Notification ================================= */
-            if(flags & MSG_RSERPOOL_NOTIFICATION) {             
+            if(flags & MSG_RSERPOOL_NOTIFICATION) {
                notification = (union rserpool_notification*)&buffer;
                if(HasAssignedPE == true) {   /* Skip printing if no PE has accepted the request yet. */
                   newLogLine(stdout);
