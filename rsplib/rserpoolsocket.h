@@ -38,6 +38,7 @@
 #include "notificationqueue.h"
 #include "simpleredblacktree.h"
 #include "threadsafety.h"
+#include "netutilities.h"
 #include "timer.h"
 #include "tagitem.h"
 
@@ -81,7 +82,9 @@ struct RSerPoolSocket
    struct PoolElement*           PoolElement;        /* PE mode                      */
    struct Session*               ConnectedSession;   /* TCP-like PU mode             */
    struct SessionStorage         SessionSet;         /* UDP-like PU mode and PE mode */
+   struct TuneSCTPParameters     AssocParameters;
    struct ThreadSafety           SessionSetMutex;
+   bool                          WaitingForFirstMsg;
 
    struct NotificationQueue      Notifications;
 

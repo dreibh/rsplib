@@ -91,7 +91,7 @@ struct rsp_info
    unsigned int               ri_registrar_request_timeout;
    unsigned int               ri_registrar_response_timeout;
    unsigned int               ri_registrar_request_max_trials;
-   
+
    uint64_t                   ri_csp_identifier;
    struct sockaddr*           ri_csp_server;
    unsigned int               ri_csp_interval;
@@ -300,6 +300,17 @@ union rserpool_notification
 #define RSERPOOL_SHUTDOWN_EVENT 3
 
 
+struct rserpool_session_parameters
+{
+   unsigned int sp_rto_initial;
+   unsigned int sp_rto_min;
+   unsigned int sp_rto_max;
+   unsigned int sp_assoc_max_rxt;
+   unsigned int sp_path_max_rxt;
+   unsigned int sp_hbinterval;
+};
+
+
 /* #######################################################################
    #### RSerPool Socket Functions                                     ####
    ####################################################################### */
@@ -313,6 +324,18 @@ union rserpool_notification
   * @return Socket descriptor or -1 in case of an error.
   */
 int rsp_socket(int domain, int type, int protocol);
+
+/**
+  * Update session parameters with given rserpool_session_parameters structure.
+  * Values set to 0 remain unchanged. The values actually set are returned in
+  * the structure.
+  *
+  * @param sd Socket descriptor.
+  * @param params rserpool_session_parameters structure.
+  * @return 0 in case of success; -1 in case of an error.
+  */
+int rsp_update_session_parameters(int sd,
+                                  struct rserpool_session_parameters* params);
 
 /**
   * Bind RSerPool socket to address(es).

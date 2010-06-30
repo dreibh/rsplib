@@ -58,7 +58,9 @@ extern struct IdentifierBitmap*  gRSerPoolSocketAllocationBitmap;
 
 
 /* ###### Configure notifications of SCTP socket ############################# */
-static bool configureSCTPSocket(int sd, sctp_assoc_t assocID)
+static bool configureSCTPSocket(struct RSerPoolSocket* rserpoolSocket,
+                                int                    sd,
+                                sctp_assoc_t           assocID)
 {
    struct sctp_event_subscribe events;
 
@@ -68,10 +70,17 @@ static bool configureSCTPSocket(int sd, sctp_assoc_t assocID)
    events.sctp_shutdown_event    = 1;
    if(ext_setsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events)) < 0) {
       LOG_ERROR
-      perror("setsockopt failed for SCTP_EVENTS");
+      logerror("setsockopt failed for SCTP_EVENTS");
       LOG_END
       return(false);
    }
+
+   if(tuneSCTP(sd, 0, &rserpoolSocket->AssocParameters) == false) {
+      LOG_WARNING
+      fputs("Unable to tune association parameters\n", stdout);
+      LOG_END
+   }
+
    return(true);
 }
 
@@ -114,15 +123,6 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    }
    setNonBlocking(fd);
 
-   /* ====== Configure SCTP socket ======================================= */
-   if(!configureSCTPSocket(fd, 0)) {
-      LOG_ERROR
-      fputs("Failed to configure SCTP parameters for socket\n", stdlog);
-      LOG_END
-      close(fd);
-      return(-1);
-   }
-
    /* ====== Initialize RSerPool socket entry ============================ */
    rserpoolSocket = (struct RSerPoolSocket*)malloc(sizeof(struct RSerPoolSocket));
    if(rserpoolSocket == NULL) {
@@ -155,13 +155,21 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    threadSafetyNew(&rserpoolSocket->SessionSetMutex, "SessionSet");
    simpleRedBlackTreeNodeNew(&rserpoolSocket->Node);
    sessionStorageNew(&rserpoolSocket->SessionSet);
-   rserpoolSocket->Socket           = fd;
-   rserpoolSocket->SocketDomain     = domain;
-   rserpoolSocket->SocketType       = type;
-   rserpoolSocket->SocketProtocol   = protocol;
-   rserpoolSocket->Descriptor       = -1;
-   rserpoolSocket->PoolElement      = NULL;
-   rserpoolSocket->ConnectedSession = NULL;
+   rserpoolSocket->Socket                             = fd;
+   rserpoolSocket->SocketDomain                       = domain;
+   rserpoolSocket->SocketType                         = type;
+   rserpoolSocket->SocketProtocol                     = protocol;
+   rserpoolSocket->Descriptor                         = -1;
+   rserpoolSocket->PoolElement                        = NULL;
+   rserpoolSocket->ConnectedSession                   = NULL;
+   rserpoolSocket->WaitingForFirstMsg                 = false;
+
+   rserpoolSocket->AssocParameters.InitialRTO         = 2000;
+   rserpoolSocket->AssocParameters.MinRTO             = 1000;
+   rserpoolSocket->AssocParameters.MaxRTO             = 5000;
+   rserpoolSocket->AssocParameters.AssocMaxRxt        = 8;
+   rserpoolSocket->AssocParameters.PathMaxRxt         = 3;
+   rserpoolSocket->AssocParameters.HeartbeatInterval  = 15000;
 
    notificationQueueNew(&rserpoolSocket->Notifications);
    if(rserpoolSocket->SocketType == SOCK_STREAM) {
@@ -169,6 +177,14 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    }
    else {
       rserpoolSocket->Notifications.EventMask = NET_NOTIFICATION_MASK;
+   }
+
+   /* ====== Configure SCTP socket ======================================= */
+   if(!configureSCTPSocket(rserpoolSocket, fd, 0)) {
+      free(rserpoolSocket->MsgBuffer);
+      free(rserpoolSocket);
+      close(fd);
+      return(-1);
    }
 
    /* ====== Find available RSerPool socket descriptor =================== */
@@ -190,6 +206,27 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
       return(-1);
    }
    return(rserpoolSocket->Descriptor);
+}
+
+
+/* ###### Update session parameters ###################################### */
+int rsp_update_session_parameters(int sd,
+                                  struct rserpool_session_parameters* params)
+{
+   struct RSerPoolSocket* rserpoolSocket;
+   GET_RSERPOOL_SOCKET(rserpoolSocket, sd)
+
+#define CHECK_AND_SET(x,y) if(y != 0) { x = y; } else { y = x; }
+
+   threadSafetyLock(&rserpoolSocket->Mutex);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.InitialRTO,        params->sp_rto_initial);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.MinRTO,            params->sp_rto_min);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.MaxRTO,            params->sp_rto_max);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.AssocMaxRxt,       params->sp_assoc_max_rxt);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.PathMaxRxt,        params->sp_path_max_rxt);
+   CHECK_AND_SET(rserpoolSocket->AssocParameters.HeartbeatInterval, params->sp_hbinterval);
+   threadSafetyUnlock(&rserpoolSocket->Mutex);
+   return(0);
 }
 
 
@@ -813,7 +850,7 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
                    rserpoolSocket->SocketProtocol);
    if(sd >= 0) {
       setNonBlocking(sd);
-      if(configureSCTPSocket(sd, 0)) {
+      if(configureSCTPSocket(rserpoolSocket, sd, 0)) {
          LOG_VERBOSE
          fprintf(stdlog, "Trying connection to pool element $%08x (", rserpoolSocket->ConnectedSession->ConnectedPE);
          poolHandlePrint(&rserpoolSocket->ConnectedSession->Handle, stdlog);
@@ -971,6 +1008,7 @@ int rsp_forcefailover_tags(int                sd,
                                                  rspAddrInfo->ai_addrs);
             if(rserpoolSocket->Socket >= 0) {
                success = true;
+               rserpoolSocket->WaitingForFirstMsg = true;
                rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
@@ -980,7 +1018,7 @@ int rsp_forcefailover_tags(int                sd,
             /* ====== Free handle resolution result ====================== */
             rsp_freeaddrinfo(rspAddrInfo);
 
-            /* ====== Failover procedue ================================== */
+            /* ====== Failover procedure ================================= */
             if(success) {
                /* ====== Do failover by client-based state sharing ======= */
                if(rserpoolSocket->ConnectedSession->Cookie) {
@@ -1151,6 +1189,8 @@ ssize_t rsp_recvmsg(int                    sd,
    struct Session*                session;
    struct rsp_sndrcvinfo          rinfoDummy;
    const union sctp_notification* notification;
+   union sockaddr_union           remoteAddress;
+   socklen_t                      remoteAddressSize;
    sctp_assoc_t                   assocID;
    int                            flags;
    int                            errorCode;
@@ -1202,9 +1242,10 @@ ssize_t rsp_recvmsg(int                    sd,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket, currentTimeout);
          LOG_END
          flags = 0;
+         remoteAddressSize = sizeof(remoteAddress);
          received = messageBufferRead(rserpoolSocket->MsgBuffer,
                                       rserpoolSocket->Socket,
-                                      &flags, NULL, 0,
+                                      &flags, &remoteAddress.sa, &remoteAddressSize,
                                       &rinfo->rinfo_ppid,
                                       &assocID,
                                       &rinfo->rinfo_stream,
@@ -1278,48 +1319,85 @@ ssize_t rsp_recvmsg(int                    sd,
             }
          }
 
-         /* ====== Handle ASAP control channel message ====================== */
-         else if( (flags & MSG_EOR) &&
-                  (ntohl(rinfo->rinfo_ppid) == PPID_ASAP) ) {
-            handleControlChannelMessage(rserpoolSocket, assocID,
-                                        rserpoolSocket->MsgBuffer->Buffer, received);
-            received = -1;
-         }
-
-         /* ====== User Data ================================================ */
+         /* ====== Handle ASAP control channel message =================== */
          else {
-            /* ====== Find session ========================================== */
-            if(rserpoolSocket->ConnectedSession) {
-               rinfo->rinfo_session = rserpoolSocket->ConnectedSession->SessionID;
-               rinfo->rinfo_pe_id   = rserpoolSocket->ConnectedSession->ConnectedPE;
+            if(rserpoolSocket->WaitingForFirstMsg) {
+               rserpoolSocket->WaitingForFirstMsg = false;
+#ifdef LINUX
+#ifdef HAVE_KERNEL_SCTP
+#warning Using lksctp fix for possible bad primary path after connectx()!
+/*
+lksctp has a bug in connectx():
+Using connectx() to connect to {A1, A2, A3}, the primary will always be A1;
+even if A1 is bad and A2 or A3 had been used for 4-way handshake! Using
+default SCTP settings of RTO.Max, Path.Max.Retrans, etc., it will take
+*minutes* to drop the bad primary path.
+Work-around: use the source address of the first incoming message as
+             primary path.
+*/
+
+               LOG_NOTE
+               fprintf(stdlog, "Setting primary for RSerPool socket %d, socket %d: ",
+                       rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+               fputaddress(&remoteAddress.sa, true, stdlog);
+               fputs("\n", stdlog);
+               LOG_END
+
+               struct sctp_setprim setPrimary;
+               setPrimary.ssp_assoc_id = assocID;
+               memcpy(&setPrimary.ssp_addr, &remoteAddress, sizeof(remoteAddress));
+               if(ext_setsockopt(rserpoolSocket->Socket, IPPROTO_SCTP, SCTP_PRIMARY_ADDR,
+                  &setPrimary, (socklen_t)sizeof(setPrimary)) < 0) {
+                  LOG_WARNING
+                  logerror("setsockopt SCTP_PRIMARY_ADDR failed");
+                  LOG_END
+               }
+#endif
+#endif
             }
+
+            if( (flags & MSG_EOR) &&
+                     (ntohl(rinfo->rinfo_ppid) == PPID_ASAP) ) {
+               handleControlChannelMessage(rserpoolSocket, assocID,
+                                           rserpoolSocket->MsgBuffer->Buffer, received);
+               received = -1;
+            }
+
+            /* ====== User Data ========================================== */
             else {
-               session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
-               if(session) {
-                  rinfo->rinfo_session = session->SessionID;
+               /* ====== Find session ==================================== */
+               if(rserpoolSocket->ConnectedSession) {
+                  rinfo->rinfo_session = rserpoolSocket->ConnectedSession->SessionID;
+                  rinfo->rinfo_pe_id   = rserpoolSocket->ConnectedSession->ConnectedPE;
                }
                else {
-                  LOG_ERROR
-                  fprintf(stdlog, "Received data on RSerPool socket %d, socket %d via unknown assoc %u\n",
-                          rserpoolSocket->Descriptor, rserpoolSocket->Socket,
-                          (unsigned int)assocID);
-                  LOG_END
+                  session = sessionStorageFindSessionByAssocID(&rserpoolSocket->SessionSet, assocID);
+                  if(session) {
+                     rinfo->rinfo_session = session->SessionID;
+                  }
+                  else {
+                     LOG_ERROR
+                     fprintf(stdlog, "Received data on RSerPool socket %d, socket %d via unknown assoc %u\n",
+                           rserpoolSocket->Descriptor, rserpoolSocket->Socket,
+                           (unsigned int)assocID);
+                     LOG_END
+                  }
                }
-            }
 
-            /* ====== Copy user data ======================================== */
-            if(buffer != NULL) {
-               if((ssize_t)bufferLength < received) {
-                  LOG_ERROR
-                  fputs("Buffer is too small to keep full message\n", stdlog);
-                  LOG_END
-                  errno = ENOMEM;
-                  return(-1);
+               /* ====== Copy user data ================================== */
+               if(buffer != NULL) {
+                  if((ssize_t)bufferLength < received) {
+                     LOG_ERROR
+                     fputs("Buffer is too small to keep full message\n", stdlog);
+                     LOG_END
+                     errno = ENOMEM;
+                     return(-1);
+                  }
+                  received = min(received, (ssize_t)bufferLength);
+                  memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
                }
-               received = min(received, (ssize_t)bufferLength);
-               memcpy(buffer, rserpoolSocket->MsgBuffer->Buffer, received);
+               *msg_flags |= MSG_EOR;
             }
-            *msg_flags |= MSG_EOR;
          }
 
          threadSafetyUnlock(&rserpoolSocket->Mutex);
