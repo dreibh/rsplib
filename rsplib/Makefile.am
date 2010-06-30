@@ -351,7 +351,7 @@ endif
 
 # ###### Test programs ######################################################
 if BUILD_TEST_PROGRAMS
-noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker t1
+noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker
 else
 noinst_PROGRAMS =
 endif
@@ -381,8 +381,8 @@ rootshell_LDADD   =
 attacker_SOURCES = attacker.cc
 attacker_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
-t1_SOURCES = t1.c
-t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+#t1_SOURCES = t1.c
+#t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
