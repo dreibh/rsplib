@@ -130,7 +130,7 @@ redblacktree.h \
 redblacktree_impl.h \
 simpleredblacktree.h \
 simpleredblacktree.c
-libtdstorage_la_LIBADD  = 
+libtdstorage_la_LIBADD  =
 libtdstorage_la_LDFLAGS = \
    -version-info $(RSPLIB_CURRENT):$(RSPLIB_REVISION):$(RSPLIB_AGE)
 
@@ -306,22 +306,22 @@ registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librs
 endif
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h
-server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS) 
+server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 terminal_SOURCES = terminal.c
-terminal_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) 
+terminal_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS) 
+hsdump_LDADD   = librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 pingpongclient_SOURCES = pingpongclient.c
-pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) 
+pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 scriptingclient_SOURCES = scriptingclient.c
-scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) 
+scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) 
+calcappclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
@@ -351,8 +351,7 @@ endif
 
 # ###### Test programs ######################################################
 if BUILD_TEST_PROGRAMS
-noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker
-# t2
+noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker t1
 else
 noinst_PROGRAMS =
 endif
@@ -382,8 +381,8 @@ rootshell_LDADD   =
 attacker_SOURCES = attacker.cc
 attacker_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
-# t2_SOURCES = t2.cc
-# t2_LDADD   = libtdnetutilities.la
+t1_SOURCES = t1.c
+t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
