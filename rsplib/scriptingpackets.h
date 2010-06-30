@@ -61,7 +61,7 @@ struct NotReady
    char                         Info[];
 } __attribute__((packed));
 
-#define SSNR_FULLY_LOADED     0x0000001
+#define SSNR_FULLY_LOADED     0x00000001
 #define SSNR_OUT_OF_RESOURCES 0x00000002
 
 
