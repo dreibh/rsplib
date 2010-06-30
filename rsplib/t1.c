@@ -2,98 +2,168 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <math.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <signal.h>
 
-#include <rserpool/rserpool.h>
-#include <rserpool/rserpool-internals.h>
-#include <rserpool/tagitem.h>
+#include "rserpool.h"
+#include "netutilities.h"
+#include "loglevel.h"
+
+struct TuneSCTPParameters
+{
+   unsigned int InitialRTO;
+   unsigned int MinRTO;
+   unsigned int MaxRTO;
+   unsigned int AssocMaxRxt;
+   unsigned int PathMaxRxt;
+   unsigned int HeartbeatInterval;
+};
+
+
+/* ###### Tune SCTP parameters ############################################ */
+bool tuneSCTP(const int                  sockfd,
+              sctp_assoc_t               assocID,
+              struct TuneSCTPParameters* parameters)
+{
+   struct sctp_rtoinfo     rtoinfo;
+   struct sctp_paddrparams peerParams;
+   struct sctp_assocparams assocParams;
+   socklen_t               size;
+   bool                    result = true;
+
+   LOG_VERBOSE3
+   fprintf(stdlog, "Tuning SCTP parameters of assoc %u:\n", sockfd);
+   LOG_END
+
+   size = (socklen_t)sizeof(rtoinfo);
+   rtoinfo.srto_assoc_id = assocID;
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, &size) < 0) {
+//       LOG_WARNING
+      logerror("getsockopt SCTP_RTOINFO failed -> skipping RTO configuration");
+//       LOG_END
+      return(false);
+   }
+   size = (socklen_t)sizeof(peerParams);
+   memset(&peerParams.spp_address, 0, sizeof(peerParams.spp_address));   // ANY address
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerParams, &size) < 0) {
+//       LOG_WARNING
+      logerror("getsockopt SCTP_PEER_ADDR_PARAMS failed -> skipping path configuration");
+//       LOG_END
+      return(false);
+   }
+   size = (socklen_t)sizeof(assocParams);
+   assocParams.sasoc_assoc_id = assocID;
+   if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, &size) < 0) {
+//       LOG_WARNING
+      logerror("getsockopt SCTP_ASSOCINFO failed -> skipping assoc configuration");
+//       LOG_END
+      return(false);
+   }
+
+//    LOG_VERBOSE3
+   fputs("Old configuration:\n", stdlog);
+   fprintf(stdlog, " - Initial RTO:       %u ms\n", rtoinfo.srto_initial);
+   fprintf(stdlog, " - Min RTO:           %u ms\n", rtoinfo.srto_min);
+   fprintf(stdlog, " - Max RTO:           %u ms\n", rtoinfo.srto_max);
+   fprintf(stdlog, " - HeartbeatInterval: %u ms\n", peerParams.spp_hbinterval);
+   fprintf(stdlog, " - PathMaxRXT:        %u\n",    peerParams.spp_pathmaxrxt);
+   fprintf(stdlog, " - AssocMaxRXT:       %u\n",    assocParams.sasoc_asocmaxrxt);
+//    LOG_END
+
+   if(parameters->InitialRTO != 0) {
+      rtoinfo.srto_initial = parameters->InitialRTO;
+   }
+   if(parameters->MinRTO != 0) {
+      rtoinfo.srto_min = parameters->MinRTO;
+   }
+   if(parameters->MaxRTO != 0) {
+      rtoinfo.srto_max = parameters->MaxRTO;
+   }
+   peerParams.spp_hbinterval = parameters->HeartbeatInterval;
+   peerParams.spp_flags      = 0;
+   if(parameters->HeartbeatInterval != 0) {
+      peerParams.spp_flags |= SPP_HB_ENABLE;
+   }
+   if(parameters->PathMaxRxt != 0) {
+      peerParams.spp_pathmaxrxt = parameters->PathMaxRxt;
+   }
+   if(parameters->AssocMaxRxt != 0) {
+      assocParams.sasoc_asocmaxrxt = parameters->AssocMaxRxt;
+   }
+
+
+   if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t)sizeof(rtoinfo)) < 0) {
+      LOG_WARNING
+      logerror("setsockopt SCTP_RTOINFO failed");
+      LOG_END
+      result = false;
+   }
+   if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerParams, (socklen_t)sizeof(peerParams)) < 0) {
+      LOG_WARNING
+      logerror("setsockopt SCTP_PEER_ADDR_PARAMS failed");
+      LOG_END
+      result = false;
+   }
+   if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_ASSOCINFO, &assocParams, (socklen_t)sizeof(assocParams)) < 0) {
+      LOG_WARNING
+      logerror("setsockopt SCTP_ASSOCINFO failed");
+      LOG_END
+      result = false;
+   }
+
+//    LOG_VERBOSE3
+   fputs("New configuration:\n", stdlog);
+   fprintf(stdlog, " - Initial RTO:       %u ms\n", rtoinfo.srto_initial);
+   fprintf(stdlog, " - Min RTO:           %u ms\n", rtoinfo.srto_min);
+   fprintf(stdlog, " - Max RTO:           %u ms\n", rtoinfo.srto_max);
+   fprintf(stdlog, " - HeartbeatInterval: %u ms\n", peerParams.spp_hbinterval);
+   fprintf(stdlog, " - PathMaxRXT:        %u\n",    peerParams.spp_pathmaxrxt);
+   fprintf(stdlog, " - AssocMaxRXT:       %u\n",    assocParams.sasoc_asocmaxrxt);
+//    LOG_END
+
+   return(result);
+}
 
 
 int main(int argc, char** argv)
 {
-   const char*           poolHandle    = "EchoPool";
-   unsigned int          reregInterval = 30000;
-   struct rsp_info       info;
-   struct rsp_loadinfo   loadInfo;
-   struct rsp_sndrcvinfo rinfo;
-   int                   flags;
-   int                   fd;
-   int                   i;
+   sockaddr_union remote;
+   int sd;
+   char buffer[1024];
+   size_t i;
 
-   memset(&loadInfo, 0, sizeof(loadInfo));
-   loadInfo.rli_policy = PPT_ROUNDROBIN;
-
-   for(i = 1;i < argc;i++) {
-      if(rsp_initarg(&info, argv[i])) {
-         /* rsplib argument */
-      }
-      else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
-         poolHandle = (const char*)&argv[i][12];
-      }
-      else if(!(strncmp(argv[i], "-rereginterval=" ,15))) {
-         reregInterval = atol((const char*)&argv[i][15]);
-         if(reregInterval < 10) {
-            reregInterval = 10;
-         }
-      }
-      else {
-         fprintf(stderr, "ERROR: Bad argument %s.\n", argv[i]);
-         exit(1);
-      }
+   puts("Start...");
+   assert(string2address("[::1]:7777", &remote) == true);
+   sd = ext_socket(AF_INET6, SOCK_STREAM, IPPROTO_SCTP);
+   if(sd < 0) {
+      perror("socket()");
+   }
+   if(ext_connect(sd, &remote.sa, sizeof(remote)) < 0) {
+      perror("connect()");
    }
 
+   struct TuneSCTPParameters tuningParameters;
+   tuningParameters.InitialRTO        = 2000;
+   tuningParameters.MinRTO            = 1000;
+   tuningParameters.MaxRTO            = 3000;
+   tuningParameters.AssocMaxRxt       = 12;
+   tuningParameters.PathMaxRxt        = 3;
+   tuningParameters.HeartbeatInterval = 2000;
+   tuneSCTP(sd, 0, &tuningParameters);
+   tuneSCTP(sd, 0, &tuningParameters);
 
-   if(rsp_initialize(&info) < 0) {
-      fputs("ERROR: Unable to initialize rsplib Library!\n", stderr);
+   for(i = 0;i < sizeof(buffer);i++) {
+      buffer[i] = (char)(i & 0xff);
    }
-
-
-   fd = rsp_socket(0, SOCK_SEQPACKET, IPPROTO_SCTP);
-   if(fd >= 0) {
-      if(rsp_listen(fd, 10) == 0) {
-         if(rsp_register(fd, (const unsigned char*)poolHandle, strlen(poolHandle),
-                        (const struct rsp_loadinfo*)&loadInfo, reregInterval, 0) == 0) {
-            for(;;) {
-               char buffer[65536];
-               ssize_t received;
-               ssize_t sent;
-               flags = 0;
-               received = rsp_recvfullmsg(fd, (char*)&buffer, sizeof(buffer),
-                                          &rinfo, &flags, -1);
-               if(received > 0) {
-                  if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                     /* RSerPool notification */
-                     printf("NOTIFICATION: ");
-                     rsp_print_notification((const union rserpool_notification*)&buffer, stdout);
-                     puts("");
-                  }
-                  else if(flags & MSG_RSERPOOL_COOKIE_ECHO) {
-                     /* Cookie Echo */
-                  }
-                  else {
-                     /* Regular data message -> echo it back */
-                     printf("Echoing %d bytes\n", (int)received);
-                     sent = rsp_sendmsg(fd, buffer, received, 0,
-                                        rinfo.rinfo_session, rinfo.rinfo_ppid, rinfo.rinfo_stream,
-                                        0, 0, 0);
-                  }
-               }
-            }
-         }
-         else {
-            fprintf(stderr, "ERROR: Failed to register PE to pool %s\n", poolHandle);
-         }
+   for(;;) {
+      if(ext_send(sd, &buffer, sizeof(buffer), MSG_NOSIGNAL) < 0) {
+         perror("send()");
+         break;
       }
-      rsp_close(fd);
+      usleep(500000);
    }
-   else {
-      fputs("ERROR: Failed to create RSerPool socket\n", stderr);
-   }
-
-
-   rsp_cleanup();
+   ext_close(sd);
    return 0;
 }
