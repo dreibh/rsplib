@@ -1,10 +1,9 @@
 Source: rsplib
 Section: net
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
 Homepage: http://tdrwww.iem.uni-due.de/dreibholz/rserpool/index.html
-Build-Depends: debhelper,
+Build-Depends: debhelper (>= 6),
  autotools-dev,
  libsctp-dev (>= 1.0.5),
  libbz2-dev (>= 1.0),
