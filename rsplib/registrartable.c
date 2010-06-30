@@ -63,7 +63,7 @@ extern struct CSPReporter* gCSPReporter;
 struct RegistrarAssocIDNode
 {
    struct SimpleRedBlackTreeNode Node;
-   sctp_assoc_t                      AssocID;
+   sctp_assoc_t                  AssocID;
 };
 
 
@@ -601,12 +601,17 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
    fprintf(stdlog, "Purged %u out-of-date peer list nodes. Peer List:\n",  (unsigned int)i);
    ST_CLASS(peerListManagementPrint)(&registrarTable->RegistrarList, stdlog, PLPO_PEERS_INDEX|PLNPO_TRANSPORT);
    LOG_END
-   
+
    for(i = 0;i < MAX_SIMULTANEOUS_REQUESTS;i++) {
       peerListNode = ST_CLASS(peerListManagementFindNearestNextPeerListNode)(
                         &registrarTable->RegistrarList,
                         *lastRegistrarIdentifier,
                         *lastTransportAddressBlock);
+      if( (peerListNode == NULL) && (i == 0) ) {
+         /* There is only one PR => get it. */
+         peerListNode = ST_CLASS(peerListManagementGetFirstPeerListNodeFromIndexStorage)(
+                           &registrarTable->RegistrarList);
+      }
       if(peerListNode != NULL) {
          *lastRegistrarIdentifier = peerListNode->Identifier;
          if(*lastTransportAddressBlock) {
@@ -714,7 +719,7 @@ int registrarTableGetRegistrar(struct RegistrarTable*   registrarTable,
       ST_CLASS(peerListNodePrint)(peerListNode, stdlog, PLPO_FULL);
       fputs("\n", stdlog);
       LOG_END
-      
+
       /* Subtract one, in order to select this node, if it is the first one!
          => Increased connection establishment speed. */
       lastRegistrarIdentifier--;
