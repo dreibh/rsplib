@@ -14,21 +14,21 @@
 #include "timeutilities.h"
 
 
-struct TuneSCTPParameters
-{
-   unsigned int InitialRTO;
-   unsigned int MinRTO;
-   unsigned int MaxRTO;
-   unsigned int AssocMaxRxt;
-   unsigned int PathMaxRxt;
-   unsigned int HeartbeatInterval;
-};
+// struct TuneSCTPParameters
+// {
+//    unsigned int InitialRTO;
+//    unsigned int MinRTO;
+//    unsigned int MaxRTO;
+//    unsigned int AssocMaxRxt;
+//    unsigned int PathMaxRxt;
+//    unsigned int HeartbeatInterval;
+// };
 
 
 /* ###### Tune SCTP parameters ############################################ */
-bool tuneSCTP(const int                  sockfd,
-              sctp_assoc_t               assocID,
-              struct TuneSCTPParameters* parameters)
+bool myTuneSCTP(const int                  sockfd,
+                sctp_assoc_t               assocID,
+                struct TuneSCTPParameters* parameters)
 {
    struct sctp_rtoinfo     rtoinfo;
    struct sctp_paddrparams peerParams;
@@ -154,14 +154,14 @@ int main(int argc, char** argv)
    }
 
    struct TuneSCTPParameters tuningParameters;
-   tuningParameters.InitialRTO        = 1000;   // 2000;
-   tuningParameters.MinRTO            =  500;   // 1000;
-   tuningParameters.MaxRTO            = 2500;   // 3000;
-   tuningParameters.AssocMaxRxt       = 8; // 12;
-   tuningParameters.PathMaxRxt        = 3; // 3;
+   tuningParameters.InitialRTO        = 1000;
+   tuningParameters.MinRTO            =  500;
+   tuningParameters.MaxRTO            = 1500;
+   tuningParameters.AssocMaxRxt       = 4;
+   tuningParameters.PathMaxRxt        = 1;
    tuningParameters.HeartbeatInterval = 5000;
-   tuneSCTP(sd, 0, &tuningParameters);
-   tuneSCTP(sd, 0, &tuningParameters);
+   myTuneSCTP(sd, 0, &tuningParameters);
+   myTuneSCTP(sd, 0, &tuningParameters);
 
    struct sctp_event_subscribe event;
    memset(&event, 1, sizeof(event));
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
       perror("getsockopt SCTP_PEER_ADDR_PARAMS failed");
       return(false);
    }
-   printf("====> spp_pathmaxrxt=%d spp_pathmtu=%d hb=%d\n", peerParams.spp_pathmaxrxt,peerParams.spp_pathmtu,peerParams.spp_hbinterval);
+   printf("====> spp_pathmaxrxt=%d spp_pathmtu=%d hb=%d    ST=%d\n", peerParams.spp_pathmaxrxt,peerParams.spp_pathmtu,peerParams.spp_hbinterval);
                      }
                      break;
                case SCTP_REMOTE_ERROR:
