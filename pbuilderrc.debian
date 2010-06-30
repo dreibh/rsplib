@@ -6,6 +6,6 @@
 # read pbuilderrc.5 document for notes on specific options.
 # MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
 
-MIRRORSITE=ftp://ftp.us.debian.org/debian
-DISTRIBUTION=lenny
+MIRRORSITE=ftp://ftp.de.debian.org/debian
+DISTRIBUTION=squeeze
 COMPONENTS=main
