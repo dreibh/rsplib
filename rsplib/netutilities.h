@@ -255,7 +255,7 @@ const struct sockaddr* getBestScopedAddress(const struct sockaddr* addrs,
 size_t filterAddressesByScope(union sockaddr_union* addressArray,
                               const size_t          inputAddresses,
                               const unsigned int    minScope);
-                              
+
 
 /**
   * Get padding for given data size and alignment.
@@ -498,6 +498,29 @@ size_t getpaddrsplus(const int              fd,
 #ifdef USE_SELECT
 int ext_poll(struct pollfd* fdlist, long unsigned int count, int time);
 #endif
+
+
+struct TuneSCTPParameters
+{
+   unsigned int InitialRTO;
+   unsigned int MinRTO;
+   unsigned int MaxRTO;
+   unsigned int AssocMaxRxt;
+   unsigned int PathMaxRxt;
+   unsigned int HeartbeatInterval;
+};
+
+/**
+  * Tune parameters of an SCTP association.
+  *
+  * @param fd Socket FD.
+  * @param assocID Association ID.
+  * @param parameters Pointer to TuneSCTPParameters structure with corresponding parameters.
+  * @return true in case of success.
+  */
+bool tuneSCTP(const int                  sockfd,
+              sctp_assoc_t               assocID,
+              struct TuneSCTPParameters* parameters);
 
 
 #ifdef __cplusplus
