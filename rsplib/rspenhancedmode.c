@@ -731,16 +731,21 @@ int rsp_accept_tags(int             sd,
    struct RSerPoolSocket* rserpoolSocket;
    struct RSerPoolSocket* newRSerPoolSocket;
    struct Session*        session;
+   union sockaddr_union   remoteAddress;
+   socklen_t              remoteAddressSize;
    int                    result = -1;
    int                    newSocket;
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
 
    if(waitForRead(rserpoolSocket, timeout)) {
-      newSocket = ext_accept(rserpoolSocket->Socket, NULL, 0);
+      remoteAddressSize = sizeof(remoteAddress);
+      newSocket = ext_accept(rserpoolSocket->Socket, &remoteAddress.sa, &remoteAddressSize);
       if(newSocket >= 0) {
          LOG_VERBOSE
-         fprintf(stdlog, "Accepted new socket %d on RSerPool socket %u, socket %d\n",
-               newSocket, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         fprintf(stdlog, "Accepted new socket %d on RSerPool socket %u, socket %d (",
+                newSocket, rserpoolSocket->Descriptor, rserpoolSocket->Socket);
+         fputaddress(&remoteAddress.sa, true, stdlog);
+         fputs(")\n", stdlog);
          LOG_END
          result = rsp_socket_internal(0, SOCK_STREAM, IPPROTO_SCTP, newSocket);
          if(result >= 0) {
@@ -756,11 +761,25 @@ int rsp_accept_tags(int             sd,
                newRSerPoolSocket->ConnectedSession = session;
 
                LOG_ACTION
-               fprintf(stdlog, "Accepted new session %u (RSerPool socket %u, socket %u) on RSerPool socket %u, socket %d\n",
-                     session->SessionID,
+               fprintf(stdlog, "Accepted new session %u from ", session->SessionID);
+               fputaddress(&remoteAddress.sa, true, stdlog);
+               fprintf(stdlog, " (RSerPool socket %u, socket %u) on RSerPool socket %u, socket %d\n",
                      newRSerPoolSocket->Descriptor, newRSerPoolSocket->Socket,
                      rserpoolSocket->Descriptor, rserpoolSocket->Socket);
                LOG_END
+
+/*
+               struct sctp_setpeerprim setPeerPrimary;
+               setPeerPrimary.sspp_assoc_id = 0;
+               memcpy(&setPeerPrimary.sspp_addr, &remoteAddress, sizeof(union sockaddr_union));
+               if(ext_setsockopt(newRSerPoolSocket->Socket,
+                                 IPPROTO_SCTP, SCTP_SET_PEER_PRIMARY_ADDR,
+                                 &setPeerPrimary, sizeof(setPeerPrimary)) < 0) {
+                  LOG_WARNING
+                  logerror("setsockopt SCTP_SET_PEER_PRIMARY_ADDR failed");
+                  LOG_END
+               }
+*/
             }
          }
       }
