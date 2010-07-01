@@ -1,0 +1,114 @@
+#!/bin/bash
+# $Id: ss.init 2283 2010-03-23 14:04:39Z dreibh $
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2010 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+
+# #########################################################
+# CSP_SERVER="127.0.0.1:2960"
+CSP_SERVER="132.252.156.42:2960"
+CSP_INTERVAL="2500"
+# #########################################################
+
+if [ "$1" = "--help" -o "$1" = "-h" ] ; then
+   echo "Usage: ss-installer {-noupdate} {registrar} {ss}"
+   exit
+fi
+
+
+# ====== Update rsplib and this script first ================================
+if [ "$1" != "xxINTERNALxx" ] ; then
+   if [ "$1" = "-noupdate" ] ; then
+      shift
+      echo "Skipping update!"
+   else
+      sudo echo "====== Updating sources ==================================" &&
+      success=0 && \
+      cd ../.. && \
+      echo svn update && \
+      ./bootstrap && ./configure --enable-kernel-sctp --enable-qt --prefix=/usr && make -j2 &&\
+      sudo make install && \
+      cd rsplib/storage && \
+      success=1
+      if [ $success -ne 1 ] ; then
+         echo "ERROR: Update failed. Check output, or try -noupdate option!"
+         exit 1
+      fi
+   fi
+   exec ./ss-installer xxINTERNALxx $@
+   exit 1
+fi
+shift
+
+
+# ====== Uninstall old versions =============================================
+if [ -e /etc/init.d/ss ] ; then
+   echo "====== Uninstalling Scripting Service ===================="
+   sudo /etc/init.d/ss stop
+   sudo update-rc.d -f ss remove
+   sudo rm /etc/init.d/ss
+fi
+if [ -e /etc/init.d/ss-registrar ] ; then
+   echo "====== Uninstalling Registrar ============================"
+   sudo /etc/init.d/ss-registrar stop
+   sudo update-rc.d -f ss-registrar remove
+   sudo rm /etc/init.d/ss-registrar
+fi
+
+
+# ====== Install new versions ===============================================
+while [ "$1" != "" ] ; do
+
+   if [ "$1" = "ss" ] ; then
+      echo "====== Installing Scripting Service ======================"
+      echo "CSP_SERVER   = $CSP_SERVER"
+      echo "CSP_INTERVAL = $CSP_INTERVAL"
+      sed -e "s/\$CSP_SERVER/$CSP_SERVER/g" -e "s/\$CSP_INTERVAL/$CSP_INTERVAL/g" ss.init >ss.init.new
+      chmod +x ss.init.new
+      sudo cp ss.init.new /etc/init.d/ss
+      rm ss.init.new
+      sudo update-rc.d ss defaults
+      sudo /etc/init.d/ss stop
+      sudo /etc/init.d/ss start
+   fi
+
+   if [ "$1" = "registrar" ] ; then
+      echo "====== Installing Registrar =============================="
+      echo "CSP_SERVER   = $CSP_SERVER"
+      echo "CSP_INTERVAL = $CSP_INTERVAL"
+      sed -e "s/\$CSP_SERVER/$CSP_SERVER/g" -e "s/\$CSP_INTERVAL/$CSP_INTERVAL/g" ss-registrar.init >ss-registrar.init.new
+      chmod +x ss-registrar.init.new
+      sudo cp ss-registrar.init.new /etc/init.d/ss-registrar
+      rm ss-registrar.init.new
+      sudo update-rc.d ss-registrar defaults
+      sudo /etc/init.d/ss-registrar start
+   fi
+
+   shift
+done
+
+echo "Done!"

@@ -10,7 +10,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2010 by Thomas Dreibholz
+# Copyright (C) 2002-2008 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,20 +40,25 @@
 
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=registrar
+NAME=ss-registrar
 DESC="RSerPool Registrar"
 DAEMON=/usr/bin/registrar
-DAEMON_OPTS="-quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
+DAEMON_OPTS="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
 
 test -x $DAEMON || exit 0
 
-# make sure SCTP module is loaded.
+
+# Make sure that SCTP is available
 modprobe sctp > /dev/null 2>&1
+# sysctl net.sctp.addip_enable=1
+# sysctl net.sctp.auth_enable=1
+
 
 # Include rsplib defaults if available
 if [ -f /etc/default/rsplib-registrar ] ; then
    . /etc/default/rsplib-registrar
 fi
+
 
 set -e
 
