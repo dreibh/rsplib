@@ -49,7 +49,7 @@ if [ "$1" != "xxINTERNALxx" ] ; then
       sudo echo "====== Updating sources ==================================" &&
       success=0 && \
       cd ../.. && \
-      echo svn update && \
+      svn update && \
       ./bootstrap && ./configure --enable-kernel-sctp --prefix=/usr && make -j2 && \
       sudo make install && \
       cd rsplib/storage && \
