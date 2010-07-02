@@ -50,7 +50,7 @@ if [ "$1" != "xxINTERNALxx" ] ; then
       success=0 && \
       cd ../.. && \
       echo svn update && \
-      ./bootstrap && ./configure --enable-kernel-sctp --enable-qt --prefix=/usr && make -j2 &&\
+      ./bootstrap && ./configure --enable-kernel-sctp --prefix=/usr && make -j2 && \
       sudo make install && \
       cd rsplib/storage && \
       success=1
