@@ -485,9 +485,11 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                            rejectNewSession(newRSerPoolSocket);
                                         }
                                         rsp_close(newRSerPoolSocket);
-                                        printTimeStamp(stdlog);
-                                        fputs("Rejected new session, since server is fully loaded\n", stdlog);
-                                        fflush(stdlog);
+                                        if(!quiet) {
+                                           printTimeStamp(stdlog);
+                                           fputs("Rejected new session, since server is fully loaded\n", stdlog);
+                                           fflush(stdlog);
+                                        }
                                      }
                                   }
                               }
