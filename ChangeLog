@@ -1,4 +1,115 @@
 ------------------------------------------------------------------------
+r2338 | dreibh | 2010-07-03 17:17:57 +0200 (Sat, 03 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Improved ss init script.
+
+------------------------------------------------------------------------
+r2337 | dreibh | 2010-07-03 17:12:06 +0200 (Sat, 03 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Do not print "fully loaded" log information in quiet mode.
+
+------------------------------------------------------------------------
+r2336 | dreibh | 2010-07-03 15:29:46 +0200 (Sat, 03 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+
+Added some bandwidth and runtime statistics output to the scripting service PE.
+
+------------------------------------------------------------------------
+r2335 | dreibh | 2010-07-03 15:04:57 +0200 (Sat, 03 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss-installer
+
+Updated ss-installer script.
+
+------------------------------------------------------------------------
+r2334 | dreibh | 2010-07-02 22:01:40 +0200 (Fri, 02 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss-installer
+
+Fix in ss-installer script.
+
+------------------------------------------------------------------------
+r2333 | dreibh | 2010-07-02 21:40:12 +0200 (Fri, 02 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss-installer
+
+Updated ss-installer script.
+
+------------------------------------------------------------------------
+r2332 | dreibh | 2010-07-01 20:44:06 +0200 (Thu, 01 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss-installer
+   M /trunk/rsplib2/rsplib/storage/ss-registrar.init
+
+
+------------------------------------------------------------------------
+r2331 | dreibh | 2010-07-01 20:43:20 +0200 (Thu, 01 Jul 2010) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/rsplib/storage/ss-installer
+   M /trunk/rsplib2/rsplib/storage/ss-registrar.init
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Added Scripting Service installer script.
+
+------------------------------------------------------------------------
+r2330 | dreibh | 2010-06-30 23:59:30 +0200 (Wed, 30 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+Fixed changelog (missing spaces).
+
+------------------------------------------------------------------------
+r2329 | dreibh | 2010-06-30 23:47:54 +0200 (Wed, 30 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/debian/changelog
+   A /trunk/rsplib2/debian/source
+   A /trunk/rsplib2/debian/source/format
+
+Added debian/sources/format, adapted other Debian files appropriately.
+
+------------------------------------------------------------------------
+r2328 | dreibh | 2010-06-30 23:33:17 +0200 (Wed, 30 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/planetlab/install-binaries
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Updated PlanetLab test scripts.
+
+------------------------------------------------------------------------
+r2327 | dreibh | 2010-06-30 22:47:35 +0200 (Wed, 30 Jun 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/pbuilderrc.debian
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+   M /trunk/rsplib2/rsplib.lsm
+
+- Version update
+- Updated LSM entry.
+
+------------------------------------------------------------------------
+r2326 | dreibh | 2010-06-30 22:47:15 +0200 (Wed, 30 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Fixed lintian warnings.
+
+------------------------------------------------------------------------
+r2325 | dreibh | 2010-06-30 22:46:58 +0200 (Wed, 30 Jun 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/registrartable.c
+
+Bugfix: if there is only one PR in the RegistrarTable, try it directly.
+
+------------------------------------------------------------------------
 r2324 | dreibh | 2010-06-30 18:14:46 +0200 (Wed, 30 Jun 2010) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/scriptingclient.c
