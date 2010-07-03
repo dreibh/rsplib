@@ -1,13 +1,19 @@
+rsplib (2.7.3-1ubuntu1) maverick; urgency=low
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 03 Jul 2010 10:45:08 +0200
+
 rsplib (2.7.2-3ubuntu1) maverick; urgency=low
 
   * Added debian/source/format file.
- 
+
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 30 Jun 2010 23:45:08 +0200
 
 rsplib (2.7.2-1ubuntu1) maverick; urgency=low
 
   * New upstream release.
- 
+
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 30 Jun 2010 21:32:19 +0200
 
 rsplib (2.7.1-2ubuntu1) maverick; urgency=low

@@ -49,7 +49,13 @@ if [ "$MODE" = "run" ] ; then
 
    # ====== Extract input ===================================================
    cd $DIRECTORY || exit 1
-   tar xzf $INPUT_NAME || exit 1
+
+   # Extract the input file:
+   # - First, try plain Tar
+   # - If it does not work, try Tar/GZip
+   # - If it does not work, try Tar/BZip2
+   # - If it does not work, return an error
+   tar xf $INPUT_NAME || tar xzf $INPUT_NAME || tar xjf $INPUT_NAME || exit 1
 
 
    # ====== Do the actual work ==============================================
