@@ -35,6 +35,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 #include <errno.h>
 #include <assert.h>
 #include <signal.h>
@@ -60,6 +61,12 @@ ScriptingServer::ScriptingServer(
    Directory[0]           = 0x00;
    LastKeepAliveTimeStamp = 0;
    WaitingForKeepAliveAck = false;
+
+   UploadSize             = 0;
+   DownloadSize           = 0;
+   UploadStarted          = 0;
+   ProcessingStarted      = 0;
+   DownloadStarted        = 0;
 }
 
 
@@ -133,7 +140,7 @@ EventHandlingResult ScriptingServer::initializeSession()
 
    setSyncTimer(getMicroTime() + (1000ULL * Settings.TransmitTimeout));   // Timeout for first upload message
 
-   
+
    const ssize_t sent  = rsp_sendmsg(RSerPoolSocketDescriptor,
                                      (const char*)ready, readyLength, 0,
                                      0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
@@ -204,7 +211,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
                  RSerPoolSocketDescriptor);
          return(EHR_Abort);
       }
-      snprintf((char*)&InputName, sizeof(InputName), "%s/%s", Directory, INPUT_NAME);
+      snprintf((char*)&InputName,  sizeof(InputName), "%s/%s",  Directory, INPUT_NAME);
       snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
       snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
 
@@ -219,6 +226,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Starting upload into directory \"%s\" ...\n",
               RSerPoolSocketDescriptor, Directory);
+      UploadStarted = getMicroTime();
    }
 
    // ====== Write to input file ============================================
@@ -235,6 +243,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
                  RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      UploadSize += (unsigned long long)length;
       setSyncTimer(getMicroTime() + (1000ULL * Settings.TransmitTimeout));   // Timeout for next upload message
       return(EHR_Okay);
    }
@@ -242,9 +251,18 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
       if(Settings.VerboseMode) {
          fputs("\n", stdlog);
       }
-      fclose(UploadFile);
-      fprintf(stdlog, "S%04d: Starting work in directory \"%s\" ...\n",
-              RSerPoolSocketDescriptor, Directory);
+      if(fclose(UploadFile) != 0) {
+         fprintf(stdlog, "S%04d: Close error for input file in directory \"%s\": %s!\n",
+                 RSerPoolSocketDescriptor, Directory, strerror(errno));
+         return(EHR_Abort);
+      }
+      ProcessingStarted = getMicroTime();
+      fprintf(stdlog, "S%04d: Upload completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => starting work in directory \"%s\" ...\n",
+              RSerPoolSocketDescriptor,
+              ceil((double)UploadSize / 1024.0),
+              (ProcessingStarted - UploadStarted) / 1000000.0,
+              (double)((double)UploadSize / 1024.0) / ((ProcessingStarted - UploadStarted) / 1000000.0),
+              Directory);
       UploadFile = NULL;
       EventHandlingResult result = sendStatus(0);
       if(result == 0) {
@@ -285,9 +303,12 @@ EventHandlingResult ScriptingServer::performDownload()
 
    FILE* fh = fopen(OutputName, "r");
    if(fh != NULL) {
+      DownloadStarted = getMicroTime();
       printTimeStamp(stdlog);
-      fprintf(stdlog, "S%04d: Starting download of results in directory \"%s\" ...\n",
-              RSerPoolSocketDescriptor, Directory);
+      fprintf(stdlog, "S%04d: Processing completed (%1.1lf s) => starting download of results in directory \"%s\" ...\n",
+              RSerPoolSocketDescriptor,
+              (DownloadStarted - ProcessingStarted) / 1000000.0,
+              Directory);
       for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
          if(dataLength >= 0) {
@@ -308,8 +329,16 @@ EventHandlingResult ScriptingServer::performDownload()
                        RSerPoolSocketDescriptor, strerror(errno));
                return(EHR_Abort);
             }
+            DownloadSize += (unsigned long long)dataLength;
          }
          if(dataLength <= 0) {
+            const unsigned long long downloadFinished = getMicroTime();
+            fprintf(stdlog, "S%04d: Download completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => finished work in directory \"%s\".\n",
+                  RSerPoolSocketDescriptor,
+                  ceil((double)DownloadSize / 1024.0),
+                  (downloadFinished - DownloadStarted) / 1000000.0,
+                  (double)((double)DownloadSize / 1024.0) / ((downloadFinished - DownloadStarted) / 1000000.0),
+                  Directory);
             break;
          }
       }
@@ -332,7 +361,7 @@ EventHandlingResult ScriptingServer::performDownload()
 EventHandlingResult ScriptingServer::startWorking()
 {
    assert(ChildProcess == 0);
-     
+
    printTimeStamp(stdlog);
    fprintf(stdlog, "S%04d: Starting work in directory \"%s\" ...\n",
            RSerPoolSocketDescriptor, Directory);
@@ -342,7 +371,7 @@ EventHandlingResult ScriptingServer::startWorking()
       const int stdlogFD = fileno(stdlog);
       dup2(stdlogFD, STDOUT_FILENO);
       dup2(stdlogFD, STDERR_FILENO);
-    
+
       // ====== Run script ==================================================
       execlp("./scriptingcontrol",
              "scriptingcontrol",
@@ -384,7 +413,7 @@ bool ScriptingServer::hasFinishedWork(int& exitStatus)
 EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now)
 {
    EventHandlingResult result = EHR_Okay;
-   
+
    switch(State) {
      case SS_Upload:
         printTimeStamp(stdlog);
@@ -392,7 +421,7 @@ EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now
                 RSerPoolSocketDescriptor, Directory);
         result = EHR_Abort;
       break;
-      
+
      case SS_Working:
         // ====== Check whether work is complete ============================
         int                 exitStatus;
@@ -402,7 +431,7 @@ EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now
               result = performDownload();
            }
         }
-        
+
         // ====== Keep-Alive handling =======================================
         else {
            // ------ Send KeepAlive -----------------------------------------
@@ -424,7 +453,7 @@ EventHandlingResult ScriptingServer::syncTimerEvent(const unsigned long long now
            }
         }
       break;
-      
+
      default:
       break;
    }
@@ -514,7 +543,7 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
             return(handleUploadMessage(buffer, bufferSize));
          }
        break;
-      case SS_Working:       
+      case SS_Working:
          if(header->Type == SPT_KEEPALIVE) {
             return(handleKeepAliveMessage());
          }
@@ -526,7 +555,7 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
           // All messages here are unexpected!
        break;
    }
-   
+
    // ====== Print unexpected message =======================================
    printTimeStamp(stdlog);
    fprintf(stdlog, "S%04d: Received unexpected message $%02x in state #%u!\n",

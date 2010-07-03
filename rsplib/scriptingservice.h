@@ -95,6 +95,11 @@ class ScriptingServer : public TCPLikeServer
    pid_t                   ChildProcess;
    bool                    WaitingForKeepAliveAck;
    unsigned long long      LastKeepAliveTimeStamp;
+   unsigned long long      UploadSize;
+   unsigned long long      DownloadSize;
+   unsigned long long      UploadStarted;
+   unsigned long long      ProcessingStarted;
+   unsigned long long      DownloadStarted;
 };
 
 
