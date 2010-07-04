@@ -43,7 +43,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME=ss-registrar
 DESC="RSerPool Registrar"
 DAEMON=/usr/bin/registrar
-DAEMON_OPTS="-cspserver=$CSP_SERVER -cspinterval=$CSP_INTERVAL -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
+DAEMON_OPTS="-cspserver=$CSP_SERVER -asap=[::]:3863 -enrp=[::]:9901 -cspinterval=$CSP_INTERVAL -quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
 
 test -x $DAEMON || exit 0
 
