@@ -202,7 +202,7 @@ unsigned int rsp_pe_failure(const unsigned char* poolHandle,
   * @param rserpoolAddrInfo Pointer to variable to store pointer to first rsp_addrinfo to.
   * @param items Desired number of PE entries to obtain.
   * @param staleCacheValue Stale cache value in milliseconds.
-  * @return Number of PE entries obtained in case of success; -1 in case of an error.
+  * @return Number of PE entries obtained in case of success; error code (negative) in case of an error.
   *
   * @see rsp_freeaddrinfo
   */
@@ -211,6 +211,12 @@ int rsp_getaddrinfo(const unsigned char*  poolHandle,
                     struct rsp_addrinfo** rserpoolAddrInfo,
                     const size_t          items,
                     const unsigned int    staleCacheValue);
+
+/* Error values for rsp_getaddrinfo() function. */
+#define REAI_NONAME -1   /* Pool Handle is unknown.           */
+#define REAI_MEMORY -2   /* Memory allocation failure.        */
+#define REAI_SYSTEM -3   /* System error returned in `errno'. */
+#define REAI_FAMILY -4   /* Address family not supported.     */
 
 /**
   * Free rsp_addrinfo structure.

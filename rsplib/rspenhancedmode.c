@@ -1062,7 +1062,7 @@ int rsp_forcefailover_tags(int                sd,
             LOG_END
          }
       }
-      else if(result == EAI_NONAME) {
+      else if(result == REAI_NONAME) {
          LOG_ACTION
          fprintf(stdlog,
                  "Handle resolution did not find new pool element. Waiting %lluus...\n",

@@ -137,7 +137,7 @@ int rsp_initialize(struct rsp_info* info)
       i++;
    }
    tagList[i].Tag = TAG_DONE;
-   
+
    /* ====== Initialize ASAP instance ==================================== */
    threadSafetyNew(&gThreadSafety, "RsplibInstance");
    threadSafetyNew(&gRSerPoolSocketSetMutex, "gRSerPoolSocketSet");
@@ -315,7 +315,7 @@ static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
 static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poolElementNode,
                                      struct rsp_addrinfo**                   rspAddrInfo)
 {
-   int    result = EAI_MEMORY;
+   int    result = REAI_MEMORY;
    char*  ptr;
    size_t i;
 
@@ -359,7 +359,7 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
                   fprintf(stdlog, "Bad address type #%d\n",
                           poolElementNode->UserTransport->AddressArray[i].sa.sa_family);
                   LOG_END_FATAL
-                  result = EAI_FAMILY;
+                  result = REAI_FAMILY;
                 break;
             }
          }
@@ -367,7 +367,7 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
       else {
          free(*rspAddrInfo);
          *rspAddrInfo = NULL;
-         result = EAI_MEMORY;
+         result = REAI_MEMORY;
       }
    }
    return(result);
@@ -422,10 +422,10 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
       }
       else {
          if(hresResult == RSPERR_NOT_FOUND) {
-            result = EAI_NONAME;
+            result = REAI_NONAME;
          }
          else {
-            result = EAI_SYSTEM;
+            result = REAI_SYSTEM;
          }
       }
    }
@@ -433,7 +433,7 @@ int rsp_getaddrinfo_tags(const unsigned char*  poolHandle,
       LOG_ERROR
       fputs("rsplib is not initialized\n", stdlog);
       LOG_END
-      result = EAI_SYSTEM;
+      result = REAI_SYSTEM;
    }
 
    return(result);
