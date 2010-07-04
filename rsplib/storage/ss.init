@@ -47,8 +47,9 @@ DAEMON=/usr/bin/server
 SS_LOCAL=""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # EXAMPLE: Use lowest IPv4 address. To use multi-homing, set SS_LOCAL=""!
-SS_LOCAL=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -ur | xargs echo`   # Space-separated list of local addresses
-SS_LOCAL=`echo $SS_LOCAL | xargs -n1 2>/dev/null | head -n2`
+v4addrs=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -ur | xargs echo`   # Space-separated list of local addresses
+v6addrs=`env LANG=C ifconfig | grep 'inet6 addr:' | grep 'Scope:Global' | sed -e 's/ //g' -e 's/inet6addr://g' -e 's/\/128Scope:Global//g' | sort -ur | xargs echo`
+SS_LOCAL=`echo $v4addrs $v6addrs | xargs -n1 2>/dev/null`
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 SS_USER="nobody"                                       # User to run scripts
