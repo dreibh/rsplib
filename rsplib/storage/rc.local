@@ -11,6 +11,10 @@
 #
 # By default this script does nothing.
 
+if [ "`uname -s`" = "FreeBSD" ] ; then
+   kldload linux || true
+fi
+
 server -quiet -scripting \
    -registrar=[2001:638:501:4ef3:20c:29ff:fecc:3728]:3863,[2001:638:501:4ef4:20c:29ff:fecc:3732] \
    -registrar=[2001:638:501:4ef4:211:43ff:feba:84c2]:3863,[2001:638:501:4ef3:201:2ff:fef1:84dc] \
