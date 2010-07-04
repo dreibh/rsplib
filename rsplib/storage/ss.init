@@ -46,9 +46,9 @@ DAEMON=/usr/bin/server
 # ====== Scripting Service Options ==========================================
 SS_LOCAL=""
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# EXAMPLE: Use lowest IPv4 address. To use multi-homing, set SS_LOCAL=""!
+# EXAMPLE: Use lowest IPv4 addresses first. To use ANY address, set SS_LOCAL=""!
 v4addrs=`env LANG=C ifconfig | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1 }' | sort -ur | xargs echo`   # Space-separated list of local addresses
-v6addrs=`env LANG=C ifconfig | grep 'inet6 addr:' | grep 'Scope:Global' | sed -e 's/ //g' -e 's/inet6addr://g' -e 's/\/128Scope:Global//g' | sort -ur | xargs echo`
+v6addrs=`env LANG=C ifconfig | grep 'inet6 addr:' | grep 'Scope:Global' | sed -e 's/ //g' -e 's/inet6addr://g' -e 's/Scope:Global//g' -e 's/\/[0-9]*//g' | sort -ur | xargs -i§ echo "[§]"`
 SS_LOCAL=`echo $v4addrs $v6addrs | xargs -n1 2>/dev/null`
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -92,6 +92,7 @@ if [ "$SS_CSPINTERVAL" != "" ] ; then
    DAEMON_OPTS="$DAEMON_OPTS -cspinterval=$SS_CSPINTERVAL"
 fi
 DAEMON_OPTS="$SS_MISCOPTS_PREPEND $DAEMON_OPTS $SS_MISCOPTS_APPEND"
+# echo "DAEMON_OPTS=$DAEMON_OPTS"
 
 
 test -x $DAEMON || exit 0
