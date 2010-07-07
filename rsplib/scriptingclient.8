@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd July 31, 2009
+.Dd July 7, 2010
 .Dt ScriptingClient 8
 .Os Scripting Client
 .\" ###### Name #############################################################
@@ -38,6 +38,7 @@
 .Sh SYNOPSIS
 .Nm scriptingclient
 .Op Fl poolhandle=pool_handle
+.Op Fl environment=file_name
 .Op Fl input=file_name
 .Op Fl output=file_name
 .Op Fl quiet
@@ -72,6 +73,10 @@ Sets the PH to a non-default value; otherwise, the default setting is
 .\" ====== Service parameters ===============================================
 .It Service Parameters:
 .Bl -tag -width indent
+.It Fl environment=file_name
+Sets the name of the environment file to upload to the PE. The PE may cache
+this environment file, allowing to skip a subsequent upload of the same
+environment file.
 .It Fl input=file_name
 Sets the name of the input file to upload to the PE.
 .It Fl output=file_name

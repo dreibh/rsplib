@@ -34,6 +34,7 @@
 #include "netutilities.h"
 #include "randomizer.h"
 #include "netutilities.h"
+#include "sha1.h"
 #ifdef ENABLE_CSP
 #include "componentstatuspackets.h"
 #endif
@@ -51,12 +52,15 @@
 #define SSCR_FAILOVER    2
 
 #define SSCS_WAIT_SERVER_READY     1
-#define SSCS_WAIT_START_PROCESSING 2
-#define SSCS_PROCESSING            3
-#define SSCS_DOWNLOAD              4
+#define SSCS_WAIT_ENVIRONMENT      2
+#define SSCS_WAIT_START_PROCESSING 3
+#define SSCS_PROCESSING            4
+#define SSCS_DOWNLOAD              5
 
 
 static unsigned int       State             = SSCS_WAIT_SERVER_READY;
+static const uint8_t      EnvironmentHash[SE_HASH_SIZE];
+static const char*        EnvironmentName   = NULL;
 static const char*        InputName         = NULL;
 static const char*        OutputName        = NULL;
 static FILE*              OutputFile        = NULL;
@@ -102,16 +106,16 @@ static void newLogLine(FILE* fh)
 
 
 /* ###### Upload input file ############################################## */
-static unsigned int performUpload(int sd)
+static unsigned int performUpload(int sd, const char* name)
 {
    struct Upload upload;
    size_t        dataLength;
    ssize_t       sent;
 
-   FILE* fh = fopen(InputName, "r");
+   FILE* fh = fopen(name, "r");
    if(fh == NULL) {
       printTimeStamp(stderr);
-      fprintf(stderr, "ERROR: Unable to open input file \"%s\"!\n", InputName);
+      fprintf(stderr, "ERROR: Unable to open file \"%s\"!\n", name);
       exit(1);
    }
 
@@ -139,7 +143,7 @@ static unsigned int performUpload(int sd)
       }
       else {
          newLogLine(stderr);
-         fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", InputName);
+         fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", name);
          exit(1);
       }
    }
@@ -198,6 +202,7 @@ static unsigned int sendKeepAlive(int sd)
                       0, htonl(PPID_SP), 0, 0, 0, 0);
    if(sent != sizeof(keepAlive)) {
       if((State != SSCS_WAIT_SERVER_READY) &&
+         (State != SSCS_WAIT_ENVIRONMENT) &&
          (State != SSCS_WAIT_START_PROCESSING)) {
          newLogLine(stdout);
          printf("Keep-Alive transmission error in state #%u: %s\n", State, strerror(errno));
@@ -289,13 +294,69 @@ static unsigned int handleReady(const int           sd,
    HasAssignedPE = true;
 
    /* ====== Proceed with uploading the work package ===================== */
-   State = SSCS_WAIT_START_PROCESSING;
    newLogLine(stdout);
    printf("Server %s is ready!\n", InfoString);
    fflush(stdout);
-   return(performUpload(sd));
+
+   /* ====== Request environment ========================================= */
+   if(EnvironmentName != NULL) {
+      State = SSCS_WAIT_ENVIRONMENT;
+      struct Environment environment;
+      environment.Header.Type   = SPT_ENVIRONMENT;
+      environment.Header.Flags  = 0x00;
+      environment.Header.Length = htons(sizeof(environment));
+      memcpy(&environment.Hash, EnvironmentHash, sizeof(EnvironmentHash));
+      ssize_t sent = rsp_sendmsg(sd, (const char*)&environment, sizeof(environment), 0,
+                                 0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
+      if(sent != (ssize_t)sizeof(environment)) {
+         newLogLine(stdout);
+         printf("Environment query error: %s\n", strerror(errno));
+         fflush(stdout);
+         return(SSCR_FAILOVER);
+      }
+   }
+   else {
+      State = SSCS_WAIT_START_PROCESSING;
+   }
+
+   /* ====== Continue with input upload ================================== */
+   return(performUpload(sd, InputName));
 }
 
+
+/* ###### Handle Ready message ########################################### */
+static unsigned int handleEnvironment(const int                 sd,
+                                      const struct Environment* environment,
+                                      const size_t              length)
+{
+   if(length < sizeof(struct Environment)) {
+      newLogLine(stdout);
+      puts("Received invalid Environment message!");
+      fflush(stdout);
+      return(SSCR_FAILOVER);
+   }
+
+   /* ====== Proceed with uploading the work package ===================== */
+   State = SSCS_WAIT_START_PROCESSING;
+   newLogLine(stdout);
+   if(environment->Header.Flags & SEF_UPLOAD_NEEDED) {
+      if(EnvironmentName != NULL) {
+         printf("Server %s needs environment\n", InfoString);
+         fflush(stdout);
+         return(performUpload(sd, EnvironmentName));
+      }
+      else {
+         printf("Server %s has requested environment, but there is no environment?!\n", InfoString);
+         fflush(stdout);
+         return(SSCR_FAILOVER);
+      }
+   }
+   else {
+      printf("Server %s has cached environment -> skipping upload\n", InfoString);
+      fflush(stdout);
+      return(SSCR_OKAY);
+   }
+}
 
 /* ###### Handle Status message ########################################## */
 static unsigned int serverStartsProcessing(const int            sd,
@@ -375,7 +436,7 @@ static unsigned int handleMessage(int                                 sd,
                                   const size_t                        length,
                                   const uint32_t                      ppid)
 {
-   /* printf("Message %u in state %u ...\n", header->Type, State); */
+   printf("Message %u in state %u ...\n", header->Type, State);
 
    /* ====== Check message header ======================================== */
    if(ppid != PPID_SP) {
@@ -411,6 +472,15 @@ static unsigned int handleMessage(int                                 sd,
             case SPT_NOTREADY:
                handleNotReady(sd, (const struct NotReady*)header, length);
                return(SSCR_FAILOVER);
+             break;
+         }
+        break;
+
+      /* ====== Wait for Ready message to start upload =================== */
+      case SSCS_WAIT_ENVIRONMENT:
+         switch(header->Type) {
+            case SPT_ENVIRONMENT:
+               return(handleEnvironment(sd, (const struct Environment*)header, length));
              break;
          }
         break;
@@ -463,6 +533,29 @@ static unsigned int handleMessage(int                                 sd,
 }
 
 
+static bool computeHash(char* filename, uint8_t* hash)
+{
+   struct sha1_ctx ctx;
+   uint8_t         buffer[16384];
+   FILE*           fh;
+   ssize_t         count;
+
+   sha1_init(&ctx);
+   fh = fopen(filename, "r");
+   if(fh != NULL) {
+      while(!feof(fh)) {
+         count = fread(&buffer, 1, sizeof(buffer), fh);
+         if(count > 0) {
+            sha1_update(&ctx, buffer, count);
+         }
+      }
+      fclose(fh);
+      sha1_final(&ctx, hash);
+      return(true);
+   }
+   return(false);
+}
+
 
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
@@ -489,6 +582,12 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[i], "-poolhandle=" ,12))) {
          poolHandle = (char*)&argv[i][12];
+      }
+      else if(!(strncmp(argv[i], "-environment=" ,13))) {
+         EnvironmentName = (const char*)&argv[i][13];
+         if(EnvironmentName[0] == 0x00) {
+            EnvironmentName = NULL;
+         }
       }
       else if(!(strncmp(argv[i], "-input=" ,7))) {
          InputName = (const char*)&argv[i][7];
@@ -525,7 +624,7 @@ int main(int argc, char** argv)
       }
       else {
          fprintf(stderr, "ERROR: Bad argument %s\n", argv[i]);
-         fprintf(stderr, "Usage: %s [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-environment=Environment Name] [-input=Input Name] [-output=Output Name] {-poolhandle=Pool Handle} {-quiet} {-maxretry=Trials} {-retrydelay=milliseconds} {-transmittimeout=milliseconds} {-keepaliveinterval=milliseconds} {-keepalivetimeout=milliseconds}\n", argv[0]);
          exit(1);
       }
    }
@@ -537,11 +636,30 @@ int main(int argc, char** argv)
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, random64());
 #endif
 
+   if(EnvironmentName) {
+      if(computeHash(EnvironmentName, &EnvironmentHash) == false) {
+         fprintf(stderr, "ERROR: Unable to compute hash of environment file %s\n",
+                 EnvironmentName);
+         exit(1);
+      }
+   }
+
 
    if(!Quiet) {
       puts("Scripting Pool User - Version 1.0");
       puts("=================================\n");
       printf("Pool Handle         = %s\n", poolHandle);
+      printf("Environment Name    = ");
+      if(EnvironmentName) {
+         printf("%s (", EnvironmentName);
+         for(i = 0; i < sizeof(EnvironmentHash); i++) {
+            printf("%02x", (unsigned int)EnvironmentHash[i]);
+         }
+         puts(")");
+      }
+      else {
+         puts("(none)");
+      }
       printf("Input Name          = %s\n", InputName);
       printf("Output Name         = %s\n\n", OutputName);
       printf("Max Retry           = %u [ms]\n", MaxRetry);

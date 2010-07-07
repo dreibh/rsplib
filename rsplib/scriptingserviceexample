@@ -28,12 +28,13 @@
 # Contact: dreibh@iem.uni-due.de
 
 if [ $# -lt 1 ] ; then
-   echo "Usage: ssdistribute [Unique ID]"
+   echo "Usage: ssdistribute [Unique ID] [Environment]"
    exit 1
 fi
 DIRECTORY="."
 UNIQUE_ID="$1"
-shift
+ENVIRONMENT="$2"
+shift ; shift
 
 POOLHANDLE="ScriptingPool"
 
@@ -42,16 +43,23 @@ SS_TEMPDIR="ssTEMP-$UNIQUE_ID"
 SS_IN_NAME="ssIN-$UNIQUE_ID.tar.gz"
 SS_OUT_NAME="ssOUT-$UNIQUE_ID.tar.gz"
 
-SS_INPUT_BYTES=10000
-SS_OUTPUT_BYTES=10000
+SS_ENVIRONMENT_BYTES=5000
+SS_INPUT_BYTES=2500
+SS_OUTPUT_BYTES=2000
 
 
 # This is the run script.
 SS_RUNSCRIPT=" \
  OUTPUT_ARCHIVE=\$1
+ ENVIRONMENT_FILE=\$2
  echo \"This is the run script!\" && \
  echo \"   + Output will be written to \\\"\$OUTPUT_ARCHIVE\\\" ...\" && \
  echo \"   + Input string is \\\"\`cat my-input.data\`\\\"\" && \
+ if [ \$ENVIRONMENT_FILE != \"\" ] ; then \
+    echo \"   + Environment file is \\\"\$ENVIRONMENT_FILE\\\" ...\" && \
+    echo \"     SHA1 hash is:\" && \
+    sha1sum \$ENVIRONMENT_FILE ; \
+ fi && \
  \
  echo \"   + Simulating some work (your program may do something more useful here!)\" && \
  date >my-output.data && \
@@ -86,6 +94,13 @@ tar chzf ../$SS_IN_NAME ssrun my-input.data my-input.random && \
 cd .. || exit 1
 
 
+if [ "$ENVIRONMENT" != "" ] ; then
+   if [ ! -e "$ENVIRONMENT" ] ; then
+      echo "   + Creating environment file \"$ENVIRONMENT\" ..."
+      dd if=/dev/urandom of=$ENVIRONMENT bs=$SS_ENVIRONMENT_BYTES count=1 || exit 1
+   fi
+fi
+
 
 echo "Distributing and processing ..."
 echo "   + Input file is \"$SS_IN_NAME\""
@@ -93,7 +108,7 @@ echo "   + Output will be written into \"$SS_OUT_NAME\""
 echo "   + Calling scriptingclient ..."
 echo ""
 
-env PATH=$PATH:. scriptingclient -runid="Example ID=$UNIQUE_ID" -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE $@ || exit 1
+env PATH=$PATH:. scriptingclient -runid="Example ID=$UNIQUE_ID" -environment=$ENVIRONMENT -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE $@ || exit 1
 echo "   + scriptingclient has returned"
 
 

@@ -42,9 +42,11 @@
 #define SPT_KEEPALIVE          0x04
 #define SPT_KEEPALIVE_ACK      0x05
 #define SPT_STATUS             0x06
+#define SPT_ENVIRONMENT        0x07
 
 #define SD_MAX_DATASIZE        1400
 #define SR_MAX_INFOSIZE          64
+#define SE_HASH_SIZE             20   /* 160-bit SHA-1 hash */
 
 struct ScriptingCommonHeader
 {
@@ -63,7 +65,6 @@ struct NotReady
 
 #define SSNR_FULLY_LOADED     0x00000001
 #define SSNR_OUT_OF_RESOURCES 0x00000002
-
 
 struct Ready
 {
@@ -99,5 +100,13 @@ struct Status
    struct ScriptingCommonHeader Header;
    uint32_t                     Status;
 } __attribute__((packed));
+
+struct Environment
+{
+   struct ScriptingCommonHeader Header;
+   uint8_t                      Hash[SE_HASH_SIZE];
+} __attribute__((packed));
+
+#define SEF_UPLOAD_NEEDED   (1 << 0)
 
 #endif

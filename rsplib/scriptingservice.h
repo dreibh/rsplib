@@ -33,6 +33,7 @@
 #include "rserpool.h"
 #include "tcplikeserver.h"
 #include "scriptingpackets.h"
+#include "sha1.h"
 
 #include <unistd.h>
 #include <sys/wait.h>
@@ -73,8 +74,8 @@ class ScriptingServer : public TCPLikeServer
    bool hasFinishedWork(int& exitStatus);
    EventHandlingResult sendStatus(const int exitStatus);
    EventHandlingResult performDownload();
-   EventHandlingResult handleUploadMessage(const char* buffer,
-                                           size_t      bufferSize);
+   EventHandlingResult handleUploadMessage(const Upload* upload);
+   EventHandlingResult handleEnvironmentMessage(const Environment* environment);
    EventHandlingResult sendKeepAliveMessage();
    EventHandlingResult handleKeepAliveAckMessage();
    EventHandlingResult handleKeepAliveMessage();
@@ -88,12 +89,15 @@ class ScriptingServer : public TCPLikeServer
    ScriptingState          State;
    ScriptingServerSettings Settings;
    char                    Directory[128];
+   char                    EnvironmentName[256];
    char                    InputName[256];
    char                    OutputName[256];
    char                    StatusName[256];
    FILE*                   UploadFile;
    pid_t                   ChildProcess;
    bool                    WaitingForKeepAliveAck;
+   bool                    WaitingForEnvironment;
+   bool                    NeedsEnvironment;
    unsigned long long      LastKeepAliveTimeStamp;
    unsigned long long      UploadSize;
    unsigned long long      DownloadSize;

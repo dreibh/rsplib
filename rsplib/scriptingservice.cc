@@ -43,9 +43,10 @@
 #include <sys/utsname.h>
 
 
-#define INPUT_NAME  "input.data"
-#define OUTPUT_NAME "output.data"
-#define STATUS_NAME "status.txt"
+#define ENVIRONMENT_NAME  "environment.data"
+#define INPUT_NAME        "input.data"
+#define OUTPUT_NAME       "output.data"
+#define STATUS_NAME       "status.txt"
 
 
 // ###### Constructor #######################################################
@@ -61,6 +62,8 @@ ScriptingServer::ScriptingServer(
    Directory[0]           = 0x00;
    LastKeepAliveTimeStamp = 0;
    WaitingForKeepAliveAck = false;
+   WaitingForEnvironment  = false;
+   NeedsEnvironment       = false;
 
    UploadSize             = 0;
    DownloadSize           = 0;
@@ -123,9 +126,23 @@ void ScriptingServer::rejectNewSession(int sd)
 // ###### Initialize session ################################################
 EventHandlingResult ScriptingServer::initializeSession()
 {
+   // ====== Create directory and get file names ============================
+   safestrcpy((char*)&Directory, "/tmp/rspSS-XXXXXX", sizeof(Directory));
+   if(mkdtemp((char*)&Directory) == NULL) {
+      printTimeStamp(stdlog);
+      fprintf(stdlog, "S%04d: Unable to generate temporary directory!\n",
+            RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+   snprintf((char*)&EnvironmentName,  sizeof(EnvironmentName), "%s/%s",  Directory, ENVIRONMENT_NAME);
+   snprintf((char*)&InputName,  sizeof(InputName), "%s/%s",  Directory, INPUT_NAME);
+   snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
+   snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
+
+
+   // ====== Send Ready message =============================================
    char           buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
    struct utsname systemInfo;
-
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
    }
@@ -198,40 +215,32 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
 
 
 // ###### Handle Upload message #############################################
-EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
-                                                         size_t      bufferSize)
+EventHandlingResult ScriptingServer::handleUploadMessage(
+                                        const Upload* upload)
+
 {
    // ====== Create temporary directory =====================================
    if(UploadFile == NULL) {
-      // ====== Create directory and get file names =========================
-      safestrcpy((char*)&Directory, "/tmp/rspSS-XXXXXX", sizeof(Directory));
-      if(mkdtemp((char*)&Directory) == NULL) {
-         printTimeStamp(stdlog);
-         fprintf(stdlog, "S%04d: Unable to generate temporary directory!\n",
-                 RSerPoolSocketDescriptor);
-         return(EHR_Abort);
-      }
-      snprintf((char*)&InputName,  sizeof(InputName), "%s/%s",  Directory, INPUT_NAME);
-      snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
-      snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
-
       // ====== Create input file ===========================================
-      UploadFile = fopen(InputName, "w");
+      UploadFile = fopen((WaitingForEnvironment == true) ? EnvironmentName : InputName, "w");
       if(UploadFile == NULL) {
          printTimeStamp(stdlog);
-         fprintf(stdlog, "S%04d: Unable to create input file in directory \"%s\": %s!\n",
-                 RSerPoolSocketDescriptor, Directory, strerror(errno));
+         fprintf(stdlog, "S%04d: Unable to create input file \"%s\" in directory \"%s\": %s!\n",
+                 RSerPoolSocketDescriptor,
+                 (WaitingForEnvironment == true) ? EnvironmentName : InputName,
+                 Directory, strerror(errno));
          return(EHR_Abort);
       }
       printTimeStamp(stdlog);
-      fprintf(stdlog, "S%04d: Starting upload into directory \"%s\" ...\n",
-              RSerPoolSocketDescriptor, Directory);
+      fprintf(stdlog, "S%04d: Starting upload of %s into directory \"%s\" ...\n",
+              RSerPoolSocketDescriptor,
+              (WaitingForEnvironment == true) ? "environment" : "work package",
+              Directory);
       UploadStarted = getMicroTime();
    }
 
    // ====== Write to input file ============================================
-   const Upload* upload = (const Upload*)buffer;
-   const size_t length  = bufferSize - sizeof(ScriptingCommonHeader);
+   const size_t length = ntohs(upload->Header.Length) - sizeof(upload->Header);
    if(length > 0) {
       if(Settings.VerboseMode) {
          fputs(".", stdlog);
@@ -257,21 +266,70 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const char* buffer,
          return(EHR_Abort);
       }
       ProcessingStarted = getMicroTime();
-      fprintf(stdlog, "S%04d: Upload completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => starting work in directory \"%s\" ...\n",
+      fprintf(stdlog, "S%04d: Upload completed (%s: %1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => starting work in directory \"%s\" ...\n",
               RSerPoolSocketDescriptor,
+              (WaitingForEnvironment == true) ? EnvironmentName : InputName,
               ceil((double)UploadSize / 1024.0),
               (ProcessingStarted - UploadStarted) / 1000000.0,
               (double)((double)UploadSize / 1024.0) / ((ProcessingStarted - UploadStarted) / 1000000.0),
               Directory);
       UploadFile = NULL;
-      EventHandlingResult result = sendStatus(0);
-      if(result == 0) {
-         return(startWorking());
+
+      if((NeedsEnvironment == true) && (WaitingForEnvironment == false)) {
+         WaitingForEnvironment = true;   // Now, get the environment
+         return(EHR_Okay);
       }
-      return(result);
+      else {
+         EventHandlingResult result = sendStatus(0);
+         if(result == 0) {
+            return(startWorking());
+         }
+         return(result);
+      }
    }
 }
 
+
+// ###### Handle Upload message #############################################
+EventHandlingResult ScriptingServer::handleEnvironmentMessage(
+                                        const Environment* environmentQuery)
+{
+   // ====== Check Environment query message ================================
+   if(ntohs(environmentQuery->Header.Length) < sizeof(Environment)) {
+      printTimeStamp(stdlog);
+      fprintf(stdlog, "S%04d: Received invalid Environment message\n",
+              RSerPoolSocketDescriptor);
+      return(EHR_Abort);
+   }
+
+   printTimeStamp(stdlog);
+   fprintf(stdlog, "S%04d: User requests environment ", RSerPoolSocketDescriptor);
+   for(size_t i = 0; i < sizeof(environmentQuery->Hash); i++) {
+      fprintf(stdlog, "%02x", (unsigned int)environmentQuery->Hash[i]);
+   }
+   fputs("\n", stdlog);
+
+
+   // ====== Look for environment in cache ==================================
+   NeedsEnvironment = true;
+
+
+   // ====== Tell user the result ===========================================
+   Environment environmentResponse;
+   environmentResponse.Header.Type   = SPT_ENVIRONMENT;
+   environmentResponse.Header.Flags  = (NeedsEnvironment == true) ? SEF_UPLOAD_NEEDED : 0;
+   environmentResponse.Header.Length = htons(sizeof(environmentResponse));
+   ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                     (const char*)&environmentResponse, sizeof(environmentResponse), 0,
+                     0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+   if(sent != (ssize_t)sizeof(environmentResponse)) {
+      printTimeStamp(stdlog);
+      fprintf(stdlog, "S%04d: Environment transmission error: %s\n",
+               RSerPoolSocketDescriptor, strerror(errno));
+      return(EHR_Abort);
+   }
+   return(EHR_Okay);
+}
 
 // ###### Send status report ################################################
 EventHandlingResult ScriptingServer::sendStatus(const int exitStatus)
@@ -375,11 +433,11 @@ EventHandlingResult ScriptingServer::startWorking()
       // ====== Run script ==================================================
       execlp("./scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, (char*)NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, ENVIRONMENT_NAME, (char*)NULL);
       // Try standard location ...
       execlp("scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, (char*)NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, ENVIRONMENT_NAME, (char*)NULL);
       perror("Failed to start scriptingcontrol");
       exit(1);
    }
@@ -528,7 +586,7 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
       return(EHR_Abort);
    }
    const ScriptingCommonHeader* header = (const ScriptingCommonHeader*)buffer;
-   if(ntohs(header->Length) != bufferSize) {
+   if(bufferSize < ntohs(header->Length)) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Received message has %u bytes but %u bytes are expected!\n",
               RSerPoolSocketDescriptor,
@@ -540,7 +598,10 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
    switch(State) {
       case SS_Upload:
          if(header->Type == SPT_UPLOAD) {
-            return(handleUploadMessage(buffer, bufferSize));
+            return(handleUploadMessage((const Upload*)buffer));
+         }
+         else if(header->Type == SPT_ENVIRONMENT) {
+            return(handleEnvironmentMessage((const Environment*)buffer));
          }
        break;
       case SS_Working:

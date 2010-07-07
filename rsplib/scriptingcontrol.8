@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd September 11, 2007
+.Dd July 7, 2010
 .Dt ScriptingControl 8
 .Os Scripting Control
 .\" ###### Name #############################################################
@@ -41,6 +41,7 @@
 .Op Input
 .Op Output
 .Op Status
+.Op Environment
 .Nm scriptingcontrol cleanup
 .Op Directory
 .Op PID
@@ -68,6 +69,8 @@ Gives the name of the input file.
 Gives the name of the output file.
 .It Status
 Gives the name of the status file.
+.It Environment
+Gives the name of the environment file (if available).
 .It PID
 The process ID (PID) of the session's worker process. All of its childs will
 be found and terminated during clean-up.
