@@ -215,14 +215,19 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
 
 
 // ###### Handle Upload message #############################################
-EventHandlingResult ScriptingServer::handleUploadMessage(
-                                        const Upload* upload)
+EventHandlingResult ScriptingServer::handleUploadMessage(const Upload* upload)
 
 {
-   // ====== Create temporary directory =====================================
+   // ====== Create input file ==============================================
    if(UploadFile == NULL) {
-      // ====== Create input file ===========================================
-      UploadFile = fopen((WaitingForEnvironment == true) ? EnvironmentName : InputName, "w");
+      if(WaitingForEnvironment == true) {
+         sha1_init(&EnvironmentHashContext);
+         UploadFile = fopen(EnvironmentName, "w");
+      }
+      else {
+         UploadFile = fopen(InputName, "w");
+      }
+
       if(UploadFile == NULL) {
          printTimeStamp(stdlog);
          fprintf(stdlog, "S%04d: Unable to create input file \"%s\" in directory \"%s\": %s!\n",
@@ -236,10 +241,12 @@ EventHandlingResult ScriptingServer::handleUploadMessage(
               RSerPoolSocketDescriptor,
               (WaitingForEnvironment == true) ? "environment" : "work package",
               Directory);
+      UploadSize    = 0;
       UploadStarted = getMicroTime();
    }
 
-   // ====== Write to input file ============================================
+
+   // ====== Write data to input file =======================================
    const size_t length = ntohs(upload->Header.Length) - sizeof(upload->Header);
    if(length > 0) {
       if(Settings.VerboseMode) {
@@ -252,10 +259,16 @@ EventHandlingResult ScriptingServer::handleUploadMessage(
                  RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      if(WaitingForEnvironment == true) {
+         sha1_update(&EnvironmentHashContext, (uint8_t*)&upload->Data, length);
+      }
       UploadSize += (unsigned long long)length;
       setSyncTimer(getMicroTime() + (1000ULL * Settings.TransmitTimeout));   // Timeout for next upload message
       return(EHR_Okay);
    }
+
+
+   // ====== Upload finished ================================================
    else {
       if(Settings.VerboseMode) {
          fputs("\n", stdlog);
@@ -265,7 +278,11 @@ EventHandlingResult ScriptingServer::handleUploadMessage(
                  RSerPoolSocketDescriptor, Directory, strerror(errno));
          return(EHR_Abort);
       }
+      UploadFile = NULL;
+
       ProcessingStarted = getMicroTime();
+
+      printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Upload completed (%s: %1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => starting work in directory \"%s\" ...\n",
               RSerPoolSocketDescriptor,
               (WaitingForEnvironment == true) ? EnvironmentName : InputName,
@@ -273,13 +290,28 @@ EventHandlingResult ScriptingServer::handleUploadMessage(
               (ProcessingStarted - UploadStarted) / 1000000.0,
               (double)((double)UploadSize / 1024.0) / ((ProcessingStarted - UploadStarted) / 1000000.0),
               Directory);
-      UploadFile = NULL;
 
+
+      // ====== Continue upload with environment file =======================
       if((NeedsEnvironment == true) && (WaitingForEnvironment == false)) {
          WaitingForEnvironment = true;   // Now, get the environment
          return(EHR_Okay);
       }
+
+      // ====== Upload of work package and environment completed ============
       else {
+         if(WaitingForEnvironment == true) {
+            sha1_final(&EnvironmentHashContext, (uint8_t*)&EnvironmentHash);
+            printTimeStamp(stdlog);
+            fprintf(stdlog, "S%04d: Got environment ",
+                    RSerPoolSocketDescriptor);
+            for(size_t i = 0; i < sizeof(EnvironmentHash); i++) {
+               fprintf(stdlog, "%02x", (unsigned int)EnvironmentHash[i]);
+            }
+            fputs("\n", stdlog);
+         }
+
+         // ====== Start to do actual work ==================================
          EventHandlingResult result = sendStatus(0);
          if(result == 0) {
             return(startWorking());
@@ -391,6 +423,7 @@ EventHandlingResult ScriptingServer::performDownload()
          }
          if(dataLength <= 0) {
             const unsigned long long downloadFinished = getMicroTime();
+            printTimeStamp(stdlog);
             fprintf(stdlog, "S%04d: Download completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => finished work in directory \"%s\".\n",
                   RSerPoolSocketDescriptor,
                   ceil((double)DownloadSize / 1024.0),

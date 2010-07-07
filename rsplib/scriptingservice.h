@@ -90,6 +90,8 @@ class ScriptingServer : public TCPLikeServer
    ScriptingServerSettings Settings;
    char                    Directory[128];
    char                    EnvironmentName[256];
+   uint8_t                 EnvironmentHash[SE_HASH_SIZE];
+   sha1_ctx                EnvironmentHashContext;
    char                    InputName[256];
    char                    OutputName[256];
    char                    StatusName[256];

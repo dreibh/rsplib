@@ -157,8 +157,8 @@ static unsigned int performUpload(int sd, const char* name)
 
 
 /* ###### Handle Status message ############################################# */
-static unsigned int handleStatus(const struct Status* status,
-                                 const size_t         length)
+static unsigned int handleStatusMessage(const struct Status* status,
+                                        const size_t         length)
 {
    if(length >= sizeof(struct Status)) {
       ExitStatus = ntohl(status->Status);
@@ -190,7 +190,7 @@ static unsigned int handleStatus(const struct Status* status,
 
 
 /* ###### Send KeepAlive message ######################################### */
-static unsigned int sendKeepAlive(int sd)
+static unsigned int sendKeepAliveMessage(int sd)
 {
    struct KeepAlive keepAlive;
    ssize_t          sent;
@@ -222,7 +222,7 @@ static unsigned int sendKeepAlive(int sd)
 
 
 /* ###### Handle KeepAliveAck message #################################### */
-static unsigned int handleKeepAliveAck()
+static unsigned int handleKeepAliveAckMessage()
 {
    KeepAliveTransmitted = false;
    LastKeepAlive        = getMicroTime();
@@ -231,7 +231,7 @@ static unsigned int handleKeepAliveAck()
 
 
 /* ###### Send KeepAliveAck message ###################################### */
-static unsigned int sendKeepAliveAck(int sd)
+static unsigned int sendKeepAliveAckMessage(int sd)
 {
    struct KeepAlive keepAliveAck;
    ssize_t          sent;
@@ -246,9 +246,9 @@ static unsigned int sendKeepAliveAck(int sd)
 
 
 /* ###### Handle Ready message ########################################### */
-static void handleNotReady(const int              sd,
-                           const struct NotReady* notReady,
-                           const size_t           length)
+static void handleNotReadyMessage(const int              sd,
+                                  const struct NotReady* notReady,
+                                  const size_t           length)
 {
    if(length >= sizeof(struct NotReady)) {
       /* ====== Get info string ========================================== */
@@ -271,9 +271,9 @@ static void handleNotReady(const int              sd,
 
 
 /* ###### Handle Ready message ########################################### */
-static unsigned int handleReady(const int           sd,
-                                const struct Ready* ready,
-                                const size_t        length)
+static unsigned int handleReadyMessage(const int           sd,
+                                       const struct Ready* ready,
+                                       const size_t        length)
 {
    if(length < sizeof(struct Ready)) {
       newLogLine(stdout);
@@ -325,9 +325,9 @@ static unsigned int handleReady(const int           sd,
 
 
 /* ###### Handle Ready message ########################################### */
-static unsigned int handleEnvironment(const int                 sd,
-                                      const struct Environment* environment,
-                                      const size_t              length)
+static unsigned int handleEnvironmentMessage(const int                 sd,
+                                             const struct Environment* environment,
+                                             const size_t              length)
 {
    if(length < sizeof(struct Environment)) {
       newLogLine(stdout);
@@ -387,8 +387,8 @@ static unsigned int serverStartsProcessing(const int            sd,
 
 
 /* ###### Handle Download message ######################################## */
-static unsigned int handleDownload(const struct Download* download,
-                                   const size_t           length)
+static unsigned int handleDownloadMessage(const struct Download* download,
+                                          const size_t           length)
 {
    size_t dataLength;
 
@@ -467,10 +467,10 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_WAIT_SERVER_READY:
          switch(header->Type) {
             case SPT_READY:
-               return(handleReady(sd, (const struct Ready*)header, length));
+               return(handleReadyMessage(sd, (const struct Ready*)header, length));
              break;
             case SPT_NOTREADY:
-               handleNotReady(sd, (const struct NotReady*)header, length);
+               handleNotReadyMessage(sd, (const struct NotReady*)header, length);
                return(SSCR_FAILOVER);
              break;
          }
@@ -480,7 +480,7 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_WAIT_ENVIRONMENT:
          switch(header->Type) {
             case SPT_ENVIRONMENT:
-               return(handleEnvironment(sd, (const struct Environment*)header, length));
+               return(handleEnvironmentMessage(sd, (const struct Environment*)header, length));
              break;
          }
         break;
@@ -498,14 +498,14 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_PROCESSING:
          switch(header->Type) {
             case SPT_KEEPALIVE_ACK:
-             return(handleKeepAliveAck());
+             return(handleKeepAliveAckMessage());
              break;
             case SPT_KEEPALIVE:
-               return(sendKeepAliveAck(sd));
+               return(sendKeepAliveAckMessage(sd));
              break;
             case SPT_STATUS:
                State = SSCS_DOWNLOAD;
-               return(handleStatus((const struct Status*)header, length));
+               return(handleStatusMessage((const struct Status*)header, length));
              break;
          }
        break;
@@ -514,10 +514,10 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_DOWNLOAD:
          switch(header->Type) {
             case SPT_DOWNLOAD:
-               return(handleDownload((const struct Download*)header, length));
+               return(handleDownloadMessage((const struct Download*)header, length));
              break;
             case SPT_KEEPALIVE_ACK:
-               return(handleKeepAliveAck());
+               return(handleKeepAliveAckMessage());
              break;
          }
        break;
@@ -720,7 +720,7 @@ int main(int argc, char** argv)
       if( (result == SSCR_OKAY) && (nextTimer <= getMicroTime()) ) {
          /* ====== KeepAlive transmission ========================== */
          if(!KeepAliveTransmitted) {
-            result = sendKeepAlive(sd);
+            result = sendKeepAliveMessage(sd);
          }
 
          /* ====== KeepAlive timeout =============================== */
