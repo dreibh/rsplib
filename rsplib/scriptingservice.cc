@@ -351,6 +351,7 @@ EventHandlingResult ScriptingServer::handleEnvironmentMessage(
    environmentResponse.Header.Type   = SPT_ENVIRONMENT;
    environmentResponse.Header.Flags  = (NeedsEnvironment == true) ? SEF_UPLOAD_NEEDED : 0;
    environmentResponse.Header.Length = htons(sizeof(environmentResponse));
+   memcpy(&environmentResponse.Hash, &environmentQuery->Hash, sizeof(environmentResponse.Hash));
    ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
                      (const char*)&environmentResponse, sizeof(environmentResponse), 0,
                      0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);

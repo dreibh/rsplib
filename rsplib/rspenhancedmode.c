@@ -1344,6 +1344,7 @@ Work-around: use the source address of the first incoming message as
                LOG_END
 
                struct sctp_setprim setPrimary;
+               memset(&setPrimary, 0, sizeof(setPrimary));
                setPrimary.ssp_assoc_id = assocID;
                memcpy(&setPrimary.ssp_addr, &remoteAddress, sizeof(remoteAddress));
                if(ext_setsockopt(rserpoolSocket->Socket, IPPROTO_SCTP, SCTP_PRIMARY_ADDR,

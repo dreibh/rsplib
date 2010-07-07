@@ -58,8 +58,7 @@
 #define SSCS_DOWNLOAD              5
 
 
-static unsigned int       State             = SSCS_WAIT_SERVER_READY;
-static const uint8_t      EnvironmentHash[SE_HASH_SIZE];
+static uint8_t            EnvironmentHash[SE_HASH_SIZE];
 static const char*        EnvironmentName   = NULL;
 static const char*        InputName         = NULL;
 static const char*        OutputName        = NULL;
@@ -71,6 +70,7 @@ static unsigned long long KeepAliveInterval = 10000000;
 static unsigned long long KeepAliveTimeout  = 10000000;
 static unsigned long long RetryDelay        = 10000000;
 static const char*        RunID             = NULL;
+static unsigned int       State             = SSCS_WAIT_SERVER_READY;
 static unsigned int       Trial             = 1;
 static uint32_t           ExitStatus        = 0;
 static bool               HasAssignedPE     = false;
