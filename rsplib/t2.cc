@@ -24,14 +24,17 @@ class EnvironmentCache : public TDMutex
    EnvironmentCache();
    ~EnvironmentCache();
 
-   bool initializeCache(const char* directory);
+   bool initializeCache(const char* directory, FILE* logFile);
 
    void print(FILE* fh);
 
    bool isInCache(const uint8_t* hash);
 
-   bool storeInCache(const uint8_t* hash, const char* fileName);
-   bool copyFromCache(const uint8_t* hash, const char* fileName);
+   bool storeInCache(const uint8_t*           hash,
+                     const char*              fileName,
+                     const unsigned long long size);
+   bool copyFromCache(const uint8_t* hash,
+                      const char*    fileName);
 
    private:
    static void printHash(FILE* fh, const uint8_t* hash);
@@ -49,6 +52,7 @@ class EnvironmentCache : public TDMutex
    std::string           CacheDirectory;
    bool                  ClearCacheDirectory;
    unsigned long long    TotalSize;
+   FILE*                 LogFile;
 };
 
 
@@ -93,9 +97,10 @@ EnvironmentCache::~EnvironmentCache()
 }
 
 
-bool EnvironmentCache::initializeCache(const char* directory)
+bool EnvironmentCache::initializeCache(const char* directory, FILE* logFile)
 {
    CacheDirectory = directory;
+   LogFile        = logFile;
 
    // ====== Create temporary cache =========================================
    if(CacheDirectory == "") {
@@ -106,6 +111,11 @@ bool EnvironmentCache::initializeCache(const char* directory)
       }
       CacheDirectory      = tempName;
       ClearCacheDirectory = true;
+
+      if(logFile) {
+         printTimeStamp(logFile);
+         fprintf(logFile, "Initialized temporary cache in %s\n", tempName);
+      }
    }
 
    // ====== Initialize cache from permanent cache directory ================
@@ -140,6 +150,13 @@ bool EnvironmentCache::initializeCache(const char* directory)
             dentry = readdir(directory);
          }
          closedir(directory);
+      }
+
+      if(logFile) {
+         printTimeStamp(logFile);
+         fprintf(logFile, "Initialized permanent cache in %s. ",
+                 CacheDirectory.c_str());
+         print(logFile);
       }
    }
 
@@ -201,10 +218,10 @@ unsigned long long EnvironmentCache::copyFile(const char* source,
 
 void EnvironmentCache::print(FILE* fh)
 {
-   fprintf(fh, "Cache contents [%lluB in %u entries]\n",
+   fprintf(fh, "Cache contents [%lluB in %u entries]:\n",
            TotalSize, (unsigned int)Cache.size());
 
-   unsigned int i = 0;
+   unsigned int i = 1;
    for(std::set<CacheEntry*>::const_iterator iterator = Cache.begin();
        iterator != Cache.end(); iterator++) {
       const CacheEntry* entry = *iterator;
@@ -236,7 +253,9 @@ bool EnvironmentCache::isInCache(const uint8_t* hash)
 }
 
 
-bool EnvironmentCache::storeInCache(const uint8_t* hash, const char* fileName)
+bool EnvironmentCache::storeInCache(const uint8_t*           hash,
+                                    const char*              fileName,
+                                    const unsigned long long size)
 {
    bool success = true;
 
@@ -259,6 +278,13 @@ bool EnvironmentCache::storeInCache(const uint8_t* hash, const char* fileName)
       // ====== Copy file ===================================================
       entry->Size = copyFile(fileName, entry->FileName.c_str(), NULL);
       if(entry->Size > 0) {
+         if(entry->Size != size) {
+            if(LogFile) {
+               printTimeStamp(LogFile);
+               fprintf(LogFile, "CACHE WARNING: Expected size %llu != actual size %llu!\n",
+                       size, entry->Size);
+            }
+         }
          Cache.insert(entry);
          TotalSize += entry->Size;
       }
@@ -273,7 +299,8 @@ bool EnvironmentCache::storeInCache(const uint8_t* hash, const char* fileName)
 }
 
 
-bool EnvironmentCache::copyFromCache(const uint8_t* hash, const char* fileName)
+bool EnvironmentCache::copyFromCache(const uint8_t* hash,
+                                     const char*    fileName)
 {
    bool success = false;
 
@@ -289,13 +316,14 @@ bool EnvironmentCache::copyFromCache(const uint8_t* hash, const char* fileName)
                entry->LastTimeUsed = getMicroTime();
             }
             else {
-               printTimeStamp(stderr);
-               fputs("CACHE ERROR: Expected hash ", stderr);
-               printHash(stderr, (uint8_t*)hash);
-               fputs(", but computed hash is ", stderr);
-               printHash(stderr, (uint8_t*)&newHash);
-               fputs("!\n", stderr);
-
+               if(LogFile) {
+                  printTimeStamp(LogFile);
+                  fputs("CACHE ERROR: Expected hash ", LogFile);
+                  printHash(LogFile, (uint8_t*)hash);
+                  fputs(", but computed hash is ", LogFile);
+                  printHash(LogFile, (uint8_t*)&newHash);
+                  fputs("!\n", LogFile);
+               }
                Cache.erase(iterator);
                unlink(entry->FileName.c_str());
                delete entry;
@@ -314,7 +342,7 @@ int main(int argc, char** argv)
 {
    EnvironmentCache ec;
 
-   ec.initializeCache("/tmp/CACHE");
+   ec.initializeCache("/tmp/CACHE", stdout);
    ec.print(stdout);
 
 
@@ -324,24 +352,25 @@ int main(int argc, char** argv)
    uint8_t hash2[SE_HASH_SIZE];
    uint8_t hash3[SE_HASH_SIZE];
    uint8_t hash4[SE_HASH_SIZE];
+   unsigned long long l1, l2, l3;
 
-   if(sha1_computeHashOfFile("xy1", (uint8_t*)&hash1) == 0) {
+   if((l1 = sha1_computeHashOfFile("xy1", (uint8_t*)&hash1)) == 0) {
       puts("File xy1 not found!");
       exit(1);
    }
-   if(sha1_computeHashOfFile("xy2", (uint8_t*)&hash2) == 0) {
+   if((l2 = sha1_computeHashOfFile("xy2", (uint8_t*)&hash2)) == 0) {
       puts("File xy2 not found!");
       exit(1);
    }
-   if(sha1_computeHashOfFile("xy3", (uint8_t*)&hash3) == 0) {
+   if((l3 = sha1_computeHashOfFile("xy3", (uint8_t*)&hash3)) == 0) {
       puts("File xy3 not found!");
       exit(1);
    }
    memset(&hash4, 0xab, sizeof(hash4));
 
-   ec.storeInCache((const uint8_t*)&hash1, "xy1");
-   ec.storeInCache((const uint8_t*)&hash2, "xy2");
-   ec.storeInCache((const uint8_t*)&hash3, "xy3");
+   ec.storeInCache((const uint8_t*)&hash1, "xy1", l1);
+   ec.storeInCache((const uint8_t*)&hash2, "xy2", l2);
+   ec.storeInCache((const uint8_t*)&hash3, "xy3", l3);
    printf("FIND-1: %d\n", ec.isInCache(hash1));
    printf("FIND-2: %d\n", ec.isInCache(hash2));
    printf("FIND-3: %d\n", ec.isInCache(hash3));
