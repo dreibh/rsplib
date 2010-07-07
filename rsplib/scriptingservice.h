@@ -56,6 +56,8 @@ class ScriptingServer : public TCPLikeServer
    ~ScriptingServer();
 
    static TCPLikeServer* scriptingServerFactory(int sd, void* userData, const uint32_t peIdentifier);
+   static bool initializeService(void* userData);
+   static void finishService(void* userData);
    static void scriptingPrintParameters(const void* userData);
    static void rejectNewSession(int sd);
 

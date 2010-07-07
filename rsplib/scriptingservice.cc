@@ -93,9 +93,38 @@ bool ScriptingServer::start()
 
 
 // ###### Create a Scripting thread #########################################
-TCPLikeServer* ScriptingServer::scriptingServerFactory(int sd, void* userData, const uint32_t peIdentifier)
+TCPLikeServer* ScriptingServer::scriptingServerFactory(
+                  int sd, void* userData, const uint32_t peIdentifier)
 {
    return(new ScriptingServer(sd, (ScriptingServerSettings*)userData));
+}
+
+
+// ###### Initialize service ################################################
+bool ScriptingServer::initializeService(void* userData)
+{
+   const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+}
+
+
+// ###### Finish service ####################################################
+void ScriptingServer::finishService(void* userData)
+{
+   const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+}
+
+
+// ###### Print parameters ##################################################
+void ScriptingServer::scriptingPrintParameters(const void* userData)
+{
+   const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+
+   puts("Scripting Parameters:");
+   printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
+   printf("   Verbose Mode            = %s\n", (settings->VerboseMode == true) ? "yes" : "no");
+   printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
+   printf("   Keep-Alive Interval     = %u [ms]\n", settings->KeepAliveInterval);
+   printf("   Keep-Alive Timeout      = %u [ms]\n", settings->KeepAliveTimeout);
 }
 
 
@@ -197,20 +226,6 @@ void ScriptingServer::finishSession(EventHandlingResult result)
          ChildProcess = 0;
       }
    }
-}
-
-
-// ###### Print parameters ##################################################
-void ScriptingServer::scriptingPrintParameters(const void* userData)
-{
-   const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
-
-   puts("Scripting Parameters:");
-   printf("   Keep Temp Dirs          = %s\n", (settings->KeepTempDirs == true) ? "yes" : "no");
-   printf("   Verbose Mode            = %s\n", (settings->VerboseMode == true) ? "yes" : "no");
-   printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
-   printf("   Keep-Alive Interval     = %u [ms]\n", settings->KeepAliveInterval);
-   printf("   Keep-Alive Timeout      = %u [ms]\n", settings->KeepAliveTimeout);
 }
 
 
