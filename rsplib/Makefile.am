@@ -305,7 +305,7 @@ registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c 
 registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
-server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h sha1.c sha1.h
+server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h environmentcache.cc environmentcache.h sha1.c sha1.h
 server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 terminal_SOURCES = terminal.c
@@ -384,7 +384,7 @@ attacker_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctpli
 #t1_SOURCES = t1.c
 #t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
-t2_SOURCES = t2.cc sha1.c sha1.h
+t2_SOURCES = t2.cc environmentcache.cc environmentcache.h sha1.c sha1.h
 t2_LDADD   = librsplib.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 

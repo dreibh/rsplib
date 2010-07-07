@@ -55,7 +55,7 @@ SS_RUNSCRIPT=" \
  echo \"This is the run script!\" && \
  echo \"   + Output will be written to \\\"\$OUTPUT_ARCHIVE\\\" ...\" && \
  echo \"   + Input string is \\\"\`cat my-input.data\`\\\"\" && \
- if [ \$ENVIRONMENT_FILE != \"\" ] ; then \
+ if [ \"\$ENVIRONMENT_FILE\" != \"\" ] ; then \
     echo \"   + Environment file is \\\"\$ENVIRONMENT_FILE\\\" ...\" && \
     echo \"     SHA1 hash is:\" && \
     sha1sum \$ENVIRONMENT_FILE ; \

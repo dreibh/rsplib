@@ -541,6 +541,9 @@ start:
       settings.TransmitTimeout   = 30000;
       settings.KeepAliveInterval = 10000;
       settings.KeepAliveTimeout  = 10000;
+      settings.CacheMaxSize      = 100000000;
+      settings.CacheMaxEntries   = 10;
+      settings.CacheDirectory    = "";
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {
             maxThreads = atol((const char*)&argv[i][14]);
@@ -562,6 +565,21 @@ start:
          }
          else if(!(strncmp(argv[i], "-sskeepalivetimeout=", 20))) {
             settings.KeepAliveTimeout = atol((const char*)&argv[i][20]);
+         }
+         else if(!(strncmp(argv[i], "-sscachemaxsize=", 16))) {
+            settings.CacheMaxSize = 1024ULL * atoll((const char*)&argv[i][16]);
+            if(settings.CacheMaxSize < 128*1024) {
+               settings.CacheMaxSize = 128*1024;
+            }
+         }
+         else if(!(strncmp(argv[i], "-sscachemaxentries=", 19))) {
+            settings.CacheMaxEntries = atol((const char*)&argv[i][19]);
+            if(settings.CacheMaxEntries < 1) {
+               settings.CacheMaxEntries = 1;
+            }
+         }
+         else if(!(strncmp(argv[i], "-sscachedirectory=", 18))) {
+            settings.CacheDirectory = (const char*)&argv[i][18];
          }
       }
       if(!policyChanged) {

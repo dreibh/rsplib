@@ -33,10 +33,10 @@
 #include "rserpool.h"
 #include "tcplikeserver.h"
 #include "scriptingpackets.h"
+#include "environmentcache.h"
 #include "sha1.h"
 
-#include <unistd.h>
-#include <sys/wait.h>
+#include <string>
 
 
 class ScriptingServer : public TCPLikeServer
@@ -44,11 +44,14 @@ class ScriptingServer : public TCPLikeServer
    public:
    struct ScriptingServerSettings
    {
-      unsigned int TransmitTimeout;
-      unsigned int KeepAliveInterval;
-      unsigned int KeepAliveTimeout;
-      bool         KeepTempDirs;
-      bool         VerboseMode;
+      unsigned int       TransmitTimeout;
+      unsigned int       KeepAliveInterval;
+      unsigned int       KeepAliveTimeout;
+      unsigned int       CacheMaxEntries;
+      unsigned long long CacheMaxSize;
+      std::string        CacheDirectory;
+      bool               KeepTempDirs;
+      bool               VerboseMode;
    };
 
    ScriptingServer(int                      rserpoolSocketDescriptor,
@@ -88,6 +91,7 @@ class ScriptingServer : public TCPLikeServer
       SS_Download = 3
    };
 
+   static EnvironmentCache Cache;
    ScriptingState          State;
    ScriptingServerSettings Settings;
    char                    Directory[128];
@@ -102,6 +106,7 @@ class ScriptingServer : public TCPLikeServer
    bool                    WaitingForKeepAliveAck;
    bool                    WaitingForEnvironment;
    bool                    NeedsEnvironment;
+   bool                    GotEnvironment;
    unsigned long long      LastKeepAliveTimeStamp;
    unsigned long long      UploadSize;
    unsigned long long      DownloadSize;

@@ -41,12 +41,16 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 
 
 #define ENVIRONMENT_NAME  "environment.data"
 #define INPUT_NAME        "input.data"
 #define OUTPUT_NAME       "output.data"
 #define STATUS_NAME       "status.txt"
+
+
+EnvironmentCache ScriptingServer::Cache;
 
 
 // ###### Constructor #######################################################
@@ -64,6 +68,7 @@ ScriptingServer::ScriptingServer(
    WaitingForKeepAliveAck = false;
    WaitingForEnvironment  = false;
    NeedsEnvironment       = false;
+   GotEnvironment         = false;
 
    UploadSize             = 0;
    DownloadSize           = 0;
@@ -105,6 +110,12 @@ bool ScriptingServer::initializeService(void* userData)
 {
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
 
+   if(Cache.initializeCache(settings->CacheDirectory.c_str(),
+                            settings->CacheMaxSize, settings->CacheMaxEntries,
+                            stdlog) == false) {
+      fputs("ERROR: Unable to initialize environment cache!\n", stderr);
+      return(false);
+   }
    return(true);
 }
 
@@ -112,7 +123,8 @@ bool ScriptingServer::initializeService(void* userData)
 // ###### Finish service ####################################################
 void ScriptingServer::finishService(void* userData)
 {
-   const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+   // const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+   Cache.cleanUp();
 }
 
 
@@ -127,6 +139,9 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    printf("   Transmit Timeout        = %u [ms]\n", settings->TransmitTimeout);
    printf("   Keep-Alive Interval     = %u [ms]\n", settings->KeepAliveInterval);
    printf("   Keep-Alive Timeout      = %u [ms]\n", settings->KeepAliveTimeout);
+   printf("   Cache Max Size          = %llu [KiB]\n", settings->CacheMaxSize / 1024);
+   printf("   Cache Max Entries       = %u\n", settings->CacheMaxEntries);
+   printf("   Cache Directory         = %s\n", settings->CacheDirectory.c_str());
 }
 
 
@@ -318,6 +333,7 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const Upload* upload)
       // ====== Upload of work package and environment completed ============
       else {
          if(WaitingForEnvironment == true) {
+            GotEnvironment = true;
             sha1_final(&EnvironmentHashContext, (uint8_t*)&EnvironmentHash);
             printTimeStamp(stdlog);
             fprintf(stdlog, "S%04d: Got environment ",
@@ -326,6 +342,9 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const Upload* upload)
                fprintf(stdlog, "%02x", (unsigned int)EnvironmentHash[i]);
             }
             fputs("\n", stdlog);
+            Cache.storeInCache((const uint8_t*)&EnvironmentHash,
+                               EnvironmentName,
+                               UploadSize);
          }
 
          // ====== Start to do actual work ==================================
@@ -360,7 +379,13 @@ EventHandlingResult ScriptingServer::handleEnvironmentMessage(
 
 
    // ====== Look for environment in cache ==================================
-   NeedsEnvironment = true;
+   if(Cache.copyFromCache((const uint8_t*)&environmentQuery->Hash,
+                          EnvironmentName) == false) {
+      NeedsEnvironment = true;
+   }
+   else {
+      GotEnvironment = true;
+   }
 
 
    // ====== Tell user the result ===========================================
@@ -484,11 +509,15 @@ EventHandlingResult ScriptingServer::startWorking()
       // ====== Run script ==================================================
       execlp("./scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, ENVIRONMENT_NAME, (char*)NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
+             (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
+             (char*)NULL);
       // Try standard location ...
       execlp("scriptingcontrol",
              "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME, ENVIRONMENT_NAME, (char*)NULL);
+             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
+             (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
+             (char*)NULL);
       perror("Failed to start scriptingcontrol");
       exit(1);
    }
