@@ -109,49 +109,46 @@ static void sha1_transform(uint32_t *state, const uint8_t *in)
    memset (block32, 0x00, sizeof block32);
 }
 
-void sha1_init(void *ctx)
+void sha1_init(struct sha1_ctx* ctx)
 {
-   struct sha1_ctx *sctx = ctx;
    static const struct sha1_ctx initstate = {
      0,
      { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 },
      { 0, }
    };
 
-   *sctx = initstate;
+   *ctx = initstate;
 }
 
-void sha1_update(void *ctx, const uint8_t *data, unsigned int len)
+void sha1_update(struct sha1_ctx* ctx, const uint8_t* data, unsigned int len)
 {
-   struct sha1_ctx *sctx = ctx;
    unsigned int i, j;
 
-   j = (sctx->count >> 3) & 0x3f;
-   sctx->count += len << 3;
+   j = (ctx->count >> 3) & 0x3f;
+   ctx->count += len << 3;
 
    if ((j + len) > 63) {
-      memcpy(&sctx->buffer[j], data, (i = 64-j));
-      sha1_transform(sctx->state, sctx->buffer);
+      memcpy(&ctx->buffer[j], data, (i = 64-j));
+      sha1_transform(ctx->state, ctx->buffer);
       for ( ; i + 63 < len; i += 64) {
-         sha1_transform(sctx->state, &data[i]);
+         sha1_transform(ctx->state, &data[i]);
       }
       j = 0;
    }
    else i = 0;
-   memcpy(&sctx->buffer[j], &data[i], len - i);
+   memcpy(&ctx->buffer[j], &data[i], len - i);
 }
 
 
 /* Add padding and return the message digest. */
-void sha1_final(void* ctx, uint8_t *out)
+void sha1_final(struct sha1_ctx* ctx, uint8_t *out)
 {
-   struct sha1_ctx *sctx = ctx;
    uint32_t i, j, index, padlen;
    uint64_t t;
    uint8_t bits[8] = { 0, };
    static const uint8_t padding[64] = { 0x80, };
 
-   t = sctx->count;
+   t = ctx->count;
    bits[7] = 0xff & t; t>>=8;
    bits[6] = 0xff & t; t>>=8;
    bits[5] = 0xff & t; t>>=8;
@@ -162,16 +159,16 @@ void sha1_final(void* ctx, uint8_t *out)
    bits[0] = 0xff & t;
 
    /* Pad out to 56 mod 64 */
-   index = (sctx->count >> 3) & 0x3f;
+   index = (ctx->count >> 3) & 0x3f;
    padlen = (index < 56) ? (56 - index) : ((64+56) - index);
-   sha1_update(sctx, padding, padlen);
+   sha1_update(ctx, padding, padlen);
 
    /* Append length */
-   sha1_update(sctx, bits, sizeof bits);
+   sha1_update(ctx, bits, sizeof bits);
 
    /* Store state in digest */
    for (i = j = 0; i < 5; i++, j += 4) {
-      uint32_t t2 = sctx->state[i];
+      uint32_t t2 = ctx->state[i];
       out[j+3] = t2 & 0xff; t2>>=8;
       out[j+2] = t2 & 0xff; t2>>=8;
       out[j+1] = t2 & 0xff; t2>>=8;
@@ -179,16 +176,17 @@ void sha1_final(void* ctx, uint8_t *out)
    }
 
    /* Wipe context */
-   memset(sctx, 0, sizeof *sctx);
+   memset(ctx, 0, sizeof *ctx);
 }
 
 
-int sha1_computeHashOfFile(const char* filename, uint8_t* hash)
+unsigned long long  sha1_computeHashOfFile(const char* filename, uint8_t* hash)
 {
-   struct sha1_ctx ctx;
-   uint8_t         buffer[65536];
-   FILE*           fh;
-   ssize_t         count;
+   struct sha1_ctx    ctx;
+   uint8_t            buffer[65536];
+   FILE*              fh;
+   ssize_t            count;
+   unsigned long long total = 0;
 
    sha1_init(&ctx);
    fh = fopen(filename, "r");
@@ -198,10 +196,10 @@ int sha1_computeHashOfFile(const char* filename, uint8_t* hash)
          if(count > 0) {
             sha1_update(&ctx, buffer, count);
          }
+         total += (unsigned long long)count;
       }
       fclose(fh);
       sha1_final(&ctx, hash);
-      return(1);
    }
-   return(0);
+   return(total);
 }

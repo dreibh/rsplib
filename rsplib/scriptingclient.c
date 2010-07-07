@@ -628,7 +628,7 @@ int main(int argc, char** argv)
       printf("Environment Name    = ");
       if(EnvironmentName) {
          printf("%s (", EnvironmentName);
-         for(i = 0; i < sizeof(EnvironmentHash); i++) {
+         for(i = 0; i < (int)sizeof(EnvironmentHash); i++) {
             printf("%02x", (unsigned int)EnvironmentHash[i]);
          }
          puts(")");

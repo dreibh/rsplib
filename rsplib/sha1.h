@@ -46,11 +46,11 @@ struct sha1_ctx {
    uint8_t buffer[64];
 };
 
-void sha1_init(void* ctx);
-void sha1_update(void* ctx, const uint8_t* data, unsigned int len);
-void sha1_final(void* ctx, uint8_t* out);
+void sha1_init(struct sha1_ctx* ctx);
+void sha1_update(struct sha1_ctx* ctx, const uint8_t* data, unsigned int len);
+void sha1_final(struct sha1_ctx* ctx, uint8_t* out);
 
-int sha1_computeHashOfFile(const char* filename, uint8_t* hash);
+unsigned long long sha1_computeHashOfFile(const char* filename, uint8_t* hash);
 
 #ifdef __cplusplus
 }
