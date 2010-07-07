@@ -743,6 +743,7 @@ int main(int argc, char** argv)
             newLogLine(stdout);
             puts("FAILOVER ...");
             fflush(stdout);
+            HasAssignedPE = false;   /* All work is lost -> start from scratch ... */
          }
          InfoString[0] = 0x00;
          nextTimer = getMicroTime() + randomizeWaitingTime(RetryDelay);
