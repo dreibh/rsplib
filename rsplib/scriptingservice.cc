@@ -104,6 +104,8 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(
 bool ScriptingServer::initializeService(void* userData)
 {
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
+
+   return(true);
 }
 
 
