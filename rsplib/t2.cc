@@ -24,7 +24,10 @@ class EnvironmentCache : public TDMutex
    EnvironmentCache();
    ~EnvironmentCache();
 
-   bool initializeCache(const char* directory, FILE* logFile);
+   bool initializeCache(const char*              directory,
+                        const unsigned long long maxSize,
+                        const unsigned int       maxEntries,
+                        FILE*                    logFile);
 
    void print(FILE* fh);
 
@@ -53,6 +56,8 @@ class EnvironmentCache : public TDMutex
    bool                  ClearCacheDirectory;
    unsigned long long    TotalSize;
    FILE*                 LogFile;
+   unsigned long long    MaxSize;
+   unsigned int          MaxEntries;
 };
 
 
@@ -97,10 +102,15 @@ EnvironmentCache::~EnvironmentCache()
 }
 
 
-bool EnvironmentCache::initializeCache(const char* directory, FILE* logFile)
+bool EnvironmentCache::initializeCache(const char*              directory,
+                                       const unsigned long long maxSize,
+                                       const unsigned int       maxEntries,
+                                       FILE*                    logFile)
 {
    CacheDirectory = directory;
    LogFile        = logFile;
+   MaxSize        = maxSize;
+   MaxEntries     = maxEntries;
 
    // ====== Create temporary cache =========================================
    if(CacheDirectory == "") {
@@ -342,7 +352,7 @@ int main(int argc, char** argv)
 {
    EnvironmentCache ec;
 
-   ec.initializeCache("/tmp/CACHE", stdout);
+   ec.initializeCache("/tmp/CACHE", 25000000, 5, stdout);
    ec.print(stdout);
 
 
