@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd October 25, 2009
+.Dd July 7, 2010
 .Dt Server 8
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -89,11 +89,14 @@
 .Op Fl pppmaxthreads=threads
 .Nm server
 .Op Fl scripting
+.Op Fl sscachedirectory=directory
+.Op Fl sscachemaxentries=entries
+.Op Fl sscachemaxsize=kibibytes
+.Op Fl sskeepaliveinterval=milliseconds
+.Op Fl sskeepalivetimeout=milliseconds
 .Op Fl sskeeptempdirs
 .Op Fl ssmaxthreads=threads
 .Op Fl sstransmittimeout=milliseconds
-.Op Fl keepaliveinterval=milliseconds
-.Op Fl keepalivetimeout=milliseconds
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm server
@@ -292,16 +295,22 @@ Sets an upper limit for the number of simultaneous PingPong sessions.
 .It Fl scripting
 Starts the Scripting service.
 .Bl -tag -width indent
+.It Fl sscachedirectory=directory
+Sets the environment cache directory.
+.It Fl sscachemaxentries=entries
+Sets the maximum number of environment cache entries.
+.It Fl sscachemaxsize=kibibytes
+Sets the maximum size of the environment cache in kibibytes.
+.It Fl sskeepaliveinterval=milliseconds
+Sets the keep-alive interval in milliseconds.
+.It Fl sskeepalivetimeout=milliseconds
+Sets the keep-alive timeout in milliseconds.
 .It Fl sskeeptempdirs
 Turns on keeping all temporary files for debugging. Handle with care!
 .It Fl ssmaxthreads=threads
 Sets an upper limit for the number of simultaneous sessions.
 .It Fl sstransmittimeout=milliseconds
 Sets the transmission timeout in milliseconds.
-.It Fl sskeepaliveinterval=milliseconds
-Sets the keep-alive interval in milliseconds.
-.It Fl sskeepalivetimeout=milliseconds
-Sets the keep-alive timeout in milliseconds.
 .El
 .El
 .El
