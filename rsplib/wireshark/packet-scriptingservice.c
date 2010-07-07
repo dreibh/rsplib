@@ -37,19 +37,22 @@
 
 
 /* Initialize the protocol and registered fields */
-static int proto_ssprotocol  = -1;
-static int hf_message_type   = -1;
-static int hf_message_flags  = -1;
-static int hf_message_length = -1;
-static int hf_message_status = -1;
-static int hf_message_data   = -1;
-static int hf_message_reason = -1;
-static int hf_message_info   = -1;
+static int proto_ssprotocol     = -1;
+static int hf_message_type      = -1;
+static int hf_message_flags     = -1;
+static int hf_message_length    = -1;
+static int hf_message_status    = -1;
+static int hf_message_data      = -1;
+static int hf_message_reason    = -1;
+static int hf_message_info      = -1;
+static int hf_message_hash      = -1;
+static int hf_environment_u_bit = -1;
 
 /* Initialize the subtree pointers */
-static gint ett_ssprotocol   = -1;
+static gint ett_ssprotocol        = -1;
+static gint ett_environment_flags = -1;
 
-static void
+static guint
 dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 
 
@@ -59,6 +62,7 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 #define MESSAGE_LENGTH_LENGTH        2
 #define MESSAGE_STATUS_LENGTH        4
 #define MESSAGE_NOTRDY_REASON_LENGTH 4
+#define MESSAGE_ENVIRON_HASH_LENGTH  20
 
 #define MESSAGE_TYPE_OFFSET          0
 #define MESSAGE_FLAGS_OFFSET         (MESSAGE_TYPE_OFFSET   + MESSAGE_TYPE_LENGTH)
@@ -68,6 +72,7 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 #define MESSAGE_RDY_INFO_OFFSET      (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
 #define MESSAGE_NOTRDY_REASON_OFFSET (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
 #define MESSAGE_NOTRDY_INFO_OFFSET   (MESSAGE_NOTRDY_REASON_OFFSET + MESSAGE_NOTRDY_REASON_LENGTH)
+#define MESSAGE_ENVIRON_HASH_OFFSET  (MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH)
 
 
 #define SS_NOTREADY_TYPE       0
@@ -75,8 +80,9 @@ dissect_ssprotocol_message(tvbuff_t *, packet_info *, proto_tree *);
 #define SS_UPLOAD_TYPE         2
 #define SS_DOWNLOAD_TYPE       3
 #define SS_KEEPALIVE_TYPE      4
-#define SS_KAEEPALIVE_ACK_TYPE 5
+#define SS_KEEPALIVE_ACK_TYPE  5
 #define SS_STATUS_TYPE         6
+#define SS_ENVIRONMENT_TYPE    7
 
 
 static const value_string message_type_values[] = {
@@ -85,8 +91,9 @@ static const value_string message_type_values[] = {
   { SS_UPLOAD_TYPE,         "Upload" },
   { SS_DOWNLOAD_TYPE,       "Download" },
   { SS_KEEPALIVE_TYPE,      "Keep-Alive" },
-  { SS_KAEEPALIVE_ACK_TYPE, "Keep-Alive Ack" },
+  { SS_KEEPALIVE_ACK_TYPE,  "Keep-Alive Ack" },
   { SS_STATUS_TYPE,         "Status" },
+  { SS_ENVIRONMENT_TYPE,    "Environment" },
   { 0, NULL }
 };
 
@@ -98,46 +105,73 @@ static const value_string notrdy_reason_values[] = {
 };
 
 
-static void
+#define SSP_ENVIRONMENT_U_BIT 0x01
+static const true_false_string environment_u_bit = {
+  "Upload needed",
+  "Upload not needed"
+};
+
+
+static guint
 dissect_ssprotocol_message(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *ssprotocol_tree)
 {
-  guint8  type;
-  guint16 data_length;
-  guint16 info_length;
+  proto_item* flags_item;
+  proto_tree* flags_tree;
+  guint8      type;
+  guint16     data_length;
+  guint16     info_length;
+  guint       total_length;
 
   type = tvb_get_guint8(message_tvb, MESSAGE_TYPE_OFFSET);
   if (pinfo && (check_col(pinfo->cinfo, COL_INFO))) {
-    col_add_fstr(pinfo->cinfo, COL_INFO, "%s ", val_to_str(type, message_type_values, "Unknown SSP type"));
+    col_add_fstr(pinfo->cinfo, COL_INFO, "%s ", val_to_str(type, message_type_values, "Unknown SSP type: %u"));
   }
   proto_tree_add_item(ssprotocol_tree, hf_message_type,   message_tvb, MESSAGE_TYPE_OFFSET,   MESSAGE_TYPE_LENGTH,   FALSE);
-  proto_tree_add_item(ssprotocol_tree, hf_message_flags,  message_tvb, MESSAGE_FLAGS_OFFSET,  MESSAGE_FLAGS_LENGTH,  FALSE);
+  flags_item = proto_tree_add_item(ssprotocol_tree, hf_message_flags,  message_tvb, MESSAGE_FLAGS_OFFSET,  MESSAGE_FLAGS_LENGTH,  FALSE);
   proto_tree_add_item(ssprotocol_tree, hf_message_length, message_tvb, MESSAGE_LENGTH_OFFSET, MESSAGE_LENGTH_LENGTH, FALSE);
+  total_length = MESSAGE_LENGTH_OFFSET + MESSAGE_LENGTH_LENGTH;
   switch (type) {
-    case SS_KAEEPALIVE_ACK_TYPE:
+    case SS_KEEPALIVE_ACK_TYPE:
     case SS_STATUS_TYPE:
-      proto_tree_add_item(ssprotocol_tree, hf_message_status, message_tvb, MESSAGE_STATUS_OFFSET, MESSAGE_STATUS_LENGTH, FALSE);
-     break;
+      info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_STATUS_OFFSET;
+      if (info_length == MESSAGE_STATUS_LENGTH) {
+        proto_tree_add_item(ssprotocol_tree, hf_message_status, message_tvb, MESSAGE_STATUS_OFFSET, MESSAGE_STATUS_LENGTH, FALSE);
+        total_length += MESSAGE_STATUS_LENGTH;
+      }
+      break;
     case SS_UPLOAD_TYPE:
     case SS_DOWNLOAD_TYPE:
       data_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_DATA_OFFSET;
       if (data_length > 0) {
         proto_tree_add_item(ssprotocol_tree, hf_message_data, message_tvb, MESSAGE_DATA_OFFSET, data_length, FALSE);
+        total_length += data_length;
       }
-     break;
+      break;
     case SS_READY_TYPE:
       info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_RDY_INFO_OFFSET;
       if (info_length > 0) {
         proto_tree_add_item(ssprotocol_tree, hf_message_info, message_tvb, MESSAGE_RDY_INFO_OFFSET, info_length, FALSE);
+        total_length += info_length;
       }
-     break;
+      break;
     case SS_NOTREADY_TYPE:
       info_length = tvb_get_ntohs(message_tvb, MESSAGE_LENGTH_OFFSET) - MESSAGE_NOTRDY_INFO_OFFSET;
       if (info_length > 0) {
         proto_tree_add_item(ssprotocol_tree, hf_message_reason, message_tvb, MESSAGE_NOTRDY_REASON_OFFSET, MESSAGE_NOTRDY_REASON_LENGTH, FALSE);
         proto_tree_add_item(ssprotocol_tree, hf_message_info,   message_tvb, MESSAGE_NOTRDY_INFO_OFFSET, info_length, FALSE);
+        total_length += info_length;
       }
-     break;
+      break;
+    case SS_ENVIRONMENT_TYPE:
+        flags_tree = proto_item_add_subtree(flags_item, ett_environment_flags);
+        proto_tree_add_item(flags_tree, hf_environment_u_bit, message_tvb, MESSAGE_FLAGS_OFFSET, MESSAGE_FLAGS_LENGTH, ENC_BIG_ENDIAN);
+        proto_tree_add_item(ssprotocol_tree, hf_message_hash, message_tvb, MESSAGE_ENVIRON_HASH_OFFSET, MESSAGE_ENVIRON_HASH_LENGTH, FALSE);
+      break;
+    default:
+      break;
   }
+
+  return total_length;
 }
 
 
@@ -148,7 +182,7 @@ dissect_ssprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *tree)
   proto_tree *ssprotocol_tree;
 
   /* pinfo is NULL only if dissect_ssprotocol_message is called from dissect_error cause */
-  if (pinfo && (check_col(pinfo->cinfo, COL_PROTOCOL)))
+  if (pinfo)
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "SSP");
 
   /* In the interest of speed, if "tree" is NULL, don't do any work not
@@ -161,8 +195,7 @@ dissect_ssprotocol(tvbuff_t *message_tvb, packet_info *pinfo, proto_tree *tree)
     ssprotocol_tree = NULL;
   };
   /* dissect the message */
-  dissect_ssprotocol_message(message_tvb, pinfo, ssprotocol_tree);
-  return(TRUE);
+  return dissect_ssprotocol_message(message_tvb, pinfo, ssprotocol_tree);
 }
 
 
@@ -179,12 +212,15 @@ proto_register_ssprotocol(void)
     { &hf_message_status,    { "Status", "ssprotocol.message_status", FT_UINT32, BASE_DEC,  NULL,                       0x0, NULL, HFILL } },
     { &hf_message_reason,    { "Reason", "ssprotocol.message_reason", FT_UINT32, BASE_DEC,  VALS(notrdy_reason_values), 0x0, NULL, HFILL } },
     { &hf_message_info,      { "Info",   "ssprotocol.message_info",   FT_STRING, BASE_NONE, NULL,                       0x0, NULL, HFILL } },
-    { &hf_message_data,      { "Data",   "ssprotocol.message_data",   FT_BYTES,  BASE_NONE, NULL,                       0x0, NULL, HFILL } }
+    { &hf_message_data,      { "Data",   "ssprotocol.message_data",   FT_BYTES,  BASE_NONE, NULL,                       0x0, NULL, HFILL } },
+    { &hf_message_hash,      { "Hash",   "ssprotocol.message_hash",   FT_BYTES,  BASE_NONE, NULL,                       0x0, NULL, HFILL } },
+    { &hf_environment_u_bit, { "U-Bit",  "ssprotocol.environment_u_bit", FT_BOOLEAN, 8,TFS(&environment_u_bit), SSP_ENVIRONMENT_U_BIT, NULL, HFILL } }
   };
 
   /* Setup protocol subtree array */
   static gint *ett[] = {
-    &ett_ssprotocol
+    &ett_ssprotocol,
+    &ett_environment_flags
   };
 
   /* Register the protocol name and description */
