@@ -569,7 +569,7 @@ start:
          loadInfo.rli_policy = PPT_LEASTUSED_DEGRADATION;
       }
 
-      TCPLikeServer::poolElement("Scripting Server - Version 1.0",
+      TCPLikeServer::poolElement("Scripting Server - Version 2.0",
                                  (poolHandle != NULL) ? poolHandle : "ScriptingPool",
                                  &info, &loadInfo,
                                  maxThreads,

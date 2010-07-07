@@ -50,6 +50,8 @@ void sha1_init(void* ctx);
 void sha1_update(void* ctx, const uint8_t* data, unsigned int len);
 void sha1_final(void* ctx, uint8_t* out);
 
+int sha1_computeHashOfFile(const char* filename, uint8_t* hash);
+
 #ifdef __cplusplus
 }
 #endif

@@ -436,7 +436,7 @@ static unsigned int handleMessage(int                                 sd,
                                   const size_t                        length,
                                   const uint32_t                      ppid)
 {
-   printf("Message %u in state %u ...\n", header->Type, State);
+   /* printf("Message %u in state %u ...\n", header->Type, State); */
 
    /* ====== Check message header ======================================== */
    if(ppid != PPID_SP) {
@@ -533,30 +533,6 @@ static unsigned int handleMessage(int                                 sd,
 }
 
 
-static bool computeHash(char* filename, uint8_t* hash)
-{
-   struct sha1_ctx ctx;
-   uint8_t         buffer[16384];
-   FILE*           fh;
-   ssize_t         count;
-
-   sha1_init(&ctx);
-   fh = fopen(filename, "r");
-   if(fh != NULL) {
-      while(!feof(fh)) {
-         count = fread(&buffer, 1, sizeof(buffer), fh);
-         if(count > 0) {
-            sha1_update(&ctx, buffer, count);
-         }
-      }
-      fclose(fh);
-      sha1_final(&ctx, hash);
-      return(true);
-   }
-   return(false);
-}
-
-
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
@@ -637,7 +613,7 @@ int main(int argc, char** argv)
 #endif
 
    if(EnvironmentName) {
-      if(computeHash(EnvironmentName, &EnvironmentHash) == false) {
+      if(sha1_computeHashOfFile(EnvironmentName, (uint8_t*)&EnvironmentHash) == 0) {
          fprintf(stderr, "ERROR: Unable to compute hash of environment file %s\n",
                  EnvironmentName);
          exit(1);
@@ -646,7 +622,7 @@ int main(int argc, char** argv)
 
 
    if(!Quiet) {
-      puts("Scripting Pool User - Version 1.0");
+      puts("Scripting Pool User - Version 2.0");
       puts("=================================\n");
       printf("Pool Handle         = %s\n", poolHandle);
       printf("Environment Name    = ");

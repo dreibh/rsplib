@@ -34,6 +34,7 @@
 #include "sha1.h"
 
 #include <string.h>
+#include <netinet/in.h>
 
 
 static inline uint32_t rol(uint32_t value, uint32_t bits)
@@ -179,4 +180,28 @@ void sha1_final(void* ctx, uint8_t *out)
 
    /* Wipe context */
    memset(sctx, 0, sizeof *sctx);
+}
+
+
+int sha1_computeHashOfFile(const char* filename, uint8_t* hash)
+{
+   struct sha1_ctx ctx;
+   uint8_t         buffer[65536];
+   FILE*           fh;
+   ssize_t         count;
+
+   sha1_init(&ctx);
+   fh = fopen(filename, "r");
+   if(fh != NULL) {
+      while(!feof(fh)) {
+         count = fread(&buffer, 1, sizeof(buffer), fh);
+         if(count > 0) {
+            sha1_update(&ctx, buffer, count);
+         }
+      }
+      fclose(fh);
+      sha1_final(&ctx, hash);
+      return(1);
+   }
+   return(0);
 }
