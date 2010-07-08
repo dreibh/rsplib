@@ -539,10 +539,10 @@ start:
       settings.KeepTempDirs      = false;
       settings.VerboseMode       = false;
       settings.TransmitTimeout   = 30000;
-      settings.KeepAliveInterval = 10000;
+      settings.KeepAliveInterval = 15000;
       settings.KeepAliveTimeout  = 10000;
-      settings.CacheMaxSize      = 100000000;
-      settings.CacheMaxEntries   = 10;
+      settings.CacheMaxSize      = 128*1024*1024;
+      settings.CacheMaxEntries   = 16;
       settings.CacheDirectory    = "";
       for(int i = 1;i < argc;i++) {
          if(!(strncmp(argv[i], "-ssmaxthreads=", 14))) {

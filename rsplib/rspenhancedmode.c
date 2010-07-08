@@ -1349,7 +1349,7 @@ Work-around: use the source address of the first incoming message as
                memcpy(&setPrimary.ssp_addr, &remoteAddress, sizeof(remoteAddress));
                if(ext_setsockopt(rserpoolSocket->Socket, IPPROTO_SCTP, SCTP_PRIMARY_ADDR,
                   &setPrimary, (socklen_t)sizeof(setPrimary)) < 0) {
-                  LOG_WARNING
+                  LOG_VERBOSE
                   logerror("setsockopt SCTP_PRIMARY_ADDR failed");
                   LOG_END
                }

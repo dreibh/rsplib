@@ -181,13 +181,15 @@ bool EnvironmentCache::purge(unsigned long long bytesToBeFreed,
        iterator != lru.end(); iterator++) {
       CacheEntry* entry = iterator->second;
 
+      TotalSize -= entry->Size;
       bytesToBeFreed   -= std::min(bytesToBeFreed, entry->Size);
       entriesToBeFreed -= std::min(entriesToBeFreed, (unsigned int)1);
       if(LogFile) {
          printTimeStamp(LogFile);
          fputs("Purging environment ", LogFile);
          printHash(LogFile, (const uint8_t*)&entry->Hash);
-         fprintf(LogFile, " (%llu KiB)\n", entry->Size / 1024);
+         fprintf(LogFile, " (%llu KiB) => %llu KiB in %u entries\n",
+                 entry->Size / 1024, TotalSize / 1024, (unsigned int)Cache.size() - 1);
       }
 
       Cache.erase(entry);
@@ -334,16 +336,16 @@ bool EnvironmentCache::storeInCache(const uint8_t*           hash,
                        size, entry->Size);
             }
          }
+         Cache.insert(entry);
+         TotalSize += entry->Size;
 
          if(LogFile) {
             printTimeStamp(LogFile);
             fputs("Caching environment ", LogFile);
             printHash(LogFile, (const uint8_t*)&entry->Hash);
-            fprintf(LogFile, " (%llu KiB)\n", entry->Size / 1024);
+            fprintf(LogFile, " (%llu KiB) => %llu KiB in %u entries\n",
+                    entry->Size / 1024, TotalSize / 1024, (unsigned int)Cache.size());
          }
-
-         Cache.insert(entry);
-         TotalSize += entry->Size;
       }
       else {
          delete entry;
@@ -374,7 +376,8 @@ bool EnvironmentCache::copyFromCache(const uint8_t* hash,
                   printTimeStamp(LogFile);
                   fputs("Retrieving environment ", LogFile);
                   printHash(LogFile, (const uint8_t*)&entry->Hash);
-                  fprintf(LogFile, " (%llu KiB)\n", entry->Size / 1024);
+                  fprintf(LogFile, " (%llu KiB) => %llu KiB in %u entries\n",
+                          entry->Size / 1024, TotalSize / 1024, (unsigned int)Cache.size());
                }
                success = true;
                entry->LastTimeUsed = getMicroTime();
@@ -388,10 +391,20 @@ bool EnvironmentCache::copyFromCache(const uint8_t* hash,
                   printHash(LogFile, (uint8_t*)&newHash);
                   fputs("!\n", LogFile);
                }
-               Cache.erase(iterator);
-               unlink(entry->FileName.c_str());
-               delete entry;
             }
+         }
+         if(!success) {
+            TotalSize -= entry->Size;
+            if(LogFile) {
+               printTimeStamp(LogFile);
+               fputs("Removing damaged environment ", LogFile);
+               printHash(LogFile, (const uint8_t*)&entry->Hash);
+               fprintf(LogFile, " (%llu KiB) => %llu KiB in %u entries\n",
+                       entry->Size / 1024, TotalSize / 1024, (unsigned int)Cache.size() - 1);
+            }
+            Cache.erase(iterator);
+            unlink(entry->FileName.c_str());
+            delete entry;
          }
          break;
       }

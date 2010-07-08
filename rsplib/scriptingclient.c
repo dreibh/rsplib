@@ -59,6 +59,7 @@
 
 
 static uint8_t            EnvironmentHash[SE_HASH_SIZE];
+static unsigned long long EnvironmentSize   = 0;
 static const char*        EnvironmentName   = NULL;
 static const char*        InputName         = NULL;
 static const char*        OutputName        = NULL;
@@ -613,7 +614,8 @@ int main(int argc, char** argv)
 #endif
 
    if(EnvironmentName) {
-      if(sha1_computeHashOfFile(EnvironmentName, (uint8_t*)&EnvironmentHash) == 0) {
+      EnvironmentSize = sha1_computeHashOfFile(EnvironmentName, (uint8_t*)&EnvironmentHash);
+      if(EnvironmentSize == 0) {
          fprintf(stderr, "ERROR: Unable to compute hash of environment file %s\n",
                  EnvironmentName);
          exit(1);
@@ -631,7 +633,7 @@ int main(int argc, char** argv)
          for(i = 0; i < (int)sizeof(EnvironmentHash); i++) {
             printf("%02x", (unsigned int)EnvironmentHash[i]);
          }
-         puts(")");
+         printf(", %llu KiB)\n", EnvironmentSize / 1024);
       }
       else {
          puts("(none)");
