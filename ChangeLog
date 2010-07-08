@@ -1,4 +1,258 @@
 ------------------------------------------------------------------------
+r2368 | dreibh | 2010-07-08 13:58:04 +0200 (Thu, 08 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2367 | dreibh | 2010-07-08 13:57:31 +0200 (Thu, 08 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/wireshark/colorfilters
+
+Updated Wireshark color filter example.
+
+------------------------------------------------------------------------
+r2366 | dreibh | 2010-07-08 10:42:28 +0200 (Thu, 08 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+Updated ss.init script.
+
+------------------------------------------------------------------------
+r2365 | dreibh | 2010-07-08 09:32:40 +0200 (Thu, 08 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/environmentcache.cc
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Scripting Service improvements.
+
+------------------------------------------------------------------------
+r2364 | dreibh | 2010-07-07 21:24:22 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/server.8
+   M /trunk/rsplib2/rsplib/wireshark/packet-scriptingservice.c
+
+Updated manpage for server.
+
+------------------------------------------------------------------------
+r2363 | dreibh | 2010-07-07 21:17:24 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/wireshark/packet-scriptingservice.c
+
+Updated Wireshark dissector.
+
+------------------------------------------------------------------------
+r2362 | dreibh | 2010-07-07 19:45:00 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/attacker.cc
+   A /trunk/rsplib2/rsplib/environmentcache.cc (from /trunk/rsplib2/rsplib/t2.cc:2361)
+   A /trunk/rsplib2/rsplib/environmentcache.h (from /trunk/rsplib2/rsplib/t2.cc:2361)
+   M /trunk/rsplib2/rsplib/rserpool-policytypes.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/t2.cc
+
+Added environment cache to Scripting Service PE.
+
+------------------------------------------------------------------------
+r2361 | dreibh | 2010-07-07 16:21:19 +0200 (Wed, 07 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/t2.cc
+
+
+------------------------------------------------------------------------
+r2360 | dreibh | 2010-07-07 16:15:36 +0200 (Wed, 07 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/t2.cc
+
+
+------------------------------------------------------------------------
+r2359 | dreibh | 2010-07-07 15:55:21 +0200 (Wed, 07 Jul 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/sha1.c
+   M /trunk/rsplib2/rsplib/sha1.h
+   M /trunk/rsplib2/rsplib/t2.cc
+
+- sha1_computeHashOfFile() now returns number of processed byted.
+- Fixed signed/unsigned warning.
+
+------------------------------------------------------------------------
+r2358 | dreibh | 2010-07-07 14:31:14 +0200 (Wed, 07 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+   A /trunk/rsplib2/rsplib/t2.cc
+
+
+------------------------------------------------------------------------
+r2357 | dreibh | 2010-07-07 13:21:40 +0200 (Wed, 07 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+
+------------------------------------------------------------------------
+r2356 | dreibh | 2010-07-07 13:21:09 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/server.cc
+
+Code clean-ups for Scripting Service PE.
+
+------------------------------------------------------------------------
+r2355 | dreibh | 2010-07-07 13:10:31 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Fixed problems of uninitialized variables reported by Valgrind.
+
+------------------------------------------------------------------------
+r2354 | dreibh | 2010-07-07 12:55:14 +0200 (Wed, 07 Jul 2010) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/wireshark/colorfilters
+
+- Debian version update.
+- Updated Wireshark color filter to support SSP_ENVIRONMENT message.
+- Improved debug output for Scripting Service PU.
+
+------------------------------------------------------------------------
+r2353 | dreibh | 2010-07-07 12:50:07 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+
+Code clean-ups in scripting service.
+
+------------------------------------------------------------------------
+r2352 | dreibh | 2010-07-07 12:20:24 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/server.cc
+   M /trunk/rsplib2/rsplib/sha1.c
+   M /trunk/rsplib2/rsplib/sha1.h
+
+Cleaned up Scripting Service code. Set version to 2.0.
+
+------------------------------------------------------------------------
+r2351 | dreibh | 2010-07-07 11:50:02 +0200 (Wed, 07 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/scriptingclient.8
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingcontrol
+   M /trunk/rsplib2/rsplib/scriptingcontrol.8
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+   A /trunk/rsplib2/rsplib/sha1.c
+   A /trunk/rsplib2/rsplib/sha1.h
+
+Updated Scripting Service protocol and PU to support environment caching.
+
+------------------------------------------------------------------------
+r2350 | dreibh | 2010-07-04 23:52:36 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+Updated rc.local example.
+
+------------------------------------------------------------------------
+r2349 | dreibh | 2010-07-04 16:51:51 +0200 (Sun, 04 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+
+------------------------------------------------------------------------
+r2348 | dreibh | 2010-07-04 16:50:17 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+Added kldload call to rc.local example.
+
+------------------------------------------------------------------------
+r2347 | dreibh | 2010-07-04 15:49:22 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+Updated rc.local example.
+
+------------------------------------------------------------------------
+r2346 | dreibh | 2010-07-04 13:50:29 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+FreeBSD bugfix: EAI_* error codes are non-negative. Introduced own codes REAI_* which are always negative.
+
+------------------------------------------------------------------------
+r2345 | dreibh | 2010-07-04 11:15:43 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/rsplib/storage/rc.local
+
+Added example rc.local usage.
+
+------------------------------------------------------------------------
+r2344 | dreibh | 2010-07-04 10:33:59 +0200 (Sun, 04 Jul 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+
+------------------------------------------------------------------------
+r2343 | dreibh | 2010-07-04 10:30:55 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss-registrar.init
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Updated example init scripts.
+
+------------------------------------------------------------------------
+r2342 | dreibh | 2010-07-04 10:23:07 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Improved ss.init script.
+
+------------------------------------------------------------------------
+r2341 | dreibh | 2010-07-04 10:11:31 +0200 (Sun, 04 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/ss.init
+
+Updated ss.init example.
+
+------------------------------------------------------------------------
+r2340 | dreibh | 2010-07-03 19:27:44 +0200 (Sat, 03 Jul 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/debian/changelog
+
+- Updated ChangeLog.
+- Updated debian/changelog.
+
+------------------------------------------------------------------------
+r2339 | dreibh | 2010-07-03 18:38:44 +0200 (Sat, 03 Jul 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/scriptingcontrol
+
+- scriptingcontrol: added support for plain Tar and Tar/BZip files.
+- Version update.
+
+------------------------------------------------------------------------
 r2338 | dreibh | 2010-07-03 17:17:57 +0200 (Sat, 03 Jul 2010) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/storage/ss.init
