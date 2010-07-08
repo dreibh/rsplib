@@ -16,7 +16,14 @@ if [ "`uname -s`" = "FreeBSD" ] ; then
 fi
 
 if [ -e /usr/bin/server ] ; then
+   if [ ! -e /var/cache ] ; then
+      mkdir /var/cache
+   fi
+   if [ ! -e /var/cache/ss ] ; then
+      mkdir /var/cache/ss
+   fi
    nohup nice /usr/bin/server -quiet -scripting \
+      -asapannounce=off -sscachedirectory=/var/cache/ss \
       -registrar=[2001:638:501:4ef3:20c:29ff:fecc:3728]:3863,[2001:638:501:4ef4:20c:29ff:fecc:3732] \
       -registrar=[2001:638:501:4ef4:211:43ff:feba:84c2]:3863,[2001:638:501:4ef3:201:2ff:fef1:84dc] \
       -cspserver=[2001:638:501:4ef3:20c:29ff:fe57:34a6]:2960 -cspinterval=2500 \
