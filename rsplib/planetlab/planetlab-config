@@ -26,7 +26,7 @@ PLANETLAB_COMPILEHOST="merkur.planetlab.haw-hamburg.de"   # "planetlab4.cs.st-an
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="libtool gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace"
 
-DISTNAME="rsplib-2.7.2"
+DISTNAME="rsplib-2.7.4"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
 DISTPRGS="rootshell registrar server calcappclient hsdump attacker"
