@@ -19,7 +19,7 @@
 @ScriptingServiceNotReady@ssprotocol.message_type==0x00@[59373,17486,54989][0,0,0]
 @ScriptingServiceReady@ssprotocol.message_type==0x01@[0,47288,9252][0,0,0]
 @ScriptingServiceUpload@ssprotocol.message_type==0x02@[29850,64871,36702][0,0,0]
-@ScriptingServiceDownload@ssprotocol.message_type==0x03@[0,47288,9252][0,0,0]
+@ScriptingServiceDownload@ssprotocol.message_type==0x03@[12925,58386,21820][0,0,0]
 @ScriptingServiceKeepAlive@ssprotocol.message_type==0x04@[65535,64764,41377][0,0,0]
 @ScriptingServiceKeepAliveAck@ssprotocol.message_type==0x05@[65535,64178,23011][0,0,0]
 @ScriptingServiceStatus@ssprotocol.message_type==0x06@[64197,39343,10675][0,0,0]
