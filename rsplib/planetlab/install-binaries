@@ -59,29 +59,31 @@ done \
 
 for SERVER in $SERVER_LIST; do
    echo -e "\x1b[34m`date`: Transfering binaries to $SERVER ...\x1b[0m"
-   nice scp -q -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $DISTNAME-bin.tar.bz2  $PLANETLAB_USER@$SERVER:/tmp
+   (
+      nice scp -q -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $DISTNAME-bin.tar.bz2  $PLANETLAB_USER@$SERVER:/tmp
 
-   cmd="\
-      echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
-      if [ ! -e bin/ ] ; then \
-         echo \"\`date\`: Creating new bin/ directory on $SERVER ...\" &&
-         mkdir bin/ ; \
-      else \
-         cd bin/ && \
-         rm -f $DISTPRGS $DISTMISC && \
-         cd .. ; \
-      fi && \
-      tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
-      rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
-      cd bin/ \
-      sudo rm -f core.\* \*.gz \*.bz2 \*.log\* \*.sca\* \*.vec\* && \
-      sudo /bin/chown root:root $SUIDPRGS && \
-      sudo /bin/chmod +s $SUIDPRGS && \
-      date >LastUpdate && \
-      cd .. && \
-      echo \"\`date\`: $SERVER is ready!\""
+      cmd="\
+         echo \"\`date\`: Unpacking binaries on $SERVER ...\" && \
+         if [ ! -e bin/ ] ; then \
+            echo \"\`date\`: Creating new bin/ directory on $SERVER ...\" &&
+            mkdir bin/ ; \
+         else \
+            cd bin/ && \
+            rm -f $DISTPRGS $DISTMISC && \
+            cd .. ; \
+         fi && \
+         tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+         rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
+         cd bin/ \
+         sudo rm -f core.\* \*.gz \*.bz2 \*.log\* \*.sca\* \*.vec\* && \
+         sudo /bin/chown root:root $SUIDPRGS && \
+         sudo /bin/chmod +s $SUIDPRGS && \
+         date >LastUpdate && \
+         cd .. && \
+         echo \"\`date\`: $SERVER is ready!\""
 
-   nice ssh -t -t -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER $cmd &
+      nice ssh -t -t -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER $cmd
+   ) &
 done
 
 wait
