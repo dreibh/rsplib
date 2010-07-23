@@ -29,6 +29,7 @@
 
 #include "environmentcache.h"
 #include "scriptingservice.h"
+#include "randomizer.h"
 #include "netutilities.h"
 #include "timeutilities.h"
 #include "stringutilities.h"
@@ -105,7 +106,8 @@ bool EnvironmentCache::initializeCache(const char*              directory,
                 (dentry->d_name[(2 * SE_HASH_SIZE) + 4] == 'a') ) {
                CacheEntry* entry = new CacheEntry;
                assert(entry != NULL);
-               entry->LastTimeUsed = getMicroTime();
+               // Not the optimal solution, but should work ...
+               entry->LastTimeUsed = random64() % getMicroTime();
                entry->FileName     = CacheDirectory + "/" + dentry->d_name;
                entry->Size         = sha1_computeHashOfFile(entry->FileName.c_str(),
                                                             (uint8_t*)&entry->Hash);
@@ -122,12 +124,15 @@ bool EnvironmentCache::initializeCache(const char*              directory,
 
       if(logFile) {
          printTimeStamp(logFile);
-         fprintf(logFile, "Initialized permanent cache in %s. ",
+         fprintf(logFile, "Initialized permanent cache in %s\n",
                  CacheDirectory.c_str());
          print(logFile);
       }
    }
 
+   const unsigned long long bytesToBeFreed   = (TotalSize > MaxSize) ? TotalSize - MaxSize : 0;
+   const unsigned int       entriesToBeFreed = (Cache.size() > MaxEntries) ? Cache.size() - MaxEntries : 0;
+   purge(bytesToBeFreed, entriesToBeFreed);
    return(true);
 }
 
@@ -166,6 +171,7 @@ void EnvironmentCache::cleanUp()
    }
 }
 
+
 // ###### Purge out-of-date entries #########################################
 bool EnvironmentCache::purge(unsigned long long bytesToBeFreed,
                              unsigned int       entriesToBeFreed)
@@ -181,6 +187,11 @@ bool EnvironmentCache::purge(unsigned long long bytesToBeFreed,
        iterator != lru.end(); iterator++) {
       CacheEntry* entry = iterator->second;
 
+      if( (bytesToBeFreed == 0) && (entriesToBeFreed == 0) ) {
+         return(true);
+      }
+
+      unlink(entry->FileName.c_str());
       TotalSize -= entry->Size;
       bytesToBeFreed   -= std::min(bytesToBeFreed, entry->Size);
       entriesToBeFreed -= std::min(entriesToBeFreed, (unsigned int)1);
@@ -194,12 +205,11 @@ bool EnvironmentCache::purge(unsigned long long bytesToBeFreed,
 
       Cache.erase(entry);
       delete entry;
-
-      if( (bytesToBeFreed == 0) && (entriesToBeFreed == 0) ) {
-         return(true);
-      }
    }
 
+   if( (bytesToBeFreed == 0) && (entriesToBeFreed == 0) ) {
+      return(true);
+   }
    return(false);
 }
 

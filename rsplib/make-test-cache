@@ -1,0 +1,24 @@
+#!/bin/bash
+
+ENTRIES=8
+DD_COUNT=10
+DD_BLOCKSIZE=1000000
+
+make_entry ()
+{
+   dd if=/dev/urandom of=TESTCACHE/input.data count=$DD_COUNT bs=$DD_BLOCKSIZE >/dev/null
+   SUM=`sha1sum TESTCACHE/input.data | awk '{ print $1 }'`
+   mv TESTCACHE/input.data TESTCACHE/$SUM.data
+}
+
+
+if [ ! -e TESTCACHE ] ; then
+   mkdir TESTCACHE
+fi
+
+i=1
+while [ $i -le $ENTRIES ] ; do
+   echo "Creating entry $i of $ENTRIES ..."
+   make_entry
+   let i=$i+1
+done

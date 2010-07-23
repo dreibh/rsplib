@@ -109,7 +109,6 @@ TCPLikeServer* ScriptingServer::scriptingServerFactory(
 bool ScriptingServer::initializeService(void* userData)
 {
    const ScriptingServerSettings* settings = (const ScriptingServerSettings*)userData;
-
    if(Cache.initializeCache(settings->CacheDirectory.c_str(),
                             settings->CacheMaxSize, settings->CacheMaxEntries,
                             stdlog) == false) {
