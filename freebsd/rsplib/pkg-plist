@@ -249,8 +249,8 @@ share/fgpconfig/input-248.fsf
 share/fgpconfig/input-249.fsf
 share/fgpconfig/input-250.fsf
 @dirrm share/fgpconfig
-share/fractalpooluser
 share/fractalpooluser/fractalpooluser_de_DE.qm
+@dirrm share/fractalpooluser
 man/man8/registrar.8
 man/man8/server.8
 man/man8/terminal.8
@@ -337,7 +337,6 @@ bin/calcappclient
 bin/cspmonitor
 bin/scriptingcontrol
 bin/scriptingserviceexample
-include/rserpool
 include/rserpool/mutex.h
 include/rserpool/thread.h
 include/rserpool/cpprspserver.h
