@@ -16,9 +16,10 @@ COMMENT=        RSerPool Framework and Example Applications
 
 # RUN_DEPENDS=
 LIB_DEPENDS=    QtGui.4:${PORTSDIR}/x11-toolkits/qt4-gui
+LIB_DEPENDS+=	QtXml.4:${PORTSDIR}/textproc/qt4-xml
 
 GNU_CONFIGURE=  yes
-CONFIGURE_ARGS=	"--enable-qt=/usr/local"
+CONFIGURE_ARGS=	--disable-maintainer-mode --enable-qt --with-qt-lib=${LOCALBASE}/lib/qt4 --with-qt-include=${LOCALBASE}/include/qt4
 USE_GMAKE=      yes
 
 LICENSE=        GPLv3
