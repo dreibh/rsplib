@@ -1,5 +1,5 @@
 # New ports collection makefile for: rsplib
-# Date created:                      27 July 2010
+# Date created:                      08 August 2010
 # Whom:                              Thomas Dreibholz <dreibh@iem.uni-due.de>
 #
 # $FreeBSD$
@@ -15,7 +15,8 @@ MAINTAINER=     dreibh@iem.uni-due.de
 COMMENT=        RSerPool Framework and Example Applications
 
 # RUN_DEPENDS=
-LIB_DEPENDS=    QtGui.4:${PORTSDIR}/x11-toolkits/qt4-gui
+BUILD_DEPENDS+= moc-qt4:${PORTSDIR}/devel/qt4-moc
+LIB_DEPENDS+=   QtGui.4:${PORTSDIR}/x11-toolkits/qt4-gui
 LIB_DEPENDS+=	QtXml.4:${PORTSDIR}/textproc/qt4-xml
 
 GNU_CONFIGURE=  yes
