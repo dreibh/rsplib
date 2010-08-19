@@ -1,35 +1,46 @@
-# New ports collection makefile for: rsplib
-# Date created:                      08 August 2010
-# Whom:                              Thomas Dreibholz <dreibh@iem.uni-due.de>
+# New ports collection makefile for:	rsplib
+# Date created:		2010-08-08
+# Whom:			Thomas Dreibholz <dreibh@iem.uni-due.de>
 #
-# $FreeBSD$
+# $FreeBSD: ports/net/rsplib/Makefile,v 1.1 2010/08/18 19:16:50 makc Exp $
 #
 
 PORTNAME=	rsplib
 PORTVERSION=	2.7.5
 CATEGORIES=	net
 MASTER_SITES=	http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Downloads/
-DISTNAME=	${PORTNAME}-${PORTVERSION}
 
-MAINTAINER=     dreibh@iem.uni-due.de
-COMMENT=        RSerPool Framework and Example Applications
+MAINTAINER=	dreibh@iem.uni-due.de
+COMMENT=	RSerPool Framework and Example Applications
 
-# RUN_DEPENDS=
-BUILD_DEPENDS+= moc-qt4:${PORTSDIR}/devel/qt4-moc
-LIB_DEPENDS+=   QtGui.4:${PORTSDIR}/x11-toolkits/qt4-gui
-LIB_DEPENDS+=	QtXml.4:${PORTSDIR}/textproc/qt4-xml
+USE_QT_VER=	4
+QT_COMPONENTS=	gui xml moc_build
+USE_GMAKE=	yes
+GNU_CONFIGURE=	yes
+CONFIGURE_ARGS=	--disable-maintainer-mode \
+		--enable-qt --with-qt-lib=${QT_LIBDIR} \
+		--with-qt-include=${QT_INCDIR}
+USE_LDCONFIG=	yes
 
-GNU_CONFIGURE=  yes
-CONFIGURE_ARGS=	--disable-maintainer-mode --enable-qt --with-qt-lib=${LOCALBASE}/lib/qt4 --with-qt-include=${LOCALBASE}/include/qt4
-USE_GMAKE=      yes
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/COPYING
 
-LICENSE=        GPLv3
-LICENSE_FILE=   ${WRKSRC}/COPYING
+MAN8=		calcappclient.8 \
+		cspmonitor.8 \
+		fractalpooluser.8 \
+		hsdump.8 \
+		pingpongclient.8 \
+		registrar.8 \
+		scriptingclient.8 \
+		scriptingcontrol.8 \
+		scriptingserviceexample.8 \
+		server.8 \
+		terminal.8
 
-pre-fetch:
+.include <bsd.port.pre.mk>
 
-post-patch:
+.if ${OSVERSION} < 700028
+IGNORE=		requires sctp(4) support
+.endif
 
-pre-install:
-
-.include <bsd.port.mk>
+.include <bsd.port.post.mk>
