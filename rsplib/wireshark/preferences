@@ -1,7 +1,9 @@
-# Configuration file for Wireshark 0.99.8.
+# Configuration file for Wireshark 1.5.0.
 #
 # This file is regenerated each time preferences are saved within
 # Wireshark.  Making manual changes should be safe, however.
+# Protocol preferences that have been commented out have not been
+# changed from their default value.
 
 ######## User Interface ########
 
@@ -41,6 +43,10 @@ gui.hex_dump_highlight_style: INVERSE
 # One of: ICONS, TEXT, BOTH
 gui.toolbar_main_style: ICONS
 
+# Filter Toolbar style.
+# One of: ICONS, TEXT, BOTH
+gui.toolbar_filter_style: TEXT
+
 # Save window position at exit?
 # TRUE or FALSE (case-insensitive).
 gui.geometry.save.position: TRUE
@@ -49,13 +55,21 @@ gui.geometry.save.position: TRUE
 # TRUE or FALSE (case-insensitive).
 gui.geometry.save.size: TRUE
 
-# Save window maximized state at exit (GTK2 only)?
+# Save window maximized state at exit?
 # TRUE or FALSE (case-insensitive).
 gui.geometry.save.maximized: TRUE
+
+# Use Mac OS X style (Mac OS X with native GTK only)?
+# TRUE or FALSE (case-insensitive).
+gui.macosx_style: TRUE
 
 # Open a console window (WIN32 only)?
 # One of: NEVER, AUTOMATIC, ALWAYS
 gui.console_open: NEVER
+
+# The max. number of entries in the display filter list.
+# A decimal number.
+gui.recent_display_filter_entries.max: 10
 
 # The max. number of items in the open recent files list.
 # A decimal number.
@@ -88,8 +102,15 @@ gui.use_pref_save: FALSE
 # Ex: mozilla %s
 gui.webbrowser: mozilla %s
 
-# Custom window title. (Prepended to existing titles.)
+# Custom window title. (Appended to existing titles.)
 gui.window_title: 
+
+# Custom start page title.
+gui.start_title: The World's Most Popular Network Protocol Analyzer
+
+# Show version in the start page and main screen's title bar.
+# TRUE or FALSE (case-insensitive).
+gui.version_in_start_page: FALSE
 
 ######## User Interface: Layout ########
 
@@ -104,17 +125,23 @@ gui.layout_content_3: PBYTES
 
 ######## User Interface: Columns ########
 
+# Packet list hidden columns.
+# List all columns to hide in the packet list.
+column.hidden: 
+
 # Packet list column format.
 # Each pair of strings consists of a column title and its format.
-column.format: "No.", "%m", "Time", "%t", "Source", "%s", "Destination",
-	"%d", "Protocol", "%p", "Info", "%i"
+column.format: 
+	"No.", "%m",
+	"Time", "%t",
+	"Source", "%s",
+	"Destination", "%d",
+	"Protocol", "%p",
+	"Info", "%i"
 
 ######## User Interface: Font ########
 
-# Font name for packet list, protocol tree, and hex dump panes (GTK version 1).
-gui.font_name: -misc-fixed-medium-r-semicondensed-*-*-100-*-*-*-*-iso8859-1
-
-# Font name for packet list, protocol tree, and hex dump panes (GTK version 2).
+# Font name for packet list, protocol tree, and hex dump panes.
 gui.gtk2.font_name: Monospace 10
 
 ######## User Interface: Colors ########
@@ -123,6 +150,11 @@ gui.gtk2.font_name: Monospace 10
 # Each value is a six digit hexadecimal color value in the form rrggbb.
 gui.marked_frame.fg: ffffff
 gui.marked_frame.bg: 000000
+
+# Color preferences for a ignored frame.
+# Each value is a six digit hexadecimal color value in the form rrggbb.
+gui.ignored_frame.fg: 7f7f7f
+gui.ignored_frame.bg: ffffff
 
 # TCP stream window color preferences.
 # Each value is a six digit hexadecimal color value in the form rrggbb.
@@ -149,7 +181,11 @@ capture.device: eth0
 
 # Capture in promiscuous mode?
 # TRUE or FALSE (case-insensitive).
-capture.prom_mode: FALSE
+capture.prom_mode: TRUE
+
+# Capture in Pcap-NG format?
+# TRUE or FALSE (case-insensitive).
+capture.pcap_ng: FALSE
 
 # Update packet list in real time during capture?
 # TRUE or FALSE (case-insensitive).
@@ -187,89 +223,105 @@ name_resolve: FALSE
 # A decimal number.
 name_resolve_concurrency: 500
 
-####### RTP Player ########
+# Load SMI modules?
+# TRUE or FALSE (case-insensitive).
+name_resolve_load_smi_modules: FALSE
+
+# Suppress SMI errors?
+# TRUE or FALSE (case-insensitive).
+name_resolve_suppress_smi_errors: FALSE
+
+####### Taps/Statistics ########
+
+# Tap update interval in ms.
+# An integer value greater between 100 and 10000.
+taps.update_interval: 3000
 
 # Maximum visible channels in RTP Player window.
 # An integer value greater than 0.
-rtp_player.max_visible: 4
+taps.rtp_player_max_visible: 4
 
 ####### Protocols ########
 
+# Display hidden items in packet details pane?
+# TRUE or FALSE (case-insensitive).
+packet_list.display_hidden_proto_items: FALSE
+
 # Enable this option to recognise all traffic on RTP dynamic payload type 96 (0x60) as FEC data corresponding to Pro-MPEG Code of Practice #3 release 2
 # TRUE or FALSE (case-insensitive).
-2dparityfec.enable: FALSE
+#2dparityfec.enable: FALSE
 
 # Enable Architecture for Control Networks dissector (ANSI BSR E1.17)
 # TRUE or FALSE (case-insensitive).
-acn.heuristic_acn: FALSE
+#acn.heuristic_acn: FALSE
 
 # Enable Streaming DMX extension dissector (ANSI BSR E1.31)
 # TRUE or FALSE (case-insensitive).
-acn.dmx_enable: FALSE
+#acn.dmx_enable: FALSE
 
 # Display format
 # One of: Hex    , Decimal, Percent
 # (case-insensitive).
-acn.dmx_display_view: Hex    
+#acn.dmx_display_view: Hex    
 
 # Display zeros instead of dots
 # TRUE or FALSE (case-insensitive).
-acn.dmx_display_zeros: FALSE
+#acn.dmx_display_zeros: FALSE
 
 # Display leading zeros on levels
 # TRUE or FALSE (case-insensitive).
-acn.dmx_display_leading_zeros: FALSE
+#acn.dmx_display_leading_zeros: FALSE
 
 # Display line format
 # One of: 20 per line, 16 per line
 # (case-insensitive).
-acn.dmx_display_line_format: 20 per line
+#acn.dmx_display_line_format: 20 per line
 
 # Set the UDP port for AudioCodes Trunk Traces.Use http://x.x.x.x/TrunkTraces to enable the traces in the Blade
 # A decimal number.
-actrace.udp_port: 2428
+#actrace.udp_port: 2428
 
 # Set the TCP port for AgentX(if other than the default of 705)
 # A decimal number.
-agentx.tcp.agentx_port: 705
+#agentx.tcp.agentx_port: 705
 
 # Whether the AH payload decode should be placed in a subtree
 # TRUE or FALSE (case-insensitive).
-ah.place_ah_payload_in_subtree: FALSE
+#ah.place_ah_payload_in_subtree: FALSE
 
 # Whether the AIM dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-aim.desegment: TRUE
+#aim.desegment: TRUE
 
 # Whether that payload of UDP packets with a specific destination port should be automatically dissected as ALC packets
 # TRUE or FALSE (case-insensitive).
-alc.default.udp_port.enabled: FALSE
+#alc.default.udp_port.enabled: FALSE
 
 # Specifies the UDP destination port for automatic dissection of ALC packets
 # A decimal number.
-alc.default.udp_port: 4001
+#alc.default.udp_port: 4001
 
 # Whether the LCT header Codepoint field should be considered the FEC Encoding ID of carried object
 # TRUE or FALSE (case-insensitive).
-alc.lct.codepoint_as_fec_id: TRUE
+#alc.lct.codepoint_as_fec_id: TRUE
 
-# How to decode LCT header extention 192
+# How to decode LCT header extension 192
 # One of: Don't decode, Decode as FLUTE extension (EXT_FDT)
 # (case-insensitive).
-alc.lct.ext.192: Decode as FLUTE extension (EXT_FDT)
+#alc.lct.ext.192: Decode as FLUTE extension (EXT_FDT)
 
-# How to decode LCT header extention 193
+# How to decode LCT header extension 193
 # One of: Don't decode, Decode as FLUTE extension (EXT_CENC)
 # (case-insensitive).
-alc.lct.ext.193: Decode as FLUTE extension (EXT_CENC)
+#alc.lct.ext.193: Decode as FLUTE extension (EXT_CENC)
 
 # Whether persistent call leg information is to be kept
 # TRUE or FALSE (case-insensitive).
-alcap.leg_info: TRUE
+#alcap.leg_info: TRUE
 
-# The dynamic payload type which will be interpreted as AMR
+# The dynamic payload type which will be interpreted as AMR; The value must be greater than 95
 # A decimal number.
-amr.dynamic.payload.type: 0
+#amr.dynamic.payload.type: 0
 
 # Type of AMR encoding of the payload
 # One of: RFC 3267 octet aligned, RFC 3267 BW-efficient, AMR IF1, AMR IF2
@@ -279,51 +331,57 @@ amr.encoding.version: RFC 3267 BW-efficient
 # The AMR mode
 # One of: Narrowband AMR, Wideband AMR
 # (case-insensitive).
-amr.mode: Narrowband AMR
+#amr.mode: Narrowband AMR
 
 # (if other than the default of IOS 4.0.1)
 # One of: IS-634 rev. 0, TSB-80, IS-634-A, IOS 2.x, IOS 3.x, IOS 4.0.1, IOS 5.0.1
 # (case-insensitive).
-ansi_a_bsmap.global_variant: IOS 4.0.1
+#ansi_a_bsmap.global_variant: IOS 4.0.1
 
 # ANSI MAP SSNs to decode as ANSI MAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-ansi_map.map.ssn: 5-14
+#ansi_map.map.ssn: 5-14
 
 # Attempt to detect excessive rate of ARP requests
 # TRUE or FALSE (case-insensitive).
-arp.detect_request_storms: FALSE
+#arp.detect_request_storms: FALSE
 
 # Number of requests needed within period to indicate a storm
 # A decimal number.
-arp.detect_storm_number_of_packets: 30
+#arp.detect_storm_number_of_packets: 30
 
 # Period in milliseconds during which a packet storm may be detected
 # A decimal number.
-arp.detect_storm_period: 100
+#arp.detect_storm_period: 100
 
 # Attempt to detect duplicate use of IP addresses
 # TRUE or FALSE (case-insensitive).
-arp.detect_duplicate_ips: TRUE
+#arp.detect_duplicate_ips: TRUE
 
 # The UDP port on which Art-Net packets will be sent
 # A decimal number.
-artnet.udp_port: 6454
+#artnet.udp_port: 6454
 
 # The way DMX values are displayed
 # One of: Percent, Hexadecimal, Decimal
 # (case-insensitive).
-artnet.dmx_disp_chan_val_type: Percent
+#artnet.dmx_disp_chan_val_type: Percent
 
 # The way DMX channel numbers are displayed
 # One of: Hexadecimal, Decimal
 # (case-insensitive).
-artnet.dmx_disp_chan_nr_type: Hexadecimal
+#artnet.dmx_disp_chan_nr_type: Hexadecimal
 
 # The number of columns for the DMX display
 # One of: 6, 10, 12, 16, 24
 # (case-insensitive).
-artnet.dmx_disp_col_count: 16
+#artnet.dmx_disp_col_count: 16
+
+# Set the UDP port numbers (by default is range 5555 to 5560) used for ARUBA encapsulated remote mirroring frames;
+# 0 (default) means that the ARUBA_ERM dissector is not active
+# 
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#aruba_erm.udp.ports: 0
 
 # The TCP ports on which ASN.1 messages will be read
 # A string denoting an positive integer range (e.g., "1-20,30-40").
@@ -339,304 +397,448 @@ asn1.sctp_ports: 801
 
 # Desegment ASN.1 messages that span TCP segments
 # TRUE or FALSE (case-insensitive).
-asn1.desegment_messages: TRUE
+#asn1.desegment_messages: TRUE
 
 # Compiled ASN.1 description of ASN.1 types
 # A string.
-asn1.file: 
+#asn1.file: 
 
 # Name of top level PDU
 # A string.
-asn1.pdu_name: ASN1
+#asn1.pdu_name: ASN1
 
 # Offset for non-reassembled packets, wrong if this happens on other than the first packet!
 # A decimal number.
-asn1.first_pdu_offset: 0
+#asn1.first_pdu_offset: 0
 
 # Show full names for all values
 # TRUE or FALSE (case-insensitive).
-asn1.flat: FALSE
+#asn1.flat: FALSE
 
 # Allow this recursion level for eliminated type references
 # One of: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 # (case-insensitive).
-asn1.type_recursion: 1
+#asn1.type_recursion: 1
 
-# Extra output useful for debuging
+# Extra output useful for debugging
 # TRUE or FALSE (case-insensitive).
-asn1.debug: FALSE
+#asn1.debug: FALSE
 
 # log to file $TMP/wireshark.log
 # TRUE or FALSE (case-insensitive).
-asn1.verbose_log: FALSE
+#asn1.verbose_log: FALSE
 
 # Autodection between LANE and SSCOP is hard. As default LANE is preferred
 # TRUE or FALSE (case-insensitive).
-atm.dissect_lane_as_sscop: FALSE
+#atm.dissect_lane_as_sscop: FALSE
+
+# Type used to dissect unknown AAL2 traffic
+# One of: Raw data, UMTS FP
+# (case-insensitive).
+#atm.unknown_aal2_type: Raw data
 
 # Whether the ATP dissector should reassemble messages spanning multiple DDP packets
 # TRUE or FALSE (case-insensitive).
-atp.desegment: TRUE
+#atp.desegment: TRUE
+
+# Banana TCP Port range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#banana.tcp.port: 
+
+# Set the port for B.A.T.M.A.N. BAT messages (if other than the default of 4305)
+# A decimal number.
+#bat.batman.bat.port: 4305
+
+# Set the port for B.A.T.M.A.N. Gateway messages (if other than the default of 4306)
+# A decimal number.
+#bat.batman.gw.port: 4306
+
+# Set the port for B.A.T.M.A.N. VIS messages (if other than the default of 4307)
+# A decimal number.
+#bat.batman.vis.port: 4307
+
+# Ethertype used to indicate B.A.T.M.A.N. packet.
+# A hexadecimal number.
+#batadv.batmanadv.ethertype: 0x4305
 
 # Set the port for BEEP messages (if other than the default of 10288)
 # A decimal number.
-beep.tcp.port: 10288
+#beep.tcp.port: 10288
 
 # Specifies that BEEP requires CRLF as a terminator, and not just CR or LF
 # TRUE or FALSE (case-insensitive).
-beep.strict_header_terminator: TRUE
+#beep.strict_header_terminator: TRUE
 
 # Whether the dissector should also display internal ASN.1 BER details such as Identifier and Length fields
 # TRUE or FALSE (case-insensitive).
-ber.show_internals: FALSE
+#ber.show_internals: FALSE
 
 # Whether the dissector should decode unexpected tags as ASN.1 BER encoded data
 # TRUE or FALSE (case-insensitive).
-ber.decode_unexpected: FALSE
+#ber.decode_unexpected: FALSE
 
 # Whether the dissector should try decoding OCTET STRINGs as constructed ASN.1 BER encoded data
 # TRUE or FALSE (case-insensitive).
-ber.decode_octetstring: FALSE
+#ber.decode_octetstring: FALSE
+
+# Whether the dissector should try decoding unknown primitive as constructed ASN.1 BER encoded data
+# TRUE or FALSE (case-insensitive).
+#ber.decode_primitive: FALSE
+
+# A table that provides names for object identifiers and the syntax of any associated values
 
 # Whether the BGP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-bgp.desegment: TRUE
+#bgp.desegment: TRUE
 
 # BGP dissector detect the length of the AS number in AS_PATH attributes automatically or manually (NOTE: Automatic detection is not 100% accurate)
 # One of: Auto-detect, 2 octet, 4 octet
 # (case-insensitive).
-bgp.asn_len: Auto-detect
+#bgp.asn_len: Auto-detect
 
 # Whether the BitTorrent dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-bittorrent.desegment: TRUE
+#bittorrent.desegment: TRUE
 
 # Enabling this will tell which BitTorrent client that produced the handshake message
 # TRUE or FALSE (case-insensitive).
-bittorrent.decode_client: FALSE
+#bittorrent.decode_client: FALSE
 
 # Novell Servers option 85 can be configured as a string instead of address
 # TRUE or FALSE (case-insensitive).
-bootp.novellserverstring: FALSE
+#bootp.novellserverstring: FALSE
 
 # The PacketCable CCC protocol version
 # One of: PKT-SP-PROV-I05-021127, IETF Draft 5, RFC 3495
 # (case-insensitive).
-bootp.pkt.ccc.protocol_version: RFC 3495
+#bootp.pkt.ccc.protocol_version: RFC 3495
 
 # Option Number for PacketCable CableLabs Client Configuration
 # A decimal number.
-bootp.pkt.ccc.option: 122
+#bootp.pkt.ccc.option: 122
+
+# Format: OptionNumber,OptionName,OptionType[;Format].
+# Example: 176,MyOption,string;242,NewOption,ipv4.
+# OptionNumbers: 1-254, but no special options. OptionType: string, ipv4 and bytes
+# A string.
+#bootp.displayasstring: 
 
 # For the sake of sub-dissectors registering to accept data from the BSSAP/BSAP dissector, this defines whether it is identified as BSSAP or BSAP.
 # One of: BSSAP, BSAP
 # (case-insensitive).
-bssap.bsap_or_bssap: BSSAP
+#bssap.bsap_or_bssap: BSSAP
+
+# GSM-A is the interface between the BSC and the MSC. Lb is the interface between the BSC and the SMLC.
+# One of: GSM A, Lb
+# (case-insensitive).
+#bssap.gsm_or_lb_interface: GSM A
 
 # Set Subsystem number used for BSSAP/BSSAP+
 # A decimal number.
-bssap.ssn: 98
+#bssap.ssn: 98
 
 # Decode NRI (for use with SGSN in Pool)
 # TRUE or FALSE (case-insensitive).
-bssgp.decode_nri: FALSE
+#bssgp.decode_nri: FALSE
 
 # NRI length, in bits
 # A decimal number.
-bssgp.nri_length: 4
+#bssgp.nri_length: 4
 
 # Whether the ACL dissector should reassemble fragmented PDUs
 # TRUE or FALSE (case-insensitive).
-bthci_acl.btacl_reassembly: TRUE
+#bthci_acl.btacl_reassembly: TRUE
+
+# TCP Port to Accept Bundle Protocol Connections
+# A decimal number.
+#bundle.tcp.port: 4556
+
+# UDP Port to Accept Bundle Protocol Connections
+# A decimal number.
+#bundle.udp.port: 4556
 
 # Set an additional UDP port, besides the standard X'BAC0' (47808) port.
 # A decimal number.
-bvlc.additional_udp_port: 0
+#bvlc.additional_udp_port: 0
 
 # The date format: (DD/MM) or (MM/DD)
 # One of: DD/MM/YYYY, MM/DD/YYYY
 # (case-insensitive).
-camel.date.format: DD/MM/YYYY
+#camel.date.format: DD/MM/YYYY
 
 # TCAP Subsystem numbers used for Camel
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-camel.tcap.ssn: 6-9
+#camel.tcap.ssn: 6-9
 
 # Activate the analyse for Response Time
 # TRUE or FALSE (case-insensitive).
-camel.srt: FALSE
+#camel.srt: FALSE
 
 # Statistics for Response Time
 # TRUE or FALSE (case-insensitive).
-camel.persistentsrt: FALSE
+#camel.persistentsrt: FALSE
+
+# Set the port for CAPWAP Control messages (if other than the default of 5246)
+# A decimal number.
+#capwap.udp.port.control: 5246
+
+# Set the port for CAPWAP Data messages (if other than the default of 5247)
+# A decimal number.
+#capwap.udp.port.data: 5247
+
+# Enable support of Cisco Wireless Controller (based on old 8 draft revision).
+# TRUE or FALSE (case-insensitive).
+#capwap.draft_8_cisco: FALSE
+
+# Reassemble fragmented CAPWAP packets.
+# TRUE or FALSE (case-insensitive).
+#capwap.reassemble: TRUE
+
+# Swap frame control bytes (needed for some APs).
+# TRUE or FALSE (case-insensitive).
+#capwap.swap_fc: TRUE
 
 # Whether the CAST dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-cast.reassembly: TRUE
+#cast.reassembly: TRUE
 
 # Set the port(s) for NetFlow messages (default: 2055,9996)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-cflow.netflow.ports: 2055,9996
+#cflow.netflow.ports: 2055,9996
 
 # Set the port(s) for IPFIX messages (default: 4739)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-cflow.ipfix.ports: 4739
+#cflow.ipfix.ports: 4739
 
 # The type of CHDLC frame checksum (none, 16-bit, 32-bit)
 # One of: None, 16-Bit, 32-Bit
 # (case-insensitive).
-chdlc.fcs_type: None
+#chdlc.fcs_type: None
 
 # The version of CIGI with which to dissect packets
 # One of: From Packet, CIGI 2, CIGI 3
 # (case-insensitive).
-cigi.version: From Packet
+#cigi.version: From Packet
 
 # The byte order with which to dissect CIGI packets (CIGI3)
 # One of: From Packet, Big-Endian, Little-Endian
 # (case-insensitive).
-cigi.byte_order: From Packet
+#cigi.byte_order: From Packet
 
 # IPv4 address or hostname of the host
 # A string.
-cigi.host: 
+#cigi.host: 
 
 # IPv4 address or hostname of the image generator
 # A string.
-cigi.ig: 
+#cigi.ig: 
 
 # NSAP selector for Transport Protocol (last byte in hex)
 # A hexadecimal number.
-clnp.tp_nsap_selector: 0x21
+#clnp.tp_nsap_selector: 0x21
 
 # Always try to decode NSDU as transport PDUs
 # TRUE or FALSE (case-insensitive).
-clnp.always_decode_transport: FALSE
+#clnp.always_decode_transport: FALSE
 
 # Whether segmented CLNP datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-clnp.reassemble: TRUE
+#clnp.reassemble: TRUE
 
 # Whether the CMP-over-TCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-cmp.desegment: TRUE
+#cmp.desegment: TRUE
+
+# Decode this TCP port's traffic as CMP. Set to "0" to disable.
+# A decimal number.
+#cmp.tcp_alternate_port: 0
+
+# Decode this TCP port's traffic as CMP-over-HTTP. Set to "0" to disable. Use this if the Content-Type is not set correctly.
+# A decimal number.
+#cmp.http_alternate_port: 0
+
+# Decode this TCP port's traffic as TCP-transport-style CMP-over-HTTP. Set to "0" to disable. Use this if the Content-Type is not set correctly.
+# A decimal number.
+#cmp.tcp_style_http_alternate_port: 0
+
+# Set the UDP port for collectd messages
+# A decimal number.
+#collectd.udp.port: 25826
 
 # Set the TCP port for COPS messages
 # A decimal number.
-cops.tcp.cops_port: 3288
+#cops.tcp.cops_port: 3288
 
 # Whether the COPS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-cops.desegment: TRUE
+#cops.desegment: TRUE
 
 # Decode the COPS messages using PacketCable clients. (Select port 2126)
 # TRUE or FALSE (case-insensitive).
-cops.packetcable: TRUE
+#cops.packetcable: TRUE
+
+# PIB settings can be changed in the Name Resolution preferences
 
 # Whether segmented COTP datagrams should be reassembled. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-cotp.reassemble: TRUE
+#cotp.reassemble: TRUE
 
 # How TSAPs should be displayed
 # One of: As strings if printable, As strings, As bytes
 # (case-insensitive).
-cotp.tsap_display: As strings if printable
+#cotp.tsap_display: As strings if printable
 
 # Set the port for CPFI messages (if other than the default of 5000)
 # A decimal number.
-cpfi.udp.port: 5000
+#cpfi.udp.port: 5000
 
 # Set the port for InstanceToInstance messages (if other than the default of 5001)
 # A decimal number.
-cpfi.udp.port2: 5001
+#cpfi.udp.port2: 5001
 
 # Control the way the '-->' is displayed. When enabled, keeps the 'lowest valued' endpoint of the src-dest pair on the left, and the arrow moves to distinguish source from dest. When disabled, keeps the arrow pointing right so the source of the frame is always on the left.
 # TRUE or FALSE (case-insensitive).
-cpfi.arrow_ctl: TRUE
+#cpfi.arrow_ctl: TRUE
 
 # Set the destination UDP port Cisco wireless IDS messages
 # A decimal number.
-cwids.udp.port: 0
+#cwids.udp.port: 0
 
 # Set the port for DAP operations (if other than the default of 102)
 # A decimal number.
-dap.tcp.port: 102
+#dap.tcp.port: 102
 
-# Whether the DCE/RPC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Show not dissected data on new Packet Bytes pane
 # TRUE or FALSE (case-insensitive).
-dcerpc.desegment_dcerpc: TRUE
+#data.datapref.newpane: FALSE
 
-# Whether the DCE/RPC dissector should reassemble fragmented DCE/RPC PDUs
+# Show data as text in the Packet Details pane
 # TRUE or FALSE (case-insensitive).
-dcerpc.reassemble_dcerpc: TRUE
+#data.show_as_text: FALSE
 
-# Display some DCOM unmarshalled fields usually hidden
+# Whether the LAN sync dissector should reassemble PDUs spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dcom.display_unmarshalling_details: FALSE
+#db-lsp.desegment_pdus: TRUE
 
 # Whether the DCCP summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-dcp.summary_in_tree: TRUE
+#dccp.summary_in_tree: TRUE
 
 # Try to decode a packet using an heuristic sub-dissector before using a sub-dissector registered to a specific port
 # TRUE or FALSE (case-insensitive).
-dcp.try_heuristic_first: FALSE
+#dccp.try_heuristic_first: FALSE
 
 # Whether to check the validity of the DCCP checksum
 # TRUE or FALSE (case-insensitive).
-dcp.check_checksum: TRUE
+#dccp.check_checksum: TRUE
 
-# If a payload looks like its embedded in an IP primitive message, and there is a wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# Whether the DCE/RPC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dct2000.ipprim_heuristic: TRUE
+#dcerpc.desegment_dcerpc: TRUE
 
-# If a payload looks like its embedded in an SCTP primitive message, and there is a wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# Whether the DCE/RPC dissector should reassemble fragmented DCE/RPC PDUs
 # TRUE or FALSE (case-insensitive).
-dct2000.sctpprim_heuristic: TRUE
+#dcerpc.reassemble_dcerpc: TRUE
+
+# Display some DCOM unmarshalled fields usually hidden
+# TRUE or FALSE (case-insensitive).
+#dcom.display_unmarshalling_details: FALSE
+
+# If a payload looks like its embedded in an IP primitive message, and there is a Wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# TRUE or FALSE (case-insensitive).
+#dct2000.ipprim_heuristic: TRUE
+
+# If a payload looks like its embedded in an SCTP primitive message, and there is a Wireshark dissector matching the DCT2000 protocol name, try parsing the payload using that dissector
+# TRUE or FALSE (case-insensitive).
+#dct2000.sctpprim_heuristic: TRUE
+
+# When set, attempt to decode LTE RRC frames. Note that this won't affect other protocols that also call the LTE RRC dissector
+# TRUE or FALSE (case-insensitive).
+#dct2000.decode_lte_rrc: TRUE
+
+# When set, attempt to decode LTE S1AP frames. Note that this won't affect other protocols that also call the LTE S1AP dissector
+# TRUE or FALSE (case-insensitive).
+#dct2000.decode_lte_s1ap: TRUE
+
+# When set, look for formatted messages indicating specific events.  This may be quite slow, so should be disabled if LTE MAC is not being analysed
+# TRUE or FALSE (case-insensitive).
+#dct2000.decode_mac_lte_oob_messages: TRUE
 
 # Set the port for DHCP failover communications
 # A decimal number.
-dhcpfo.tcp_port: 519
+#dhcpfo.tcp_port: 519
 
 # Whether the DHCP failover dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dhcpfo.desegment: TRUE
+#dhcpfo.desegment: TRUE
 
-# TCP ports to be decoded as Diameter (default: 3868,3868)
+# TCP ports to be decoded as Diameter (default: 3868)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
 diameter.tcp.ports: 3868,3868
 
 # Set the SCTP port for Diameter messages
 # A decimal number.
-diameter.sctp.port: 3868
+#diameter.sctp.port: 3868
 
 # Whether the Diameter dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-diameter.desegment: TRUE
+#diameter.desegment: TRUE
+
+# DICOM Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#dicom.tcp.port: 104
+
+# When enabled, the DICOM dissector will parse all TCP packets not handled by any other dissector and look for an association request. Disabled by default, to preserve resources for the non DICOM community.
+# TRUE or FALSE (case-insensitive).
+#dicom.heuristic: FALSE
+
+# Create DICOM File Meta Header according to PS 3.10 on export for PDUs. If the captured PDV does not contain a SOP Class UID and SOP Instance UID (e.g. for command PDVs), wireshark specific ones will be created.
+# TRUE or FALSE (case-insensitive).
+#dicom.export_header: TRUE
+
+# Do not show items below this size in the export list. Set it to 0, to see DICOM commands and responses in the list. Set it higher, to just export DICOM IODs (i.e. CT Images, RT Structures).
+# A decimal number.
+#dicom.export_minsize: 4096
+
+# Create a node for sequences and items, and show children in a hierarchy. Deselect this option, if you prefer a flat display or e.g. when using TShark to create a text output.
+# TRUE or FALSE (case-insensitive).
+#dicom.seq_tree: TRUE
+
+# Create a node for a tag and show tag details as single elements. This can be useful to debug a tag and to allow display filters on these attributes. When using TShark to create a text output, it's better to have it disabled. 
+# TRUE or FALSE (case-insensitive).
+#dicom.tag_tree: FALSE
+
+# Show message ID and number of completed, remaining, warned or failed operations in header and info column.
+# TRUE or FALSE (case-insensitive).
+#dicom.cmd_details: TRUE
+
+# Decode all DICOM tags in the last PDV. This will ensure the proper reassembly. When not set, the decoding may fail and the exports may become corrupt.
+# TRUE or FALSE (case-insensitive).
+#dicom.pdv_reassemble: TRUE
 
 # Set the UDP port for DIS messages
 # A decimal number.
-dis.udp.port: 3000
+#dis.udp.port: 3000
 
 # Set the port for DISP operations (if other than the default of 102)
 # A decimal number.
-disp.tcp.port: 102
+#disp.tcp.port: 102
 
 # Set the TCP port for DISTCC messages
 # A decimal number.
-distcc.tcp.port: 3632
+#distcc.tcp.port: 3632
 
 # Whether the DISTCC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-distcc.desegment_distcc_over_tcp: TRUE
+#distcc.desegment_distcc_over_tcp: TRUE
 
 # Set the TCP port for Distributed Lock Manager
 # A decimal number.
-dlm3.tcp.port: 21064
+#dlm3.tcp.port: 21064
 
 # Set the SCTP port for Distributed Lock Manager
 # A decimal number.
-dlm3.sctp.port: 21064
+#dlm3.sctp.port: 21064
 
 # Port numbers used for DMP traffic
 # A string denoting an positive integer range (e.g., "1-20,30-40").
@@ -644,637 +846,737 @@ dmp.udp_ports:
 
 # Calculate sequence/acknowledgement analysis
 # TRUE or FALSE (case-insensitive).
-dmp.seq_ack_analysis: TRUE
+#dmp.seq_ack_analysis: TRUE
 
 # Align identifiers in info list (does not align when retransmission or duplicate acknowledgement indication)
 # TRUE or FALSE (case-insensitive).
-dmp.align_ids: FALSE
+#dmp.align_ids: FALSE
 
 # Print subject as body id in free text messages with subject
 # TRUE or FALSE (case-insensitive).
-dmp.subject_as_id: FALSE
+#dmp.subject_as_id: FALSE
 
 # Format of the structured message id
 # One of: None, 1 Byte value, 2 Byte value, 4 Byte value, 8 Byte value, Fixed text string, Zero terminated text string
 # (case-insensitive).
-dmp.struct_print: None
+#dmp.struct_print: None
 
 # Used to set where the structured message id starts in the User Data
 # A decimal number.
-dmp.struct_offset: 0
+#dmp.struct_offset: 0
 
 # Used to set length of fixed text string in the structured message id format (maximum 128 characters)
 # A decimal number.
-dmp.struct_length: 1
+#dmp.struct_length: 1
 
 # Whether the DNP3 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dnp3.desegment: TRUE
+#dnp3.desegment: TRUE
 
 # Whether the DNS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dns.desegment_dns_messages: TRUE
+#dns.desegment_dns_messages: TRUE
 
 # Set the port for DOP operations (if other than the default of 102)
 # A decimal number.
-dop.tcp.port: 102
+#dop.tcp.port: 102
 
 # Whether the DRDA dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-drda.desegment: TRUE
+#drda.desegment: TRUE
 
 # Whether the DSI dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-dsi.desegment: TRUE
+#dsi.desegment: TRUE
 
 # Set the port for DSP operations (if other than the default of 102)
 # A decimal number.
-dsp.tcp.port: 102
+#dsp.tcp.port: 102
 
 # semicolon separated list of private RSA keys used for DTLS decryption; each list entry must be in the form of <ip>,<port>,<protocol>,<key_file_name><key_file_name>   is the local file name of the RSA private key used by the specified server
-
+# 
 # A string.
-dtls.keys_list: 
+#dtls.keys_list: 
 
 # redirect dtls debug to file name; leave empty to disable debug, use "-" to redirect output to stderr
-
+# 
 # A string.
-dtls.debug_file: 
+#dtls.debug_file: 
 
 # Set the TDP port for the DTPT Server
 # A decimal number.
-dtpt.tcp.port: 5721
+#dtpt.tcp.port: 5721
 
 # Allow only packets with Major=0x03//Minor=0xFF as DVMRP V3 packets
 # TRUE or FALSE (case-insensitive).
-dvmrp.strict_v3: FALSE
+#dvmrp.strict_v3: FALSE
 
 # Whether the eDonkey dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-edonkey.desegment: TRUE
+#edonkey.desegment: TRUE
 
 # Whether the EtherNet/IP dissector should desegment all messages spanning multiple TCP segments
 # TRUE or FALSE (case-insensitive).
-enip.desegment: TRUE
+#enip.desegment: TRUE
 
 # The UDP port on which ENTTEC packets will be sent
 # A decimal number.
-enttec.udp_port: 3333
+#enttec.udp_port: 3333
 
 # The TCP port on which ENTTEC packets will be sent
 # A decimal number.
-enttec.tcp_port: 3333
+#enttec.tcp_port: 3333
 
 # The way DMX values are displayed
 # One of: Percent, Hexadecimal, Decimal
 # (case-insensitive).
-enttec.dmx_disp_chan_val_type: Percent
+#enttec.dmx_disp_chan_val_type: Percent
 
 # The way DMX channel numbers are displayed
 # One of: Hexadecimal, Decimal
 # (case-insensitive).
-enttec.dmx_disp_chan_nr_type: Hexadecimal
+#enttec.dmx_disp_chan_nr_type: Hexadecimal
 
 # The number of columns for the DMX display
 # One of: 6, 10, 12, 16, 24
 # (case-insensitive).
-enttec.dmx_disp_col_count: 16
+#enttec.dmx_disp_col_count: 16
 
 # If you are capturing in networks with multiplexed or slow nodes, this can be useful
 # TRUE or FALSE (case-insensitive).
-epl.show_soc_flags: FALSE
+#epl.show_soc_flags: FALSE
 
 # Protocol encapsulated in HDLC records
-# One of: Cisco HDLC, PPP serial, Frame Relay, SS7 MTP2, Raw data
+# One of: Cisco HDLC, PPP serial, Frame Relay, SS7 MTP2, Attempt to guess
 # (case-insensitive).
-erf.erfhdlc: SS7 MTP2
+erf.hdlc_type: SS7 MTP2
 
-# Protocol encapsulated in ATM records
-# One of: ATM, LLC, Raw data
-# (case-insensitive).
-erf.erfatm: Raw data
+# Whether raw ATM cells should be treated as the first cell of an AAL5 PDU
+# TRUE or FALSE (case-insensitive).
+#erf.rawcell_first: FALSE
 
-# Protocol encapsulated in Ethernet records
-# One of: Ethernet with FCS, Ethernet, Raw data
+# Protocol encapsulated in ATM AAL5 packets
+# One of: Attempt to guess, LLC multiplexed
 # (case-insensitive).
-erf.erfeth: Raw data
+#erf.aal5_type: Attempt to guess
+
+# Whether the FCS is present in Ethernet packets
+# TRUE or FALSE (case-insensitive).
+#erf.ethfcs: TRUE
+
+# Enable this dissector (default is false)
+# TRUE or FALSE (case-insensitive).
+#esl.enable: FALSE
 
 # This is done only if the Decoding is not SET or the packet does not belong to a SA. Assumes a 12 byte auth (HMAC-SHA1-96/HMAC-MD5-96/AES-XCBC-MAC-96) and attempts decode based on the ethertype 13 bytes from packet end
 # TRUE or FALSE (case-insensitive).
-esp.enable_null_encryption_decode_heuristic: FALSE
+#esp.enable_null_encryption_decode_heuristic: FALSE
 
 # Attempt to decode based on the SAD described hereafter.
 # TRUE or FALSE (case-insensitive).
-esp.enable_encryption_decode: FALSE
+#esp.enable_encryption_decode: FALSE
 
 # Attempt to Check ESP Authentication based on the SAD described hereafter.
 # TRUE or FALSE (case-insensitive).
-esp.enable_authentication_check: FALSE
+#esp.enable_authentication_check: FALSE
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_1: 
+#esp.sa_1: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_1: NULL
+#esp.encryption_algorithm_1: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_1: NULL
+#esp.authentication_algorithm_1: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_1: 
+#esp.encryption_key_1: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_1: 
+#esp.authentication_key_1: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_2: 
+#esp.sa_2: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_2: NULL
+#esp.encryption_algorithm_2: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_2: NULL
+#esp.authentication_algorithm_2: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_2: 
+#esp.encryption_key_2: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_2: 
+#esp.authentication_key_2: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_3: 
+#esp.sa_3: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_3: NULL
+#esp.encryption_algorithm_3: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_3: NULL
+#esp.authentication_algorithm_3: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_3: 
+#esp.encryption_key_3: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_3: 
+#esp.authentication_key_3: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_4: 
+#esp.sa_4: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_4: NULL
+#esp.encryption_algorithm_4: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_4: NULL
+#esp.authentication_algorithm_4: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_4: 
+#esp.encryption_key_4: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_4: 
+#esp.authentication_key_4: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_5: 
+#esp.sa_5: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_5: NULL
+#esp.encryption_algorithm_5: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_5: NULL
+#esp.authentication_algorithm_5: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_5: 
+#esp.encryption_key_5: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_5: 
+#esp.authentication_key_5: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_6: 
+#esp.sa_6: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_6: NULL
+#esp.encryption_algorithm_6: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_6: NULL
+#esp.authentication_algorithm_6: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_6: 
+#esp.encryption_key_6: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_6: 
+#esp.authentication_key_6: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_7: 
+#esp.sa_7: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_7: NULL
+#esp.encryption_algorithm_7: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_7: NULL
+#esp.authentication_algorithm_7: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_7: 
+#esp.encryption_key_7: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_7: 
+#esp.authentication_key_7: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_8: 
+#esp.sa_8: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_8: NULL
+#esp.encryption_algorithm_8: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_8: NULL
+#esp.authentication_algorithm_8: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_8: 
+#esp.encryption_key_8: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_8: 
+#esp.authentication_key_8: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_9: 
+#esp.sa_9: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_9: NULL
+#esp.encryption_algorithm_9: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_9: NULL
+#esp.authentication_algorithm_9: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_9: 
+#esp.encryption_key_9: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_9: 
+#esp.authentication_key_9: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_10: 
+#esp.sa_10: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_10: NULL
+#esp.encryption_algorithm_10: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_10: NULL
+#esp.authentication_algorithm_10: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_10: 
+#esp.encryption_key_10: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_10: 
+#esp.authentication_key_10: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_11: 
+#esp.sa_11: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_11: NULL
+#esp.encryption_algorithm_11: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_11: NULL
+#esp.authentication_algorithm_11: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_11: 
+#esp.encryption_key_11: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_11: 
+#esp.authentication_key_11: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_12: 
+#esp.sa_12: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_12: NULL
+#esp.encryption_algorithm_12: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_12: NULL
+#esp.authentication_algorithm_12: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_12: 
+#esp.encryption_key_12: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_12: 
+#esp.authentication_key_12: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_13: 
+#esp.sa_13: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_13: NULL
+#esp.encryption_algorithm_13: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_13: NULL
+#esp.authentication_algorithm_13: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_13: 
+#esp.encryption_key_13: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_13: 
+#esp.authentication_key_13: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_14: 
+#esp.sa_14: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_14: NULL
+#esp.encryption_algorithm_14: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_14: NULL
+#esp.authentication_algorithm_14: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_14: 
+#esp.encryption_key_14: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_14: 
+#esp.authentication_key_14: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_15: 
+#esp.sa_15: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_15: NULL
+#esp.encryption_algorithm_15: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_15: NULL
+#esp.authentication_algorithm_15: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_15: 
+#esp.encryption_key_15: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_15: 
+#esp.authentication_key_15: 
 
-# SA identifier.  Must have the form "Protocol|Source Address|Destination Adress|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
+# SA identifier.  Must have the form "Protocol|Source Address|Destination Address|SPI". Example: "IPv4|192.168.0.45|10.1.2.7|*" See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for more details.
 # A string.
-esp.sa_16: 
+#esp.sa_16: 
 
 # Encryption algorithm
-# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
+# One of: NULL, TripleDES-CBC [RFC2451], AES-CBC [RFC3602], AES-CTR [RFC3686], DES-CBC [RFC2405], CAST5-CBC [RFC2144], BLOWFISH-CBC [RFC2451], TWOFISH-CBC
 # (case-insensitive).
-esp.encryption_algorithm_16: NULL
+#esp.encryption_algorithm_16: NULL
 
 # Authentication algorithm
-# One of: NULL, HMAC-SHA1-96 [RFC2404], HMAC-SHA256, HMAC-MD5-96 [RFC2403], ANY 12-bytes of Authentication [No Checking]
+# One of: NULL, HMAC-SHA-1-96 [RFC2404], HMAC-SHA-256-96 [draft-ietf-ipsec-ciph-sha-256-00], HMAC-SHA-256-128 [RFC4868], HMAC-MD5-96 [RFC2403], MAC-RIPEMD-160-96 [RFC2857], ANY 96 bit authentication [no checking], ANY 128 bit authentication [no checking], ANY 192 bit authentication [no checking], ANY 256 bit authentication [no checking]
 # (case-insensitive).
-esp.authentication_algorithm_16: NULL
+#esp.authentication_algorithm_16: NULL
 
 # Encryption key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.encryption_key_16: 
+#esp.encryption_key_16: 
 
 # Authentication key. May be ASCII or hexadecimal (if prepended with 0x).See the ESP Preferences page on the Wireshark wiki (http://wiki.wireshark.org/ESP_Preferences) for supported sizes.
 # A string.
-esp.authentication_key_16: 
+#esp.authentication_key_16: 
+
+# ESS category attributes translation table
+
+# Some Ethernet adapters and drivers include the FCS at the end of a packet, others do not.  The Ethernet dissector attempts to guess whether a captured packet has an FCS, but it cannot always guess correctly.
+# TRUE or FALSE (case-insensitive).
+#eth.assume_fcs: FALSE
 
 # Whether packets should be interpreted as coming from CheckPoint FireWall-1 monitor file if they look as if they do
 # TRUE or FALSE (case-insensitive).
-eth.interpret_as_fw1_monitor: FALSE
+#eth.interpret_as_fw1_monitor: FALSE
 
-# Set TCP port 1 for etheric messages
-# A decimal number.
-etheric.tcp.port1: 1806
+# Describe the conditions that must be true for the CCSDS dissector to be called
 
-# Set TCP port 2 for etheric messages
-# A decimal number.
-etheric.tcp.port2: 10002
+# Set the condition that must be true for the CCSDS dissector to be called
+# TRUE or FALSE (case-insensitive).
+#eth.ccsds_heuristic_length: FALSE
+
+# Set the condition that must be true for the CCSDS dissector to be called
+# TRUE or FALSE (case-insensitive).
+#eth.ccsds_heuristic_version: FALSE
+
+# Set the condition that must be true for the CCSDS dissector to be called
+# TRUE or FALSE (case-insensitive).
+#eth.ccsds_heuristic_header: FALSE
+
+# Set the condition that must be true for the CCSDS dissector to be called
+# TRUE or FALSE (case-insensitive).
+#eth.ccsds_heuristic_bit: FALSE
+
+# Whether the EVRC dissector should process payload type 60 as legacy EVRC packets
+# TRUE or FALSE (case-insensitive).
+#evrc.legacy_pt_60: FALSE
 
 # Controls the display of the session's username in the info column.  This is only displayed if the packet containing it was seen during this capture session.
 # TRUE or FALSE (case-insensitive).
-exec.info_show_username: TRUE
+#exec.info_show_username: TRUE
 
 # Controls the display of the command being run on the server by this session in the info column.  This is only displayed if the packet containing it was seen during this capture session.
 # TRUE or FALSE (case-insensitive).
-exec.info_show_command: FALSE
+#exec.info_show_command: FALSE
 
 # If enabled, reassembly of multi-frame sequences is done
 # TRUE or FALSE (case-insensitive).
-fc.reassemble: TRUE
+#fc.reassemble: TRUE
 
 # This is the size of non-last frames in a multi-frame sequence
 # A decimal number.
-fc.max_frame_size: 1024
+#fc.max_frame_size: 1024
+
+# Set the TCP port for FastCGI traffic
+# A decimal number.
+#fcgi.tcp.port: 0
 
 # Whether the FCIP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-fcip.desegment: TRUE
+#fcip.desegment: TRUE
 
 # Port number used for FCIP
 # A decimal number.
-fcip.target_port: 3225
+#fcip.target_port: 3225
 
 # Whether the FDDI dissector should add 3-byte padding to all captured FDDI packets (useful with e.g. Tru64 UNIX tcpdump)
 # TRUE or FALSE (case-insensitive).
-fddi.padding: FALSE
+#fddi.padding: FALSE
+
+# Whether the FIX dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#fix.desegment: TRUE
+
+# TCP Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#fix.tcp.port: 
+
+# Decode FLIP payload according to mode
+# One of: no decoding, heuristic, forced
+# (case-insensitive).
+#flip.decoding_mode: heuristic
+
+# Enabled protocols for heuristic mode
+
+# Decode payload as RTP if detected
+# TRUE or FALSE (case-insensitive).
+#flip.heur_decode_rtp: TRUE
+
+# Decode payload as RTCP if detected
+# TRUE or FALSE (case-insensitive).
+#flip.heur_decode_rtcp: TRUE
+
+# Mapping of flow IDs to their decodings
+
+# Decoding to user-defined protocol
+# A string.
+#flip.forced_decode: data
 
 # With this option display filters for fmp fhandle a RPC call, even if the actual fhandle is only present in one of the packets
 # TRUE or FALSE (case-insensitive).
-fmp.fhandle_find_both_reqrep: FALSE
+#fmp.fhandle_find_both_reqrep: FALSE
+
+# Show reported release info
+# TRUE or FALSE (case-insensitive).
+#fp.show_release_info: TRUE
+
+# Call MAC dissector for payloads
+# TRUE or FALSE (case-insensitive).
+#fp.call_mac: TRUE
 
 # Encapsulation
 # One of: FRF 3.2/Cisco HDLC, GPRS Network Service, Raw Ethernet
 # (case-insensitive).
-fr.encap: FRF 3.2/Cisco HDLC
+#fr.encap: FRF 3.2/Cisco HDLC
 
-# Show File Offset
+# Show offset of frame in capture file
 # TRUE or FALSE (case-insensitive).
-frame.show_file_off: FALSE
+#frame.show_file_off: FALSE
 
 # Treat all frames as DOCSIS Frames
 # TRUE or FALSE (case-insensitive).
-frame.force_docsis_encap: FALSE
+#frame.force_docsis_encap: FALSE
+
+# Whether or not MD5 hashes should be generated for each frame, useful for finding duplicate frames.
+# TRUE or FALSE (case-insensitive).
+#frame.generate_md5_hash: FALSE
+
+# Whether or not an Epoch time entry should be generated for each frame.
+# TRUE or FALSE (case-insensitive).
+#frame.generate_epoch_time: TRUE
 
 # Whether the FireWall-1 summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-fw1.summary_in_tree: TRUE
+#fw1.summary_in_tree: TRUE
 
 # Whether the Firewall-1 monitor file includes UUID information
 # TRUE or FALSE (case-insensitive).
-fw1.with_uuid: FALSE
+#fw1.with_uuid: FALSE
 
 # Whether the interface list includes the chain position
 # TRUE or FALSE (case-insensitive).
-fw1.iflist_with_chain: FALSE
+#fw1.iflist_with_chain: FALSE
 
 # Whether the GIOP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-giop.desegment_giop_messages: TRUE
+#giop.desegment_giop_messages: TRUE
 
 # File containing stringified IORs, one per line.
 # A string.
-giop.ior_txt: IOR.txt
+#giop.ior_txt: IOR.txt
+
+# Whether the GIT dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#git.desegment: TRUE
+
+# Whether the Gigamon header summary line should be shown in the protocol tree
+# TRUE or FALSE (case-insensitive).
+#gmhdr.summary_in_tree: TRUE
+
+# TCP Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#gopher.tcp.port: 70
+
+# UDP ports to be decoded as GPRS-NS (default: 2157,19999)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#gprs-ns.udp.ports: 2157,19999
 
 # Whether the Gryphon dissector should desegment all messages spanning multiple TCP segments
 # TRUE or FALSE (case-insensitive).
-gryphon.desegment: TRUE
+#gryphon.desegment: TRUE
 
 # Always decode a GSM Short Message as Connectionless WSP if a Port Number Information Element is present in the SMS User Data Header.
 # TRUE or FALSE (case-insensitive).
-gsm-sms-ud.port_number_udh_means_wsp: FALSE
+#gsm-sms-ud.port_number_udh_means_wsp: FALSE
 
 # Always try subdissection of the 1st fragment of a fragmented GSM Short Message. If reassembly is possible, the Short Message may be dissected twice (once as a short frame, once in its entirety).
 # TRUE or FALSE (case-insensitive).
-gsm-sms-ud.try_dissect_1st_fragment: FALSE
+#gsm-sms-ud.try_dissect_1st_fragment: FALSE
 
 # Prevent sub-dissectors from replacing column data with their own. Eg. Prevent WSP dissector overwriting SMPP information.
 # TRUE or FALSE (case-insensitive).
-gsm-sms-ud.prevent_dissectors_chg_cols: FALSE
+#gsm-sms-ud.prevent_dissectors_chg_cols: FALSE
 
 # TCAP Subsystem numbers used for GSM MAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-gsm_map.tcap.ssn: 6-9
+#gsm_map.tcap.ssn: 6-9
+
+# Whether the dissector should reassemble SMS spanning multiple packets
+# TRUE or FALSE (case-insensitive).
+#gsm_sms.reassemble: TRUE
+
+# Treat ARFCN 512-810 as DCS 1800 rather than PCS 1900
+# TRUE or FALSE (case-insensitive).
+#gsm_um.dcs1800: TRUE
 
 # Whether or not to try reassembling GSSAPI blobs spanning multiple (SMB/SessionSetup) PDUs
 # TRUE or FALSE (case-insensitive).
-gss-api.gssapi_reassembly: TRUE
+#gss-api.gssapi_reassembly: TRUE
 
-# GTPv0 port (default 3386)
+# GTPv0 and GTP' port (default 3386)
 # A decimal number.
-gtp.v0_port: 3386
+#gtp.v0_port: 3386
 
-# GTPv1 control plane port (default 2123)
+# GTPv1 and GTPv2 control plane port (default 2123)
 # A decimal number.
-gtp.v1c_port: 2123
+#gtp.v1c_port: 2123
 
 # GTPv1 user plane port (default 2152)
 # A decimal number.
-gtp.v1u_port: 2152
+#gtp.v1u_port: 2152
 
 # Dissect T-PDU
 # TRUE or FALSE (case-insensitive).
-gtp.dissect_tpdu: TRUE
+#gtp.dissect_tpdu: TRUE
 
 # GTP ETSI order
 # TRUE or FALSE (case-insensitive).
-gtp.check_etsi: FALSE
+#gtp.check_etsi: FALSE
 
 # Dissect GTP over TCP
 # TRUE or FALSE (case-insensitive).
-gtp.dissect_gtp_over_tcp: TRUE
+#gtp.dissect_gtp_over_tcp: TRUE
 
 # H.225 Server TLS Port
 # A decimal number.
-h225.tls.port: 1300
+#h225.tls.port: 1300
 
 # Whether the H.225 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-h225.reassembly: TRUE
+#h225.reassembly: TRUE
 
 # ON - display tunnelled H.245 inside H.225.0 tree, OFF - display tunnelled H.245 in root tree after H.225.0
 # TRUE or FALSE (case-insensitive).
-h225.h245_in_tree: TRUE
+#h225.h245_in_tree: TRUE
 
 # ON - display tunnelled protocols inside H.225.0 tree, OFF - display tunnelled protocols in root tree after H.225.0
 # TRUE or FALSE (case-insensitive).
-h225.tp_in_tree: TRUE
+#h225.tp_in_tree: TRUE
 
 # Whether the H.245 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-h245.reassembly: TRUE
+#h245.reassembly: TRUE
 
 # Whether the dissector should show short names or the long names from the standard
 # TRUE or FALSE (case-insensitive).
-h245.shorttypes: FALSE
+#h245.shorttypes: FALSE
 
 # Mantain relationships between transactions and contexts and display an extra tree showing context data
 # TRUE or FALSE (case-insensitive).
-h248.ctx_info: FALSE
+#h248.ctx_info: FALSE
 
 # Port to be decoded as h248
 # A decimal number.
@@ -1282,47 +1584,60 @@ h248.udp_port: 0
 
 # Port to be decoded as h248
 # A decimal number.
-h248.tcp_port: 2945
+#h248.tcp_port: 2945
 
 # Desegment H.248 messages that span more TCP segments
 # TRUE or FALSE (case-insensitive).
-h248.desegment: TRUE
+#h248.desegment: TRUE
 
-# The dynamic payload type which will be interpreted as H264
+# The dynamic payload type which will be interpreted as H264; The value must be greater than 95
 # A decimal number.
-h263p.dynamic.payload.type: 0
+#h263p.dynamic.payload.type: 0
 
-# The dynamic payload type which will be interpreted as H264
-# A decimal number.
+# Dynamic payload types which will be interpreted as H264; Values must be in the range 96 - 127
+# A string denoting an positive integer range (e.g., "1-20,30-40").
 h264.dynamic.payload.type: 0
 
 # Port to be decoded as h501
 # A decimal number.
-h501.udp.port: 2099
+#h501.udp.port: 2099
 
 # Port to be decoded as h501
 # A decimal number.
-h501.tcp.port: 2099
+#h501.tcp.port: 2099
 
 # Desegment H.501 messages that span more TCP segments
 # TRUE or FALSE (case-insensitive).
-h501.desegment: TRUE
+#h501.desegment: TRUE
+
+# Enable this dissector (default is false)
+# TRUE or FALSE (case-insensitive).
+#hilscher.enable: FALSE
+
+# Set the port for HNBAP messages (Default of 29169)
+# A decimal number.
+#hnbap.port: 29169
+
+# Set the UDP port (source or destination) used for HP encapsulated remote mirroring frames;
+# 0 (default) means that the HP_ERM dissector is not active
+# A decimal number.
+#hp_erm.udp.port: 0
 
 # Whether the HTTP dissector should reassemble headers of a request spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-http.desegment_headers: TRUE
+#http.desegment_headers: TRUE
 
 # Whether the HTTP dissector should use the "Content-length:" value, if present, to reassemble the body of a request spanning multiple TCP segments, and reassemble chunked data spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-http.desegment_body: TRUE
+#http.desegment_body: TRUE
 
 # Whether to reassemble bodies of entities that are transfered using the "Transfer-Encoding: chunked" method
 # TRUE or FALSE (case-insensitive).
-http.dechunk_body: TRUE
+#http.dechunk_body: TRUE
 
 # Whether to uncompress entity bodies that are compressed using "Content-Encoding: "
 # TRUE or FALSE (case-insensitive).
-http.decompress_body: TRUE
+#http.decompress_body: TRUE
 
 # TCP Ports range
 # A string denoting an positive integer range (e.g., "1-20,30-40").
@@ -1330,140 +1645,307 @@ http.tcp.port: 80,3128,3132,8080,8088,11371,3689,1900
 
 # SSL/TLS Ports range
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-http.ssl.port: 443
+#http.ssl.port: 443
+
+# A table to define custom HTTP header for which fields can be setup and used for filtering/data extraction etc.
+
+# How the I2C messages are interpreted
+# One of: None (raw I2C), IPMB
+# (case-insensitive).
+#i2c.type: IPMB
 
 # Whether the 128th and following bytes of the ICMP payload should be decoded as MPLS extensions or as a portion of the original packet
 # TRUE or FALSE (case-insensitive).
-icmp.favor_icmp_mpls: FALSE
+#icmp.favor_icmp_mpls: FALSE
 
-# Ethertype used to indicate IEEE 802.1ah tag.
+# Whether the IDMP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#idmp.desegment_idmp_messages: TRUE
+
+# Whether segmented IDMP datagrams should be reassembled. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#idmp.reassemble: TRUE
+
+# Set the port for Internet Directly Mapped Protocol requests/responses
+# A decimal number.
+#idmp.tcp.port: 1102
+
+# (Hexadecimal) Ethertype used to indicate IEEE 802.1ah tag.
 # A hexadecimal number.
 ieee8021ah.8021ah_ethertype: 0x88f0
 
 # Whether the iFCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ifcp.desegment: TRUE
+#ifcp.desegment: TRUE
 
 # TCAP Subsystem numbers used for INAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-inap.ssn: 106,241
+#inap.ssn: 106,241
+
+# When set, dissector will attempt to identify unknown IBA payloads as containing an encapsulated ethertype, and parse them accordingly
+# TRUE or FALSE (case-insensitive).
+#infiniband.identify_payload: TRUE
+
+# When set, dissector will attempt to identify and parse Mellanox Ethernet-over-InfiniBand packets
+# TRUE or FALSE (case-insensitive).
+#infiniband.dissect_eoib: TRUE
 
 # Whether the IPv4 type-of-service field should be decoded as a Differentiated Services field (see RFC2474/RFC2475)
 # TRUE or FALSE (case-insensitive).
-ip.decode_tos_as_diffserv: TRUE
+#ip.decode_tos_as_diffserv: TRUE
 
 # Whether fragmented IP datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-ip.defragment: TRUE
+#ip.defragment: TRUE
 
 # Whether the IP summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-ip.summary_in_tree: TRUE
+#ip.summary_in_tree: TRUE
 
 # Whether to validate the IP checksum
 # TRUE or FALSE (case-insensitive).
-ip.check_checksum: TRUE
+#ip.check_checksum: TRUE
 
 # Whether to correct for TSO-enabled hardware captures, such as spoofing the IP packet length
 # TRUE or FALSE (case-insensitive).
-ip.tso_support: FALSE
+#ip.tso_support: FALSE
+
+# Whether to look up IP addresses in each GeoIP database we have loaded
+# TRUE or FALSE (case-insensitive).
+#ip.use_geoip: FALSE
+
+# Whether to interpret the originally reserved flag as security flag
+# TRUE or FALSE (case-insensitive).
+#ip.security_flag: FALSE
 
 # Whether the IPDC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ipdc.desegment_ipdc_messages: TRUE
+#ipdc.desegment_ipdc_messages: TRUE
 
 # Set the IPDC monitoring port
 # A decimal number.
-ipdc.tcp.port: 6668
+#ipdc.tcp.port: 6668
+
+# FRU Language Code is English; strings are ASCII+LATIN1 (vs. Unicode)
+# TRUE or FALSE (case-insensitive).
+#ipmi.fru_langcode_is_english: TRUE
+
+# Do not search for responses coming after this timeout (milliseconds)
+# A decimal number.
+#ipmi.response_after_req: 5000
+
+# Allow for responses before requests (milliseconds)
+# A decimal number.
+#ipmi.response_before_req: 0
+
+# Format of messages embedded into Send/Get/Forward Message
+# One of: None, IPMB, Session-based (LAN, ...), Use heuristics
+# (case-insensitive).
+#ipmi.msgfmt: Use heuristics
+
+# Selects which OEM format is used for commands that IPMI does not define
+# One of: None, Pigeon Point Systems
+# (case-insensitive).
+#ipmi.selected_oem: None
 
 # Whether fragmented IPv6 datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-ipv6.defragment: TRUE
+#ipv6.defragment: TRUE
+
+# Whether the IPv6 summary line should be shown in the protocol tree
+# TRUE or FALSE (case-insensitive).
+#ipv6.summary_in_tree: TRUE
+
+# Path to a pluto log file containing DH secret information
+# A string.
+#isakmp.log: insert pluto log path here
+
+# Table of IKE_SA security parameters for decryption of IKEv2 packets
 
 # The iSCSI protocol version
 # One of: Draft 08, Draft 09, Draft 11, Draft 12, Draft 13
 # (case-insensitive).
-iscsi.protocol_version: Draft 13
+#iscsi.protocol_version: Draft 13
 
 # Whether the iSCSI dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-iscsi.desegment_iscsi_messages: TRUE
+#iscsi.desegment_iscsi_messages: TRUE
 
 # When enabled, packets that appear bogus are ignored
 # TRUE or FALSE (case-insensitive).
-iscsi.bogus_pdu_filter: TRUE
+#iscsi.bogus_pdu_filter: TRUE
 
 # Ignore packets that haven't set the F bit when they should have
 # TRUE or FALSE (case-insensitive).
-iscsi.demand_good_f_bit: FALSE
+#iscsi.demand_good_f_bit: FALSE
 
 # Treat packets whose data segment length is greater than this value as bogus
 # A decimal number.
-iscsi.bogus_pdu_max_data_len: 262144
+#iscsi.bogus_pdu_max_data_len: 262144
 
 # Port number of iSCSI target
 # A decimal number.
-iscsi.target_port: 3260
+#iscsi.target_port: 3260
+
+# System port number of iSCSI target
+# A decimal number.
+#iscsi.target_system_port: 860
 
 # When enabled, pdus are assumed to contain a data digest
 # TRUE or FALSE (case-insensitive).
-iscsi.enable_data_digests: FALSE
+#iscsi.enable_data_digests: FALSE
 
 # When enabled, data digests are assumed to be CRC32C
 # TRUE or FALSE (case-insensitive).
-iscsi.data_digest_is_crc32c: TRUE
+#iscsi.data_digest_is_crc32c: TRUE
 
 # The size of a data digest (bytes)
 # A decimal number.
-iscsi.data_digest_size: 4
+#iscsi.data_digest_size: 4
+
+# The dynamic payload type which will be interpreted as ISMACryp
+# A decimal number.
+#ismacryp.dynamic.payload.type: 0
+
+# ISMACryp version
+# One of: ISMACryp v1.1, ISMACryp v2.0
+# (case-insensitive).
+#ismacryp.version: ISMACryp v1.1
+
+# The following option allows the version to be set manually and to override the version if detected from RTP payload type:
+
+# Indicates whether or not the ISMACryp version deduced from RTP payload type, if present, is used or whether the version above is used
+# TRUE or FALSE (case-insensitive).
+#ismacryp.override_rtp_pt: FALSE
+
+# ISMACryp v1.1 parameters declared in SDP
+
+# Set the length of the IV in the ISMACryp AU Header in bytes
+# A decimal number.
+#ismacryp.iv_length: 4
+
+# Set the length of the Delta IV in the ISMACryp AU Header in bytes
+# A decimal number.
+#ismacryp.delta_iv_length: 0
+
+# Set the length of the Key Indicator in the ISMACryp AU Header in bytes
+# A decimal number.
+#ismacryp.key_indicator_length: 0
+
+# Indicates whether or not the Key Indicator is present in all AU Headers (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.key_indicator_per_au_flag: FALSE
+
+# Indicates whether or not selective encryption is enabled (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.selective_encryption: TRUE
+
+# ISMACryp v2.0 parameters declared in SDP
+
+# Indicates whether or not slice start / end is present (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.slice_indication: FALSE
+
+# Indicates whether or not padding information is present (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.padding_indication: FALSE
+
+# AU parameters set according to RFC3640 mode or user defined
+
+# RFC3640 mode
+# One of: aac-hbr, mpeg4-video, avc-video
+# (case-insensitive).
+#ismacryp.rfc3640_mode: avc-video
+
+# Indicates use of user mode instead of RFC3640 modes (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.user_mode: FALSE
+
+# AU parameters defined by the user
+
+# Set the length of the AU size in the AU Header in bits
+# A decimal number.
+#ismacryp.au_size_length: 0
+
+# Set the length of the AU index in the AU Header in bits
+# A decimal number.
+#ismacryp.au_index_length: 0
+
+# Set the length of the AU delta index in the AU Header in bits
+# A decimal number.
+#ismacryp.au_index_delta_length: 0
+
+# Set the length of the CTS delta field in the AU Header in bits
+# A decimal number.
+#ismacryp.cts_delta_length: 0
+
+# Set the length of the DTS delta field in the AU Header in bits
+# A decimal number.
+#ismacryp.dts_delta_length: 0
+
+# Indicates whether or not the RAP field is present in the AU Header (T/F)
+# TRUE or FALSE (case-insensitive).
+#ismacryp.random_access_indication: FALSE
+
+# Indicates the number of bits on which the stream state field is encoded in the AU Header (bits)
+# A decimal number.
+#ismacryp.stream_state_indication: 0
 
 # Whether the iSNS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-isns.desegment: TRUE
+#isns.desegment: TRUE
 
 # Show the CIC value (in addition to the message type) in the Info column
 # TRUE or FALSE (case-insensitive).
-isup.show_cic_in_info: TRUE
+#isup.show_cic_in_info: TRUE
 
 # Whether APM messages datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-isup.defragment_apm: TRUE
+#isup.defragment_apm: TRUE
 
-# Set TCP port for ISUP Thin messages
+# The MPLS label (aka Flow Bundle ID) used by ITDM traffic.
+# A hexadecimal number.
+#itdm.mpls_label: 0x99887
+
+# Flow Number used by I-TDM Control Protocol traffic.
 # A decimal number.
-isup_thin.tcp.port: 0
+#itdm.ctl_flowno: 0
 
 # Support Implementers Guide (version 01)
 # TRUE or FALSE (case-insensitive).
-iua.support_ig: FALSE
+#iua.support_ig: FALSE
 
 # Whether IuUP Payload bits should be dissected
 # TRUE or FALSE (case-insensitive).
-iuup.dissect_payload: FALSE
+#iuup.dissect_payload: FALSE
 
 # The payload contains a two byte pseudoheader indicating direction and circuit_id
 # TRUE or FALSE (case-insensitive).
-iuup.two_byte_pseudoheader: FALSE
+#iuup.two_byte_pseudoheader: FALSE
 
 # The dynamic payload type which will be interpreted as IuUP
 # A decimal number.
-iuup.dynamic.payload.type: 0
+#iuup.dynamic.payload.type: 0
+
+# Set the port for JMirror Port (if other than the default of 30030)
+# A decimal number.
+#jmirror.udp.port: 30030
 
 # Enable to have correctly typed MIME media dissected as JXTA Messages.
 # TRUE or FALSE (case-insensitive).
-jxta.msg.mediatype: TRUE
+#jxta.msg.mediatype: TRUE
 
 # Whether the JXTA dissector should reassemble messages spanning multiple UDP/TCP/SCTP segments. To use this option you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings  and enable "Reassemble fragmented IP datagrams" in the IP protocol settings.
 # TRUE or FALSE (case-insensitive).
-jxta.desegment: TRUE
+#jxta.desegment: TRUE
 
 # Enable to inspect UDP datagrams for JXTA messages.
 # TRUE or FALSE (case-insensitive).
-jxta.udp.heuristic: TRUE
+#jxta.udp.heuristic: TRUE
 
 # Enable to inspect TCP connections for JXTA conversations.
 # TRUE or FALSE (case-insensitive).
-jxta.tcp.heuristic: TRUE
+#jxta.tcp.heuristic: TRUE
 
 # Enable to inspect SCTP connections for JXTA conversations.
 # TRUE or FALSE (case-insensitive).
@@ -1473,277 +1955,411 @@ jxta.sctp.heuristic: FALSE
 
 # Whether the Kerberos dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-kerberos.desegment: TRUE
+#kerberos.desegment: TRUE
 
 # Whether the dissector should try to decrypt encrypted Kerberos blobs. This requires that the proper keytab file is installed as well.
 # TRUE or FALSE (case-insensitive).
-kerberos.decrypt: FALSE
+#kerberos.decrypt: FALSE
 
 # The keytab file containing all the secrets
 # A string.
-kerberos.file: insert filename here
+#kerberos.file: insert filename here
 
 # Set the port for Kismet Client/Server messages (if other than the default of 2501)
 # A decimal number.
-kismet.tcp.port: 2501
+#kismet.tcp.port: 2501
 
 # Whether the Kpasswd dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-kpasswd.desegment: TRUE
+#kpasswd.desegment: TRUE
 
 # L2TPv3 Cookie Size
 # One of: None, 4 Byte Cookie, 8 Byte Cookie
 # (case-insensitive).
-l2tp.cookie_size: 4 Byte Cookie
+#l2tp.cookie_size: 4 Byte Cookie
 
 # L2TPv3 L2-Specific Sublayer
-# One of: None, Default L2-Specific, ATM-Specific, LAPD-Specific
+# One of: None, Default L2-Specific, ATM-Specific, LAPD-Specific, DOCSIS DMPT-Specific
 # (case-insensitive).
-l2tp.l2_specific: Default L2-Specific
+#l2tp.l2_specific: Default L2-Specific
 
 # Decode L2TPv3 packet contents as this protocol
-# One of: Ethernet, Cisco HDLC, Frame Relay, PPP, IP, MPLS, AAL5, LAPD
+# One of: Ethernet, Cisco HDLC, Frame Relay, PPP, IP, MPLS, AAL5, LAPD, DOCSIS-DMPT
 # (case-insensitive).
-l2tp.protocol: Cisco HDLC
+#l2tp.protocol: Cisco HDLC
 
 # Use SAPI values as specified in TS 48 056
 # TRUE or FALSE (case-insensitive).
-lapd.use_gsm_sapi_values: FALSE
+#lapd.use_gsm_sapi_values: FALSE
+
+# RTP payload type for embedded LAPD. It must be one of the dynamic types from 96 to 127. Set it to 0 to disable.
+# A decimal number.
+#lapd.rtp_payload_type: 0
+
+# Whether the dissector should defragment LAPDm messages spanning multiple packets.
+# TRUE or FALSE (case-insensitive).
+#lapdm.reassemble: TRUE
 
 # Whether the Laplink dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-laplink.desegment_laplink_over_tcp: TRUE
+#laplink.desegment_laplink_over_tcp: TRUE
 
-# Whether the LDAP dissector should reassemble messages spanning multiple TCP segments.To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Whether the LDAP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ldap.desegment_ldap_messages: TRUE
+#ldap.desegment_ldap_messages: TRUE
 
 # Set the port for LDAP operations
 # A decimal number.
-ldap.tcp.port: 389
+#ldap.tcp.port: 389
 
 # Set the port for LDAP operations over SSL
 # A decimal number.
-ldap.ssl.port: 636
+#ldap.ssl.port: 636
 
 # Set the TCP port for messages (if other than the default of 646)
 # A decimal number.
-ldp.tcp.port: 646
+#ldp.tcp.port: 646
 
 # Set the UDP port for messages (if other than the default of 646)
 # A decimal number.
-ldp.udp.port: 646
+#ldp.udp.port: 646
 
 # Whether the LDP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ldp.desegment_ldp_messages: TRUE
+#ldp.desegment_ldp_messages: TRUE
+
+# The UDP port on which Local Download Sharing Service broadcasts will be sent
+# A decimal number.
+#ldss.udp_port: 6087
 
 # Set UDP port for LGE Monitor messages
 # A decimal number.
-lge_monitor.udp.port: 0
+#lge_monitor.udp.port: 0
 
 # Whether to autodetect the cipher bit (because it might be set on unciphered data)
 # TRUE or FALSE (case-insensitive).
-llcgprs.autodetect_cipher_bit: FALSE
+#llcgprs.autodetect_cipher_bit: FALSE
 
 # Dissect this ethertype as LLT traffic in addition to the default, 0xCAFE.
 # A hexadecimal number.
-llt.alternate_ethertype: 0
+#llt.alternate_ethertype: 0
 
 # UDP port number to use for LMP
 # A decimal number.
-lmp.udp_port: 701
+#lmp.udp_port: 701
+
+# Whether LMP contains a checksum which can be checked
+# TRUE or FALSE (case-insensitive).
+#lmp.checksum: FALSE
 
 # Set the TCP or UDP port for Pegasus LSC messages
 # A decimal number.
-lsc.port: 0
+#lsc.port: 0
+
+# UDP Port to accept LTP Connections
+# A decimal number.
+#ltp.udp.port: 1113
 
 # Swap frame control bytes (needed for some APs
 # TRUE or FALSE (case-insensitive).
-lwapp.swap_fc: FALSE
+#lwapp.swap_fc: FALSE
 
 # Set the UDP port for lwres daemon(if other than the default of 921)
 # A decimal number.
-lwres.udp.lwres_port: 921
+#lwres.udp.lwres_port: 921
 
 # Version used by Wireshark
-# One of: Internet Draft version 2, Internet Draft version 8, Internet Draft version 12
+# One of: Internet Draft version 2, Internet Draft version 8, RFC 4165
 # (case-insensitive).
-m2pa.version: Internet Draft version 12
+#m2pa.version: RFC 4165
 
 # Set the port for M2PA messages (Default of 3565)
 # A decimal number.
-m2pa.port: 3565
+#m2pa.port: 3565
 
 # The value of the parameter tag for protocol data 1
 # One of: 0x000e (Draft 7), 0x0300 (RFC3331)
 # (case-insensitive).
-m2ua.protocol_data_1_tag: 0x0300 (RFC3331)
+#m2ua.protocol_data_1_tag: 0x0300 (RFC3331)
 
 # Version used by Wireshark
 # One of: Internet Draft version 5, Internet Draft version 6, Internet Draft version 7, RFC 3332
 # (case-insensitive).
-m3ua.version: RFC 3332
+#m3ua.version: RFC 3332
 
-# Whether the dissector should decrypt MAPI PDUs
+# Number of Re-Transmits before expert warning triggered
+# A decimal number.
+#mac-lte.retx_count_warn: 3
+
+# Attempt to decode BCH, PCH and CCCH data using LTE RRC dissector
 # TRUE or FALSE (case-insensitive).
-mapi.decrypt: FALSE
+#mac-lte.attempt_rrc_decode: TRUE
+
+# Attempt to dissect frames that have failed CRC check
+# TRUE or FALSE (case-insensitive).
+#mac-lte.attempt_to_dissect_crc_failures: FALSE
+
+# When enabled, use heuristic dissector to find MAC-LTE frames sent with UDP framing
+# TRUE or FALSE (case-insensitive).
+#mac-lte.heuristic_mac_lte_over_udp: FALSE
+
+# Will call LTE RLC dissector with standard settings as per RRC spec
+# TRUE or FALSE (case-insensitive).
+#mac-lte.attempt_to_dissect_srb_sdus: TRUE
+
+# A table that maps from configurable lcids -> RLC logical channels
+
+# When logging at UE side, will look for original transmission
+# TRUE or FALSE (case-insensitive).
+#mac-lte.attempt_to_track_ul_harq_resend: TRUE
+
+# If any BSR report is >= this number, an expert warning will be added
+# A decimal number.
+#mac-lte.bsr_warn_threshold: 50
+
+# Track status of SRs, providing links between requests, failure indications and grants
+# TRUE or FALSE (case-insensitive).
+#mac-lte.track_sr: TRUE
+
+# Can show PHY, MAC or RLC layer info in Info column
+# One of: PHY Info, MAC Info, RLC Info
+# (case-insensitive).
+#mac-lte.layer_to_show: RLC Info
+
+# MAC-Telnet UDP port if other than the default
+# A decimal number.
+#mactelnet.port: 20561
 
 # The name of the file containing the mate module's configuration
 # A string.
-mate.config: 
+#mate.config: 
 
 # A frame is considered for decoding as MDSHDR if either ethertype is 0xFCFC or zero. Turn this flag off if you you don't want ethertype zero to be decoded as MDSHDR. This might be useful to avoid problems with test frames.
 # TRUE or FALSE (case-insensitive).
-mdshdr.decode_if_etype_zero: TRUE
+#mdshdr.decode_if_etype_zero: TRUE
 
 # Set the TCP port for MEGACO text messages
 # A decimal number.
-megaco.tcp.txt_port: 2944
+#megaco.tcp.txt_port: 2944
 
 # Set the UDP port for MEGACO text messages
 # A decimal number.
-megaco.udp.txt_port: 2944
+#megaco.udp.txt_port: 2944
 
 # Specifies that the raw text of the MEGACO message should be displayed instead of (or in addition to) the dissection tree
 # TRUE or FALSE (case-insensitive).
-megaco.display_raw_text: TRUE
+#megaco.display_raw_text: TRUE
 
 # Specifies that the dissection tree of the MEGACO message should be displayed instead of (or in addition to) the raw text
 # TRUE or FALSE (case-insensitive).
-megaco.display_dissect_tree: TRUE
+#megaco.display_dissect_tree: TRUE
 
 # Mantain relationships between transactions and contexts and display an extra tree showing context data
 # TRUE or FALSE (case-insensitive).
-megaco.ctx_info: FALSE
+#megaco.ctx_info: FALSE
+
+# Whether the MEMCACHE dissector should reassemble headers of a request spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#memcache.desegment_headers: TRUE
+
+# Whether the memcache dissector should reassemble PDUs spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#memcache.desegment_pdus: TRUE
 
 # Set the UDP port for gateway messages (if other than the default of 2427)
 # A decimal number.
-mgcp.tcp.gateway_port: 2427
+#mgcp.tcp.gateway_port: 2427
 
 # Set the TCP port for gateway messages (if other than the default of 2427)
 # A decimal number.
-mgcp.udp.gateway_port: 2427
+#mgcp.udp.gateway_port: 2427
 
 # Set the TCP port for callagent messages (if other than the default of 2727)
 # A decimal number.
-mgcp.tcp.callagent_port: 2727
+#mgcp.tcp.callagent_port: 2727
 
 # Set the UDP port for callagent messages (if other than the default of 2727)
 # A decimal number.
-mgcp.udp.callagent_port: 2727
+#mgcp.udp.callagent_port: 2727
 
 # Specifies that the raw text of the MGCP message should be displayed instead of (or in addition to) the dissection tree
 # TRUE or FALSE (case-insensitive).
-mgcp.display_raw_text: FALSE
+#mgcp.display_raw_text: FALSE
 
 # Display the number of MGCP messages found in a packet in the protocol column.
 # TRUE or FALSE (case-insensitive).
-mgcp.display_mgcp_message_count: FALSE
+#mgcp.display_mgcp_message_count: FALSE
 
 # Set the port for MIKEY messages (if other than the default of 2269)
 # A decimal number.
-mikey.udp.port: 2269
+#mikey.udp.port: 2269
 
 # Set the port for MIKEY messages (if other than the default of 2269)
 # A decimal number.
-mikey.tcp.port: 2269
+#mikey.tcp.port: 2269
 
 # Display multipart bodies with no media type dissector as raw text (may cause problems with binary data).
 # TRUE or FALSE (case-insensitive).
-mime_multipart.display_unknown_body_as_text: FALSE
+#mime_multipart.display_unknown_body_as_text: FALSE
 
 # Remove any base64 content-transfer encoding from bodies. This supports export of the body and its further dissection.
 # TRUE or FALSE (case-insensitive).
-mime_multipart.remove_base64_encoding: FALSE
+#mime_multipart.remove_base64_encoding: FALSE
+
+# Whether PPP Multilink frames use 12-bit sequence numbers
+# TRUE or FALSE (case-insensitive).
+#mp.short_seqno: FALSE
+
+# The dynamic payload type which will be interpreted as MP4V-ES
+# A decimal number.
+#mp4v-es.dynamic.payload.type: 0
+
+# Default decoder for MPLS payload
+# One of: SAToP (no RTP support), CESoPSN basic NxDS0 mode (no RTP support), Ethernet MPLS PW (CW is heuristically detected), Frame relay DLCI MPLS PW, HDLC MPLS PW (no CW), FR Port mode, HDLC MPLS PW (no CW), HDLC mode, PPP payload, Ethernet MPLS PW (with CW), Ethernet MPLS PW (no CW, early implementations), Generic MPLS PW (with Generic/Preferred MPLS CW), Internal TDM, MPLS PW ATM N-to-One encapsulation, with CW, MPLS PW ATM N-to-One encapsulation, no CW, MPLS PW ATM One-to-One or AAL5 PDU encapsulation, MPLS PW ATM AAL5 CPCS-SDU mode encapsulation
+# (case-insensitive).
+#mpls.mplspref.payload: Ethernet MPLS PW (CW is heuristically detected)
+
+# draft-ietf-pwe3-vccv-bfd-05 states that PWAC Channel Type 0x07 must be used when VCCV carries PW-ACH-encapsulated BFD (i.e., BFD without IP/UDP Headers, or "raw" BFD)
+# 
+# Legacy or buggy devices may not comply to this and use Channel Type 0x0 for BFD. Enable this preference to decode such BFD traffic. Disable for standard behavior of PWAC dissector (default).
+# TRUE or FALSE (case-insensitive).
+#mpls.mplspref.pwac_0x0_as_bfd: FALSE
+
+# draft-ietf-pwe3-vccv-bfd-05 states that PWAC Channel Type 0x07 must be used when VCCV carries PW-ACH-encapsulated BFD (i.e., "raw" BFD)
+# 
+# Legacy or buggy devices may not comply to this and use voluntary Channel Type for BFD. Enable this preference to decode all PWAC Channel Types as raw BFD, except Channel Type 0x21 (IPv4). Disable for standard behavior of PWAC dissector (default).
+# TRUE or FALSE (case-insensitive).
+#mpls.mplspref.pwac_all_as_bfd_xip: FALSE
+
+# Legacy devices may use MPLS PW Associated Channel for PPP traffic.
+# 
+# Enable this preference to allow PWAC dissector to try PPP, if no other suitable dissector found (default).
+# TRUE or FALSE (case-insensitive).
+#mpls.mplspref.pwac_try_ppp: TRUE
 
 # Set the UDP port for messages (if other than the default of 3503)
 # A decimal number.
-mpls-echo.udp.port: 3503
+#mpls-echo.udp.port: 3503
+
+# Enable to allow non-zero Length in Control Word. This may be needed to correctly decode traffic from some legacy devices which generate non-zero Length even if there is no padding in the packet. Note that Length should have proper value (dissector checks this anyway).
+# 
+# Disable to blame all packets with CW.Length <> 0. This conforms to RFC4717.
+# TRUE or FALSE (case-insensitive).
+#mplspwatmaal5sdu.allow_cw_length_nonzero_aal5: FALSE
+
+# Enable to use reserved bits (8..9) of Control Word as an extension of CW.Length. This may be needed to correctly decode traffic from some legacy devices which uses reserved bits as extension of Length
+# 
+# Disable to blame all packets with CW.Reserved <> 0. This conforms to RFC4717.
+# TRUE or FALSE (case-insensitive).
+#mplspwatmaal5sdu.extend_cw_length_with_rsvd_aal5: FALSE
+
+# Enable to allow non-zero Length in Control Word. This may be needed to correctly decode traffic from some legacy devices which generate non-zero Length even if there is no padding in the packet. Note that Length should have proper value (dissector checks this anyway).
+# 
+# Disable to blame all packets with CW.Length <> 0. This conforms to RFC4717.
+# TRUE or FALSE (case-insensitive).
+#mplspwatmn1cw.allow_cw_length_nonzero: FALSE
+
+# Enable to use reserved bits (8..9) of Control Word as an extension of CW.Length. This may be needed to correctly decode traffic from some legacy devices which uses reserved bits as extension of Length
+# 
+# Disable to blame all packets with CW.Reserved <> 0. This conforms to RFC4717.
+# TRUE or FALSE (case-insensitive).
+#mplspwatmn1cw.extend_cw_length_with_rsvd: FALSE
 
 # Whether the MQ dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-mq.desegment: TRUE
+#mq.desegment: TRUE
 
 # Whether the MQ dissector should reassemble MQ messages spanning multiple TSH segments
 # TRUE or FALSE (case-insensitive).
-mq.reassembly: TRUE
+#mq.reassembly: TRUE
 
 # Specifies that the raw text of the MSRP message should be displayed in addition to the dissection tree
 # TRUE or FALSE (case-insensitive).
-msrp.display_raw_text: TRUE
+#msrp.display_raw_text: TRUE
 
 # Where available, show which protocol and frame caused this MSRP stream to be created
 # TRUE or FALSE (case-insensitive).
-msrp.show_setup_info: TRUE
+#msrp.show_setup_info: TRUE
 
 # Whether the MTP2 dissector should use extended sequence numbers as described in Q.703, Annex A as a default.
 # TRUE or FALSE (case-insensitive).
-mtp2.use_extended_sequence_numbers: FALSE
+#mtp2.use_extended_sequence_numbers: FALSE
 
 # The SS7 standard used in MTP3 packets
 # One of: ITU, ANSI, Chinese ITU, Japan
 # (case-insensitive).
-mtp3.standard: ITU
+#mtp3.standard: ITU
 
 # The structure of the pointcodes in ITU networks
 # One of: Unstructured, 3-8-3, 4-3-4-3
 # (case-insensitive).
-mtp3.itu_pc_structure: Unstructured
+#mtp3.itu_pc_structure: Unstructured
 
 # The structure of the pointcodes in Japan networks
 # One of: Unstructured, 7-4-5, 3-4-4-5
 # (case-insensitive).
-mtp3.japan_pc_structure: Unstructured
+#mtp3.japan_pc_structure: Unstructured
 
 # Use 5-bit (instead of 8-bit) SLS in ANSI MTP3 packets
 # TRUE or FALSE (case-insensitive).
-mtp3.ansi_5_bit_sls: FALSE
+#mtp3.ansi_5_bit_sls: FALSE
 
 # Use 5-bit (instead of 4-bit) SLS in Japan MTP3 packets
 # TRUE or FALSE (case-insensitive).
-mtp3.japan_5_bit_sls: FALSE
+#mtp3.japan_5_bit_sls: FALSE
 
 # Format for point code in the address columns
 # One of: Decimal, Hexadecimal, NI-Decimal, NI-Hexadecimal, Dashed
 # (case-insensitive).
-mtp3.addr_format: Dashed
+#mtp3.addr_format: Dashed
 
 # Decode the spare bits of the SIO as the MSU priority (a national option in ITU)
 # TRUE or FALSE (case-insensitive).
-mtp3.itu_priority: FALSE
+#mtp3.itu_priority: FALSE
 
 # Whether the MySQL dissector should reassemble MySQL buffers spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-mysql.desegment_buffers: TRUE
+#mysql.desegment_buffers: TRUE
 
 # Whether the MySQL dissector should display the SQL query string in the INFO column.
 # TRUE or FALSE (case-insensitive).
-mysql.show_sql_query: FALSE
+#mysql.show_sql_query: FALSE
+
+# Whether the Nasdaq ITCH dissector should decode Chi X extensions.
+# TRUE or FALSE (case-insensitive).
+#nasdaq_itch.chi_x: TRUE
+
+# Whether the Nasdaq-SoupTCP dissector should reassemble messages spanning multiple TCP segments.
+# TRUE or FALSE (case-insensitive).
+#nasdaq_soup.desegment: TRUE
+
+# TCP Ports range
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#nasdaq_soup.tcp.port: 
 
 # Whether the NBD dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings
 # TRUE or FALSE (case-insensitive).
-nbd.desegment_nbd_messages: TRUE
+#nbd.desegment_nbd_messages: TRUE
 
 # Whether the NBSS dissector should reassemble packets spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-nbss.desegment_nbss_commands: TRUE
+#nbss.desegment_nbss_commands: TRUE
 
 # Whether the NCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ncp.desegment: TRUE
+#ncp.desegment: TRUE
 
 # Whether the NCP dissector should defragment NDS messages spanning multiple reply packets.
 # TRUE or FALSE (case-insensitive).
-ncp.defragment_nds: TRUE
+#ncp.defragment_nds: TRUE
 
 # Dissect the NetWare Information Structure as NetWare 5.x or higher or as older NetWare 3.x.
 # TRUE or FALSE (case-insensitive).
-ncp.newstyle: TRUE
+#ncp.newstyle: TRUE
 
 # Whether the NCP dissector should echo the NDS Entry ID to name resolves to the expert table.
 # TRUE or FALSE (case-insensitive).
-ncp.eid_2_expert: TRUE
+#ncp.eid_2_expert: TRUE
 
 # Whether the NCP dissector should echo NCP connection information to the expert table.
 # TRUE or FALSE (case-insensitive).
@@ -1751,11 +2367,11 @@ ncp.connection_2_expert: TRUE
 
 # Whether the NCP dissector should echo protocol errors to the expert table.
 # TRUE or FALSE (case-insensitive).
-ncp.error_2_expert: TRUE
+#ncp.error_2_expert: TRUE
 
 # Whether the NCP dissector should echo server information to the expert table.
 # TRUE or FALSE (case-insensitive).
-ncp.server_2_expert: TRUE
+#ncp.server_2_expert: TRUE
 
 # Whether the NCP dissector should echo file open/close/oplock information to the expert table.
 # TRUE or FALSE (case-insensitive).
@@ -1764,92 +2380,112 @@ ncp.file_2_expert: TRUE
 # Version of the NDMP protocol to assume if the version can not be automatically detected from the capture
 # One of: Version 2, Version 3, Version 4, Version 5
 # (case-insensitive).
-ndmp.default_protocol_version: Version 4
+#ndmp.default_protocol_version: Version 4
 
 # Whether the NDMP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ndmp.desegment: TRUE
+#ndmp.desegment: TRUE
 
 # Whether the dissector should defragment NDMP messages spanning multiple packets.
 # TRUE or FALSE (case-insensitive).
-ndmp.defragment: TRUE
+#ndmp.defragment: TRUE
 
 # Whether the NDPS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ndps.desegment_tcp: TRUE
+#ndps.desegment_tcp: TRUE
 
 # Whether the NDPS dissector should reassemble fragmented NDPS messages spanning multiple SPX packets
 # TRUE or FALSE (case-insensitive).
-ndps.desegment_spx: TRUE
+#ndps.desegment_spx: TRUE
 
 # Whether or not the NDPS dissector should show object id's and other details
 # TRUE or FALSE (case-insensitive).
-ndps.show_oid: FALSE
+#ndps.show_oid: FALSE
 
 # Whether the NetBIOS dissector should defragment messages spanning multiple frames
 # TRUE or FALSE (case-insensitive).
-netbios.defragment: TRUE
+#netbios.defragment: TRUE
+
+# port if other than the default
+# A decimal number.
+#netdump.udp.port: 0
 
 # The TCP port on which Monotone Netsync packets will be sent
 # A decimal number.
-netsync.tcp_port: 5253
+#netsync.tcp_port: 5253
 
 # Whether the Netsync dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-netsync.desegment_netsync_messages: TRUE
+#netsync.desegment_netsync_messages: TRUE
 
 # Always dissect this port's traffic as newmail notifications.  Additional ports will be dynamically registered as they are seen in MAPI register push notification packets.
 # A decimal number.
-newmail.default_port: 0
+#newmail.default_port: 0
 
 # Whether the dissector should snoop the FH to filename mappings by looking inside certain packets
 # TRUE or FALSE (case-insensitive).
-nfs.file_name_snooping: FALSE
+#nfs.file_name_snooping: FALSE
 
 # Whether the dissector should snoop the full pathname for files for matching FH's
 # TRUE or FALSE (case-insensitive).
-nfs.file_full_name_snooping: FALSE
+#nfs.file_full_name_snooping: FALSE
 
-# With this option display filters for nfs fhandles (nfs.fh.{name|full_name|hash}) will find both the request and response packets for a RPC call, even if the actual fhandle is only present in one of the packets
+# With this option display filters for nfs fhandles (nfs.fh.{name|full_name|hash}) will find both the request 						and response packets for a RPC call, even if the actual fhandle is only present in one of the packets
 # TRUE or FALSE (case-insensitive).
-nfs.fhandle_find_both_reqrep: FALSE
+#nfs.fhandle_find_both_reqrep: FALSE
+
+# When enabled, this option will print the NFSv4 tag (if one exists) in the Info column in the Summary pane
+# TRUE or FALSE (case-insensitive).
+#nfs.display_nfsv4_tag: TRUE
+
+# When enabled, shows only the significant NFSv4 Operations in the info column.  Others (like GETFH, PUTFH, etc) are not displayed
+# TRUE or FALSE (case-insensitive).
+#nfs.display_major_nfsv4_ops: TRUE
 
 # Decode all NFS file handles as if they are of this type
-# One of: Unknown, SVR4, KNFSD_LE, NFSD_LE, KNFSD_NEW, ONTAP_V3, ONTAP_V4, ONTAP_GX_V3
+# One of: Unknown, SVR4, KNFSD_LE, NFSD_LE, KNFSD_NEW, ONTAP_V3, ONTAP_V4, ONTAP_GX_V3, CELERRA
 # (case-insensitive).
-nfs.default_fhandle_type: Unknown
+#nfs.default_fhandle_type: Unknown
 
 # Whether the dissector will track and match MSG and RES calls for asynchronous NLM
 # TRUE or FALSE (case-insensitive).
-nlm.msg_res_matching: FALSE
+#nlm.msg_res_matching: FALSE
 
 # Check this to decode NORM traffic between clients
 # TRUE or FALSE (case-insensitive).
-norm.heuristic_norm: FALSE
-
-# UDP ports to be decoded as NSIP (default: 2157,19999)
-# A string denoting an positive integer range (e.g., "1-20,30-40").
-nsip.udp.ports: 2157,19999
+#norm.heuristic_norm: FALSE
 
 # NT Password (used to decrypt payloads)
 # A string.
-ntlmssp.nt_password: 
+#ntlmssp.nt_password: 
+
+# Dissect custom olsr.org message types (compatible with rfc routing agents)
+# TRUE or FALSE (case-insensitive).
+#olsr.ff_olsrorg: TRUE
+
+# Dissect custom nrlolsr tc message (incompatible with rfc routing agents)
+# TRUE or FALSE (case-insensitive).
+#olsr.nrlolsr: TRUE
+
+# The TCP ports for the OPC UA TCP Binary Protocol
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#opcua.tcp_ports: 4840
 
 # Whether the OPSI dissector should desegment all messages spanning multiple TCP segments
 # TRUE or FALSE (case-insensitive).
-opsi.desegment_opsi_messages: TRUE
+#opsi.desegment_opsi_messages: TRUE
 
 # TCP port for OSI over TPKT
 # A decimal number.
-osi.tpkt_port: 0
+#osi.tpkt_port: 0
 
 # Whether segmented TPKT datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-osi.tpkt_reassemble: FALSE
+#osi.tpkt_reassemble: FALSE
 
 # Set the port for P7 operations (if other than the default of 102)
 # A decimal number.
-p7.tcp.port: 102
+#p7.tcp.port: 102
 
 # Port numbers used for P_Mul traffic
 # A string denoting an positive integer range (e.g., "1-20,30-40").
@@ -1857,145 +2493,226 @@ p_mul.udp_ports: 2751,2752,2753,2754
 
 # Reassemble fragmented P_Mul packets
 # TRUE or FALSE (case-insensitive).
-p_mul.reassemble: TRUE
+#p_mul.reassemble: TRUE
 
 # Make the P_Mul dissector use relative message id number instead of absolute ones
 # TRUE or FALSE (case-insensitive).
-p_mul.relative_msgid: TRUE
+#p_mul.relative_msgid: TRUE
 
 # Calculate sequence/acknowledgement analysis
 # TRUE or FALSE (case-insensitive).
-p_mul.seq_ack_analysis: TRUE
+#p_mul.seq_ack_analysis: TRUE
 
 # Type of content in Data_PDU
-# One of: No decoding, Compressed Data Type
+# One of: No decoding, BER encoded ASN.1, Compressed Data Type
 # (case-insensitive).
-p_mul.decode: No decoding
+#p_mul.decode: No decoding
+
+# UDP communication port for packetbb PDUs
+# A decimal number.
+#packetbb.communication_port: 269
+
+# SCCP (and SUA) SSNs to decode as PCAP
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#pcap.ssn: 
 
 # The UDP port on which Packet Cable Lawful Intercept packets will be sent
 # A decimal number.
-pcli.udp_port: 9000
+#pcli.udp_port: 9000
+
+# Show uncompressed User-Plane data as IP
+# TRUE or FALSE (case-insensitive).
+#pdcp-lte.show_user_plane_as_ip: FALSE
+
+# Show unciphered Signalling-Plane data as RRC
+# TRUE or FALSE (case-insensitive).
+#pdcp-lte.show_signalling_plane_as_rrc: FALSE
+
+# Attempt to decode ROHC data
+# TRUE or FALSE (case-insensitive).
+#pdcp-lte.dissect_rohc: FALSE
+
+# Show ROHC feedback option tag & length
+# TRUE or FALSE (case-insensitive).
+#pdcp-lte.show_feedback_option_tag_length: FALSE
+
+# When enabled, use heuristic dissector to find PDCP-LTE frames sent with UDP framing
+# TRUE or FALSE (case-insensitive).
+#pdcp-lte.heuristic_pdcp_lte_over_udp: FALSE
 
 # Whether the dissector should put the internal PER data in the tree or if it should hide it
 # TRUE or FALSE (case-insensitive).
-per.display_internal_per_fields: FALSE
+#per.display_internal_per_fields: FALSE
 
 # Whether to check the validity of the PGM checksum
 # TRUE or FALSE (case-insensitive).
-pgm.check_checksum: TRUE
+#pgm.check_checksum: TRUE
 
 # PGM Encap is PGM packets encapsulated in UDP packets (Note: This option is off, i.e. port is 0, by default)
 # A decimal number.
-pgm.udp.encap_ucast_port: 0
+#pgm.udp.encap_ucast_port: 0
 
 # PGM Encap is PGM packets encapsulated in UDP packets (Note: This option is off, i.e. port is 0, by default)
 # A decimal number.
-pgm.udp.encap_mcast_port: 0
+#pgm.udp.encap_mcast_port: 0
 
 # Set the port for PGSQL messages (if different from the default of 5432)
 # A decimal number.
-pgsql.tcp.port: 5432
+#pgsql.tcp.port: 5432
 
 # The password to used to decrypt the encrypted elements within the PKCS#12 file
 # A string.
-pkcs12.password: 
+#pkcs12.password: 
 
 # Whether to try and decrypt the encrypted data within the PKCS#12 with a NULL password
 # TRUE or FALSE (case-insensitive).
-pkcs12.try_null_password: FALSE
+#pkcs12.try_null_password: FALSE
 
 # Decode packets on this UDP port as PacketCable CCC
 # A decimal number.
-pkt_ccc.udp_port: 0
+#pkt_ccc.udp_port: 0
 
 # Whether the PN-RT summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-pn_rt.summary_in_tree: TRUE
+#pn_rt.summary_in_tree: TRUE
+
+# Whether the POP dissector should reassemble RETR and TOP responses and spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#pop.desegment_data: TRUE
 
 # Whether fragmented 802.11 aggregated MPDUs should be reassembled
 # TRUE or FALSE (case-insensitive).
-ppi.reassemble: TRUE
+#ppi.reassemble: TRUE
 
 # The type of PPP frame checksum (none, 16-bit, 32-bit)
 # One of: None, 16-Bit, 32-Bit
 # (case-insensitive).
-ppp.fcs_type: None
+#ppp.fcs_type: None
 
 # Whether Van Jacobson-compressed PPP frames should be decompressed
 # TRUE or FALSE (case-insensitive).
-ppp.decompress_vj: TRUE
+#ppp.decompress_vj: TRUE
 
 # Default Protocol ID to be used for PPPMuxCP
 # A hexadecimal number.
-ppp.default_proto_id: 0
+#ppp.default_proto_id: 0
 
 # Show values of tags and lengths of data fields
 # TRUE or FALSE (case-insensitive).
-pppoed.show_tags_and_lengths: FALSE
+#pppoed.show_tags_and_lengths: FALSE
+
+# A table that enumerates user protocols to be used against specific presentation context identifiers
+
+# Enable this dissector (default is false)
+# TRUE or FALSE (case-insensitive).
+#prp.enable: FALSE
 
 # Whether the PVFS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-pvfs.desegment: TRUE
+#pvfs.desegment: TRUE
 
 # Whether the Q.931 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-q931.desegment_h323_messages: TRUE
+#q931.desegment_h323_messages: TRUE
 
 # Reassemble segmented Q.931 messages (Q.931 - Annex H)
 # TRUE or FALSE (case-insensitive).
-q931.reassembly: TRUE
+#q931.reassembly: TRUE
 
 # Set the UDP port for the Quake Server
 # A decimal number.
-quake.udp.port: 26000
+#quake.udp.port: 26000
 
 # Set the UDP port for the Quake II Server
 # A decimal number.
-quake2.udp.port: 27910
+#quake2.udp.port: 27910
 
 # Set the UDP base port for the Quake III Arena Server
 # A decimal number.
-quake3.udp.arena_port: 27960
+#quake3.udp.arena_port: 27960
 
 # Set the UDP base port for the Quake III Arena Master Server
 # A decimal number.
-quake3.udp.master_port: 27950
+#quake3.udp.master_port: 27950
 
 # Set the UDP port for the QuakeWorld Server
 # A decimal number.
-quakeworld.udp.port: 27500
+#quakeworld.udp.port: 27500
+
+# Radiotap has a bit to indicate whether the FCS is still on the frame or not. Some generators (e.g. AirPcap) use a non-standard radiotap flag 14 to put the FCS into the header.
+# TRUE or FALSE (case-insensitive).
+#radiotap.bit14_fcs_in_header: FALSE
 
 # Shared secret used to decode User Passwords
 # A string.
-radius.shared_secret: 
+#radius.shared_secret: 
 
 # Whether to add or not to the tree the AVP's payload length
 # TRUE or FALSE (case-insensitive).
-radius.show_length: FALSE
+#radius.show_length: FALSE
 
 # An alternate UDP port to decode as RADIUS
 # A decimal number.
-radius.alternate_port: 0
+#radius.alternate_port: 0
+
+# Time to live for a radius request used for matching it with a response
+# A decimal number.
+#radius.request_ttl: 5
+
+# The SCCP SubSystem Number for RANAP (default 142)
+# A decimal number.
+#ranap.sccp_ssn: 142
 
 # Where available, show which protocol and frame caused this RDT stream to be created
 # TRUE or FALSE (case-insensitive).
-rdt.show_setup_info: TRUE
+#rdt.show_setup_info: TRUE
 
 # Register a client UDP port for RDT traffic
 # TRUE or FALSE (case-insensitive).
-rdt.register_udp_port: FALSE
+#rdt.register_udp_port: FALSE
 
 # Set the UDP port for clients
 # A decimal number.
-rdt.default_udp_port: 6970
+#rdt.default_udp_port: 6970
+
+# Attempt to keep track of PDUs for AM channels, and point out problems
+# One of: No-Analysis, Only-MAC-frames, Only-RLC-frames
+# (case-insensitive).
+#rlc-lte.do_sequence_analysis_am: No-Analysis
+
+# Attempt to keep track of PDUs for UM channels, and point out problems
+# One of: No-Analysis, Only-MAC-frames, Only-RLC-frames
+# (case-insensitive).
+#rlc-lte.do_sequence_analysis: No-Analysis
+
+# Call PDCP dissector for signalling PDUs.  Note that without reassembly, it canonly be called for complete PDus (i.e. not segmented over RLC)
+# TRUE or FALSE (case-insensitive).
+#rlc-lte.call_pdcp_for_srb: FALSE
+
+# Call PDCP dissector for user-plane PDUs.  Note that without reassembly, it canonly be called for complete PDus (i.e. not segmented over RLC)
+# One of: Off, 7-bit SN, 12-bit SN
+# (case-insensitive).
+#rlc-lte.call_pdcp_for_drb: Off
+
+# Call RRC dissector for CCCH PDUs
+# TRUE or FALSE (case-insensitive).
+#rlc-lte.call_rrc_for_ccch: FALSE
+
+# When enabled, use heuristic dissector to find RLC-LTE frames sent with UDP framing
+# TRUE or FALSE (case-insensitive).
+#rlc-lte.heuristic_rlc_lte_over_udp: FALSE
+
+# When enabled, if data is not present, don't report as an error, but instead add expert info to indicate that headers were ommitted
+# TRUE or FALSE (case-insensitive).
+#rlc-lte.header_only_mode: FALSE
 
 # Whether the RPC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-rpc.desegment_rpc_over_tcp: TRUE
+#rpc.desegment_rpc_over_tcp: TRUE
 
 # Whether the RPC dissector should defragment RPC-over-TCP messages.
 # TRUE or FALSE (case-insensitive).
-rpc.defragment_rpc_over_tcp: TRUE
+#rpc.defragment_rpc_over_tcp: TRUE
 
 # Set the maximum size of RPCoverTCP PDUs.  If the size field of the record marker is larger than this value it will not be considered a valid RPC PDU.
 # A decimal number.
@@ -2003,139 +2720,190 @@ rpc.max_tcp_pdu_size: 262144
 
 # Whether the RPC dissector should attempt to dissect RPC PDUs containing programs that are not known to Wireshark. This will make the heuristics significantly weaker and elevate the risk for falsely identifying and misdissecting packets significantly.
 # TRUE or FALSE (case-insensitive).
-rpc.dissect_unknown_programs: FALSE
+#rpc.dissect_unknown_programs: FALSE
 
 # Whether the RPC dissector should attempt to locate RPC PDU boundaries when initial fragment alignment is not known.  This may cause false positives, or slow operation.
 # TRUE or FALSE (case-insensitive).
-rpc.find_fragment_start: FALSE
+#rpc.find_fragment_start: FALSE
+
+# Whether the RPCAP dissector should reassemble PDUs spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#rpcap.desegment_pdus: TRUE
+
+# Whether the packets should be decoded according to the link-layer type.
+# TRUE or FALSE (case-insensitive).
+#rpcap.decode_content: TRUE
+
+# Default link-layer type to use if an Open Reply packet has not been received.
+# A decimal number.
+#rpcap.linktype: 0
 
 # Specifies whether Wireshark should decode and display sub-messages within BUNDLE messages
 # TRUE or FALSE (case-insensitive).
-rsvp.process_bundle: TRUE
+#rsvp.process_bundle: TRUE
+
+# Specifies how Wireshark should dissect generalized labels
+# One of: data (no interpretation), SONET/SDH ("S, U, K, L, M" scheme), Wavelength Label (G.694 frequency grid), ODUk Label
+# (case-insensitive).
+#rsvp.generalized_label_options: data (no interpretation)
 
 # Set the TCP port for RSYNC messages
 # A decimal number.
-rsync.tcp_port: 873
+#rsync.tcp_port: 873
 
 # Whether the RSYNC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-rsync.desegment: TRUE
+#rsync.desegment: TRUE
 
 # Where available, show which protocol and frame caused this RTCP stream to be created
 # TRUE or FALSE (case-insensitive).
-rtcp.show_setup_info: TRUE
+#rtcp.show_setup_info: TRUE
 
 # If call control SIP/H.323/RTSP/.. messages are missing in the trace, RTCP isn't decoded without this
 # TRUE or FALSE (case-insensitive).
-rtcp.heuristic_rtcp: FALSE
+#rtcp.heuristic_rtcp: FALSE
 
 # Try to work out network delay by comparing time between packets as captured and delays as seen by endpoint
 # TRUE or FALSE (case-insensitive).
-rtcp.show_roundtrip_calculation: FALSE
+#rtcp.show_roundtrip_calculation: FALSE
 
 # Minimum (absolute) calculated roundtrip delay time in milliseconds that should be reported
 # A decimal number.
-rtcp.roundtrip_min_threshhold: 10
+#rtcp.roundtrip_min_threshhold: 10
 
 # Whether the RTMPT dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-rtmpt.desegment: TRUE
+#rtmpt.desegment: TRUE
 
 # Where available, show which protocol and frame caused this RTP stream to be created
 # TRUE or FALSE (case-insensitive).
-rtp.show_setup_info: TRUE
+#rtp.show_setup_info: TRUE
 
 # If call control SIP/H323/RTSP/.. messages are missing in the trace, RTP isn't decoded without this
 # TRUE or FALSE (case-insensitive).
-rtp.heuristic_rtp: FALSE
+#rtp.heuristic_rtp: FALSE
 
 # Whether subdissector can request RTP streams to be reassembled
 # TRUE or FALSE (case-insensitive).
-rtp.desegment_rtp_streams: TRUE
+#rtp.desegment_rtp_streams: TRUE
 
-# If an RTP version 0 packet is encountered, it can be treated as an invalid packet, a STUN packet, or a T.38 packet
-# One of: Invalid RTP packets, STUN packets, T.38 packets
+# If an RTP version 0 packet is encountered, it can be treated as an invalid or ZRTP packet, a CLASSIC-STUN packet, or a T.38 packet
+# One of: Invalid or ZRTP packets, CLASSIC-STUN packets, T.38 packets
 # (case-insensitive).
-rtp.version0_type: Invalid RTP packets
+#rtp.version0_type: Invalid or ZRTP packets
 
 # Payload Type for RFC2198 Redundant Audio Data
 # A decimal number.
-rtp.rfc2198_payload_type: 99
+#rtp.rfc2198_payload_type: 99
 
-# This is the value of the Payload Type fieldthat specifies RTP Events
+# This is the value of the Payload Type field that specifies RTP Events
 # A decimal number.
-rtpevent.event_payload_type_value: 101
+#rtpevent.event_payload_type_value: 101
+
+# This is the value of the Payload Type field that specifies Cisco Named Signaling Events
+# A decimal number.
+#rtpevent.cisco_nse_payload_type_value: 100
+
+# Specifies the maximum number of samples dissected in a DATA_BATCH submessage. Increasing this value may affect performances if the trace has a lot of big batched samples.
+# A decimal number.
+#rtps2.max_batch_samples_dissected: 16
 
 # Whether segmented RTSE datagrams should be reassembled. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-rtse.reassemble: TRUE
+#rtse.reassemble: TRUE
 
 # Set the TCP port for RTSP messages
 # A decimal number.
-rtsp.tcp.port: 554
+#rtsp.tcp.port: 554
 
 # Set the alternate TCP port for RTSP messages
 # A decimal number.
-rtsp.tcp.alternate_port: 8554
+#rtsp.tcp.alternate_port: 8554
 
 # Whether the RTSP dissector should reassemble headers of a request spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-rtsp.desegment_headers: TRUE
+#rtsp.desegment_headers: TRUE
 
 # Whether the RTSP dissector should use the "Content-length:" value to desegment the body of a request spanning multiple TCP segments
 # TRUE or FALSE (case-insensitive).
-rtsp.desegment_body: TRUE
+#rtsp.desegment_body: TRUE
+
+# Set the port for RUA messages (Default of 29169)
+# A decimal number.
+#rua.port: 29169
 
 # Set the UDP port for Reliable UDP traffic
 # A decimal number.
-rudp.udp.port: 0
+#rudp.udp.port: 0
+
+# Set the SCTP port for S1AP messages
+# A decimal number.
+#s1ap.sctp.port: 36412
 
 # Whether the S5066 dissector should reassemble PDUs spanning multiple TCP segments. The default is to use reassembly.
 # TRUE or FALSE (case-insensitive).
-s5066.desegment_pdus: TRUE
+#s5066.desegment_pdus: TRUE
 
-# Whether the S5066 dissector should dissect editon 1 of the STANAG. This editon was never formally approved and is very rare. The common edition is editon 1.2.
+# Whether the S5066 dissector should dissect this edition of the STANAG. This edition was never formally approved and is very rare. The common edition is edition 1.2.
 # TRUE or FALSE (case-insensitive).
-s5066.edition_one: FALSE
+#s5066.edition_one: FALSE
 
 # Set the port for STANAG 5066. (If other than the default 5066. This number is registered with IANA.)
 # A decimal number.
-s5066.tcp.port: 5066
+#s5066.tcp.port: 5066
+
+# Whether the SASP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#sasp.desegment_sasp_messages: TRUE
 
 # The source point code (usually MSC) (to determine whether message is uplink or downlink)
 # A hexadecimal number.
-sccp.source_pc: 0
+#sccp.source_pc: 0
 
 # Show parameter length in the protocol tree
 # TRUE or FALSE (case-insensitive).
-sccp.show_length: FALSE
+#sccp.show_length: FALSE
 
 # Whether XUDT messages should be reassembled
 # TRUE or FALSE (case-insensitive).
-sccp.defragment_xudt: TRUE
+#sccp.defragment_xudt: TRUE
 
-# Whether to keep infomation about messages and their associations
+# Whether to keep information about messages and their associations
 # TRUE or FALSE (case-insensitive).
-sccp.trace_sccp: FALSE
+#sccp.trace_sccp: FALSE
 
 # Show SLR, DLR, and CAUSE Parameters in the Information Column of the Summary
 # TRUE or FALSE (case-insensitive).
-sccp.show_more_info: FALSE
+#sccp.show_more_info: FALSE
 
 # A table that enumerates user protocols to be used against specific PCs and SSNs
+
+# Set the source and destination addresses to the GT digits (if RI=GT).  This may affect TCAP's ability to recognize which messages belong to which TCAP session.
+# TRUE or FALSE (case-insensitive).
+#sccp.set_addresses: FALSE
+
+# Set the port for SCoP
+# 
+# A decimal number.
+#scop.port: 17755
+
+# Set the port for secured SCoP
+# 
+# A decimal number.
+#scop.port_secure: 17756
 
 # When Target Cannot Be Identified, Decode SCSI Messages As
 # One of: Block Device, Sequential Device, Object Based Storage Device, Medium Changer Device, Multimedia Device
 # (case-insensitive).
-scsi.decode_scsi_messages_as: Block Device
+#scsi.decode_scsi_messages_as: Block Device
 
 # Whether fragmented SCSI DATA IN/OUT transfers should be reassembled
 # TRUE or FALSE (case-insensitive).
-scsi.defragment: FALSE
+#scsi.defragment: FALSE
 
 # Show source and destination port numbers in the protocol tree
 # TRUE or FALSE (case-insensitive).
-sctp.show_port_numbers_in_tree: TRUE
+#sctp.show_port_numbers_in_tree: TRUE
 
 # The type of checksum used in SCTP packets
 # One of: None, Adler 32, CRC 32c, Automatic
@@ -2144,258 +2912,306 @@ sctp.checksum: CRC 32c
 
 # Show always SCTP control chunks in the Info column
 # TRUE or FALSE (case-insensitive).
-sctp.show_always_control_chunks: TRUE
+#sctp.show_always_control_chunks: TRUE
 
 # Try to decode a packet using an heuristic sub-dissector before using a sub-dissector registered to a specific port or PPI
 # TRUE or FALSE (case-insensitive).
-sctp.try_heuristic_first: FALSE
+#sctp.try_heuristic_first: FALSE
 
 # Whether fragmented SCTP user messages should be reassembled
 # TRUE or FALSE (case-insensitive).
-sctp.reassembly: FALSE
+#sctp.reassembly: FALSE
 
 # Match TSNs and their SACKs
 # TRUE or FALSE (case-insensitive).
-sctp.tsn_analysis: FALSE
+#sctp.tsn_analysis: FALSE
+
+# Dissect upper layer protocols
+# TRUE or FALSE (case-insensitive).
+#sctp.ulp_dissection: TRUE
 
 # Specifies that RTP/RTCP/T.38/MSRP/etc streams are decoded based upon port numbers found in SDP payload
 # TRUE or FALSE (case-insensitive).
-sdp.establish_conversation: TRUE
+#sdp.establish_conversation: TRUE
 
 # Set the port(s) for sFlow messages (default: 6343)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-sflow.ports: 6343
+#sflow.ports: 6343
 
 # Enabling dissection makes it easy to view protocol details in each of the sampled headers.  Disabling dissection may reduce noise caused when display filters match the contents of any sampled header(s).
 # TRUE or FALSE (case-insensitive).
-sflow.enable_dissection: TRUE
+#sflow.enable_dissection: TRUE
 
 # This option only makes sense if dissection of sampled headers is enabled and probably not even then.
 # TRUE or FALSE (case-insensitive).
-sflow.enable_analysis: FALSE
+#sflow.enable_analysis: FALSE
 
 # Set UDP port 1 for SigComp messages
 # A decimal number.
-sigcomp.udp.port: 5555
+#sigcomp.udp.port: 5555
 
 # Set UDP port 2 for SigComp messages
 # A decimal number.
-sigcomp.udp.port2: 6666
+#sigcomp.udp.port2: 6666
 
 # Set TCP port 1 for SigComp messages
 # A decimal number.
-sigcomp.tcp.port: 5555
+#sigcomp.tcp.port: 5555
 
 # Set TCP port 2 for SigComp messages
 # A decimal number.
-sigcomp.tcp.port2: 6666
+#sigcomp.tcp.port2: 6666
 
 # Preference whether to Dissect the UDVM code or not
 # TRUE or FALSE (case-insensitive).
-sigcomp.display.udvm.code: TRUE
+#sigcomp.display.udvm.code: TRUE
 
 # preference whether to display the bytecode in UDVM operands or not
 # TRUE or FALSE (case-insensitive).
-sigcomp.display.bytecode: FALSE
+#sigcomp.display.bytecode: FALSE
 
 # preference whether to decompress message or not
 # TRUE or FALSE (case-insensitive).
-sigcomp.decomp.msg: TRUE
+#sigcomp.decomp.msg: TRUE
 
 # preference whether to display the decompressed message as raw text or not
 # TRUE or FALSE (case-insensitive).
-sigcomp.display.decomp.msg.as.txt: FALSE
+#sigcomp.display.decomp.msg.as.txt: FALSE
 
-# 0 = UDVM executes silently, then increasing detail about execution of UDVM instructions, Warning! CPU intense at high detail
+# 'No-Printout' = UDVM executes silently, then increasing detail about execution of UDVM instructions; Warning! CPU intense at high detail
 # One of: No-Printout, Low-detail, Medium-detail, High-detail
 # (case-insensitive).
-sigcomp.show.udvm.execution: No-Printout
+#sigcomp.show.udvm.execution: No-Printout
+
+# Set the TCP port for Simulcrypt messages ('0' means no port is assigned)
+# A decimal number.
+#simulcrypt.tcp.port: 0
+
+# Set the UDP port for Simulcrypt messages ('0' means no port is assigned)
+# A decimal number.
+#simulcrypt.udp.port: 0
+
+# Set the CA_system_ID used to decode ECM datagram as MIKEY
+# A hexadecimal number.
+#simulcrypt.ca_system_id_mikey: 0x9999
 
 # SIP Server TCP Port
 # A decimal number.
-sip.tcp.port: 5060
+#sip.tcp.port: 5060
 
 # SIP Server TLS Port
 # A decimal number.
-sip.tls.port: 5061
+#sip.tls.port: 5061
 
 # Specifies that the raw text of the SIP message should be displayed in addition to the dissection tree
 # TRUE or FALSE (case-insensitive).
-sip.display_raw_text: FALSE
+#sip.display_raw_text: FALSE
+
+# If the raw text of the SIP message is displayed, the trailing carriage return and line feed are not shown
+# TRUE or FALSE (case-insensitive).
+#sip.display_raw_text_without_crlf: FALSE
 
 # If enabled, only SIP/2.0 traffic will be dissected as SIP. Disable it to allow SIP traffic with a different version to be dissected as SIP.
 # TRUE or FALSE (case-insensitive).
-sip.strict_sip_version: TRUE
+#sip.strict_sip_version: TRUE
 
 # Whether the SIP dissector should reassemble headers of a request spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-sip.desegment_headers: TRUE
+#sip.desegment_headers: TRUE
 
 # Whether the SIP dissector should use the "Content-length:" value, if present, to reassemble the body of a request spanning multiple TCP segments, and reassemble chunked data spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-sip.desegment_body: TRUE
+#sip.desegment_body: TRUE
+
+# Whether retransmissions are detected coming from the same source port only.
+# TRUE or FALSE (case-insensitive).
+#sip.retrans_the_same_sport: TRUE
 
 # Whether the SCCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-skinny.desegment: TRUE
+#skinny.desegment: TRUE
 
 # Whether the SoulSeek dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-slsk.desegment: TRUE
+#slsk.desegment: TRUE
 
 # Whether the SoulSeek dissector should decompress all zlib compressed packets inside messages
 # TRUE or FALSE (case-insensitive).
-slsk.decompress: TRUE
+#slsk.decompress: TRUE
 
 # Whether the dissector should reassemble the payload of SMB Transaction commands spanning multiple SMB PDUs
 # TRUE or FALSE (case-insensitive).
-smb.trans_reassembly: TRUE
+#smb.trans_reassembly: TRUE
 
 # Whether the dissector should reassemble DCERPC over SMB commands
 # TRUE or FALSE (case-insensitive).
-smb.dcerpc_reassembly: TRUE
+#smb.dcerpc_reassembly: TRUE
 
 # Whether the dissector should snoop SMB and related CIFS protocols to discover and display Names associated with SIDs
 # TRUE or FALSE (case-insensitive).
-smb.sid_name_snooping: FALSE
+#smb.sid_name_snooping: FALSE
 
 # Whether the SMPP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-smpp.reassemble_smpp_over_tcp: TRUE
+#smpp.reassemble_smpp_over_tcp: TRUE
 
 # Whether the SMTP dissector should reassemble command and response lines spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-smtp.desegment_lines: TRUE
+#smtp.desegment_lines: TRUE
 
 # Whether the SMTP dissector should reassemble DATA command and lines spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-smtp.desegment_data: TRUE
+#smtp.desegment_data: TRUE
 
 # Whether fragmented BIUs should be reassembled
 # TRUE or FALSE (case-insensitive).
-sna.defragment: TRUE
+#sna.defragment: TRUE
 
 # Whether the SNMP OID should be shown in the info column
 # TRUE or FALSE (case-insensitive).
-snmp.display_oid: TRUE
+#snmp.display_oid: TRUE
 
 # Whether the SNMP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-snmp.desegment: TRUE
+#snmp.desegment: TRUE
 
 # ON - display dissected variables inside SNMP tree, OFF - display dissected variables in root tree after SNMP
 # TRUE or FALSE (case-insensitive).
-snmp.var_in_tree: TRUE
+#snmp.var_in_tree: TRUE
 
 # Table of engine-user associations used for authentication and decryption
 
+# Table of enterprise specific-trap type descriptions
+
+# MIB settings can be changed in the Name Resolution preferences
+
 # Whether the SRVLOC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-srvloc.desegment_tcp: TRUE
+#srvloc.desegment_tcp: TRUE
 
 # Set the UDP port for SSCOP messages encapsulated in UDP (0 to disable)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-sscop.udp.ports: 
+#sscop.udp.ports: 
 
 # SSCOP payload (dissector to call on SSCOP payload)
 # One of: Data (no further dissection), Q.2931, SSCF-NNI (MTP3-b), ALCAP, NBAP
 # (case-insensitive).
-sscop.payload: Q.2931
+#sscop.payload: Q.2931
 
 # Whether the SSH dissector should reassemble SSH buffers spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ssh.desegment_buffers: TRUE
+#ssh.desegment_buffers: TRUE
 
 # Whether the SSL dissector should reassemble SSL records spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ssl.desegment_ssl_records: TRUE
+#ssl.desegment_ssl_records: TRUE
 
 # Whether the SSL dissector should reassemble SSL Application Data spanning multiple SSL records. 
 # TRUE or FALSE (case-insensitive).
-ssl.desegment_ssl_application_data: TRUE
+#ssl.desegment_ssl_application_data: TRUE
 
 # Semicolon-separated list of private RSA keys used for SSL decryption; each list entry must be in the form of <ip>,<port>,<protocol>,<key_file_name>. <key_file_name> is the local file name of the RSA private key used by the specified server (or name of the file containing such a list)
 # A string.
-ssl.keys_list: 
+#ssl.keys_list: 
 
-# redirect ssl debug to file name; leave empty to disable debug, use "-" to redirect output to stderr
-
+# Redirect SSL debug to file name; leave empty to disable debugging, or use "-" to redirect output to stderr
+# 
 # A string.
-ssl.debug_file: 
+#ssl.debug_file: 
+
+# Pre-Shared-Key as HEX string, should be 0 to 16 bytes
+# A string.
+#ssl.psk: 
 
 # Whether the StarTeam dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-starteam.desegment: TRUE
+#starteam.desegment: TRUE
+
+# Whether the BPDU dissector should use 802.1t System ID Extensions when dissecting the Bridge Identifier
+# TRUE or FALSE (case-insensitive).
+#stp.use_system_id_extension: TRUE
 
 # Version used by Wireshark
 # One of: Internet Draft version 08, RFC 3868
 # (case-insensitive).
-sua.version: RFC 3868
+#sua.version: RFC 3868
+
+# Set the source and destination addresses to the PC or GT digits, depending on the routing indicator.  This may affect TCAP's ability to recognize which messages belong to which TCAP session.
+# TRUE or FALSE (case-insensitive).
+#sua.set_addresses: FALSE
+
+# Set the port number for synchrophasor frames over UDP(if other than the default of 4713)
+# A decimal number.
+#synphasor.udp_port: 4713
+
+# Set the port number for synchrophasor frames over TCP(if other than the default of 4712)
+# A decimal number.
+#synphasor.tcp_port: 4712
 
 # Whether the T.38 dissector should decode using the Pre-Corrigendum T.38 ASN.1 specification (1998).
 # TRUE or FALSE (case-insensitive).
-t38.use_pre_corrigendum_asn1_specification: TRUE
+#t38.use_pre_corrigendum_asn1_specification: TRUE
 
 # Whether a UDP packet that looks like RTP version 2 packet will be dissected as RTP packet or T.38 packet. If enabled there is a risk that T.38 UDPTL packets with sequence number higher than 32767 may be dissected as RTP.
 # TRUE or FALSE (case-insensitive).
-t38.dissect_possible_rtpv2_packets_as_rtp: FALSE
+#t38.dissect_possible_rtpv2_packets_as_rtp: FALSE
 
 # Set the TCP port for T.38 messages
 # A decimal number.
-t38.tcp.port: 6004
+#t38.tcp.port: 6004
 
 # Set the UDP port for T.38 messages
 # A decimal number.
-t38.udp.port: 6004
+#t38.udp.port: 6004
 
 # Whether the dissector should reassemble T.38 PDUs spanning multiple TCP segments when TPKT is used over TCP. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-t38.reassembly: TRUE
+#t38.reassembly: TRUE
 
 # Whether T.38 is used with TPKT for TCP
 # One of: Never, Always, Maybe
 # (case-insensitive).
-t38.tpkt_usage: Maybe
+#t38.tpkt_usage: Maybe
 
 # Where available, show which protocol and frame caused this T.38 stream to be created
 # TRUE or FALSE (case-insensitive).
-t38.show_setup_info: TRUE
+#t38.show_setup_info: TRUE
 
-# Whether the TACACS+ dissector should reasssemble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Whether the TACACS+ dissector should reassemble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-tacplus.desegment: TRUE
+#tacplus.desegment: TRUE
 
 # TACACS+ Encryption Key
 # A string.
-tacplus.key: 
+#tacplus.key: 
 
 # Whether the TALI dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-tali.reassemble: TRUE
+#tali.reassemble: TRUE
 
 # SCCP (and SUA) SSNs to decode as TCAP
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-tcap.ssn: 
+#tcap.ssn: 
 
 # Activate the analyse for Response Time
 # TRUE or FALSE (case-insensitive).
-tcap.srt: FALSE
+#tcap.srt: FALSE
 
 # Statistics for Response Time
 # TRUE or FALSE (case-insensitive).
-tcap.persistentsrt: FALSE
+#tcap.persistentsrt: FALSE
 
 # Maximal delay for message repetion
 # A decimal number.
-tcap.repetitiontimeout: 10
+#tcap.repetitiontimeout: 10
 
 # Maximal delay for message lost
 # A decimal number.
-tcap.losttimeout: 30
+#tcap.losttimeout: 30
 
 # Whether the TCP summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-tcp.summary_in_tree: TRUE
+#tcp.summary_in_tree: TRUE
 
 # Whether to validate the TCP checksum
 # TRUE or FALSE (case-insensitive).
@@ -2403,57 +3219,69 @@ tcp.check_checksum: TRUE
 
 # Whether subdissector can request TCP streams to be reassembled
 # TRUE or FALSE (case-insensitive).
-tcp.desegment_tcp_streams: TRUE
+#tcp.desegment_tcp_streams: TRUE
 
 # Make the TCP dissector analyze TCP sequence numbers to find and flag segment retransmissions, missing segments and RTT
 # TRUE or FALSE (case-insensitive).
-tcp.analyze_sequence_numbers: TRUE
+#tcp.analyze_sequence_numbers: TRUE
 
-# Make the TCP dissector use relative sequence numbers instead of absolute ones. To use this option you must also enable "Analyze TCP sequence numbers". This option will also try to track and adjust the window field according to any TCP window scaling options seen.
+# Make the TCP dissector use relative sequence numbers instead of absolute ones. To use this option you must also enable "Analyze TCP sequence numbers". 
 # TRUE or FALSE (case-insensitive).
-tcp.relative_sequence_numbers: TRUE
+#tcp.relative_sequence_numbers: TRUE
+
+# Try to track and adjust the window field according to any TCP window scaling options seen.To use this option you must also enable "Analyze TCP sequence numbers". 
+# TRUE or FALSE (case-insensitive).
+#tcp.window_scaling: TRUE
+
+# Make the TCP dissector track the number on un-ACKed bytes of data are in flight per packet. To use this option you must also enable "Analyze TCP sequence numbers". This takes a lot of memory but allows you to track how much data are in flight at a time and graphing it in io-graphs
+# TRUE or FALSE (case-insensitive).
+#tcp.track_bytes_in_flight: TRUE
 
 # Calculate timestamps relative to the first frame and the previous frame in the tcp conversation
 # TRUE or FALSE (case-insensitive).
-tcp.calculate_timestamps: FALSE
+#tcp.calculate_timestamps: FALSE
 
 # Try to decode a packet using an heuristic sub-dissector before using a sub-dissector registered to a specific port
 # TRUE or FALSE (case-insensitive).
-tcp.try_heuristic_first: FALSE
+#tcp.try_heuristic_first: FALSE
 
 # Set the port for IPSEC/ISAKMP messagesIf other than the default of 10000)
 # A decimal number.
-tcpencap.tcp.port: 10000
+#tcpencap.tcp.port: 10000
 
 # Whether the TDS dissector should reassemble TDS buffers spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-tds.desegment_buffers: TRUE
+#tds.desegment_buffers: TRUE
 
 # Whether the TDS dissector should defragment messages spanning multiple Netlib buffers
 # TRUE or FALSE (case-insensitive).
-tds.defragment: TRUE
+#tds.defragment: TRUE
 
 # Hint as to version of TDS protocol being decoded
 # One of: Not Specified, TDS 4, TDS 5, TDS 7, TDS 8
 # (case-insensitive).
-tds.protocol_type: Not Specified
+#tds.protocol_type: Not Specified
 
 # Hint as to whether to decode TDS protocol as little-endian or big-endian. (TDS7/8 always decoded as little-endian)
 # One of: Little Endian, Big Endian
 # (case-insensitive).
-tds.endian_type: Little Endian
+#tds.endian_type: Little Endian
 
 # Additional TCP ports to decode as TDS
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-tds.tcp_ports: 
+#tds.tcp_ports: 
 
 # Check this to decode IPv6 traffic between Teredo clients and relays
 # TRUE or FALSE (case-insensitive).
-teredo.heuristic_teredo: FALSE
+#teredo.heuristic_teredo: FALSE
+
+# Port numbers used for TFTP traffic (default 69)
+# A string denoting an positive integer range (e.g., "1-20,30-40").
+#tftp.udp_ports: 69
 
 # Whether TIPCv1 SEGMENTATION_MANAGER datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-tipc.defragment: TRUE
+#tipc.defragment: TRUE
 
 # Whether to try to dissect TIPC data or not
 # TRUE or FALSE (case-insensitive).
@@ -2461,52 +3289,72 @@ tipc.dissect_tipc_data: FALSE
 
 # Try to decode a TIPCv2 packet using an heuristic sub-dissector before using a registered sub-dissector
 # TRUE or FALSE (case-insensitive).
-tipc.try_heuristic_first: FALSE
+#tipc.try_heuristic_first: FALSE
 
 # TIPC 1.7 removes/adds fields (not) available in TIPC 1.5/1.6 while keeping the version number 2 in the packages. "ALL" shows all fields that were ever used in both versions.
 # One of: ALL, TIPC 1.5/1.6, TIPC 1.7
 # (case-insensitive).
-tipc.handle_v2_as: ALL
+#tipc.handle_v2_as: ALL
+
+# Decode this TCP ports traffic as TIPC. Set to "0" to disable.
+# A decimal number.
+#tipc.alternate_port: 0
+
+# Whether the TIPC-over-TCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#tipc.desegment: TRUE
 
 # Whether the TNS dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-tns.desegment_tns_messages: TRUE
+#tns.desegment_tns_messages: TRUE
 
 # Whether the TPKT dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-tpkt.desegment: TRUE
+#tpkt.desegment: TRUE
 
-# 
+# No description
 # A decimal number.
-tpncp.tcp.trunkpack_port: 2424
+#tpncp.tcp.trunkpack_port: 2424
 
-# 
+# No description
 # A decimal number.
-tpncp.udp.trunkpack_port: 2424
+#tpncp.udp.trunkpack_port: 2424
 
 # Whether Linux mangling of the link-layer header should be checked for and worked around
 # TRUE or FALSE (case-insensitive).
-tr.fix_linux_botches: FALSE
+#tr.fix_linux_botches: FALSE
+
+# Critical Traffic Mask (base hex)
+# A hexadecimal number.
+#tte.ct_mask_value: 0
+
+# Critical Traffic Marker (base hex)
+# A hexadecimal number.
+#tte.ct_marker_value: 0xffffffff
 
 # Whether the UCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ucp.desegment_ucp_messages: TRUE
+#ucp.desegment_ucp_messages: TRUE
 
 # Whether the UDP summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-udp.summary_in_tree: TRUE
+#udp.summary_in_tree: TRUE
 
 # Try to decode a packet using an heuristic sub-dissector before using a sub-dissector registered to a specific port
 # TRUE or FALSE (case-insensitive).
-udp.try_heuristic_first: FALSE
+#udp.try_heuristic_first: FALSE
 
 # Whether to validate the UDP checksum
 # TRUE or FALSE (case-insensitive).
 udp.check_checksum: TRUE
 
+# Collect process flow information from IPFIX
+# TRUE or FALSE (case-insensitive).
+#udp.process_info: FALSE
+
 # Ignore an invalid checksum coverage field and continue dissection
 # TRUE or FALSE (case-insensitive).
-udplite.ignore_checksum_coverage: TRUE
+#udplite.ignore_checksum_coverage: TRUE
 
 # Whether to validate the UDPlite checksum
 # TRUE or FALSE (case-insensitive).
@@ -2514,77 +3362,81 @@ udplite.check_checksum: TRUE
 
 # Whether the ULP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-ulp.desegment_ulp_messages: TRUE
+#ulp.desegment_ulp_messages: TRUE
 
 # Set the TCP port for Ulp messages(IANA registerd port is 7275)
 # A decimal number.
-ulp.tcp.port: 7275
+#ulp.tcp.port: 7275
 
 # Whether the UMA dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-uma.desegment_ucp_messages: TRUE
+#uma.desegment_ucp_messages: TRUE
 
-# TCP ports to be decoded as UMA (default: 14001,14001)
+# TCP ports to be decoded as UMA (default: 14001)
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-uma.udp.ports: 14001,14001
+#uma.tcp.ports: 14001
 
-# A table that enumerates the various protocols to be used against a cartain user DLT
+# UNISTIM port (default 5000)
+# A decimal number.
+#unistim.udp.port: 0
+
+# A table that enumerates the various protocols to be used against a certain user DLT
 
 # Whether the vlan summary line should be shown in the protocol tree
 # TRUE or FALSE (case-insensitive).
-vlan.summary_in_tree: TRUE
+#vlan.summary_in_tree: TRUE
 
-# The Ethertype used to indicate 802.1QinQ VLAN in VLAN tunneling.
+# The (hexadecimal) Ethertype used to indicate 802.1QinQ VLAN in VLAN tunneling.
 # A hexadecimal number.
-vlan.qinq_ethertype: 0x9100
+#vlan.qinq_ethertype: 0x9100
 
-# Whether the VNC dissector should reasss emble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Whether the VNC dissector should reassemble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-vnc.desegment: TRUE
+#vnc.desegment: TRUE
 
 # Decode this port's traffic as VNC in addition to the default ports (5500, 5501, 5900, 5901)
 # A decimal number.
-vnc.alternate_port: 0
+#vnc.alternate_port: 0
 
 # Enable this preference if you want to view the WBXML tokens without the representation in a media type (e.g., WML). Tokens will show up as Tag_0x12, attrStart_0x08 or attrValue_0x0B for example.
 # TRUE or FALSE (case-insensitive).
-wbxml.skip_wbxml_token_mapping: FALSE
+#wbxml.skip_wbxml_token_mapping: FALSE
 
 # Enable this preference if you want to skip the parsing of the WBXML tokens that constitute the body of the WBXML document. Only the WBXML header will be dissected (and visualized) then.
 # TRUE or FALSE (case-insensitive).
-wbxml.disable_wbxml_token_parsing: FALSE
+#wbxml.disable_wbxml_token_parsing: FALSE
 
 # Show transaction ID direction bit separately from the rest of the transaction ID field.
 # TRUE or FALSE (case-insensitive).
-wimaxasncp.show_transaction_id_d_bit: FALSE
+#wimaxasncp.show_transaction_id_d_bit: FALSE
 
 # Print debug output to the console.
 # TRUE or FALSE (case-insensitive).
-wimaxasncp.debug_enabled: FALSE
+#wimaxasncp.debug_enabled: FALSE
 
 # Set UDP port for WiMAX ASN Control Plane Protocol
 # A decimal number.
-wimaxasncp.udp.wimax_port: 2231
+#wimaxasncp.udp.wimax_port: 2231
 
 # Whether the WINS-Replication dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-winsrepl.reassemble: TRUE
+#winsrepl.reassemble: TRUE
 
 # Whether fragmented 802.11 datagrams should be reassembled
 # TRUE or FALSE (case-insensitive).
-wlan.defragment: TRUE
+#wlan.defragment: TRUE
 
 # Don't dissect 802.11n draft HT elements (which might contain duplicate information).
 # TRUE or FALSE (case-insensitive).
-wlan.ignore_draft_ht: FALSE
+#wlan.ignore_draft_ht: FALSE
 
 # Whether retransmitted 802.11 frames should be subdissected
 # TRUE or FALSE (case-insensitive).
-wlan.retransmitted: TRUE
+#wlan.retransmitted: TRUE
 
 # Some 802.11 cards include the FCS at the end of a packet, others do not.
 # TRUE or FALSE (case-insensitive).
-wlan.check_fcs: FALSE
+#wlan.check_fcs: FALSE
 
 # Some 802.11 cards leave the Protection bit set even though the packet is decrypted, and some also leave the IV (initialization vector).
 # One of: No, Yes - without IV, Yes - with IV
@@ -2593,306 +3445,374 @@ wlan.ignore_wep: Yes - without IV
 
 # Enable WEP and WPA/WPA2 decryption
 # TRUE or FALSE (case-insensitive).
-wlan.enable_decryption: FALSE
+#wlan.enable_decryption: FALSE
 
-# This is just a static text
+# Valid key formats
 
 # Key #1 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key1: 
+#wlan.wep_key1: 
 
 # Key #2 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key2: 
+#wlan.wep_key2: 
 
 # Key #3 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key3: 
+#wlan.wep_key3: 
 
 # Key #4 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key4: 
+#wlan.wep_key4: 
 
 # Key #5 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key5: 
+#wlan.wep_key5: 
 
 # Key #6 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key6: 
+#wlan.wep_key6: 
 
 # Key #7 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key7: 
+#wlan.wep_key7: 
 
 # Key #8 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key8: 
+#wlan.wep_key8: 
 
 # Key #9 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key9: 
+#wlan.wep_key9: 
 
 # Key #10 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key10: 
+#wlan.wep_key10: 
 
 # Key #11 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key11: 
+#wlan.wep_key11: 
 
 # Key #12 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key12: 
+#wlan.wep_key12: 
 
 # Key #13 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key13: 
+#wlan.wep_key13: 
 
 # Key #14 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key14: 
+#wlan.wep_key14: 
 
 # Key #15 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key15: 
+#wlan.wep_key15: 
 
 # Key #16 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key16: 
+#wlan.wep_key16: 
 
 # Key #17 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key17: 
+#wlan.wep_key17: 
 
 # Key #18 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key18: 
+#wlan.wep_key18: 
 
 # Key #19 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key19: 
+#wlan.wep_key19: 
 
 # Key #20 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key20: 
+#wlan.wep_key20: 
 
 # Key #21 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key21: 
+#wlan.wep_key21: 
 
 # Key #22 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key22: 
+#wlan.wep_key22: 
 
 # Key #23 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key23: 
+#wlan.wep_key23: 
 
 # Key #24 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key24: 
+#wlan.wep_key24: 
 
 # Key #25 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key25: 
+#wlan.wep_key25: 
 
 # Key #26 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key26: 
+#wlan.wep_key26: 
 
 # Key #27 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key27: 
+#wlan.wep_key27: 
 
 # Key #28 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key28: 
+#wlan.wep_key28: 
 
 # Key #29 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key29: 
+#wlan.wep_key29: 
 
 # Key #30 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key30: 
+#wlan.wep_key30: 
 
 # Key #31 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key31: 
+#wlan.wep_key31: 
 
 # Key #32 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key32: 
+#wlan.wep_key32: 
 
 # Key #33 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key33: 
+#wlan.wep_key33: 
 
 # Key #34 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key34: 
+#wlan.wep_key34: 
 
 # Key #35 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key35: 
+#wlan.wep_key35: 
 
 # Key #36 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key36: 
+#wlan.wep_key36: 
 
 # Key #37 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key37: 
+#wlan.wep_key37: 
 
 # Key #38 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key38: 
+#wlan.wep_key38: 
 
 # Key #39 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key39: 
+#wlan.wep_key39: 
 
 # Key #40 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key40: 
+#wlan.wep_key40: 
 
 # Key #41 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key41: 
+#wlan.wep_key41: 
 
 # Key #42 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key42: 
+#wlan.wep_key42: 
 
 # Key #43 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key43: 
+#wlan.wep_key43: 
 
 # Key #44 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key44: 
+#wlan.wep_key44: 
 
 # Key #45 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key45: 
+#wlan.wep_key45: 
 
 # Key #46 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key46: 
+#wlan.wep_key46: 
 
 # Key #47 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key47: 
+#wlan.wep_key47: 
 
 # Key #48 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key48: 
+#wlan.wep_key48: 
 
 # Key #49 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key49: 
+#wlan.wep_key49: 
 
 # Key #50 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key50: 
+#wlan.wep_key50: 
 
 # Key #51 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key51: 
+#wlan.wep_key51: 
 
 # Key #52 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key52: 
+#wlan.wep_key52: 
 
 # Key #53 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key53: 
+#wlan.wep_key53: 
 
 # Key #54 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key54: 
+#wlan.wep_key54: 
 
 # Key #55 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key55: 
+#wlan.wep_key55: 
 
 # Key #56 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key56: 
+#wlan.wep_key56: 
 
 # Key #57 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key57: 
+#wlan.wep_key57: 
 
 # Key #58 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key58: 
+#wlan.wep_key58: 
 
 # Key #59 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key59: 
+#wlan.wep_key59: 
 
 # Key #60 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key60: 
+#wlan.wep_key60: 
 
 # Key #61 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key61: 
+#wlan.wep_key61: 
 
 # Key #62 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key62: 
+#wlan.wep_key62: 
 
 # Key #63 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key63: 
+#wlan.wep_key63: 
 
 # Key #64 string can be:   <wep hexadecimal key>;   wep:<wep hexadecimal key>;   wpa-pwd:<passphrase>[:<ssid>];   wpa-psk:<wpa hexadecimal key>
 # A string.
-wlan.wep_key64: 
+#wlan.wep_key64: 
 
 # Set the maximum Basic CID used in the Wimax decoder (if other than the default of 320).  Note: The maximum Primary CID is double the maximum Basic CID.
 # A decimal number.
-wmx.basic_cid_max: 320
+#wmx.basic_cid_max: 320
 
 # Set to TRUE to use the Corrigendum 2 version of Wimax message decoding. Set to FALSE to use the 802.16e-2005  version.
 # TRUE or FALSE (case-insensitive).
-wmx.corrigendum_2_version: FALSE
+#wmx.corrigendum_2_version: FALSE
 
-# If CALL REQUEST not seen or didn't specify protocol, dissect as QLLC/SNA
+# Whether the wow dissector should reassemble messages spanning multiple TCP segments.  To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-x.25.payload_is_qllc_sna: FALSE
+#wow.desegment: TRUE
 
-# Reassemble fragmented X.25 packets
+# (Hexadecimal) Ethertype used to indicate IEEE 802.15.4 frame.
+# A hexadecimal number.
+#wpan.802154_ethertype: 0x809a
+
+# Set if the FCS field is in TI CC24xx format.
 # TRUE or FALSE (case-insensitive).
-x.25.reassemble: TRUE
+#wpan.802154_cc24xx: FALSE
+
+# Dissect data only if FCS is ok.
+# TRUE or FALSE (case-insensitive).
+#wpan.802154_fcs_ok: TRUE
+
+# A table of static address mappings between 16-bit short addressing and EUI-64 addresses
+
+# 128-bit decryption key in hexadecimal format
+# A string.
+#wpan.802154_key: 
 
 # Whether the X11 dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive).
-x11.desegment: TRUE
+#x11.desegment: TRUE
+
+# If CALL REQUEST not seen or didn't specify protocol, dissect as QLLC/SNA
+# TRUE or FALSE (case-insensitive).
+#x25.payload_is_qllc_sna: FALSE
+
+# If CALL REQUEST has no data, assume the protocol handled is COTP
+# TRUE or FALSE (case-insensitive).
+#x25.call_request_nodata_is_cotp: FALSE
+
+# If CALL REQUEST not seen or didn't specify protocol, check user data before checking heuristic dissectors
+# TRUE or FALSE (case-insensitive).
+#x25.payload_check_data: FALSE
+
+# Reassemble fragmented X.25 packets
+# TRUE or FALSE (case-insensitive).
+#x25.reassemble: TRUE
+
+# Set the SCTP port for X2AP messages
+# A decimal number.
+#x2ap.sctp.port: 36422
 
 # Set the port for P1 operations (if other than the default of 102)
 # A decimal number.
-x411.tcp.port: 102
+#x411.tcp.port: 102
 
 # Try to recognize XML for unknown media types
 # TRUE or FALSE (case-insensitive).
-xml.heuristic: FALSE
+#xml.heuristic: FALSE
 
 # Try to recognize XML for unknown TCP ports
 # TRUE or FALSE (case-insensitive).
-xml.heuristic_tcp: FALSE
+#xml.heuristic_tcp: FALSE
 
 # TCP Ports range
 # A string denoting an positive integer range (e.g., "1-20,30-40").
-xml.tcp.port: 
+#xml.tcp.port: 
 
-# Whether the X.25-over-TCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Try to recognize XML for unknown UDP ports
 # TRUE or FALSE (case-insensitive).
-xot.desegment: TRUE
+#xml.heuristic_udp: FALSE
 
-# Whether the YMSG dissector should reasssemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# Try to recognize XML encoded in Unicode (UCS-2)
 # TRUE or FALSE (case-insensitive).
-ymsg.desegment: TRUE
+#xml.heuristic_unicode: FALSE
+
+# Whether the X.25-over-TCP dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings
+# TRUE or FALSE (case-insensitive).
+#xot.desegment: TRUE
+
+# Whether the X.25-over-TCP dissector should reassemble all X.25 packets before calling the X25 dissector. If the TCP packets arrive out-of-order, the X.25 reassembly can otherwise fail. To use this option, you should also enable "Reassemble X.25-over-TCP messages spanning multiple TCP segments", "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings and "Reassemble fragmented X.25 packets" in the X.25 protocol settings.
+# TRUE or FALSE (case-insensitive).
+#xot.x25_desegment: FALSE
+
+# Whether the YMSG dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
+# TRUE or FALSE (case-insensitive).
+#ymsg.desegment: TRUE
+
+# Specifies the security level to use in the decryption process. This value is ignored for ZigBee 2004 and unsecured networks.
+# One of: No Security, No Encryption, 32-bit Integrity Protection, No Encryption, 64-bit Integrity Protection, No Encryption, 128-bit Integrity Protection, AES-128 Encryption, No Integrity Protection, AES-128 Encryption, 32-bit Integrity Protection, AES-128 Encryption, 64-bit Integrity Protection, AES-128 Encryption, 128-bit Integrity Protection
+# (case-insensitive).
+#zbee.nwk.seclevel: AES-128 Encryption, 32-bit Integrity Protection
+
+# Specifies the network key to use for decryption.
+# A string.
+#zbee.nwk.nwkkey: 
+
+# The Extended address of the trust center.
+# A string.
+#zbee.nwk.tcaddr: 
+
+# Specifies the trust center link key to use for decryption.
+# A string.
+#zbee.nwk.tclinkkey: 
+
+# Set the port for ZEP Protocol
+# Default port is 17754
+# A decimal number.
+#zep.udp.port: 17754
