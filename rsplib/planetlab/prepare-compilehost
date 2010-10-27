@@ -45,7 +45,7 @@ for SERVER in $SERVER_LIST; do
 
    cmd="echo \"\`date\`: Installing packages on $SERVER ...\""
    for i in $PLANETLAB_COMPILEPKGS ; do
-      cmd="$cmd ; sudo yum $PLANETLAB_YUMOPTS -y install $i"
+      cmd="$cmd ; sudo yum $PLANETLAB_YUMOPTS -y --nogpgcheck install $i"
    done
    cmd="sudo yum $PLANETLAB_YUMOPTS clean all ; sudo yum $PLANETLAB_YUMOPTS makecache ; sudo yum -y $PLANETLAB_YUMOPTS update ; sudo yum -y $PLANETLAB_YUMOPTS upgrade ; $cmd ; sudo /usr/bin/updatedb ; echo \"\`date\`: $SERVER is ready!\""
    echo $cmd
