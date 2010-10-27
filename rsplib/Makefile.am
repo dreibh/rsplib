@@ -299,29 +299,29 @@ endif
 
 if ENABLE_REGISTRAR_STATISTICS
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
 else
 registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
+registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h environmentcache.cc environmentcache.h sha1.c sha1.h
-server_LDADD   = libtdbreakdetector.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
+server_LDADD   = libtdcppthread.la libtdthreadsafety.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 terminal_SOURCES = terminal.c
-terminal_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+terminal_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 hsdump_SOURCES = hsdump.c
-hsdump_LDADD   = librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
+hsdump_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 pingpongclient_SOURCES = pingpongclient.c
-pingpongclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+pingpongclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 
 scriptingclient_SOURCES = scriptingclient.c sha1.c sha1.h
-scriptingclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+scriptingclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
-calcappclient_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+calcappclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 
 cspmonitor_SOURCES = cspmonitor.c
 cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
@@ -345,13 +345,13 @@ dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD    = $(QT_LDADD) libtdrandomizer.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+fractalpooluser_LDADD    = $(QT_LDADD) libtdrandomizer.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
 # ###### Test programs ######################################################
 if BUILD_TEST_PROGRAMS
-noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker t2
+noinst_PROGRAMS = hrestest testregistrator fork gettimestamp exectime execalarm rootshell attacker
 else
 noinst_PROGRAMS =
 endif
@@ -384,8 +384,8 @@ attacker_LDADD   = libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctpli
 #t1_SOURCES = t1.c
 #t1_LDADD   = librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
-t2_SOURCES = t2.cc environmentcache.cc environmentcache.h sha1.c sha1.h
-t2_LDADD   = librsplib.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
+#t2_SOURCES = t2.cc environmentcache.cc environmentcache.h sha1.c sha1.h
+#t2_LDADD   = librsplib.la libcpprspserver.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
