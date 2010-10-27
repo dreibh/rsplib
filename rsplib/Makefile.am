@@ -345,7 +345,7 @@ dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD    = $(QT_LDADD) librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+fractalpooluser_LDADD    = $(QT_LDADD) libtdrandomizer.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
 
