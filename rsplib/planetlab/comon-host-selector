@@ -50,6 +50,8 @@ CandidateForPR="($GreatHost && $TimeFine)"
 
 
 ./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
+./comon-query alive-planetlab.addresses "$AliveHost" address address "" quiet
+grep "^[0-9a-f]*$" alive-planetlab.addresses | xargs ./comon-print-address >alive-planetlab.ip
 ./comon-query good-planetlab.hosts "$GoodHost" name name nameonly quiet
 ./comon-query great-planetlab.hosts "$GreatHost" name name nameonly quiet
 

@@ -46,6 +46,12 @@ done \
 ) | sort -u`
 
 
+echo -e "\x1b[34m`date`: Removing old keys ...\x1b[0m"
+for SERVER in $SERVER_LIST; do
+   echo "Removing key of $SERVER"
+   ssh-keygen -R $SERVER >/dev/null 2>&1
+done
+
 for SERVER in $SERVER_LIST; do
    echo -e "\x1b[34m`date`: Contacting $SERVER ...\x1b[0m"
 
