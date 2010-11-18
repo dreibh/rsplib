@@ -87,6 +87,7 @@ Description: RSerPool Registrar service
 Package: rsplib-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: chrpath
 Description: RSerPool test tools
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
