@@ -177,7 +177,7 @@ static unsigned int handleStatusMessage(const struct Status* status,
          newLogLine(stderr);
          fputs("Maximum number of trials reached -> check your input and the results!\n", stderr);
          fputs("Trying to download the results file for debugging ...", stderr);
-         return(SSCR_COMPLETE);
+         /* Final trial has failed: continue with download of the error output! */
       }
       return(SSCR_OKAY);
    }
@@ -769,5 +769,5 @@ int main(int argc, char** argv)
    rsp_close(sd);
    rsp_cleanup();
    rsp_freeinfo(&info);
-   return((result == SSCR_COMPLETE) ? 0 : 1);
+   return(((result == SSCR_COMPLETE) && (ExitStatus == 0)) ? 0 : 1);
 }
