@@ -341,7 +341,7 @@ void FractalPU::startNextJob()
    // ====== Wait for job completion ========================================
    // std::cout << "Waiting for job completion ..." << std::endl;
    if(CurrentThreads > 1) {
-      statusBar()->showMessage("Waiting for job completion ...");
+      statusBar()->showMessage(tr("Waiting for job completion ..."));
    }
 }
 

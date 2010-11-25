@@ -78,5 +78,9 @@
         <source>&amp;Next Image</source>
         <translation type="unfinished">&amp;Nächstes Bild</translation>
     </message>
+    <message>
+        <source>Waiting for job completion ...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>
