@@ -388,6 +388,7 @@ int rsp_getpeername(int            sd,
                     size_t*        poolHandleSize,
                     uint32_t*      identifier);
 
+#if 0
 /**
   *
   *
@@ -396,6 +397,7 @@ int rsp_getpeername(int            sd,
   * @return 0 in case of success; -1 in case of an error.
   */
 int rsp_();
+#endif
 
 /**
   * Close RSerPool socket.
