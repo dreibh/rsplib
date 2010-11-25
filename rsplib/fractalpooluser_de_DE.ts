@@ -1,4 +1,6 @@
-<!DOCTYPE TS><TS>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="de_DE">
 <context>
     <name>FractalCalculationThread</name>
     <message>
@@ -71,6 +73,10 @@
     <message>
         <source>About Fractal Pool User</source>
         <translation>Über FractalPoolUser</translation>
+    </message>
+    <message>
+        <source>&amp;Next Image</source>
+        <translation type="unfinished">&amp;Nächstes Bild</translation>
     </message>
 </context>
 </TS>

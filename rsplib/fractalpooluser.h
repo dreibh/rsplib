@@ -101,7 +101,7 @@ class ImageDisplay : public QWidget
    protected:
    void paintEvent(QPaintEvent* paintEvent);
 
-   
+
    // ====== Private data ===================================================
    private:
    QImage* Image;
@@ -189,7 +189,7 @@ class FractalPU
       double       N;
    };
 
-   
+
    // ====== Public methods =================================================
    public:
    FractalPU(const size_t       width,
@@ -244,7 +244,7 @@ class FractalPU
    inline unsigned int getRecvTimeout() const {
       return(RecvTimeout);
    }
-   
+
 
    // ====== Protected methods ==============================================
    protected:
@@ -252,7 +252,7 @@ class FractalPU
    void resizeEvent(QResizeEvent* resizeEvent);
    void contextMenuEvent(QContextMenuEvent* event);
 
-   
+
    // ====== Slots ==========================================================
    public slots:
    void countDown();
@@ -263,10 +263,11 @@ class FractalPU
    void changeShowFailoverMarks(bool checked);
    void changeShowSessions(bool checked);
    void changeThreads(QAction* action);
+   void restart();
    void about();
    void quit();
 
-   
+
    // ====== Private methods and data =======================================
    private:
    void getNextParameters();

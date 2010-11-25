@@ -447,7 +447,7 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
    showSessions->setCheckable(true);
    showSessions->setChecked(ShowSessions);
    connect(showSessions, SIGNAL(toggled(bool)), this, SLOT(changeShowSessions(bool)));
-   
+
    QMenu* sessionsMenu = menu.addMenu(tr("Sessions"));
    Q_CHECK_PTR(sessionsMenu);
    for(size_t i = 0;i < sizeof(sessionsEntries) / sizeof(sessionsEntries[0]);i++) {
@@ -467,6 +467,7 @@ void FractalPU::contextMenuEvent(QContextMenuEvent* event)
    connect(sessionsMenu, SIGNAL(triggered(QAction*)), this, SLOT(changeThreads(QAction*)));
 
    menu.addSeparator();
+   menu.addAction(tr("&Next Image"), this, SLOT(restart()));
    menu.addAction(tr("&About"), this, SLOT(about()));
    menu.addSeparator();
    menu.addAction(tr("&Quit"), this, SLOT(quit()));
@@ -499,6 +500,13 @@ void FractalPU::changeThreads(QAction* action)
    }
 }
 
+
+/* ###### Next Image ##################################################### */
+void FractalPU::restart()
+{
+   setStatus(FPU_CalcAborted);
+   CountDown = 0;
+}
 
 /* ###### About ########################################################## */
 void FractalPU::about()
