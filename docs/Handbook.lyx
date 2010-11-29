@@ -1,4 +1,4 @@
-#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -109,7 +109,7 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-August 24, 2010
+November 23, 2010
 \end_layout
 
 \begin_layout Standard
@@ -1627,8 +1627,192 @@ The
  API
 \end_layout
 
-\begin_layout Standard
-[TBD]
+\begin_layout Subsection
+Initialization/Clean-Up
+\end_layout
+
+\begin_layout Subsubsection
+rsp_initinfo()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_freeinfo()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_initarg()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_initialize()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_cleanup()
+\end_layout
+
+\begin_layout Subsection
+Basic Mode API
+\end_layout
+
+\begin_layout Subsubsection
+rsp_pe_registration()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_pe_deregistration()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_pe_failure()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getaddrinfo()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_freeaddrinfo()
+\end_layout
+
+\begin_layout Subsection
+Enhanced Mode API Socket Functions
+\end_layout
+
+\begin_layout Subsubsection
+rsp_socket()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_update_session_parameters()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_bind()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_listen()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getsockname()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getpeername()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_close()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_poll()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_select()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getsockopt()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_setsockopt()
+\end_layout
+
+\begin_layout Subsection
+Enhanced Mode API Pool Element Functions
+\end_layout
+
+\begin_layout Subsubsection
+rsp_register()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_deregister()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_accept()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_connect()
+\end_layout
+
+\begin_layout Subsection
+Enhanced Mode API Pool User Functions
+\end_layout
+
+\begin_layout Subsubsection
+rsp_has_cookie()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_forcefailover()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_sendmsg()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_send_cookie()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_recvmsg()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_recvfullmsg()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_read()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_recv()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_write()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_send()
+\end_layout
+
+\begin_layout Subsection
+Enhanced Mode API Miscellaneous Functions
+\end_layout
+
+\begin_layout Subsubsection
+rsp_mapsocket()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_unmapsocket()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_print_notification()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getpolicybytype()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_getpolicybyname()
+\end_layout
+
+\begin_layout Subsubsection
+rsp_csp_setstatus()
 \end_layout
 
 \begin_layout Standard
