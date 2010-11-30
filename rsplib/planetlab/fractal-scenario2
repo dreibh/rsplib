@@ -23,9 +23,11 @@
 . ./planetlab-config
 
 PRsPerRegion=3
-PR_LIST=`( head -n$PRsPerRegion pr-europe.hosts ; head -n$PRsPerRegion pr-america.hosts ; head -n$PRsPerRegion pr-asia.hosts ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
-PE_LIST=`cat alive-planetlab.hosts|grep "^[a-Z0-9]"|sort -u`
-# PE_LIST=`cat pe-europe.hosts|grep "^[a-Z0-9]"|sort -u`
+PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip ; head -n$PRsPerRegion pr-asia.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
+PE_LIST=`cat alive-planetlab.ip|grep "^[a-Z0-9]"|sort -u`
+
+# PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
+# PE_LIST=`cat pe-europe.ip|grep "^[a-Z0-9]"|sort -u`
 
 
 TESTID=fractal-scenario2
