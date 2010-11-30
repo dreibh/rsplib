@@ -73,7 +73,7 @@ while [ ! x$1 = "x" ] ; do
               exit 1 ; \
            fi \
         fi && \
-        echo \"`date`: $SERVER> $PROGCALL\" | head -c117 | xargs -i echo ... && \
+        echo \"`date`: $SERVER> $PROGCALL\" | head -c125 | xargs -i§ echo §... && \
         $PROGCALL" 2>&1 &
      echo $! >$PIDFILE )  | grep -v "tcgetattr: Inappropriate ioctl for device" &
    # This is necessary to get rid of the stupid tcgetattr error prints, but
