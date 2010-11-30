@@ -49,37 +49,48 @@ CandidateForPE="($GoodHost && $TimeOkay)"
 CandidateForPR="($GreatHost && $TimeFine)"
 
 
-./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
-./comon-query alive-planetlab.addresses "$AliveHost" address address "" quiet
-grep "^[0-9a-f]*$" alive-planetlab.addresses | xargs ./comon-print-address >alive-planetlab.ip
-./comon-query good-planetlab.hosts "$GoodHost" name name nameonly quiet
-./comon-query great-planetlab.hosts "$GreatHost" name name nameonly quiet
+do_query ()
+# $1 = Output prefix
+# $2 = Filter rule
+# $3 = Title
+{
+   local outputPrefix=$1
+   local filterRule=$2
+   local title=$3
 
-./comon-query pr-europe.hosts "$CandidateForPR && location==$Europe" name 5minload nameonly quiet
-./comon-query pr-asia.hosts "$CandidateForPR && location==$Australasia" name 5minload nameonly quiet
-./comon-query pr-america.hosts "$CandidateForPR && (location==$NorthAmerica || location==$SouthAmerica)" name 5minload nameonly quiet
+   ./comon-query $outputPrefix.hosts "$filterRule" name 5minload nameonly quiet
+   ./comon-query $outputPrefix.addresses "$filterRule" address address "" quiet
+   grep "^[0-9a-f]*$" $outputPrefix.addresses | xargs ./comon-print-address >$outputPrefix.ip
+   rm -f $outputPrefix.addresses
 
-./comon-query pe-europe.hosts "$CandidateForPE && location==$Europe" name 5minload nameonly quiet
-./comon-query pe-asia.hosts "$CandidateForPE && location==$Australasia" name 5minload nameonly quiet
-./comon-query pe-america.hosts "$CandidateForPE && (location==$NorthAmerica || location==$SouthAmerica)" name 5minload nameonly quiet
-
-./comon-query pu-europe.hosts "$CandidateForPE && location==$Europe" name 5minload nameonly quiet
-./comon-query pu-asia.hosts "$CandidateForPE && location==$Australasia" name 5minload nameonly quiet
-./comon-query pu-america.hosts "$CandidateForPE && (location==$NorthAmerica || location==$SouthAmerica)" name 5minload nameonly quiet
+   echo "$title`wc --lines $outputPrefix.hosts | awk '{ print $1 }'`"
+}
 
 
-wc --lines alive-planetlab.hosts
-wc --lines good-planetlab.hosts
-wc --lines great-planetlab.hosts
+do_query alive-planetlab "$AliveHost" "Alive Hosts: "
 
-wc --lines pr-europe.hosts
-wc --lines pr-asia.hosts
-wc --lines pr-america.hosts
+# ------ Remove old keys in background ------
+(
+   cat alive-planetlab.hosts | xargs -n1 ssh-keygen -R  >/dev/null 2>&1
+   cat alive-planetlab.ip | xargs -n1 ssh-keygen -R  >/dev/null 2>&1
+) &
 
-wc --lines pe-europe.hosts
-wc --lines pe-asia.hosts
-wc --lines pe-america.hosts
+do_query good-planetlab  "$GoodHost"  "Good Hosts:  "
+do_query great-planetlab "$GreatHost" "Great Hosts: "
 
-wc --lines pu-europe.hosts
-wc --lines pu-asia.hosts
-wc --lines pu-america.hosts
+
+do_query pr-europe       "$CandidateForPR && location==$Europe"                                    "PR Europe:   "
+do_query pr-asia         "$CandidateForPR && location==$Australasia"                               "PR Asia:     "
+do_query pr-america      "$CandidateForPR && (location==$NorthAmerica || location==$SouthAmerica)" "PR America:  "
+
+do_query pe-europe       "$CandidateForPE && location==$Europe"                                    "PE Europe:   "
+do_query pe-asia         "$CandidateForPE && location==$Australasia"                               "PE Asia:     "
+do_query pe-america      "$CandidateForPE && (location==$NorthAmerica || location==$SouthAmerica)" "PE America:  "
+
+do_query pu-europe       "$CandidateForPU && location==$Europe"                                    "PU Europe:   "
+do_query pu-asia         "$CandidateForPU && location==$Australasia"                               "PU Asia:     "
+do_query pu-america      "$CandidateForPU && (location==$NorthAmerica || location==$SouthAmerica)" "PU America:  "
+
+
+echo "Waiting for old keys to be removed ..."
+wait
