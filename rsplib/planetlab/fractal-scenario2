@@ -23,7 +23,7 @@
 . ./planetlab-config
 
 PRsPerRegion=3
-PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip ; head -n$PRsPerRegion pr-asia.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
+PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
 PE_LIST=`cat alive-planetlab.ip|grep "^[a-Z0-9]"|sort -u`
 
 # PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
