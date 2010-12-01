@@ -1,0 +1,150 @@
+#!/bin/sh
+# $Id$
+# * ##########################################################################
+# *
+# *              //===//   //=====   //===//   //       //   //===//
+# *             //    //  //        //    //  //       //   //    //
+# *            //===//   //=====   //===//   //       //   //===<<
+# *           //   \\         //  //        //       //   //    //
+# *          //     \\  =====//  //        //=====  //   //===//    Version II
+# *
+# *             ###################################################
+# *           ======  D E M O N S T R A T I O N   S Y S T E M  ======
+# *             ###################################################
+# *
+# * ############# An Efficient RSerPool Prototype Implementation #############
+# *
+# * Copyright (C) 2002-2010 by Thomas Dreibholz
+# *
+# * This program is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, either version 3 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# *
+# * Contact: dreibh.iem.uni-due.de
+
+. ./planetlab-config
+
+
+# ====== PR and PE lists ====================================================
+PRsPerRegion=3
+PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
+PE_LIST=`cat alive-planetlab.ip|grep "^[a-Z0-9]"|sort -u`
+# PE_LIST=`cat pr-europe.ip|grep "^[a-Z0-9]"|sort -u`
+
+
+# ====== Component Parameters ===============================================
+TESTID=fractal-scenario3
+PR_MISCOPT="-asapannounce=off -enrpannounce=off -endpointkeepalivetransmissioninterval=30000 -endpointkeepalivetimeoutinterval=15000 -cspinterval=1000 -loglevel=1"
+PE_MISCOPT="-asapannounce=off -cspinterval=0 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=1 "
+PU_MISCOPT=""
+VALGRIND=""  # "/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
+
+SSH_USER="$PLANETLAB_USER"
+SSH_KEY="$PLANETLAB_KEY"
+SERVICE_DIRECTORY="bin"
+
+
+# ====== Local Test =========================================================
+PR_LIST="localhost"
+PE_LIST="localhost localhost localhost localhost localhost localhost"
+
+SSH_USER="dreibh"
+SSH_KEY="/home/dreibh/.ssh/id_dsa"
+SERVICE_DIRECTORY="src/rsplib2/rsplib"
+SERVICE_PRE_PROGRAM=""
+OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
+# ====== Local Test =========================================================
+
+
+
+resetAll ()
+{
+   for node in `echo $PR_LIST $PE_LIST | xargs -n1 echo | sort -u` ; do
+      echo "Running do-killall for $node ..."
+      echo ./do-killall $node
+   done
+}
+
+
+startNetwork ()
+{
+   optPeers=""
+   for peer in $PR_LIST ; do
+      optPeers="$optPeers -peer=$peer:9901"
+   done
+   number=1
+   for pr in $PR_LIST ; do
+      # echo "Starting PR $number on $pr ..."
+      ./servicecontrol restart "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar \
+         "$OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data"   "" &
+      number=$(($number+1))
+   done
+   wait
+
+   optRegistrars=""
+   for pr in $PR_LIST ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+   number=1
+   for pe in $PE_LIST ; do
+      # echo "Starting PE $number on $pe ..."
+      ./servicecontrol restart "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server \
+         "$OPT_CSP $PE_MISCOPT $optRegistrars -identifier=$number"   "" &
+      number=$(($number+1))
+   done
+   wait
+}
+
+
+stopNetwork ()
+{
+   number=1
+   for pe in $PE_LIST ; do
+      ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server "" "" &
+      number=$(($number+1))
+   done
+   wait
+
+   number=1
+   for pr in $PR_LIST ; do
+      ./servicecontrol stop "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar "" "" &
+      number=$(($number+1))
+   done
+   wait
+}
+
+
+
+if [ $# -lt 1 ] ; then
+   echo "Usage: fractal-scenario3 [start|stop|reset|user]"
+   exit 1
+fi
+
+if [ "x$1" = "xstart" ] ; then
+   startNetwork
+elif [ "x$1" = "xstop" ] ; then
+   stopNetwork
+elif [ "x$1" = "xreset" ] ; then
+   echo "Resetting everything!"
+   resetAll
+elif [ "x$1" = "xuser" ] ; then
+   optRegistrars=""
+   for pr in $PR_LIST ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+   shift
+   cmd="env LANG=C ../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig -threads=9 $@"
+   echo "# $cmd"
+   $cmd
+else
+   echo "ERROR: Bad parameter $1!"
+fi

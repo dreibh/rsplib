@@ -85,6 +85,7 @@ stopNetwork ()
 
 if [ $# -lt 1 ] ; then
    echo "Usage: fractal-scenario2 [start|stop|reset|user]"
+   exit 1
 fi
 
 if [ "x$1" = "xstart" ] ; then

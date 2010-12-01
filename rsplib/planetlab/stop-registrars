@@ -1,5 +1,0 @@
-#!/bin/bash
-
-PROCNAME="registrar"
-
-. ./stop-processes $PROCNAME
