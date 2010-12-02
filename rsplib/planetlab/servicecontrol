@@ -39,7 +39,7 @@ SC_SSH_COMMAND="$2"
 SC_SSH_NODE="$3"
 SC_SSH_USER="$4"
 SC_SSH_KEY="$5"
-SC_SSH_OPTS="-oConnectTimeout=5 -oConnectionAttempts=4 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
+SC_SSH_OPTS="-T -x -oConnectTimeout=5 -oConnectionAttempts=3 -oStrictHostKeyChecking=no -oPasswordAuthentication=no"
 shift ; shift ; shift ; shift ; shift
 
 SC_SERVICE_INSTANCE_ID="$1"
@@ -68,108 +68,115 @@ SC_SERVICE_SHUTDOWN_TIMEOUT=10   # 10s to wait after SIGINT. After that: SIGKILL
 # echo SC_SERVICE_OPTS=$SC_SERVICE_OPTS
 # echo SC_SERVICE_PRE_PROGRAM=$SC_SERVICE_PRE_PROGRAM
 
+# echo "### $SC_SSH_COMMAND -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE /bin/bash"
 
-$SC_SSH_COMMAND -x -T -C -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE /bin/bash <<EOF
-   # echo "Logged in to $SC_SSH_NODE"
 
-   if [ -e ~/$SC_SERVICE_DIRECTORY ] ; then
-      cd ~/$SC_SERVICE_DIRECTORY
-      if [ "$SC_ACTION" = "stop" -o "$SC_ACTION" = "restart" ] ; then
-         if [ -e $SC_SERVICE_PIDFILE ] ; then
-            echo -e "\\\x1b[034m\`date\`: Stopping $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[030m"
-            PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
-            # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-               $SC_SERVICE_PRE_PROGRAM kill -INT \$PID_$UUID
-               sleep 0.1
-               i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
-                  # --- if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-                  if ! grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-                     i_$UUID=$SC_SERVICE_SHUTDOWN_TIMEOUT
-                  else
-                     sleep 1
-                  fi
-                  let i_$UUID=\$i_$UUID+1
-               done
-               # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-               if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-                  echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has not stopped yet -> sending SIGKILL."
-                  $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID_$UUID
-               fi
-            else
-               echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has already stopped -> only removing PID file."
-            fi
-            echo "   \`date\`: => removing $SC_SERVICE_PIDFILE on \$HOSTNAME (PID is \$PID_$UUID)"
-            rm -f $SC_SERVICE_PIDFILE
-            if [ -e $SC_SERVICE_LOGFILE ] ; then
-               bzip2 -f $SC_SERVICE_LOGFILE
-            fi
-         fi
-      fi
+$SC_SSH_COMMAND -l $SC_SSH_USER -i $SC_SSH_KEY $SC_SSH_OPTS $SC_SSH_NODE /bin/bash <<EOF
 
-      if [ "$SC_ACTION" = "start" -o "$SC_ACTION" = "restart" ] ; then
-         echo -e "\\\x1b[033m\`date\`: Starting $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[0m"
-         DoStartup=1
-         if [ -e $SC_SERVICE_PIDFILE ] ; then
-            echo "$SC_SERVICE_PIDFILE already exisits."
-            PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
-            # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-            if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-               echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME is still running!"
-               DoStartup=0
-            else
-               # Remove PID file, since process is already stopped.
-               rm -f $SC_SERVICE_PIDFILE
-            fi
-         fi
+# echo "Logged in to $SC_SSH_NODE"
 
-         if [ \$DoStartup -eq 1 ] ; then
-            if [ -e ./$SC_SERVICE_PROGRAM ] ; then
-               ulimit -c unlimited
-               $SC_SERVICE_PRE_PROGRAM nohup ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS -daemonpidfile=$SC_SERVICE_PIDFILE >$SC_SERVICE_LOGFILE 2>&1
-               PID_$UUID=\`cat $SC_SERVICE_PIDFILE\`
-
-               # Wait some time, for sudo/nice etc. to start the actual program
-               i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
-                  # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
-                  if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-                     i_$UUID=$SC_SERVICE_STARTUP_TIMEOUT
-                  else
-                     sleep 1
-                  fi
-                  let i_$UUID=\$i_$UUID+1
-               done
-
+if [ -e ~/$SC_SERVICE_DIRECTORY ] ; then
+   cd ~/$SC_SERVICE_DIRECTORY
+   if [ "$SC_ACTION" = "stop" -o "$SC_ACTION" = "restart" ] ; then
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         echo -e "\\\x1b[034m\`date\`: Stopping $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[030m"
+         PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
+         # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
+            # echo $SC_SERVICE_PRE_PROGRAM /bin/kill -INT \$PID_$UUID
+            $SC_SERVICE_PRE_PROGRAM /bin/kill -INT \$PID_$UUID
+            sleep 0.1
+            i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_SHUTDOWN_TIMEOUT ] ; do
                # --- if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
                if ! grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-                  $SC_SERVICE_PRE_PROGRAM kill -KILL \$PID_$UUID   # Just to make sure it is gone
-                  let ExitCode_$UUID=\$ExitCode_$UUID+1
+                  i_$UUID=$SC_SERVICE_SHUTDOWN_TIMEOUT
+               else
+                  sleep 1
                fi
-            else
-               let ExitCode_$UUID=\$ExitCode_$UUID+1
-               echo -e "\\\x1b[031m\`date\`: ERROR: No program $SC_SERVICE_DIRECTORY/$SC_SERVICE_PROGRAM on \$HOSTNAME!\\\x1b[030m"
-            fi
-         fi
-      fi
-
-      if [ "$SC_ACTION" = "status" ] ; then
-         if [ -e $SC_SERVICE_PIDFILE ] ; then
-            PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
+               let i_$UUID=\$i_$UUID+1
+            done
             # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
             if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
-               echo -e "\\\x1b[032m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
-            else
-               echo -e "\\\x1b[031m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
+               echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has not stopped yet -> sending SIGKILL."
+               # echo $SC_SERVICE_PRE_PROGRAM /bin/kill -KILL \$PID_$UUID
+               $SC_SERVICE_PRE_PROGRAM /bin/kill -KILL \$PID_$UUID
             fi
          else
-            echo -e "\\\x1b[032m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\\\x1b[030m"
+            echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME has already stopped -> only removing PID file."
+         fi
+         echo "   \`date\`: => removing $SC_SERVICE_PIDFILE on \$HOSTNAME (PID is \$PID_$UUID)"
+         rm -f $SC_SERVICE_PIDFILE
+         if [ -e $SC_SERVICE_LOGFILE ] ; then
+            bzip2 -f $SC_SERVICE_LOGFILE
+         fi
+      fi
+   fi
+
+   if [ "$SC_ACTION" = "start" -o "$SC_ACTION" = "restart" ] ; then
+      echo -e "\\\x1b[033m\`date\`: Starting $SC_SERVICE_PROGRAM on \$HOSTNAME ($SC_SERVICE_PIDFILE) ...\\\x1b[0m"
+      DoStartup=1
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         echo "$SC_SERVICE_PIDFILE already exisits."
+         PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
+         # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
+            echo "\`date\`: \$PID_$UUID ($SC_SERVICE_PROGRAM) on \$HOSTNAME is still running!"
+            DoStartup=0
+         else
+            # Remove PID file, since process is already stopped.
+            rm -f $SC_SERVICE_PIDFILE
          fi
       fi
 
-   else
-      let ExitCode_$UUID=\$ExitCode_$UUID+1
-      echo -e "\\\x1b[031m\`date\`: ERROR: No directory $SC_SERVICE_DIRECTORY on \$HOSTNAME!\\\x1b[030m"
+      if [ \$DoStartup -eq 1 ] ; then
+         if [ -e ./$SC_SERVICE_PROGRAM ] ; then
+            ulimit -c unlimited
+            # echo nohup $SC_SERVICE_PRE_PROGRAM ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS -daemonpidfile=$SC_SERVICE_PIDFILE
+            nohup $SC_SERVICE_PRE_PROGRAM ./$SC_SERVICE_PROGRAM $SC_SERVICE_OPTS -daemonpidfile=$SC_SERVICE_PIDFILE >$SC_SERVICE_LOGFILE 2>&1 </dev/null
+            PID_$UUID=\`cat $SC_SERVICE_PIDFILE\`
+
+            # Wait some time, for sudo/nice etc. to start the actual program
+            i_$UUID=0 ; while [ \$i_$UUID -lt $SC_SERVICE_STARTUP_TIMEOUT ] ; do
+               # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+               if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
+                  i_$UUID=$SC_SERVICE_STARTUP_TIMEOUT
+               else
+                  sleep 1
+               fi
+               let i_$UUID=\$i_$UUID+1
+            done
+
+            # --- if ! ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+            if ! grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
+               $SC_SERVICE_PRE_PROGRAM /bin/kill -KILL \$PID_$UUID   # Just to make sure it is gone
+               let ExitCode_$UUID=\$ExitCode_$UUID+1
+            fi
+         else
+            let ExitCode_$UUID=\$ExitCode_$UUID+1
+            echo -e "\\\x1b[031m\`date\`: ERROR: No program $SC_SERVICE_DIRECTORY/$SC_SERVICE_PROGRAM on \$HOSTNAME!\\\x1b[030m"
+         fi
+      fi
    fi
 
-   # echo "Leaving $SC_SSH_NODE"
+   if [ "$SC_ACTION" = "status" ] ; then
+      if [ -e $SC_SERVICE_PIDFILE ] ; then
+         PID_$UUID="\`cat $SC_SERVICE_PIDFILE\`"
+         # --- if ps -o cmd -p "\$PID_$UUID" | grep $SC_SERVICE_PROGRAM 1>/dev/null 2>/dev/null ; then
+         if grep $SC_SERVICE_PROGRAM "/proc/\$PID_$UUID/cmdline" 1>/dev/null 2>/dev/null ; then
+            echo -e "\\\x1b[032m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is OK.\\\x1b[0m"
+         else
+            echo -e "\\\x1b[031m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is DEAD.\\\x1b[0m"
+         fi
+      else
+         echo -e "\\\x1b[032m\`date\`: $SC_SERVICE_PROGRAM on \$HOSTNAME is NOT RUNNING.\\\x1b[030m"
+      fi
+   fi
+
+else
+   let ExitCode_$UUID=\$ExitCode_$UUID+1
+   echo -e "\\\x1b[031m\`date\`: ERROR: No directory $SC_SERVICE_DIRECTORY on \$HOSTNAME!\\\x1b[030m"
+fi
+
+# echo "Leaving $SC_SSH_NODE"
+
 EOF
