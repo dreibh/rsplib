@@ -34,31 +34,29 @@
 . ./planetlab-config
 
 
-# ====== PR and PE lists ====================================================
-PRsPerRegion=3
-PR_LIST=`( head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip ) | grep "^[a-Z0-9]"|sort -u`   # ACHTUNG: Eindeutigkeit unbedingt notwendig!!!
-PE_LIST=`cat alive-planetlab.ip|grep "^[a-Z0-9]"|sort -u`
-# PE_LIST=`cat pr-europe.ip|grep "^[a-Z0-9]"|sort -u`
-
-
 # ====== Component Parameters ===============================================
 TESTID=fractal-scenario3
 PR_MISCOPT="-asapannounce=off -enrpannounce=off -endpointkeepalivetransmissioninterval=30000 -endpointkeepalivetimeoutinterval=15000 -cspinterval=1000 -loglevel=1"
 PE_MISCOPT="-asapannounce=off -cspinterval=0 -fractal -fgpfailureafter=0 -rereginterval=30000 -policy=RoundRobin -loglevel=1 "
 PU_MISCOPT=""
-VALGRIND=""  # "/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
+VALGRIND="/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
 
 SSH_USER="$PLANETLAB_USER"
 SSH_KEY="$PLANETLAB_KEY"
 SERVICE_DIRECTORY="bin"
 
 
+# ====== PR and PE lists ====================================================
+PRsPerRegion=3
+PR_LIST=`head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip`
+PE_LIST=`cat alive-planetlab.ip`
+
+
 # ====== Local Test =========================================================
 PR_LIST="localhost"
 PE_LIST="localhost localhost localhost localhost localhost localhost"
-
 SSH_USER="dreibh"
-SSH_KEY="/home/dreibh/.ssh/id_dsa"
+SSH_KEY="$HOME/.ssh/id_dsa"
 SERVICE_DIRECTORY="src/rsplib2/rsplib"
 SERVICE_PRE_PROGRAM=""
 OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
@@ -66,56 +64,68 @@ OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
 
 
 
+# ###### Reset all nodes ####################################################
 resetAll ()
 {
-   for node in `echo $PR_LIST $PE_LIST | xargs -n1 echo | sort -u` ; do
+   local nodeList="$1"
+
+   echo "Resetting everything!"
+   for node in `echo $nodeList | xargs -n1 echo | sort -u` ; do
       echo "Running do-killall for $node ..."
       echo ./do-killall $node
    done
 }
 
 
+# ###### Start given PRs and PEs ############################################
 startNetwork ()
 {
-   optPeers=""
-   for peer in $PR_LIST ; do
+   local prList="$1"
+   local peList="$2"
+
+   local optPeers=""
+   for peer in $prList ; do
       optPeers="$optPeers -peer=$peer:9901"
    done
-   number=1
-   for pr in $PR_LIST ; do
+   local number=1
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
       # echo "Starting PR $number on $pr ..."
-      ./servicecontrol restart "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar \
-         "$OPT_CSP $PR_MISCOPT -identifier=100$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data"   "" &
+      ./servicecontrol start "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar \
+         "$OPT_CSP $PR_MISCOPT -identifier=0x$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data"   "" &
       number=$(($number+1))
    done
    wait
 
-   optRegistrars=""
-   for pr in $PR_LIST ; do
+   local optRegistrars=""
+   for pr in $prList ; do
       optRegistrars="$optRegistrars -registrar=$pr:3863"
    done
-   number=1
-   for pe in $PE_LIST ; do
+   local number=1
+   for pe in $peList ; do
       # echo "Starting PE $number on $pe ..."
-      ./servicecontrol restart "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server \
-         "$OPT_CSP $PE_MISCOPT $optRegistrars -identifier=$number"   "" &
+      ./servicecontrol start "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server \
+         "$OPT_CSP $PE_MISCOPT $optRegistrars -identifier=0x$number"   "" &
       number=$(($number+1))
    done
    wait
 }
 
 
+# ###### Stop given PRs and PEs #############################################
 stopNetwork ()
 {
-   number=1
-   for pe in $PE_LIST ; do
+   local prList="$1"
+   local peList="$2"
+
+   local number=1
+   for pe in $peList ; do
       ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server "" "" &
       number=$(($number+1))
    done
    wait
 
-   number=1
-   for pr in $PR_LIST ; do
+   local number=1
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
       ./servicecontrol stop "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar "" "" &
       number=$(($number+1))
    done
@@ -123,28 +133,41 @@ stopNetwork ()
 }
 
 
+# ###### Run local user #####################################################
+runUser ()
+{
+   local prList="$1"
 
+   local optRegistrars=""
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+   shift
+   cmd="env LANG=C $VALGRIND ../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig -threads=9 $@"
+   echo "# $cmd"
+   $cmd
+}
+
+
+
+# ###### Main program #######################################################
 if [ $# -lt 1 ] ; then
-   echo "Usage: fractal-scenario3 [start|stop|reset|user]"
+   echo >&2 "Usage: $0 [start|stop|restart|user|reset]"
    exit 1
 fi
 
 if [ "x$1" = "xstart" ] ; then
-   startNetwork
+   startNetwork "$PR_LIST" "$PE_LIST"
 elif [ "x$1" = "xstop" ] ; then
-   stopNetwork
-elif [ "x$1" = "xreset" ] ; then
-   echo "Resetting everything!"
-   resetAll
+   stopNetwork "$PR_LIST" "$PE_LIST"
+elif [ "x$1" = "xrestart" ] ; then
+   stopNetwork  "$PR_LIST" "$PE_LIST"
+   startNetwork "$PR_LIST" "$PE_LIST"
 elif [ "x$1" = "xuser" ] ; then
-   optRegistrars=""
-   for pr in $PR_LIST ; do
-      optRegistrars="$optRegistrars -registrar=$pr:3863"
-   done
-   shift
-   cmd="env LANG=C ../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig -threads=9 $@"
-   echo "# $cmd"
-   $cmd
+   runUser "$PR_LIST"
+elif [ "x$1" = "xreset" ] ; then
+   resetAll "$PR_LIST $PE_LIST"
 else
-   echo "ERROR: Bad parameter $1!"
+   echo >&2 "ERROR: Bad parameter $1!"
+   exit 1
 fi

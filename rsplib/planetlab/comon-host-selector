@@ -20,13 +20,14 @@
 # Contact: dreibh@iem.uni-due.de
 
 
-# Settings for "location":
+# ###### Settings for "location" ############################################
 NorthAmerica=1
 Europe=2
 Australasia=3
 SouthAmerica=4
 
 
+# ###### Definitions ########################################################
 DNSWorking="(dns1udp<80 || dns2udp<80)"
 DNSFine="(dns1udp<20 && dns2udp<80)"
 
@@ -39,7 +40,6 @@ TimeFine="(drift <= 1ms)"
 LoadOkay="(5minload < 5)"
 LoadFine="(5minload < 1)"
 
-
 AliveHost="((resptime > 0) && (sshstatus < 1h) && $DNSWorking)"
 GoodHost="($AliveHost && $DiskOkay && $MemOkay && $LoadOkay)"
 GreatHost="($GoodHost && $DNSFine && $LoadFine)"
@@ -49,6 +49,7 @@ CandidateForPE="($GoodHost && $TimeOkay)"
 CandidateForPR="($GreatHost && $TimeFine)"
 
 
+# ###### Query CoMon service ################################################
 do_query ()
 # $1 = Output prefix
 # $2 = Filter rule
@@ -67,6 +68,8 @@ do_query ()
 }
 
 
+
+# ###### Main program #######################################################
 do_query alive-planetlab "$AliveHost" "Alive Hosts: "
 
 # ------ Remove old keys in background ------
