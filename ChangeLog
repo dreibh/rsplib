@@ -1,4 +1,285 @@
 ------------------------------------------------------------------------
+r2408 | dreibh | 2010-12-02 15:51:38 +0100 (Thu, 02 Dec 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
+   M /trunk/rsplib2/rsplib/planetlab/servicecontrol
+
+Improved fractal demo setup.
+
+------------------------------------------------------------------------
+r2407 | dreibh | 2010-12-02 11:12:19 +0100 (Thu, 02 Dec 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/comon-host-selector
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
+
+Improved host selection and fractal demo script.
+
+------------------------------------------------------------------------
+r2406 | dreibh | 2010-12-01 16:21:02 +0100 (Wed, 01 Dec 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+
+Version update.
+
+------------------------------------------------------------------------
+r2405 | dreibh | 2010-12-01 16:17:11 +0100 (Wed, 01 Dec 2010) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+   A /trunk/rsplib2/rsplib/planetlab/fractal-scenario3 (from /trunk/rsplib2/rsplib/planetlab/fractal-scenario2:2404)
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+   D /trunk/rsplib2/rsplib/planetlab/run-messung6
+   D /trunk/rsplib2/rsplib/planetlab/run-messung6a
+   D /trunk/rsplib2/rsplib/planetlab/run-messung7
+   D /trunk/rsplib2/rsplib/planetlab/run-tests
+   D /trunk/rsplib2/rsplib/planetlab/run-tests2
+   M /trunk/rsplib2/rsplib/planetlab/servicecontrol
+   D /trunk/rsplib2/rsplib/planetlab/stop-registrars
+   D /trunk/rsplib2/rsplib/planetlab/t1.R
+   D /trunk/rsplib2/rsplib/planetlab/test1
+   D /trunk/rsplib2/rsplib/planetlab/test9.R
+
+- Updated fractal scenario script.
+- Cleaned up PlanetLab directory.
+
+------------------------------------------------------------------------
+r2404 | dreibh | 2010-11-30 15:58:29 +0100 (Tue, 30 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+
+Restricted PRs to nodes in Europe and America, since bandwidth of Asian nodes is not really good.
+
+------------------------------------------------------------------------
+r2403 | dreibh | 2010-11-30 15:50:32 +0100 (Tue, 30 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/do-killall
+
+"killall" script skips removing old keys.
+
+------------------------------------------------------------------------
+r2402 | dreibh | 2010-11-30 15:50:14 +0100 (Tue, 30 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+
+PlanetLab fractal demo now uses IP addresses instead of DNS names.
+
+------------------------------------------------------------------------
+r2401 | dreibh | 2010-11-30 15:49:40 +0100 (Tue, 30 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/start-process
+
+Fixed output.
+
+------------------------------------------------------------------------
+r2400 | dreibh | 2010-11-30 15:45:57 +0100 (Tue, 30 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/comon-host-selector
+
+CoMon-based host selector also fetches IP addresses now -> no more DNS timeouts in demo script.
+
+------------------------------------------------------------------------
+r2396 | dreibh | 2010-11-29 10:00:27 +0100 (Mon, 29 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+
+Updated documentation.
+
+------------------------------------------------------------------------
+r2394 | dreibh | 2010-11-25 16:01:32 +0100 (Thu, 25 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.qm
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.ts
+
+Fixed translation.
+
+------------------------------------------------------------------------
+r2393 | dreibh | 2010-11-25 15:48:24 +0100 (Thu, 25 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.qm
+   M /trunk/rsplib2/rsplib/fractalpooluser_de_DE.ts
+
+Added option to restart with a new image.
+
+------------------------------------------------------------------------
+r2392 | dreibh | 2010-11-25 15:45:39 +0100 (Thu, 25 Nov 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rserpool.h
+
+Removed dummy code.
+
+------------------------------------------------------------------------
+r2391 | dreibh | 2010-11-19 14:20:55 +0100 (Fri, 19 Nov 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+
+------------------------------------------------------------------------
+r2387 | dreibh | 2010-11-18 11:04:11 +0100 (Thu, 18 Nov 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Updated build scripts. Added dependency for chrpath.
+------------------------------------------------------------------------
+r2386 | dreibh | 2010-11-18 11:02:31 +0100 (Thu, 18 Nov 2010) | 1 line
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+scriptingclient now downloads results archive when final trial has failed -> useful to get error log.
+------------------------------------------------------------------------
+r2385 | dreibh | 2010-10-29 13:52:41 +0200 (Fri, 29 Oct 2010) | 6 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/comon-host-selector
+   A /trunk/rsplib2/rsplib/planetlab/comon-print-address
+   M /trunk/rsplib2/rsplib/planetlab/do-killall
+
+Updated PlanetLab scripts.-- Diese und die folgenden Zeilen werden ignoriert --
+
+AM   planetlab/comon-print-address
+M    planetlab/comon-host-selector
+M    planetlab/do-killall
+
+------------------------------------------------------------------------
+r2384 | dreibh | 2010-10-27 21:37:15 +0200 (Wed, 27 Oct 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/docs/Handbook.lyx
+
+Updated Debian version for PPA upload.
+
+------------------------------------------------------------------------
+r2383 | dreibh | 2010-10-27 21:32:11 +0200 (Wed, 27 Oct 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+Fixed Makefile.am problem under Natty Narwhal.
+
+------------------------------------------------------------------------
+r2382 | dreibh | 2010-10-27 17:26:12 +0200 (Wed, 27 Oct 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+   M /trunk/rsplib2/rsplib/planetlab/prepare-compilehost
+
+Updated PlanetLab scripts.
+
+------------------------------------------------------------------------
+r2381 | dreibh | 2010-10-27 17:25:59 +0200 (Wed, 27 Oct 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+Fixed compile problem for Natty Narwhal in Makefile.am.
+
+------------------------------------------------------------------------
+r2380 | dreibh | 2010-09-20 15:09:36 +0200 (Mon, 20 Sep 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/wireshark/preferences
+
+Updated example Wireshark preferences.
+
+------------------------------------------------------------------------
+r2379 | dreibh | 2010-08-19 17:03:07 +0200 (Thu, 19 Aug 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+   M /trunk/rsplib2/freebsd/rsplib/pkg-descr
+   M /trunk/rsplib2/freebsd/rsplib/pkg-plist
+
+Updated FreeBSD packaging files by using the versions of the accepted port.
+
+------------------------------------------------------------------------
+r2378 | dreibh | 2010-08-08 12:15:37 +0200 (Sun, 08 Aug 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/storage/rc.local
+
+Updated rc.local example.
+
+------------------------------------------------------------------------
+r2377 | dreibh | 2010-08-08 11:54:28 +0200 (Sun, 08 Aug 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+
+Added dependency for qt4-moc to FreeBSD Makefile.
+
+------------------------------------------------------------------------
+r2376 | dreibh | 2010-07-27 17:57:25 +0200 (Tue, 27 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/pkg-plist
+
+Fixed problem in pkg-plist.
+
+------------------------------------------------------------------------
+r2375 | dreibh | 2010-07-27 16:51:53 +0200 (Tue, 27 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+   M /trunk/rsplib2/freebsd/rsplib/pkg-plist
+
+Finished FreeBSD ports files.
+
+------------------------------------------------------------------------
+r2374 | dreibh | 2010-07-27 16:11:45 +0200 (Tue, 27 Jul 2010) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/freebsd
+   A /trunk/rsplib2/freebsd/rsplib
+   A /trunk/rsplib2/freebsd/rsplib/Makefile
+   A /trunk/rsplib2/freebsd/rsplib/distinfo
+   A /trunk/rsplib2/freebsd/rsplib/make-shar
+   A /trunk/rsplib2/freebsd/rsplib/pkg-descr
+   A /trunk/rsplib2/freebsd/rsplib/pkg-plist
+   A /trunk/rsplib2/freebsd/rsplib/test-packaging
+
+Started adding FreeBSD ports scripts.
+
+------------------------------------------------------------------------
+r2373 | dreibh | 2010-07-23 14:31:22 +0200 (Fri, 23 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Version update.
+
+------------------------------------------------------------------------
+r2372 | dreibh | 2010-07-23 08:08:17 +0200 (Fri, 23 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/environmentcache.cc
+   A /trunk/rsplib2/rsplib/make-test-cache
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+- Fixed problem with Scripting Service's environment cache: purged entries were not removed.
+
+------------------------------------------------------------------------
+r2371 | dreibh | 2010-07-14 11:30:24 +0200 (Wed, 14 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/install-binaries
+
+Fixed problem in install-binaries PlanetLab script.
+
+------------------------------------------------------------------------
+r2370 | dreibh | 2010-07-08 15:52:00 +0200 (Thu, 08 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
+r2369 | dreibh | 2010-07-08 15:51:29 +0200 (Thu, 08 Jul 2010) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib.lsm
+
+Version update.
+
+------------------------------------------------------------------------
 r2368 | dreibh | 2010-07-08 13:58:04 +0200 (Thu, 08 Jul 2010) | 1 line
 Changed paths:
    M /trunk/rsplib2/rsplib/planetlab/planetlab-config
