@@ -22,11 +22,11 @@
 
 PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=due_test
-PLANETLAB_COMPILEHOST="planetlab2.uc3m.es"   # "merkur.planetlab.haw-hamburg.de"   # "planetlab4.cs.st-andrews.ac.uk"   # "planet3.cs.huji.ac.il"   # "merkur.planetlab.haw-hamburg.de"
+PLANETLAB_COMPILEHOST="planetlab1.iem.uni-due.de"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace"
 
-DISTNAME="rsplib-2.7.6~rc1"
+DISTNAME="rsplib-2.7.6"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
 DISTPRGS="rootshell registrar server calcappclient hsdump attacker"
