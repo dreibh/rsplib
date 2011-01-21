@@ -30,10 +30,10 @@
 #
 # USAGE:
 # ./make-deb default            => for Ubuntu REVU
-#    Note: Replaces "Maintainer" by MOTU and writes original maintainer entry
-#          to "XSBC-Original-Maintainer"
+#    Note: Replaces "Maintainer" by Ubuntu Developers and
+#          writes original maintainer entry to "XSBC-Original-Maintainer"
 # ./make-deb unstable           => for Debian Mentors
-# ./make-deb intrepid|hardy|... => for Launchpad PPA
+# ./make-deb natty|maverick|... => for Launchpad PPA
 # ---------------------------------------------------------------------------
 
 
@@ -97,7 +97,7 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
       fi
       mv debian/changelog.new debian/changelog
    else
-      sed -e "s/^Maintainer:/Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>\nXSBC-Original-Maintainer:/g" <debian/control >debian/control.new
+      sed -e "s/^Maintainer:/Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>\nXSBC-Original-Maintainer:/g" <debian/control >debian/control.new
       mv debian/control.new debian/control
    fi
 
