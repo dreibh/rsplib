@@ -2,6 +2,7 @@ rsplib (2.7.6-0ubuntu1) natty; urgency=low
 
   * New upstream release.
   * Using tiny rules for dh7 now.
+  * Switch to dpkg-source 3.0 (quilt) format.
   * Updated Ubuntu package to latest release (LP: #696512).
   * Closes Debian ITP bug with wnpp (Closes: #586405).
 
