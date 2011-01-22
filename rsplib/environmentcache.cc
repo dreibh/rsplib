@@ -154,18 +154,18 @@ void EnvironmentCache::cleanUp()
       DIR* directory = opendir(CacheDirectory.c_str());
       if(directory != NULL) {
          char* cwd = getcwd(NULL, 0);
-         chdir(CacheDirectory.c_str());
+         if(chdir(CacheDirectory.c_str()) == 0) {
+            dirent* dentry = readdir(directory);
+            while(dentry != NULL) {
+               unlink(dentry->d_name);
+               dentry = readdir(directory);
+            }
+            closedir(directory);
 
-         dirent* dentry = readdir(directory);
-         while(dentry != NULL) {
-            unlink(dentry->d_name);
-            dentry = readdir(directory);
-         }
-         closedir(directory);
-
-         if(cwd) {
-            chdir(cwd);
-            free(cwd);
+            if(cwd) {
+               chdir(cwd);
+               free(cwd);
+            }
          }
       }
    }

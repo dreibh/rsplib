@@ -132,7 +132,7 @@ void TCPLikeServer::setLoad(double load)
    ServerList->unlock();
 
    if(oldTotalLoad != newTotalLoad) {
-      ext_write(ServerList->SystemNotificationPipe, "!", 1);
+      ext_send(ServerList->SystemNotificationPipe, "!", 1, 0);
    }
 }
 
@@ -515,7 +515,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                               // ====== Clear notification pipe ===================
                               if(pollfds[1].revents & POLLIN) {
                                  char buffer[1024];
-                                 ext_read(systemNotificationPipe[0], (char*)&buffer, sizeof(buffer));
+                                 ext_recv(systemNotificationPipe[0], (char*)&buffer, sizeof(buffer), 0);
                               }
 
                            }

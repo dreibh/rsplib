@@ -1481,7 +1481,7 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
 /* ###### Wake up main loop thread using pipe ############################ */
 static void asapInstanceNotifyMainLoop(struct ASAPInstance* asapInstance)
 {
-   ext_write(asapInstance->MainLoopPipe[1], "!", 1);
+   ext_send(asapInstance->MainLoopPipe[1], "!", 1, 0);
 }
 
 
