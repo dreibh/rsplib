@@ -162,10 +162,12 @@ void EnvironmentCache::cleanUp()
             }
             closedir(directory);
 
-            if(cwd) {
-               chdir(cwd);
-               free(cwd);
+            if(chdir(cwd) != 0) {
+               // Something went wrong ...
             }
+         }
+         if(cwd) {
+            free(cwd);
          }
       }
    }
