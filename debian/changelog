@@ -1,4 +1,4 @@
-rsplib (2.7.7~rc1-0ubuntu1) natty; urgency=low
+rsplib (2.7.7~rc1-1ubuntu1) natty; urgency=low
 
   * New upstream release.
   * Using tiny rules for dh7 now.
