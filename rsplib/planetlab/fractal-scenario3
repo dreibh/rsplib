@@ -102,7 +102,7 @@ startNetwork ()
          "./rootshell" &
       number=$(($number+1))
    done
-   wait
+   # wait
 
    local optRegistrars=""
    for pr in $prList ; do
@@ -131,7 +131,7 @@ stopNetwork ()
       ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server "" "./rootshell" &
       number=$(($number+1))
    done
-   wait
+   # wait
 
    local number=1
    for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
@@ -173,7 +173,8 @@ elif [ "x$1" = "xrestart" ] ; then
    stopNetwork  "$PR_LIST" "$PE_LIST"
    startNetwork "$PR_LIST" "$PE_LIST"
 elif [ "x$1" = "xuser" ] ; then
-   runUser "$PR_LIST"
+   shift
+   runUser "$PR_LIST" $@
 elif [ "x$1" = "xreset" ] ; then
    resetAll "$PR_LIST $PE_LIST"
 else
