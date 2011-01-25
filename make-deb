@@ -47,6 +47,7 @@ fi
 CHANGELOG_HEADER="`head -n1 debian/changelog`"
 
 PACKAGE=`echo $CHANGELOG_HEADER | sed -e "s/(.*//" -e "s/ //g"`
+PACKAGE_VERSION=`echo $CHANGELOG_HEADER | sed -e "s/[a-Z0-9 ]*(//" -e "s/).*//" -e "s/ //g" -e "s/^[0-9]*://"`
 OUTPUT_VERSION=`echo $CHANGELOG_HEADER | sed -e "s/[a-Z0-9 ]*(//" -e "s/).*//" -e "s/[0-9]*$//" -e "s/ //g" -e "s/^[0-9]*://"`
 UPSTREAM_VERSION=`echo $OUTPUT_VERSION | sed -e "s/-[^ ]*$//g"`
 INPUT_DISTRIBUTION=`echo $CHANGELOG_HEADER | sed -e "s/[^)]*)//" -e "s/;.*//g" -e "s/ //g"`
@@ -54,6 +55,7 @@ INPUT_DISTRIBUTION=`echo $CHANGELOG_HEADER | sed -e "s/[^)]*)//" -e "s/;.*//g" -
 echo "######################################################################"
 echo "CHANGELOG_HEADER:   $CHANGELOG_HEADER"
 echo "PACKAGE:            $PACKAGE"
+echo "PACKAGE_VERSION     $PACKAGE_VERSION"
 echo "UPSTREAM_VERSION:   $UPSTREAM_VERSION"
 echo "OUTPUT_VERSION:     $OUTPUT_VERSION"
 echo "INPUT_DISTRIBUTION: $INPUT_DISTRIBUTION"
@@ -90,7 +92,9 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
    cp $UPSTREAM_PACKAGE $PACKAGE\_$UPSTREAM_VERSION.orig.tar.gz && \
    cp $UPSTREAM_PACKAGE $PACKAGE\_$OUTPUT_VERSION.orig.tar.gz && \
    rm -rf $PACKAGE-$UPSTREAM_VERSION && \
+   rm -rf $PACKAGE-$UPSTREAM_VERSION.orig && \
    tar xzf $UPSTREAM_PACKAGE && \
+   cp -r $PACKAGE-$UPSTREAM_VERSION $PACKAGE-$UPSTREAM_VERSION.orig && \
    cp -r debian $PACKAGE-$UPSTREAM_VERSION && \
    find $PACKAGE-$UPSTREAM_VERSION -name .svn | xargs --no-run-if-empty rm -rf && \
    cd $PACKAGE-$UPSTREAM_VERSION && \
@@ -112,12 +116,23 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
       if [ "$DISTRIBUTION" = "dapper" -o "$DISTRIBUTION" = "edgy" -o "$DISTRIBUTION" = "hardy" -o "$DISTRIBUTION" = "intrepid" -o "$DISTRIBUTION" = "jaunty" ] ; then
          rm -rf debian/source
       fi
-      # -----------------------------------------------------------------....
+      # ---------------------------------------------------------------------
    else
       sed -e "s/^Maintainer:/Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>\nXSBC-Original-Maintainer:/g" <debian/control >debian/control.new
       mv debian/control.new debian/control
    fi
 
+
+   echo ""
+   echo "------ Creating diff file $PACKAGE-$PACKAGE_VERSION.diff.gz ------"
+   (
+      cd ..
+      diff -urN "--exclude=*~" "--exclude=.svn" "--exclude=.git" $PACKAGE-$UPSTREAM_VERSION.orig $PACKAGE-$UPSTREAM_VERSION | gzip -c >$PACKAGE-$PACKAGE_VERSION.diff.gz
+   )
+
+
+   echo ""
+   echo "------ Building source package ------"
 
    # Without signature!
    # debuild -us -uc
