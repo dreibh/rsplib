@@ -1,21 +1,21 @@
 rsplib (2.7.7-0ubuntu1) natty; urgency=low
 
   * New upstream release.
-  * Using tiny rules for dh7 now.
   * Switch to dpkg-source 3.0 (quilt) format.
+  * debian/rules: Using tiny rules for debhelper 7 now.
+  * debian/control:
+    - Drop Build-Depends on quilt. It's obsolete with 3.0 source format.
+    - Bump Standards-Version to 3.9.1.
+    - Recommends chrpath because it allows scripting service scripts to
+      remove absolute library paths.
+  * debian/patches: Removed obsolete spelling error patch (fixed upstream).
+  * debian/copyright: Updated.
+  * debian/watch: Updated URL of upstream package.
+  * debian/README.source: Dropped. It's obsolete with 3.0 source format.
   * Updated Ubuntu package to latest release (LP: #696512).
   * Closes Debian ITP bug with wnpp (Closes: #586405).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 22 Jan 2011 11:11:11 +0200
-
-rsplib (2.7.1-0ubuntu1) maverick; urgency=low
-
-  * New upstream release.
-  * Updated debian/watch to use new homepage URL.
-  * Updated Ubuntu package to latest release (LP: #596212).
-  * Closes Debian ITP bug with wnpp (Closes: #586405).
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 19 Jun 2010 11:18:38 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 28 Jan 2011 11:11:11 +0200
 
 rsplib (2.7.0-0ubuntu1) lucid; urgency=low
 
