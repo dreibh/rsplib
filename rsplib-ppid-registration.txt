@@ -1,0 +1,165 @@
+###### Fractal Generator Protocol ######
+
+## Contact Name:
+Thomas Dreibholz
+
+## Contact Email:
+dreibh@iem.uni-due.de
+
+## What type of assignment/registration are you requesting?
+SCTP Payload Protocol Identifier for the Fractal Generator Protocol (FGP)
+
+## Which registry are you requesting this assignment/registration be made in?
+SCTP Parameters -> SCTP Payload Protocol Identifiers
+
+
+## If possible, please give a brief description of why you need this assignment/registration:
+
+The Fractal Generator Protocol (FGP) is used by the Fractal Generator Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of the FGP is to demonstrate ASAP cookie based failover (RFC 5351/RFC 5352) and RSerPool workload distribution (draft-dreibholz-rserpool-applic-distcomp-08). Particularly, it is also intended to be used in RSerPool interop testing. Since FGP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between FGP and ASAP messages.
+
+The implementation of the FGP is available as Open Source under GPLv3 licence within the RSPLIB package at:
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ .
+
+Some more documentation of the FGP application can be found here:
+
+* Dreibholz, T.; Becke, M.: ``The RSPLIB Project – From Research to Application´´ (PDF, 2104 KiB), Demo Presentation at the IEEE Global Communications Conference (GLOBECOM), Miami, Florida/U.S.A., December 8, 2010.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/Globecom2010-Demo.pdf
+
+* Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+
+
+## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
+
+Registry Name: SCTP Payload Protocol Identifiers
+Reference: [RFC4960]
+Registration Procedures: First Come First Served
+
+
+
+###### Ping Pong Protocol ######
+
+## Contact Name:
+Thomas Dreibholz
+
+## Contact Email:
+dreibh@iem.uni-due.de
+
+## What type of assignment/registration are you requesting?
+SCTP Payload Protocol Identifier for the Ping Pong Protocol (PPP)
+
+## Which registry are you requesting this assignment/registration be made in?
+SCTP Parameters -> SCTP Payload Protocol Identifiers
+
+
+## If possible, please give a brief description of why you need this assignment/registration:
+
+The Ping Pong Protocol (PPP) is used by the Ping Pong Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of the PPP is to test RSerPool failover behaviour (RFC 5351/RFC 5352). Particularly, it is also intended to be used in RSerPool interop testing. Since PPP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between PPP and ASAP messages.
+
+The implementation of the PPP is available as Open Source under GPLv3 licence within the RSPLIB package at:
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ .
+
+Some more documentation on RSPLIB can be found here:
+
+* Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+
+
+## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
+
+Registry Name: SCTP Payload Protocol Identifiers
+Reference: [RFC4960]
+Registration Procedures: First Come First Served
+
+
+
+###### CalcApp Protocol ######
+
+## Contact Name:
+Thomas Dreibholz
+
+## Contact Email:
+dreibh@iem.uni-due.de
+
+## What type of assignment/registration are you requesting?
+SCTP Payload Protocol Identifier for the CalcApp Protocol (CALCAPP)
+
+## Which registry are you requesting this assignment/registration be made in?
+SCTP Parameters -> SCTP Payload Protocol Identifiers
+
+
+## If possible, please give a brief description of why you need this assignment/registration:
+
+The CalcApp Protocol (CALCAPP) is used by the CalcApp Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of CALCAPP is to measure failover (RFC 5351/RFC 5352) and pool member selection policy (RFC 5356; draft-dreibholz-rserpool-asap-hropt-08; draft-dreibholz-rserpool-delay-07) performance in distributed setups (draft-dreibholz-rserpool-applic-distcomp-08). Particularly, it is also intended to be used in RSerPool interop testing.
+
+Its implementation is available as Open Source under GPLv3 licence. Since CALCAPP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between CALCAPP and ASAP messages.
+
+The implementation of the CALCAPP is available as Open Source under GPLv3 licence within the RSPLIB package at:
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ .
+
+Some more documentation of the CALCAPP application can be found here:
+
+* Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+
+* Dreibholz, T.; Zhou, X.; Becke, M.; Pulinthanath, J.; Rathgeb, E. P.; Du, W.: ``On the Security of Reliable Server Pooling Systems´´ (PDF, 539 KiB), in International Journal on Intelligent Information and Database Systems (IJIIDS), vol. 4, no. 6, pp. 552–578, ISSN 1751-5858, December 2010.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/IJIIDS2010.pdf
+
+* Dreibholz, T.; Rathgeb, E. P.: ``Overview and Evaluation of the Server Redundancy and Session Failover Mechanisms in the Reliable Server Pooling Framework´´ (PDF, 1156 KiB), in International Journal on Advances in Internet Technology (IJAIT), vol. 2, no. 1, pp. 1–14, ISSN 1942-2652, June 2009.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/IJAIT2009.pdf
+
+* Dreibholz, T.; Rathgeb, E. P.: ``On Improving the Performance of Reliable Server Pooling Systems for Distance-Sensitive Distributed Applications´´ (PDF, 392 KiB), in Proceedings of the 15. ITG/GI Fachtagung Kommunikation in Verteilten Systemen (KiVS), Informatik aktuell, pp. 39–50, Springer, ISBN 978-3-540-69962-0, Bern/Switzerland, February 2007.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/KiVS2007.pdf
+
+* Dreibholz, T.; Rathgeb, E. P.: ``On the Performance of Reliable Server Pooling Systems´´ (PDF, 672 KiB), in Proceedings of the IEEE Conference on Local Computer Networks (LCN) 30th Anniversary, pp. 200–208, ISBN 0-7695-2421-4, ISSN 0742-1303, Sydney/Australia, November 16, 2005.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/LCN2005.pdf
+
+
+## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
+
+Registry Name: SCTP Payload Protocol Identifiers
+Reference: [RFC4960]
+Registration Procedures: First Come First Served
+
+
+
+###### Scripting Service Protocol ######
+
+## Contact Name:
+Thomas Dreibholz
+
+## Contact Email:
+dreibh@iem.uni-due.de
+
+## What type of assignment/registration are you requesting?
+SCTP Payload Protocol Identifier for the Scripting Service Protocol (SSP)
+
+## Which registry are you requesting this assignment/registration be made in?
+SCTP Parameters -> SCTP Payload Protocol Identifiers
+
+
+## If possible, please give a brief description of why you need this assignment/registration:
+
+The Scripting Service Protocol (SSP is used by the Scripting Service Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of SSP is to distribute workload in an RSerPool-based compute pool (draft-dreibholz-rserpool-applic-distcomp-08). For example, SSP is used by the Simulation Processing Tool-Chain "SimProcTC" to distribute simulation runs.
+
+Its implementation is available as Open Source under GPLv3 licence. Since SSP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between SSP and ASAP messages.
+
+The implementation of the SSP is available as Open Source under GPLv3 licence within the RSPLIB package at:
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ .
+
+Some more documentation of the SSP application can be found here:
+
+* Dreibholz, T.; Zhou, X.; Rathgeb, E. P.: ``SimProcTC – The Design and Realization of a Powerful Tool-Chain for OMNeT++ Simulations´´ (PDF, 551 KiB), in Proceedings of the 2nd ACM/ICST International Workshop on OMNeT++, pp. 1–8, ISBN 978-963-9799-45-5, Rome/Italy, March 6, 2009.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/OMNeT__Workshop2009.pdf
+
+* Dreibholz, T.; Rathgeb, E. P.: ``A Powerful Tool-Chain for Setup, Distributed Processing, Analysis and Debugging of OMNeT++ Simulations´´ (PDF, 557 KiB), in Proceedings of the 1st ACM/ICST International Workshop on OMNeT++, ISBN 978-963-9799-20-2, Marseille/France, March 7, 2008.
+http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/OMNeTWorkshop2008.pdf
+
+* SimProcTC Homepage: http://www.exp-math.uni-essen.de/~dreibh/omnetpp/
+
+
+## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
+
+Registry Name: SCTP Payload Protocol Identifiers
+Reference: [RFC4960]
+Registration Procedures: First Come First Served
