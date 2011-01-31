@@ -55,10 +55,10 @@ INPUT_DISTRIBUTION=`echo $CHANGELOG_HEADER | sed -e "s/[^)]*)//" -e "s/;.*//g" -
 echo "######################################################################"
 echo "CHANGELOG_HEADER:   $CHANGELOG_HEADER"
 echo "PACKAGE:            $PACKAGE"
-echo "PACKAGE_VERSION     $PACKAGE_VERSION"
-echo "UPSTREAM_VERSION:   $UPSTREAM_VERSION"
-echo "OUTPUT_VERSION:     $OUTPUT_VERSION"
 echo "INPUT_DISTRIBUTION: $INPUT_DISTRIBUTION"
+echo "UPSTREAM_VERSION:   $UPSTREAM_VERSION"
+echo "PACKAGE_VERSION     $PACKAGE_VERSION"
+echo "OUTPUT_VERSION:     $OUTPUT_VERSION"
 echo "######################################################################"
 
 
@@ -108,7 +108,8 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
       if [ "$DISTRIBUTION" = "unstable" -o "$DISTRIBUTION" = "testing" -o "$DISTRIBUTION" = "stable" ] ; then
          sed -e "s/$INPUT_DISTRIBUTION;/$DISTRIBUTION;/1" -e "s/ubuntu[0-9]//1" <debian/changelog >debian/changelog.new
       else
-         sed -e "s/$INPUT_DISTRIBUTION;/$DISTRIBUTION;/1" -e "s/ubuntu/ubuntu-$DISTRIBUTION/1" <debian/changelog >debian/changelog.new
+         # Naming example: 2.7.7-0ubuntu1~natty1~ppa0
+         sed -e "s/$INPUT_DISTRIBUTION;/$DISTRIBUTION;/1" -e "s/$PACKAGE_VERSION/$PACKAGE_VERSION~${DISTRIBUTION}1~ppa0/1" <debian/changelog >debian/changelog.new
       fi
       mv debian/changelog.new debian/changelog
 
@@ -185,19 +186,24 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
       if [ "$DISTRIBUTION" = "default" ] ; then
          ppa="revu"
       fi
-      echo "   dput $ppa `ls $PACKAGE\_$UPSTREAM_VERSION-[0-9]*_source.changes`"
+      changesFile=`ls ${PACKAGE}_${PACKAGE_VERSION}_source.changes | tail -n1`
    else
-      echo "   dput ppa `ls $PACKAGE\_$OUTPUT_VERSION-$DISTRIBUTION[0-9]_source.changes`"
+      ppa="ppa"
+      changesFile=`ls ${PACKAGE}_${PACKAGE_VERSION}~${DISTRIBUTION}[0-9]~ppa[0-9]_source.changes | tail -n1`
    fi
+   echo "   dput $ppa $changesFile"
 done
 echo ""
 
 echo "Build test:"
 for DISTRIBUTION in $DISTRIBUTIONS ; do
    if [ "$DISTRIBUTION" = "unstable" -o "$DISTRIBUTION" = "testing" -o "$DISTRIBUTION" = "stable" -o "$DISTRIBUTION" = "default" ] ; then
-      echo "   sudo pbuilder build `ls $PACKAGE\_$UPSTREAM_VERSION-[0-9]*.dsc`"
+      changesFilesPattern="${PACKAGE}_${PACKAGE_VERSION}_*.changes"
+      dscFile=`ls ${PACKAGE}_${PACKAGE_VERSION}.dsc | tail -n1`
    else
-      echo "   sudo pbuilder build `ls $PACKAGE\_$OUTPUT_VERSION-$DISTRIBUTION[0-9].dsc`"
+      changesFilesPattern="${PACKAGE}_${PACKAGE_VERSION}~${DISTRIBUTION}[0-9]~ppa[0-9]_*.changes"
+      dscFile=`ls ${PACKAGE}_${PACKAGE_VERSION}~${DISTRIBUTION}[0-9]~ppa[0-9].dsc | tail -n1`
    fi
+   echo "   sudo pbuilder build $dscFile && lintian -iIEv --pedantic /var/cache/pbuilder/result/$changesFilesPattern"
 done
 echo ""
