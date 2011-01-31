@@ -12,7 +12,10 @@ rsplib (2.7.7-0ubuntu1) natty; urgency=low
   * debian/copyright: Updated.
   * debian/watch: Updated URL of upstream package.
   * debian/README.source: Dropped. It's obsolete with 3.0 source format.
-  * debian/librsplib2.docs: Added rsplib documentation.
+  * debian/rsplib-docs.docs, debian/rsplib-docs.docs, debian/control:
+    Moved rsplib documentation into separate package.
+  * debian/control:
+    Dropped build depend libxmu-dev, since it is unnecessary.
   * Removed obsolete debian/rsplib-doc.docs and debian/rsplib-doc.install.
   * debian/rsplib-registrar.init: Updated header.
   * Applied wrap-and-sort.
