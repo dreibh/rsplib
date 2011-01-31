@@ -3,21 +3,22 @@ Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
 Homepage: http://tdrwww.iem.uni-due.de/dreibholz/rserpool/index.html
-Build-Depends: debhelper (>= 7.0.50~),
- autotools-dev,
- libsctp-dev (>= 1.0.5),
- libbz2-dev (>= 1.0),
- libqt4-dev,
- libx11-dev,
- libxext-dev,
- libxmu-dev,
- libxi-dev
+Build-Depends: autotools-dev,
+               debhelper (>= 7.0.50~),
+               libbz2-dev (>= 1.0),
+               libqt4-dev,
+               libsctp-dev (>= 1.0.5),
+               libx11-dev,
+               libxext-dev,
+               libxi-dev,
+               libxmu-dev
 Standards-Version: 3.9.1
 
 Package: librsplib2
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Description: RSerPool client/server API library for load distribution and
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -30,7 +31,9 @@ Description: RSerPool client/server API library for load distribution and
 Package: librsplib-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, librsplib2 (= ${binary:Version})
+Depends: librsplib2 (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: headers of the RSerPool client/server API library rsplib
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -44,7 +47,8 @@ Description: headers of the RSerPool client/server API library rsplib
 Package: libcpprspserver2
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Description: C++ RSerPool client/server API library
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -57,7 +61,9 @@ Description: C++ RSerPool client/server API library
 Package: libcpprspserver-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcpprspserver2 (= ${binary:Version})
+Depends: libcpprspserver2 (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: headers of the C++ RSerPool client/server API library
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -70,7 +76,8 @@ Description: headers of the C++ RSerPool client/server API library
 
 Package: rsplib-registrar
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Description: RSerPool Registrar service
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -84,7 +91,8 @@ Description: RSerPool Registrar service
 
 Package: rsplib-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
 Recommends: chrpath
 Description: RSerPool test tools
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
@@ -97,7 +105,9 @@ Description: RSerPool test tools
 
 Package: rsplib-services
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
+Depends: rsplib-tools,
+         ${misc:Depends},
+         ${shlibs:Depends}
 Recommends: rsplib-fgp-cfgfiles
 Description: RSerPool example services
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
@@ -112,7 +122,9 @@ Description: RSerPool example services
 
 Package: rsplib-fgp-cfgfiles
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, rsplib-tools
+Depends: rsplib-tools,
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: RSerPool Fractal Generator Service example input files
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.

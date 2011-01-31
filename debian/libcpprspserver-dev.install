@@ -1,11 +1,11 @@
-debian/tmp/usr/lib/libcpprspserver*.so
-debian/tmp/usr/lib/libcpprspserver*.a
-debian/tmp/usr/lib/libcpprspserver*.la
-debian/tmp/usr/lib/libtdcppthread*.so
-debian/tmp/usr/lib/libtdcppthread*.a
-debian/tmp/usr/lib/libtdcppthread*.la
 debian/tmp/usr/include/rserpool/cpprspserver.h
 debian/tmp/usr/include/rserpool/mutex.h
 debian/tmp/usr/include/rserpool/tcplikeserver.h
 debian/tmp/usr/include/rserpool/thread.h
 debian/tmp/usr/include/rserpool/udplikeserver.h
+debian/tmp/usr/lib/libcpprspserver*.a
+debian/tmp/usr/lib/libcpprspserver*.la
+debian/tmp/usr/lib/libcpprspserver*.so
+debian/tmp/usr/lib/libtdcppthread*.a
+debian/tmp/usr/lib/libtdcppthread*.la
+debian/tmp/usr/lib/libtdcppthread*.so
