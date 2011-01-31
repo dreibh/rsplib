@@ -10,7 +10,8 @@ Build-Depends: autotools-dev,
                libsctp-dev (>= 1.0.5),
                libx11-dev,
                libxext-dev,
-               libxi-dev
+               libxi-dev,
+               libxmu-dev
 Standards-Version: 3.9.1
 
 Package: librsplib2
