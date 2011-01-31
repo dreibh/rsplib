@@ -63,6 +63,12 @@ echo "######################################################################"
 
 
 echo ""
+echo "====== Calling wrap-and-sort =========================================="
+echo ""
+wrap-and-sort -a -v || exit1
+
+
+echo ""
 echo "====== Creating upstream package ======================================"
 echo ""
 UPSTREAM_PACKAGE="`find . -name $PACKAGE-$UPSTREAM_VERSION.tar.gz`"
