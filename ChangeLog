@@ -1,4 +1,58 @@
 ------------------------------------------------------------------------
+r2453 | dreibh | 2011-01-28 11:22:16 +0100 (Fri, 28 Jan 2011) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/ppid-registrations-for-rsplib.txt (from /trunk/rsplib2/rsplib-ppid-registration.txt:2452)
+   D /trunk/rsplib2/rsplib-ppid-registration.txt
+
+Gave PPID registration descriptions a more meaningful file name.
+
+------------------------------------------------------------------------
+r2452 | dreibh | 2011-01-28 10:46:26 +0100 (Fri, 28 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+
+Header update.
+
+------------------------------------------------------------------------
+r2451 | dreibh | 2011-01-28 10:28:40 +0100 (Fri, 28 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/compat
+
+Updated Debian files, according to LP #696512.
+
+------------------------------------------------------------------------
+r2450 | dreibh | 2011-01-28 09:42:38 +0100 (Fri, 28 Jan 2011) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/rsplib-ppid-registration.txt
+
+Added draft of PPID registration text.
+
+------------------------------------------------------------------------
+r2449 | dreibh | 2011-01-25 19:12:47 +0100 (Tue, 25 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Extended make-deb to generate diff between original upstream (rsplib-*.orig) and build version (rsplib-*) for Ubuntu review.
+
+------------------------------------------------------------------------
+r2448 | dreibh | 2011-01-25 17:49:43 +0100 (Tue, 25 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated LSM entry.
+
+------------------------------------------------------------------------
+r2447 | dreibh | 2011-01-25 17:31:37 +0100 (Tue, 25 Jan 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+- Updated ChangLog.
+- Version update.
+
+------------------------------------------------------------------------
 r2441 | dreibh | 2011-01-22 15:09:51 +0100 (Sat, 22 Jan 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/configure.in

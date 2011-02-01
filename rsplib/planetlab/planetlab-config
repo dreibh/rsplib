@@ -26,7 +26,7 @@ PLANETLAB_COMPILEHOST="planetlab-2.cs.auckland.ac.nz"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace"
 
-DISTNAME="rsplib-2.7.7"
+DISTNAME="rsplib-2.7.8~rc1"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
 DISTPRGS="rootshell registrar server calcappclient hsdump attacker"
