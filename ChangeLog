@@ -1,4 +1,133 @@
 ------------------------------------------------------------------------
+r2476 | dreibh | 2011-02-01 15:23:24 +0100 (Tue, 01 Feb 2011) | 1 line
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/make-deb
+   M /trunk/rsplib2/make-symbols
+
+Packaging update.
+------------------------------------------------------------------------
+r2468 | dreibh | 2011-02-01 09:37:06 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Symbols file handling fix.
+
+------------------------------------------------------------------------
+r2467 | dreibh | 2011-02-01 08:27:02 +0100 (Tue, 01 Feb 2011) | 1 line
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Updated make-deb script.
+------------------------------------------------------------------------
+r2466 | dreibh | 2011-02-01 08:25:46 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
+r2465 | dreibh | 2011-02-01 08:24:52 +0100 (Tue, 01 Feb 2011) | 1 line
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Updated make-deb script.
+------------------------------------------------------------------------
+r2464 | dreibh | 2011-02-01 08:24:27 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/configure.in
+
+Improved Qt handling in autoconf/automake scripts: dropped unnecessary library dependencies.
+
+------------------------------------------------------------------------
+r2463 | dreibh | 2011-02-01 08:23:44 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/make-symbols
+
+Added script to create Debian symbol files.
+
+------------------------------------------------------------------------
+r2462 | dreibh | 2011-02-01 08:22:59 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingcontrol.8
+
+Fixed spelling error in manpage.
+
+------------------------------------------------------------------------
+r2461 | dreibh | 2011-02-01 08:22:15 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   A /trunk/rsplib2/debian/libcpprspserver2.symbols
+   A /trunk/rsplib2/debian/librsplib2.symbols
+
+Updated Debian packaging files.
+
+------------------------------------------------------------------------
+r2460 | dreibh | 2011-02-01 08:21:55 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+
+Fixed compiler warning by fixing possible problem with notification handling.
+
+------------------------------------------------------------------------
+r2459 | dreibh | 2011-02-01 08:20:56 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/dispatcher.c
+   M /trunk/rsplib2/rsplib/rsputilities.c
+
+Fixed calls to exit() in rsplib.
+
+------------------------------------------------------------------------
+r2458 | dreibh | 2011-01-31 21:46:24 +0100 (Mon, 31 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Packaging script fix.
+
+------------------------------------------------------------------------
+r2457 | dreibh | 2011-01-31 21:37:32 +0100 (Mon, 31 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Updated make-deb script.
+
+------------------------------------------------------------------------
+r2456 | dreibh | 2011-01-31 21:36:36 +0100 (Mon, 31 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   D /trunk/rsplib2/debian/librsplib2.docs
+   A /trunk/rsplib2/debian/rsplib-docs.doc-base
+   A /trunk/rsplib2/debian/rsplib-docs.docs (from /trunk/rsplib2/debian/librsplib2.docs:2453)
+
+Updated packaging file. Added documentation package.
+
+------------------------------------------------------------------------
+r2455 | dreibh | 2011-01-31 20:18:07 +0100 (Mon, 31 Jan 2011) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Updated packaging script:
+- Using better distribution-specific package naming.
+- Echo call for lintian on pbuilder-generated output.
+
+------------------------------------------------------------------------
+r2454 | dreibh | 2011-01-31 19:29:31 +0100 (Mon, 31 Jan 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/libcpprspserver-dev.install
+   M /trunk/rsplib2/debian/librsplib-dev.install
+   M /trunk/rsplib2/debian/rsplib-services.install
+   M /trunk/rsplib2/debian/rsplib-tools.install
+
+Updated Debian files.
+
+------------------------------------------------------------------------
 r2453 | dreibh | 2011-01-28 11:22:16 +0100 (Fri, 28 Jan 2011) | 2 lines
 Changed paths:
    A /trunk/rsplib2/ppid-registrations-for-rsplib.txt (from /trunk/rsplib2/rsplib-ppid-registration.txt:2452)
