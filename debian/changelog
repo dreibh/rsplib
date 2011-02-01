@@ -1,4 +1,4 @@
-rsplib (2.7.7-0ubuntu1) natty; urgency=low
+rsplib (2.7.8~rc1-0ubuntu1) natty; urgency=low
 
   * New upstream release.
   * Switch to dpkg-source 3.0 (quilt) format.
@@ -8,6 +8,8 @@ rsplib (2.7.7-0ubuntu1) natty; urgency=low
     - Bump Standards-Version to 3.9.1.
     - Recommends chrpath because it allows scripting service scripts to
       remove absolute library paths.
+    - Removed obsolete build dependencies:
+      libx11-dev, libxext-dev, libxmu-dev, libxi-dev.
   * debian/patches: Removed obsolete spelling error patch (fixed upstream).
   * debian/copyright: Updated.
   * debian/watch: Updated URL of upstream package.
