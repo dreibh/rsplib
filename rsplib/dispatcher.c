@@ -306,10 +306,6 @@ void dispatcherEventLoop(struct Dispatcher* dispatcher)
                                  (struct pollfd*)&ufds, &nfds, &timeout,
                                  &pollTimeStamp);
       result = ext_poll((struct pollfd*)&ufds, nfds, timeout);
-      if(result < 0) {
-         logerror("poll() failed");
-         exit(1);
-      }
       dispatcherHandlePollResult(dispatcher, result,
                                  (struct pollfd*)&ufds, nfds, timeout,
                                  pollTimeStamp);

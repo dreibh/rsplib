@@ -123,7 +123,7 @@ static bool initComponentStatusReporter(struct rsp_info* info,
       if(sscanf((const char*)&parameter[15], "0x%x", &identifier) == 0) {
          if(sscanf((const char*)&parameter[15], "%u", &identifier) == 0) {
             fputs("ERROR: Bad registrar ID given!\n", stderr);
-            exit(1);
+            return(false);
          }
       }
       info->ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLELEMENT, identifier);
@@ -185,14 +185,14 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
 
    if(!(strncmp(arg, "-log" ,4))) {
       if(initLogging(arg) == false) {
-         exit(1);
+         return(0);
       }
       return(1);
    }
 #ifdef ENABLE_CSP
    else if(!(strncmp(arg, "-csp" ,4))) {
       if(initComponentStatusReporter(info, arg) == false) {
-         exit(1);
+         return(0);
       }
       return(1);
    }
@@ -200,7 +200,7 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
    else if(!(strncmp(arg, "-registrar=", 11))) {
       if(addStaticRegistrar(info, (char*)&arg[11]) < 0) {
          fprintf(stderr, "ERROR: Bad registrar setting %s\n", arg);
-         exit(1);
+         return(0);
       }
       return(1);
    }
@@ -234,7 +234,7 @@ int rsp_initarg(struct rsp_info* info, const char* arg)
       else {
          if(string2address((const char*)&arg[14], &asapAnnounceAddress) == false) {
             fprintf(stderr, "ERROR: Bad ASAP announce setting %s\n", arg);
-            exit(1);
+            return(0);
          }
          if(getPort(&asapAnnounceAddress.sa) == 0) {
             setPort(&asapAnnounceAddress.sa, ASAP_PORT);
