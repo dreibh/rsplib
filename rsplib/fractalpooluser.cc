@@ -662,22 +662,22 @@ void FractalCalculationThread::run()
                do {
 
                   // ====== Handle received result chunks ===================
-                  size_t         packets = 0;
-                  FGPData        data;
                   rsp_sndrcvinfo rinfo;
-                  int            flags = 0;
-                  ssize_t received;
+                  char           buffer[max(sizeof(FGPData), sizeof(rsp_sndrcvinfo))];
+                  int            flags   = 0;
+                  size_t         packets = 0;
+                  ssize_t        received;
 
-                  received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                  received = rsp_recvfullmsg(Session, (char*)&buffer, sizeof(buffer),
                                              &rinfo, &flags, Master->getRecvTimeout());
                   while(received > 0) {
                      // ====== Handle notification ==========================
                      if(flags & MSG_RSERPOOL_NOTIFICATION) {
-                        union rserpool_notification* notification =
-                           (union rserpool_notification*)&data;
+                        const union rserpool_notification* notification =
+                           (const union rserpool_notification*)&buffer;
                         printTimeStamp(stdout);
                         printf("Notification: ");
-                        rsp_print_notification((union rserpool_notification*)&data, stdout);
+                        rsp_print_notification(notification, stdout);
                         puts("");
                         if(notification->rn_header.rn_type == RSERPOOL_FAILOVER) {
                            if(notification->rn_failover.rf_state == RSERPOOL_FAILOVER_NECESSARY) {
@@ -691,9 +691,10 @@ void FractalCalculationThread::run()
 
                      // ====== Handle Data ==================================
                      else {
+                        const FGPData* data = (const FGPData*)&buffer;
                         if((received >= (ssize_t)sizeof(FGPCommonHeader)) &&
-                           (data.Header.Type == FGPT_DATA)) {
-                           const DataStatus status = handleDataMessage(&data, received);
+                           (data->Header.Type == FGPT_DATA)) {
+                           const DataStatus status = handleDataMessage(data, received);
 
                            switch(status) {
                               case Finalizer:
@@ -726,7 +727,7 @@ void FractalCalculationThread::run()
                      }
 
                      flags = 0;
-                     received = rsp_recvfullmsg(Session, (char*)&data, sizeof(data),
+                     received = rsp_recvfullmsg(Session, (char*)&buffer, sizeof(buffer),
                                                 &rinfo, &flags, Master->getRecvTimeout());
                   }
                   if(Success == false) {
