@@ -440,12 +440,14 @@ static unsigned int handleMessage(int                                 sd,
    /* printf("Message %u in state %u ...\n", header->Type, State); */
 
    /* ====== Check message header ======================================== */
+/*
    if(ppid != PPID_SP) {
       newLogLine(stdout);
       printf("Received message has wrong PPID $%08x!\n", ppid);
       fflush(stdout);
       return(SSCR_FAILOVER);
    }
+*/
    if(length < sizeof(struct ScriptingCommonHeader)) {
       newLogLine(stdout);
       printf("Received message of %u bytes does not even contain header!\n",

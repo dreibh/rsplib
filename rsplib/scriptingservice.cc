@@ -652,12 +652,14 @@ EventHandlingResult ScriptingServer::handleMessage(const char* buffer,
                                                    uint16_t    streamID)
 {
    /* ====== Check message header ======================================== */
+/*
    if(ntohl(ppid) != PPID_SP) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Received message has wrong PPID $%08x!\n",
               RSerPoolSocketDescriptor, ntohl(ppid));
       return(EHR_Abort);
    }
+*/
    if(bufferSize < sizeof(struct ScriptingCommonHeader)) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Received message of %u bytes does not even contain header!\n",
