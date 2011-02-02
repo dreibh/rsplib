@@ -190,7 +190,12 @@ for DISTRIBUTION in $DISTRIBUTIONS ; do
         "$DISTRIBUTION" = "testing"  -o \
         "$DISTRIBUTION" = "stable"   -o \
         "$DISTRIBUTION" = "default" ] ; then
-      dscFile=`ls ${PACKAGE}_${PACKAGE_VERSION}.dsc | tail -n1`
+      if [ "$DISTRIBUTION" = "default" ] ; then
+         version=${PACKAGE_VERSION}
+      else
+         version=${DEBIAN_VERSION}
+      fi
+      dscFile=`ls ${PACKAGE}_${version}.dsc | tail -n1`
    else
       dscFile=`ls ${PACKAGE}_${PACKAGE_VERSION}~${DISTRIBUTION}[0-9]~ppa[0-9].dsc | tail -n1`
    fi
