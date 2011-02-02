@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r2486 | dreibh | 2011-02-02 10:40:56 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
 r2485 | dreibh | 2011-02-02 10:39:55 +0100 (Wed, 02 Feb 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/configure.in
