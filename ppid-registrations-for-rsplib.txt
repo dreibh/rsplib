@@ -1,3 +1,5 @@
+$Id$
+
 ###### Fractal Generator Protocol ######
 
 ## Contact Name:
@@ -156,6 +158,47 @@ http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publica
 http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/OMNeTWorkshop2008.pdf
 
 * SimProcTC Homepage: http://www.exp-math.uni-essen.de/~dreibh/omnetpp/
+
+
+## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
+
+Registry Name: SCTP Payload Protocol Identifiers
+Reference: [RFC4960]
+Registration Procedures: First Come First Served
+
+
+###### Test Protocols ######
+
+## Contact Name:
+Thomas Dreibholz
+
+## Contact Email:
+dreibh@iem.uni-due.de
+
+## What type of assignment/registration are you requesting?
+SCTP Payload Protocol Identifier for RSerPool test protocols:
+- Echo (ECHO)
+- Discard (DISCARD)
+- Daytime (DAYTIME)
+- Character Generator (CHARGEN)
+
+## Which registry are you requesting this assignment/registration be made in?
+SCTP Parameters -> SCTP Payload Protocol Identifiers
+
+
+## If possible, please give a brief description of why you need this assignment/registration:
+
+The protocols ECHO, DISCARD, DAYTIME and CHARGEN are test applications of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of these protocols is to test the correct behaviour of implementations (according to RFC 5351 to RFC 5354 and RFC 5356). In particular, these protocols are used for interop testing (draft-dreibholz-rserpool-score-08). Since the test protocols are multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between test protocol and ASAP messages.
+
+The implementation of the ECHO, DISCARD, DAYTIME and CHARGEN protocols is available as Open Source under GPLv3 licence within the RSPLIB package at:
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ .
+
+Some more information on RSerPool interop testing can be found here:
+
+* draft-dreibholz-rserpool-score-08
+
+* Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:

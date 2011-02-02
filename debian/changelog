@@ -1,4 +1,4 @@
-rsplib (2.7.8~rc2-2ubuntu1) natty; urgency=low
+rsplib (2.7.8~rc2-0ubuntu1) natty; urgency=low
 
   * New upstream release.
   * Switch to dpkg-source 3.0 (quilt) format.
