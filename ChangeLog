@@ -1,4 +1,47 @@
 ------------------------------------------------------------------------
+r2485 | dreibh | 2011-02-02 10:39:55 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2483 | dreibh | 2011-02-02 09:32:50 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+   M /trunk/rsplib2/debian/librsplib2.symbols
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+   M /trunk/rsplib2/ppid-registrations-for-rsplib.txt
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated symbols files, LSM entry and PPID registration text.
+
+------------------------------------------------------------------------
+r2482 | dreibh | 2011-02-01 16:32:17 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
+r2481 | dreibh | 2011-02-01 16:31:20 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2480 | dreibh | 2011-02-01 16:16:49 +0100 (Tue, 01 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Removed check for PPID in scripting service, since it is unnecessary.
+
+------------------------------------------------------------------------
 r2476 | dreibh | 2011-02-01 15:23:24 +0100 (Tue, 01 Feb 2011) | 1 line
 Changed paths:
    M /trunk/rsplib2/debian/changelog
