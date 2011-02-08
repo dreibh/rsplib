@@ -1,6 +1,5 @@
 rsplib (2.7.8-0ubuntu1) natty; urgency=low
 
-  * New upstream release.
   * Switch to dpkg-source 3.0 (quilt) format.
   * debian/rules: Using tiny rules for debhelper 7 now.
   * debian/control:
@@ -19,10 +18,10 @@ rsplib (2.7.8-0ubuntu1) natty; urgency=low
   * Removed obsolete debian/rsplib-doc.docs and debian/rsplib-doc.install.
   * debian/rsplib-registrar.init: Updated header.
   * Applied wrap-and-sort.
-  * Updated Ubuntu package to latest release (LP: #696512).
+  * New upstream release (LP: #696512).
   * Closes Debian ITP bug with wnpp (Closes: #586405).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 01 Feb 2011 11:11:11 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 08 Feb 2011 11:11:11 +0200
 
 rsplib (2.7.0-0ubuntu1) lucid; urgency=low
 

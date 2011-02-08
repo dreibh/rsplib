@@ -28,7 +28,7 @@ echo ""
 echo "Creating binary package ..."
 echo ""
 
-debuild -b -us -uc || exit 1
+./bootstrap && debuild -b -us -uc || exit 1
 
 
 for LIBRARY_PACKAGE in $LIBRARY_PACKAGES ; do
