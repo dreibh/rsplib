@@ -37,6 +37,8 @@ MAN8=		calcappclient.8 \
 		server.8 \
 		terminal.8
 
+MAKE_JOBS_SAFE=	yes
+
 .include <bsd.port.pre.mk>
 
 .if ${OSVERSION} < 700028
