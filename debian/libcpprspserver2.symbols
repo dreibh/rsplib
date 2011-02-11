@@ -1,10 +1,7 @@
 libcpprspserver.so.2 libcpprspserver2 #MINVER#
- _ZN13TCPLikeServer11poolElementEPKcS1_P8rsp_infoP12rsp_loadinfojPFPS_iPvjEPFvPKvEPFviEPFbS7_EPFvS7_EPFddES7_PK8sockaddrjjjbbP7TagItem@Base 2.7.8
  _ZN13TCPLikeServer13finishSessionE19EventHandlingResult@Base 2.7.8
- _ZN13TCPLikeServer13handleMessageEPKcjjt@Base 2.7.8
  _ZN13TCPLikeServer14syncTimerEventEy@Base 2.7.8
  _ZN13TCPLikeServer15asyncTimerEventEy@Base 2.7.8
- _ZN13TCPLikeServer16handleCookieEchoEPKcj@Base 2.7.8
  _ZN13TCPLikeServer17initializeSessionEv@Base 2.7.8
  _ZN13TCPLikeServer18handleNotificationEPK21rserpool_notification@Base 2.7.8
  _ZN13TCPLikeServer3runEv@Base 2.7.8
@@ -17,12 +14,9 @@ libcpprspserver.so.2 libcpprspserver2 #MINVER#
  _ZN13TCPLikeServerD2Ev@Base 2.7.8
  _ZN13UDPLikeServer10startTimerEy@Base 2.7.8
  _ZN13UDPLikeServer11handleTimerEv@Base 2.7.8
- _ZN13UDPLikeServer11poolElementEPKcS1_P8rsp_infoP12rsp_loadinfoPK8sockaddrjjjbbP7TagItem@Base 2.7.8
  _ZN13UDPLikeServer13finishServiceEi19EventHandlingResult@Base 2.7.8
- _ZN13UDPLikeServer13handleMessageEiPKcjjt@Base 2.7.8
  _ZN13UDPLikeServer13waitForActionEy@Base 2.7.8
  _ZN13UDPLikeServer15printParametersEv@Base 2.7.8
- _ZN13UDPLikeServer16handleCookieEchoEiPKcj@Base 2.7.8
  _ZN13UDPLikeServer17initializeServiceEij@Base 2.7.8
  _ZN13UDPLikeServer18handleNotificationEPK21rserpool_notification@Base 2.7.8
  _ZN13UDPLikeServer7setLoadEd@Base 2.7.8
@@ -38,8 +32,6 @@ libcpprspserver.so.2 libcpprspserver2 #MINVER#
  _ZN17TCPLikeServerList3addEP13TCPLikeServer@Base 2.7.8
  _ZN17TCPLikeServerList6removeEP13TCPLikeServer@Base 2.7.8
  _ZN17TCPLikeServerList9removeAllEv@Base 2.7.8
- _ZN17TCPLikeServerListC1Eji@Base 2.7.8
- _ZN17TCPLikeServerListC2Eji@Base 2.7.8
  _ZN17TCPLikeServerListD0Ev@Base 2.7.8
  _ZN17TCPLikeServerListD1Ev@Base 2.7.8
  _ZN17TCPLikeServerListD2Ev@Base 2.7.8
@@ -54,6 +46,13 @@ libcpprspserver.so.2 libcpprspserver2 #MINVER#
  _ZTV13TCPLikeServer@Base 2.7.8
  _ZTV13UDPLikeServer@Base 2.7.8
  _ZTV17TCPLikeServerList@Base 2.7.8
+ (c++|regex)"^TCPLikeServer::handleCookieEcho\(.*\)@Base" 2.7.8
+ (c++|regex)"^TCPLikeServer::handleMessage\(.*\)@Base" 2.7.8
+ (c++|regex)"^TCPLikeServerList::TCPLikeServerList\(.*\)@Base" 2.7.8
+ (c++|regex)"^TCPLikeServer::poolElement\(.*\)@Base" 2.7.8
+ (c++|regex)"^UDPLikeServer::handleCookieEcho\(.*\)@Base" 2.7.8
+ (c++|regex)"^UDPLikeServer::handleMessage\(.*\)@Base" 2.7.8
+ (c++|regex)"^UDPLikeServer::poolElement\(.*\)@Base" 2.7.8
 libtdcppthread.so.2 libcpprspserver2 #MINVER#
  _ZN7TDMutexC1Ev@Base 2.7.8
  _ZN7TDMutexC2Ev@Base 2.7.8
