@@ -21,10 +21,12 @@
 
 PACKAGE=`cat Makefile | grep PORTNAME= | sed -e "s/PORTNAME=//g" | tr -d "\t"`
 UPSTREAM_VERSION=`cat Makefile | grep PORTVERSION= | sed -e "s/PORTVERSION=//g" | tr -d "\t"`
+CATEGORY=`cat Makefile | grep CATEGORIES= | sed -e "s/CATEGORIES=//g" | tr -d "\t"`
 
 echo "######################################################################"
 echo "PACKAGE:          $PACKAGE"
 echo "UPSTREAM_VERSION: $UPSTREAM_VERSION"
+echo "CATEGORY:         $CATEGORY"
 echo "######################################################################"
 
 
