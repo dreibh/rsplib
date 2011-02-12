@@ -46,13 +46,14 @@ libcpprspserver.so.2 libcpprspserver2 #MINVER#
  _ZTV13TCPLikeServer@Base 2.7.8
  _ZTV13UDPLikeServer@Base 2.7.8
  _ZTV17TCPLikeServerList@Base 2.7.8
- (c++|regex)"^TCPLikeServer::handleCookieEcho\(.*\)@Base" 2.7.8
- (c++|regex)"^TCPLikeServer::handleMessage\(.*\)@Base" 2.7.8
- (c++|regex)"^TCPLikeServerList::TCPLikeServerList\(.*\)@Base" 2.7.8
- (c++|regex)"^TCPLikeServer::poolElement\(.*\)@Base" 2.7.8
- (c++|regex)"^UDPLikeServer::handleCookieEcho\(.*\)@Base" 2.7.8
- (c++|regex)"^UDPLikeServer::handleMessage\(.*\)@Base" 2.7.8
- (c++|regex)"^UDPLikeServer::poolElement\(.*\)@Base" 2.7.8
+ (regex)"^_ZN13TCPLikeServer11poolElementEPKcS1_P8rsp_infoP12rsp_loadinfo(m|j)PFPS_iPvjEPFvPKvEPFviEPFbS7_EPFvS7_EPFddES7_PK8sockaddr(m|j)jjbbP7TagItem@Base$" 2.7.8
+ (regex)"^_ZN13TCPLikeServer13handleMessageEPKc(m|j)jt@Base$" 2.7.8
+ (regex)"^_ZN13TCPLikeServer16handleCookieEchoEPKc(m|j)@Base$" 2.7.8
+ (regex)"^_ZN13UDPLikeServer11poolElementEPKcS1_P8rsp_infoP12rsp_loadinfoPK8sockaddr(m|j)jjbbP7TagItem@Base$" 2.7.8
+ (regex)"^_ZN13UDPLikeServer13handleMessageEiPKc(m|j)jt@Base$" 2.7.8
+ (regex)"^_ZN13UDPLikeServer16handleCookieEchoEiPKc(m|j)@Base$" 2.7.8
+ (regex)"^_ZN17TCPLikeServerListC1E(m|j)i@Base$" 2.7.8
+ (regex)"^_ZN17TCPLikeServerListC2E(m|j)i@Base$" 2.7.8
 libtdcppthread.so.2 libcpprspserver2 #MINVER#
  _ZN7TDMutexC1Ev@Base 2.7.8
  _ZN7TDMutexC2Ev@Base 2.7.8
