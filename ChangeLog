@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2524 | dreibh | 2011-02-19 11:16:30 +0100 (Sat, 19 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog from SVN.
+
+------------------------------------------------------------------------
+r2523 | dreibh | 2011-02-19 11:14:42 +0100 (Sat, 19 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated LSM entry.
+
+------------------------------------------------------------------------
 r2522 | dreibh | 2011-02-19 11:07:13 +0100 (Sat, 19 Feb 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/scriptingclient.c
