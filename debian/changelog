@@ -1,8 +1,8 @@
-rsplib (2.7.9-0ubuntu1) natty; urgency=low
+rsplib (2.7.10-0ubuntu1) natty; urgency=high
 
-  * New upstream release (LP: #696512).
+  * New upstream release (LP: #696512), containing important bugfixes.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 18 Feb 2011 20:20:20 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 18 Feb 2011 21:21:21 +0200
 
 rsplib (2.7.8-0ubuntu1) natty; urgency=low
 
