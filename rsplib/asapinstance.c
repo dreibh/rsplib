@@ -1481,7 +1481,12 @@ static void asapInstanceHandleQueuedAITMs(struct ASAPInstance* asapInstance)
 /* ###### Wake up main loop thread using pipe ############################ */
 static void asapInstanceNotifyMainLoop(struct ASAPInstance* asapInstance)
 {
-   ext_send(asapInstance->MainLoopPipe[1], "!", 1, 0);
+   const ssize_t result = ext_write(asapInstance->MainLoopPipe[1], "!", 1);
+   if(result <= 0) {
+      LOG_ERROR
+      logerror("Writing to main loop pipe failed");
+      LOG_END
+   }
 }
 
 
@@ -1506,6 +1511,7 @@ static void* asapInstanceMainLoop(void* args)
    int                  timeout;
    unsigned int         pipeIndex;
    int                  result;
+   ssize_t              r;
 
    asapInstanceConnectToRegistrar(asapInstance, -1);
 
@@ -1533,7 +1539,12 @@ static void* asapInstanceMainLoop(void* args)
       dispatcherHandlePollResult(asapInstance->StateMachine, result,
                                  (struct pollfd*)&ufds, nfds, timeout, pollTimeStamp);
       if(ufds[pipeIndex].revents & POLLIN) {
-         CHECK(ext_read(asapInstance->MainLoopPipe[0], (char*)&buffer, sizeof(buffer)) > 0);
+         r = ext_read(asapInstance->MainLoopPipe[0], (char*)&buffer, sizeof(buffer));
+         if(r <= 0) {
+            LOG_ERROR
+            logerror("Reading from main loop pipe failed");
+            LOG_END
+         }
       }
 
       /* ====== Handle inter-thread messages ============================= */

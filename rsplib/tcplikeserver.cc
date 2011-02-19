@@ -133,7 +133,9 @@ void TCPLikeServer::setLoad(double load)
 
    if(oldTotalLoad != newTotalLoad) {
       const ssize_t result = ext_write(ServerList->SystemNotificationPipe, "!", 1);
-      if(result < 0) {   }
+      if(result <= 0) {
+         perror("Writing to system notification pipe failed");
+      }
    }
 }
 
@@ -517,7 +519,9 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                               if(pollfds[1].revents & POLLIN) {
                                  char buffer[1024];
                                  const ssize_t result = ext_read(systemNotificationPipe[0], (char*)&buffer, sizeof(buffer));
-                                 if(result < 0) {   }
+                                 if(result < 0) {
+                                    perror("Reading from system notification pipe failed");
+                                 }
                               }
 
                            }
