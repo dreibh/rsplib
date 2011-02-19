@@ -642,7 +642,7 @@ int main(int argc, char** argv)
       }
       printf("Input Name          = %s\n", InputName);
       printf("Output Name         = %s\n\n", OutputName);
-      printf("Max Retry           = %u [ms]\n", MaxRetry);
+      printf("Max Retry           = %u\n", MaxRetry);
       printf("Retry Delay         = %llu [ms]\n", RetryDelay / 1000);
       printf("Transmit Timeout    = %llu [ms]\n", TransmitTimeout / 1000);
       printf("Keep-Alive Interval = %llu [ms]\n", KeepAliveInterval / 1000);
