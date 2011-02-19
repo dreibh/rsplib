@@ -1,4 +1,174 @@
 ------------------------------------------------------------------------
+r2522 | dreibh | 2011-02-19 11:07:13 +0100 (Sat, 19 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Bugfix: fixed wrong unit output in status print for scriptingclient. MaxRetries are trials, not milliseconds.
+
+------------------------------------------------------------------------
+r2521 | dreibh | 2011-02-19 11:06:27 +0100 (Sat, 19 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+String indentation fix for cspmonitor.
+
+------------------------------------------------------------------------
+r2520 | dreibh | 2011-02-19 11:05:52 +0100 (Sat, 19 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Bugfix: Fixed pipe handling in ASAPInstance and TCPLikeServer. The bug may have caused the lack of a load state update when using an adaptive pool policy.
+
+------------------------------------------------------------------------
+r2519 | dreibh | 2011-02-18 20:25:44 +0100 (Fri, 18 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Bugfix: reverted change to pipe handling and fixed compiler warnings.
+
+------------------------------------------------------------------------
+r2518 | dreibh | 2011-02-17 15:09:01 +0100 (Thu, 17 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/make-diff
+
+Updated make-diff script.
+
+------------------------------------------------------------------------
+r2517 | dreibh | 2011-02-17 09:49:01 +0100 (Thu, 17 Feb 2011) | 2 lines
+Changed paths:
+   D /trunk/rsplib2/UpdateDocFile1.sh
+   A /trunk/rsplib2/UpdateDocFiles (from /trunk/rsplib2/UpdateDocFile1.sh:2516)
+
+Updated SED script.
+
+------------------------------------------------------------------------
+r2516 | dreibh | 2011-02-15 16:23:18 +0100 (Tue, 15 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/UpdateDocFile1.sh
+
+Added SED script.
+
+------------------------------------------------------------------------
+r2515 | dreibh | 2011-02-12 19:53:34 +0100 (Sat, 12 Feb 2011) | 4 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+
+Replaced (c++|regex) by (regex) patterns suggested by Felix Geyer.
+
+#25 of https://bugs.launchpad.net/ubuntu/+source/rsplib/+bug/696512
+
+------------------------------------------------------------------------
+r2512 | dreibh | 2011-02-11 23:10:16 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Updated make-deb: keep symbols files for Maverick and Natty PPA uploads.
+
+------------------------------------------------------------------------
+r2511 | dreibh | 2011-02-11 22:19:46 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+   M /trunk/rsplib2/make-symbols
+   A /trunk/rsplib2/replace-cpp-symbols
+
+Symbols file handling finally got right, hopefully ...
+
+------------------------------------------------------------------------
+r2510 | dreibh | 2011-02-11 16:13:08 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+
+Using 32-bit symbols file for testing purposes.
+
+------------------------------------------------------------------------
+r2509 | dreibh | 2011-02-11 14:06:16 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/freebsd/rsplib/make-diff (from /trunk/rsplib2/freebsd/rsplib/test-packaging:2508)
+   M /trunk/rsplib2/freebsd/rsplib/test-packaging
+
+Updated packaging scripts.
+
+------------------------------------------------------------------------
+r2508 | dreibh | 2011-02-11 13:55:00 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/test-packaging
+
+Updated FreeBSD packaging test scrip.
+
+------------------------------------------------------------------------
+r2507 | dreibh | 2011-02-11 13:09:07 +0100 (Fri, 11 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+   M /trunk/rsplib2/debian/librsplib2.symbols
+   M /trunk/rsplib2/make-symbols
+
+Reverted symbols file change.
+
+------------------------------------------------------------------------
+r2506 | dreibh | 2011-02-10 15:11:52 +0100 (Thu, 10 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+   M /trunk/rsplib2/freebsd/rsplib/test-packaging
+
+Updated FreeBSD packaging files.
+
+------------------------------------------------------------------------
+r2505 | dreibh | 2011-02-09 18:10:12 +0100 (Wed, 09 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+   M /trunk/rsplib2/freebsd/rsplib/distinfo
+
+Updated FreeBSD packaging files.
+
+------------------------------------------------------------------------
+r2504 | dreibh | 2011-02-08 13:34:58 +0100 (Tue, 08 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+   M /trunk/rsplib2/debian/librsplib2.symbols
+   M /trunk/rsplib2/make-symbols
+
+Updated symbols files.
+
+------------------------------------------------------------------------
+r2503 | dreibh | 2011-02-08 12:59:31 +0100 (Tue, 08 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/make-symbols
+
+Updated changelog and make-symbols script.
+
+------------------------------------------------------------------------
+r2491 | dreibh | 2011-02-02 15:18:35 +0100 (Wed, 02 Feb 2011) | 1 line
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+make-deb update.
+------------------------------------------------------------------------
+r2490 | dreibh | 2011-02-02 14:58:50 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-deb
+
+Fixed Debian problem in make-deb script.
+
+------------------------------------------------------------------------
+r2488 | dreibh | 2011-02-02 12:36:54 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
+r2487 | dreibh | 2011-02-02 12:36:38 +0100 (Wed, 02 Feb 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/libcpprspserver2.symbols
+   M /trunk/rsplib2/debian/librsplib2.symbols
+
+Updated symbols files.
+
+------------------------------------------------------------------------
 r2486 | dreibh | 2011-02-02 10:40:56 +0100 (Wed, 02 Feb 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/ChangeLog
