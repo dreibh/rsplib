@@ -107,7 +107,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    int                     color;
 
    if(cspObject->Workload >= 0.0) {
-      snprintf((char*)&workload, sizeof(workload), ", L=%u%%",
+      snprintf((char*)&workload, sizeof(workload), ", L=%3u%%",
                (unsigned int)rint(100.0 * cspObject->Workload));
    }
    else {
@@ -132,8 +132,8 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
          switch(cspObject->AssociationArray[i].ProtocolID) {
             case IPPROTO_SCTP:
                fprintf(fd,"   -> %s SCTP ppid=$%08x",
-                     str,
-                     cspObject->AssociationArray[i].PPID);
+                       str,
+                       cspObject->AssociationArray[i].PPID);
              break;
             case IPPROTO_TCP:
                fprintf(fd,"   -> %s TCP", str);
@@ -143,9 +143,9 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
              break;
             default:
                fprintf(fd,"   -> %s proto=%d ppid=$%08x",
-                     str,
-                     cspObject->AssociationArray[i].ProtocolID,
-                     cspObject->AssociationArray[i].PPID);
+                       str,
+                       cspObject->AssociationArray[i].ProtocolID,
+                       cspObject->AssociationArray[i].PPID);
              break;
          }
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
@@ -257,12 +257,12 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
                                    (char*)&cspObject->Description,
                                    sizeof(cspObject->Description));
                memcpy(&cspObject->Status,
-                        &cspReport->Status,
-                        sizeof(cspObject->Status));
+                      &cspReport->Status,
+                      sizeof(cspObject->Status));
                cspObject->Status[sizeof(cspObject->Status) - 1] = 0x00;
                memcpy(&cspObject->Location,
-                        &cspReport->Location,
-                        sizeof(cspObject->Location));
+                      &cspReport->Location,
+                      sizeof(cspObject->Location));
                cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
                if(cspObject->AssociationArray) {
                   deleteComponentAssociationArray(cspObject->AssociationArray);
@@ -272,7 +272,7 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
                memcpy(cspObject->AssociationArray, &cspReport->AssociationArray, cspReport->Associations * sizeof(struct ComponentAssociation));
                cspObject->Associations = cspReport->Associations;
                CHECK(simpleRedBlackTreeInsert(objectStorage,
-                                                  &cspObject->Node) == &cspObject->Node);
+                                              &cspObject->Node) == &cspObject->Node);
             }
          }
       }
