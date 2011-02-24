@@ -74,7 +74,8 @@ void getComponentLocation(char*        componentLocation,
    char                  str[CSPR_LOCATION_SIZE];
    union sockaddr_union* addressArray;
    int                   addresses;
-   size_t                i;
+   int                   i, j;
+   unsigned int          minScope;
 
    componentLocation[0] = 0x00;
    if(sd >= 0) {
@@ -84,17 +85,30 @@ void getComponentLocation(char*        componentLocation,
       addresses = gatherLocalAddresses(&addressArray);
    }
    if(addresses > 0) {
-      for(i = 0;i < (size_t)addresses;i++) {
-         if(getScope((const struct sockaddr*)&addressArray[i]) >= 6) {
-            if(address2string((const struct sockaddr*)&addressArray[i],
-                              (char*)&str, sizeof(str),
-                              (i == 0) ? true : false)) {
-               if(componentLocation[0] != 0x00) {
-                  safestrcat(componentLocation, ", ", CSPR_LOCATION_SIZE);
+      minScope = AS_UNICAST_GLOBAL;
+      for(j = 0; j < 1; j++) {
+         for(i = 0;i < addresses;i++) {
+            if(getScope((const struct sockaddr*)&addressArray[i]) >= minScope) {
+               if(address2string((const struct sockaddr*)&addressArray[i],
+                                 (char*)&str, sizeof(str),
+                                 (i == 0) ? true : false)) {
+                  if(componentLocation[0] != 0x00) {
+                     safestrcat(componentLocation, ", ", CSPR_LOCATION_SIZE);
+                  }
+                  if(strncmp(str, "::ffff:", 7) == 0) {
+                     safestrcat(componentLocation, (const char*)&str[7], CSPR_LOCATION_SIZE);
+                  }
+                  else {
+                     safestrcat(componentLocation, str, CSPR_LOCATION_SIZE);
+                  }
                }
-               safestrcat(componentLocation, str, CSPR_LOCATION_SIZE);
             }
          }
+         if(componentLocation[0] != 0x00) {
+            /* At least one address of current minScope has been found ... */
+            break;
+         }
+         minScope = AS_UNICAST_SITELOCAL;
       }
       free(addressArray);
    }
