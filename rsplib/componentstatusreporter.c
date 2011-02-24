@@ -37,6 +37,7 @@
 #include "randomizer.h"
 
 #include <math.h>
+#include <sys/utsname.h>
 
 
 extern struct Dispatcher gDispatcher;
@@ -72,12 +73,21 @@ void getComponentLocation(char*        componentLocation,
                           sctp_assoc_t assocID)
 {
    char                  str[CSPR_LOCATION_SIZE];
+   struct utsname        hostInfo;
    union sockaddr_union* addressArray;
    int                   addresses;
+   int                   copiedAddresses;
    int                   i, j;
    unsigned int          minScope;
 
    componentLocation[0] = 0x00;
+
+   /* ====== Get hostname ================================================ */
+   if(uname(&hostInfo) == 0) {
+      safestrcat(componentLocation, hostInfo.nodename, CSPR_LOCATION_SIZE);
+   }
+
+   /* ====== Get address(es) ============================================= */
    if(sd >= 0) {
       addresses = getladdrsplus(sd, assocID, &addressArray);
    }
@@ -85,7 +95,8 @@ void getComponentLocation(char*        componentLocation,
       addresses = gatherLocalAddresses(&addressArray);
    }
    if(addresses > 0) {
-      minScope = AS_UNICAST_GLOBAL;
+      copiedAddresses = 0;
+      minScope        = AS_UNICAST_GLOBAL;
       for(j = 0; j < 1; j++) {
          for(i = 0;i < addresses;i++) {
             if(getScope((const struct sockaddr*)&addressArray[i]) >= minScope) {
@@ -93,7 +104,8 @@ void getComponentLocation(char*        componentLocation,
                                  (char*)&str, sizeof(str),
                                  (i == 0) ? true : false)) {
                   if(componentLocation[0] != 0x00) {
-                     safestrcat(componentLocation, ", ", CSPR_LOCATION_SIZE);
+                     safestrcat(componentLocation,
+                                (copiedAddresses > 0) ? ", " : ": ", CSPR_LOCATION_SIZE);
                   }
                   if(strncmp(str, "::ffff:", 7) == 0) {
                      safestrcat(componentLocation, (const char*)&str[7], CSPR_LOCATION_SIZE);
@@ -101,10 +113,11 @@ void getComponentLocation(char*        componentLocation,
                   else {
                      safestrcat(componentLocation, str, CSPR_LOCATION_SIZE);
                   }
+                  copiedAddresses++;
                }
             }
          }
-         if(componentLocation[0] != 0x00) {
+         if(copiedAddresses > 0) {
             /* At least one address of current minScope has been found ... */
             break;
          }
