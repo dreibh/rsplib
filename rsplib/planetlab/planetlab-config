@@ -26,7 +26,6 @@ PLANETLAB_COMPILEHOST="planetlab-2.cs.auckland.ac.nz"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace"
 
-DISTNAME="rsplib-2.7.8~rc1"
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
 DISTPRGS="rootshell registrar server calcappclient hsdump attacker"
@@ -36,6 +35,18 @@ DISTMISC=""
 SUIDPRGS="rootshell registrar server calcappclient attacker hsdump"
 
 export OPT_CSP="-cspserver=132.252.152.140:2960 -cspinterval=1000"
+
+
+# ------ Automatically find out DISTNAME from debian/changelog --------------
+CHANGELOG_HEADER="`head -n1 ../../debian/changelog`"
+PACKAGE=`echo $CHANGELOG_HEADER | sed -e "s/(.*//" -e "s/ //g"`
+PACKAGE_VERSION=`echo $CHANGELOG_HEADER | sed -e "s/[a-Z0-9 ]*(//" -e "s/).*//" -e "s/ //g" -e "s/^[0-9]*://"`
+INPUT_DISTRIBUTION=`echo $CHANGELOG_HEADER | sed -e "s/[^)]*)//" -e "s/;.*//g" -e "s/ //g"`
+UPSTREAM_VERSION=`echo $CHANGELOG_HEADER | sed -e "s/[a-Z0-9 ]*(//" -e "s/).*//" -e "s/[0-9]*$//" -e "s/ //g" -e "s/^[0-9]*://" -e "s/-[^ ]*$//g"`
+
+DISTNAME="$PACKAGE-$UPSTREAM_VERSION"
+echo "===> DISTNAME=$DISTNAME"
+# ---------------------------------------------------------------------------
 
 
 # ###########################################################################
