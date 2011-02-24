@@ -868,42 +868,47 @@ void fputaddress(const struct sockaddr* address, const bool port, FILE* fd)
 /* ###### Get IPv4 address scope ######################################### */
 static unsigned int getScopeIPv4(const uint32_t* address)
 {
-    uint32_t a;
-    uint8_t  b1;
-    uint8_t  b2;
+   uint32_t a;
+   uint8_t  b1;
+   uint8_t  b2;
 
-    /* Unspecified */
-    if(*address == 0x00000000) {
-       return(0);
-    }
+   /* Unspecified */
+   if(*address == 0x00000000) {
+      return(0);
+   }
 
-    /* Loopback */
-    a = ntohl(*address);
-    if((a & 0x7f000000) == 0x7f000000) {
-       return(2);
-    }
+   /* Loopback */
+   a = ntohl(*address);
+   if((a & 0x7f000000) == 0x7f000000) {
+      return(2);
+   }
 
-    /* Class A private */
-    b1 = (uint8_t)(a >> 24);
-    if(b1 == 10) {
-       return(AS_UNICAST_SITELOCAL);
-    }
+   /* Class A private */
+   b1 = (uint8_t)(a >> 24);
+   if(b1 == 10) {
+      return(AS_UNICAST_SITELOCAL);
+   }
 
-    /* Class B private */
-    b2 = (uint8_t)((a >> 16) & 0x00ff);
-    if((b1 == 172) && (b2 >= 16) && (b2 <= 31)) {
-       return(AS_UNICAST_SITELOCAL);
-    }
+   /* Class B private */
+   b2 = (uint8_t)((a >> 16) & 0x00ff);
+   if((b1 == 172) && (b2 >= 16) && (b2 <= 31)) {
+      return(AS_UNICAST_SITELOCAL);
+   }
 
-    /* Class C private */
-    if((b1 == 192) && (b2 == 168)) {
-       return(AS_UNICAST_SITELOCAL);
-    }
+   /* 169.254.0.0/16 link-local [RFC 3927] */
+   if((b1 == 169) && (b2 == 254)) {
+      return(AS_UNICAST_LINKLOCAL);
+   }
 
-    if(IN_MULTICAST(ntohl(*address))) {
-       return(AS_MULTICAST_GLOBAL);
-    }
-    return(AS_UNICAST_GLOBAL);
+   /* Class C private */
+   if((b1 == 192) && (b2 == 168)) {
+      return(AS_UNICAST_SITELOCAL);
+   }
+
+   if(IN_MULTICAST(ntohl(*address))) {
+      return(AS_MULTICAST_GLOBAL);
+   }
+   return(AS_UNICAST_GLOBAL);
 }
 
 
