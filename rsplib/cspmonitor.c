@@ -180,7 +180,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]\t\x1b[0m\x1b[%umU=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
