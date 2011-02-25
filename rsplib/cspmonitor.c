@@ -30,6 +30,7 @@
 #include "tdtypes.h"
 #include "debug.h"
 #include "timeutilities.h"
+#include "stringutilities.h"
 #include "netutilities.h"
 #include "breakdetector.h"
 #include "componentstatusreporter.h"
@@ -78,6 +79,34 @@ static void getDescriptionForID(const uint64_t id,
 }
 
 
+/* ###### Get description for protocol ################################### */
+static void getDescriptionForProtocol(const uint16_t protocolID,
+                                      const uint32_t ppid,
+                                      char*          buffer,
+                                      const size_t   bufferSize)
+{
+   char ppidString[32];
+   char protocolString[32];
+   
+   snprintf((char*)&ppidString, sizeof(ppidString), "$%08x", ppid);
+
+   switch(protocolID) {
+      case IPPROTO_SCTP:
+         safestrcpy((char*)&protocolString, "SCTP", sizeof(protocolString));
+       break;
+      case IPPROTO_TCP:
+         safestrcpy((char*)&protocolString, "TCP", sizeof(protocolString));
+       break;
+      case IPPROTO_UDP:
+         safestrcpy((char*)&protocolString, "UDP", sizeof(protocolString));
+       break;
+      default:
+         snprintf((char*)&protocolString, sizeof(protocolString), "$%04x", protocolID);
+       break;
+   }
+   snprintf(buffer, bufferSize, "%s/%s", ppidString, protocolString);
+}
+
 
 struct CSPObject
 {
@@ -101,53 +130,46 @@ bool useCompactMode = false;
 static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
-   char                    str[256];
-   char                    workload[16];
+   char                    workloadString[32];
+   char                    protocolString[256];
+   char                    idString[256];
    size_t                  i;
    int                     color;
 
-   if(cspObject->Workload >= 0.0) {
-      snprintf((char*)&workload, sizeof(workload), ", L=%3u%%",
-               (unsigned int)rint(100.0 * cspObject->Workload));
+   if(cspObject->Workload >= 0.00) {
+      if(cspObject->Workload < 0.90) {
+         snprintf((char*)&workloadString, sizeof(workloadString), ", L=%3u%%",
+                  (unsigned int)rint(100.0 * cspObject->Workload));
+      }
+      else {
+         snprintf((char*)&workloadString, sizeof(workloadString), ", L=\x1b[7m%3u%%\x1b[27m",
+                  (unsigned int)rint(100.0 * cspObject->Workload));         
+      }
    }
    else {
-      workload[0] = 0x00;
+      workloadString[0] = 0x00;
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, int=%4lldms, A=%u%s \"%s\"\x1b[0K\n",
+   /* , int=%4lldms */
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
            (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
-           (long long)cspObject->ReportInterval / 1000,
+           /* (long long)cspObject->ReportInterval / 1000, */
            (unsigned int)cspObject->Associations,
-           workload,
+           workloadString,
            cspObject->Status);
    if(!useCompactMode) {
       for(i = 0;i < cspObject->Associations;i++) {
          getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
-                             (char*)&str, sizeof(str));
-         switch(cspObject->AssociationArray[i].ProtocolID) {
-            case IPPROTO_SCTP:
-               fprintf(fd,"   -> %s SCTP ppid=$%08x",
-                       str,
-                       cspObject->AssociationArray[i].PPID);
-             break;
-            case IPPROTO_TCP:
-               fprintf(fd,"   -> %s TCP", str);
-             break;
-            case IPPROTO_UDP:
-               fprintf(fd,"   -> %s UDP", str);
-             break;
-            default:
-               fprintf(fd,"   -> %s proto=%d ppid=$%08x",
-                       str,
-                       cspObject->AssociationArray[i].ProtocolID,
-                       cspObject->AssociationArray[i].PPID);
-             break;
-         }
+                             (char*)&idString, sizeof(idString));
+         getDescriptionForProtocol(cspObject->AssociationArray[i].ProtocolID,
+                                   cspObject->AssociationArray[i].PPID,
+                                   (char*)&protocolString, sizeof(protocolString));
+         fprintf(fd, "   -> %s %s", idString, protocolString);
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
             fprintf(fd, "  duration=%4llu.%03llus",
                     (unsigned long long)cspObject->AssociationArray[i].Duration / 1000000,
