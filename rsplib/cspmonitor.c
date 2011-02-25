@@ -57,17 +57,17 @@ static void getDescriptionForID(const uint64_t id,
    switch(CID_GROUP(id)) {
       case CID_GROUP_REGISTRAR:
          snprintf(buffer, bufferSize,
-                  "Registrar    $%08Lx",
+                  "PR $%08Lx",
                   CID_OBJECT(id));
          break;
       case CID_GROUP_POOLELEMENT:
          snprintf(buffer, bufferSize,
-                  "Pool Element $%08Lx",
+                  "PE $%08Lx",
                   CID_OBJECT(id));
          break;
       case CID_GROUP_POOLUSER:
          snprintf(buffer, bufferSize,
-                  "Pool User    $%08Lx",
+                  "PU $%08Lx",
                   CID_OBJECT(id));
          break;
       default:
