@@ -324,7 +324,7 @@ calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statisti
 calcappclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 
 cspmonitor_SOURCES = cspmonitor.c
-cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdnetutilities.la libtdstorage.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
+cspmonitor_LDADD   = librspcsp.la libtdbreakdetector.la libtdtimeutilities.la libtdstringutilities.la libtdnetutilities.la libtdstorage.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 
 
 # ###### FractalPoolUser program ############################################
