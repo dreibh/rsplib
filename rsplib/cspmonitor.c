@@ -130,6 +130,7 @@ struct CSPObject
    uint64_t                      Identifier;
    uint64_t                      LastReportTimeStamp;
    uint64_t                      ReportInterval;
+   uint64_t                      SenderTimeStamp;
    char                          Description[128];
    char                          Status[128];
    char                          Location[128];
@@ -146,19 +147,21 @@ bool useCompactMode = false;
 static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
-   char                    workloadString[32];
-   char                    protocolString[256];
    char                    idString[256];
+   char                    protocolString[256];
+   char                    workloadString[32];
+   char                    uptimeString[32];
+   unsigned int            h, m, s;
    size_t                  i;
    int                     color;
 
    if(cspObject->Workload >= 0.00) {
       if(cspObject->Workload < 0.90) {
-         snprintf((char*)&workloadString, sizeof(workloadString), ", L=%3u%%",
+         snprintf((char*)&workloadString, sizeof(workloadString), " L=%3u%%",
                   (unsigned int)rint(100.0 * cspObject->Workload));
       }
       else {
-         snprintf((char*)&workloadString, sizeof(workloadString), ", L=\x1b[7m%3u%%\x1b[27m",
+         snprintf((char*)&workloadString, sizeof(workloadString), " L=\x1b[7m%3u%%\x1b[27m",
                   (unsigned int)rint(100.0 * cspObject->Workload));         
       }
    }
@@ -166,15 +169,24 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
       workloadString[0] = 0x00;
    }
 
+   h = (unsigned int)(cspObject->SenderTimeStamp / (3600ULL * 1000000ULL));
+   if(h < 100) {
+      m = (unsigned int)((cspObject->SenderTimeStamp / (60ULL * 1000000ULL)) % 60);
+      s = (unsigned int)((cspObject->SenderTimeStamp / 1000000ULL) % 60);
+      snprintf((char*)&uptimeString, sizeof(uptimeString), "%02u:%02u:%02u", h, m, s);
+   }
+   else {
+      snprintf((char*)&uptimeString, sizeof(uptimeString), "%3ud %02uh", h / 24, h % 24);
+   }
+
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   /* , int=%4lldms */
-   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um lr=%1.1fs, A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "\x1b[%u;47m%s [%s]:\x1b[0m\x1b[%um U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
            color,
            cspObject->Description,
            cspObject->Location,
            color,
+           uptimeString,
            (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
-           /* (long long)cspObject->ReportInterval / 1000, */
            (unsigned int)cspObject->Associations,
            workloadString,
            cspObject->Status);
@@ -187,9 +199,9 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
                                    (char*)&protocolString, sizeof(protocolString));
          fprintf(fd, "   -> %s %s", idString, protocolString);
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
-            const unsigned int h = (unsigned int)(cspObject->AssociationArray[i].Duration / (3600ULL * 1000000ULL));
-            const unsigned int m = (unsigned int)((cspObject->AssociationArray[i].Duration / (60ULL * 1000000ULL)) % 60);
-            const unsigned int s = (unsigned int)((cspObject->AssociationArray[i].Duration / 1000000ULL) % 60);
+            h = (unsigned int)(cspObject->AssociationArray[i].Duration / (3600ULL * 1000000ULL));
+            m = (unsigned int)((cspObject->AssociationArray[i].Duration / (60ULL * 1000000ULL)) % 60);
+            s = (unsigned int)((cspObject->AssociationArray[i].Duration / 1000000ULL) % 60);
             fprintf(fd, "  duration=%u:%02u:%02u", h, m, s);
          }
          fputs("\x1b[0K\n", fd);
@@ -290,6 +302,7 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
             }
             if(cspObject) {
                cspObject->LastReportTimeStamp = getMicroTime();
+               cspObject->SenderTimeStamp     = cspReport->Header.SenderTimeStamp;
                cspObject->ReportInterval      = cspReport->ReportInterval;
                cspObject->Workload            = CSR_GET_WORKLOAD(cspReport->Workload);
                getDescriptionForID(cspObject->Identifier,

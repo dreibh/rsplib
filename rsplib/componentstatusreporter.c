@@ -183,12 +183,13 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
                                    const struct ComponentAssociation* associationArray,
                                    const size_t                       associations)
 {
+   static unsigned long long     startupTime = getMicroTime();
    struct ComponentStatusReport* cspReport;
-   size_t       i;
-   int          sd;
-   ssize_t      result;
-   const size_t length = sizeof(struct ComponentStatusReport) +
-                            (associations * sizeof(struct ComponentAssociation));
+   size_t                        i;
+   int                           sd;
+   ssize_t                       result;
+   const size_t                  length = sizeof(struct ComponentStatusReport) +
+                                             (associations * sizeof(struct ComponentAssociation));
 
    result = -1;
    cspReport   = (struct ComponentStatusReport*)malloc(length);
@@ -198,7 +199,7 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
       cspReport->Header.Version         = htonl(CSP_VERSION);
       cspReport->Header.Length          = htonl(length);
       cspReport->Header.SenderID        = hton64(senderID);
-      cspReport->Header.SenderTimeStamp = hton64(getMicroTime());
+      cspReport->Header.SenderTimeStamp = hton64(getMicroTime() - startupTime);
       cspReport->ReportInterval         = htonl(reportInterval);
       cspReport->Workload               = htons(CSR_SET_WORKLOAD(workload));
       strncpy((char*)&cspReport->Status, statusText, sizeof(cspReport->Status));
