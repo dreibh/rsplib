@@ -183,7 +183,7 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
                                    const struct ComponentAssociation* associationArray,
                                    const size_t                       associations)
 {
-   static unsigned long long     startupTime = getMicroTime();
+   static unsigned long long     startupTime = 0;;
    struct ComponentStatusReport* cspReport;
    size_t                        i;
    int                           sd;
@@ -194,6 +194,9 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
    result = -1;
    cspReport   = (struct ComponentStatusReport*)malloc(length);
    if(cspReport) {
+      if(startupTime == 0) {
+         startupTime = getMicroTime();
+      }
       cspReport->Header.Type            = CSPT_REPORT;
       cspReport->Header.Flags           = 0;
       cspReport->Header.Version         = htonl(CSP_VERSION);
