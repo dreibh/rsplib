@@ -87,8 +87,21 @@ static void getDescriptionForProtocol(const uint16_t protocolID,
 {
    char ppidString[32];
    char protocolString[32];
-   
-   snprintf((char*)&ppidString, sizeof(ppidString), "$%08x", ppid);
+
+   switch(ppid) {
+      case 0x0:
+         safestrcpy((char*)&ppidString, "Data", sizeof(ppidString));
+       break;
+      case 0xb:
+         safestrcpy((char*)&ppidString, "ASAP", sizeof(ppidString));
+        break;
+      case 0xc:
+         safestrcpy((char*)&ppidString, "ENRP", sizeof(ppidString));
+        break;
+      default:
+         snprintf((char*)&ppidString, sizeof(ppidString), "$%08x", ppid);
+       break;
+   }
 
    switch(protocolID) {
       case IPPROTO_SCTP:
@@ -104,7 +117,10 @@ static void getDescriptionForProtocol(const uint16_t protocolID,
          snprintf((char*)&protocolString, sizeof(protocolString), "$%04x", protocolID);
        break;
    }
-   snprintf(buffer, bufferSize, "%s/%s", ppidString, protocolString);
+   snprintf(buffer, bufferSize, "%s%s%s",
+            ppidString,
+            (ppidString[0] != 0x00) ? "/" : "",
+            protocolString);
 }
 
 
@@ -171,9 +187,10 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
                                    (char*)&protocolString, sizeof(protocolString));
          fprintf(fd, "   -> %s %s", idString, protocolString);
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
-            fprintf(fd, "  duration=%4llu.%03llus",
-                    (unsigned long long)cspObject->AssociationArray[i].Duration / 1000000,
-                    (unsigned long long)(cspObject->AssociationArray[i].Duration % 1000000) / 1000);
+            const unsigned int h = (unsigned int)(cspObject->AssociationArray[i].Duration / (3600ULL * 1000000ULL));
+            const unsigned int m = (unsigned int)((cspObject->AssociationArray[i].Duration / (60ULL * 1000000ULL)) % 60);
+            const unsigned int s = (unsigned int)((cspObject->AssociationArray[i].Duration / 1000000ULL) % 60);
+            fprintf(fd, "  duration=%u:%02u:%02u", h, m, s);
          }
          fputs("\x1b[0K\n", fd);
       }
