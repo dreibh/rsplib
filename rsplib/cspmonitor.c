@@ -140,7 +140,9 @@ struct CSPObject
 };
 
 
-bool useCompactMode = false;
+static bool   useCompactMode         = false;
+static size_t currentObjectLabelSize = 0;
+static size_t maxObjectLabelSize     = 0;
 
 
 /* ###### CSPObject print function ####################################### */
@@ -148,9 +150,12 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 {
    const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
    char                    idString[256];
-   char                    protocolString[256];
+   char                    protocolString[64];
    char                    workloadString[32];
    char                    uptimeString[32];
+   char                    objectLabelString[256];
+   char                    space[256];
+   size_t                  objectLabelSize;
    unsigned int            h, m, s;
    size_t                  i;
    int                     color;
@@ -169,6 +174,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
       workloadString[0] = 0x00;
    }
 
+   /* ====== Get uptime string =========================================== */
    h = (unsigned int)(cspObject->SenderTimeStamp / (3600ULL * 1000000ULL));
    if(h < 100) {
       m = (unsigned int)((cspObject->SenderTimeStamp / (60ULL * 1000000ULL)) % 60);
@@ -176,15 +182,38 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
       snprintf((char*)&uptimeString, sizeof(uptimeString), "%02u:%02u:%02u", h, m, s);
    }
    else {
-      snprintf((char*)&uptimeString, sizeof(uptimeString), "%3ud %02uh", h / 24, h % 24);
+      if((h / 24) < 15000) {
+         snprintf((char*)&uptimeString, sizeof(uptimeString), "%3ud %02uh", h / 24, h % 24);
+      }
+      else {
+         safestrcat((char*)&uptimeString, "???", sizeof(uptimeString));
+      }
+   }
+
+   /* ====== Get object label string ===================================== */
+   snprintf((char*)&objectLabelString, sizeof(objectLabelString),
+            "%s [%s]",
+            cspObject->Description,
+            cspObject->Location);
+   objectLabelSize    = strlen(objectLabelString);
+   maxObjectLabelSize = max(maxObjectLabelSize, objectLabelSize);
+   if(currentObjectLabelSize > objectLabelSize) {
+      for(i = 0;i < min(sizeof(space) - 1, currentObjectLabelSize - objectLabelSize); i++) {
+         space[i] = ' ';
+      }
+      space[i] = 0x00;
+   }
+   else {
+      space[0] = 0x00;
    }
 
    color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-   fprintf(fd, "\x1b[%u;47m%s [%s]\t\x1b[0m\x1b[%umU=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "\x1b[%u;47m%s\x1b[0m\x1b[%um %s",
            color,
-           cspObject->Description,
-           cspObject->Location,
+           objectLabelString,
            color,
+           space);
+   fprintf(fd, "U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
            uptimeString,
            (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
            (unsigned int)cspObject->Associations,
@@ -435,7 +464,9 @@ int main(int argc, char** argv)
          printf("\x1b[;H");
          printTimeStamp(stdout);
          puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
+         maxObjectLabelSize = 0;
          simpleRedBlackTreePrint(&objectStorage, stdout);
+         currentObjectLabelSize = maxObjectLabelSize;
          printf("\x1b[0J");
          fflush(stdout);
       }
