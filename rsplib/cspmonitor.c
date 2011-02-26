@@ -186,7 +186,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
          snprintf((char*)&uptimeString, sizeof(uptimeString), "%3ud %02uh", h / 24, h % 24);
       }
       else {
-         safestrcat((char*)&uptimeString, "???", sizeof(uptimeString));
+         safestrcpy((char*)&uptimeString, "???", sizeof(uptimeString));
       }
    }
 
