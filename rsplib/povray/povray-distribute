@@ -70,8 +70,8 @@ cd "$TEMPDIR"
 find . -name "ssrun" -or -name "input.pov" -or -name "*.inc" | \
    xargs tar czf input.tar.gz
 cd ..
-../scriptingclient -quiet -input=$TEMPDIR/input.tar.gz \
-                   -output=$TEMPDIR/output.tar.gz
+scriptingclient -quiet -input=$TEMPDIR/input.tar.gz \
+                -output=$TEMPDIR/output.tar.gz
 if [ -e "$TEMPDIR/output.tar.gz" ] ; then
    cd "$TEMPDIR"
    tar xzf output.tar.gz
