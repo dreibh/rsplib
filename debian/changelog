@@ -1,9 +1,9 @@
-rsplib (2.7.11~beta2.1-0ubuntu1) natty; urgency=low
+rsplib (2.7.11-1ubuntu1) oneiric; urgency=low
 
-  * New upstream release (LP: #xxxxxx), containing important bugfixes.
-  * Closes Debian ITP bug with wnpp (Closes: #586405).
+  * New upstream release.
+  * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 02 Mar 2011 10:10:10 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 05 May 2011 11:11:11 +0200
 
 rsplib (2.7.10-0ubuntu1) natty; urgency=high
 
