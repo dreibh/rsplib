@@ -126,7 +126,8 @@ static void getDescriptionForProtocol(const uint16_t protocolID,
 
 struct CSPObject
 {
-   struct SimpleRedBlackTreeNode Node;
+   struct SimpleRedBlackTreeNode StorageNode;
+   struct SimpleRedBlackTreeNode DisplayNode;
    uint64_t                      Identifier;
    uint64_t                      LastReportTimeStamp;
    uint64_t                      ReportInterval;
@@ -145,10 +146,19 @@ static size_t currentObjectLabelSize = 0;
 static size_t maxObjectLabelSize     = 0;
 
 
-/* ###### CSPObject print function ####################################### */
-static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
+/* ###### Get CSPObject from given Display Node ########################## */
+static const struct CSPObject* getCSPObjectFromDisplayNode(const void* displayNodePtr)
 {
-   const struct CSPObject* cspObject = (const struct CSPObject*)cspObjectPtr;
+   const struct CSPObject* dummy = (const struct CSPObject*)displayNodePtr;
+   long n = (long)displayNodePtr - ((long)&dummy->DisplayNode - (long)dummy);
+   return((const struct CSPObject*)n);
+}
+
+
+/* ###### CSPObject print function ####################################### */
+static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
+{
+   const struct CSPObject* cspObject = getCSPObjectFromDisplayNode(cspObjectPtr);
    char                    idString[256];
    char                    protocolString[64];
    char                    workloadString[32];
@@ -159,7 +169,7 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
    unsigned int            h, m, s;
    size_t                  i;
    int                     color;
-
+   
    if(cspObject->Workload >= 0.00) {
       if(cspObject->Workload < 0.90) {
          snprintf((char*)&workloadString, sizeof(workloadString), " L=%3u%%",
@@ -241,7 +251,36 @@ static void cspObjectPrint(const void* cspObjectPtr, FILE* fd)
 
 
 /* ###### CSPObject comparision function ################################# */
-static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectPtr2)
+static int cspObjectDisplayComparison(const void* cspObjectPtr1, const void* cspObjectPtr2)
+{
+   const struct CSPObject* cspObject1 = getCSPObjectFromDisplayNode(cspObjectPtr1);
+   const struct CSPObject* cspObject2 = getCSPObjectFromDisplayNode(cspObjectPtr2);
+
+   if(CID_GROUP(cspObject1->Identifier) < CID_GROUP(cspObject2->Identifier)) {
+      return(-1);
+   }
+   else if(CID_GROUP(cspObject1->Identifier) > CID_GROUP(cspObject2->Identifier)) {
+      return(1);
+   }
+    
+   const int result = strcmp((const char*)&cspObject1->Location,
+                             (const char*)&cspObject2->Location);
+   if(result != 0) {
+      return(result);
+   }
+   
+   if(cspObject1->Identifier < cspObject2->Identifier) {
+      return(-1);
+   }
+   else if(cspObject1->Identifier > cspObject2->Identifier) {
+      return(1);
+   }
+   return(0);
+}
+
+
+/* ###### CSPObject comparision function ################################# */
+static int cspObjectStorageComparison(const void* cspObjectPtr1, const void* cspObjectPtr2)
 {
    const struct CSPObject* cspObject1 = (const struct CSPObject*)cspObjectPtr1;
    const struct CSPObject* cspObject2 = (const struct CSPObject*)cspObjectPtr2;
@@ -257,12 +296,12 @@ static int cspObjectComparison(const void* cspObjectPtr1, const void* cspObjectP
 
 /* ###### Find CSPObject in storage ###################################### */
 struct CSPObject* findCSPObject(struct SimpleRedBlackTree* objectStorage,
-                                const uint64_t                 id)
+                                const uint64_t             id)
 {
    struct SimpleRedBlackTreeNode* node;
    struct CSPObject               cmpCSPObject;
    cmpCSPObject.Identifier = id;
-   node = simpleRedBlackTreeFind(objectStorage, &cmpCSPObject.Node);
+   node = simpleRedBlackTreeFind(objectStorage, &cmpCSPObject.StorageNode);
    if(node) {
       return((struct CSPObject*)node);
    }
@@ -271,16 +310,19 @@ struct CSPObject* findCSPObject(struct SimpleRedBlackTree* objectStorage,
 
 
 /* ###### Purge out-of-date CSPObject in storage ######################### */
-void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage, const unsigned long long purgeInterval)
+void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage,
+                     struct SimpleRedBlackTree* objectDisplay,
+                     const unsigned long long purgeInterval)
 {
    struct CSPObject* cspObject;
    struct CSPObject* nextCSPObject;
 
    cspObject = (struct CSPObject*)simpleRedBlackTreeGetFirst(objectStorage);
    while(cspObject != NULL) {
-      nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->Node);
+      nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->StorageNode);
       if(cspObject->LastReportTimeStamp + min(purgeInterval, (10 * cspObject->ReportInterval)) < getMicroTime()) {
-         CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->Node) == &cspObject->Node);
+         CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->StorageNode) == &cspObject->StorageNode);
+         CHECK(simpleRedBlackTreeRemove(objectDisplay, &cspObject->DisplayNode) == &cspObject->DisplayNode);
          free(cspObject->AssociationArray);
          free(cspObject);
       }
@@ -290,7 +332,9 @@ void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage, const unsigned lo
 
 
 /* ###### Handle incoming CSP message #################################### */
-static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
+static void handleMessage(int                        sd,
+                          struct SimpleRedBlackTree* objectStorage,
+                          struct SimpleRedBlackTree* objectDisplay)
 {
    struct ComponentStatusReport* cspReport;
    struct CSPObject*             cspObject;
@@ -324,7 +368,8 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
             if(cspObject == NULL) {
                cspObject = (struct CSPObject*)malloc(sizeof(struct CSPObject));
                if(cspObject) {
-                  simpleRedBlackTreeNodeNew(&cspObject->Node);
+                  simpleRedBlackTreeNodeNew(&cspObject->StorageNode);
+                  simpleRedBlackTreeNodeNew(&cspObject->DisplayNode);
                   cspObject->Identifier       = cspReport->Header.SenderID;
                   cspObject->AssociationArray = NULL;
                }
@@ -353,7 +398,9 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
                memcpy(cspObject->AssociationArray, &cspReport->AssociationArray, cspReport->Associations * sizeof(struct ComponentAssociation));
                cspObject->Associations = cspReport->Associations;
                CHECK(simpleRedBlackTreeInsert(objectStorage,
-                                              &cspObject->Node) == &cspObject->Node);
+                                              &cspObject->StorageNode) == &cspObject->StorageNode);
+               CHECK(simpleRedBlackTreeInsert(objectDisplay,
+                                              &cspObject->DisplayNode) == &cspObject->DisplayNode);
             }
          }
       }
@@ -365,6 +412,7 @@ static void handleMessage(int sd, struct SimpleRedBlackTree* objectStorage)
 int main(int argc, char** argv)
 {
    struct SimpleRedBlackTree objectStorage;
+   struct SimpleRedBlackTree objectDisplay;
    union sockaddr_union      localAddress;
    struct pollfd             ufds;
    unsigned long long        now;
@@ -432,10 +480,8 @@ int main(int argc, char** argv)
       exit(1);
    }
 
-   simpleRedBlackTreeNew(&objectStorage,
-                             cspObjectPrint,
-                             cspObjectComparison);
-
+   simpleRedBlackTreeNew(&objectStorage, NULL,                  cspObjectStorageComparison);
+   simpleRedBlackTreeNew(&objectDisplay, cspObjectDisplayPrint, cspObjectDisplayComparison);
 
    puts("Component Status Monitor - Version 1.0");
    puts("======================================\n");
@@ -453,10 +499,10 @@ int main(int argc, char** argv)
                            ((lastUpdate + updateInterval) > now) ?
                               (int)((lastUpdate + updateInterval - now) / 1000) : 0);
          if((result > 0) && (ufds.revents & POLLIN)) {
-            handleMessage(sd, &objectStorage);
+            handleMessage(sd, &objectStorage, &objectDisplay);
          }
       }
-      purgeCSPObjects(&objectStorage, purgeInterval);
+      purgeCSPObjects(&objectStorage, &objectDisplay, purgeInterval);
 
       elements = simpleRedBlackTreeGetElements(&objectStorage);
 
@@ -465,7 +511,7 @@ int main(int argc, char** argv)
          printTimeStamp(stdout);
          puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
          maxObjectLabelSize = 0;
-         simpleRedBlackTreePrint(&objectStorage, stdout);
+         simpleRedBlackTreePrint(&objectDisplay, stdout);
          currentObjectLabelSize = maxObjectLabelSize;
          printf("\x1b[0J");
          fflush(stdout);
