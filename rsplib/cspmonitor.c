@@ -67,12 +67,12 @@ static void getDescriptionForID(const uint64_t id,
          break;
       case CID_GROUP_POOLUSER:
          snprintf(buffer, bufferSize,
-                  "PU $%08Lx",
+                  "PU $%14Lx",
                   CID_OBJECT(id));
          break;
       default:
          snprintf(buffer, bufferSize,
-                  "ID $%Lx",
+                  "ID $%14Lx",
                   CID_OBJECT(id));
          break;
    }
