@@ -21,7 +21,7 @@
 
 
 PLANETLAB_KEY=~/.ssh/planetlab
-PLANETLAB_USER=due_test
+PLANETLAB_USER=dueple_RSerPool
 PLANETLAB_COMPILEHOST="planetlab-2.cs.auckland.ac.nz"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
 PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace"
