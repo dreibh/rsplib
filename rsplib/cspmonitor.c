@@ -268,7 +268,7 @@ static int cspObjectDisplayComparison(const void* cspObjectPtr1, const void* csp
    if(result != 0) {
       return(result);
    }
-   
+
    if(cspObject1->Identifier < cspObject2->Identifier) {
       return(-1);
    }
@@ -322,7 +322,11 @@ void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage,
       nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->StorageNode);
       if(cspObject->LastReportTimeStamp + min(purgeInterval, (10 * cspObject->ReportInterval)) < getMicroTime()) {
          CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->StorageNode) == &cspObject->StorageNode);
+         simpleRedBlackTreeVerify(objectStorage);
          CHECK(simpleRedBlackTreeRemove(objectDisplay, &cspObject->DisplayNode) == &cspObject->DisplayNode);
+         simpleRedBlackTreeVerify(objectDisplay);
+         simpleRedBlackTreeNodeDelete(&cspObject->StorageNode);
+         simpleRedBlackTreeNodeDelete(&cspObject->DisplayNode);
          free(cspObject->AssociationArray);
          free(cspObject);
       }
@@ -375,6 +379,13 @@ static void handleMessage(int                        sd,
                }
             }
             if(cspObject) {
+               if(simpleRedBlackTreeNodeIsLinked(&cspObject->DisplayNode)) {
+                  /* The position within the objectDisplay storage may change,
+                     due to updated locationArray! */
+                  CHECK(simpleRedBlackTreeRemove(objectDisplay, &cspObject->DisplayNode) == &cspObject->DisplayNode);
+                  simpleRedBlackTreeVerify(objectDisplay);
+               }
+             
                cspObject->LastReportTimeStamp = getMicroTime();
                cspObject->SenderTimeStamp     = cspReport->Header.SenderTimeStamp;
                cspObject->ReportInterval      = cspReport->ReportInterval;
@@ -389,6 +400,15 @@ static void handleMessage(int                        sd,
                memcpy(&cspObject->Location,
                       &cspReport->Location,
                       sizeof(cspObject->Location));
+
+               /* DisplayNode MUST be re-inserted, since the location may change and
+                  the location is part of the sorting key! */
+               /*
+               for(int i=0;i < 6;i++) {
+                 cspObject->Location[i] = 'A' + (random() % 26);
+               }
+               */
+               
                cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
                if(cspObject->AssociationArray) {
                   deleteComponentAssociationArray(cspObject->AssociationArray);
@@ -399,8 +419,10 @@ static void handleMessage(int                        sd,
                cspObject->Associations = cspReport->Associations;
                CHECK(simpleRedBlackTreeInsert(objectStorage,
                                               &cspObject->StorageNode) == &cspObject->StorageNode);
+               simpleRedBlackTreeVerify(objectStorage);
                CHECK(simpleRedBlackTreeInsert(objectDisplay,
                                               &cspObject->DisplayNode) == &cspObject->DisplayNode);
+               simpleRedBlackTreeVerify(objectDisplay);
             }
          }
       }
