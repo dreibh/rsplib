@@ -40,6 +40,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/poll.h>
 #include <ext_socket.h>
 
@@ -438,10 +439,10 @@ int main(int argc, char** argv)
    union sockaddr_union      localAddress;
    struct pollfd             ufds;
    unsigned long long        now;
-   unsigned long long        lastUpdate;
    unsigned long long        updateInterval = 1000000;
    unsigned long long        purgeInterval  = 30000000;
-   size_t                    lastElements   = 0;
+   unsigned long long        lastUpdate     = 0;
+   size_t                    lastElements   = ~0;
    size_t                    elements;
    int                       result;
    int                       reuse;
@@ -514,7 +515,7 @@ int main(int argc, char** argv)
    while(!breakDetected()) {
       ufds.fd          = sd;
       ufds.events      = POLLIN;
-      now = lastUpdate = getMicroTime();
+      now              = getMicroTime();
       while(now - lastUpdate < updateInterval) {
          now = getMicroTime();
          result = ext_poll(&ufds, 1,
@@ -522,6 +523,9 @@ int main(int argc, char** argv)
                               (int)((lastUpdate + updateInterval - now) / 1000) : 0);
          if((result > 0) && (ufds.revents & POLLIN)) {
             handleMessage(sd, &objectStorage, &objectDisplay);
+         }         
+         else if((result < 0) && (errno == EINTR)) {
+            goto finished;
          }
       }
       purgeCSPObjects(&objectStorage, &objectDisplay, purgeInterval);
@@ -540,8 +544,10 @@ int main(int argc, char** argv)
       }
 
       lastElements = elements;
+      lastUpdate   = now;
    }
 
+finished:
    ext_close(sd);
    simpleRedBlackTreeDelete(&objectStorage);
    puts("\nTerminated!");
