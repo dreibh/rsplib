@@ -1579,9 +1579,11 @@ int recvfromplus(int                      sockfd,
          errno = EWOULDBLOCK;
       }
       else {   /* Error */
-         LOG_ERROR
-         fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
-         LOG_END
+         if(errno != EINTR) {
+            LOG_ERROR 
+            fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
+            LOG_END
+         }
          cc = -1;
       }
    }
@@ -2095,6 +2097,10 @@ int sendabort(int sockfd, sctp_assoc_t assocID)
 /* ###### Send SCTP SHUTDOWN ############################################# */
 int sendshutdown(int sockfd, sctp_assoc_t assocID)
 {
+   if(assocID == 0) {
+      /* FreeBSD seems to ignore SCTP_EOF on TCP-like socket! */
+      return(ext_shutdown(sockfd, 2));
+   }
 #ifdef SOLARIS
    /* The Solaris API has no SCTP_ABORT. Instead, it is a regular flag. */
    return(sendtoplus(sockfd, NULL, 0,
