@@ -259,8 +259,8 @@ int rsp_close(int sd)
               rserpoolSocket->Descriptor, rserpoolSocket->Socket,
               session->SessionID);
       LOG_END
-      /* Send ABORT to peer */
-      sendabort(rserpoolSocket->Socket, session->AssocID);
+      /* Send SHUTDOWN to peer */
+      sendshutdown(rserpoolSocket->Socket, session->AssocID);
       deleteSession(rserpoolSocket, session);
       session = nextSession;
    }
