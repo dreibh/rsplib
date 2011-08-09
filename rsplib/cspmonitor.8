@@ -39,8 +39,13 @@
 .Nm cspmonitor
 .Op Fl localaddress=address:port
 .Op Fl updateinterval=milliseconds
+.Op Fl purgeinterval=milliseconds
 .Op Fl compact
 .Op Fl full
+.Op Fl maxpr=PRs
+.Op Fl maxpe=PEs
+.Op Fl maxpu=PUs
+.Op Fl maxlocationsize=characters
 .Op Fl logappend=filename
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
@@ -60,11 +65,21 @@ The following options are available:
 Sets the local UDP socket address and port number. By default, it listens on
 all addresses, port 2960.
 .It Fl updateinterval=milliseconds
-Sets the update interval in milliseconds.
+Sets the update interval in milliseconds. Default: 1000.
+.It Fl purgeinterval=milliseconds
+Sets the purge interval in milliseconds. Default: 30000.
 .It Fl compact
 Turns on compact status display mode.
 .It Fl full
 Turns on full status display mode (default).
+.It Fl maxpr=PRs
+Limits the number of PRs to be displayed to the given number.
+.It Fl maxpr=PEs
+Limits the number of PEs to be displayed to the given number.
+.It Fl maxpr=PUs
+Limits the number of PUs to be displayed to the given number.
+.It Fl maxlocationsize=characters
+Limits the location string size to the given number of characters.
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent

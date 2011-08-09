@@ -142,9 +142,16 @@ struct CSPObject
 };
 
 
-static bool   useCompactMode         = false;
-static size_t currentObjectLabelSize = 0;
-static size_t maxObjectLabelSize     = 0;
+static bool         useCompactMode         = false;
+static size_t       currentObjectLabelSize = 0;
+static unsigned int currentPRs             = 0;
+static unsigned int currentPEs             = 0;
+static unsigned int currentPUs             = 0;
+static unsigned int maxPRs                 = ~0;
+static unsigned int maxPEs                 = ~0;
+static unsigned int maxPUs                 = ~0;
+static unsigned int maxLocationSize        = ~0;
+static size_t       maxObjectLabelSize     = 0;
 
 
 /* ###### Get CSPObject from given Display Node ########################## */
@@ -163,6 +170,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    char                    idString[256];
    char                    protocolString[64];
    char                    workloadString[32];
+   char                    locationString[sizeof(cspObject->Location)];
    char                    uptimeString[32];
    char                    objectLabelString[256];
    char                    space[256];
@@ -170,7 +178,39 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    unsigned int            h, m, s;
    size_t                  i;
    int                     color;
-   
+
+   color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
+
+   /* ====== Check component number limit to display ===================== */
+   if(CID_GROUP(cspObject->Identifier) == CID_GROUP_REGISTRAR) {
+      currentPRs++;
+      if(currentPRs > maxPRs) {
+         if(currentPRs == maxPRs + 1) {
+            fprintf(fd, "\x1b[%u;47m(further PRs have been hidden)\x1b[0m\n", color);
+         }
+         return;
+      }
+   }
+   else if(CID_GROUP(cspObject->Identifier) == CID_GROUP_POOLELEMENT) {
+      currentPEs++;
+      if(currentPEs > maxPEs) {
+         if(currentPEs == maxPEs + 1) {
+            fprintf(fd, "\x1b[%u;47m(further PEs have been hidden)\x1b[0m\n", color);
+         }
+         return;
+      }
+   }
+   else if(CID_GROUP(cspObject->Identifier) == CID_GROUP_POOLUSER) {
+      currentPUs++;
+      if(currentPUs > maxPUs) {
+         if(currentPUs == maxPUs + 1) {
+            fprintf(fd, "\x1b[%u;47m(further PUs have been hidden)\x1b[0m\n", color);
+         }
+         return;
+      }
+   }
+
+   /* ====== Get workload string ========================================= */
    if(cspObject->Workload >= 0.00) {
       if(cspObject->Workload < 0.90) {
          snprintf((char*)&workloadString, sizeof(workloadString), " L=%3u%%",
@@ -178,7 +218,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       }
       else {
          snprintf((char*)&workloadString, sizeof(workloadString), " L=\x1b[7m%3u%%\x1b[27m",
-                  (unsigned int)rint(100.0 * cspObject->Workload));         
+                  (unsigned int)rint(100.0 * cspObject->Workload));
       }
    }
    else {
@@ -202,10 +242,21 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    }
 
    /* ====== Get object label string ===================================== */
+   maxLocationSize = min(maxLocationSize, sizeof(cspObject->Location) - 1);
+   memcpy((char*)&locationString, cspObject->Location, sizeof(cspObject->Location));
+   i = strlen(locationString);
+   if(i > maxLocationSize) {
+      if(maxLocationSize >= 3) {
+         locationString[maxLocationSize - 1] = '.';
+         locationString[maxLocationSize - 2] = '.';
+         locationString[maxLocationSize - 3] = '.';
+      }
+      locationString[maxLocationSize] = 0x00;
+   }
    snprintf((char*)&objectLabelString, sizeof(objectLabelString),
             "%s [%s]",
             cspObject->Description,
-            cspObject->Location);
+            locationString);
    objectLabelSize    = strlen(objectLabelString);
    maxObjectLabelSize = max(maxObjectLabelSize, objectLabelSize);
    if(currentObjectLabelSize > objectLabelSize) {
@@ -218,7 +269,6 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       space[0] = 0x00;
    }
 
-   color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
    fprintf(fd, "\x1b[%u;47m%s\x1b[0m\x1b[%um %s",
            color,
            objectLabelString,
@@ -263,7 +313,7 @@ static int cspObjectDisplayComparison(const void* cspObjectPtr1, const void* csp
    else if(CID_GROUP(cspObject1->Identifier) > CID_GROUP(cspObject2->Identifier)) {
       return(1);
    }
-    
+
    const int result = strcmp((const char*)&cspObject1->Location,
                              (const char*)&cspObject2->Location);
    if(result != 0) {
@@ -386,7 +436,7 @@ static void handleMessage(int                        sd,
                   CHECK(simpleRedBlackTreeRemove(objectDisplay, &cspObject->DisplayNode) == &cspObject->DisplayNode);
                   simpleRedBlackTreeVerify(objectDisplay);
                }
-             
+
                cspObject->LastReportTimeStamp = getMicroTime();
                cspObject->SenderTimeStamp     = cspReport->Header.SenderTimeStamp;
                cspObject->ReportInterval      = cspReport->ReportInterval;
@@ -409,7 +459,7 @@ static void handleMessage(int                        sd,
                  cspObject->Location[i] = 'A' + (random() % 26);
                }
                */
-               
+
                cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
                if(cspObject->AssociationArray) {
                   deleteComponentAssociationArray(cspObject->AssociationArray);
@@ -470,12 +520,24 @@ int main(int argc, char** argv)
             updateInterval = 100000;
          }
       }
-      else if(!(strncmp(argv[n], "-purge=", 7))) {
-         purgeInterval = 1000 * atol((const char*)&argv[n][7]);
+      else if(!(strncmp(argv[n], "-purgeinterval=", 15))) {
+         purgeInterval = 1000 * atol((const char*)&argv[n][15]);
          if(purgeInterval < 1000000) {
             purgeInterval = 1000000;
          }
       }
+      else if(!(strncmp(argv[n], "-maxpr=", 7))) {
+         maxPRs = atoi((const char*)&argv[n][7]);
+      }
+      else if(!(strncmp(argv[n], "-maxpe=", 7))) {
+         maxPEs = atoi((const char*)&argv[n][7]);
+      }
+      else if(!(strncmp(argv[n], "-maxpu=", 7))) {
+         maxPUs = atoi((const char*)&argv[n][7]);
+      }
+      else if(!(strncmp(argv[n], "-maxlocationsize=", 17))) {
+         maxLocationSize = atoi((const char*)&argv[n][17]);
+      }      
       else if(!(strcmp(argv[n], "-compact"))) {
          useCompactMode = true;
       }
@@ -484,7 +546,7 @@ int main(int argc, char** argv)
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
-         fprintf(stderr, "Usage: %s {-localaddress=address:port} {-updateinterval=milliseconds} {-compact|-full}\n", argv[0]);
+         fprintf(stderr, "Usage: %s {-localaddress=address:port} {-updateinterval=milliseconds} {-purgeinterval=milliseconds} {-compact|-full} {-maxpr=PRs} {-maxpe=PEs} {-maxpu=PUs} {-maxlocationsize=characters}\n", argv[0]);
          exit(1);
       }
    }
@@ -512,6 +574,9 @@ int main(int argc, char** argv)
    installBreakDetector();
    printf("\x1b[;H\x1b[2J");
 
+   /* The first update should be in 1 second ... */
+   lastUpdate = getMicroTime() + 1000000 - updateInterval;
+   
    while(!breakDetected()) {
       ufds.fd          = sd;
       ufds.events      = POLLIN;
@@ -523,7 +588,7 @@ int main(int argc, char** argv)
                               (int)((lastUpdate + updateInterval - now) / 1000) : 0);
          if((result > 0) && (ufds.revents & POLLIN)) {
             handleMessage(sd, &objectStorage, &objectDisplay);
-         }         
+         }
          else if((result < 0) && (errno == EINTR)) {
             goto finished;
          }
@@ -537,6 +602,9 @@ int main(int argc, char** argv)
          printTimeStamp(stdout);
          puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
          maxObjectLabelSize = 0;
+         currentPRs         = 0;
+         currentPEs         = 0;
+         currentPUs         = 0;
          simpleRedBlackTreePrint(&objectDisplay, stdout);
          currentObjectLabelSize = maxObjectLabelSize;
          printf("\x1b[0J");
