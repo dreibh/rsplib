@@ -186,7 +186,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       currentPRs++;
       if(currentPRs > maxPRs) {
          if(currentPRs == maxPRs + 1) {
-            fprintf(fd, "\x1b[%u;47m(further PRs have been hidden)\x1b[0m\n", color);
+            fprintf(fd, "\n\x1b[%u;47m(further PRs have been hidden)\x1b[0m\n", color);
          }
          return;
       }
@@ -195,7 +195,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       currentPEs++;
       if(currentPEs > maxPEs) {
          if(currentPEs == maxPEs + 1) {
-            fprintf(fd, "\x1b[%u;47m(further PEs have been hidden)\x1b[0m\n", color);
+            fprintf(fd, "\n\x1b[%u;47m(further PEs have been hidden)\x1b[0m\n", color);
          }
          return;
       }
@@ -204,7 +204,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       currentPUs++;
       if(currentPUs > maxPUs) {
          if(currentPUs == maxPUs + 1) {
-            fprintf(fd, "\x1b[%u;47m(further PUs have been hidden)\x1b[0m\n", color);
+            fprintf(fd, "\n\x1b[%u;47m(further PUs have been hidden)\x1b[0m\n", color);
          }
          return;
       }
