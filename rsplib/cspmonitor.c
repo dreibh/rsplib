@@ -152,6 +152,7 @@ static unsigned int maxPEs                 = ~0;
 static unsigned int maxPUs                 = ~0;
 static unsigned int maxLocationSize        = ~0;
 static size_t       maxObjectLabelSize     = 0;
+static bool         useLabelHighlighting   = false;
 
 
 /* ###### Get CSPObject from given Display Node ########################## */
@@ -179,10 +180,19 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    size_t                  i;
    int                     color;
 
-   color = 31 + (unsigned int)(CID_GROUP(cspObject->Identifier) % 8);
-
+   color = 0;
+#define COLOR_BLACK     0
+#define COLOR_RED       1
+#define COLOR_GREEN     2
+#define COLOR_YELLOW    3
+#define COLOR_BLUE      4
+#define COLOR_MAGENTA   5
+#define COLOR_CYAN      6
+#define COLOR_WHITE     7
+#define COLOR_DEFAULT   9
    /* ====== Check component number limit to display ===================== */
    if(CID_GROUP(cspObject->Identifier) == CID_GROUP_REGISTRAR) {
+      color = 31;
       currentPRs++;
       if(currentPRs > maxPRs) {
          if(currentPRs == maxPRs + 1) {
@@ -192,6 +202,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       }
    }
    else if(CID_GROUP(cspObject->Identifier) == CID_GROUP_POOLELEMENT) {
+      color = 34;
       currentPEs++;
       if(currentPEs > maxPEs) {
          if(currentPEs == maxPEs + 1) {
@@ -201,6 +212,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       }
    }
    else if(CID_GROUP(cspObject->Identifier) == CID_GROUP_POOLUSER) {
+      color = 32;
       currentPUs++;
       if(currentPUs > maxPUs) {
          if(currentPUs == maxPUs + 1) {
@@ -269,8 +281,9 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       space[0] = 0x00;
    }
 
-   fprintf(fd, "\x1b[%u;47m%s\x1b[0m\x1b[%um %s",
+   fprintf(fd, "\x1b[%u%sm%s\x1b[0m\x1b[%um %s",
            color,
+           ((useLabelHighlighting) ? ";47;1" : ";1"),
            objectLabelString,
            color,
            space);
@@ -545,6 +558,12 @@ int main(int argc, char** argv)
       }
       else if(!(strcmp(argv[n], "-full"))) {
          useCompactMode = false;
+      }
+      else if(!(strcmp(argv[n], "-highlighting"))) {
+         useLabelHighlighting = true;
+      }
+      else if(!(strcmp(argv[n], "-nohighlighting"))) {
+         useLabelHighlighting = false;
       }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
