@@ -254,7 +254,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       locationString[maxLocationSize] = 0x00;
    }
    snprintf((char*)&objectLabelString, sizeof(objectLabelString),
-            "%s [%s]",
+            "\n%s [%s]",
             cspObject->Description,
             locationString);
    objectLabelSize    = strlen(objectLabelString);
@@ -274,13 +274,14 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
            objectLabelString,
            color,
            space);
-   fprintf(fd, "U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K\n",
+   fprintf(fd, "U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K",
            uptimeString,
            (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
            (unsigned int)cspObject->Associations,
            workloadString,
            cspObject->Status);
    if(!useCompactMode) {
+      fputs("\n", fd);
       for(i = 0;i < cspObject->Associations;i++) {
          getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
                              (char*)&idString, sizeof(idString));
@@ -294,7 +295,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
             s = (unsigned int)((cspObject->AssociationArray[i].Duration / 1000000ULL) % 60);
             fprintf(fd, "  duration=%u:%02u:%02u", h, m, s);
          }
-         fputs("\x1b[0K\n", fd);
+         fputs("\x1b[0K", fd);
       }
    }
    fputs("\x1b[0m\x1b[0K", fd);
@@ -484,10 +485,11 @@ static void handleMessage(int                        sd,
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   struct SimpleRedBlackTree objectStorage;
-   struct SimpleRedBlackTree objectDisplay;
    union sockaddr_union      localAddress;
    struct pollfd             ufds;
+   struct SimpleRedBlackTree objectStorage;
+   struct SimpleRedBlackTree objectDisplay;
+   SimpleRedBlackTreeNode*   node;
    unsigned long long        now;
    unsigned long long        updateInterval = 1000000;
    unsigned long long        purgeInterval  = 30000000;
@@ -600,12 +602,18 @@ int main(int argc, char** argv)
       if( (elements != lastElements) || (elements > 0) ) {
          printf("\x1b[;H");
          printTimeStamp(stdout);
-         puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n");
+         puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H");
          maxObjectLabelSize = 0;
          currentPRs         = 0;
          currentPEs         = 0;
          currentPUs         = 0;
-         simpleRedBlackTreePrint(&objectDisplay, stdout);
+
+         node = simpleRedBlackTreeGetFirst(&objectDisplay);
+         while(node != NULL) {
+            cspObjectDisplayPrint(node, stdout);
+            node = simpleRedBlackTreeGetNext(&objectDisplay, node);
+         }
+
          currentObjectLabelSize = maxObjectLabelSize;
          printf("\x1b[0J");
          fflush(stdout);
