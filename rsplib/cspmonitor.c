@@ -498,21 +498,21 @@ static void handleMessage(int                        sd,
 /* ###### Main program ################################################### */
 int main(int argc, char** argv)
 {
-   union sockaddr_union      localAddress;
-   struct pollfd             ufds;
-   struct SimpleRedBlackTree objectStorage;
-   struct SimpleRedBlackTree objectDisplay;
-   SimpleRedBlackTreeNode*   node;
-   unsigned long long        now;
-   unsigned long long        updateInterval = 1000000;
-   unsigned long long        purgeInterval  = 30000000;
-   unsigned long long        lastUpdate     = 0;
-   size_t                    lastElements   = ~0;
-   size_t                    elements;
-   int                       result;
-   int                       reuse;
-   int                       sd;
-   int                       n;
+   union sockaddr_union           localAddress;
+   struct pollfd                  ufds;
+   struct SimpleRedBlackTree      objectStorage;
+   struct SimpleRedBlackTree      objectDisplay;
+   struct SimpleRedBlackTreeNode* node;
+   unsigned long long             now;
+   unsigned long long             updateInterval = 1000000;
+   unsigned long long             purgeInterval  = 30000000;
+   unsigned long long             lastUpdate     = 0;
+   size_t                         lastElements   = ~0;
+   size_t                         elements;
+   int                            result;
+   int                            reuse;
+   int                            sd;
+   int                            n;
 
    if(checkIPv6()) {
       string2address("[::]:0", &localAddress);
