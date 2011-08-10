@@ -38,6 +38,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <errno.h>
@@ -68,7 +69,7 @@ static void getDescriptionForID(const uint64_t id,
          break;
       case CID_GROUP_POOLUSER:
          snprintf(buffer, bufferSize,
-                  "PU $%14Lx",
+                  "PU $%014Lx",
                   CID_OBJECT(id));
          break;
       default:
@@ -144,6 +145,9 @@ struct CSPObject
 
 static bool         useCompactMode         = false;
 static size_t       currentObjectLabelSize = 0;
+static unsigned int totalPRs               = 0;
+static unsigned int totalPEs               = 0;
+static unsigned int totalPUs               = 0;
 static unsigned int currentPRs             = 0;
 static unsigned int currentPEs             = 0;
 static unsigned int currentPUs             = 0;
@@ -152,7 +156,6 @@ static unsigned int maxPEs                 = ~0;
 static unsigned int maxPUs                 = ~0;
 static unsigned int maxLocationSize        = ~0;
 static size_t       maxObjectLabelSize     = 0;
-static bool         useLabelHighlighting   = false;
 
 
 /* ###### Get CSPObject from given Display Node ########################## */
@@ -181,22 +184,14 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    int                     color;
 
    color = 0;
-#define COLOR_BLACK     0
-#define COLOR_RED       1
-#define COLOR_GREEN     2
-#define COLOR_YELLOW    3
-#define COLOR_BLUE      4
-#define COLOR_MAGENTA   5
-#define COLOR_CYAN      6
-#define COLOR_WHITE     7
-#define COLOR_DEFAULT   9
    /* ====== Check component number limit to display ===================== */
    if(CID_GROUP(cspObject->Identifier) == CID_GROUP_REGISTRAR) {
       color = 31;
       currentPRs++;
       if(currentPRs > maxPRs) {
          if(currentPRs == maxPRs + 1) {
-            fprintf(fd, "\n\x1b[%u;47m(further PRs have been hidden)\x1b[0m", color);
+            fprintf(fd, "\n\x1b[%u;47m(%u further PRs have been hidden)\x1b[0m",
+                    color, totalPRs -maxPRs);
          }
          return;
       }
@@ -206,7 +201,8 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       currentPEs++;
       if(currentPEs > maxPEs) {
          if(currentPEs == maxPEs + 1) {
-            fprintf(fd, "\n\x1b[%u;47m(further PEs have been hidden)\x1b[0m", color);
+            fprintf(fd, "\n\x1b[%u;47m(%u further PEs have been hidden)\x1b[0m",
+                    color, totalPEs -maxPEs);
          }
          return;
       }
@@ -216,7 +212,8 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       currentPUs++;
       if(currentPUs > maxPUs) {
          if(currentPUs == maxPUs + 1) {
-            fprintf(fd, "\n\x1b[%u;47m(further PUs have been hidden)\x1b[0m", color);
+            fprintf(fd, "\n\x1b[%u;47m(%u further PUs have been hidden)\x1b[0m",
+                    color, totalPUs -maxPUs);
          }
          return;
       }
@@ -281,9 +278,8 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
       space[0] = 0x00;
    }
 
-   fprintf(fd, "\x1b[%u%sm%s\x1b[0m\x1b[%um %s",
+   fprintf(fd, "\x1b[%u;1m%s\x1b[0m\x1b[%um %s",
            color,
-           ((useLabelHighlighting) ? ";47;1" : ";1"),
            objectLabelString,
            color,
            space);
@@ -387,6 +383,17 @@ void purgeCSPObjects(struct SimpleRedBlackTree* objectStorage,
       nextCSPObject = (struct CSPObject*)simpleRedBlackTreeGetNext(objectStorage, &cspObject->StorageNode);
       if(cspObject->LastReportTimeStamp + min(purgeInterval, (10 * cspObject->ReportInterval)) < getMicroTime()) {
          CHECK(simpleRedBlackTreeRemove(objectStorage, &cspObject->StorageNode) == &cspObject->StorageNode);
+         switch(CID_GROUP(cspObject->Identifier)) {
+            case CID_GROUP_REGISTRAR:
+              assert(totalPRs > 0); totalPRs--;
+             break;
+            case CID_GROUP_POOLELEMENT:
+              assert(totalPEs > 0); totalPEs--;
+             break;
+            case CID_GROUP_POOLUSER:
+              assert(totalPUs > 0); totalPUs--;
+             break;
+         }
          simpleRedBlackTreeVerify(objectStorage);
          CHECK(simpleRedBlackTreeRemove(objectDisplay, &cspObject->DisplayNode) == &cspObject->DisplayNode);
          simpleRedBlackTreeVerify(objectDisplay);
@@ -441,6 +448,17 @@ static void handleMessage(int                        sd,
                   simpleRedBlackTreeNodeNew(&cspObject->DisplayNode);
                   cspObject->Identifier       = cspReport->Header.SenderID;
                   cspObject->AssociationArray = NULL;
+                  switch(CID_GROUP(cspObject->Identifier)) {
+                     case CID_GROUP_REGISTRAR:
+                       totalPRs++;
+                      break;
+                     case CID_GROUP_POOLELEMENT:
+                       totalPEs++;
+                      break;
+                     case CID_GROUP_POOLUSER:
+                       totalPUs++;
+                      break;
+                  }
                }
             }
             if(cspObject) {
@@ -559,12 +577,6 @@ int main(int argc, char** argv)
       else if(!(strcmp(argv[n], "-full"))) {
          useCompactMode = false;
       }
-      else if(!(strcmp(argv[n], "-highlighting"))) {
-         useLabelHighlighting = true;
-      }
-      else if(!(strcmp(argv[n], "-nohighlighting"))) {
-         useLabelHighlighting = false;
-      }
       else {
          printf("Bad argument \"%s\"!\n" ,argv[n]);
          fprintf(stderr, "Usage: %s {-localaddress=address:port} {-updateinterval=milliseconds} {-purgeinterval=milliseconds} {-compact|-full} {-maxpr=PRs} {-maxpe=PEs} {-maxpu=PUs} {-maxlocationsize=characters}\n", argv[0]);
@@ -621,7 +633,8 @@ int main(int argc, char** argv)
       if( (elements != lastElements) || (elements > 0) ) {
          printf("\x1b[;H");
          printTimeStamp(stdout);
-         puts("Current Component Status\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H");
+         printf("Current Component Status -- \x1b[31;1m%u PRs\x1b[0m, \x1b[34;1m%u PEs\x1b[0m, \x1b[32;1m%u PUs\x1b[0m\x1b[0K\n\x1b[0K\n\x1b[0K\x1b[;H\n",
+                totalPRs, totalPEs, totalPUs);
          maxObjectLabelSize = 0;
          currentPRs         = 0;
          currentPEs         = 0;
