@@ -102,7 +102,7 @@ void getComponentLocation(char*        componentLocation,
             if(getScope((const struct sockaddr*)&addressArray[i]) >= minScope) {
                if(address2string((const struct sockaddr*)&addressArray[i],
                                  (char*)&str, sizeof(str),
-                                 (i == 0) ? true : false)) {
+                                 ((copiedAddresses == 0) && (sd >= 0)) ? true : false)) {
                   if(componentLocation[0] != 0x00) {
                      safestrcat(componentLocation,
                                 (copiedAddresses > 0) ? ", " : ": ", CSPR_LOCATION_SIZE);
