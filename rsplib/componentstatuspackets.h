@@ -48,6 +48,8 @@ struct ComponentStatusCommonHeader
    uint64_t SenderTimeStamp;
 } __attribute__((packed));
 
+#define CSPF_FINAL         (1 << 0)
+
 
 #define CSPR_LOCATION_SIZE 128
 #define CSPR_STATUS_SIZE   128

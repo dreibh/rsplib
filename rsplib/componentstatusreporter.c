@@ -46,6 +46,7 @@ extern struct Dispatcher gDispatcher;
 static void cspReporterCallback(struct Dispatcher* dispatcher,
                                 struct Timer*      timer,
                                 void*              userData);
+static void sendCSPReport(struct CSPReporter* cspReporter, const bool final);
 
 
 /* ###### Create new ComponentAssociation array ########################## */
@@ -167,6 +168,7 @@ void cspReporterNew(struct CSPReporter*    cspReporter,
 void cspReporterDelete(struct CSPReporter* cspReporter)
 {
    timerDelete(&cspReporter->CSPReportTimer);
+   sendCSPReport(cspReporter, true);
    cspReporter->StateMachine                 = NULL;
    cspReporter->CSPGetReportFunction         = NULL;
    cspReporter->CSPGetReportFunctionUserData = NULL;
@@ -181,7 +183,8 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
                                    const char*                        componentLocation,
                                    const double                       workload,
                                    const struct ComponentAssociation* associationArray,
-                                   const size_t                       associations)
+                                   const size_t                       associations,
+                                   const uint8_t                      flags)
 {
    static unsigned long long     startupTime = 0;;
    struct ComponentStatusReport* cspReport;
@@ -198,7 +201,7 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
          startupTime = getMicroTime();
       }
       cspReport->Header.Type            = CSPT_REPORT;
-      cspReport->Header.Flags           = 0;
+      cspReport->Header.Flags           = flags;
       cspReport->Header.Version         = htonl(CSP_VERSION);
       cspReport->Header.Length          = htonl(length);
       cspReport->Header.SenderID        = hton64(senderID);
@@ -234,12 +237,12 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
 
 
 /* ###### Report status ################################################## */
-static void sendCSPReport(struct CSPReporter* cspReporter)
+static void sendCSPReport(struct CSPReporter* cspReporter, const bool final)
 {
-   struct ComponentAssociation* caeArray = NULL;
    char                         statusText[CSPR_STATUS_SIZE];
    char                         componentLocation[CSPR_LOCATION_SIZE];
-   size_t                       caeArraySize;
+   struct ComponentAssociation* caeArray     = NULL;
+   size_t                       caeArraySize = 0;
    double                       workload;
 
    LOG_VERBOSE4
@@ -247,12 +250,14 @@ static void sendCSPReport(struct CSPReporter* cspReporter)
    LOG_END
 
    statusText[0] = 0x00;
-   caeArraySize = cspReporter->CSPGetReportFunction(cspReporter->CSPGetReportFunctionUserData,
-                                                    &cspReporter->CSPIdentifier,
-                                                    &caeArray,
-                                                    (char*)&statusText,
-                                                    (char*)&componentLocation,
-                                                    &workload);
+   if(final == false) {
+      caeArraySize = cspReporter->CSPGetReportFunction(cspReporter->CSPGetReportFunctionUserData,
+                                                       &cspReporter->CSPIdentifier,
+                                                       &caeArray,
+                                                       (char*)&statusText,
+                                                       (char*)&componentLocation,
+                                                       &workload);
+   }
    if(CID_OBJECT(cspReporter->CSPIdentifier) != 0ULL) {
       componentStatusSend(&cspReporter->CSPReportAddress,
                           cspReporter->CSPReportInterval,
@@ -260,7 +265,8 @@ static void sendCSPReport(struct CSPReporter* cspReporter)
                           (cspReporter->StatusTextOverride != NULL) ? cspReporter->StatusTextOverride : statusText,
                           componentLocation,
                           workload,
-                          caeArray, caeArraySize);
+                          caeArray, caeArraySize,
+                          (final == true) ? CSPF_FINAL : 0x00);
    }
    if(caeArray) {
       deleteComponentAssociationArray(caeArray);
@@ -279,7 +285,7 @@ static void cspReporterCallback(struct Dispatcher* dispatcher,
 {
    struct CSPReporter* cspReporter = (struct CSPReporter*)userData;
 
-   sendCSPReport(cspReporter);
+   sendCSPReport(cspReporter, false);
    timerStart(&cspReporter->CSPReportTimer,
            getMicroTime() + cspReporter->CSPReportInterval);
 }
