@@ -469,30 +469,35 @@ static void handleMessage(int                        sd,
                   simpleRedBlackTreeVerify(objectDisplay);
                }
 
-               cspObject->LastReportTimeStamp = getMicroTime();
-               cspObject->SenderTimeStamp     = cspReport->Header.SenderTimeStamp;
-               cspObject->ReportInterval      = cspReport->ReportInterval;
-               cspObject->Workload            = CSR_GET_WORKLOAD(cspReport->Workload);
-               getDescriptionForID(cspObject->Identifier,
-                                   (char*)&cspObject->Description,
-                                   sizeof(cspObject->Description));
-               memcpy(&cspObject->Status,
-                      &cspReport->Status,
-                      sizeof(cspObject->Status));
-               cspObject->Status[sizeof(cspObject->Status) - 1] = 0x00;
-               memcpy(&cspObject->Location,
-                      &cspReport->Location,
-                      sizeof(cspObject->Location));
-
-               /* DisplayNode MUST be re-inserted, since the location may change and
-                  the location is part of the sorting key! */
-               /*
-               for(int i=0;i < 6;i++) {
-                 cspObject->Location[i] = 'A' + (random() % 26);
+               if(cspReport->Header.Flags != 0x00) {
+                  cspObject->LastReportTimeStamp = 0;
                }
-               */
+               else {
+                  cspObject->LastReportTimeStamp = getMicroTime();
+                  cspObject->SenderTimeStamp     = cspReport->Header.SenderTimeStamp;
+                  cspObject->ReportInterval      = cspReport->ReportInterval;
+                  cspObject->Workload            = CSR_GET_WORKLOAD(cspReport->Workload);
+                  getDescriptionForID(cspObject->Identifier,
+                                      (char*)&cspObject->Description,
+                                      sizeof(cspObject->Description));
+                  memcpy(&cspObject->Status,
+                         &cspReport->Status,
+                         sizeof(cspObject->Status));
+                  cspObject->Status[sizeof(cspObject->Status) - 1] = 0x00;
+                  memcpy(&cspObject->Location,
+                         &cspReport->Location,
+                         sizeof(cspObject->Location));
 
-               cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
+                  /* DisplayNode MUST be re-inserted, since the location may change and
+                     the location is part of the sorting key! */
+                  /*
+                  for(int i=0;i < 6;i++) {
+                    cspObject->Location[i] = 'A' + (random() % 26);
+                  }
+                  */
+
+                  cspObject->Location[sizeof(cspObject->Location) - 1] = 0x00;
+               }
                if(cspObject->AssociationArray) {
                   deleteComponentAssociationArray(cspObject->AssociationArray);
                }
