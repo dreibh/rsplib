@@ -48,7 +48,7 @@ SERVICE_DIRECTORY="bin"
 
 # ====== PlanetLab PR and PE lists ==========================================
 PRsPerRegion=3
-PR_LIST=`head -n$PRsPerRegion pr-europe.ip ; head -n$PRsPerRegion pr-america.ip`
+PR_LIST=`cat pr-europe.hosts | grep "\.de$" | head -n$PRsPerRegion ; cat pr-america.hosts | grep "\.edu$" | head -n$PRsPerRegion`
 PE_LIST=`cat alive-planetlab.ip`
 
 # ====== Small Test ======
