@@ -1,4 +1,4 @@
-rsplib (2.7.12~beta2-1ubuntu1) oneiric; urgency=low
+rsplib (2.7.12~rc1-1ubuntu1) oneiric; urgency=low
 
   * New upstream release.
   * Closes Debian ITP bug with wnpp (Closes: #516750).
