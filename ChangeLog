@@ -1,4 +1,198 @@
 ------------------------------------------------------------------------
+r2580 | dreibh | 2011-08-25 16:59:05 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
+
+Scenario improvement.
+
+------------------------------------------------------------------------
+r2579 | dreibh | 2011-08-25 16:58:47 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Output fix.
+
+------------------------------------------------------------------------
+r2578 | dreibh | 2011-08-25 16:16:22 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2577 | dreibh | 2011-08-25 16:05:02 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Changed default look of cspmonitor to more useful settings.
+
+------------------------------------------------------------------------
+r2576 | dreibh | 2011-08-25 15:54:40 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/acinclude.m4
+
+Improved Qt library path detection.
+
+------------------------------------------------------------------------
+r2575 | dreibh | 2011-08-16 13:09:45 +0200 (Tue, 16 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Support for CSPF_FINAL flag in cspmonitor.
+
+------------------------------------------------------------------------
+r2574 | dreibh | 2011-08-16 12:48:46 +0200 (Tue, 16 Aug 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatuspackets.h
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+
+Send final CSP Report when component shuts down. Added flag CSPF_FINAL.
+
+
+------------------------------------------------------------------------
+r2573 | dreibh | 2011-08-16 12:38:09 +0200 (Tue, 16 Aug 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+
+Small output improvement.
+
+
+------------------------------------------------------------------------
+r2572 | dreibh | 2011-08-10 10:28:41 +0200 (Wed, 10 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Some further output improvements to make status in CSPMonitor easier readable.
+
+------------------------------------------------------------------------
+r2571 | dreibh | 2011-08-10 10:06:07 +0200 (Wed, 10 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Added missing "struct" to compile with ANSI-C.
+
+------------------------------------------------------------------------
+r2570 | dreibh | 2011-08-09 19:22:25 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2568 | dreibh | 2011-08-09 17:43:34 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Removed newlines at the wrong place.
+
+------------------------------------------------------------------------
+r2567 | dreibh | 2011-08-09 17:39:53 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+And another CSPMonitor output improvement.
+
+------------------------------------------------------------------------
+r2566 | dreibh | 2011-08-09 17:09:42 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Added missing newlines.
+
+------------------------------------------------------------------------
+r2565 | dreibh | 2011-08-09 17:07:18 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Another small output improvement for CSPMonitor.
+
+------------------------------------------------------------------------
+r2564 | dreibh | 2011-08-09 16:35:14 +0200 (Tue, 09 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.8
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Added some output options to CSPMonitor.
+
+------------------------------------------------------------------------
+r2562 | dreibh | 2011-07-23 23:47:27 +0200 (Sat, 23 Jul 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Call sendshutdown() on rsp_close(), in order to ensure that socket is cleanly shut down.
+
+------------------------------------------------------------------------
+r2561 | dreibh | 2011-07-23 23:46:36 +0200 (Sat, 23 Jul 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Do not print error message when poll has been interrupted by signal (EINTR).
+
+------------------------------------------------------------------------
+r2560 | dreibh | 2011-07-18 15:21:59 +0200 (Mon, 18 Jul 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Improved handling of output interval.
+
+------------------------------------------------------------------------
+r2559 | dreibh | 2011-07-03 12:05:23 +0200 (Sun, 03 Jul 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+A small output improvement for cspmonitor.
+
+------------------------------------------------------------------------
+r2558 | dreibh | 2011-06-27 13:56:47 +0200 (Mon, 27 Jun 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Bugfix in cspmonitor:
+Location is part of the sorting key for the display storage => node must be re-inserted on every change. Otherwise, the tree may become invalid => endless loop.
+
+------------------------------------------------------------------------
+r2557 | dreibh | 2011-06-01 10:24:50 +0200 (Wed, 01 Jun 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
+r2556 | dreibh | 2011-06-01 08:02:36 +0200 (Wed, 01 Jun 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Updated config.
+
+------------------------------------------------------------------------
+r2554 | dreibh | 2011-05-27 16:15:16 +0200 (Fri, 27 May 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Output is now sorted by location string => much better overview of large pool.
+
+------------------------------------------------------------------------
+r2553 | dreibh | 2011-05-27 15:47:10 +0200 (Fri, 27 May 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+
+Output improvement.
+
+------------------------------------------------------------------------
+r2552 | dreibh | 2011-05-06 20:05:34 +0200 (Fri, 06 May 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+   M /trunk/rsplib2/rsplib.lsm
+
+Version update.
+
+------------------------------------------------------------------------
 r2550 | dreibh | 2011-05-05 17:17:48 +0200 (Thu, 05 May 2011) | 2 lines
 Changed paths:
    A /trunk/rsplib2/rsplib/povray/landscape.pov
