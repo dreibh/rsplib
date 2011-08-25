@@ -290,14 +290,13 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
            workloadString,
            cspObject->Status);
    if(!useCompactMode) {
-      fputs("\n", fd);
       for(i = 0;i < cspObject->Associations;i++) {
          getDescriptionForID(cspObject->AssociationArray[i].ReceiverID,
                              (char*)&idString, sizeof(idString));
          getDescriptionForProtocol(cspObject->AssociationArray[i].ProtocolID,
                                    cspObject->AssociationArray[i].PPID,
                                    (char*)&protocolString, sizeof(protocolString));
-         fprintf(fd, "   -> %s %s", idString, protocolString);
+         fprintf(fd, "\n   -> %s %s", idString, protocolString);
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
             h = (unsigned int)(cspObject->AssociationArray[i].Duration / (3600ULL * 1000000ULL));
             m = (unsigned int)((cspObject->AssociationArray[i].Duration / (60ULL * 1000000ULL)) % 60);
