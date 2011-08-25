@@ -143,7 +143,7 @@ struct CSPObject
 };
 
 
-static bool         useCompactMode         = false;
+static bool         useCompactMode         = true;
 static size_t       currentObjectLabelSize = 0;
 static unsigned int totalPRs               = 0;
 static unsigned int totalPEs               = 0;
@@ -151,10 +151,10 @@ static unsigned int totalPUs               = 0;
 static unsigned int currentPRs             = 0;
 static unsigned int currentPEs             = 0;
 static unsigned int currentPUs             = 0;
-static unsigned int maxPRs                 = ~0;
-static unsigned int maxPEs                 = ~0;
-static unsigned int maxPUs                 = ~0;
-static unsigned int maxLocationSize        = ~0;
+static unsigned int maxPRs                 = 6;
+static unsigned int maxPEs                 = 42;
+static unsigned int maxPUs                 = 24;
+static unsigned int maxLocationSize        = 72;
 static size_t       maxObjectLabelSize     = 0;
 
 
