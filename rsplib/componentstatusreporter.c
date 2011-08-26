@@ -121,7 +121,7 @@ void getComponentLocation(char*        componentLocation,
                   if(strncmp(str, "::ffff:", 7) == 0) {
                      safestrcat(componentLocation, (const char*)&str[7], CSPR_LOCATION_SIZE);
                   }
-                  if(strncmp(str, "[::ffff:", 8) == 0) {
+                  else if(strncmp(str, "[::ffff:", 8) == 0) {
                      s = index(str, ']');
                      while(*s != 0x00) {
                         *s = s[1];
