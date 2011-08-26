@@ -80,6 +80,7 @@ void getComponentLocation(char*        componentLocation,
    int                   copiedAddresses;
    int                   i, j;
    unsigned int          minScope;
+   char*                 s;
 
    componentLocation[0] = 0x00;
 
@@ -94,10 +95,10 @@ void getComponentLocation(char*        componentLocation,
       addresses = getladdrsplus(sd, assocID, &addressArray);
    }
    if( (sd < 1) ||
-       ( (addresses == 1) && ( (addressArray[0].sa.sa_family == AF_INET) &&
-                               (addressArray[0].in.sin_addr.s_addr == INADDR_ANY) ) ||
-                             ( (addressArray[0].sa.sa_family == AF_INET6) && 
-                               (IN6_IS_ADDR_UNSPECIFIED(&(addressArray[0].in6.sin6_addr))) ) ) ) {
+       ( (addresses == 1) && ( ((addressArray[0].sa.sa_family == AF_INET) &&
+                                (addressArray[0].in.sin_addr.s_addr == INADDR_ANY)) ||
+                               ((addressArray[0].sa.sa_family == AF_INET6) &&
+                                (IN6_IS_ADDR_UNSPECIFIED(&(addressArray[0].in6.sin6_addr)))) ) ) ) {
       if(addresses > 0) {
          free(addressArray);
       }
@@ -119,6 +120,14 @@ void getComponentLocation(char*        componentLocation,
                   }
                   if(strncmp(str, "::ffff:", 7) == 0) {
                      safestrcat(componentLocation, (const char*)&str[7], CSPR_LOCATION_SIZE);
+                  }
+                  if(strncmp(str, "[::ffff:", 8) == 0) {
+                     s = index(str, ']');
+                     while(*s != 0x00) {
+                        *s = s[1];
+                        s++;
+                     }
+                     safestrcat(componentLocation, (const char*)&str[8], CSPR_LOCATION_SIZE);
                   }
                   else {
                      safestrcat(componentLocation, str, CSPR_LOCATION_SIZE);
@@ -266,6 +275,11 @@ static void sendCSPReport(struct CSPReporter* cspReporter, const bool final)
                                                        (char*)&statusText,
                                                        (char*)&componentLocation,
                                                        &workload);
+   }
+   else {
+      statusText[0]        = 0x00;
+      componentLocation[0] = 0x00;
+      workload             = 0.0;
    }
    if(CID_OBJECT(cspReporter->CSPIdentifier) != 0ULL) {
       componentStatusSend(&cspReporter->CSPReportAddress,
