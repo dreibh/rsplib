@@ -89,16 +89,25 @@ void getComponentLocation(char*        componentLocation,
    }
 
    /* ====== Get address(es) ============================================= */
+   addresses = 0;
    if(sd >= 0) {
       addresses = getladdrsplus(sd, assocID, &addressArray);
    }
-   else {
+   if( (sd < 1) ||
+       ( (addresses == 1) && ( (addressArray[0].sa.sa_family == AF_INET) &&
+                               (addressArray[0].in.sin_addr.s_addr == INADDR_ANY) ) ||
+                             ( (addressArray[0].sa.sa_family == AF_INET6) && 
+                               (IN6_IS_ADDR_UNSPECIFIED(&(addressArray[0].in6.sin6_addr))) ) ) ) {
+      if(addresses > 0) {
+         free(addressArray);
+      }
       addresses = gatherLocalAddresses(&addressArray);
    }
+   
    if(addresses > 0) {
       copiedAddresses = 0;
       minScope        = AS_UNICAST_GLOBAL;
-      for(j = 0; j < 1; j++) {
+      for(j = 0; j <= 1; j++) {
          for(i = 0;i < addresses;i++) {
             if(getScope((const struct sockaddr*)&addressArray[i]) >= minScope) {
                if(address2string((const struct sockaddr*)&addressArray[i],

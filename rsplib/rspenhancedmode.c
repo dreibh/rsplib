@@ -1715,6 +1715,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
    struct RSerPoolSocket* rserpoolSocket;
    struct Session*        session;
    size_t                 sessions;
+   bool                   gotLocation;
 
    LOG_VERBOSE3
    fputs("Getting Component Status...\n", stdlog);
@@ -1746,7 +1747,7 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
          (*caeArray)[caeArraySize].PPID       = PPID_ASAP;
          caeArraySize++;
       }
-      getComponentLocation(componentLocation, -1, 0);
+      gotLocation = false;
 
       rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetFirst(&gRSerPoolSocketSet);
       while(rserpoolSocket != NULL) {
@@ -1777,8 +1778,16 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
             if(PPT_IS_ADAPTIVE(rserpoolSocket->PoolElement->LoadInfo.rli_policy)) {
                *workload = rserpoolSocket->PoolElement->LoadInfo.rli_load / (double)PPV_MAX_LOAD;
             }
+            if(gotLocation == false) {
+               getComponentLocation(componentLocation, rserpoolSocket->Socket, 0);
+               gotLocation = true;
+            }
          }
          rserpoolSocket = (struct RSerPoolSocket*)simpleRedBlackTreeGetNext(&gRSerPoolSocketSet, &rserpoolSocket->Node);
+      }
+
+      if(gotLocation == false) {
+         getComponentLocation(componentLocation, -1, 0);
       }
 
       if((statusText[0] == 0x00) || (sessions != 1)) {
