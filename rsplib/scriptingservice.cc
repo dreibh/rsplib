@@ -179,7 +179,7 @@ EventHandlingResult ScriptingServer::initializeSession()
    else {
       safestrcpy((char*)&Directory, tempDirectory, sizeof(Directory));
    }
-   safestrcat((char*)&Directory, "/rspSS-XXXXXX", sizeof(Directory));
+   safestrcat((char*)&Directory, "/rspSS-Session-XXXXXX", sizeof(Directory));
    if(mkdtemp((char*)&Directory) == NULL) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Unable to generate temporary directory!\n",

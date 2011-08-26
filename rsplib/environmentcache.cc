@@ -73,8 +73,15 @@ bool EnvironmentCache::initializeCache(const char*              directory,
 
    // ====== Create temporary cache =========================================
    if(CacheDirectory == "") {
-      char tempName[128];
-      safestrcpy((char*)&tempName, "/tmp/rspSS-XXXXXX", sizeof(tempName));
+      char        tempName[256];
+      const char* tempDirectory = getenv("TMPDIR");
+      if(tempDirectory == NULL) {
+         safestrcpy((char*)&tempName, "/tmp", sizeof(tempName));
+      }
+      else {
+         safestrcpy((char*)&tempName, tempDirectory, sizeof(tempName));
+      }
+      safestrcat((char*)&tempName, "/rspSS-EnvironmentCache-XXXXXX", sizeof(tempName));
       if(mkdtemp((char*)&tempName) == NULL) {
          return(false);
       }
