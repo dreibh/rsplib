@@ -265,9 +265,11 @@ static void handleNotReadyMessage(const int              sd,
    else {
       InfoString[0] = 0x00;
    }
-   newLogLine(stdout);
-   printf("Server %s is not ready yet => trying another one.\n", InfoString);
-   fflush(stdout);
+   if(!Quiet) {
+      newLogLine(stdout);
+      printf("Server %s is not ready yet => trying another one.\n", InfoString);
+      fflush(stdout);
+   }
 }
 
 
