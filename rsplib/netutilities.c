@@ -2171,18 +2171,22 @@ bool tuneSCTP(const int                  sockfd,
    rtoinfo.srto_assoc_id = assocID;
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, &size) < 0) {
       LOG_WARNING
-      logerror("getsockopt SCTP_RTOINFO failed -> skipping RTO configuration");
+      logerror("getsockopt SCTP_RTOINFO failed -> skipping assoc configuration");
       LOG_END
       return(false);
    }
    size = (socklen_t)sizeof(peerParams);
    peerParams.spp_assoc_id = assocID;
    memset(&peerParams.spp_address, 0, sizeof(peerParams.spp_address));   // ANY address
+   peerParams.spp_address.ss_family = AF_INET6;
    if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerParams, &size) < 0) {
-      LOG_WARNING
-      logerror("getsockopt SCTP_PEER_ADDR_PARAMS failed -> skipping path configuration");
-      LOG_END
-      return(false);
+      peerParams.spp_address.ss_family = AF_INET;
+      if(ext_getsockopt(sockfd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerParams, &size) < 0) {
+         LOG_WARNING
+         logerror("getsockopt SCTP_PEER_ADDR_PARAMS failed -> skipping assoc configuration");
+         LOG_END
+         return(false);
+      }
    }
    size = (socklen_t)sizeof(assocParams);
    assocParams.sasoc_assoc_id = assocID;
@@ -2230,15 +2234,12 @@ bool tuneSCTP(const int                  sockfd,
       LOG_END
       result = false;
    }
-
    if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_RTOINFO, &rtoinfo, (socklen_t)sizeof(rtoinfo)) < 0) {
       LOG_WARNING
       logerror("setsockopt SCTP_RTOINFO failed");
       LOG_END
       result = false;
    }
-   peerParams.spp_assoc_id = assocID;
-   memset(&peerParams.spp_address, 0, sizeof(peerParams.spp_address));   // ANY address
    if(ext_setsockopt(sockfd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerParams, sizeof(peerParams)) < 0) {
       LOG_WARNING
       logerror("setsockopt SCTP_PEER_ADDR_PARAMS failed");
