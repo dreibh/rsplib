@@ -136,12 +136,11 @@ void DaytimeServer::handleNotification(const union rserpool_notification* notifi
                (unsigned int)(microTime % 1000000));
       safestrcat((char*)&daytime, microseconds, sizeof(daytime));
 
-      ssize_t sent;
-      sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                         (char*)&daytime, strlen(daytime), 0,
-                         notification->rn_session_change.rsc_session,
-                         0x00000000, 0,
-                         0, 0, 0);
+      rsp_sendmsg(RSerPoolSocketDescriptor,
+                  (char*)&daytime, strlen(daytime), 0,
+                  notification->rn_session_change.rsc_session,
+                  0x00000000, 0,
+                  0, 0, 0);
 #ifdef SOLARIS
       rsp_sendmsg(RSerPoolSocketDescriptor,
                   NULL, 0,

@@ -992,7 +992,6 @@ static void asapInstanceHandleEndpointKeepAlive(
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
    struct ST_CLASS(PoolNode)*        poolNode;
-   unsigned int                      result;
    int                               sd;
 
    LOG_VERBOSE2
@@ -1066,10 +1065,10 @@ static void asapInstanceHandleEndpointKeepAlive(
          LOG_VERBOSE2
          fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
          LOG_END
-         result = rserpoolMessageSend(IPPROTO_SCTP,
-                                    asapInstance->RegistrarSocket,
-                                    0, 0, 0, 0,
-                                    message);
+         rserpoolMessageSend(IPPROTO_SCTP,
+                             asapInstance->RegistrarSocket,
+                             0, 0, 0, 0,
+                             message);
       }
       else {
          LOG_WARNING
@@ -1090,10 +1089,10 @@ static void asapInstanceHandleEndpointKeepAlive(
             LOG_VERBOSE2
             fprintf(stdlog, "Sending KeepAliveAck for pool element $%08x\n",message->Identifier);
             LOG_END
-            result = rserpoolMessageSend(IPPROTO_SCTP,
-                                         asapInstance->RegistrarSocket,
-                                         0, 0, 0, 0,
-                                         message);
+            rserpoolMessageSend(IPPROTO_SCTP,
+                                asapInstance->RegistrarSocket,
+                                0, 0, 0, 0,
+                                message);
 
             poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromIndex)(poolNode, poolElementNode);
          }
