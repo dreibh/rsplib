@@ -172,7 +172,14 @@ void ScriptingServer::rejectNewSession(int sd)
 EventHandlingResult ScriptingServer::initializeSession()
 {
    // ====== Create directory and get file names ============================
-   safestrcpy((char*)&Directory, "/tmp/rspSS-XXXXXX", sizeof(Directory));
+   const char* tempDirectory = getenv("TMPDIR");
+   if(tempDirectory == NULL) {
+      safestrcpy((char*)&Directory, "/tmp", sizeof(Directory));
+   }
+   else {
+      safestrcpy((char*)&Directory, tempDirectory, sizeof(Directory));
+   }
+   safestrcat((char*)&Directory, "/rspSS-XXXXXX", sizeof(Directory));
    if(mkdtemp((char*)&Directory) == NULL) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Unable to generate temporary directory!\n",
