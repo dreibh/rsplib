@@ -34,7 +34,7 @@
 #include "netdouble.h"
 
 
-#define PPID_FGP 0x29097601
+#define PPID_FGP         32   /* old value: 0x29097601 */
 
 #define FGPT_PARAMETER 0x01
 #define FGPT_DATA      0x02

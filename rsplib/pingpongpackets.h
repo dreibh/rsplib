@@ -33,7 +33,7 @@
 #include "tdtypes.h"
 
 
-#define PPID_PPP 0x29097602
+#define PPID_PPP    33   /* old value: 0x29097602 */
 
 #define PPPT_PING 0x01
 #define PPPT_PONG 0x02

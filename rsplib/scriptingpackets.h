@@ -33,7 +33,7 @@
 #include "tdtypes.h"
 
 
-#define PPID_SP          0x29097604
+#define PPID_SP                  35 /* old value: 0x29097604 */
 
 #define SPT_NOTREADY           0x00
 #define SPT_READY              0x01

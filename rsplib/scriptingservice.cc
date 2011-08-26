@@ -176,11 +176,11 @@ EventHandlingResult ScriptingServer::initializeSession()
    if(mkdtemp((char*)&Directory) == NULL) {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Unable to generate temporary directory!\n",
-            RSerPoolSocketDescriptor);
+              RSerPoolSocketDescriptor);
       return(EHR_Abort);
    }
-   snprintf((char*)&EnvironmentName,  sizeof(EnvironmentName), "%s/%s",  Directory, ENVIRONMENT_NAME);
-   snprintf((char*)&InputName,  sizeof(InputName), "%s/%s",  Directory, INPUT_NAME);
+   snprintf((char*)&EnvironmentName, sizeof(EnvironmentName), "%s/%s", Directory, ENVIRONMENT_NAME);
+   snprintf((char*)&InputName,  sizeof(InputName),  "%s/%s", Directory, INPUT_NAME);
    snprintf((char*)&OutputName, sizeof(OutputName), "%s/%s", Directory, OUTPUT_NAME);
    snprintf((char*)&StatusName, sizeof(StatusName), "%s/%s", Directory, STATUS_NAME);
 

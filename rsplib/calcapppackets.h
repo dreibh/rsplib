@@ -33,7 +33,7 @@
 #include "netdouble.h"
 
 
-#define PPID_CALCAPP 0x29097603
+#define PPID_CALCAPP         34   /* old value: 0x29097603 */
 
 #define CALCAPP_REQUEST       1
 #define CALCAPP_ACCEPT        2
