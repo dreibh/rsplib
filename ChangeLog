@@ -1,4 +1,104 @@
 ------------------------------------------------------------------------
+r2592 | dreibh | 2011-08-26 14:33:29 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Do not pring server selection trials in quiet mode.
+
+------------------------------------------------------------------------
+r2591 | dreibh | 2011-08-26 14:30:28 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+
+Fix for location string generation.
+
+------------------------------------------------------------------------
+r2590 | dreibh | 2011-08-26 14:11:53 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+
+CSP status improvement.
+
+------------------------------------------------------------------------
+r2589 | dreibh | 2011-08-26 13:21:10 +0200 (Fri, 26 Aug 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+tuneSCTP(): FreeBSD requires address family setting for SCTP_PEER_ADDR_PARAMS. Trying AF_INET6 first, then AF_INET.
+
+
+------------------------------------------------------------------------
+r2588 | dreibh | 2011-08-26 12:25:22 +0200 (Fri, 26 Aug 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+
+Some improvements for generating CSP location string.
+
+
+------------------------------------------------------------------------
+r2587 | dreibh | 2011-08-26 09:59:38 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/standardservices.cc
+
+Removed unused variables -> got rid of compiler warnings.
+
+------------------------------------------------------------------------
+r2586 | dreibh | 2011-08-26 09:50:11 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian.conf
+   A /trunk/rsplib2/filter-empty-entries
+   M /trunk/rsplib2/make-deb
+
+Improved build scripts.
+
+------------------------------------------------------------------------
+r2585 | dreibh | 2011-08-26 09:50:04 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/environmentcache.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Also using TMPDIR to configure storage place for temporary environment files.
+
+------------------------------------------------------------------------
+r2584 | dreibh | 2011-08-26 09:42:21 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Scripting Service PE: use TMPDIR environment variable to configure temporary directory storage place.
+
+------------------------------------------------------------------------
+r2583 | dreibh | 2011-08-26 08:56:16 +0200 (Fri, 26 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/calcapppackets.h
+   M /trunk/rsplib2/rsplib/fractalgeneratorpackets.h
+   M /trunk/rsplib2/rsplib/pingpongpackets.h
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Changed PPIDs to IANA-assigned ones.
+
+------------------------------------------------------------------------
+r2582 | dreibh | 2011-08-25 17:12:27 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated packaging files.
+
+------------------------------------------------------------------------
+r2581 | dreibh | 2011-08-25 17:06:14 +0200 (Thu, 25 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+
+Version update.
+
+------------------------------------------------------------------------
 r2580 | dreibh | 2011-08-25 16:59:05 +0200 (Thu, 25 Aug 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
