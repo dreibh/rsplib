@@ -1,10 +1,11 @@
-rsplib (2.7.12-1ubuntu1) oneiric; urgency=high
+rsplib (2.7.12-4ubuntu1) precise; urgency=high
 
   * New upstream release.
+  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
   * Bugfix for configure script (LP: #831109).
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 27 Aug 2011 12:12:12 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 20 Oct 2011 17:17:17 +0200
 
 rsplib (2.7.11-1ubuntu1) oneiric; urgency=low
 

@@ -6,7 +6,7 @@
 # read pbuilderrc.5 document for notes on specific options.
 
 MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
-DISTRIBUTION=oneiric
+DISTRIBUTION=precise
 COMPONENTS="main universe"
 
 # OTHERMIRROR="deb http://de.archive.ubuntu.com/ubuntu/ main restricted universe multiverse"
