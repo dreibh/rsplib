@@ -477,7 +477,6 @@ void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
                                  size_t                 bufferSize)
 {
    struct RSerPoolMessage* message;
-   unsigned int            type = 0;
    unsigned int            result;
 
    struct Session* session = findSession(rserpoolSocket, 0, assocID);
@@ -491,7 +490,6 @@ void handleControlChannelMessage(struct RSerPoolSocket* rserpoolSocket,
       result = rserpoolPacket2Message(buffer, NULL, 0, PPID_ASAP, bufferSize, bufferSize, &message);
       if(message != NULL) {
          if(result == RSPERR_OKAY) {
-            type = message->Type;
             switch(message->Type) {
                case AHT_COOKIE:
                   LOG_VERBOSE
