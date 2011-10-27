@@ -255,7 +255,7 @@ static void handleNotReadyMessage(const int              sd,
       /* ====== Get info string ========================================== */
       size_t i;
       for(i = 0;i < (length - sizeof(struct NotReady));i++) {
-         if(i == SR_MAX_INFOSIZE) {
+         if(i == sizeof(notReady->Info)) {
             break;
          }
          InfoString[i] = isprint(notReady->Info[i]) ? notReady->Info[i] : '.';
@@ -288,7 +288,7 @@ static unsigned int handleReadyMessage(const int           sd,
    /* ====== Get info string ============================================= */
    size_t i;
    for(i = 0;i < (length - sizeof(struct Ready));i++) {
-      if(i == SR_MAX_INFOSIZE) {
+      if(i == sizeof(ready->Info)) {
          break;
       }
       InfoString[i] = isprint(ready->Info[i]) ? ready->Info[i] : '.';

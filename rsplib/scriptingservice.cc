@@ -147,17 +147,17 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
 // ###### Reject new session when server is fully loaded ####################
 void ScriptingServer::rejectNewSession(int sd)
 {
-   char           buffer[sizeof(NotReady) + SR_MAX_INFOSIZE];
+   char           buffer[sizeof(NotReady)];
    struct utsname systemInfo;
 
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
    }
-
+   
    NotReady* notReady = (NotReady*)&buffer;
-   memset((char*)&notReady->Info, 0x00, SR_MAX_INFOSIZE);
-   snprintf((char*)&notReady->Info, SR_MAX_INFOSIZE, "%s", systemInfo.nodename);
-   const ssize_t notReadyLength = sizeof(NotReady) + strlen(notReady->Info);
+   memset((char*)&notReady->Info, 0x00, sizeof(notReady->Info));
+   snprintf((char*)&notReady->Info, sizeof(notReady->Info), "%s", systemInfo.nodename);
+   const ssize_t notReadyLength = sizeof(NotReady) + strlen(notReady->Info) - SR_MAX_INFOSIZE;
    notReady->Header.Type   = SPT_NOTREADY;
    notReady->Header.Flags  = 0x00;
    notReady->Header.Length = htons(notReadyLength);
@@ -193,16 +193,16 @@ EventHandlingResult ScriptingServer::initializeSession()
 
 
    // ====== Send Ready message =============================================
-   char           buffer[sizeof(Ready) + SR_MAX_INFOSIZE];
+   char           buffer[sizeof(Ready)];
    struct utsname systemInfo;
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
    }
 
    Ready* ready = (Ready*)&buffer;
-   memset((char*)&ready->Info, 0x00, SR_MAX_INFOSIZE);
-   snprintf((char*)&ready->Info, SR_MAX_INFOSIZE, "%s", systemInfo.nodename);
-   const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info);
+   memset((char*)&ready->Info, 0x00, sizeof(ready->Info));
+   snprintf((char*)&ready->Info, sizeof(ready->Info), "%s", systemInfo.nodename);
+   const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info) - SR_MAX_INFOSIZE;
    ready->Header.Type   = SPT_READY;
    ready->Header.Flags  = 0x00;
    ready->Header.Length = htons(readyLength);

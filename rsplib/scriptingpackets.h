@@ -60,7 +60,7 @@ struct NotReady
 {
    struct ScriptingCommonHeader Header;
    uint32_t                     Reason;
-   char                         Info[];
+   char                         Info[SR_MAX_INFOSIZE];
 } __attribute__((packed));
 
 #define SSNR_FULLY_LOADED     0x00000001
@@ -69,7 +69,7 @@ struct NotReady
 struct Ready
 {
    struct ScriptingCommonHeader Header;
-   char                         Info[];
+   char                         Info[SR_MAX_INFOSIZE];
 } __attribute__((packed));
 
 struct Upload
