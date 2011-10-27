@@ -714,16 +714,13 @@ void TCPLikeServerList::remove(TCPLikeServer* thread)
 // ###### Get total load ####################################################
 double TCPLikeServerList::getTotalLoad()
 {
-   size_t             threads;
-   unsigned long long loadSum;
-
    lock();
-   threads = Threads;
-   loadSum = LoadSum;
+   const size_t             threads = Threads;
+   const unsigned long long loadSum = LoadSum;
    unlock();
 
    if(threads > 0) {
-      return(LoadSum / (double)PPV_MAX_LOAD);
+      return(loadSum / (double)PPV_MAX_LOAD);
    }
    return(0.0);
 }
