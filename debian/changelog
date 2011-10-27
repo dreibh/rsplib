@@ -1,9 +1,10 @@
 rsplib (2.7.13~rc1.0-1ubuntu1) precise; urgency=high
 
   * New upstream release.
-  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
+  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.  
   * Added debug package to control file.
   * Improved package descriptions in control file.
+  * Fixed dependencies in control file.
   * Bugfix for configure script (LP: #831109).
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
