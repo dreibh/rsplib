@@ -547,7 +547,7 @@ bool handleControlChannelAndNotifications(struct RSerPoolSocket* rserpoolSocket)
    int      flags;
 
    /* ====== Check, if message on socket is notification or ASAP ========= */
-   flags   = MSG_PEEK;   /* Only peek to check of data is of right type! */
+   flags   = MSG_PEEK;   /* Only peek to check if data is of right type! */
    result  = recvfromplus(rserpoolSocket->Socket, (char*)&buffer, sizeof(buffer),
                           &flags, NULL, NULL, &ppid, NULL, NULL, 0);
    if( (result > 0) &&
