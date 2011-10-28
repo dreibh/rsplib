@@ -251,11 +251,11 @@ static void handleNotReadyMessage(const int              sd,
                                   const struct NotReady* notReady,
                                   const size_t           length)
 {
-   if(length >= sizeof(struct NotReady)) {
+   if(length >= sizeof(struct NotReady) - SR_MAX_INFOSIZE) {
       /* ====== Get info string ========================================== */
       size_t i;
-      for(i = 0;i < (length - sizeof(struct NotReady));i++) {
-         if(i == sizeof(notReady->Info)) {
+      for(i = 0;i < length - (sizeof(struct NotReady) - SR_MAX_INFOSIZE);i++) {
+         if(i == SR_MAX_INFOSIZE) {
             break;
          }
          InfoString[i] = isprint(notReady->Info[i]) ? notReady->Info[i] : '.';
@@ -278,7 +278,7 @@ static unsigned int handleReadyMessage(const int           sd,
                                        const struct Ready* ready,
                                        const size_t        length)
 {
-   if(length < sizeof(struct Ready)) {
+   if(length < sizeof(struct Ready) - SR_MAX_INFOSIZE) {
       newLogLine(stdout);
       puts("Received invalid Ready message!");
       fflush(stdout);
@@ -287,8 +287,8 @@ static unsigned int handleReadyMessage(const int           sd,
 
    /* ====== Get info string ============================================= */
    size_t i;
-   for(i = 0;i < (length - sizeof(struct Ready));i++) {
-      if(i == sizeof(ready->Info)) {
+   for(i = 0;i < length - (sizeof(struct Ready) - SR_MAX_INFOSIZE);i++) {
+      if(i == SR_MAX_INFOSIZE) {
          break;
       }
       InfoString[i] = isprint(ready->Info[i]) ? ready->Info[i] : '.';
