@@ -1,12 +1,12 @@
 # New ports collection makefile for:	rsplib
-# Date created:		2010-08-08
+# Date created:		2011-11-18
 # Whom:			Thomas Dreibholz <dreibh@iem.uni-due.de>
 #
-# $FreeBSD: ports/net/rsplib/Makefile,v 1.1 2010/08/18 19:16:50 makc Exp $
+# $FreeBSD: ports/net/rsplib/Makefile,v 1.2 2011/03/03 17:09:45 sylvio Exp $
 #
 
 PORTNAME=	rsplib
-PORTVERSION=	2.7.10
+PORTVERSION=	2.7.13
 CATEGORIES=	net
 MASTER_SITES=	http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Downloads/
 
