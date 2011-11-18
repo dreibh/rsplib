@@ -1,4 +1,88 @@
 ------------------------------------------------------------------------
+r2602 | dreibh | 2011-10-28 18:38:31 +0200 (Fri, 28 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/wireshark/dfilters
+
+Updated filter rules example.
+
+------------------------------------------------------------------------
+r2601 | dreibh | 2011-10-28 15:31:42 +0200 (Fri, 28 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+
+Fixed info string handling problem introduced by yesterday's update.
+
+------------------------------------------------------------------------
+r2600 | dreibh | 2011-10-27 16:40:22 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+
+Packaging script updates.
+
+------------------------------------------------------------------------
+r2599 | dreibh | 2011-10-27 16:20:27 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/rules
+
+Added debug package to debian/control.
+
+------------------------------------------------------------------------
+r2598 | dreibh | 2011-10-27 16:19:15 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/sessioncontrol.c
+
+Fixed typo in comment.
+
+------------------------------------------------------------------------
+r2597 | dreibh | 2011-10-27 16:11:02 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/sessioncontrol.c
+
+Removed unused variable.
+
+------------------------------------------------------------------------
+r2596 | dreibh | 2011-10-27 16:08:44 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+
+Fixed thread synchronisation problem (not really critical).
+
+------------------------------------------------------------------------
+r2595 | dreibh | 2011-10-27 16:00:10 +0200 (Thu, 27 Oct 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+
+Fixed buffer size problem occurring with new versions of gcc.
+
+------------------------------------------------------------------------
+r2594 | dreibh | 2011-10-20 17:27:32 +0200 (Thu, 20 Oct 2011) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/make-ppa
+   M /trunk/rsplib2/pbuilderrc.ubuntu
+
+- Updated packaging scripts for Ubuntu 12.04 Precise Pangolin.
+- Fixed non-empty-dependency_libs-in-la-file lintian error.
+
+------------------------------------------------------------------------
+r2593 | dreibh | 2011-08-27 13:19:49 +0200 (Sat, 27 Aug 2011) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/configure.in
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/rsplib.lsm
+
+Version update.
+
+------------------------------------------------------------------------
 r2592 | dreibh | 2011-08-26 14:33:29 +0200 (Fri, 26 Aug 2011) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/scriptingclient.c
