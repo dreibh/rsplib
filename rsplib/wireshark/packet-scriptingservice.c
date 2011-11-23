@@ -3,7 +3,7 @@
  * of the rsplib RSerPool implementation
  * http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
  *
- * Copyright 2008-2010 by Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
+ * Copyright 2008-2012 by Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
  *
  * $Id$
  *

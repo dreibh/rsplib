@@ -1,4 +1,4 @@
-debian/tmp/usr/share/man/man8/server.8
-debian/tmp/usr/share/man/man8/terminal.8
-debian/tmp/usr/share/man/man8/cspmonitor.8
-debian/tmp/usr/share/man/man8/hsdump.8
+debian/tmp/usr/share/man/man1/server.1
+debian/tmp/usr/share/man/man1/terminal.1
+debian/tmp/usr/share/man/man1/cspmonitor.1
+debian/tmp/usr/share/man/man1/hsdump.1

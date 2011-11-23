@@ -2,7 +2,7 @@
  * Routines for the Component Status Protocol of the rsplib RSerPool implementation
  * http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
  *
- * Copyright 2006 by Thomas Dreibholz <dreibh [AT].iem.uni-due.de>
+ * Copyright 2012 by Thomas Dreibholz <dreibh [AT].iem.uni-due.de>
  *
  * $Id$
  *

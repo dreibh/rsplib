@@ -15,7 +15,7 @@
  *   - check message lengths
  *
  * Copyright 2004, 2005, 2006, 2007 Michael Tuexen <tuexen [AT] fh-muenster.de>
- * Copyright 2008 Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
+ * Copyright 2012 Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
  *
  * $Id: packet-asap.c 26646 2008-10-31 14:07:23Z stig $
  *

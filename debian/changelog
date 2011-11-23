@@ -1,3 +1,9 @@
+rsplib (2.7.14~beta1.0-0ubuntu1) precise; urgency=high
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 23 Nov 2011 07:07:07 +0200
+
 rsplib (2.7.13-0ubuntu1) precise; urgency=high
 
   * New upstream release.

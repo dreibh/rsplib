@@ -14,7 +14,7 @@
  *   - check message lengths
  *
  * Copyright 2004, 2005, 2006, 2007 Michael Tuexen <tuexen [AT] fh-muenster.de>
- * Copyright 2008 Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
+ * Copyright 2012 Thomas Dreibholz <dreibh [AT] iem.uni-due.de>
  *
  * $Id: packet-enrp.c 26647 2008-10-31 15:11:57Z stig $
  *
