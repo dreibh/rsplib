@@ -1,0 +1,92 @@
+.\" $Id$
+.\" --------------------------------------------------------------------------
+.\"
+.\"              //===//   //=====   //===//   //       //   //===//
+.\"             //    //  //        //    //  //       //   //    //
+.\"            //===//   //=====   //===//   //       //   //===<<
+.\"           //   \\         //  //        //       //   //    //
+.\"          //     \\  =====//  //        //=====  //   //===//    Version II
+.\"
+.\" ------------- An Efficient RSerPool Prototype Implementation -------------
+.\"
+.\" Copyright (C) 2002-2012 by Thomas Dreibholz
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" Contact: dreibh@iem.uni-due.de
+.\"
+.\" ###### Setup ############################################################
+.Dd November 23, 2011
+.Dt ScriptingServiceExample 1
+.Os Scripting Control
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm scriptingserviceexample
+.Nd Example client script for the Scripting Service
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm scriptingserviceexample
+.Op ID
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm scriptingserviceexample
+is a small shell script providing an example of how to use the scripting
+service PU and PE: it first creates a temporary directory with a name created
+from the given unique ID. In this directory, an input directory is created
+containing two files: an example input file "my-input.data" and a run
+script "ssrun" (the run script is written by echo commands within
+scriptingserviceexample). The input directory is archived by Tar/GZip and
+provided to scriptingclient as input file. scriptingclient distributes the
+input to a Scripting PE, which unpacks the archive and executes "ssrun".
+"ssrun" gets the name of an output archive as its first argument; this archive
+is created by the example script and contains an example output file
+"my-output.data". The output archive is transferred back to the PU. Finally,
+scriptingserviceexample dumps the content of "my-output.data".
+.br
+.Nm scriptingserviceexample
+can be taken as an example to do something more useful with the scripting
+service: for example, simulation input could be packaged with a script actually
+executing a simulation program on the input and archiving the results. Then,
+the scripting service can be used to distribute a set of simulation runs to a
+pool of processing nodes.
+.br
+Important note on security: the scripting service does not include any
+security features yet. That is, arbitrary scripts will be executed. Without
+modifications (for example signatures), do NOT use it outside of a controlled
+environment!
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options are available:
+.Bl -tag -width indent
+.It ID
+Gives an unique identifier for the example run, for example: 1234.
+.El
+.\" ###### See also #########################################################
+.Sh SEE ALSO
+For a detailed introduction to RSerPool, see:
+.br
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+.Pp
+Thomas Dreibholz's RSerPool Page:
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
+.\" ###### Authors ##########################################################
+.Sh AUTHORS
+Dr. Thomas Dreibholz
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
+.br
+mailto://dreibh@iem.uni-due.de
+.br

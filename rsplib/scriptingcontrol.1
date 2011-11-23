@@ -1,0 +1,96 @@
+.\" $Id$
+.\" --------------------------------------------------------------------------
+.\"
+.\"              //===//   //=====   //===//   //       //   //===//
+.\"             //    //  //        //    //  //       //   //    //
+.\"            //===//   //=====   //===//   //       //   //===<<
+.\"           //   \\         //  //        //       //   //    //
+.\"          //     \\  =====//  //        //=====  //   //===//    Version II
+.\"
+.\" ------------- An Efficient RSerPool Prototype Implementation -------------
+.\"
+.\" Copyright (C) 2002-2012 by Thomas Dreibholz
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" Contact: dreibh@iem.uni-due.de
+.\"
+.\" ###### Setup ############################################################
+.Dd November 23, 2011
+.Dt ScriptingControl 1
+.Os Scripting Control
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm scriptingcontrol
+.Nd Scripting Control script for the Scripting Service
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm scriptingcontrol run
+.Op Directory
+.Op Input
+.Op Output
+.Op Status
+.Op Environment
+.Nm scriptingcontrol cleanup
+.Op Directory
+.Op PID
+.Op keeptempdirs
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm scriptingcontrol
+is invoked when a new session is created by the scripting service PE. It takes
+the input file name and should create an output file of the given name.
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options are available:
+.Bl -tag -width indent
+.It run|cleanup
+.Nm run
+is used when the session is started.
+.Nm cleanup
+is used to kill all processes and remove the directory.
+.It Directory
+Gives the name of the temporary session directory.
+.It Input
+Gives the name of the input file.
+.It Output
+Gives the name of the output file.
+.It Status
+Gives the name of the status file.
+.It Environment
+Gives the name of the environment file (if available).
+.It PID
+The process ID (PID) of the session's worker process. All of its children will
+be found and terminated during clean-up.
+.It keeptempdirs
+Do not delete temporary directory during clean-up.
+.El
+.\" ###### See also #########################################################
+.Sh SEE ALSO
+For a detailed introduction to RSerPool, see:
+.br
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+.Pp
+Thomas Dreibholz's RSerPool Page:
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
+.\" ###### Authors ##########################################################
+.Sh AUTHORS
+Dr. Thomas Dreibholz
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/
+.br
+mailto://dreibh@iem.uni-due.de
+.br

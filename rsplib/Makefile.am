@@ -9,7 +9,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2011 by Thomas Dreibholz
+# Copyright (C) 2002-2012 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -394,4 +394,4 @@ dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.8 server.8 terminal.8 cspmonitor.8 calcappclient.8 pingpongclient.8 hsdump.8 scriptingcontrol.8 scriptingserviceexample.8 scriptingclient.8 fractalpooluser.8
+dist_man_MANS = registrar.1 server.1 terminal.1 cspmonitor.1 calcappclient.1 pingpongclient.1 hsdump.1 scriptingcontrol.1 scriptingserviceexample.1 scriptingclient.1 fractalpooluser.1
