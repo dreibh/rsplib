@@ -4,24 +4,26 @@ rsplib (2.7.14~beta1.0-0ubuntu1) precise; urgency=high
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 23 Nov 2011 07:07:07 +0200
 
-rsplib (2.7.13-0ubuntu1) precise; urgency=high
+rsplib (2.7.13-0ubuntu2) precise; urgency=high
 
   * New upstream release.
-  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.  
+  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
   * Added debug package to control file.
   * Improved package descriptions in control file.
+  * Bumped standards version in control file to 3.9.2.
   * Fixed dependencies in control file.
   * Bugfix for configure script (LP: #831109).
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 18 Nov 2011 13:13:13 +0200
 
-rsplib (2.7.11-1ubuntu1) oneiric; urgency=low
+rsplib (2.7.10-0ubuntu2) oneiric; urgency=low
 
-  * New upstream release.
-  * Closes Debian ITP bug with wnpp (Closes: #516750).
+  * debian/patches/fix-qt-detection.patch:
+    - Backport patch from 2.7.12 to fix FTBFS due to bad Qt detection
+      LP: #831109
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 05 May 2011 11:11:11 +0200
+ -- Michael Terry <mterry@ubuntu.com>  Mon, 29 Aug 2011 09:57:02 -0400
 
 rsplib (2.7.10-0ubuntu1) natty; urgency=high
 
