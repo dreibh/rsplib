@@ -1,11 +1,13 @@
 rsplib (2.7.14~beta1.0-0ubuntu1) precise; urgency=high
 
   * New upstream release.
+  * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 23 Nov 2011 07:07:07 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 06 Dec 2011 08:08:08 +0200
 
-rsplib (2.7.13-0ubuntu2) precise; urgency=high
+rsplib (2.7.13-0ubuntu1) precise; urgency=low
 
+  [ Thomas Dreibholz ]
   * New upstream release.
   * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
   * Added debug package to control file.
@@ -13,9 +15,16 @@ rsplib (2.7.13-0ubuntu2) precise; urgency=high
   * Bumped standards version in control file to 3.9.2.
   * Fixed dependencies in control file.
   * Bugfix for configure script (LP: #831109).
-  * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 18 Nov 2011 13:13:13 +0200
+  [ Charlie Smotherman ]
+  * Removed ppa versioning from changelog.
+  * Updated debain/copyright with suggested DEP5 changes from output using 
+    libconfig-model-perl.
+  * Removed debian/patches/fix-qt-detection.patch, included in new upstream
+    release.
+  * Close upgrade bug. (LP: #892717)
+
+ -- Charlie Smotherman <cjsmo@ubuntu.com>  Tue, 29 Nov 2011 17:37:43 -0500
 
 rsplib (2.7.10-0ubuntu2) oneiric; urgency=low
 
@@ -28,7 +37,6 @@ rsplib (2.7.10-0ubuntu2) oneiric; urgency=low
 rsplib (2.7.10-0ubuntu1) natty; urgency=high
 
   * New upstream release (LP: #721923), containing important bugfixes.
-  * Closes Debian ITP bug with wnpp (Closes: #586405).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 19 Feb 2011 22:22:22 +0200
 
@@ -53,7 +61,6 @@ rsplib (2.7.8-0ubuntu1) natty; urgency=low
   * debian/rsplib-registrar.init: Updated header.
   * Applied wrap-and-sort.
   * New upstream release (LP: #696512).
-  * Closes Debian ITP bug with wnpp (Closes: #586405).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 08 Feb 2011 11:11:11 +0200
 
@@ -97,7 +104,6 @@ rsplib (2.6.0-3ubuntu1) jaunty; urgency=low
   * Removed unnecessary setting of rpath by Qt 4.x detection code.
   * Fixed too-long lines in debian/control.
   * Updated packaging script.
-  * Closes Debian ITP bug with wnpp (Closes: #516750).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 23 Feb 2009 15:37:12 +0200
 
