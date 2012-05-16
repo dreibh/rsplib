@@ -24,7 +24,7 @@ PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=dueple_RSerPool
 PLANETLAB_COMPILEHOST="planetlab-2.cs.auckland.ac.nz"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
-PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel slocate valgrind strace lksctp-tools-devel"
+PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel findutils valgrind strace lksctp-tools-devel ImageMagick-devel GeoIP-devel libcurl-devel openssl-devel bison flex subversion git R"
 
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
