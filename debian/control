@@ -8,7 +8,7 @@ Build-Depends: autotools-dev,
                libbz2-dev (>= 1.0),
                libqt4-dev,
                libsctp-dev (>= 1.0.5)
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 
 Package: librsplib2
 Section: libs
@@ -89,7 +89,8 @@ Description: documentation of the RSerPool implementation rsplib
 
 Package: rsplib-registrar
 Architecture: any
-Depends: ${misc:Depends},
+Depends: lsb-base (>= 3.2-14),
+         ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-docs
 Description: RSerPool Registrar service
@@ -109,7 +110,8 @@ Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: chrpath,
             rsplib-docs,
-            rsplib-fgp-cfgfiles
+            rsplib-fgp-cfgfiles,
+            rsplib-legacy-wrappers
 Description: RSerPool test tools
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -166,3 +168,18 @@ Description: Debug symbols of the RSerPool programs
  and a client-side/server-side API for accessing the service of a pool.
  .
  This package contains the debug symbols of the rsplib package.
+
+Package: rsplib-legacy-wrappers
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: RSerPool legacy names
+ Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+ RFC 5356) for a lightweight server pool and session management framework.
+ It provides highly available pool management (that is registration
+ handling and load distribution/balancing) by components called Registrar
+ and a client-side/server-side API for accessing the service of a pool.
+ .
+ This package provides legacy wrappers for rsplib-2.x scripts. The programs
+ server and terminal have been renamed to rspserver and rspterminal,
+ respectively, in order to avoid naming conflicts.

@@ -1,9 +1,9 @@
-rsplib (2.7.14~beta1.0-0ubuntu1) precise; urgency=high
+rsplib (3.0.0~rc1.1-1ubuntu1) precise; urgency=low
 
   * New upstream release.
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 06 Dec 2011 08:08:08 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 21 Apr 2012 22:22:22 +0200
 
 rsplib (2.7.13-0ubuntu1) precise; urgency=low
 
@@ -18,7 +18,7 @@ rsplib (2.7.13-0ubuntu1) precise; urgency=low
 
   [ Charlie Smotherman ]
   * Removed ppa versioning from changelog.
-  * Updated debain/copyright with suggested DEP5 changes from output using 
+  * Updated debain/copyright with suggested DEP5 changes from output using
     libconfig-model-perl.
   * Removed debian/patches/fix-qt-detection.patch, included in new upstream
     release.

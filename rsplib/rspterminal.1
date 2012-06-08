@@ -28,58 +28,29 @@
 .\"
 .\" ###### Setup ############################################################
 .Dd June 06, 2012
-.Dt CSPMonitor 1
-.Os CSP Monitor
+.Dt RspTerminal 1
+.Os RSerPool Terminal
 .\" ###### Name #############################################################
 .Sh NAME
-.Nm cspmonitor
-.Nd CSP server for monitoring RSerPool components
+.Nm rspterminal
+.Nd RSerPool terminal (PU) for services like Echo, Discard, Daytime, CharGen
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
-.Nm cspmonitor
-.Op Fl localaddress=address:port
-.Op Fl updateinterval=milliseconds
-.Op Fl purgeinterval=milliseconds
-.Op Fl compact
-.Op Fl full
-.Op Fl maxpr=PRs
-.Op Fl maxpe=PEs
-.Op Fl maxpu=PUs
-.Op Fl maxlocationsize=characters
-.Op Fl logappend=filename
-.Op Fl logcolor=on|off
-.Op Fl logfile=filename
-.Op Fl loglevel=0-9
+.Nm terminal
+.Op Fl poolhandle=pool_handle
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
-.Nm cspmonitor
-is a simple simple Component Status Protocol (CSP) monitor server. It receives
-status messages from components via UDP and prints them on the screen. This
-program is useful to keep an overview of running RSerPool components.
+.Nm terminal
+is an simple Reliable Server Pooling (RSerPool) pool user (PU) to use test
+services like Echo, Discard, Daytime, CharGen.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl localaddress=address:port
-Sets the local UDP socket address and port number. By default, it listens on
-all addresses, port 2960.
-.It Fl updateinterval=milliseconds
-Sets the update interval in milliseconds. Default: 1000.
-.It Fl purgeinterval=milliseconds
-Sets the purge interval in milliseconds. Default: 30000.
-.It Fl compact
-Turns on compact status display mode.
-.It Fl full
-Turns on full status display mode (default).
-.It Fl maxpr=PRs
-Limits the number of PRs to be displayed to the given number.
-.It Fl maxpr=PEs
-Limits the number of PEs to be displayed to the given number.
-.It Fl maxpr=PUs
-Limits the number of PUs to be displayed to the given number.
-.It Fl maxlocationsize=characters
-Limits the location string size to the given number of characters.
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"EchoPool".
 .\" ====== Logging ==========================================================
 .It Logging Parameters:
 .Bl -tag -width indent
@@ -94,11 +65,42 @@ Sets the logging verbosity from 0 (none) to 9 (very verbose).
 It is recommended to use at least a value of 2 to see possibly
 important error messages and warnings.
 .El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.El
 .El
 .Pp
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
-.Nm cspmonitor
+.Nm terminal
 uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################

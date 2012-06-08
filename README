@@ -1,6 +1,6 @@
 A. FIRST STEPS
 
-How to set up a simple test of the rsplib-2.7.x release:
+How to set up a simple test of the rsplib-3.x.y release:
 
 1. If, AND ONLY IF, you would like to use the sctplib/socketapi *userland* SCTP
    implementation, do the following two steps first:
@@ -87,7 +87,7 @@ How to set up a simple test of the rsplib-2.7.x release:
 
 8. You can monitor the status of each component using the Component Status Protocol
    client "cspclient". Simply start it by "./cspmonitor". It will listen for status
-   messages sent via UDP on port 2960. The components (registrar, server, etc.) accept
+   messages sent via UDP on port 2960. The components (registrar, rspserver, etc.) accept
    the command line arguments "-cspserver=<Server>:<Port>" and
    "-cspinterval=<Microseconds>". For example, if you want a status update every 300ms
    and your CSP client is listening on port 2960 of host 1.2.3.4, use the arguments
@@ -105,7 +105,7 @@ How to set up a simple test of the rsplib-2.7.x release:
 
 B. DEMO POOL ELEMENTS (SERVERS)
 
-All demo servers can be started using the ./server program. It takes a set of
+All demo servers can be started using the ./rspserver program. It takes a set of
 common parameters as well as some service-specific arguments. These parameters
 are explained in the following.
 
@@ -212,7 +212,7 @@ C.1 Common Parameters
 
 C.2 Terminal (e.g. for Echo, Discard, Daytime and Chargen services)
 
-Start with ./terminal; the default PH is EchoPool.
+Start with ./rspterminal; the default PH is EchoPool.
 
 
 C.3 Fractal Client (for the Fractal Generator service)
@@ -343,4 +343,4 @@ Visit http://tdrwww.iem.uni-due.de/dreibholz/rserpool/ for more information
 ==================================================================================
 
 
-12.09.2012 Thomas Dreibholz, dreibh@iem.uni-due.de
+06.06.2012 Thomas Dreibholz, dreibh@iem.uni-due.de

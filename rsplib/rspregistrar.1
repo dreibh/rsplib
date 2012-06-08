@@ -1,0 +1,212 @@
+.\" $Id: registrar.8 1767 2008-04-16 11:41:05Z dreibh $
+.\" --------------------------------------------------------------------------
+.\"
+.\"              //===//   //=====   //===//   //       //   //===//
+.\"             //    //  //        //    //  //       //   //    //
+.\"            //===//   //=====   //===//   //       //   //===<<
+.\"           //   \\         //  //        //       //   //    //
+.\"          //     \\  =====//  //        //=====  //   //===//    Version II
+.\"
+.\" ------------- An Efficient RSerPool Prototype Implementation -------------
+.\"
+.\" Copyright (C) 2002-2012 by Thomas Dreibholz
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" Contact: dreibh@iem.uni-due.de
+.\"
+.\" ###### Setup ############################################################
+.Dd June 06, 2012
+.Dt RspRegistrar 1
+.Os RSerPool Registrar
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm rspregistrar
+.Nd RSerPool Pool Registrar (PR) Service
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm rspregistrar
+.Op Fl announcettl=TTL
+.Op Fl asap=auto|address:port,address,...
+.Op Fl asapannounce=auto|address:port
+.Op Fl autoclosetimeout=seconds
+.Op Fl endpointkeepalivetransmissioninterval=milliseconds
+.Op Fl endpointkeepalivetimeoutinterval=milliseconds
+.Op Fl maxbadpereports=reports
+.Op Fl maxhresitems=items
+.Op Fl maxincrement=increment
+.Op Fl minaddressscope=loopback|sitelocal|global
+.Op Fl serverannouncecycle=milliseconds
+.Op Fl enrp=auto|address:port,address,...
+.Op Fl enrpannounce=auto|address:port
+.Op Fl maxelementsperhtrequest=items
+.Op Fl mentordiscoverytimeout=milliseconds
+.Op Fl peer=address:port
+.Op Fl peerheartbeatcycle=milliseconds
+.Op Fl peermaxtimelastheard=millisecond
+.Op Fl peermaxtimenoresponse=milliseconds
+.Op Fl takeoverexpiryinterval=milliseconds
+.Op Fl cspinterval=milliseconds
+.Op Fl cspserver=address:port
+.Op Fl logcolor=on|off
+.Op Fl logappend=filename
+.Op Fl logfile=filename
+.Op Fl loglevel=0-9
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm rspregistrar
+provides a registrar service for Reliable Server Pooling (RSerPool) pool
+elements (PEs) and pool users (PUs). PRs of an operation scope synchronize
+their view of the handlespace using the Endpoint haNdlespace Redundancy
+Protocol (ENRP), transported via SCTP. An operation scope has a limited range,
+e.g. an organization or only a building. In particular, it is restricted to a
+single administrative domain \- in contrast to GRID computing \- in order to
+keep the management complexity at a minimum. Nevertheless, PEs may be
+distributed globally for their service to survive localized disasters.
+.Pp
+PEs choose an arbitrary PR of the operation scope to register into a pool by
+using the Aggregate Server Access Protocol (ASAP), again transported via SCTP.
+Upon registration at a PR, the chosen PR becomes the Home-PR (PR-H) of the
+newly registered PE. A PR-H is responsible for monitoring its PEs' availability
+by keep-alive messages (to be acknowledged by the PE within a given timeout)
+and propagates the information about its PEs to the other PRs of the operation
+scope via ENRP updates.
+.Pp
+In order to access the service of a pool given by its PH, a PU requests a PE
+selection from an arbitrary PR of the operation scope, using the Aggregate
+Server Access Protocol (ASAP), transported via SCTP. The PR selects the
+requested list of PE identities by applying a pool-specific selection rule,
+called pool policy.
+.Pp
+In order to allow for automatic configuration, a PR can send out regular
+announces via an ASAP and ENRP multicast address. PEs and PUs can listen to
+this address to learn the list of currently available PRs.
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options are available:
+.Bl -tag -width indent
+.It Fl quiet
+Do not print startup and shutdown messages.
+.It Fl announcettl=TTL
+Sets the TTL for outgoing ASAP Announce/ENRP Presence messages via multicast.
+.\" ====== Logging ==========================================================
+.It Logging Parameters:
+.Bl -tag -width indent
+It is recommended to use at least a value of 2 to see possibly
+important error messages and warnings.
+.It Fl logcolor=on|off
+Turns ANSI colorization of the logging output on or off.
+.It Fl logappend=filename
+Write logging output to a file (default is stdout); output will be appended to given file.
+.It Fl logfile=filename
+Write logging output to a file (default is stdout); given file will be overwritten.
+.It Fl loglevel=0-9
+Sets the logging verbosity from 0 (none) to 9 (very verbose).
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds.
+.It Fl cspserver=address:port
+Sets the CSP monitor server's address and port.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It Aggregate Server Access Protocol (ASAP) Parameters:
+.Bl -tag -width indent
+.It Fl autoclosetimeout=seconds
+Sets the SCTP autoclose timeout for idle ASAP associations.
+.It Fl asap=auto|address:port,address,...
+Sets the ASAP endpoint address(es). Use "auto" to automatically set it (default).
+.It Fl asapannounce=auto|address:port
+Sets the multicast address and UDP port to send the ASAP Announces to. Use "auto" to automatically set it (default). Examples:
+.br
+\-asapannounce=auto
+.br
+\-asapannounce=239.0.0.1:3863
+.It Fl endpointkeepalivetransmissioninterval=milliseconds
+Sets the ASAP Endpoint Keep Alive interval.
+.It Fl endpointkeepalivetimeoutinterval=milliseconds
+Sets the ASAP Endpoint Keep Alive timeout.
+.It Fl maxbadpereports=reports
+Sets the maximum number of ASAP Endpoint Unreachable reports before
+removing a PE.
+.It Fl maxincrement=increment
+Sets the MaxIncrement constant. Handle with care!
+.It Fl maxhresitems=items
+Sets the MaxHResItems constant.
+.It Fl minaddressscope=loopback|sitelocal|global
+Sets the minimum address scope acceptable for registered PEs:
+.br
+loopback: Loopback address (only valid on the same node!)
+.br
+site-local: Site-local addresses (e.g. 192.168.1.1, etc.)
+.br
+global: Global addresses
+.It Fl serverannouncecycle=milliseconds
+Sets the ASAP Announce interval.
+.El
+.\" ====== ENRP Protocol ====================================================
+.It Endpoint Handlespace Redundancy Protocol (ENRP) Parameters:
+.Bl -tag -width indent
+.It Fl enrp=auto|address:port,address,...
+Sets the ENRP endpoint address(es). Use "auto" to automatically set it (default). Examples:
+.br
+\-enrp=auto
+.br
+\-enrp=1.2.3.4:9901
+.br
+\-enrp=1.2.3.4:9901,[2000::1:2:3],9.8.7.6
+.It Fl enrpannounce=auto|address:port
+Sets the multicast address and UDP port to send the ENRP Announces to. Use "auto" to automatically set it (default). Examples:
+.br
+\-enrpannounce=auto
+.br
+\-enrpannounce=239.0.0.1:9901
+.It Fl maxelementsperhtrequest=items
+Sets the maximum number of items per ENRP Handle Table Response.
+.It Fl mentordiscoverytimeout=milliseconds
+Sets the mentor PR discovery timeout in milliseconds.
+.It Fl peer=address:port
+Adds a static PR entry into the Peer List. It is possible to add multiple entries.
+.It Fl peerheartbeatcycle=milliseconds
+Sets the ENRP peer heartbeat interval.
+.It Fl peermaxtimelastheard=milliseconds
+Sets the ENRP peer max time last heard.
+.It Fl peermaxtimenoresponse=milliseconds
+Sets the ENRP maximum time without response.
+.It Fl takeoverexpiryinterval=milliseconds
+Sets the ENRP takeover timeout.
+.El
+.El
+.Pp
+.\" ###### Environment ######################################################
+.Sh ENVIRONMENT
+.Nm rspregistrar
+uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+server to send reports to in the specified interval.
+.\" ###### Diagnostics ######################################################
+.Sh DIAGNOSTICS
+If loglevel>0, log messages will be printed to stdout or into a specified
+log file.
+.\" ###### See also #########################################################
+.Sh SEE ALSO
+For a detailed introduction to RSerPool, see:
+.br
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+.Pp
+Thomas Dreibholz's RSerPool Page:
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/

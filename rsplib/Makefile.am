@@ -290,26 +290,26 @@ libcpprspserver_la_LDFLAGS = \
 
 # ###### Main programs ######################################################
 if BUILD_QT_PROGRAMS
-bin_PROGRAMS = fractalpooluser registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
+bin_PROGRAMS = fractalpooluser rspregistrar rspserver rspterminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = add-dummy-interface
 else
-bin_PROGRAMS = registrar server terminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
+bin_PROGRAMS = rspregistrar rspserver rspterminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
 EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-dummy-interface
 endif
 
 if ENABLE_REGISTRAR_STATISTICS
-registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
+rspregistrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
+rspregistrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
 else
-registrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
-registrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
+rspregistrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
+rspregistrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 
-server_SOURCES = server.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h environmentcache.cc environmentcache.h sha1.c sha1.h
-server_LDADD   = libtdcppthread.la libtdthreadsafety.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+rspserver_SOURCES = rspserver.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h environmentcache.cc environmentcache.h sha1.c sha1.h
+rspserver_LDADD   = libtdcppthread.la libtdthreadsafety.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
-terminal_SOURCES = terminal.c
-terminal_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
+rspterminal_SOURCES = rspterminal.c
+rspterminal_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS)
 
 hsdump_SOURCES = hsdump.c
 hsdump_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsphsmgt.la librspmessaging.la $(socketapi_LIBS) $(sctplib_LIBS)
@@ -390,8 +390,8 @@ endif
 
 
 # ###### Scripts ############################################################
-dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample
+dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample server terminal registrar
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = registrar.1 server.1 terminal.1 cspmonitor.1 calcappclient.1 pingpongclient.1 hsdump.1 scriptingcontrol.1 scriptingserviceexample.1 scriptingclient.1 fractalpooluser.1
+dist_man_MANS = rspregistrar.1 rspserver.1 rspterminal.1 cspmonitor.1 calcappclient.1 pingpongclient.1 hsdump.1 scriptingcontrol.1 scriptingserviceexample.1 scriptingclient.1 fractalpooluser.1 server.1 terminal.1 registrar.1

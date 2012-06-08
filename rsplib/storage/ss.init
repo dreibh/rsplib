@@ -41,7 +41,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 NAME=ss
 DESC="RSerPool Scripting Service"
-DAEMON=/usr/bin/server
+DAEMON=/usr/bin/rspserver
 
 # ====== Scripting Service Options ==========================================
 SS_LOCAL=""

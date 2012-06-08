@@ -40,10 +40,11 @@
 
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=registrar
+NAME=rspregistrar
 DESC="RSerPool Registrar"
-DAEMON=/usr/bin/registrar
-DAEMON_OPTS="-quiet -daemonpidfile=/var/run/$NAME.pid -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
+PIDFILE=/var/run/$NAME.pid
+DAEMON=/usr/bin/rspregistrar
+DAEMON_ARGS="-quiet -daemonpidfile=$PIDFILE -logfile=/var/log/$NAME.log -loglevel=3 -logcolor=off"
 
 test -x $DAEMON || exit 0
 
@@ -59,40 +60,51 @@ if [ -f /etc/default/rsplib-registrar ] ; then
    . /etc/default/rsplib-registrar
 fi
 
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
 
 set -e
 
 case "$1" in
   start)
    echo -n "Starting $DESC: "
-   start-stop-daemon --start  --pidfile /var/run/$NAME.pid \
-      --exec $DAEMON -- $DAEMON_OPTS
+   start-stop-daemon --start  --pidfile $PIDFILE \
+      --exec $DAEMON -- $DAEMON_ARGS
    echo "$NAME."
    ;;
   stop)
    echo -n "Stopping $DESC: "
-   start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+   start-stop-daemon --stop --quiet --pidfile $PIDFILE \
       --exec $DAEMON
    echo "$NAME."
    ;;
   force-reload)
    start-stop-daemon --stop --test --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON \
+      $PIDFILE --exec $DAEMON \
    && $0 restart \
    || exit 0
    ;;
   restart)
-    echo -n "Restarting $DESC: "
+   echo -n "Restarting $DESC: "
    start-stop-daemon --stop --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON
+      $PIDFILE --exec $DAEMON
    sleep 1
    start-stop-daemon --start --quiet --pidfile \
-      /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+      $PIDFILE --exec $DAEMON -- $DAEMON_ARGS
    echo "$NAME."
+   ;;
+  status)
+   status_of_proc -p $PIDFILE $DAEMON $NAME && exit 0 || exit $?
    ;;
   *)
    N=/etc/init.d/$NAME
-   echo "Usage: $N {start|stop|restart|force-reload}" >&2
+   echo "Usage: $N {start|stop|restart|force-reload|status}" >&2
    exit 1
    ;;
 esac

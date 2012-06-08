@@ -6,6 +6,10 @@
 # read pbuilderrc.5 document for notes on specific options.
 # MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
 
-MIRRORSITE=ftp://ftp.de.debian.org/debian
-DISTRIBUTION=squeeze
+MIRRORSITE=ftp://ftp.no.debian.org/debian
+DISTRIBUTION=sid
 COMPONENTS=main
+DEBOOTSTRAPOPTS=(
+    '--variant=buildd'
+    '--keyring' '/usr/share/keyrings/debian-archive-keyring.gpg'
+    )
