@@ -1,4 +1,4 @@
-rsplib (3.0.0~rc1.1-1ubuntu1) precise; urgency=low
+rsplib (3.0.0~rc1.2-1ubuntu1) precise; urgency=low
 
   * New upstream release.
   * Closes Debian ITP bug with wnpp (Closes: #516750).

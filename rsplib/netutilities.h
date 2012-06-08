@@ -41,12 +41,12 @@
 
 #include "tdtypes.h"
 #include "sockaddrunion.h"
+#include "ext_socket.h"
 
 #include <stdio.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <ext_socket.h>
 
 
 #ifdef __cplusplus

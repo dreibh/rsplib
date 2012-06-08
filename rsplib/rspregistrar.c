@@ -27,7 +27,7 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
-#include "registrar.h"
+#include "rspregistrar.h"
 
 #include <signal.h>
 
@@ -278,7 +278,7 @@ static void goIntoDaemonMode(const char* daemonPIDFile)
          exit(0);
       }
       else {
-         signal(SIGHUP, SIG_IGN);      
+         signal(SIGHUP, SIG_IGN);
       }
    }
 }

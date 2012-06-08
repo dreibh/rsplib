@@ -27,7 +27,7 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
-#include "registrar.h"
+#include "rspregistrar.h"
 
 
 static void poolElementNodeDisposer(struct ST_CLASS(PoolElementNode)* poolElementNode,

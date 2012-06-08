@@ -40,6 +40,8 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#error HAVE_CONFIG_H has not been defined?!
 #endif
 
 #include "tdtypes.h"
@@ -67,7 +69,7 @@ extern "C" {
 #define LOGLEVEL_VERBOSE5  9
 
 #ifndef MAX_LOGLEVEL
-#wanring MAX_LOGLEVEL should be defined in config.h!
+#warning MAX_LOGLEVEL should be defined in config.h!
 #define MAX_LOGLEVEL LOGLEVEL_VERBOSE5
 #endif
 

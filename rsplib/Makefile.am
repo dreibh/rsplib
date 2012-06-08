@@ -298,10 +298,10 @@ EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-d
 endif
 
 if ENABLE_REGISTRAR_STATISTICS
-rspregistrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
+rspregistrar_SOURCES = rspregistrar.c rspregistrar.h rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c takeoverprocess.h
 rspregistrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(bz2_LIBS) $(socketapi_LIBS) $(sctplib_LIBS)
 else
-rspregistrar_SOURCES = registrar.c registrar.h registrar-global.c registrar-core.c registrar-asap.c registrar-enrp.c registrar-takeover.c registrar-security.c registrar-misc.c takeoverprocess.c takeoverprocess.h
+rspregistrar_SOURCES = rspregistrar.c rspregistrar.h rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c takeoverprocess.h
 rspregistrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la librsphsmgt.la librspmessaging.la libtdstorage.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la -lm $(socketapi_LIBS) $(sctplib_LIBS)
 endif
 

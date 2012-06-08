@@ -27,7 +27,7 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
-#include "registrar.h"
+#include "rspregistrar.h"
 
 
 /* ###### ENRP Presence timer callback ################################### */
