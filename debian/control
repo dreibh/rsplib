@@ -181,5 +181,5 @@ Description: RSerPool legacy names
  and a client-side/server-side API for accessing the service of a pool.
  .
  This package provides legacy wrappers for rsplib-2.x scripts. The programs
- server and terminal have been renamed to rspserver and rspterminal,
- respectively, in order to avoid naming conflicts.
+ registrar, server and terminal have been renamed to rspregistrar, rspserver
+ and rspterminal, respectively, in order to avoid naming conflicts.
