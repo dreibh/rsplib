@@ -337,7 +337,7 @@ else
    AC_TRY_COMPILE([#include <sys/types.h>
                    #include <netinet/sctp.h>],
                   [sctp_assoc_t id;
-                   int result = sctp_connectx(0, NULL, 0, &id);],
+                   int result = sctp_connectx(0, 0, 0, &id);],
                   [AC_MSG_RESULT(yes)
                    AC_DEFINE(HAVE_CONNECTX_WITH_ID, 1, [Define to 1 if sctp_connectx has associd parameter.])],
                   AC_MSG_RESULT(no))
