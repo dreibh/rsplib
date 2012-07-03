@@ -76,11 +76,11 @@
     </message>
     <message>
         <source>&amp;Next Image</source>
-        <translation type="unfinished">&amp;Nächstes Bild</translation>
+        <translation>&amp;Nächstes Bild</translation>
     </message>
     <message>
         <source>Waiting for job completion ...</source>
-        <translation type="unfinished"></translation>
+        <translation>Warte auf Abschluß der Berechnung ...</translation>
     </message>
 </context>
 </TS>
