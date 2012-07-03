@@ -47,7 +47,7 @@ SERVICE_DIRECTORY="bin"
 
 
 # ====== PlanetLab PR and PE lists ==========================================
-PRsPerRegion=3
+PRsPerRegion=5
 PR_LIST=`cat pr-europe.hosts | grep "\.de$" | head -n$PRsPerRegion ; cat pr-america.hosts | grep "\.edu$" | head -n$PRsPerRegion`
 PE_LIST=`cat alive-planetlab.ip`
 
@@ -97,7 +97,7 @@ startNetwork ()
    local number=1
    for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
       echo "Starting PR $number on $pr ..."
-      ./servicecontrol start "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar \
+      ./servicecontrol start "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" rspregistrar \
          "$OPT_CSP $PR_MISCOPT -identifier=0x$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data" \
          "./rootshell" &
       number=$(($number+1))
@@ -111,7 +111,7 @@ startNetwork ()
    local number=1
    for pe in $peList ; do
       echo "Starting PE $number on $pe ..."
-      ./servicecontrol start "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server \
+      ./servicecontrol start "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" rspserver \
          "$OPT_CSP $PE_MISCOPT $optRegistrars -identifier=0x$number" \
          "./rootshell" &
       number=$(($number+1))
@@ -128,14 +128,14 @@ stopNetwork ()
 
    local number=1
    for pe in $peList ; do
-      ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" server "" "./rootshell" &
+      ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" rspserver "" "./rootshell" &
       number=$(($number+1))
    done
    # wait
 
    local number=1
    for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
-      ./servicecontrol stop "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" registrar "" "./rootshell" &
+      ./servicecontrol stop "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" rspregistrar "" "./rootshell" &
       number=$(($number+1))
    done
    wait

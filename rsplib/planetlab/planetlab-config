@@ -28,13 +28,13 @@ PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoco
 
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
-DISTPRGS="rootshell registrar server calcappclient hsdump attacker"
+DISTPRGS="rootshell rspregistrar rspserver rspterminal calcappclient hsdump attacker"
 KILLALLMISC="perftool bzip2 gzip tar yum /usr/bin/python /usr/bin/yum"
 DISTSTRIP=0
 DISTMISC=""
-SUIDPRGS="rootshell registrar server calcappclient attacker hsdump"
+SUIDPRGS="rootshell rspregistrar rspserver rspterminal calcappclient attacker hsdump"
 
-export OPT_CSP="-cspserver=132.252.152.140:2960 -cspinterval=1000"
+export OPT_CSP="-cspserver=132.252.152.206:2960 -cspinterval=2500"
 
 
 # ------ Automatically find out DISTNAME from debian/changelog --------------
