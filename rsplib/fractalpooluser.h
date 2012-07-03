@@ -277,7 +277,7 @@ class FractalPU
    FractalGeneratorStatus     Status;
    QMutex                     StatusMutex;
    ImageDisplay*              Display;
-   size_t                     Run;
+   unsigned int               Run;
 
    const unsigned char*       PoolHandle;
    size_t                     PoolHandleSize;
@@ -286,15 +286,16 @@ class FractalPU
    unsigned int               InterImageTime;
    bool                       ShowFailoverMarks;
    bool                       ShowSessions;
-   size_t                     ConfiguredThreads;
-   size_t                     CurrentThreads;
+   unsigned int               ConfiguredThreads;
+   unsigned int               CurrentThreads;
+   unsigned int               RunningThreads;
 
    QStringList                ConfigList;
    QDir                       ConfigDirectory;
    QString                    ImageStoragePrefix;
-   size_t                     FileNumber;
-   bool                       Success;
+   unsigned int               FileNumber;
    unsigned int               CountDown;
+   bool                       Success;
 };
 
 

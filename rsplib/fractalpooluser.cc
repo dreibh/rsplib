@@ -115,9 +115,10 @@ FractalPU::FractalPU(const size_t       width,
    SendTimeout        = recvTimeout;
    InterImageTime     = interImageTime;
    ImageStoragePrefix = QString(imageStoragePrefix);
-   ShowFailoverMarks     = showFailoverMarks;
+   ShowFailoverMarks  = showFailoverMarks;
    ShowSessions       = showSessions;
    ConfiguredThreads  = threads;
+   RunningThreads     = 0;
    FileNumber         = 0;
    Run                = 0;
 
@@ -246,7 +247,8 @@ void FractalPU::getNextParameters()
 /* ###### Start next fractal PU job ###################################### */
 void FractalPU::startNextJob()
 {
-   CHECK(getStatus() != FPU_CalcInProgress);
+   Q_ASSERT(getStatus() != FPU_CalcInProgress);
+   Q_ASSERT(RunningThreads == 0);
 
    // ====== Initialize image object and timeout timer ======================
    Run++;
@@ -285,7 +287,6 @@ void FractalPU::startNextJob()
    const size_t yStep  = (size_t)rint((double)Parameter.Height / yCount);
 
    size_t remaining = CurrentThreads;
-   size_t number    = 0;
    for(size_t yPosition = 0;yPosition < yCount;yPosition++) {
       const size_t xCount = (yPosition < yCount - 1) ? min(remaining, yCount) : remaining;
       if(xCount > 0) {
@@ -301,38 +302,38 @@ void FractalPU::startNextJob()
             // ====== Mark rectange for next session ========================
             if(CurrentThreads > 1) {
                if(ShowFailoverMarks) {
-                  color.setHsv((((5 * number) % 72) * 5) % 256, 100, 255);
+                  color.setHsv((((5 * RunningThreads) % 72) * 5) % 256, 100, 255);
                   Display->fillRect(xPosition * xStep, yPosition * yStep,
                                     xStep, yStep, color.rgb());
                }
                char str[64];
-               snprintf((char*)&str, sizeof(str), "%u", (unsigned int)number + 1);
+               snprintf((char*)&str, sizeof(str), "%u", (unsigned int)RunningThreads + 1);
                const QString numberString(str);
                painter.drawText(xPosition * xStep, yPosition * yStep, xStep, yStep,
                                 Qt::AlignCenter, numberString);
             }
 
             // ====== Start new session =====================================
-            CalculationThreadArray[number] =
-               new FractalCalculationThread(this, number,
+            CalculationThreadArray[RunningThreads] =
+               new FractalCalculationThread(this, RunningThreads,
                       xPosition * xStep, yPosition * yStep, xStep, yStep,
                       (CurrentThreads == 1));
-            Q_CHECK_PTR(CalculationThreadArray[number]);
+            Q_CHECK_PTR(CalculationThreadArray[RunningThreads]);
 
-            connect(CalculationThreadArray[number], SIGNAL(updateImage(int, int)),
+            connect(CalculationThreadArray[RunningThreads], SIGNAL(updateImage(int, int)),
                     this, SLOT(redrawImage(int, int)));
-            connect(CalculationThreadArray[number], SIGNAL(updateStatus(QString)),
+            connect(CalculationThreadArray[RunningThreads], SIGNAL(updateStatus(QString)),
                     this, SLOT(changeStatus(QString)));
-            connect(CalculationThreadArray[number], SIGNAL(finished()),
+            connect(CalculationThreadArray[RunningThreads], SIGNAL(finished()),
                     this, SLOT(handleCompletedSession()));
 
-            CalculationThreadArray[number]->start();
-            number++;
+            CalculationThreadArray[RunningThreads]->start();
+            RunningThreads++;
          }
          painter.end();
       }
    }
-   CHECK(number == CurrentThreads);
+   Q_ASSERT(RunningThreads == CurrentThreads);
 
    // ====== Make everything visible ========================================
    Display->update();
@@ -350,17 +351,10 @@ void FractalPU::startNextJob()
 void FractalPU::handleCompletedSession()
 {
    if(CalculationThreadArray) {
-      // ====== Count active sessions =======================================
-      size_t active = 0;
-      for(size_t i = 0;i < CurrentThreads;i++) {
-         if( (CalculationThreadArray[i] != NULL) &&
-             (!CalculationThreadArray[i]->isFinished()) ) {
-            active++;
-         }
-      }
-
       // ====== All sessions have finished ==================================
-      if(active == 0) {
+      Q_ASSERT(RunningThreads > 0);
+      RunningThreads--;
+      if(RunningThreads == 0) {
          Display->setCursor(Qt::ArrowCursor);
 
          Success = true;
