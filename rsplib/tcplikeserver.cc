@@ -439,7 +439,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                            // waiting time. Therefore, cleaning them up is useful
                            // before accepting new sessions.
                            if(serverSet.handleRemovalsAndTimers() > 0) {
-                              int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                              const int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
                               if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
                                  logerror("Unable to update backlog using rsp_listen()");
                               }
@@ -455,7 +455,7 @@ void TCPLikeServer::poolElement(const char*          programTitle,
                                         if(serviceThread) {
                                            if(serverSet.add(serviceThread)) {
                                               if(serviceThread->start()) {
-                                                 int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
+                                                 const int backlog = (int)(serverSet.getMaxThreads() - serverSet.getThreads());
                                                  if(rsp_listen(rserpoolSocket, 1 + backlog) < 0) {
                                                     logerror("Unable to update backlog using rsp_listen()");
                                                     fflush(stdlog);
