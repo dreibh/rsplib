@@ -294,7 +294,7 @@ bin_PROGRAMS = fractalpooluser rspregistrar rspserver rspterminal hsdump pingpon
 EXTRA_DIST = add-dummy-interface
 else
 bin_PROGRAMS = rspregistrar rspserver rspterminal hsdump pingpongclient scriptingclient calcappclient cspmonitor
-EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts add-dummy-interface
+EXTRA_DIST = fractalpooluser.cc fractalpooluser.h fractalpooluser_de_DE.ts fractalpooluser_nb_NO.ts add-dummy-interface
 endif
 
 if ENABLE_REGISTRAR_STATISTICS
@@ -341,7 +341,7 @@ CLEANFILES = $(FRACTALPOOLUSERMOCEDFILES)
 $(fractalpooluser_OBJECTS): $(FRACTALPOOLUSERMOCEDFILES)
 
 fractalpooluserdir = $(datadir)/fractalpooluser
-dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm
+dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h

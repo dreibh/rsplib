@@ -11,7 +11,7 @@
     <message>
         <location filename="fractalpooluser.cc" line="707"/>
         <source>Processed packet #</source>
-        <translation type="unfinished">Behandlet pakke#</translation>
+        <translation type="unfinished">Behandlet pakke #</translation>
     </message>
     <message>
         <location filename="fractalpooluser.cc" line="709"/>
