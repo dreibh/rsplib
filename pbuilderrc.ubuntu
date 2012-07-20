@@ -5,7 +5,7 @@
 #
 # read pbuilderrc.5 document for notes on specific options.
 
-MIRRORSITE=http://de.archive.ubuntu.com/ubuntu/
+MIRRORSITE=http://no.archive.ubuntu.com/ubuntu/
 DISTRIBUTION=quantal
 COMPONENTS="main universe"
 
@@ -13,3 +13,23 @@ COMPONENTS="main universe"
 # OTHERMIRROR="deb http://ppa.launchpad.net/dreibh/ubuntu $DISTRIBUTION main"
 
 # NOTE: Upon changes, run "sudo pbuilder --override-config" to update repositories!
+
+
+# =================================================================
+
+mkdir /var/cache/pbuilder/hook.d || true
+
+HOOKDIR="/var/cache/pbuilder/hook.d"
+
+cat >/var/cache/pbuilder/hook.d/C10shell <<EOF
+#!/bin/sh
+# invoke shell if build fails.
+
+apt-get install -y --force-yes vim less bash
+cd /tmp/buildd/*/debian/..
+/bin/bash < /dev/tty > /dev/tty 2> /dev/tty
+EOF
+
+sudo chmod a+x /var/cache/pbuilder/hook.d/C10shell
+
+# =================================================================
