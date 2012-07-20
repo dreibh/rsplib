@@ -15,6 +15,10 @@ COMPONENTS="main universe"
 # NOTE: Upon changes, run "sudo pbuilder --override-config" to update repositories!
 
 
+# Turn OFF ccache! It will not work properly!
+CCACHEDIR=
+
+
 # =================================================================
 
 mkdir /var/cache/pbuilder/hook.d || true
