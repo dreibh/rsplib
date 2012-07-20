@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc1.4)
+AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc1.5)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -48,6 +48,16 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
+
+
+# ###### colorgcc ###########################################################
+AC_CHECK_PROG([COLORGCC], [colorgcc], [yes], [no])
+if test "$COLORGCC" == "yes"
+then
+   AC_MSG_NOTICE([Compiling using colorgcc])
+   CC=colorgcc
+   CXX=colorgcc
+fi
 
 
 # ###### Options ############################################################
