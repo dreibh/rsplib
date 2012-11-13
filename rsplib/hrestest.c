@@ -53,7 +53,6 @@ int main(int argc, char** argv)
    unsigned long long   statsLine     = 1;
    unsigned long long   startTimeStamp;
    unsigned long long   updateTimeStamp;
-   unsigned long long   requestTimeStamp;
    unsigned long long   responseTimeStamp;
    unsigned long long   successCount = 0;
    unsigned long long   failureCount = 0;
@@ -146,7 +145,6 @@ int main(int argc, char** argv)
    startTimeStamp  = getMicroTime();
    updateTimeStamp = 0;
    while(!breakDetected()) {
-      requestTimeStamp = getMicroTime();
       result = rsp_getaddrinfo((const unsigned char*)poolHandle, strlen(poolHandle),
                                &rspAddrInfo, items, 0);
       responseTimeStamp = getMicroTime();
