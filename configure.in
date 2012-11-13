@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc2)
+AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc3)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -135,8 +135,8 @@ hpux*)
     thread_LIBS="-lpthread"
    ;;
 linux*)
-    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE"
-    CXXFLAGS="$CXXFLAGS -DLINUX -D_GNU_SOURCE -std=c++98"
+    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE -D_FORTIFY_SOURCE=2"
+    CXXFLAGS="$CXXFLAGS -DLINUX -D_GNU_SOURCE -std=c++98 -D_FORTIFY_SOURCE=2"
     LDFLAGS="$LDFLAGS"
     thread_LIBS="-lpthread"
     ;;

@@ -1,10 +1,10 @@
-rsplib (3.0.0~rc2-1ubuntu1) quantal; urgency=low
+rsplib (3.0.0~rc3-1ubuntu1) quantal; urgency=low
 
   * New upstream release.
   * debian/control: now using colorgcc.
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 24 Aug 2012 22:22:22 +0800
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 13 Nov 2012 22:22:22 +0800
 
 rsplib (2.7.13-0ubuntu1) precise; urgency=low
 
