@@ -89,11 +89,11 @@ int sctp_connectx(int                    sockfd,
 
 #ifndef HAVE_SCTP_SEND
 #warning No sctp_send() available - Using wrapper!
-ssize_t sctp_send(int                           sd,
-                  const void*                   data,
-                  size_t                        len,
-                  const struct sctp_sndrcvinfo* sinfo,
-                  int                           flags)
+ssize_t sctp_send_wrapper(int                           sd,
+                          const void*                   data,
+                          size_t                        len,
+                          const struct sctp_sndrcvinfo* sinfo,
+                          int                           flags)
 {
    struct sctp_sndrcvinfo* sri;
    struct iovec            iov = { (char*)data, len };
@@ -119,7 +119,7 @@ ssize_t sctp_send(int                           sd,
 #endif
 
 #ifndef HAVE_SCTP_SENDX
-#warning No sctp_send() available - Using only the first address!
+#warning No sctp_sendx() available - Using only the first address!
 ssize_t sctp_sendx(int                           sd,
                    const void*                   data,
                    size_t                        len,
@@ -1580,7 +1580,7 @@ int recvfromplus(int                      sockfd,
       }
       else {   /* Error */
          if(errno != EINTR) {
-            LOG_ERROR 
+            LOG_ERROR
             fprintf(stdlog, "poll(%d) failed: %s\n", sockfd, strerror(errno));
             LOG_END
          }

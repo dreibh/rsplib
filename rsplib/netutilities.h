@@ -71,11 +71,12 @@ int sctp_connectx(int                    sockfd,
 #endif
 
 #ifndef HAVE_SCTP_SEND
-ssize_t sctp_send(int                           sd,
-                  const void*                   data,
-                  size_t                        len,
-                  const struct sctp_sndrcvinfo* sinfo,
-                  int                           flags);
+#define sctp_send(a,b,c,d,e) sctp_send_wrapper(a,b,c,d,e)
+ssize_t sctp_send_wrapper(int                           sd,
+                          const void*                   data,
+                          size_t                        len,
+                          const struct sctp_sndrcvinfo* sinfo,
+                          int                           flags);
 #endif
 
 #ifndef HAVE_SCTP_SENDX
