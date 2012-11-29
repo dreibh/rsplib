@@ -32,7 +32,7 @@ AC_INIT(rsplib/rspbasicmode.c)
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc3)
+AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc3.1)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
@@ -333,7 +333,14 @@ else
    oldLIBS=$LIBS
    AC_CHECK_FUNCS(sctp_sendmsg, ,  AC_CHECK_LIB(sctp, sctp_sendmsg))
    AC_CHECK_FUNCS(sctp_connectx, , AC_CHECK_LIB(sctp, sctp_connectx))
-   AC_CHECK_FUNCS(sctp_send, ,     AC_CHECK_LIB(sctp, sctp_send))
+   case $host_os in
+      linux*)
+         AC_MSG_NOTICE([LK-SCTP's sctp_send() is broken. Using wrapper.])
+         ;;
+      *)
+         AC_CHECK_FUNCS(sctp_send, ,  AC_CHECK_LIB(sctp, sctp_send))
+         ;;
+   esac
    AC_CHECK_FUNCS(sctp_sendx, ,    AC_CHECK_LIB(sctp, sctp_sendx))
    AC_CHECK_MEMBER(struct sctp_paddrparams.spp_flags,
                    AC_DEFINE(HAVE_SPP_FLAGS, 1, [Define this if you support version 10 if the API ID.]),,
