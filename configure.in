@@ -28,11 +28,12 @@
 
 
 # ###### Basic setup ########################################################
-AC_INIT(rsplib/rspbasicmode.c)
+AC_INIT([rsplib], [3.0.0~rc3.2])
+AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
+AM_INIT_AUTOMAKE
 AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE(rsplib, 3.0.0~rc3.1)
 AC_PREFIX_DEFAULT(/usr/local)
 if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
