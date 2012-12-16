@@ -30,8 +30,6 @@
 # ###### Basic setup ########################################################
 AC_INIT([rsplib], [3.0.0~rc3.2])
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
-AM_INIT_AUTOMAKE
-AC_CONFIG_AUX_DIR(admin)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 AC_PREFIX_DEFAULT(/usr/local)
@@ -40,6 +38,7 @@ if test "x$prefix" = "xNONE"; then
   ac_configure_args="$ac_configure_args --prefix $prefix"
 fi
 AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE
 
 
 # ###### Checks for programs ################################################
