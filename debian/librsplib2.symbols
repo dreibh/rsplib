@@ -463,7 +463,7 @@ libtdnetutilities.so.2 librsplib2 #MINVER#
  getSocklen@Base 2.7.8
  getladdrsplus@Base 2.7.8
  getpaddrsplus@Base 2.7.8
- sctp_send_wrapper@Base 2.7.8
+ sctp_send_wrapper@Base 3.0.0~rc3.3
  hton64@Base 2.7.8
  messageBufferDelete@Base 2.7.8
  messageBufferHasPartial@Base 2.7.8

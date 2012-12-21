@@ -37,14 +37,8 @@
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif
-#ifdef HAVE_SYS_INTTYPES_H
-#include <sys/inttypes.h>
-#endif
+#include <sys/types.h>
 #ifdef FreeBSD
 #include <machine/endian.h>
 #endif

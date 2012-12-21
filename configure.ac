@@ -28,7 +28,7 @@
 
 
 # ###### Basic setup ########################################################
-AC_INIT([rsplib], [3.0.0~rc3.2])
+AC_INIT([rsplib], [3.0.0~rc3.3])
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST

@@ -1,10 +1,12 @@
-rsplib (3.0.0~rc3.2-1ubuntu1) quantal; urgency=low
+rsplib (3.0.0~rc3.3-1ubuntu1) unstable; urgency=high
 
   * New upstream release.
   * debian/control: now using colorgcc.
+  * debian/control: added dependency dpkg-dev for hardening options.
+  * rebian/rules: using buildflags.mk for hardening options.
   * Closes Debian ITP bug with wnpp (Closes: #516750).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 11:11:11 +0800
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
 
 rsplib (2.7.13-0ubuntu1) precise; urgency=low
 
