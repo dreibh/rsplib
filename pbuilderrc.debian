@@ -13,3 +13,6 @@ DEBOOTSTRAPOPTS=(
     '--variant=buildd'
     '--keyring' '/usr/share/keyrings/debian-archive-keyring.gpg'
     )
+
+# Turn OFF ccache! It will not work properly!
+CCACHEDIR=
