@@ -1,2 +1,3 @@
 version=3
+http://www.iem.uni-due.de/~dreibh/rserpool/  download/rsplib-(.*)\.tar\.gz
 http://www.tdr.wiwi.uni-due.de/forschung/forschungsprojekte/reliable-server-pooling/    fileadmin/fileupload/I-TDR/ReliableServer/Downloads/rsplib-(.*)\.tar\.gz
