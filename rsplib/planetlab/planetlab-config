@@ -45,7 +45,7 @@ INPUT_DISTRIBUTION=`echo $CHANGELOG_HEADER | sed -e "s/[^)]*)//" -e "s/;.*//g" -
 UPSTREAM_VERSION=`echo $CHANGELOG_HEADER | sed -e "s/[a-Z0-9 ]*(//" -e "s/).*//" -e "s/[0-9]*$//" -e "s/ //g" -e "s/^[0-9]*://" -e "s/-[^ ]*$//g"`
 
 DISTNAME="$PACKAGE-$UPSTREAM_VERSION"
-echo "===> DISTNAME=$DISTNAME"
+# echo "===> DISTNAME=$DISTNAME"
 # ---------------------------------------------------------------------------
 
 
