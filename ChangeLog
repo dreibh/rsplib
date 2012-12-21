@@ -1,4 +1,43 @@
 ------------------------------------------------------------------------
+r2736 | dreibh | 2012-12-21 16:02:29 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+   M /trunk/rsplib2/make-ppa
+   M /trunk/rsplib2/rsplib.lsm
+
+Documentation updates.
+
+------------------------------------------------------------------------
+r2735 | dreibh | 2012-12-21 15:58:02 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+
+Version update to 3.0.0.
+
+------------------------------------------------------------------------
+r2734 | dreibh | 2012-12-21 15:23:23 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/autogen.sh
+
+Updated autogen.sh to include fortification options for Debian/Ubuntu systems.
+
+------------------------------------------------------------------------
+r2733 | dreibh | 2012-12-21 15:17:35 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/librsplib2.symbols
+   M /trunk/rsplib2/debian/rules
+   M /trunk/rsplib2/rsplib/tdtypes.h
+
+Some packaging updates.
+
+------------------------------------------------------------------------
 r2732 | dreibh | 2012-12-21 13:10:42 +0100 (Fri, 21 Dec 2012) | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib/fractalgeneratorservice.cc
