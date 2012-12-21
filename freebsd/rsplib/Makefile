@@ -6,9 +6,9 @@
 #
 
 PORTNAME=	rsplib
-PORTVERSION=	2.7.13
+PORTVERSION=	3.0.1
 CATEGORIES=	net
-MASTER_SITES=	http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Downloads/
+MASTER_SITES=	http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Downloads/ http://www.exp-math.uni-essen.de/~dreibh/rserpool/
 
 MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications
@@ -25,17 +25,17 @@ USE_LDCONFIG=	yes
 LICENSE=	GPLv3
 LICENSE_FILE=	${WRKSRC}/COPYING
 
-MAN8=		calcappclient.8 \
-		cspmonitor.8 \
-		fractalpooluser.8 \
-		hsdump.8 \
-		pingpongclient.8 \
-		registrar.8 \
-		scriptingclient.8 \
-		scriptingcontrol.8 \
-		scriptingserviceexample.8 \
-		server.8 \
-		terminal.8
+MAN1=		calcappclient.1 \
+		cspmonitor.1 \
+		fractalpooluser.1 \
+		hsdump.1 \
+		pingpongclient.1 \
+		registrar.1 \
+		scriptingclient.1 \
+		scriptingcontrol.1 \
+		scriptingserviceexample.1 \
+		server.1 \
+		terminal.1
 
 MAKE_JOBS_SAFE=	yes
 
