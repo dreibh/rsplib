@@ -1,4 +1,4 @@
-rsplib (3.0.0~rc3.3-1ubuntu1) unstable; urgency=high
+rsplib (3.0.0-1ubuntu1) raring; urgency=high
 
   * New upstream release.
   * debian/control: now using colorgcc.
