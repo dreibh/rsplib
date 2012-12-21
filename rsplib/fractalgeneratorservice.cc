@@ -286,7 +286,7 @@ EventHandlingResult FractalGeneratorServer::advanceX(const unsigned int color)
          printf("Failure Tester on RSerPool socket %u -> Disconnecting after %u packets!\n",
                 RSerPoolSocketDescriptor,
                 (unsigned int)DataPackets);
-         return(EHR_Abort);
+         return(EHR_Shutdown);
       }
 
       // ====== Schedule cookie/data timer ==================================
