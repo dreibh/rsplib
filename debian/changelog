@@ -6,6 +6,7 @@ rsplib (3.0.1-1ubuntu1) raring; urgency=high
   * debian/rules: using buildflags.mk for hardening options.
   * debian/watch: added mirror on www.iem.uni-due.de.
   * Closes Debian ITP bug with wnpp (Closes: #516750).
+  * Closes upgrade bug. (LP: #1093075)
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
 
