@@ -1,2 +1,2 @@
-s/2012 Thomas Dreibholz/2012 Thomas Dreibholz/g
-s/2012 by Thomas Dreibholz/2012 by Thomas Dreibholz/g
+s/http:\/\/tdrwww.iem.uni-due.de\/dreibholz/http:\/\/www.iem.uni-due.de\/~dreibh/g
+s/http:\/\/tdrwww.iem.uni-due.de/http:\/\/www.tdr.wiwi.uni-due.de/g

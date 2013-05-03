@@ -2,6 +2,9 @@ rsplib (3.0.2~rc1-1ubuntu1) saucy; urgency=low
 
   * New upstream release.
   * debian/control: Bump standards version to 3.9.4.
+  * debian/copyright: Updated URL.
+
+  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 03 May 2011 08:08:08 +0200
 
 rsplib (3.0.1-1ubuntu3) raring; urgency=low
 
