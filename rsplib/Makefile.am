@@ -306,7 +306,7 @@ rspregistrar_LDADD   = libtdbreakdetector.la librspdispatcher.la librspcsp.la li
 endif
 
 rspserver_SOURCES = rspserver.cc standardservices.cc standardservices.h fractalgeneratorservice.cc fractalgeneratorservice.h calcappservice.cc calcappservice.h pingpongpackets.h fractalgeneratorpackets.h calcapppackets.h scriptingservice.h scriptingservice.cc scriptingpackets.h environmentcache.cc environmentcache.h sha1.c sha1.h
-rspserver_LDADD   = libtdcppthread.la libtdthreadsafety.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS) -lstdc++
+rspserver_LDADD   = libtdcppthread.la libtdthreadsafety.la libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la libcpprspserver.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS) -lstdc++ -lm
 
 rspterminal_SOURCES = rspterminal.c
 rspterminal_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
@@ -345,7 +345,7 @@ dist_fractalpooluser_DATA = fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm
 
 fractalpooluser_CXXFLAGS = $(QT_CXXFLAGS) "-DDEFAULT_FPU_CONFIGDIR=\"$(datadir)/fgpconfig\""
 fractalpooluser_SOURCES  = fractalpooluser.cc fractalpooluser.h
-fractalpooluser_LDADD    = $(QT_LDADD) libtdrandomizer.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS) -lstdc++
+fractalpooluser_LDADD    = $(QT_LDADD) libtdrandomizer.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la librsplib.la $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS) -lstdc++ -lm
 endif
 
 

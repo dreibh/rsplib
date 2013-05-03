@@ -1,7 +1,7 @@
-Format-Specification:
-Name: Reliable Server Pooling
-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
-Source: http://tdrwww.iem.uni-due.de/dreibholz/rserpool/download/
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Reliable Server Pooling
+Upstream-Contact: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Source: http://www.iem.uni-due.de/~dreibh/rserpool/download/
 
 Files: *
 Copyright: 2002-2011, Thomas Dreibholz <dreibh@iem.uni-due.de>
@@ -18,6 +18,6 @@ License: GPL-3
  .
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-X-Comment: On Debian systems, the complete text of the GNU General
+ .
+ On Debian systems, the complete text of the GNU General
  Public License can be found in `/usr/share/common-licenses/GPL-3'.

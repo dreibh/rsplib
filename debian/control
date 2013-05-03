@@ -1,8 +1,9 @@
 Source: rsplib
 Section: net
 Priority: optional
-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
-Homepage: http://tdrwww.iem.uni-due.de/dreibholz/rserpool/index.html
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Homepage: http://www.iem.uni-due.de/~dreibh/rserpool/index.html
 Build-Depends: autotools-dev,
                colorgcc,
                debhelper (>= 7.0.50~),
@@ -10,7 +11,7 @@ Build-Depends: autotools-dev,
                libbz2-dev (>= 1.0),
                libqt4-dev,
                libsctp-dev (>= 1.0.5)
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 
 Package: librsplib2
 Section: libs
@@ -175,6 +176,8 @@ Package: rsplib-legacy-wrappers
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
+Breaks: rsplib-tools (<< 3.0.0)
+Replaces: rsplib-tools (<< 3.0.0)
 Description: RSerPool legacy names
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.

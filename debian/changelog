@@ -1,12 +1,34 @@
+rsplib (3.0.2~rc1-1ubuntu1) saucy; urgency=low
+
+  * New upstream release.
+  * debian/control: Bump standards version to 3.9.4.
+
+rsplib (3.0.1-1ubuntu3) raring; urgency=low
+
+  * Added missing math lib to link, fixing FTBFS.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 17 Apr 2013 17:08:55 -0400
+
+rsplib (3.0.1-1ubuntu2) raring; urgency=low
+
+  * Add Breaks/Replaces to account for files moved from rsplib-tools to
+    rsplib-legacy-wrappers.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 08 Jan 2013 11:36:48 +0000
+
 rsplib (3.0.1-1ubuntu1) raring; urgency=high
 
+  [ Thomas Dreibholz ]
   * New upstream release.
   * debian/control: now using colorgcc.
   * debian/control: added dependency dpkg-dev for hardening options.
   * debian/rules: using buildflags.mk for hardening options.
   * debian/watch: added mirror on www.iem.uni-due.de.
-  * Closes Debian ITP bug with wnpp (Closes: #516750).
-  * Closes upgrade bug. (LP: #1093075)
+ 
+  [ Bhavani Shankar ]
+  * Update debian/copyright to reflect latest standards.
+  * Bump standards version to 3.9.4.
+  * Close Upgrade bug (LP: #1093075) 
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
 
