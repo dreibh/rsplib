@@ -1,4 +1,128 @@
 ------------------------------------------------------------------------
+r2768 | dreibh | 2013-05-11 23:15:09 +0200 (Sat, 11 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/librsplib2.symbols
+   M /trunk/rsplib2/rsplib/netutilities.c
+
+Removed old bug work-around wrapper. It does not work with newer lksctp versions any more.
+
+------------------------------------------------------------------------
+r2767 | dreibh | 2013-05-03 17:47:08 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-ppa
+
+Updated make-ppa.
+
+------------------------------------------------------------------------
+r2766 | dreibh | 2013-05-03 12:05:52 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+
+A few build updates.
+
+------------------------------------------------------------------------
+r2765 | dreibh | 2013-05-03 11:48:17 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/BUGS
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/UpdateDoc1.sed
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/freebsd/rsplib/pkg-descr
+   M /trunk/rsplib2/ppid-registrations-for-rsplib.txt
+   M /trunk/rsplib2/rsplib/calcappclient.1
+   M /trunk/rsplib2/rsplib/cspmonitor.1
+   M /trunk/rsplib2/rsplib/fractalpooluser.1
+   M /trunk/rsplib2/rsplib/hsdump.1
+   M /trunk/rsplib2/rsplib/pingpongclient.1
+   M /trunk/rsplib2/rsplib/rspregistrar.1
+   M /trunk/rsplib2/rsplib/rspserver.1
+   M /trunk/rsplib2/rsplib/rspterminal.1
+   M /trunk/rsplib2/rsplib/scriptingclient.1
+   M /trunk/rsplib2/rsplib/scriptingcontrol.1
+   M /trunk/rsplib2/rsplib/scriptingserviceexample.1
+   M /trunk/rsplib2/rsplib.lsm
+
+Replaced old URL http://tdrwww.iem.uni-due.de/dreibholz/rserpool by http://www.iem.uni-due.de/~dreibh/rserpool.
+
+------------------------------------------------------------------------
+r2764 | dreibh | 2013-05-03 11:45:26 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+
+Updated documentation.
+
+------------------------------------------------------------------------
+r2763 | dreibh | 2013-05-03 11:44:54 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/copyright
+   M /trunk/rsplib2/rsplib/Makefile.am
+
+Build script updates to include the latest Ubuntu changes.
+
+------------------------------------------------------------------------
+r2762 | dreibh | 2013-05-03 11:43:08 +0200 (Fri, 03 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/build-deb
+   M /trunk/rsplib2/make-deb
+
+Updated build scripts.
+
+------------------------------------------------------------------------
+r2742 | dreibh | 2012-12-22 10:44:08 +0100 (Sat, 22 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+Added LP number for upgrade.
+
+------------------------------------------------------------------------
+r2741 | dreibh | 2012-12-21 18:24:01 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/pbuilderrc.debian
+
+Updated Debian pbuilderrc.
+
+------------------------------------------------------------------------
+r2740 | dreibh | 2012-12-21 17:44:14 +0100 (Fri, 21 Dec 2012) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/freebsd/rsplib/Makefile
+   M /trunk/rsplib2/freebsd/rsplib/distinfo
+
+Updated FreeBSD packaging files.
+
+
+------------------------------------------------------------------------
+r2739 | dreibh | 2012-12-21 16:54:21 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated version to 3.0.1.
+
+------------------------------------------------------------------------
+r2738 | dreibh | 2012-12-21 16:42:13 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/watch
+
+Added mirror to watch file.
+
+------------------------------------------------------------------------
+r2737 | dreibh | 2012-12-21 16:05:56 +0100 (Fri, 21 Dec 2012) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+
+------------------------------------------------------------------------
 r2736 | dreibh | 2012-12-21 16:02:29 +0100 (Fri, 21 Dec 2012) | 2 lines
 Changed paths:
    M /trunk/rsplib2/ChangeLog
