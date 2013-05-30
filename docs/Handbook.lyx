@@ -1845,7 +1845,7 @@ rsp_csp_setstatus()
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
 bibfiles "Referenzarchiv"
-options "bibtotoc,acm"
+options "bibtotoc,alphaurl"
 
 \end_inset
 

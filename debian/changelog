@@ -2,6 +2,7 @@ rsplib (3.0.2~rc2.1-1ubuntu1) saucy; urgency=low
 
   * New upstream release.
   * debian/control: Bump standards version to 3.9.4. Now requires libsctp > 1.0.7, since work-around wrapper for older version's bug does not work any more.
+  * debian/watch: Removed old server tdrwww.iem.uni-due.de.
   * debian/copyright: Updated URL.
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 11 May 2013 08:08:08 +0200
