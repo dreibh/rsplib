@@ -956,7 +956,7 @@ int main(int argc, char** argv)
                     "2.0kde",
                     ki18n("A KDE/RSerPool Fractal Generator Pool User"),
                     KAboutData::License_GPL_V3,
-                    ki18n("Copyright (C) 2009-2012 Thomas Dreibholz"));
+                    ki18n("Copyright (C) 2009-2013 Thomas Dreibholz"));
    KCmdLineArgs::init(argc, argv, &about);
    KApplication application;
 #else
