@@ -30,7 +30,6 @@ PRs=1
 GET_ALL_MAX_PARALLEL=100
 
 
-
 get-hosts ()
 {
    GH_OUTPUT=""
@@ -117,61 +116,63 @@ get-all-good-hosts ()
 
 
 
-# Settings for "location":
-NorthAmerica=1
-Europe=2
-Australasia=3
-SouthAmerica=4
+# # Settings for "location":
+# NorthAmerica=1
+# Europe=2
+# Australasia=3
+# SouthAmerica=4
+# 
+# UptimeOkay="(uptime >= 72000)"
+# 
+# DNSWorking="(dns1udp<80 || dns2udp<80)"
+# DNSFine="(dns1udp<20 && dns2udp<80)"
+# 
+# DiskOkay="(gbfree>=5)"
+# MemOkay="((freemem >= 100)  && (swapused <= 10))"
+# 
+# TimeOkay="(drift <= 1000ms)"
+# TimeFine="(drift <= 1ms)"
+# 
+# LoadOkay="(5minload < 5)"
+# LoadFine="(5minload < 1)"
+# 
+# 
+# AliveHost="((resptime > 0) && (sshstatus < 1h) && $DNSWorking)"
+# GoodHost="($UptimeOkay && $AliveHost && $DiskOkay && $MemOkay && $LoadOkay)"
+# GreatHost="($GoodHost && $DNSFine && $LoadFine)"
+# 
+# CandidateForPU="($GoodHost && $TimeOkay)"
+# CandidateForPE="($GoodHost && $TimeOkay)"
+# CandidateForPR="($GreatHost && $TimeFine)"
 
-UptimeOkay="(uptime >= 72000)"
-
-DNSWorking="(dns1udp<80 || dns2udp<80)"
-DNSFine="(dns1udp<20 && dns2udp<80)"
-
-DiskOkay="(gbfree>=5)"
-MemOkay="((freemem >= 100)  && (swapused <= 10))"
-
-TimeOkay="(drift <= 1000ms)"
-TimeFine="(drift <= 1ms)"
-
-LoadOkay="(5minload < 5)"
-LoadFine="(5minload < 1)"
+# ./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
+# ./comon-query good-planetlab.hosts "$GoodHost" name name nameonly quiet
+# ./comon-query great-planetlab.hosts "$GreatHost" name name nameonly quiet
 
 
-AliveHost="((resptime > 0) && (sshstatus < 1h) && $DNSWorking)"
-GoodHost="($UptimeOkay && $AliveHost && $DiskOkay && $MemOkay && $LoadOkay)"
-GreatHost="($GoodHost && $DNSFine && $LoadFine)"
-
-CandidateForPU="($GoodHost && $TimeOkay)"
-CandidateForPE="($GoodHost && $TimeOkay)"
-CandidateForPR="($GreatHost && $TimeFine)"
-
-
-./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
-./comon-query good-planetlab.hosts "$GoodHost" name name nameonly quiet
-./comon-query great-planetlab.hosts "$GreatHost" name name nameonly quiet
-
+echo "Removing old SSH keys ..."
+cat alive-planetlab.hosts | xargs -n1 ssh-keygen -R >/dev/null 2>&1
 
 
 echo "###### Trying European Hosts ##########################################"
-IN_HOSTS="`grep ".de$" good-planetlab.hosts`"
-#  `grep ".at$" good-planetlab.hosts` `grep ".ch$" good-planetlab.hosts` `grep ".fr$" good-planetlab.hosts` `grep ".be$" good-planetlab.hosts` `grep ".nl$" good-planetlab.hosts` `grep ".pl$" good-planetlab.hosts` `grep ".cz$" good-planetlab.hosts` `grep ".dk$" good-planetlab.hosts` `grep ".se$" good-planetlab.hosts` `grep ".fi$" good-planetlab.hosts` `grep ".uk$" good-planetlab.hosts` `grep ".no$" good-planetlab.hosts` `grep ".it$" good-planetlab.hosts` `grep ".es$" good-planetlab.hosts` `grep ".pt$" good-planetlab.hosts`"
+IN_HOSTS="`grep ".de$" alive-planetlab.hosts`"
+#  `grep ".at$" alive-planetlab.hosts` `grep ".ch$" alive-planetlab.hosts` `grep ".fr$" alive-planetlab.hosts` `grep ".be$" alive-planetlab.hosts` `grep ".nl$" alive-planetlab.hosts` `grep ".pl$" alive-planetlab.hosts` `grep ".cz$" alive-planetlab.hosts` `grep ".dk$" alive-planetlab.hosts` `grep ".se$" alive-planetlab.hosts` `grep ".fi$" alive-planetlab.hosts` `grep ".uk$" alive-planetlab.hosts` `grep ".no$" alive-planetlab.hosts` `grep ".it$" alive-planetlab.hosts` `grep ".es$" alive-planetlab.hosts` `grep ".pt$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="europe"
 test-hosts
 
 echo "###### Trying American Hosts ##########################################"
-IN_HOSTS="`grep ".edu$" good-planetlab.hosts`"
-# "`grep ".berkeley.edu$" good-planetlab.hosts` `grep ".ucla.edu$" good-planetlab.hosts` `grep ".ucsd.edu$" good-planetlab.hosts`"
+IN_HOSTS="`grep ".edu$" alive-planetlab.hosts`"
+# "`grep ".berkeley.edu$" alive-planetlab.hosts` `grep ".ucla.edu$" alive-planetlab.hosts` `grep ".ucsd.edu$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="america"
 test-hosts
 
 echo "###### Trying Asian Hosts #############################################"
-IN_HOSTS="`grep ".jp$" good-planetlab.hosts` `grep ".cn$" good-planetlab.hosts` `grep ".th$" good-planetlab.hosts` `grep ".sg$" good-planetlab.hosts` `grep ".kr$" good-planetlab.hosts` `grep ".tw$" good-planetlab.hosts` `grep ".in$" good-planetlab.hosts`"
+IN_HOSTS="`grep ".jp$" alive-planetlab.hosts` `grep ".cn$" alive-planetlab.hosts` `grep ".th$" alive-planetlab.hosts` `grep ".sg$" alive-planetlab.hosts` `grep ".kr$" alive-planetlab.hosts` `grep ".tw$" alive-planetlab.hosts` `grep ".in$" alive-planetlab.hosts`"
 HOSTSFILEMIDDLE="asia"
 test-hosts
 
 echo "###### Trying Australian Hosts ########################################"
-IN_HOSTS="`grep ".au$" good-planetlab.hosts` `grep ".nz$" good-planetlab.hosts`"
+IN_HOSTS="`grep ".au$" alive-planetlab.hosts` `grep ".nz$" alive-planetlab.hosts`"
 let SERVER_TEST_TIMEOUT=5*$SERVER_TEST_TIMEOUT
 HOSTSFILEMIDDLE="australia"
 test-hosts
@@ -179,23 +180,26 @@ touch pr-australia.hosts
 touch pe-australia.hosts
 touch pu-australia.hosts
 
-# echo "###### Trying Chinese Hosts ###########################################"
-# IN_HOSTS="`grep ".cn$" good-planetlab.hosts`"
-# HOSTSFILEMIDDLE="china"
-# test-hosts
+echo "###### Trying Chinese Hosts ###########################################"
+IN_HOSTS="`grep ".cn$" alive-planetlab.hosts`"
+HOSTSFILEMIDDLE="china"
+test-hosts
 
-# echo "###### Trying Essen Hosts #############################################"
-# IN_HOSTS="`grep ".uni-essen.de$" good-planetlab.hosts`"
-# HOSTSFILEMIDDLE="essen"
-# test-hosts
-
-
-# echo "###### Trying ALL Hosts ###############################################"
-# . ./planetlab-config
-# IN_HOSTS="`cat alive-planetlab.hosts`"     #  | grep ".de$"
-# OUT_HOSTS=good-planetlab.hosts
-# let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
-# get-all-good-hosts
+echo "###### Trying Essen Hosts #############################################"
+IN_HOSTS="`grep ".uni-essen.de$" alive-planetlab.hosts`"
+HOSTSFILEMIDDLE="essen"
+test-hosts
 
 
-mv good-planetlab.hosts planetlab.hosts
+echo "###### Trying ALL Hosts ###############################################"
+. ./planetlab-config
+
+IN_HOSTS="`cat alive-planetlab.hosts`"
+OUT_HOSTS=great-planetlab.hosts
+let SERVER_TEST_TIMEOUT=1*$SERVER_TEST_TIMEOUT
+get-all-good-hosts
+
+IN_HOSTS="`cat alive-planetlab.hosts`"
+OUT_HOSTS=good-planetlab.hosts
+let SERVER_TEST_TIMEOUT=10*$SERVER_TEST_TIMEOUT
+get-all-good-hosts
