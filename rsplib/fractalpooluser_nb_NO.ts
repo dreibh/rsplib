@@ -16,7 +16,7 @@
     <message>
         <location filename="fractalpooluser.cc" line="709"/>
         <source>of PE</source>
-        <translation>av PE</translation>
+        <translation type="unfinished">fra PE</translation>
     </message>
     <message>
         <location filename="fractalpooluser.cc" line="746"/>
@@ -59,12 +59,12 @@
     <message>
         <location filename="fractalpooluser.cc" line="393"/>
         <source>Waiting for </source>
-        <translation>Venter på  </translation>
+        <translation type="unfinished">Venter i  </translation>
     </message>
     <message>
         <location filename="fractalpooluser.cc" line="393"/>
         <source> seconds ...</source>
-        <translation>sekunder ...</translation>
+        <translation type="unfinished"> sekunder ...</translation>
     </message>
     <message>
         <location filename="fractalpooluser.cc" line="433"/>
