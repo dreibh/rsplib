@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+import sys;
+
+# XML-RPC
+if sys.version_info < (3,0,0):
+   import xmlrpclib;
+else:
+   import xmlrpc.client;
+
+
+
+# ###### Main program #######################################################
+if len(sys.argv) < 4:
+   sys.stderr.write('Usage: ' + sys.argv[0] + ' URL user password\n')
+   sys.exit(1)
+
+apiURL = sys.argv[1]
+if apiURL == 'default':
+   apiURL = 'https://www.planet-lab.eu/PLCAPI/'
+user     = sys.argv[2]
+password = sys.argv[3]
+
+
+if sys.version_info < (3,0,0):
+   plc_server = xmlrpclib.ServerProxy(apiURL, allow_none=True)
+else:
+   plc_server = xmlrpc.client.ServerProxy(apiURL, allow_none=True)
+
+
+plc_authentication = {}
+plc_authentication['AuthMethod'] = 'password'
+plc_authentication['Username']   = user
+plc_authentication['AuthString'] = password
+
+nodeList = plc_server.GetNodes(plc_authentication, 
+                               { 'boot_state' : 'boot' },
+                               ['node_id', 'site_id', 'hostname', 'model', 'boot_state'])
+for node in nodeList:
+   print node['hostname']

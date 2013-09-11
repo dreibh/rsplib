@@ -27,7 +27,7 @@ PUs=15
 PEs=6
 PRs=1
 
-GET_ALL_MAX_PARALLEL=100
+GET_ALL_MAX_PARALLEL=64
 
 
 get-hosts ()
@@ -121,26 +121,26 @@ get-all-good-hosts ()
 # Europe=2
 # Australasia=3
 # SouthAmerica=4
-# 
+#
 # UptimeOkay="(uptime >= 72000)"
-# 
+#
 # DNSWorking="(dns1udp<80 || dns2udp<80)"
 # DNSFine="(dns1udp<20 && dns2udp<80)"
-# 
+#
 # DiskOkay="(gbfree>=5)"
 # MemOkay="((freemem >= 100)  && (swapused <= 10))"
-# 
+#
 # TimeOkay="(drift <= 1000ms)"
 # TimeFine="(drift <= 1ms)"
-# 
+#
 # LoadOkay="(5minload < 5)"
 # LoadFine="(5minload < 1)"
-# 
-# 
+#
+#
 # AliveHost="((resptime > 0) && (sshstatus < 1h) && $DNSWorking)"
 # GoodHost="($UptimeOkay && $AliveHost && $DiskOkay && $MemOkay && $LoadOkay)"
 # GreatHost="($GoodHost && $DNSFine && $LoadFine)"
-# 
+#
 # CandidateForPU="($GoodHost && $TimeOkay)"
 # CandidateForPE="($GoodHost && $TimeOkay)"
 # CandidateForPR="($GreatHost && $TimeFine)"
@@ -148,6 +148,12 @@ get-all-good-hosts ()
 # ./comon-query alive-planetlab.hosts "$AliveHost" name name nameonly quiet
 # ./comon-query good-planetlab.hosts "$GoodHost" name name nameonly quiet
 # ./comon-query great-planetlab.hosts "$GreatHost" name name nameonly quiet
+
+
+if [ ! -e alive-planetlab.hosts ] ; then
+   echo >&2 "ERROR: alive-planetlab.hosts not found! Create it first!"
+   exit 1
+fi
 
 
 echo "Removing old SSH keys ..."
