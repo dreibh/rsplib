@@ -1,0 +1,183 @@
+#!/bin/sh
+# $Id$
+# * ##########################################################################
+# *
+# *              //===//   //=====   //===//   //       //   //===//
+# *             //    //  //        //    //  //       //   //    //
+# *            //===//   //=====   //===//   //       //   //===<<
+# *           //   \\         //  //        //       //   //    //
+# *          //     \\  =====//  //        //=====  //   //===//    Version II
+# *
+# *             ###################################################
+# *           ======  D E M O N S T R A T I O N   S Y S T E M  ======
+# *             ###################################################
+# *
+# * ############# An Efficient RSerPool Prototype Implementation #############
+# *
+# * Copyright (C) 2002-2013 by Thomas Dreibholz
+# *
+# * This program is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, either version 3 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# *
+# * Contact: dreibh.iem.uni-due.de
+
+. ./planetlab-config
+
+
+# ====== Component Parameters ===============================================
+TESTID=fractal-scenario3
+PR_MISCOPT="-disable-ipv6 -asapannounce=off -enrpannounce=off -endpointkeepalivetransmissioninterval=30000 -endpointkeepalivetimeoutinterval=15000 -cspinterval=1000 -loglevel=5"
+PE_MISCOPT="-fractal -fgpfailureafter=0 -asapannounce=off -rereginterval=30000 -policy=RoundRobin -cspinterval=1000 -loglevel=9 "
+PU_MISCOPT=""
+VALGRIND="" # "/usr/bin/valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000"
+
+SSH_USER="$PLANETLAB_USER"
+SSH_KEY="$PLANETLAB_KEY"
+SERVICE_DIRECTORY="bin"
+
+
+# ====== PlanetLab PR and PE lists ==========================================
+PR_LIST="solvang.simula.nornet"  ## `cat alive-nornet.hosts | sort | head -n2`
+PE_LIST="nordreaker.simula.nornet"  ## `cat alive-nornet.hosts`
+
+# ====== Small Test ======
+# PR_LIST=`cat pr-europe.hosts | grep "\.de$" | head -n2`
+# PE_LIST=`cat pr-europe.hosts | grep "\.de$" | head -n10`
+# PR_LIST="planet2.zib.de"
+# PE_LIST="planet2.zib.de"
+# ====== Small Test ======
+
+
+# ====== Local Test =========================================================
+# PR_LIST="localhost"
+# PE_LIST="localhost localhost localhost localhost localhost localhost"
+# SSH_USER="dreibh"
+# SSH_KEY="$HOME/.ssh/id_dsa"
+# SERVICE_DIRECTORY="src/rsplib2/rsplib"
+# SERVICE_PRE_PROGRAM=""
+# OPT_CSP="-cspserver=127.0.0.1:2960 -cspinterval=1000"
+# ====== Local Test =========================================================
+
+
+
+# ###### Reset all nodes ####################################################
+resetAll ()
+{
+   local nodeList="$1"
+
+   echo "Resetting everything!"
+   for node in `echo $nodeList | xargs -n1 echo | sort -u` ; do
+      echo "Running do-killall for $node ..."
+      echo ./do-killall $node
+   done
+}
+
+
+# ###### Start given PRs and PEs ############################################
+startNetwork ()
+{
+   local prList="$1"
+   local peList="$2"
+
+   local optPeers=""
+   for peer in $prList ; do
+      optPeers="$optPeers -peer=$peer:9901"
+   done
+   local number=1
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
+      echo "Starting PR $number on $pr ..."
+      ./servicecontrol start "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" rspregistrar \
+         "$OPT_CSP $PR_MISCOPT -identifier=0x$number -asap=0.0.0.0:3863 -enrp=0.0.0.0:9901 $optPeers -statsfile=statistics-$pr.data -statsinterval=1000 -actionlogfile=actions-$pr.data" \
+         "" &
+      number=$(($number+1))
+   done
+   wait
+
+   local optRegistrars=""
+   for pr in $prList ; do
+      address=`host "srl-rserpool.$pr" | awk '/^[a-zA-Z0-9.-]+ has address/ { print $4 }'`
+      optRegistrars="$optRegistrars -registrar=$address:3863"
+   done
+   local number=1
+   for pe in $peList ; do
+      echo "Starting PE $number on $pe ..."
+      ./servicecontrol start "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" rspserver \
+         "$OPT_CSP $PE_MISCOPT $optRegistrars -identifier=0x$number" \
+         "" &
+      number=$(($number+1))
+   done
+   wait
+}
+
+
+# ###### Stop given PRs and PEs #############################################
+stopNetwork ()
+{
+   local prList="$1"
+   local peList="$2"
+
+   local number=1
+   for pe in $peList ; do
+      ./servicecontrol stop "ssh" $pe "$SSH_USER" "$SSH_KEY" "$TESTID-PE$number" "$SERVICE_DIRECTORY" rspserver "" "" &
+      number=$(($number+1))
+   done
+   # wait
+
+   local number=1
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
+      ./servicecontrol stop "ssh" $pr "$SSH_USER" "$SSH_KEY" "$TESTID-PR$number" "$SERVICE_DIRECTORY" rspregistrar "" "" &
+      number=$(($number+1))
+   done
+   wait
+}
+
+
+# ###### Run local user #####################################################
+runUser ()
+{
+   local prList="$1"
+
+   local optRegistrars=""
+   for pr in `echo $prList | xargs -n1 echo | sort -u` ; do
+      optRegistrars="$optRegistrars -registrar=$pr:3863"
+   done
+   shift
+   cmd="env LANG=C $VALGRIND ../fractalpooluser $optRegistrars -loglevel=1 $PU_MISCOPT $OPT_CSP -configdir=../fgpconfig -threads=9 $@"
+   echo "# $cmd"
+   $cmd
+}
+
+
+
+# ###### Main program #######################################################
+if [ $# -lt 1 ] ; then
+   echo >&2 "Usage: $0 [start|stop|restart|user|reset]"
+   exit 1
+fi
+
+if [ "x$1" = "xstart" ] ; then
+   startNetwork "$PR_LIST" "$PE_LIST"
+elif [ "x$1" = "xstop" ] ; then
+   stopNetwork "$PR_LIST" "$PE_LIST"
+elif [ "x$1" = "xrestart" ] ; then
+   stopNetwork  "$PR_LIST" "$PE_LIST"
+   startNetwork "$PR_LIST" "$PE_LIST"
+elif [ "x$1" = "xuser" ] ; then
+   shift
+   runUser "$PR_LIST" $@
+elif [ "x$1" = "xreset" ] ; then
+   resetAll "$PR_LIST $PE_LIST"
+else
+   echo >&2 "ERROR: Bad parameter $1!"
+   exit 1
+fi

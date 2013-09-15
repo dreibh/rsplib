@@ -1,0 +1,89 @@
+#!/bin/bash -e
+# $Id$
+#
+# Thomas Dreibholz's PlanetLab/NorNet Script Collection
+# Copyright (C) 2005-2013 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
+
+. ./planetlab-config
+
+
+SERVER=$1
+if [ x$SERVER = "x" ]; then
+   echo "ERROR: No server name/IP given!"
+   exit 1
+fi
+
+
+if [ ! -e bin ]; then
+   echo "ERROR: bin-Verzeichnis existiert nicht!"
+   exit 1
+fi
+for prg in $DISTPRGS ; do
+   if [ ! -e bin/$prg ]; then
+      echo "ERROR: bin/$prg existiert nicht!"
+      exit 1
+   fi
+done
+if [ "x$DISTMISC" != "x" ] ; then
+   cp -f $DISTMISC bin/
+fi
+echo "Preparing binaries archive ..."
+#tar cf - bin | bzip2 -c9 >$DISTNAME-bin.tar.bz2
+
+
+SERVER_LIST=`\
+( \
+while [ x$1 != "x" ] ; do \
+   echo $1 && \
+   shift ; \
+done \
+) | sort -u`
+
+
+
+for SERVER in $SERVER_LIST; do
+   echo -e "\x1b[34m`env LANG=en date`: Transfering binaries to $SERVER ...\x1b[0m"
+   (
+      nice scp -q -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $DISTNAME-bin.tar.bz2  $PLANETLAB_USER@$SERVER:/tmp
+
+      cmd="\
+         echo -e \"\\x1b[34m\`env LANG=en date\`: Unpacking binaries on $SERVER ...\\x1b[0m\" && \
+         if [ ! -e bin/ ] ; then \
+            echo -e \"\\x1b[34m\`env LANG=en date\`: Creating new bin/ directory on $SERVER ...\\x1b[0m\" &&
+            mkdir bin/ ; \
+         else \
+            cd bin/ && \
+            rm -f $DISTPRGS $DISTMISC && \
+            cd .. ; \
+         fi && \
+         tar xjf /tmp/$DISTNAME-bin.tar.bz2 && \
+         rm -f /tmp/$DISTNAME-bin.tar.bz2 && \
+         cd bin/ \
+         sudo rm -f core.\* \*.gz \*.bz2 \*.log\* \*.sca\* \*.vec\* && \
+         sudo /bin/chown root:root $SUIDPRGS && \
+         sudo /bin/chmod +s $SUIDPRGS && \
+         env LANG=en date >LastUpdate && \
+         cd .. && \
+         echo -e \"\\x1b[34m\`env LANG=en date\`: $SERVER is ready!\\x1b[0m\""
+
+      nice ssh -t -t -C -i $PLANETLAB_KEY -oStrictHostKeyChecking=no -oPasswordAuthentication=no -oConnectTimeout=30 $PLANETLAB_USER@$SERVER $cmd
+   ) &
+done
+
+wait

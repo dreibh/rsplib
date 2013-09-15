@@ -1,0 +1,65 @@
+#!/bin/bash -e
+#
+# Thomas Dreibholz's PlanetLab/NorNet Script Collection
+# Copyright (C) 2005-2013 by Thomas Dreibholz, dreibh@iem.uni-due.de
+#
+# $Id$
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+# Contact: dreibh@iem.uni-due.de
+#
+
+. ./planetlab-config
+
+
+if [ x$1 = "x" ]; then
+   SERVER_LIST=$PLANETLAB_COMPILEHOST
+   echo "NOTE: Using compile host $SERVER_LIST."
+else
+   SERVER_LIST=`\
+   ( \
+      while [ x$1 != "x" ] ; do \
+         echo $1 && \
+         shift ; \
+      done \
+   ) | sort -u`
+fi
+
+
+for SERVER in $SERVER_LIST; do
+   echo -e "\x1b[34m`env LANG=en date`: Contacting $SERVER ...\x1b[0m"
+
+   cmd="echo -e \"\x1b[33m\`env LANG=en date\`: Updating repositories on $SERVER ...\x1b[30m\""
+   
+   # yum extremely sucks by trying really slow or even not working mirrors.
+   # yum-plugin-fastestmirror solves this issue. Therefore, install it first.
+   cmd="$cmd ; sudo yum -y install $PLANETLAB_YUMOPTS yum-plugin-fastestmirror"
+   cmd="$cmd ; sudo yum $PLANETLAB_YUMOPTS clean all ; sudo yum -y $PLANETLAB_YUMOPTS update"
+
+   cmd="$cmd ; echo -e \"\x1b[33m\`env LANG=en date\`: Installing packages on $SERVER ...\x1b[30m\""
+   cmd="$cmd ; sudo yum $PLANETLAB_YUMOPTS -y install"
+   for package in $PLANETLAB_COMPILEPKGS ; do
+      cmd="$cmd $package"
+   done
+
+   cmd="$cmd ; echo -e \"\x1b[33m\`env LANG=en date\`: Cleaning up on $SERVER ...\x1b[30m\""
+   cmd="$cmd ; sudo yum -y $PLANETLAB_YUMOPTS upgrade"
+   cmd="$cmd ; sudo /usr/bin/updatedb"
+   
+   ssh -C -i $PLANETLAB_KEY -oPasswordAuthentication=no -oStrictHostKeyChecking=no $PLANETLAB_USER@$SERVER "$cmd" &
+done
+
+wait
