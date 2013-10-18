@@ -51,20 +51,25 @@ AC_PROG_LIBTOOL
 
 
 # ###### colorgcc ###########################################################
-AC_CHECK_PROG([COLORGCC], [colorgcc], [yes], [no])
-if test "$COLORGCC" == "yes"
-then
-   AC_MSG_NOTICE([Compiling using colorgcc])
-   CC=colorgcc
-   CXX=colorgcc -lstdc++
+AC_ARG_ENABLE([colorgcc],
+              [  --enable-colorgcc       enable colorgcc support ][default=yes]],
+              enable_colorgcc=$enableval, enable_colorgcc=yes)
+if test "${enable_colorgcc}" = "yes"; then
+   AC_CHECK_PROG([COLORGCC], [colorgcc], [yes], [no])
+   if test "$COLORGCC" == "yes"
+   then
+      AC_MSG_NOTICE([Compiling using colorgcc])
+      CC=colorgcc
+      CXX=colorgcc
+   fi
 fi
 
 
 # ###### Options ############################################################
 AC_ARG_WITH([max-loglevel],
-[AS_HELP_STRING([--with-max-loglevel],[Highest supported logging level @<:@9@:>@])],
-[max_loglevel=${withval}],
-[max_loglevel=9])
+            [AS_HELP_STRING([--with-max-loglevel],[Highest supported logging level @<:@9@:>@])],
+            [max_loglevel=${withval}],
+            [max_loglevel=9])
 AC_DEFINE_UNQUOTED([MAX_LOGLEVEL], ${max_loglevel}, [Maximum logging level])
 
 AC_ARG_ENABLE([csp],
@@ -542,6 +547,8 @@ echo "   glib Libraries                  : $glib_LIBS"
 echo "   Thread Libraries                : $thread_LIBS"
 echo "   BZip2 Libraries                 : $bz2_LIBS"
 echo ""
+echo "   CC                              : $CC"
+echo "   CXX                             : $CXX"
 echo "   CFLAGS                          : $CFLAGS"
 echo "   CXXFLAGS                        : $CXXFLAGS"
 echo "   LDFLAGS                         : $LDFLAGS"
