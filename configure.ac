@@ -56,7 +56,7 @@ if test "$COLORGCC" == "yes"
 then
    AC_MSG_NOTICE([Compiling using colorgcc])
    CC=colorgcc
-   CXX=colorgcc
+   CXX=colorgcc -lstdc++
 fi
 
 
