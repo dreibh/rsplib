@@ -1,4 +1,394 @@
 ------------------------------------------------------------------------
+r2796 | dreibh | 2013-10-23 13:30:55 +0200 (Wed, 23 Oct 2013) | 1 line
+Changed paths:
+   A /trunk/rsplib2/update-changelog
+
+Packaging file updates.
+------------------------------------------------------------------------
+r2795 | dreibh | 2013-10-18 23:52:41 +0200 (Fri, 18 Oct 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/make-ppa
+   M /trunk/sctplib1/make-ppa
+   M /trunk/socketapi/make-ppa
+
+Updated make-ppa.
+
+------------------------------------------------------------------------
+r2794 | dreibh | 2013-10-18 13:56:12 +0200 (Fri, 18 Oct 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+
+Finally, it also compiles with colorgcc under Ubuntu again.
+
+------------------------------------------------------------------------
+r2793 | dreibh | 2013-10-18 13:40:49 +0200 (Fri, 18 Oct 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+
+New, colorgcc usage is configurable. This should fix FreeBSD compile issues.
+
+------------------------------------------------------------------------
+r2792 | dreibh | 2013-10-18 13:08:03 +0200 (Fri, 18 Oct 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+
+A compile fix.
+
+------------------------------------------------------------------------
+r2791 | dreibh | 2013-10-18 11:35:23 +0200 (Fri, 18 Oct 2013) | 3 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib.lsm
+
+Some small compile fixes for FreeBSD.
+
+
+------------------------------------------------------------------------
+r2790 | dreibh | 2013-09-16 00:38:04 +0200 (Mon, 16 Sep 2013) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/rsplib/nornet
+   A /trunk/rsplib2/rsplib/nornet/Get-Nodes-From-PLC (from /trunk/rsplib2/rsplib/planetlab/Get-Nodes-From-PLC:2789)
+   A /trunk/rsplib2/rsplib/nornet/Hostname-to-Address
+   A /trunk/rsplib2/rsplib/nornet/alive-nornet.hosts
+   A /trunk/rsplib2/rsplib/nornet/alive-nornet.ip
+   A /trunk/rsplib2/rsplib/nornet/create-binaries (from /trunk/rsplib2/rsplib/planetlab/create-binaries:2789)
+   A /trunk/rsplib2/rsplib/nornet/fractal-scenario3 (from /trunk/rsplib2/rsplib/planetlab/fractal-scenario3:2789)
+   A /trunk/rsplib2/rsplib/nornet/go (from /trunk/rsplib2/rsplib/planetlab/go:2789)
+   A /trunk/rsplib2/rsplib/nornet/install-binaries (from /trunk/rsplib2/rsplib/planetlab/install-binaries:2789)
+   A /trunk/rsplib2/rsplib/nornet/install-binaries-on-all-nodes (from /trunk/rsplib2/rsplib/planetlab/install-binaries-on-all-nodes:2789)
+   A /trunk/rsplib2/rsplib/nornet/install-sctp (from /trunk/rsplib2/rsplib/planetlab/install-sctp:2789)
+   A /trunk/rsplib2/rsplib/nornet/planetlab-config (from /trunk/rsplib2/rsplib/planetlab/planetlab-config:2789)
+   A /trunk/rsplib2/rsplib/nornet/prepare-compilehost (from /trunk/rsplib2/rsplib/planetlab/prepare-compilehost:2789)
+   A /trunk/rsplib2/rsplib/nornet/servicecontrol (from /trunk/rsplib2/rsplib/planetlab/servicecontrol:2789)
+
+Added some NorNet test scripts.
+
+------------------------------------------------------------------------
+r2789 | dreibh | 2013-09-11 13:23:22 +0200 (Wed, 11 Sep 2013) | 2 lines
+Changed paths:
+   A /trunk/rsplib2/rsplib/planetlab/Get-Nodes-From-PLC
+   M /trunk/rsplib2/rsplib/planetlab/create-hosts-files
+
+Some test script updates.
+
+------------------------------------------------------------------------
+r2788 | dreibh | 2013-07-29 23:41:18 +0200 (Mon, 29 Jul 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/fractalpooluser_nb_NO.qm
+   M /trunk/rsplib2/rsplib/fractalpooluser_nb_NO.ts
+
+Improved Norwegian translations (hopefully).
+
+------------------------------------------------------------------------
+r2784 | dreibh | 2013-06-10 16:50:50 +0200 (Mon, 10 Jun 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/rsplib/planetlab/create-hosts-files
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
+   M /trunk/rsplib2/rsplib/planetlab/install-binaries-on-all-nodes
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+
+Configuration updates.
+
+------------------------------------------------------------------------
+r2782 | dreibh | 2013-05-30 15:31:22 +0200 (Thu, 30 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/debian/changelog
+
+Updated Debian changelog.
+
+------------------------------------------------------------------------
+r2780 | dreibh | 2013-05-30 14:19:07 +0200 (Thu, 30 May 2013) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/rsplib.lsm
+
+Updated ChangeLog.
+------------------------------------------------------------------------
+r2777 | dreibh | 2013-05-30 13:33:33 +0200 (Thu, 30 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/Makefile.am
+   M /trunk/rsplib2/README
+   M /trunk/rsplib2/UpdateDoc1.sed
+   M /trunk/rsplib2/acinclude.m4
+   M /trunk/rsplib2/clean-deb
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/deb-install
+   M /trunk/rsplib2/deb-uninstall
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/rsplib-registrar.init
+   M /trunk/rsplib2/debian/watch
+   M /trunk/rsplib2/debian.conf
+   M /trunk/rsplib2/docs/Handbook.lyx
+   M /trunk/rsplib2/docs/Handbook.pdf
+   M /trunk/rsplib2/docs/Makefile.am
+   M /trunk/rsplib2/docs/Referenzarchiv.bib
+   M /trunk/rsplib2/freebsd/rsplib/make-diff
+   M /trunk/rsplib2/freebsd/rsplib/test-packaging
+   M /trunk/rsplib2/make-symbols
+   M /trunk/rsplib2/replace-cpp-symbols
+   M /trunk/rsplib2/rsplib/Makefile.am
+   M /trunk/rsplib2/rsplib/add-dummy-interface
+   M /trunk/rsplib2/rsplib/asapinstance.c
+   M /trunk/rsplib2/rsplib/asapinstance.h
+   M /trunk/rsplib2/rsplib/asapinterthreadmessage.c
+   M /trunk/rsplib2/rsplib/asapinterthreadmessage.h
+   M /trunk/rsplib2/rsplib/attacker.cc
+   M /trunk/rsplib2/rsplib/breakdetector.c
+   M /trunk/rsplib2/rsplib/breakdetector.h
+   M /trunk/rsplib2/rsplib/calcappclient.1
+   M /trunk/rsplib2/rsplib/calcappclient.cc
+   M /trunk/rsplib2/rsplib/calcapppackets.h
+   M /trunk/rsplib2/rsplib/calcappservice.cc
+   M /trunk/rsplib2/rsplib/calcappservice.h
+   M /trunk/rsplib2/rsplib/componentstatuspackets.h
+   M /trunk/rsplib2/rsplib/componentstatusreporter.c
+   M /trunk/rsplib2/rsplib/componentstatusreporter.h
+   M /trunk/rsplib2/rsplib/cpprspserver.h
+   M /trunk/rsplib2/rsplib/crashtest.c
+   M /trunk/rsplib2/rsplib/cspmonitor.1
+   M /trunk/rsplib2/rsplib/cspmonitor.c
+   M /trunk/rsplib2/rsplib/debug.h
+   M /trunk/rsplib2/rsplib/debug.helgrind
+   M /trunk/rsplib2/rsplib/debug.memcheck
+   M /trunk/rsplib2/rsplib/dispatcher.c
+   M /trunk/rsplib2/rsplib/dispatcher.h
+   M /trunk/rsplib2/rsplib/doublelinkedringlist.c
+   M /trunk/rsplib2/rsplib/doublelinkedringlist.h
+   M /trunk/rsplib2/rsplib/environmentcache.cc
+   M /trunk/rsplib2/rsplib/environmentcache.h
+   M /trunk/rsplib2/rsplib/execalarm.cc
+   M /trunk/rsplib2/rsplib/exectime.cc
+   M /trunk/rsplib2/rsplib/ext_socket.h
+   M /trunk/rsplib2/rsplib/fdcallback.c
+   M /trunk/rsplib2/rsplib/fdcallback.h
+   M /trunk/rsplib2/rsplib/fgpconfig/Makefile.am
+   M /trunk/rsplib2/rsplib/fgpconfig/renumber-files
+   M /trunk/rsplib2/rsplib/fgpconfig/update-iterations
+   M /trunk/rsplib2/rsplib/fork.c
+   M /trunk/rsplib2/rsplib/fractalgeneratorpackets.h
+   M /trunk/rsplib2/rsplib/fractalgeneratorservice.cc
+   M /trunk/rsplib2/rsplib/fractalgeneratorservice.h
+   M /trunk/rsplib2/rsplib/fractalpooluser.1
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+   M /trunk/rsplib2/rsplib/fractalpooluser.h
+   M /trunk/rsplib2/rsplib/gettimestamp.c
+   M /trunk/rsplib2/rsplib/hrestest.c
+   M /trunk/rsplib2/rsplib/hsdump.1
+   M /trunk/rsplib2/rsplib/hsdump.c
+   M /trunk/rsplib2/rsplib/identifierbitmap.c
+   M /trunk/rsplib2/rsplib/identifierbitmap.h
+   M /trunk/rsplib2/rsplib/interthreadmessageport.c
+   M /trunk/rsplib2/rsplib/interthreadmessageport.h
+   M /trunk/rsplib2/rsplib/leaflinkedredblacktree.c
+   M /trunk/rsplib2/rsplib/leaflinkedredblacktree.h
+   M /trunk/rsplib2/rsplib/loglevel.c
+   M /trunk/rsplib2/rsplib/loglevel.h
+   M /trunk/rsplib2/rsplib/make-rootshell
+   M /trunk/rsplib2/rsplib/messagebuffer.c
+   M /trunk/rsplib2/rsplib/messagebuffer.h
+   M /trunk/rsplib2/rsplib/mutex.cc
+   M /trunk/rsplib2/rsplib/mutex.h
+   M /trunk/rsplib2/rsplib/netdouble.c
+   M /trunk/rsplib2/rsplib/netdouble.h
+   M /trunk/rsplib2/rsplib/netutilities.c
+   M /trunk/rsplib2/rsplib/netutilities.h
+   M /trunk/rsplib2/rsplib/notificationqueue.c
+   M /trunk/rsplib2/rsplib/notificationqueue.h
+   M /trunk/rsplib2/rsplib/peerlist-template.h
+   M /trunk/rsplib2/rsplib/peerlist-template_impl.h
+   M /trunk/rsplib2/rsplib/peerlistmanagement-template.h
+   M /trunk/rsplib2/rsplib/peerlistmanagement-template_impl.h
+   M /trunk/rsplib2/rsplib/peerlistnode-template.h
+   M /trunk/rsplib2/rsplib/peerlistnode-template_impl.h
+   M /trunk/rsplib2/rsplib/pingpongclient.1
+   M /trunk/rsplib2/rsplib/pingpongclient.c
+   M /trunk/rsplib2/rsplib/pingpongpackets.h
+   M /trunk/rsplib2/rsplib/planetlab/ComponentControl.config
+   M /trunk/rsplib2/rsplib/planetlab/attack-scenario2
+   M /trunk/rsplib2/rsplib/planetlab/attack-scenario3
+   M /trunk/rsplib2/rsplib/planetlab/attack-scenario4
+   M /trunk/rsplib2/rsplib/planetlab/combine-disaster-scenario1-results
+   M /trunk/rsplib2/rsplib/planetlab/combine-vectors
+   M /trunk/rsplib2/rsplib/planetlab/comon-host-selector
+   M /trunk/rsplib2/rsplib/planetlab/comon-print-address
+   M /trunk/rsplib2/rsplib/planetlab/comon-query
+   M /trunk/rsplib2/rsplib/planetlab/compile-and-install
+   M /trunk/rsplib2/rsplib/planetlab/create-binaries
+   M /trunk/rsplib2/rsplib/planetlab/create-hosts-files
+   M /trunk/rsplib2/rsplib/planetlab/do-clearall
+   M /trunk/rsplib2/rsplib/planetlab/do-killall
+   M /trunk/rsplib2/rsplib/planetlab/filter-hosts
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario1
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario2
+   M /trunk/rsplib2/rsplib/planetlab/fractal-scenario3
+   M /trunk/rsplib2/rsplib/planetlab/get
+   M /trunk/rsplib2/rsplib/planetlab/get-coredumps
+   M /trunk/rsplib2/rsplib/planetlab/get-results
+   M /trunk/rsplib2/rsplib/planetlab/go
+   M /trunk/rsplib2/rsplib/planetlab/install-binaries
+   M /trunk/rsplib2/rsplib/planetlab/install-sctp
+   M /trunk/rsplib2/rsplib/planetlab/perftest
+   M /trunk/rsplib2/rsplib/planetlab/perftest-version2
+   M /trunk/rsplib2/rsplib/planetlab/planetlab-config
+   M /trunk/rsplib2/rsplib/planetlab/plotter.R
+   M /trunk/rsplib2/rsplib/planetlab/prepare-compilehost
+   M /trunk/rsplib2/rsplib/planetlab/put
+   M /trunk/rsplib2/rsplib/planetlab/run-disaster-scenario1
+   M /trunk/rsplib2/rsplib/planetlab/run-disaster-scenario2
+   M /trunk/rsplib2/rsplib/planetlab/servicecontrol
+   M /trunk/rsplib2/rsplib/planetlab/ssh-tool
+   M /trunk/rsplib2/rsplib/planetlab/start-process
+   M /trunk/rsplib2/rsplib/planetlab/stop-process
+   M /trunk/rsplib2/rsplib/planetlab/stop-processes
+   M /trunk/rsplib2/rsplib/planetlab/test-hosts
+   M /trunk/rsplib2/rsplib/planetlab/three-regions-scenario
+   M /trunk/rsplib2/rsplib/planetlab/tos-scenario1
+   M /trunk/rsplib2/rsplib/poolelementnode-template.h
+   M /trunk/rsplib2/rsplib/poolelementnode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolhandle.c
+   M /trunk/rsplib2/rsplib/poolhandle.h
+   M /trunk/rsplib2/rsplib/poolhandlespacechecksum.c
+   M /trunk/rsplib2/rsplib/poolhandlespacechecksum.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-basics.c
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-basics.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-template.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement-template_impl.h
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement.c
+   M /trunk/rsplib2/rsplib/poolhandlespacemanagement.h
+   M /trunk/rsplib2/rsplib/poolhandlespacenode-template.h
+   M /trunk/rsplib2/rsplib/poolhandlespacenode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolnode-template.h
+   M /trunk/rsplib2/rsplib/poolnode-template_impl.h
+   M /trunk/rsplib2/rsplib/poolpolicy-template.h
+   M /trunk/rsplib2/rsplib/poolpolicy-template_impl.h
+   M /trunk/rsplib2/rsplib/poolpolicysettings.c
+   M /trunk/rsplib2/rsplib/poolpolicysettings.h
+   M /trunk/rsplib2/rsplib/pooluserlist-template.h
+   M /trunk/rsplib2/rsplib/pooluserlist-template_impl.h
+   M /trunk/rsplib2/rsplib/poolusernode-template.h
+   M /trunk/rsplib2/rsplib/poolusernode-template_impl.h
+   M /trunk/rsplib2/rsplib/povray/povray-distribute
+   M /trunk/rsplib2/rsplib/povray/run-povray-for-files
+   M /trunk/rsplib2/rsplib/randomizer.c
+   M /trunk/rsplib2/rsplib/randomizer.h
+   M /trunk/rsplib2/rsplib/redblacktree.h
+   M /trunk/rsplib2/rsplib/redblacktree_impl.h
+   M /trunk/rsplib2/rsplib/registrartable.c
+   M /trunk/rsplib2/rsplib/registrartable.h
+   M /trunk/rsplib2/rsplib/reniceall
+   M /trunk/rsplib2/rsplib/rootshell.c
+   M /trunk/rsplib2/rsplib/rserpool-csp.h
+   M /trunk/rsplib2/rsplib/rserpool-internals.h
+   M /trunk/rsplib2/rsplib/rserpool-policytypes.h
+   M /trunk/rsplib2/rsplib/rserpool.h
+   M /trunk/rsplib2/rsplib/rserpoolerror.c
+   M /trunk/rsplib2/rsplib/rserpoolerror.h
+   M /trunk/rsplib2/rsplib/rserpoolmessage.c
+   M /trunk/rsplib2/rsplib/rserpoolmessage.h
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.c
+   M /trunk/rsplib2/rsplib/rserpoolmessagecreator.h
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.c
+   M /trunk/rsplib2/rsplib/rserpoolmessageparser.h
+   M /trunk/rsplib2/rsplib/rserpoolsocket.c
+   M /trunk/rsplib2/rsplib/rserpoolsocket.h
+   M /trunk/rsplib2/rsplib/rspbasicmode.c
+   M /trunk/rsplib2/rsplib/rspenhancedmode.c
+   M /trunk/rsplib2/rsplib/rspregistrar-asap.c
+   M /trunk/rsplib2/rsplib/rspregistrar-core.c
+   M /trunk/rsplib2/rsplib/rspregistrar-enrp.c
+   M /trunk/rsplib2/rsplib/rspregistrar-global.c
+   M /trunk/rsplib2/rsplib/rspregistrar-misc.c
+   M /trunk/rsplib2/rsplib/rspregistrar-security.c
+   M /trunk/rsplib2/rsplib/rspregistrar-takeover.c
+   M /trunk/rsplib2/rsplib/rspregistrar.1
+   M /trunk/rsplib2/rsplib/rspregistrar.c
+   M /trunk/rsplib2/rsplib/rspregistrar.h
+   M /trunk/rsplib2/rsplib/rspserver.1
+   M /trunk/rsplib2/rsplib/rspserver.cc
+   M /trunk/rsplib2/rsplib/rspterminal.1
+   M /trunk/rsplib2/rsplib/rspterminal.c
+   M /trunk/rsplib2/rsplib/rsputilities.c
+   M /trunk/rsplib2/rsplib/scriptingclient.1
+   M /trunk/rsplib2/rsplib/scriptingclient.c
+   M /trunk/rsplib2/rsplib/scriptingcontrol
+   M /trunk/rsplib2/rsplib/scriptingcontrol.1
+   M /trunk/rsplib2/rsplib/scriptingpackets.h
+   M /trunk/rsplib2/rsplib/scriptingservice.cc
+   M /trunk/rsplib2/rsplib/scriptingservice.h
+   M /trunk/rsplib2/rsplib/scriptingserviceexample
+   M /trunk/rsplib2/rsplib/scriptingserviceexample.1
+   M /trunk/rsplib2/rsplib/session.h
+   M /trunk/rsplib2/rsplib/sessioncontrol.c
+   M /trunk/rsplib2/rsplib/sessioncontrol.h
+   M /trunk/rsplib2/rsplib/sessionstorage.c
+   M /trunk/rsplib2/rsplib/sessionstorage.h
+   M /trunk/rsplib2/rsplib/sha1.c
+   M /trunk/rsplib2/rsplib/sha1.h
+   M /trunk/rsplib2/rsplib/simpleredblacktree.c
+   M /trunk/rsplib2/rsplib/simpleredblacktree.h
+   M /trunk/rsplib2/rsplib/sockaddrunion.h
+   M /trunk/rsplib2/rsplib/standardservices.cc
+   M /trunk/rsplib2/rsplib/standardservices.h
+   M /trunk/rsplib2/rsplib/statistics.cc
+   M /trunk/rsplib2/rsplib/statistics.h
+   M /trunk/rsplib2/rsplib/storage/ss-installer
+   M /trunk/rsplib2/rsplib/storage/ss-registrar.init
+   M /trunk/rsplib2/rsplib/storage/ss.init
+   M /trunk/rsplib2/rsplib/storage/ssclient.c
+   M /trunk/rsplib2/rsplib/stringutilities.c
+   M /trunk/rsplib2/rsplib/stringutilities.h
+   M /trunk/rsplib2/rsplib/tagitem.c
+   M /trunk/rsplib2/rsplib/tagitem.h
+   M /trunk/rsplib2/rsplib/takeoverprocess.c
+   M /trunk/rsplib2/rsplib/takeoverprocess.h
+   M /trunk/rsplib2/rsplib/tcplikeserver.cc
+   M /trunk/rsplib2/rsplib/tcplikeserver.h
+   M /trunk/rsplib2/rsplib/tdtypes.h
+   M /trunk/rsplib2/rsplib/testregistrator.c
+   M /trunk/rsplib2/rsplib/thread.cc
+   M /trunk/rsplib2/rsplib/thread.h
+   M /trunk/rsplib2/rsplib/threadsafety.c
+   M /trunk/rsplib2/rsplib/threadsafety.h
+   M /trunk/rsplib2/rsplib/threadsignal.c
+   M /trunk/rsplib2/rsplib/threadsignal.h
+   M /trunk/rsplib2/rsplib/timer.c
+   M /trunk/rsplib2/rsplib/timer.h
+   M /trunk/rsplib2/rsplib/timestamphashtable.c
+   M /trunk/rsplib2/rsplib/timestamphashtable.h
+   M /trunk/rsplib2/rsplib/timeutilities.c
+   M /trunk/rsplib2/rsplib/timeutilities.h
+   M /trunk/rsplib2/rsplib/transportaddressblock.c
+   M /trunk/rsplib2/rsplib/transportaddressblock.h
+   M /trunk/rsplib2/rsplib/udplikeserver.cc
+   M /trunk/rsplib2/rsplib/udplikeserver.h
+   M /trunk/rsplib2/rsplib/wireshark/Makefile.am
+
+Updated build scripts.
+
+------------------------------------------------------------------------
+r2773 | dreibh | 2013-05-30 13:07:44 +0200 (Thu, 30 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/UpdateDoc1.sed
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/rsplib/fractalpooluser.cc
+
+Added build dependency libfile-fcntllock-perl to get rid of lock warning.
+
+------------------------------------------------------------------------
+r2769 | dreibh | 2013-05-30 10:43:56 +0200 (Thu, 30 May 2013) | 2 lines
+Changed paths:
+   M /trunk/rsplib2/build-deb
+   M /trunk/rsplib2/make-deb
+
+Now correctly handling versions like 1:1.0.14.
+
+------------------------------------------------------------------------
 r2768 | dreibh | 2013-05-11 23:15:09 +0200 (Sat, 11 May 2013) | 2 lines
 Changed paths:
    M /trunk/rsplib2/configure.ac
