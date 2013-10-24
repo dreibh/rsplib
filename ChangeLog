@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2799 | dreibh | 2013-10-23 15:03:34 +0200 (Wed, 23 Oct 2013) | 2 lines
+Changed paths:
+   D /trunk/rsplib2/missing
+
+Removed automatically-generated file.
+
+------------------------------------------------------------------------
+r2797 | dreibh | 2013-10-23 13:32:46 +0200 (Wed, 23 Oct 2013) | 1 line
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+
+Updated ChangeLog.
+------------------------------------------------------------------------
 r2796 | dreibh | 2013-10-23 13:30:55 +0200 (Wed, 23 Oct 2013) | 1 line
 Changed paths:
    A /trunk/rsplib2/update-changelog
