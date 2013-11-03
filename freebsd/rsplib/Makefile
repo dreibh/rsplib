@@ -6,9 +6,9 @@
 #
 
 PORTNAME=	rsplib
-PORTVERSION=	3.0.1
+PORTVERSION=	3.0.2
 CATEGORIES=	net
-MASTER_SITES=	http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Downloads/ http://www.exp-math.uni-essen.de/~dreibh/rserpool/
+MASTER_SITES=	http://www.exp-math.uni-essen.de/~dreibh/rserpool/
 
 MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications
@@ -17,9 +17,9 @@ USE_QT_VER=	4
 QT_COMPONENTS=	gui xml moc_build
 USE_GMAKE=	yes
 GNU_CONFIGURE=	yes
-CONFIGURE_ARGS=	--disable-maintainer-mode \
-		--enable-qt --with-qt-lib=${QT_LIBDIR} \
-		--with-qt-include=${QT_INCDIR}
+CONFIGURE_ARGS=	--disable-maintainer-mode --disable-colorgcc \
+		--enable-qt --with-qt-lib=/usr/local/lib/qt4 \
+		--with-qt-include=/usr/local/include/qt4
 USE_LDCONFIG=	yes
 
 LICENSE=	GPLv3
