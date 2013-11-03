@@ -59,8 +59,8 @@ if test "${enable_colorgcc}" = "yes"; then
    if test "$COLORGCC" == "yes"
    then
       AC_MSG_NOTICE([Compiling using colorgcc])
-      CC=colorgcc
-      CXX=colorgcc -lstdc++
+      CC="colorgcc"
+      CXX="colorgcc -lstdc++"
    fi
 fi
 
