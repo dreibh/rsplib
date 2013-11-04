@@ -32,11 +32,11 @@ rsplib (3.0.1-1ubuntu1) raring; urgency=high
   * debian/control: added dependency dpkg-dev for hardening options.
   * debian/rules: using buildflags.mk for hardening options.
   * debian/watch: added mirror on www.iem.uni-due.de.
- 
+
   [ Bhavani Shankar ]
   * Update debian/copyright to reflect latest standards.
   * Bump standards version to 3.9.4.
-  * Close Upgrade bug (LP: #1093075) 
+  * Close Upgrade bug (LP: #1093075)
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
 
