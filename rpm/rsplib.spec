@@ -3,9 +3,9 @@ Version: 3.0.2
 Release: 1%{?dist}
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
-Group: Productivity/Networking/Other
-Source: %{name}-%{version}.tar.gz
-URL: http://www.iem.uni-due.de/~dreibh/rserpool/download/rsplib-3.0.2.tar.gz
+Group: Applications/Internet
+URL: http://www.iem.uni-due.de/~dreibh/rserpool/
+Source: http://www.iem.uni-due.de/~dreibh/rserpool/download/%{name}-%{version}.tar.gz
 
 AutoReqProv: on
 BuildRequires: libtool, automake, autoconf
@@ -43,7 +43,7 @@ This package contains the documentation for the RSerPool implementation rsplib.
 
 %package registrar
 Summary: RSerPool Registrar service
-Group: Productivity/Networking/Other
+Group: Applications/Internet
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-docs
 
@@ -54,7 +54,7 @@ This package provides the registrar, which is the management component for RSerP
 
 %package tools
 Summary: RSerPool test tools
-Group: Productivity/Networking/Other
+Group: Applications/Internet
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-docs
 Requires: chrpath
@@ -66,7 +66,7 @@ This package provides some test tools for RSerPool setups.
 
 %package services
 Summary: RSerPool example services
-Group: Productivity/Networking/Other
+Group: Applications/Internet
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-tools
 
@@ -77,7 +77,7 @@ This package provides a set of input files for the Fractal Generator service.
 
 %package legacy-wrappers
 Summary: RSerPool legacy names
-Group: Productivity/Networking/Other
+Group: Applications/Internet
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-tools
 
