@@ -1,6 +1,7 @@
 debian/tmp/usr/include/rserpool/rserpool-internals.h
 debian/tmp/usr/include/rserpool/rserpool-policytypes.h
 debian/tmp/usr/include/rserpool/rserpool.h
+debian/tmp/usr/include/rserpool/rserpool-csp.h
 debian/tmp/usr/include/rserpool/tagitem.h
 debian/tmp/usr/lib/librspcsp*.a
 debian/tmp/usr/lib/librspcsp*.la
