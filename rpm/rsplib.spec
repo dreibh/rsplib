@@ -90,6 +90,8 @@ This package provides legacy wrappers for rsplib-2.x scripts. The programs regis
 %setup -q
 
 %build
+autoreconf -if
+
 %configure --disable-maintainer-mode --enable-kernel-sctp --enable-qt --enable-csp --prefix=/usr
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
