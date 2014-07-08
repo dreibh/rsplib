@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.0.2
+Version: 3.0.3~rc1.0
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
@@ -227,5 +227,5 @@ rm -rf "$RPM_BUILD_ROOT"
 
 
 %changelog
-* Mon Nov 04 2013 Thomas Dreibholz <dreibh@simula.no> 3.0.2
+* Mon Nov 04 2014 Thomas Dreibholz <dreibh@simula.no> 3.0.2
 - Initial RPM release

@@ -2,7 +2,7 @@
 # $Id$
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2013 by Thomas Dreibholz
+# Copyright (C) 2005-2014 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ PLANETLAB_KEY=~/.ssh/planetlab
 PLANETLAB_USER=dueple_RSerPool
 PLANETLAB_COMPILEHOST="planetlab-2.cs.auckland.ac.nz"
 PLANETLAB_YUMOPTS=""   # "--disablerepo=ThirdParty"
-PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel boost-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel findutils valgrind strace lksctp-tools-devel ImageMagick-devel GeoIP-devel libcurl-devel openssl-devel bison flex subversion git R"
+PLANETLAB_COMPILEPKGS="autoconf automake libtool gcc gcc-c++ gdb automake autoconf joe libstdc++-devel boost-devel gcc gcc-c++ glib-devel glib2-devel make subversion libpcap bzip2-devel findutils valgrind strace lksctp-tools-devel ImageMagick-devel GeoIP-devel libcurl-devel openssl-devel bison flex subversion git R libcaps-devel intltool gperf"
 
 DISTDIRNAME="rsplib"
 DISTCONFOPT="--disable-kernel-sctp --enable-csp --disable-qt"
