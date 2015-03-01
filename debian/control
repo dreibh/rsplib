@@ -12,7 +12,7 @@ Build-Depends: autotools-dev,
                libfile-fcntllock-perl,
                libqt4-dev,
                libsctp-dev (>= 1.0.8)
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 
 Package: librsplib2
 Section: libs
