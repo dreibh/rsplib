@@ -116,7 +116,7 @@ Ellernstraße 29, 45326 Essen, Germany
 
 
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
@@ -131,11 +131,11 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-May
+March
 \begin_inset space \thinspace{}
 \end_inset
 
-3, 2013
+1, 2015
 \end_layout
 
 \begin_layout Standard
@@ -1661,20 +1661,40 @@ Initialization/Clean-Up
 rsp_initinfo()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_freeinfo()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_initarg()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_initialize()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_cleanup()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -1685,20 +1705,40 @@ Basic Mode API
 rsp_pe_registration()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_pe_deregistration()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_pe_failure()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_getaddrinfo()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_freeaddrinfo()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -1709,44 +1749,88 @@ Enhanced Mode API Socket Functions
 rsp_socket()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_update_session_parameters()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_bind()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_listen()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_getsockname()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_getpeername()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_close()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_poll()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_select()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_getsockopt()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_setsockopt()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -1757,16 +1841,32 @@ Enhanced Mode API Pool Element Functions
 rsp_register()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_deregister()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_accept()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_connect()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -1777,40 +1877,80 @@ Enhanced Mode API Pool User Functions
 rsp_has_cookie()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_forcefailover()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_sendmsg()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_send_cookie()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_recvmsg()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_recvfullmsg()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_read()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_recv()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_write()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_send()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsection
@@ -1821,24 +1961,84 @@ Enhanced Mode API Miscellaneous Functions
 rsp_mapsocket()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_unmapsocket()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_print_notification()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_getpolicybytype()
+\end_layout
+
+\begin_layout Standard
+...
 \end_layout
 
 \begin_layout Subsubsection
 rsp_getpolicybyname()
 \end_layout
 
+\begin_layout Standard
+...
+\end_layout
+
 \begin_layout Subsubsection
 rsp_csp_setstatus()
+\end_layout
+
+\begin_layout Standard
+...
+\end_layout
+
+\begin_layout Section*
+Testbed Platform
+\end_layout
+
+\begin_layout Standard
+A large-scale and realistic Internet testbed platform with support for the
+ multi-homing feature of the underlying SCTP protocol is NorNet.
+ A description of NorNet is provided in
+\begin_inset space \thinspace{}
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PAMS2013-NorNet,ComNets2013-Core,CAIA2015,NNUW2-Dreibholz-NorNetCore-Tutorial"
+
+\end_inset
+
+, some further information can be found on the project website at
+\begin_inset space \thinspace{}
+\end_inset
+
+
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+https://www.nntb.no
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
