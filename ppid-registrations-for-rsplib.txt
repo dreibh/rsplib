@@ -157,7 +157,7 @@ http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publica
 * Dreibholz, T.; Rathgeb, E. P.: ``A Powerful Tool-Chain for Setup, Distributed Processing, Analysis and Debugging of OMNeT++ Simulations´´ (PDF, 557 KiB), in Proceedings of the 1st ACM/ICST International Workshop on OMNeT++, ISBN 978-963-9799-20-2, Marseille/France, March 7, 2008.
 http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/OMNeTWorkshop2008.pdf
 
-* SimProcTC Homepage: http://www.exp-math.uni-essen.de/~dreibh/omnetpp/
+* SimProcTC Homepage: http://www.iem.uni-due.de/~dreibh/omnetpp/
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:

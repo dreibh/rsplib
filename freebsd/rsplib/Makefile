@@ -4,7 +4,7 @@
 PORTNAME=	rsplib
 PORTVERSION=	3.0.2
 CATEGORIES=	net
-MASTER_SITES=	http://www.exp-math.uni-essen.de/~dreibh/rserpool/
+MASTER_SITES=	http://www.iem.uni-due.de/~dreibh/rserpool/
 
 MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications

@@ -1,8 +1,8 @@
-rsplib (3.0.3~rc1.0-1ubuntu1) utopic; urgency=low
+rsplib (3.0.3~rc1.1-1ubuntu1) utopic; urgency=low
 
   * New upstream release.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 08 Jul 2014 08:08:08 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 01 Mar 2015 08:08:08 +0200
 
 rsplib (3.0.2-1ubuntu1) saucy; urgency=low
 
