@@ -1,4 +1,26 @@
 ------------------------------------------------------------------------
+r2831 | dreibh | 2015-03-01 11:56:44 +0100 | 2 lines
+Changed paths:
+   M /trunk/rsplib2/configure.ac
+   M /trunk/rsplib2/debian/changelog
+   M /trunk/rsplib2/debian/control
+   M /trunk/rsplib2/debian/copyright
+   A /trunk/rsplib2/debian/upstream
+   A /trunk/rsplib2/debian/upstream/signing-key.asc
+   M /trunk/rsplib2/debian/watch
+
+Packaging updates for signature check.
+
+------------------------------------------------------------------------
+r2830 | dreibh | 2015-03-01 10:35:33 +0100 | 3 lines
+Changed paths:
+   M /trunk/rsplib2/ChangeLog
+   M /trunk/rsplib2/make-ppa
+
+Script update.
+Updated ChangeLog.
+
+------------------------------------------------------------------------
 r2829 | dreibh | 2015-03-01 10:32:25 +0100 | 2 lines
 Changed paths:
    M /trunk/rsplib2/rsplib.lsm
