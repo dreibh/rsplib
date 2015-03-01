@@ -1,6 +1,7 @@
 rsplib (3.0.3~rc1.1-1ubuntu1) utopic; urgency=low
 
   * New upstream release.
+  * debian/control: updated standards version.
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 01 Mar 2015 08:08:08 +0200
 
