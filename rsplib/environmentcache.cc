@@ -27,6 +27,8 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <map>
+
 #include "environmentcache.h"
 #include "scriptingservice.h"
 #include "randomizer.h"
@@ -40,8 +42,6 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
-#include <map>
 
 
 // ###### Constructor #######################################################

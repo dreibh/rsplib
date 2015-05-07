@@ -27,6 +27,8 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <iostream>
+
 #include "rserpool.h"
 #include "tdtypes.h"
 #include "calcapppackets.h"
@@ -45,7 +47,6 @@
 #include <math.h>
 #include <signal.h>
 #include <ext_socket.h>
-#include <iostream>
 
 
 using namespace std;

@@ -27,13 +27,13 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <complex>
+#include <iostream>
+
 #include "fractalgeneratorservice.h"
 #include "netutilities.h"
 #include "timeutilities.h"
 #include "stringutilities.h"
-
-#include <complex>
-#include <iostream>
 
 
 #if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 303)
