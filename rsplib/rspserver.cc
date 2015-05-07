@@ -27,6 +27,8 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <string>
+
 #include "rserpool.h"
 #include "breakdetector.h"
 #include "tagitem.h"
@@ -168,11 +170,7 @@ start:
          }
          else if(sscanf((const char*)&argv[i][8], "LeastUsedDegradation:%lf", &degradation) == 1) {
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            if(loadInfo.rli_load_degradation < 0) {
-               fputs("ERROR: Bad LUD degradation value!\n", stderr);
-               exit(1);
-            }
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad LUD degradation value!\n", stderr);
                exit(1);
             }
@@ -180,11 +178,7 @@ start:
          }
          else if(sscanf((const char*)&argv[i][8], "PriorityLeastUsed:%lf", &degradation) == 1) {
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            if(loadInfo.rli_load_degradation < 0) {
-               fputs("ERROR: Bad PLU degradation value!\n", stderr);
-               exit(1);
-            }
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad PLU degradation value!\n", stderr);
                exit(1);
             }
@@ -208,11 +202,7 @@ start:
             }
             loadInfo.rli_load_dpf         = (unsigned int)rint(dpf * (double)PPV_MAX_LOADDPF);
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            if(loadInfo.rli_load_degradation < 0) {
-               fputs("ERROR: Bad LU-DPF degradation value!\n", stderr);
-               exit(1);
-            }
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad LU-DPF degradation value!\n", stderr);
                exit(1);
             }
