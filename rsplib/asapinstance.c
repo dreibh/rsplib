@@ -301,7 +301,7 @@ static void asapInstanceConfigure(struct ASAPInstance* asapInstance,
 static bool asapInstanceConnectToRegistrar(struct ASAPInstance* asapInstance,
                                            int                  sd)
 {
-   RegistrarIdentifierType registrarIdentifier;
+   RegistrarIdentifierType registrarIdentifier = 0;
 #ifdef HAVE_SCTP_DELAYED_SACK
    struct sctp_sack_info   sctpSACKInfo;
 #endif
