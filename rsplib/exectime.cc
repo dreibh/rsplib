@@ -27,14 +27,16 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <thread.h>
-#include <iostream>
 #include <sys/time.h>
+
 #include "timeutilities.h"
 
 
@@ -131,7 +133,7 @@ int main(int argc, char** argv)
    }
 
    cerr << "Starting ..." << endl;
-   ExecThread  threadSet[argc - 2];
+   ExecThread* threadSet = new ExecThread[argc - 2];
    ExecThread* threadPtrSet[argc - 2];
    size_t      threads = 0;
    for(int i = 2;i < argc;i++) {
@@ -166,5 +168,6 @@ int main(int argc, char** argv)
    }
 
    cerr << endl << "Done!" << endl;
+   delete threadSet;
    return(0);
 }
