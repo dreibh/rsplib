@@ -125,7 +125,7 @@ static unsigned int performUpload(int sd, const char* name)
    fflush(stdout);
    for(;;) {
       dataLength = fread((char*)&upload.Data, 1, sizeof(upload.Data), fh);
-      if(dataLength >= 0) {
+      if(dataLength > 0) {
          upload.Header.Type   = SPT_UPLOAD;
          upload.Header.Flags  = 0x00;
          upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
@@ -136,10 +136,6 @@ static unsigned int performUpload(int sd, const char* name)
             printf("Upload error: %s\n", strerror(errno));
             fflush(stdout);
             return(SSCR_FAILOVER);
-         }
-
-         if(dataLength == 0) {
-            break;
          }
       }
       else {
