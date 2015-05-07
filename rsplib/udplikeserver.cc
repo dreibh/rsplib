@@ -27,6 +27,8 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
+#include <string>
+
 #include "udplikeserver.h"
 #include "timeutilities.h"
 #include "netutilities.h"
@@ -272,7 +274,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                            timeout = 0;
                         }
                         else {
-                           timeout = min(timeout, NextTimerTimeStamp - now);
+                           timeout = std::min(timeout, NextTimerTimeStamp - now);
                         }
                      }
 

@@ -119,7 +119,7 @@ int main(int argc, char** argv)
          }
          else if(sscanf((const char*)&argv[i][8], "LeastUsedDegradation:%lf", &degradation) == 1) {
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad LUD degradation value!\n", stderr);
                exit(1);
             }
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
          }
          else if(sscanf((const char*)&argv[i][8], "PriorityLeastUsed:%lf", &degradation) == 1) {
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad PLU degradation value!\n", stderr);
                exit(1);
             }
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
             }
             loadInfo.rli_load_dpf         = (unsigned int)rint(dpf * (double)PPV_MAX_LOADDPF);
             loadInfo.rli_load_degradation = (unsigned int)rint(degradation * (double)PPV_MAX_LOAD_DEGRADATION);
-            else if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
+            if(loadInfo.rli_load_degradation > PPV_MAX_LOAD_DEGRADATION) {
                fputs("ERROR: Bad LU-DPF degradation value!\n", stderr);
                exit(1);
             }

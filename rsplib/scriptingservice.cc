@@ -450,7 +450,7 @@ EventHandlingResult ScriptingServer::performDownload()
               Directory);
       for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
-         if(dataLength >= 0) {
+         if(dataLength > 0) {
             download.Header.Type   = SPT_DOWNLOAD;
             download.Header.Flags  = 0x00;
             download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
@@ -470,7 +470,7 @@ EventHandlingResult ScriptingServer::performDownload()
             }
             DownloadSize += (unsigned long long)dataLength;
          }
-         if(dataLength <= 0) {
+         else {
             const unsigned long long downloadFinished = getMicroTime();
             printTimeStamp(stdlog);
             fprintf(stdlog, "S%04d: Download completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => finished work in directory \"%s\".\n",

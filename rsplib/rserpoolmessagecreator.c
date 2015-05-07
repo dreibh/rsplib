@@ -196,7 +196,6 @@ static bool createAddressParameter(struct RSerPoolMessage* message,
          fprintf(stdlog, "Unknown address family %u\n", address->sa_family);
          LOG_END_FATAL
          return(false);
-       break;
    }
 
    return(finishTLV(message, tlvPosition));
@@ -242,7 +241,6 @@ static bool createTransportParameter(struct RSerPoolMessage*             message
          fprintf(stdlog,"Unknown protocol #%d\n", transportAddressBlock->Protocol);
          LOG_END_FATAL
          return(false);
-       break;
    }
 
    if(transportAddressBlock->Flags & TABF_CONTROLCHANNEL) {
@@ -489,7 +487,6 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
          fprintf(stdlog, "Unknown policy #$%02x\n", poolPolicySettings->PolicyType);
          LOG_END_FATAL
          return(false);
-       break;
    }
 
    return(finishTLV(message, tlvPosition));

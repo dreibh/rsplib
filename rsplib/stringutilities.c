@@ -109,7 +109,6 @@ int getNextWord(const char* input, char* buffer, const size_t bufferSize, size_t
          }
          else {
             return(0);
-            break;
          }
       }
       if(i < bufferSize) {

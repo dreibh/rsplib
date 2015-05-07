@@ -74,7 +74,6 @@ bool registrarPoolUserHasPermissionFor(struct Registrar*               registrar
        break;
       default:
          CHECK(false);
-       break;
    }
 
    /* printf("rate=%1.6f   threshold=%1.6f\n", rate, threshold); */

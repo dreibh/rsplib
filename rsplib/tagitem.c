@@ -151,12 +151,10 @@ struct TagItem* tagListNext(struct TagItem* tagList)
                return(NULL);
             }
             continue;
-         break;
         case TAG_IGNORE:
          break;
         case TAG_END:
            return(NULL);
-         break;
         case TAG_SKIP:
            tagListPtr += (long)tagListPtr->Data;
          break;

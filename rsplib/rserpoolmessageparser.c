@@ -953,7 +953,6 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
          LOG_END
          message->Error = RSPERR_UNSUPPORTED_POOL_POLICY;
          return(false);
-       break;
    }
 
    return(checkFinishTLV(message, tlvPosition));
@@ -2234,7 +2233,6 @@ static bool scanMessage(struct RSerPoolMessage* message)
          fprintf(stdlog, "Unknown message type $%04x!\n", message->Type);
          LOG_END
          return(false);
-       break;
    }
 
    return(checkFinishMessage(message,startPosition));

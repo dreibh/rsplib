@@ -46,6 +46,11 @@
 #include <machine/endian.h>
 #endif
 
+#ifndef __cplusplus
+typedef unsigned char bool;
+#define true 1
+#define false 0
+
 #ifndef max
 #define max(a, b) ((a) < (b) ? (b) : (a))
 #endif
@@ -53,10 +58,6 @@
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif
 
-#ifndef __cplusplus
-typedef unsigned char bool;
-#define true 1
-#define false 0
 #endif
 
 #endif

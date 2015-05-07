@@ -690,7 +690,6 @@ bool address2string(const struct sockaddr* address,
             snprintf(buffer, length, "%s", inet_ntoa(ipv4address->sin_addr));
          }
          return(true);
-       break;
       case AF_INET6:
          ipv6address = (const struct sockaddr_in6*)address;
          if( IN6_IS_ADDR_LINKLOCAL(&ipv6address->sin6_addr) ||
@@ -722,7 +721,6 @@ bool address2string(const struct sockaddr* address,
       case AF_UNSPEC:
          safestrcpy(buffer, "(unspecified)",length);
          return(true);
-       break;
    }
 
    LOG_ERROR
@@ -1117,10 +1115,8 @@ uint16_t getPort(const struct sockaddr* address)
       switch(address->sa_family) {
          case AF_INET:
             return(ntohs(((struct sockaddr_in*)address)->sin_port));
-          break;
          case AF_INET6:
             return(ntohs(((struct sockaddr_in6*)address)->sin6_port));
-          break;
          default:
             LOG_ERROR
             fprintf(stdlog, "Unsupported address family #%d\n",
@@ -1141,11 +1137,9 @@ bool setPort(struct sockaddr* address, uint16_t port)
          case AF_INET:
             ((struct sockaddr_in*)address)->sin_port = htons(port);
             return(true);
-          break;
          case AF_INET6:
             ((struct sockaddr_in6*)address)->sin6_port = htons(port);
             return(true);
-          break;
          default:
             LOG_ERROR
             fprintf(stdlog, "Unsupported address family #%d\n",
@@ -1628,17 +1622,14 @@ size_t getSocklen(const struct sockaddr* address)
    switch(address->sa_family) {
       case AF_INET:
          return(sizeof(struct sockaddr_in));
-       break;
       case AF_INET6:
          return(sizeof(struct sockaddr_in6));
-       break;
       default:
          LOG_ERROR
          fprintf(stdlog, "Unsupported address family #%d\n",
                  address->sa_family);
          LOG_END_FATAL
          return(sizeof(struct sockaddr));
-       break;
    }
 }
 

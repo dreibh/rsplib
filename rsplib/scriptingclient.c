@@ -139,9 +139,7 @@ static unsigned int performUpload(int sd, const char* name)
          }
       }
       else {
-         newLogLine(stderr);
-         fprintf(stderr, "ERROR: Reading failed in \"%s\"!\n", name);
-         exit(1);
+         break;
       }
    }
    fclose(fh);
@@ -469,11 +467,9 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_READY:
                return(handleReadyMessage(sd, (const struct Ready*)header, length));
-             break;
             case SPT_NOTREADY:
                handleNotReadyMessage(sd, (const struct NotReady*)header, length);
                return(SSCR_FAILOVER);
-             break;
          }
         break;
 
@@ -482,7 +478,6 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_ENVIRONMENT:
                return(handleEnvironmentMessage(sd, (const struct Environment*)header, length));
-             break;
          }
         break;
 
@@ -491,7 +486,6 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_STATUS:
                return(serverStartsProcessing(sd, (const struct Status*)header, length));
-             break;
          }
         break;
 
@@ -499,15 +493,12 @@ static unsigned int handleMessage(int                                 sd,
       case SSCS_PROCESSING:
          switch(header->Type) {
             case SPT_KEEPALIVE_ACK:
-             return(handleKeepAliveAckMessage());
-             break;
+               return(handleKeepAliveAckMessage());
             case SPT_KEEPALIVE:
                return(sendKeepAliveAckMessage(sd));
-             break;
             case SPT_STATUS:
                State = SSCS_DOWNLOAD;
                return(handleStatusMessage((const struct Status*)header, length));
-             break;
          }
        break;
 
@@ -516,10 +507,8 @@ static unsigned int handleMessage(int                                 sd,
          switch(header->Type) {
             case SPT_DOWNLOAD:
                return(handleDownloadMessage((const struct Download*)header, length));
-             break;
             case SPT_KEEPALIVE_ACK:
                return(handleKeepAliveAckMessage());
-             break;
          }
        break;
    }

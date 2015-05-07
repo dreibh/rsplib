@@ -452,7 +452,6 @@ bool handleNotification(struct RSerPoolSocket*         rserpoolSocket,
             case SCTP_SHUTDOWN_COMP:
                handleCommLost(rserpoolSocket, &notification->sn_assoc_change);
                return(true);
-             break;
          }
       }
       else if(notification->sn_header.sn_type == SCTP_SHUTDOWN_EVENT) {
