@@ -1,3 +1,9 @@
+rsplib (3.0.4~rc1-1ubuntu1) vivid; urgency=low
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 08 May 2015 08:08:08 +0200
+
 rsplib (3.0.3-1ubuntu1) vivid; urgency=low
 
   * New upstream release.
