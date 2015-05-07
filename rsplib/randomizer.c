@@ -98,9 +98,10 @@ uint32_t random32()
             return(number);
          }
          RandomSource = RS_CLIB;
+
       case RS_CLIB:
          return(random());
-       break;
+
       case RS_TRY_DEVICE:
          RandomDevice = fopen("/dev/urandom", "r");
          if(RandomDevice != NULL) {
