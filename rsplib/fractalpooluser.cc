@@ -288,7 +288,7 @@ void FractalPU::startNextJob()
 
    size_t remaining = CurrentThreads;
    for(size_t yPosition = 0;yPosition < yCount;yPosition++) {
-      const size_t xCount = (yPosition < yCount - 1) ? min(remaining, yCount) : remaining;
+      const size_t xCount = (yPosition < yCount - 1) ? std::min(remaining, yCount) : remaining;
       if(xCount > 0) {
          const size_t xStep = (size_t)rint(Parameter.Width / xCount);
          remaining -= xCount;
@@ -657,7 +657,7 @@ void FractalCalculationThread::run()
 
                   // ====== Handle received result chunks ===================
                   rsp_sndrcvinfo rinfo;
-                  char           buffer[max(sizeof(FGPData), sizeof(rsp_sndrcvinfo))];
+                  char           buffer[std::max(sizeof(FGPData), sizeof(rsp_sndrcvinfo))];
                   int            flags   = 0;
                   size_t         packets = 0;
                   ssize_t        received;

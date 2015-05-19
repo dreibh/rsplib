@@ -78,8 +78,8 @@ class ImageDisplay : public QWidget
                         const size_t width, const size_t height,
                         const unsigned int color) {
       if(Image) {
-         for(size_t j = y;j < min(y + height, (size_t)Image->height());j++) {
-            for(size_t i = x;i < min(x + width, (size_t)Image->width());i++) {
+         for(size_t j = y;j < std::min(y + height, (size_t)Image->height());j++) {
+            for(size_t i = x;i < std::min(x + width, (size_t)Image->width());i++) {
                Image->setPixel(i, j, color);
             }
          }
