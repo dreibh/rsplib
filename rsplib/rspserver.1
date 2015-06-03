@@ -9,7 +9,7 @@
 .\"
 .\" ------------- An Efficient RSerPool Prototype Implementation -------------
 .\"
-.\" Copyright (C) 2002-2014 by Thomas Dreibholz
+.\" Copyright (C) 2002-2015 by Thomas Dreibholz
 .\"
 .\" This program is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd June 06, 2012
+.Dd June 03, 2015
 .Dt RspServer 1
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -89,6 +89,7 @@
 .Op Fl pppmaxthreads=threads
 .Nm rspserver
 .Op Fl scripting
+.Op Fl sskeyring=keyring
 .Op Fl sscachedirectory=directory
 .Op Fl sscachemaxentries=entries
 .Op Fl sscachemaxsize=kibibytes
@@ -295,6 +296,8 @@ Sets an upper limit for the number of simultaneous PingPong sessions.
 .It Fl scripting
 Starts the Scripting service.
 .Bl -tag -width indent
+.It Fl sskeyring=keyring
+The location of a GnuPG keyring to check the work packages and environments against. If a keyring is specified, only files that pass the validation are accepted.
 .It Fl sscachedirectory=directory
 Sets the environment cache directory.
 .It Fl sscachemaxentries=entries

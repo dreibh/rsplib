@@ -50,6 +50,7 @@ class ScriptingServer : public TCPLikeServer
       unsigned int       CacheMaxEntries;
       unsigned long long CacheMaxSize;
       std::string        CacheDirectory;
+      std::string        Keyring;
       bool               KeepTempDirs;
       bool               VerboseMode;
    };
@@ -75,6 +76,7 @@ class ScriptingServer : public TCPLikeServer
    virtual EventHandlingResult initializeSession();
    virtual void finishSession(EventHandlingResult result);
    virtual EventHandlingResult syncTimerEvent(const unsigned long long now);
+   bool checkEnvironment(const char* environmentName);
    EventHandlingResult startWorking();
    bool hasFinishedWork(int& exitStatus);
    EventHandlingResult sendStatus(const int exitStatus);

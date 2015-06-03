@@ -10,7 +10,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2014 by Thomas Dreibholz
+# Copyright (C) 2002-2015 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,16 +30,33 @@
 
 # ====== Preparation ========================================================
 if [ $# -lt 1 ] ; then
-   echo >2 "Usage: scriptingcontrol {[run] [Directory] [Input] [Output] [Status] [Environment]} {[cleanup] [Directory] [PID] {keeptempdirs}}"
+   echo >2 "Usage: scriptingcontrol {check-environment [Environment] [Keyring]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring]} {cleanup [Directory] [PID] {keeptempdirs}}"
    exit 1
 fi
 MODE="$1"
 
 
+# ====== Environment check mode =============================================
+if [ "$MODE" = "check-environment" ] ; then
+   if [ $# -lt 3 ] ; then
+     echo >2 "Usage: scriptingcontrol check-environment [Environment] [Keyring]"
+     exit 1
+   fi
+   ENVIRONMENT_NAME="$2"
+   KEYRING="$3"
+
+   # ====== Verify input ====================================================
+   if [ "$KEYRING" != "" ] ; then
+      gpg --no-default-keyring "--keyring=$KEYRING" --verify $ENVIRONMENT_NAME || exit 1
+   else
+      echo "WARNING: Skipping verification; you should better configure a keyring!"
+   fi
+
+
 # ====== Work mode ==========================================================
-if [ "$MODE" = "run" ] ; then
-   if [ $# -lt 4 ] ; then
-     echo >2 "Usage: scriptingcontrol [run] [Directory] [Input] [Output] [Status]"
+elif [ "$MODE" = "run" ] ; then
+   if [ $# -lt 5 ] ; then
+     echo >2 "Usage: scriptingcontrol run [Directory] [Input] [Output] [Status] [Environment] [Keyring]"
      exit 1
    fi
    DIRECTORY="$2"
@@ -47,6 +64,14 @@ if [ "$MODE" = "run" ] ; then
    OUTPUT_NAME="$4"
    STATUS_NAME="$5"
    ENVIRONMENT_NAME="$6"
+   KEYRING="$7"
+
+   # ====== Verify input ====================================================
+   if [ "$KEYRING" != "" ] ; then
+      gpg --no-default-keyring "--keyring=$KEYRING" --verify $INPUT_NAME || exit 1
+   else
+      echo "WARNING: Skipping verification; you should better configure a keyring!"
+   fi
 
    # ====== Extract input ===================================================
    cd $DIRECTORY || exit 1
@@ -66,7 +91,7 @@ if [ "$MODE" = "run" ] ; then
 # ====== Clean up directory =================================================
 elif [ "$MODE" = "cleanup" ] ; then
    if [ $# -lt 3 ] ; then
-     echo >2 "Usage: scriptingcontrol [cleanup] [Directory] [PID] {keeptempdirs}"
+     echo >2 "Usage: scriptingcontrol cleanup [Directory] [PID] {keeptempdirs}"
      exit 1
    fi
    DIRECTORY="$2"

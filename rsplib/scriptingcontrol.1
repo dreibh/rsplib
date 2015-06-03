@@ -9,7 +9,7 @@
 .\"
 .\" ------------- An Efficient RSerPool Prototype Implementation -------------
 .\"
-.\" Copyright (C) 2002-2014 by Thomas Dreibholz
+.\" Copyright (C) 2002-2054 by Thomas Dreibholz
 .\"
 .\" This program is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 .\" Contact: dreibh@iem.uni-due.de
 .\"
 .\" ###### Setup ############################################################
-.Dd June 06, 2012
+.Dd June 03, 2015
 .Dt ScriptingControl 1
 .Os Scripting Control
 .\" ###### Name #############################################################
@@ -36,12 +36,16 @@
 .Nd Scripting Control script for the Scripting Service
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
+.Nm scriptingcontrol check-environment
+.Op Environment
+.Op Keyring
 .Nm scriptingcontrol run
 .Op Directory
 .Op Input
 .Op Output
 .Op Status
 .Op Environment
+.Op Keyring
 .Nm scriptingcontrol cleanup
 .Op Directory
 .Op PID
@@ -56,7 +60,9 @@ the input file name and should create an output file of the given name.
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It run|cleanup
+.It check-environment|run|cleanup
+.Nm check-environment
+is used to check a newly downloaded environment file.
 .Nm run
 is used when the session is started.
 .Nm cleanup
@@ -71,6 +77,8 @@ Gives the name of the output file.
 Gives the name of the status file.
 .It Environment
 Gives the name of the environment file (if available).
+.It Keyring
+Gives the name of a GnuPG keyring file to check the input file and environment file (if available).
 .It PID
 The process ID (PID) of the session's worker process. All of its children will
 be found and terminated during clean-up.

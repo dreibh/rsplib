@@ -350,6 +350,10 @@ start:
          if(!(strncmp(argv[i], "-chargenmaxthreads=", 19))) {
             maxThreads = atol((const char*)&argv[i][19]);
          }
+         else if(!(strncmp(argv[i], "-chargen", 8))) {
+            fprintf(stderr, "ERROR: Unknown Character Generator parameter: %s!\n", argv[i]);
+            exit(1);
+         }
       }
 
       TCPLikeServer::poolElement("Character Generator Server - Version 1.0",
@@ -425,6 +429,10 @@ start:
          }
          else if(!(strncmp(argv[i], "-fgpfailureafter=", 17))) {
             settings.FailureAfter = atol((const char*)&argv[i][17]);
+         }
+         else if(!(strncmp(argv[i], "-fgp", 4))) {
+            fprintf(stderr, "ERROR: Unknown Fractal Generator parameter: %s!\n", argv[i]);
+            exit(1);
          }
       }
 
@@ -508,6 +516,10 @@ start:
                cleanShutdownProbability = 1.0;
             }
          }
+         else if(!(strncmp(argv[i], "-cap", 4))) {
+            fprintf(stderr, "ERROR: Unknown CalcApp parameter: %s!\n", argv[i]);
+            exit(1);
+         }
       }
 
       CalcAppServer calcAppServer(maxJobs, objectName, vectorFileName, scalarFileName,
@@ -570,6 +582,13 @@ start:
          }
          else if(!(strncmp(argv[i], "-sscachedirectory=", 18))) {
             settings.CacheDirectory = (const char*)&argv[i][18];
+         }
+         else if(!(strncmp(argv[i], "-sskeyring=", 11))) {
+            settings.Keyring = (const char*)&argv[i][11];
+         }
+         else if(!(strncmp(argv[i], "-ss", 3))) {
+            fprintf(stderr, "ERROR: Unknown Scripting Service parameter: %s!\n", argv[i]);
+            exit(1);
          }
       }
       if(!policyChanged) {

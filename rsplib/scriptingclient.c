@@ -125,20 +125,21 @@ static unsigned int performUpload(int sd, const char* name)
    fflush(stdout);
    for(;;) {
       dataLength = fread((char*)&upload.Data, 1, sizeof(upload.Data), fh);
-      if(dataLength > 0) {
-         upload.Header.Type   = SPT_UPLOAD;
-         upload.Header.Flags  = 0x00;
-         upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
-         sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                            0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
-         if(sent != (ssize_t)dataLength + (ssize_t)sizeof(struct ScriptingCommonHeader)) {
-            newLogLine(stdout);
-            printf("Upload error: %s\n", strerror(errno));
-            fflush(stdout);
-            return(SSCR_FAILOVER);
-         }
+
+      // NOTE: end-of-file will be indicated by empty SPT_UPLOAD message!
+      upload.Header.Type   = SPT_UPLOAD;
+      upload.Header.Flags  = 0x00;
+      upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+      sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
+                           0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
+      if(sent != (ssize_t)dataLength + (ssize_t)sizeof(struct ScriptingCommonHeader)) {
+         newLogLine(stdout);
+         printf("Upload error: %s\n", strerror(errno));
+         fflush(stdout);
+         return(SSCR_FAILOVER);
       }
-      else {
+
+      if(dataLength <= 0) {
          break;
       }
    }
@@ -387,8 +388,6 @@ static unsigned int serverStartsProcessing(const int            sd,
 static unsigned int handleDownloadMessage(const struct Download* download,
                                           const size_t           length)
 {
-   size_t dataLength;
-
    /* ====== Create file, if necessary =================================== */
    if(!OutputFile) {
       newLogLine(stdout);
@@ -403,7 +402,7 @@ static unsigned int handleDownloadMessage(const struct Download* download,
    }
 
    /* ====== Write data ================================================== */
-   dataLength = length - sizeof(struct ScriptingCommonHeader);
+   size_t dataLength = length - sizeof(struct ScriptingCommonHeader);
    if(dataLength > 0) {
       if(fwrite(&download->Data, dataLength, 1, OutputFile) != 1) {
          newLogLine(stderr);

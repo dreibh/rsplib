@@ -141,6 +141,7 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    printf("   Cache Max Size          = %llu [KiB]\n", settings->CacheMaxSize / 1024);
    printf("   Cache Max Entries       = %u\n", settings->CacheMaxEntries);
    printf("   Cache Directory         = %s\n", settings->CacheDirectory.c_str());
+   printf("   Keyring                 = %s\n", settings->Keyring.c_str());
 }
 
 
@@ -153,7 +154,7 @@ void ScriptingServer::rejectNewSession(int sd)
    if(uname(&systemInfo) != 0) {
       systemInfo.nodename[0] = 0x00;
    }
-   
+
    NotReady* notReady = (NotReady*)&buffer;
    memset((char*)&notReady->Info, 0x00, sizeof(notReady->Info));
    snprintf((char*)&notReady->Info, sizeof(notReady->Info), "%s", systemInfo.nodename);
@@ -348,9 +349,12 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const Upload* upload)
                fprintf(stdlog, "%02x", (unsigned int)EnvironmentHash[i]);
             }
             fputs("\n", stdlog);
-            Cache.storeInCache((const uint8_t*)&EnvironmentHash,
-                               EnvironmentName,
-                               UploadSize);
+            if(!checkEnvironment(EnvironmentName)) {
+               fprintf(stdlog, "S%04d: Invalid environment in directory \"%s\"\n",
+                       RSerPoolSocketDescriptor, Directory);
+               return(EHR_Abort);
+            }
+            Cache.storeInCache((const uint8_t*)&EnvironmentHash, EnvironmentName, UploadSize);
          }
 
          // ====== Start to do actual work ==================================
@@ -450,27 +454,28 @@ EventHandlingResult ScriptingServer::performDownload()
               Directory);
       for(;;) {
          dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
-         if(dataLength > 0) {
-            download.Header.Type   = SPT_DOWNLOAD;
-            download.Header.Flags  = 0x00;
-            download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
-            if(Settings.VerboseMode) {
-               fputs(".", stdlog);
-               fflush(stdlog);
-            }
-            sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                               (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                               0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
-            if(sent != (ssize_t)(dataLength + sizeof(struct ScriptingCommonHeader))) {
-               fclose(fh);
-               printTimeStamp(stdlog);
-               fprintf(stdlog, "S%04d: Download data transmission error: %s\n",
-                       RSerPoolSocketDescriptor, strerror(errno));
-               return(EHR_Abort);
-            }
-            DownloadSize += (unsigned long long)dataLength;
+
+         // NOTE: end-of-file will be indicated by empty SPT_DOWNLOAD message!
+         download.Header.Type   = SPT_DOWNLOAD;
+         download.Header.Flags  = 0x00;
+         download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+         if(Settings.VerboseMode) {
+            fputs(".", stdlog);
+            fflush(stdlog);
          }
-         else {
+         sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                              (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
+                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+         if(sent != (ssize_t)(dataLength + sizeof(struct ScriptingCommonHeader))) {
+            fclose(fh);
+            printTimeStamp(stdlog);
+            fprintf(stdlog, "S%04d: Download data transmission error: %s\n",
+                     RSerPoolSocketDescriptor, strerror(errno));
+            return(EHR_Abort);
+         }
+         DownloadSize += (unsigned long long)dataLength;
+
+         if(dataLength <= 0) {
             const unsigned long long downloadFinished = getMicroTime();
             printTimeStamp(stdlog);
             fprintf(stdlog, "S%04d: Download completed (%1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => finished work in directory \"%s\".\n",
@@ -497,6 +502,28 @@ EventHandlingResult ScriptingServer::performDownload()
 }
 
 
+// ###### Check new environment #############################################
+bool ScriptingServer::checkEnvironment(const char* environmentName)
+{
+   char command[1024];
+
+   snprintf((char*)&command, sizeof(command), "./scriptingcontrol check-environment \"%s\" \"%s\"",
+            environmentName, Settings.Keyring.c_str());
+   int status = system((char*)&command);
+   if(status < 0) {
+      snprintf((char*)&command, sizeof(command), "scriptingcontrol check-environment \"%s\" \"%s\"",
+               environmentName, Settings.Keyring.c_str());
+      status = system((char*)&command);
+      if(status < 0) {
+         perror("Failed to run scriptingcontrol for checking the environment");
+         return(false);
+      }
+   }
+
+   printf("EXIT=%d\n",WEXITSTATUS(status));
+   return( (WIFEXITED(status)) && (WEXITSTATUS(status) == 0) );
+}
+
 // ###### Start working script ##############################################
 EventHandlingResult ScriptingServer::startWorking()
 {
@@ -517,12 +544,14 @@ EventHandlingResult ScriptingServer::startWorking()
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
              (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
+             Settings.Keyring.c_str(),
              (char*)NULL);
       // Try standard location ...
       execlp("scriptingcontrol",
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
              (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
+             Settings.Keyring.c_str(),
              (char*)NULL);
       perror("Failed to start scriptingcontrol");
       exit(1);
