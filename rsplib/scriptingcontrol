@@ -66,16 +66,17 @@ elif [ "$MODE" = "run" ] ; then
    ENVIRONMENT_NAME="$6"
    KEYRING="$7"
 
-   # ====== Verify input ====================================================
+   cd $DIRECTORY || exit 1
+
+   # ====== Verify input =================================================
    if [ "$KEYRING" != "" ] ; then
-      gpg --no-default-keyring "--keyring=$KEYRING" --verify $INPUT_NAME || exit 1
+      gpg --no-default-keyring "--keyring=$KEYRING" --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
+      mv $INPUT_NAME.decrypt $INPUT_NAME
    else
       echo "WARNING: Skipping verification; you should better configure a keyring!"
    fi
 
    # ====== Extract input ===================================================
-   cd $DIRECTORY || exit 1
-
    # Extract the input file:
    # - First, try plain Tar
    # - If it does not work, try Tar/GZip

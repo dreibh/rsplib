@@ -10,7 +10,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2014 by Thomas Dreibholz
+# Copyright (C) 2002-2015 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,13 +28,15 @@
 # Contact: dreibh@iem.uni-due.de
 
 if [ $# -lt 1 ] ; then
-   echo "Usage: ssdistribute [Unique ID] [Environment]"
+   echo "Usage: ssdistribute [Unique ID] [Environment] [Keyring] [Key]"
    exit 1
 fi
 DIRECTORY="."
 UNIQUE_ID="$1"
 ENVIRONMENT="$2"
-shift ; shift
+KEYRING="$3"
+KEY="$4"
+shift ; shift ; shift ; shift
 
 POOLHANDLE="ScriptingPool"
 
@@ -102,13 +104,32 @@ if [ "$ENVIRONMENT" != "" ] ; then
 fi
 
 
+if [ "$KEYRING" != "" -a "$KEY" != "" ] ; then
+   echo "   + Signing \"$SS_IN_NAME\" ..." && \
+   rm -f "$SS_IN_NAME.signed"
+   gpg --no-default-keyring "--keyring=$KEYRING" --local-user "$KEY" --sign --output "$SS_IN_NAME.signed" "$SS_IN_NAME" || exit 1
+   SS_IN_FILE="$SS_IN_NAME.signed"
+   
+   echo "   + Signing \"$ENVIRONMENT\" ..." && \
+   rm -f "$ENVIRONMENT.signed"
+   gpg --no-default-keyring "--keyring=$KEYRING" --local-user "$KEY" --sign --output "$ENVIRONMENT.signed" "$ENVIRONMENT" || exit 1
+
+   SS_IN_FILE="$SS_IN_NAME.signed"
+   ENVIRONMENT_FILE="$ENVIRONMENT.signed"
+else
+   echo "   + NOTE: Skipping signature!"
+   SS_IN_FILE="$SS_IN_NAME"
+   ENVIRONMENT_FILE="$ENVIRONMENT"
+fi
+
+
 echo "Distributing and processing ..."
 echo "   + Input file is \"$SS_IN_NAME\""
 echo "   + Output will be written into \"$SS_OUT_NAME\""
 echo "   + Calling scriptingclient ..."
 echo ""
 
-env PATH=$PATH:. scriptingclient -runid="Example ID=$UNIQUE_ID" -environment=$ENVIRONMENT -input=$SS_IN_NAME -output=$SS_OUT_NAME -poolhandle=$POOLHANDLE $@ || exit 1
+env PATH=$PATH:. scriptingclient -runid="Example ID=$UNIQUE_ID" "-environment=$ENVIRONMENT_FILE" "-input=$SS_IN_FILE" "-output=$SS_OUT_NAME" "-poolhandle=$POOLHANDLE" $@ || exit 1
 echo "   + scriptingclient has returned"
 
 
@@ -119,9 +140,9 @@ if [ -s "$SS_OUT_NAME" ] ; then
    ( tar xzvf "$SS_OUT_NAME" | xargs touch ) || exit 1   # This will also update the time stamp!
    echo "   + Results string is \"`cat my-output.data`\""
    echo "   + Removing temporary files $SS_IN_NAME and $SS_OUT_NAME ..."
-   rm -f $SS_IN_NAME $SS_OUT_NAME
+   rm -f "$SS_IN_NAME" "$SS_IN_FILE" "$SS_OUT_NAME"
    echo "   + Removing temporary directory $SS_TEMPDIR"
-   rm -rf $SS_TEMPDIR
+   rm -rf "$SS_TEMPDIR"
    exit 0
 else
    echo "ERROR: No results have been created in directory $DIRECTORY!"

@@ -520,7 +520,6 @@ bool ScriptingServer::checkEnvironment(const char* environmentName)
       }
    }
 
-   printf("EXIT=%d\n",WEXITSTATUS(status));
    return( (WIFEXITED(status)) && (WEXITSTATUS(status) == 0) );
 }
 
