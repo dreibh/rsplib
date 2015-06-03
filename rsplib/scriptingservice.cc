@@ -322,13 +322,12 @@ EventHandlingResult ScriptingServer::handleUploadMessage(const Upload* upload)
       ProcessingStarted = getMicroTime();
 
       printTimeStamp(stdlog);
-      fprintf(stdlog, "S%04d: Upload completed (%s: %1.0lf KiB in %1.1lf s; %1.1lf KiB/s) => starting work in directory \"%s\" ...\n",
+      fprintf(stdlog, "S%04d: Upload completed (%s: %1.0lf KiB in %1.1lf s; %1.1lf KiB/s)\n",
               RSerPoolSocketDescriptor,
               (WaitingForEnvironment == true) ? EnvironmentName : InputName,
               ceil((double)UploadSize / 1024.0),
               (ProcessingStarted - UploadStarted) / 1000000.0,
-              (double)((double)UploadSize / 1024.0) / ((ProcessingStarted - UploadStarted) / 1000000.0),
-              Directory);
+              (double)((double)UploadSize / 1024.0) / ((ProcessingStarted - UploadStarted) / 1000000.0));
 
 
       // ====== Continue upload with environment file =======================

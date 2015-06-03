@@ -28,6 +28,14 @@
 # Contact: dreibh@iem.uni-due.de
 
 
+# ====== Warning message when no keyring is configured ======================
+display_keyring_warning ()
+{
+   echo "######################################################################"
+   echo "WARNING: Skipping verification; you should better configure a keyring!"
+   echo "######################################################################"
+}
+
 # ====== Preparation ========================================================
 if [ $# -lt 1 ] ; then
    echo >2 "Usage: scriptingcontrol {check-environment [Environment] [Keyring]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring]} {cleanup [Directory] [PID] {keeptempdirs}}"
@@ -49,7 +57,7 @@ if [ "$MODE" = "check-environment" ] ; then
    if [ "$KEYRING" != "" ] ; then
       gpg --no-default-keyring "--keyring=$KEYRING" --verify $ENVIRONMENT_NAME || exit 1
    else
-      echo "WARNING: Skipping verification; you should better configure a keyring!"
+      display_keyring_warning
    fi
 
 
@@ -73,7 +81,7 @@ elif [ "$MODE" = "run" ] ; then
       gpg --no-default-keyring "--keyring=$KEYRING" --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
       mv $INPUT_NAME.decrypt $INPUT_NAME
    else
-      echo "WARNING: Skipping verification; you should better configure a keyring!"
+      display_keyring_warning
    fi
 
    # ====== Extract input ===================================================
