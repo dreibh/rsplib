@@ -71,7 +71,7 @@ if [ -f /etc/default/ss ] ; then
 fi
 
 DAEMON_OPTS="-scripting -poolhandle=$SS_POOLHANDLE -daemonpidfile=/var/run/$NAME.pid -logappend=/var/log/$NAME.log -loglevel=$SS_LOGLEVEL -logcolor=on"
-for pr in $PRs ; do
+for pr in $SS_PRs ; do
    DAEMON_OPTS="$DAEMON_OPTS -registrar=$pr"
 done
 if [ "$SS_LOCAL" != "" ] ; then
