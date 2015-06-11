@@ -504,19 +504,17 @@ EventHandlingResult ScriptingServer::performDownload()
 // ###### Check new environment #############################################
 bool ScriptingServer::checkEnvironment(const char* environmentName)
 {
-   char command[1024];
+   char sscmd[1024];
+   char callcmd[1024];
 
-   snprintf((char*)&command, sizeof(command), "./scriptingcontrol check-environment \"%s\" \"%s\"",
+   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\"",
             environmentName, Settings.Keyring.c_str());
-   int status = system((char*)&command);
+   snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
+
+   int status = system((char*)&callcmd);
    if(status < 0) {
-      snprintf((char*)&command, sizeof(command), "scriptingcontrol check-environment \"%s\" \"%s\"",
-               environmentName, Settings.Keyring.c_str());
-      status = system((char*)&command);
-      if(status < 0) {
-         perror("Failed to run scriptingcontrol for checking the environment");
-         return(false);
-      }
+      perror("Failed to run scriptingcontrol for checking the environment");
+      return(false);
    }
 
    return( (WIFEXITED(status)) && (WEXITSTATUS(status) == 0) );
@@ -538,14 +536,12 @@ EventHandlingResult ScriptingServer::startWorking()
       dup2(stdlogFD, STDERR_FILENO);
 
       // ====== Run script ==================================================
-      execlp("./scriptingcontrol",
-             "scriptingcontrol",
-             "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
-             (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
-             Settings.Keyring.c_str(),
-             (char*)NULL);
-      // Try standard location ...
-      execlp("scriptingcontrol",
+      struct stat buffer;
+      const char* scriptingControl = "./scriptingcontrol";
+      if(stat(scriptingControl, &buffer) != 0) {
+         scriptingControl = "scriptingcontrol";   // Try standard location!
+      }
+      execlp(scriptingControl,
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
              (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
