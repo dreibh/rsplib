@@ -103,7 +103,7 @@ elif [ "$MODE" = "run" ] ; then
 
    # ====== Do the actual work ==============================================
    chmod 700 ssrun && \
-   ./ssrun $OUTPUT_NAME $ENVIRONMENT_NAME || exit 1
+   ./ssrun $OUTPUT_NAME "$ENVIRONMENT_NAME" "$KEYRING" "$TRUSTDB" || exit 1
 
 
 # ====== Clean up directory =================================================
