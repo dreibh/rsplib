@@ -74,18 +74,18 @@ void setLogColor(const unsigned int color)
 /* ###### Initialize logfile ############################################# */
 static bool initLogFile(const unsigned int logLevel, const char* fileName, const char* fileMode)
 {
+   FILE* newLogFile;
+
    finishLogging();
    if(fileName != NULL) {
-      *gStdLog = fopen(fileName,fileMode);
-      if(*gStdLog != NULL) {
+      newLogFile = fopen(fileName,fileMode);
+      if(newLogFile != NULL) {
+         *gStdLog     = newLogFile;
          gCloseStdLog = true;
-         gLogLevel   = min(logLevel,MAX_LOGLEVEL);
+         gLogLevel    = min(logLevel,MAX_LOGLEVEL);
          return(true);
       }
    }
-
-   *gStdLog     = stderr;
-   gCloseStdLog = false;
    return(false);
 }
 
