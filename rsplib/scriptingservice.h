@@ -51,6 +51,7 @@ class ScriptingServer : public TCPLikeServer
       unsigned long long CacheMaxSize;
       std::string        CacheDirectory;
       std::string        Keyring;
+      std::string        TrustDB;
       bool               KeepTempDirs;
       bool               VerboseMode;
    };

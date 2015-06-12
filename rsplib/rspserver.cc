@@ -586,6 +586,9 @@ start:
          else if(!(strncmp(argv[i], "-sskeyring=", 11))) {
             settings.Keyring = (const char*)&argv[i][11];
          }
+         else if(!(strncmp(argv[i], "-sstrustdb=", 11))) {
+            settings.TrustDB = (const char*)&argv[i][11];
+         }
          else if(!(strncmp(argv[i], "-ss", 3))) {
             fprintf(stderr, "ERROR: Unknown Scripting Service parameter: %s!\n", argv[i]);
             exit(1);

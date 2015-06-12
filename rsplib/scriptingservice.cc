@@ -142,6 +142,7 @@ void ScriptingServer::scriptingPrintParameters(const void* userData)
    printf("   Cache Max Entries       = %u\n", settings->CacheMaxEntries);
    printf("   Cache Directory         = %s\n", settings->CacheDirectory.c_str());
    printf("   Keyring                 = %s\n", settings->Keyring.c_str());
+   printf("   Trust DB                = %s\n", settings->TrustDB.c_str());
 }
 
 
@@ -507,8 +508,8 @@ bool ScriptingServer::checkEnvironment(const char* environmentName)
    char sscmd[1024];
    char callcmd[1024];
 
-   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\"",
-            environmentName, Settings.Keyring.c_str());
+   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\" \"%s\"",
+            environmentName, Settings.Keyring.c_str(), Settings.TrustDB.c_str());
    snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
 
    int status = system((char*)&callcmd);
@@ -544,8 +545,9 @@ EventHandlingResult ScriptingServer::startWorking()
       execlp(scriptingControl,
              "scriptingcontrol",
              "run", Directory, INPUT_NAME, OUTPUT_NAME, STATUS_NAME,
-             (GotEnvironment == true) ? ENVIRONMENT_NAME : NULL,
+             ((GotEnvironment == true) ? ENVIRONMENT_NAME : ""),
              Settings.Keyring.c_str(),
+             Settings.TrustDB.c_str(),
              (char*)NULL);
       perror("Failed to start scriptingcontrol");
       exit(1);

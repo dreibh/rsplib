@@ -38,7 +38,7 @@ display_keyring_warning ()
 
 # ====== Preparation ========================================================
 if [ $# -lt 1 ] ; then
-   echo >2 "Usage: scriptingcontrol {check-environment [Environment] [Keyring]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring]} {cleanup [Directory] [PID] {keeptempdirs}}"
+   echo >2 "Usage: scriptingcontrol {check-environment [Environment] [Keyring] [Trust DB]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring] [Trust DB]} {cleanup [Directory] [PID] {keeptempdirs}}"
    exit 1
 fi
 MODE="$1"
@@ -46,16 +46,19 @@ MODE="$1"
 
 # ====== Environment check mode =============================================
 if [ "$MODE" = "check-environment" ] ; then
-   if [ $# -lt 3 ] ; then
-     echo >2 "Usage: scriptingcontrol check-environment [Environment] [Keyring]"
+   if [ $# -lt 4 ] ; then
+     echo >2 "Usage: scriptingcontrol check-environment [Environment] [Keyring] [Trust DB]"
      exit 1
    fi
    ENVIRONMENT_NAME="$2"
    KEYRING="$3"
+   TRUSTDB="$4"
 
    # ====== Verify input ====================================================
-   if [ "$KEYRING" != "" ] ; then
-      gpg --no-default-keyring "--keyring=$KEYRING" --verify $ENVIRONMENT_NAME || exit 1
+   if [ "$KEYRING" != "" -a "$TRUSTDB" != "" ] ; then
+      cp -f "$KEYRING" keyring.gpg
+      cp -f "$TRUSTDB" trustdb.gpg
+      gpg --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --verify $ENVIRONMENT_NAME || exit 1
    else
       display_keyring_warning
    fi
@@ -64,7 +67,7 @@ if [ "$MODE" = "check-environment" ] ; then
 # ====== Work mode ==========================================================
 elif [ "$MODE" = "run" ] ; then
    if [ $# -lt 5 ] ; then
-     echo >2 "Usage: scriptingcontrol run [Directory] [Input] [Output] [Status] [Environment] [Keyring]"
+     echo >2 "Usage: scriptingcontrol run [Directory] [Input] [Output] [Status] [Environment] [Keyring] [Trust DB]"
      exit 1
    fi
    DIRECTORY="$2"
@@ -73,12 +76,15 @@ elif [ "$MODE" = "run" ] ; then
    STATUS_NAME="$5"
    ENVIRONMENT_NAME="$6"
    KEYRING="$7"
+   TRUSTDB="$8"
 
    cd $DIRECTORY || exit 1
 
    # ====== Verify input =================================================
-   if [ "$KEYRING" != "" ] ; then
-      gpg --no-default-keyring "--keyring=$KEYRING" --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
+   if [ "$KEYRING" != "" -a "$TRUSTDB" != "" ] ; then
+      cp -f "$KEYRING" keyring.gpg
+      cp -f "$TRUSTDB" trustdb.gpg
+      gpg --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
       mv $INPUT_NAME.decrypt $INPUT_NAME
    else
       display_keyring_warning

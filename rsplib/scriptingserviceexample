@@ -110,12 +110,14 @@ if [ "$KEYRING" != "" -a "$KEY" != "" ] ; then
    gpg --no-default-keyring "--keyring=$KEYRING" --local-user "$KEY" --sign --output "$SS_IN_NAME.signed" "$SS_IN_NAME" || exit 1
    SS_IN_FILE="$SS_IN_NAME.signed"
    
-   echo "   + Signing \"$ENVIRONMENT\" ..." && \
-   rm -f "$ENVIRONMENT.signed"
-   gpg --no-default-keyring "--keyring=$KEYRING" --local-user "$KEY" --sign --output "$ENVIRONMENT.signed" "$ENVIRONMENT" || exit 1
+   if  [ "$ENVIRONMENT" != "" ] ; then
+      echo "   + Signing \"$ENVIRONMENT\" ..." && \
+      rm -f "$ENVIRONMENT.signed"
+      gpg --no-default-keyring "--keyring=$KEYRING" --local-user "$KEY" --sign --output "$ENVIRONMENT.signed" "$ENVIRONMENT" || exit 1
 
-   SS_IN_FILE="$SS_IN_NAME.signed"
-   ENVIRONMENT_FILE="$ENVIRONMENT.signed"
+      SS_IN_FILE="$SS_IN_NAME.signed"
+      ENVIRONMENT_FILE="$ENVIRONMENT.signed"
+   fi
 else
    echo "   + NOTE: Skipping signature!"
    SS_IN_FILE="$SS_IN_NAME"
