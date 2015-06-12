@@ -38,7 +38,7 @@ display_keyring_warning ()
 
 # ====== Preparation ========================================================
 if [ $# -lt 1 ] ; then
-   echo >2 "Usage: scriptingcontrol {check-environment [Environment] [Keyring] [Trust DB]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring] [Trust DB]} {cleanup [Directory] [PID] {keeptempdirs}}"
+   echo >2 "Usage: scriptingcontrol {check-environment [Directory] [Environment] [Keyring] [Trust DB]} {run [Directory] [Input] [Output] [Status] [Environment] [Keyring] [Trust DB]} {cleanup [Directory] [PID] {keeptempdirs}}"
    exit 1
 fi
 MODE="$1"
@@ -46,19 +46,22 @@ MODE="$1"
 
 # ====== Environment check mode =============================================
 if [ "$MODE" = "check-environment" ] ; then
-   if [ $# -lt 4 ] ; then
-     echo >2 "Usage: scriptingcontrol check-environment [Environment] [Keyring] [Trust DB]"
+   if [ $# -lt 5 ] ; then
+     echo >2 "Usage: scriptingcontrol check-environment [Directory] [Environment] [Keyring] [Trust DB]"
      exit 1
    fi
-   ENVIRONMENT_NAME="$2"
-   KEYRING="$3"
-   TRUSTDB="$4"
+   DIRECTORY="$2"
+   ENVIRONMENT_NAME="$3"
+   KEYRING="$4"
+   TRUSTDB="$5"
+
+   cd $DIRECTORY || exit 1
 
    # ====== Verify input ====================================================
    if [ "$KEYRING" != "" -a "$TRUSTDB" != "" ] ; then
       cp -f "$KEYRING" keyring.gpg
       cp -f "$TRUSTDB" trustdb.gpg
-      gpg --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --verify $ENVIRONMENT_NAME || exit 1
+      gpg -q --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --homedir . --verify $ENVIRONMENT_NAME || exit 1
    else
       display_keyring_warning
    fi
@@ -84,7 +87,7 @@ elif [ "$MODE" = "run" ] ; then
    if [ "$KEYRING" != "" -a "$TRUSTDB" != "" ] ; then
       cp -f "$KEYRING" keyring.gpg
       cp -f "$TRUSTDB" trustdb.gpg
-      gpg --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
+      gpg -q --no-default-keyring --keyring ./keyring.gpg --trustdb-name ./trustdb.gpg --homedir . --decrypt --output $INPUT_NAME.decrypt $INPUT_NAME || exit 1
       mv $INPUT_NAME.decrypt $INPUT_NAME
    else
       display_keyring_warning
