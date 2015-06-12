@@ -508,8 +508,13 @@ bool ScriptingServer::checkEnvironment(const char* environmentName)
    char sscmd[1024];
    char callcmd[1024];
 
+<<<<<<< HEAD
    snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\" \"%s\"",
             environmentName, Settings.Keyring.c_str(), Settings.TrustDB.c_str());
+=======
+   snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\"",
+            environmentName, Settings.Keyring.c_str());
+>>>>>>> Some improvements for scripting service example.
    snprintf((char*)&callcmd, sizeof(callcmd), "if [ -e ./scriptingcontrol ] ; then ./%s ; else %s ; fi", sscmd, sscmd);
 
    int status = system((char*)&callcmd);
