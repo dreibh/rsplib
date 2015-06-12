@@ -1,8 +1,8 @@
-rsplib (3.0.4~rc1.6-1ubuntu1) wily; urgency=low
+rsplib (3.1.0~rc1.7-1ubuntu1) wily; urgency=low
 
   * New upstream release.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 11 Jun 2015 08:08:08 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 12 Jun 2015 08:08:08 +0200
 
 rsplib (3.0.3-1ubuntu1) vivid; urgency=low
 
