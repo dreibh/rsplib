@@ -44,7 +44,7 @@
 #define SPT_STATUS             0x06
 #define SPT_ENVIRONMENT        0x07
 
-#define SD_MAX_DATASIZE        1400
+#define SD_MAX_DATASIZE       16384
 #define SR_MAX_INFOSIZE          64
 #define SE_HASH_SIZE             20   /* 160-bit SHA-1 hash */
 
