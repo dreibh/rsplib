@@ -35,6 +35,7 @@
 #include "randomizer.h"
 #include "netutilities.h"
 #include "sha1.h"
+#include "memfile.h"
 #ifdef ENABLE_CSP
 #include "componentstatuspackets.h"
 #endif
@@ -45,8 +46,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 
 
 #define SSCR_OKAY        0
@@ -82,7 +81,7 @@ static bool               KeepAliveTransmitted;
 static unsigned long long LastKeepAlive;
 
 
-/* ###### Randomize waiting time ######################################### */
+// ###### Randomize waiting time ############################################
 static unsigned long long randomizeWaitingTime(const unsigned long long interval)
 {
    const double originalInterval = (double)interval;
@@ -93,7 +92,7 @@ static unsigned long long randomizeWaitingTime(const unsigned long long interval
 }
 
 
-/* ###### Write new log line ############################################# */
+// ###### Write new log line ################################################
 static void newLogLine(FILE* fh)
 {
    printTimeStamp(fh);
@@ -108,55 +107,7 @@ static void newLogLine(FILE* fh)
 }
 
 
-struct MemFile
-{
-   FILE*  FileHandle;
-   void*  Address;
-   size_t Length;
-   off_t  Offset;
-};
-
-void closeMemFile(struct MemFile* memFile)
-{
-   if(memFile) {
-      if(memFile->Address) {
-         munmap(memFile->Address, memFile->Length);
-      }
-      if(memFile->FileHandle) {
-         fclose(memFile->FileHandle);
-      }
-      free(memFile);
-   }
-}
-
-struct MemFile* openMemFile(const char* name)
-{
-   struct MemFile* memFile = (struct MemFile*)malloc(sizeof(struct MemFile));
-   struct stat     fileStat;
-
-   if(memFile != NULL) {
-      memFile->Address    = NULL;
-      memFile->FileHandle = fopen(name, "r");
-      if(memFile->FileHandle != NULL) {
-         if(fstat(fileno(memFile->FileHandle), &fileStat) == 0) {
-            memFile->Length  = fileStat.st_size;
-            memFile->Address = mmap(NULL, memFile->Length, PROT_READ, MAP_PRIVATE,
-                                    fileno(memFile->FileHandle), 0);
-            if(memFile->Address != NULL) {
-               return(memFile);
-            }
-         }
-      }
-   }
-
-   closeMemFile(memFile);   
-   return(NULL);
-}
-
-
-
-
-/* ###### Upload input file ############################################## */
+// ###### Upload input file #################################################
 static unsigned int performUpload(int sd, const char* name)
 {
    struct Upload upload;
@@ -211,7 +162,7 @@ static unsigned int performUpload(int sd, const char* name)
 }
 
 
-/* ###### Handle Status message ############################################# */
+// ###### Handle Status message ################################################
 static unsigned int handleStatusMessage(const struct Status* status,
                                         const size_t         length)
 {
@@ -244,7 +195,7 @@ static unsigned int handleStatusMessage(const struct Status* status,
 }
 
 
-/* ###### Send KeepAlive message ######################################### */
+// ###### Send KeepAlive message ############################################
 static unsigned int sendKeepAliveMessage(int sd)
 {
    struct KeepAlive keepAlive;
@@ -276,7 +227,7 @@ static unsigned int sendKeepAliveMessage(int sd)
 }
 
 
-/* ###### Handle KeepAliveAck message #################################### */
+// ###### Handle KeepAliveAck message #######################################
 static unsigned int handleKeepAliveAckMessage()
 {
    KeepAliveTransmitted = false;
@@ -285,7 +236,7 @@ static unsigned int handleKeepAliveAckMessage()
 }
 
 
-/* ###### Send KeepAliveAck message ###################################### */
+// ###### Send KeepAliveAck message #########################################
 static unsigned int sendKeepAliveAckMessage(int sd)
 {
    struct KeepAlive keepAliveAck;
@@ -300,7 +251,7 @@ static unsigned int sendKeepAliveAckMessage(int sd)
 }
 
 
-/* ###### Handle Ready message ########################################### */
+// ###### Handle Ready message ##############################################
 static void handleNotReadyMessage(const int              sd,
                                   const struct NotReady* notReady,
                                   const size_t           length)
@@ -327,7 +278,7 @@ static void handleNotReadyMessage(const int              sd,
 }
 
 
-/* ###### Handle Ready message ########################################### */
+// ###### Handle Ready message ##############################################
 static unsigned int handleReadyMessage(const int           sd,
                                        const struct Ready* ready,
                                        const size_t        length)
@@ -381,7 +332,7 @@ static unsigned int handleReadyMessage(const int           sd,
 }
 
 
-/* ###### Handle Ready message ########################################### */
+// ###### Handle Ready message ##############################################
 static unsigned int handleEnvironmentMessage(const int                 sd,
                                              const struct Environment* environment,
                                              const size_t              length)
@@ -415,7 +366,7 @@ static unsigned int handleEnvironmentMessage(const int                 sd,
    }
 }
 
-/* ###### Handle Status message ########################################## */
+// ###### Handle Status message #############################################
 static unsigned int serverStartsProcessing(const int            sd,
                                            const struct Status* status,
                                            const size_t         length)
@@ -443,7 +394,7 @@ static unsigned int serverStartsProcessing(const int            sd,
 }
 
 
-/* ###### Handle Download message ######################################## */
+// ###### Handle Download message ###########################################
 static unsigned int handleDownloadMessage(const struct Download* download,
                                           const size_t           length)
 {
@@ -485,7 +436,7 @@ static unsigned int handleDownloadMessage(const struct Download* download,
 }
 
 
-/* ###### Handle message ################################################# */
+// ###### Handle message ####################################################
 static unsigned int handleMessage(int                                 sd,
                                   const struct ScriptingCommonHeader* header,
                                   const size_t                        length,
@@ -581,7 +532,7 @@ static unsigned int handleMessage(int                                 sd,
 }
 
 
-/* ###### Main program ################################################### */
+// ###### Main program ######################################################
 int main(int argc, char** argv)
 {
    const char*                  poolHandle = "ScriptingPool";

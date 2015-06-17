@@ -317,7 +317,7 @@ hsdump_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.l
 pingpongclient_SOURCES = pingpongclient.c
 pingpongclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
 
-scriptingclient_SOURCES = scriptingclient.c sha1.c sha1.h
+scriptingclient_SOURCES = scriptingclient.cc sha1.c sha1.h memfile.cc memfile.h
 scriptingclient_LDADD   = libtdrandomizer.la libtdstringutilities.la libtdtimeutilities.la libtdnetutilities.la libtdloglevel.la libtdbreakdetector.la librsplib.la -lm $(socketapi_LIBS) $(sctplib_LIBS) $(glib_LIBS)
 
 calcappclient_SOURCES = calcappclient.cc calcapppackets.h statistics.cc statistics.h
