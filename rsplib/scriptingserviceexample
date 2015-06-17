@@ -45,7 +45,7 @@ SS_TEMPDIR="ssTEMP-$UNIQUE_ID"
 SS_IN_NAME="ssIN-$UNIQUE_ID.tar.gz"
 SS_OUT_NAME="ssOUT-$UNIQUE_ID.tar.gz"
 
-SS_ENVIRONMENT_BYTES=100000000
+SS_ENVIRONMENT_BYTES=30000000
 SS_INPUT_BYTES=2500
 SS_OUTPUT_BYTES=2000
 
@@ -131,7 +131,7 @@ echo "   + Output will be written into \"$SS_OUT_NAME\""
 echo "   + Calling scriptingclient ..."
 echo ""
 
-env PATH=$PATH:. ./scriptingclient -runid="Example ID=$UNIQUE_ID" "-environment=$ENVIRONMENT_FILE" "-input=$SS_IN_FILE" "-output=$SS_OUT_NAME" "-poolhandle=$POOLHANDLE" $@ || exit 1
+env PATH=$PATH:. scriptingclient -runid="Example ID=$UNIQUE_ID" "-environment=$ENVIRONMENT_FILE" "-input=$SS_IN_FILE" "-output=$SS_OUT_NAME" "-poolhandle=$POOLHANDLE" $@ || exit 1
 echo "   + scriptingclient has returned"
 
 

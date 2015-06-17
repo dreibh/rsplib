@@ -32,6 +32,7 @@
 #include "timeutilities.h"
 #include "stringutilities.h"
 #include "loglevel.h"
+#include "memfile.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -440,34 +441,37 @@ EventHandlingResult ScriptingServer::sendStatus(const int exitStatus)
 // ###### Perform work package download #####################################
 EventHandlingResult ScriptingServer::performDownload()
 {
-   Download download;
-   size_t   dataLength;
-   ssize_t  sent;
-
-   FILE* fh = fopen(OutputName, "r");
-   if(fh != NULL) {
+   struct MemFile* memFile = openMemFile(OutputName);
+   if(memFile != NULL) {
       DownloadStarted = getMicroTime();
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: Processing completed (%1.1lf s) => starting download of results in directory \"%s\" ...\n",
               RSerPoolSocketDescriptor,
               (DownloadStarted - ProcessingStarted) / 1000000.0,
               Directory);
+
+      size_t totalBytesSent = 0;
       for(;;) {
-         dataLength = fread((char*)&download.Data, 1, sizeof(download.Data), fh);
+         Download download;
+         size_t   dataLength = memFile->Length - totalBytesSent;
+         if(dataLength > sizeof(download.Data)) {
+            dataLength = sizeof(download.Data);
+         }
 
          // NOTE: end-of-file will be indicated by empty SPT_DOWNLOAD message!
          download.Header.Type   = SPT_DOWNLOAD;
          download.Header.Flags  = 0x00;
          download.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+         memcpy((void*)&download.Data, &memFile->Address[totalBytesSent], dataLength);
          if(Settings.VerboseMode) {
             fputs(".", stdlog);
             fflush(stdlog);
          }
-         sent = rsp_sendmsg(RSerPoolSocketDescriptor,
-                              (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                              0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
+         const ssize_t sent = rsp_sendmsg(RSerPoolSocketDescriptor,
+                                 (const char*)&download, dataLength + sizeof(struct ScriptingCommonHeader), 0,
+                                 0, htonl(PPID_SP), 0, 0, 0, Settings.TransmitTimeout);
          if(sent != (ssize_t)(dataLength + sizeof(struct ScriptingCommonHeader))) {
-            fclose(fh);
+            closeMemFile(memFile);
             printTimeStamp(stdlog);
             fprintf(stdlog, "S%04d: Download data transmission error: %s\n",
                      RSerPoolSocketDescriptor, strerror(errno));
@@ -486,11 +490,13 @@ EventHandlingResult ScriptingServer::performDownload()
                   Directory);
             break;
          }
+
+         totalBytesSent += dataLength;
       }
       if(Settings.VerboseMode) {
          fputs("\n", stdlog);
       }
-      fclose(fh);
+      closeMemFile(memFile);
    } else {
       printTimeStamp(stdlog);
       fprintf(stdlog, "S%04d: There are no results in directory \"%s\"!\n",

@@ -110,12 +110,7 @@ static void newLogLine(FILE* fh)
 // ###### Upload input file #################################################
 static unsigned int performUpload(int sd, const char* name)
 {
-   struct Upload upload;
-   size_t        totalBytesSent;
-   size_t        dataLength;
-   ssize_t       sent;
-
-   struct MemFile* memFile = openMemFile(name);
+   MemFile* memFile = openMemFile(name);
    if(memFile == NULL) {
       printTimeStamp(stderr);
       fprintf(stderr, "ERROR: Unable to open and memory-map file \"%s\"!\n", name);
@@ -126,9 +121,11 @@ static unsigned int performUpload(int sd, const char* name)
    printf("Uploading %lu bytes ...\n", memFile->Length);
    fflush(stdout);
    
-   totalBytesSent = 0;
+   size_t totalBytesSent = 0;
    for(;;) {      
-      dataLength = (memFile->Length - totalBytesSent);
+      Upload upload;
+
+      size_t dataLength = memFile->Length - totalBytesSent;
       if(dataLength > sizeof(upload.Data)) {
          dataLength = sizeof(upload.Data);
       }
@@ -137,10 +134,11 @@ static unsigned int performUpload(int sd, const char* name)
       upload.Header.Type   = SPT_UPLOAD;
       upload.Header.Flags  = 0x00;
       upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
-      memcpy((void*)&upload.Data, &((char*)memFile->Address)[totalBytesSent], dataLength);
-      sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                         0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
+      memcpy((void*)&upload.Data, &memFile->Address[totalBytesSent], dataLength);
+      const ssize_t sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
+                                       0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
       if(sent != (ssize_t)dataLength + (ssize_t)sizeof(struct ScriptingCommonHeader)) {
+         closeMemFile(memFile);
          newLogLine(stdout);
          printf("Upload error: %s\n", strerror(errno));
          fflush(stdout);
