@@ -45,6 +45,8 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
 
 #define SSCR_OKAY        0
@@ -106,32 +108,87 @@ static void newLogLine(FILE* fh)
 }
 
 
+struct MemFile
+{
+   FILE*  FileHandle;
+   void*  Address;
+   size_t Length;
+   off_t  Offset;
+};
+
+void closeMemFile(struct MemFile* memFile)
+{
+   if(memFile) {
+      if(memFile->Address) {
+         munmap(memFile->Address, memFile->Length);
+      }
+      if(memFile->FileHandle) {
+         fclose(memFile->FileHandle);
+      }
+      free(memFile);
+   }
+}
+
+struct MemFile* openMemFile(const char* name)
+{
+   struct MemFile* memFile = (struct MemFile*)malloc(sizeof(struct MemFile));
+   struct stat     fileStat;
+
+   if(memFile != NULL) {
+      memFile->Address    = NULL;
+      memFile->FileHandle = fopen(name, "r");
+      if(memFile->FileHandle != NULL) {
+         if(fstat(fileno(memFile->FileHandle), &fileStat) == 0) {
+            memFile->Length  = fileStat.st_size;
+            memFile->Address = mmap(NULL, memFile->Length, PROT_READ, MAP_PRIVATE,
+                                    fileno(memFile->FileHandle), 0);
+            if(memFile->Address != NULL) {
+               return(memFile);
+            }
+         }
+      }
+   }
+
+   closeMemFile(memFile);   
+   return(NULL);
+}
+
+
+
+
 /* ###### Upload input file ############################################## */
 static unsigned int performUpload(int sd, const char* name)
 {
    struct Upload upload;
+   size_t        totalBytesSent;
    size_t        dataLength;
    ssize_t       sent;
 
-   FILE* fh = fopen(name, "r");
-   if(fh == NULL) {
+   struct MemFile* memFile = openMemFile(name);
+   if(memFile == NULL) {
       printTimeStamp(stderr);
-      fprintf(stderr, "ERROR: Unable to open file \"%s\"!\n", name);
+      fprintf(stderr, "ERROR: Unable to open and memory-map file \"%s\"!\n", name);
       exit(1);
    }
 
    newLogLine(stdout);
-   puts("Uploading ...");
+   printf("Uploading %lu bytes ...\n", memFile->Length);
    fflush(stdout);
-   for(;;) {
-      dataLength = fread((char*)&upload.Data, 1, sizeof(upload.Data), fh);
+   
+   totalBytesSent = 0;
+   for(;;) {      
+      dataLength = (memFile->Length - totalBytesSent);
+      if(dataLength > sizeof(upload.Data)) {
+         dataLength = sizeof(upload.Data);
+      }
 
       // NOTE: end-of-file will be indicated by empty SPT_UPLOAD message!
       upload.Header.Type   = SPT_UPLOAD;
       upload.Header.Flags  = 0x00;
       upload.Header.Length = htons(dataLength + sizeof(struct ScriptingCommonHeader));
+      memcpy((void*)&upload.Data, &((char*)memFile->Address)[totalBytesSent], dataLength);
       sent = rsp_sendmsg(sd, (const char*)&upload, dataLength + sizeof(struct ScriptingCommonHeader), 0,
-                           0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
+                         0, htonl(PPID_SP), 0, 0, 0, (int)(TransmitTimeout / 1000));
       if(sent != (ssize_t)dataLength + (ssize_t)sizeof(struct ScriptingCommonHeader)) {
          newLogLine(stdout);
          printf("Upload error: %s\n", strerror(errno));
@@ -142,8 +199,10 @@ static unsigned int performUpload(int sd, const char* name)
       if(dataLength <= 0) {
          break;
       }
+
+      totalBytesSent += dataLength;
    }
-   fclose(fh);
+   closeMemFile(memFile);
 
    newLogLine(stdout);
    puts("Upload complete.");
