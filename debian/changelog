@@ -1,3 +1,15 @@
+rsplib (3.1.1~rc1-1ubuntu1) xenial; urgency=low
+
+  * New upstream release.
+  * debian/compat: using debhelper 9 now.
+  * debian/control: Updated standards version.
+  * debian/control: added dependency dpkg-dev for hardening options.
+  * debian/control: updated standards version.
+  * debian/copyright: fix for machine-readable format.
+  * debian/rules: using buildflags.mk for hardening options.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 04 Apr 2016 08:08:08 +0200
+
 rsplib (3.1.0-1ubuntu1) xenial; urgency=low
 
   * New upstream release.
