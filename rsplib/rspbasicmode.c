@@ -83,11 +83,9 @@ extern size_t getSessionStatus(struct ComponentAssociation** caeArray,
 /* ###### Initialize RSerPool API Library ################################ */
 int rsp_initialize(struct rsp_info* info)
 {
-   static const char* buildDate = __DATE__;
-   static const char* buildTime = __TIME__;
-   struct rsp_info    emptyinfo;
-   struct TagItem     tagList[16];
-   size_t             i;
+   struct rsp_info emptyinfo;
+   struct TagItem  tagList[16];
+   size_t          i;
 
    beginLogging();
 
@@ -150,8 +148,8 @@ int rsp_initialize(struct rsp_info* info)
       if(info) {
          info->ri_version    = RSPLIB_VERSION;
          info->ri_revision   = RSPLIB_REVISION;
-         info->ri_build_date = buildDate;
-         info->ri_build_time = buildTime;
+         info->ri_build_date = NULL;
+         info->ri_build_time = NULL;
       }
 
       /* ====== Initialize session storage =============================== */

@@ -79,8 +79,8 @@ struct rsp_info
 {
    unsigned int               ri_version;
    unsigned int               ri_revision;
-   const char*                ri_build_date;
-   const char*                ri_build_time;
+   const char*                ri_build_date;   /* DEPRECATED! */
+   const char*                ri_build_time;   /* DEPRECATED! */
    struct rsp_registrar_info* ri_registrars;
    int                        ri_disable_autoconfig;
    struct sockaddr*           ri_registrar_announce;
