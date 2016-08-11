@@ -103,7 +103,7 @@ AC_MSG_RESULT([-->   $QTEXTRALIB])
 
 
 # ====== Components =========================================================
-QT_CXXFLAGS="$QT_CXXFLAGS -fPIC -fPIE -I$QTEXTRAINC"
+QT_CXXFLAGS="$QT_CXXFLAGS -fPIC -I$QTEXTRAINC"
 QT_LDADD="-L$QTEXTRALIB"   # OLD: "-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
 for x in $QT_REQUIRED_COMPONENTS ; do
    AC_MSG_CHECKING([Qt component $x])
