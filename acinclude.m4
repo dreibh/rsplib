@@ -22,7 +22,7 @@ AC_DEFUN([TD_CHECK_QT],
 [
 
 QT_REQUIRED_COMPONENTS="QtWidgets QtGui QtXml QtCore"
-QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 /usr/include/qt5"
+QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 `find /usr/include -name qt5 -type d | head -n1`"
 QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt5/lib /usr/local/lib/qt5 `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
 QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt5/bin /usr/share/qt5/bin"
 
