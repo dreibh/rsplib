@@ -22,9 +22,9 @@ AC_DEFUN([TD_CHECK_QT],
 [
 
 QT_REQUIRED_COMPONENTS="QtCore QtGui QtXml"
-QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 /usr/include/qt5 /usr/share/qt4/include /usr/local/include/qt4 /usr/include/qt4 /usr/include"
-QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt5/lib /usr/local/lib/qt5 /usr/share/qt5/lib /usr/local/qt4/lib /usr/local/lib/qt4 /usr/share/qt4/lib `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
-QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt5/bin /usr/share/qt5/bin /usr/local/qt4/bin /usr/share/qt4/bin"
+QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 /usr/include/qt5"
+QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt5/lib /usr/local/lib/qt5 `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
+QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt5/bin /usr/share/qt5/bin"
 
 QTEXTRAINC=""
 QTEXTRALIB=""
@@ -36,7 +36,7 @@ MOC=""
 # ====== Directory ==========================================================
 AC_ARG_WITH([qt-dir],
    AC_HELP_STRING([--with-qt-dir=/path/to/qt],
-      [to specify the path to the Qt-4.x directory.]),
+      [to specify the path to the Qt directory.]),
    [QTDIR="$withval"],
    [QTDIR=""])
 if test x$QTDIR != x ; then
@@ -52,7 +52,7 @@ fi
 AC_MSG_CHECKING(Qt includes directory)
 AC_ARG_WITH([qt-include],
    AC_HELP_STRING([--with-qt-include=/path/to/qt include],
-      [to specify the path to the Qt-4.x include directory]),
+      [to specify the path to the Qt include directory]),
    [QT_INCLUDE_PATHS="$withval"],
    [QT_INCLUDE_PATHS="$QT_DEFAULT_INCLUDE_PATHS"])
 if test x$QTDIR != x ; then
@@ -77,7 +77,7 @@ AC_MSG_RESULT([-->   $QTEXTRAINC])
 AC_MSG_CHECKING(Qt libraries directory)
 AC_ARG_WITH([qt-lib],
    AC_HELP_STRING([--with-qt-lib=/path/to/qt lib],
-      [to specify the path to the Qt-4.x lib directory]),
+      [to specify the path to the Qt lib directory]),
    [QT_LIBRARY_PATHS="$withval"],
    [QT_LIBRARY_PATHS="$QT_DEFAULT_LIBRARY_PATHS"])
 if test x$QTDIR != x ; then
@@ -103,7 +103,7 @@ AC_MSG_RESULT([-->   $QTEXTRALIB])
 
 
 # ====== Components =========================================================
-QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC"
+QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC -fPIC -fPIE"
 QT_LDADD="-L$QTEXTRALIB"   # OLD: "-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
 for x in $QT_REQUIRED_COMPONENTS ; do
    AC_MSG_CHECKING([Qt component $x])
@@ -138,20 +138,20 @@ if test x$QTDIR != x ; then
 fi
 
 AC_MSG_CHECKING(Qt meta-object compiler moc)
-for QTPOSTFIX in "" ; do
-   for p in $QT_BINARY_PATHS ; do
-      echo -n "$p/moc$QTPOSTFIX?   "
-      if test -e $p/moc$QTPOSTFIX ; then
-         MOC="$p/moc$QTPOSTFIX"
-         break
-      fi
-   done
-done
-if test x$MOC = x ; then
-   AC_MSG_ERROR([moc$QTPOSTFIX not found!])
-fi
+MOC="qtchooser -run-tool=moc -qt=5"
+#for QTPOSTFIX in "" ; do
+   #for p in $QT_BINARY_PATHS ; do
+      #echo -n "$p/$MOC?   "
+      #if test -e $p/$MOC ; then
+         #MOC="$p/$MOC"
+         #break
+      #fi
+   #done
+#done
+#if test x$MOC = x ; then
+   #AC_MSG_ERROR([$MOC not found!])
+#fi
 AC_MSG_RESULT([$MOC])
-
 AC_SUBST(MOC)
 
 
@@ -177,7 +177,7 @@ EOF
 
 cat > myqt.cpp << EOF
    #include "myqt.h"
-   #include <QApplication>
+   #include <QtWidgets/QApplication>
 
    int main( int argc, char **argv )
    {
@@ -189,23 +189,23 @@ EOF
 
 
 # ------ MOC test -----------------------------------------------------------
-AC_MSG_CHECKING(for working moc$QTPOSTFIX)
+AC_MSG_CHECKING(for working $MOC)
 test_command_1="$MOC myqt.h -o moc_myqt.cpp"
 AC_TRY_EVAL(test_command_1)
 if test x"$ac_status" != x0; then
-   AC_MSG_ERROR(moc$QTPOSTFIX call failed)
+   AC_MSG_ERROR($MOC call failed)
 fi
 AC_MSG_RESULT(yes)
 
 # ------ MOC compile test ---------------------------------------------------
-AC_MSG_CHECKING(whether C++-compiling the moc$QTPOSTFIX-generated program works)
+AC_MSG_CHECKING(whether C++-compiling the moc-generated program works)
 test_command_2="$CXX $QT_CXXFLAGS -c $CXXFLAGS -o moc_myqt.o moc_myqt.cpp"
 
 echo CMD=$test_command_2
 
 AC_TRY_EVAL(test_command_2)
 if test x"$ac_status" != x0; then
-   AC_MSG_ERROR(moc$QTPOSTFIX-generated test program C++-compilation failed)
+   AC_MSG_ERROR($MOC-generated test program C++-compilation failed)
 fi
 AC_MSG_RESULT(yes)
 

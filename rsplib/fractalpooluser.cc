@@ -27,11 +27,11 @@
  * Contact: dreibh@iem.uni-due.de
  */
 
-#include <QApplication>
-#include <QStatusBar>
-#include <QMenu>
-#include <QMessageBox>
-#include <QLayout>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QLayout>
 #include <QThread>
 #include <QTimer>
 #include <QPainter>
@@ -80,8 +80,8 @@
 #define DEFAULT_FPU_CONFIGDIR        "fgpconfig"
 #endif
 #define DEFAULT_FPU_IMAGEPREFIX      ""
-#define DEFAULT_FPU_SHOWCOLORMARKS   TRUE
-#define DEFAULT_FPU_SHOWSESSIONS     TRUE
+#define DEFAULT_FPU_SHOWCOLORMARKS   true
+#define DEFAULT_FPU_SHOWSESSIONS     true
 
 
 
@@ -124,7 +124,7 @@ FractalPU::FractalPU(const size_t       width,
 
    // ====== Initialize file and directory names ============================
    ConfigDirectory = QDir(configDirName, "*.fsf", QDir::Name, QDir::Files);
-   if(ConfigDirectory.exists() != TRUE) {
+   if(ConfigDirectory.exists() != true) {
       std::cerr << "WARNING: Configuration directory " << configDirName << " does not exist!" << std::endl;
       ConfigDirectory = QDir::current();
    }
@@ -888,16 +888,16 @@ int main(int argc, char** argv)
          imageStoragePrefix = (const char*)&argv[i][20];
       }
       else if(!(strcmp(argv[i], "-sessions"))) {
-         showSessions = TRUE;
+         showSessions = true;
       }
       else if(!(strcmp(argv[i], "-nosessions"))) {
-         showSessions = TRUE;
+         showSessions = true;
       }
       else if(!(strcmp(argv[i], "-colormarks"))) {
-         showFailoverMarks = TRUE;
+         showFailoverMarks = true;
       }
       else if(!(strcmp(argv[i], "-nocolormarks"))) {
-         showFailoverMarks = FALSE;
+         showFailoverMarks = false;
       }
       else {
          printf("ERROR: Bad argument %s\n", argv[i]);
@@ -939,8 +939,8 @@ int main(int argc, char** argv)
    printf("Receive Timeout      = %u [ms]\n", recvTimeout);
    printf("Inter Image Time     = %u [s]\n", interImageTime);
    printf("Image Storage Prefix = %s\n", imageStoragePrefix);
-   printf("Show Color Marks     = %s\n", (showFailoverMarks == TRUE) ? "on" : "off");
-   printf("Show Sessions        = %s\n", (showSessions == TRUE) ? "on" : "off");
+   printf("Show Color Marks     = %s\n", (showFailoverMarks == true) ? "on" : "off");
+   printf("Show Sessions        = %s\n", (showSessions == true) ? "on" : "off");
    printf("Threads              = %u\n\n", (unsigned int)threads);
 
 

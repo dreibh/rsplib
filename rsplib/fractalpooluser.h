@@ -37,7 +37,7 @@
 #include <kmainwindow.h>
 #endif
 
-#include <QMainWindow>
+#include <QtWidgets/QMainWindow>
 #include <QThread>
 #include <QMutex>
 #include <QImage>
