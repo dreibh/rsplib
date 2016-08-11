@@ -87,13 +87,13 @@ case "$1" in
   force-reload)
    start-stop-daemon --stop --test --quiet --pidfile \
       $PIDFILE --exec $DAEMON \
-   && $0 restart \
+   ; $0 restart \
    || exit 0
    ;;
   restart)
    echo -n "Restarting $DESC: "
    start-stop-daemon --stop --quiet --pidfile \
-      $PIDFILE --exec $DAEMON
+      $PIDFILE --exec $DAEMON || true
    sleep 1
    start-stop-daemon --start --quiet --pidfile \
       $PIDFILE --exec $DAEMON -- $DAEMON_ARGS

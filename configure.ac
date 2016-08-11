@@ -27,7 +27,7 @@
 
 
 # ###### Basic setup ########################################################
-AC_INIT([rsplib], [3.1.1])
+AC_INIT([rsplib], [3.1.2~rc1.0])
 
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
 
