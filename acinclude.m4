@@ -21,7 +21,7 @@
 AC_DEFUN([TD_CHECK_QT],
 [
 
-QT_REQUIRED_COMPONENTS="QtCore QtGui QtXml"
+QT_REQUIRED_COMPONENTS="QtWidgets QtGui QtXml QtCore"
 QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 /usr/include/qt5"
 QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt5/lib /usr/local/lib/qt5 `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
 QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt5/bin /usr/share/qt5/bin"
@@ -90,7 +90,7 @@ for x in $QT_LIBRARY_PATHS ; do
     if test -d $x ; then
        # The libraries directory must contain libQtCore. Otherwise,
        # this directory is not the right one!
-       if test -f $x/libQtCore.so -o -f $x/libQtCore.a ; then
+       if test -f $x/libQt5Core.so -o -f $x/libQt5Core.a ; then
           QTEXTRALIB="$x"
           break
        fi
@@ -103,18 +103,19 @@ AC_MSG_RESULT([-->   $QTEXTRALIB])
 
 
 # ====== Components =========================================================
-QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC -fPIC -fPIE"
+QT_CXXFLAGS="$QT_CXXFLAGS -fPIC -fPIE -I$QTEXTRAINC"
 QT_LDADD="-L$QTEXTRALIB"   # OLD: "-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
 for x in $QT_REQUIRED_COMPONENTS ; do
    AC_MSG_CHECKING([Qt component $x])
-   if ! test -e $QTEXTRALIB/lib$x.so ; then
-      if ! test -e $QTEXTRALIB/lib$x.a ; then
-         AC_MSG_ERROR([Component $x is not available: no $QTEXTRALIB/lib$x.so or $QTEXTRALIB/lib$x.a found!])
+   x5=`echo "$x" | sed -e "s/Qt/Qt5/g"`
+   if ! test -e $QTEXTRALIB/lib$x5.so ; then
+      if ! test -e $QTEXTRALIB/lib$x5.a ; then
+         AC_MSG_ERROR([Component $x is not available: no $QTEXTRALIB/lib$x5.so or $QTEXTRALIB/lib$x5.a found!])
       fi
    fi
    AC_MSG_RESULT([okay])
-   QT_LDADD="$QT_LDADD -l$x"
    QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC/$x"
+   QT_LDADD="$QT_LDADD -l$x5"
 done
 QT_LDADD="$QT_LDADD $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS -lpthread"
 
