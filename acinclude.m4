@@ -1,5 +1,5 @@
 # $Id$
-# Check for Qt 4.x compiler flags, linker flags, and binary packages
+# Check for Qt compiler flags, linker flags, and binary packages
 #
 # Copyright (C) 2002-2014 by Thomas Dreibholz
 #
@@ -18,14 +18,13 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-AC_DEFUN([TD_CHECK_QT4],
+AC_DEFUN([TD_CHECK_QT],
 [
 
 QT_REQUIRED_COMPONENTS="QtCore QtGui QtXml"
-QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt4/include /usr/local/include/qt4 /usr/include/qt4 /usr/include"
-QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt4/lib /usr/local/lib/qt4 /usr/share/qt4/lib `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
-QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt4/bin /usr/share/qt4/bin"
-QTPOSTFIX="-qt4"
+QT_DEFAULT_INCLUDE_PATHS="/usr/share/qt5/include /usr/local/include/qt5 /usr/include/qt5 /usr/share/qt4/include /usr/local/include/qt4 /usr/include/qt4 /usr/include"
+QT_DEFAULT_LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/qt5/lib /usr/local/lib/qt5 /usr/share/qt5/lib /usr/local/qt4/lib /usr/local/lib/qt4 /usr/share/qt4/lib `cat 2>/dev/null /etc/ld.so.conf.d/*.conf | sed -e "/# /d"` /usr/lib64"
+QT_DEFAULT_BINARY_PATHS="/usr/bin /usr/local/bin /usr/local/qt5/bin /usr/share/qt5/bin /usr/local/qt4/bin /usr/share/qt4/bin"
 
 QTEXTRAINC=""
 QTEXTRALIB=""
@@ -36,12 +35,12 @@ MOC=""
 
 # ====== Directory ==========================================================
 AC_ARG_WITH([qt-dir],
-   AC_HELP_STRING([--with-qt-dir=/path/to/Qt-4.x],
+   AC_HELP_STRING([--with-qt-dir=/path/to/qt],
       [to specify the path to the Qt-4.x directory.]),
    [QTDIR="$withval"],
    [QTDIR=""])
 if test x$QTDIR != x ; then
-   AC_MSG_CHECKING(Qt 4.x directory)
+   AC_MSG_CHECKING(Qt directory)
    if test ! -d $x ; then
       AC_MSG_ERROR([Bad setting of Qt directory. Check --qt-dir parameter!])
    fi
@@ -50,9 +49,9 @@ fi
 
 
 # ====== Includes ===========================================================
-AC_MSG_CHECKING(Qt 4.x includes directory)
+AC_MSG_CHECKING(Qt includes directory)
 AC_ARG_WITH([qt-include],
-   AC_HELP_STRING([--with-qt-include=/path/to/Qt-4.x include],
+   AC_HELP_STRING([--with-qt-include=/path/to/qt include],
       [to specify the path to the Qt-4.x include directory]),
    [QT_INCLUDE_PATHS="$withval"],
    [QT_INCLUDE_PATHS="$QT_DEFAULT_INCLUDE_PATHS"])
@@ -69,15 +68,15 @@ for x in $QT_INCLUDE_PATHS ; do
     fi
 done
 if test x$QTEXTRAINC = x ; then
-   AC_MSG_ERROR([No Qt 4.x include directory found. Try --with-qt-include=<directory>.])
+   AC_MSG_ERROR([No Qt include directory found. Try --with-qt-include=<directory>.])
 fi
 AC_MSG_RESULT([-->   $QTEXTRAINC])
 
 
 # ====== Libraries ==========================================================
-AC_MSG_CHECKING(Qt 4.x libraries directory)
+AC_MSG_CHECKING(Qt libraries directory)
 AC_ARG_WITH([qt-lib],
-   AC_HELP_STRING([--with-qt-lib=/path/to/Qt-4.x lib],
+   AC_HELP_STRING([--with-qt-lib=/path/to/qt lib],
       [to specify the path to the Qt-4.x lib directory]),
    [QT_LIBRARY_PATHS="$withval"],
    [QT_LIBRARY_PATHS="$QT_DEFAULT_LIBRARY_PATHS"])
@@ -98,7 +97,7 @@ for x in $QT_LIBRARY_PATHS ; do
     fi
 done
 if test x$QTEXTRALIB = x ; then
-   AC_MSG_ERROR([No Qt 4.x libraries directory found. Try --with-qt-lib=<directory>.])
+   AC_MSG_ERROR([No Qt libraries directory found. Try --with-qt-lib=<directory>.])
 fi
 AC_MSG_RESULT([-->   $QTEXTRALIB])
 
@@ -107,7 +106,7 @@ AC_MSG_RESULT([-->   $QTEXTRALIB])
 QT_CXXFLAGS="$QT_CXXFLAGS -I$QTEXTRAINC"
 QT_LDADD="-L$QTEXTRALIB"   # OLD: "-Wl,-rpath,$QTEXTRALIB -L$QTEXTRALIB"
 for x in $QT_REQUIRED_COMPONENTS ; do
-   AC_MSG_CHECKING([Qt 4.x component $x])
+   AC_MSG_CHECKING([Qt component $x])
    if ! test -e $QTEXTRALIB/lib$x.so ; then
       if ! test -e $QTEXTRALIB/lib$x.a ; then
          AC_MSG_ERROR([Component $x is not available: no $QTEXTRALIB/lib$x.so or $QTEXTRALIB/lib$x.a found!])
@@ -130,21 +129,23 @@ AC_SUBST(QT_LDADD)
 
 # ====== Programs ===========================================================
 AC_ARG_WITH([qt-bin],
-   AC_HELP_STRING([--with-qt-binaries=/path/to/Qt-4.x binaries],
-      [to specify the path to the Qt-4.x binaries directory]),
+   AC_HELP_STRING([--with-qt-binaries=/path/to/qt binaries],
+      [to specify the path to the Qt binaries directory]),
    [QT_BINARY_PATHS="$withval"],
    [QT_BINARY_PATHS="$QT_DEFAULT_BINARY_PATHS"])
 if test x$QTDIR != x ; then
    QT_BINARY_PATHS="$QTDIR/bin"
 fi
 
-AC_MSG_CHECKING(Qt 4.x meta-object compiler moc$QTPOSTFIX)
-for p in $QT_BINARY_PATHS ; do
-   echo -n "$p/moc$QTPOSTFIX?   "
-   if test -e $p/moc$QTPOSTFIX ; then
-      MOC="$p/moc$QTPOSTFIX"
-      break
-   fi
+AC_MSG_CHECKING(Qt meta-object compiler moc)
+for QTPOSTFIX in "" ; do
+   for p in $QT_BINARY_PATHS ; do
+      echo -n "$p/moc$QTPOSTFIX?   "
+      if test -e $p/moc$QTPOSTFIX ; then
+         MOC="$p/moc$QTPOSTFIX"
+         break
+      fi
+   done
 done
 if test x$MOC = x ; then
    AC_MSG_ERROR([moc$QTPOSTFIX not found!])

@@ -30,6 +30,7 @@
 AC_INIT([rsplib], [3.1.2~rc1.0])
 
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
 AC_PREFIX_DEFAULT(/usr/local)
@@ -479,7 +480,7 @@ esac
 # ###### Check for Qt, if it is requested ###################################
 AM_CONDITIONAL(BUILD_QT_PROGRAMS, test x$enable_qt = xyes)
 if test "${enable_qt}" = "yes"; then
-   TD_CHECK_QT4
+   TD_CHECK_QT
    AC_DEFINE(ENABLE_QT, 1, [QT is usable])
 else
    echo "Skipping checks for QT, since it is not requested."
