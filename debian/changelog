@@ -1,8 +1,8 @@
-rsplib (3.1.2~rc1.0-1ubuntu1) xenial; urgency=low
+rsplib (3.1.2~rc1.1-1ubuntu1) zesty; urgency=low
 
   * New upstream release.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 11 Aug 2016 08:08:08 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 31 Oct 2016 08:08:08 +0200
 
 rsplib (3.1.1-1ubuntu1) xenial; urgency=low
 
