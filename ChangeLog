@@ -1,3 +1,105 @@
+commit 1375ee19597bac0e78ab6265e382378099e1dc3c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 31 15:45:31 2016 +0100
+
+    Merged into master branch.
+
+commit a718d1edd5c7dd8d9987ed721bfa61e912336e30
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 31 15:37:41 2016 +0100
+
+    A fix.
+
+commit fb3f233508fe6fbc2e3f7beab3f3735c9c5c90c2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 31 15:34:39 2016 +0100
+
+    Packaging file update.
+
+commit a59dfa7fa36019da172ba16a4bd605853a69dd46
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 17:45:21 2016 +0200
+
+    A fix.
+
+commit 1f7f48c458232fc31659bde81f49a39a8c2cfff0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 17:27:32 2016 +0200
+
+    Dependency fix.
+
+commit 75c45047a0dd968a6b4e22d52c22127a967d7048
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 16:52:49 2016 +0200
+
+    Got rid of build-time string in compiled library (fix for reproducible build).
+
+commit 417b9b635d75c87739aea5fd978c640e7999ae0c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 16:49:39 2016 +0200
+
+    Compile option fix.
+
+commit a92b65927d6704073dbcc895832c12bdc5736815
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 16:40:38 2016 +0200
+
+    A fix.
+
+commit 87ea501511853b09507053d4e33a281e10cd3ee2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 15:29:14 2016 +0200
+
+    Configuration script improvement.
+
+commit dfde810cda3c19d7fd4ec3a60d66eb2ea59a4481
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 15:15:21 2016 +0200
+
+    Some fixes.
+
+commit 82f59831b31be81bb3ff2154e17912087b118ea7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 14:50:31 2016 +0200
+
+    Updates for Qt 5.x.
+
+commit 579cb1595cca71e1a8ffd81cd033876b3e45903e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 13:59:17 2016 +0200
+
+    Started to update configure scripts for Qt 5.x.
+
+commit 3bb110e90762a690bcb46db50190c36b24332bb0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 11 13:31:43 2016 +0200
+
+    Init script fix for Ubuntu 16.04.
+
+commit 97761c2d451f7a7052f571b2a78ca4288f73a48f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Apr 5 06:46:19 2016 +0200
+
+    Version bump.
+
+commit e075c87b3b67cafd6f6936010f8a22caca138ce5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Apr 4 17:02:08 2016 +0200
+
+    Build script updates.
+
+commit 5abbc69d4e71afa94919f1027bfe7e9984a2734e
+Author: Priv.-Doz. Dr. Thomas Dreibholz <dreibh@iem.uni-due.de>
+Date:   Tue Oct 27 10:43:11 2015 +0100
+
+    Minor update.
+
+commit da949db95bd99f8a748dc8f2f91d342ec493f707
+Author: Priv.-Doz. Dr. Thomas Dreibholz <dreibh@iem.uni-due.de>
+Date:   Tue Oct 27 10:36:01 2015 +0100
+
+    Updated ChangeLog.
+
 commit 65c6dc2492796c763aa5df515994e1b146736631
 Author: Priv.-Doz. Dr. Thomas Dreibholz <dreibh@iem.uni-due.de>
 Date:   Tue Oct 27 10:33:58 2015 +0100
