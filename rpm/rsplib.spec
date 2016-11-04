@@ -13,7 +13,8 @@ BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: bzip2-devel
 BuildRequires: glib2-devel
-BuildRequires: qt-devel
+BuildRequires: qt5-qtbase-devel
+BuildRequires: qtchooser
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -227,5 +228,5 @@ rm -rf "$RPM_BUILD_ROOT"
 
 
 %changelog
-* Mon Nov 04 2016 Thomas Dreibholz <dreibh@simula.no> 3.0.2
+* Fri Nov 04 2016 Thomas Dreibholz <dreibh@simula.no> 3.1.2
 - Initial RPM release
