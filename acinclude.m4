@@ -81,7 +81,7 @@ AC_ARG_WITH([qt-lib],
    [QT_LIBRARY_PATHS="$withval"],
    [QT_LIBRARY_PATHS="$QT_DEFAULT_LIBRARY_PATHS"])
 if test x$QTDIR != x ; then
-   QT_LIBRARY_PATHS="$QTDIR/include"
+   QT_LIBRARY_PATHS="$QTDIR/lib"
 fi
 
 QTEXTRALIB=""
@@ -138,20 +138,18 @@ if test x$QTDIR != x ; then
    QT_BINARY_PATHS="$QTDIR/bin"
 fi
 
+AC_MSG_CHECKING(Looking for qtchooser)
+QTCHOOSER="qtchooser"
+for p in $QT_BINARY_PATHS $QT_LIBRARY_PATHS ; do
+   echo -n "$p/$QTCHOOSER?   "
+   if test -e $p/$QTCHOOSER ; then
+      QTCHOOSER="$p/$QTCHOOSER"
+      break
+   fi
+done
+
 AC_MSG_CHECKING(Qt meta-object compiler moc)
-MOC="qtchooser -run-tool=moc -qt=5"
-#for QTPOSTFIX in "" ; do
-   #for p in $QT_BINARY_PATHS ; do
-      #echo -n "$p/$MOC?   "
-      #if test -e $p/$MOC ; then
-         #MOC="$p/$MOC"
-         #break
-      #fi
-   #done
-#done
-#if test x$MOC = x ; then
-   #AC_MSG_ERROR([$MOC not found!])
-#fi
+MOC="$QTCHOOSER -run-tool=moc -qt=5"
 AC_MSG_RESULT([$MOC])
 AC_SUBST(MOC)
 
