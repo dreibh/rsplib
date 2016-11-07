@@ -145,6 +145,9 @@ for p in $QT_BINARY_PATHS $QT_LIBRARY_PATHS ; do
    if test -e $p/$QTCHOOSER ; then
       QTCHOOSER="$p/$QTCHOOSER"
       break
+   elif test -e $p/qtchooser/$QTCHOOSER ; then
+      QTCHOOSER="$p/qtchooser/$QTCHOOSER"
+      break
    fi
 done
 
