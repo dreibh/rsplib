@@ -141,15 +141,19 @@ fi
 AC_MSG_CHECKING(Looking for qtchooser)
 QTCHOOSER="qtchooser"
 for p in $QT_BINARY_PATHS $QT_LIBRARY_PATHS ; do
-   echo -n "$p/$QTCHOOSER?   "
-   if test -e $p/$QTCHOOSER ; then
-      QTCHOOSER="$p/$QTCHOOSER"
-      break
-   elif test -e $p/qtchooser/$QTCHOOSER ; then
+   if test -x $p/qtchooser/$QTCHOOSER ; then
       QTCHOOSER="$p/qtchooser/$QTCHOOSER"
+      break
+   elif test -x $p/$QTCHOOSER ; then
+      QTCHOOSER="$p/$QTCHOOSER"
       break
    fi
 done
+if ! test -x $QTCHOOSER ; then
+   AC_ERROR([qtchooser not found!])
+fi
+AC_MSG_RESULT([$QTCHOOSER])
+AC_SUBST(QTCHOOSER)
 
 AC_MSG_CHECKING(Qt meta-object compiler moc)
 MOC="$QTCHOOSER -run-tool=moc -qt=5"
@@ -202,8 +206,6 @@ AC_MSG_RESULT(yes)
 # ------ MOC compile test ---------------------------------------------------
 AC_MSG_CHECKING(whether C++-compiling the moc-generated program works)
 test_command_2="$CXX $QT_CXXFLAGS -c $CXXFLAGS -o moc_myqt.o moc_myqt.cpp"
-
-echo CMD=$test_command_2
 
 AC_TRY_EVAL(test_command_2)
 if test x"$ac_status" != x0; then
