@@ -1,3 +1,39 @@
+commit 7a874f941c0267be21e512de50715c777944d81b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 23 13:43:53 2016 +0100
+
+    FreeBSD compile fix: no work-around for PTHREAD_MUTEX_RECURSIVE needed any more.
+
+commit 601dcc4594236c201bd36aacbd5599200fb3093e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Nov 8 14:59:57 2016 +0100
+
+    Fixed build script for Fedora.
+
+commit df3ee08e3df1a4d0cce8da48a2d83f4f51b74043
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 7 13:54:33 2016 +0100
+
+    A fix for Fedora Core.
+
+commit f07d175dd9f1aa6a0bbfcefd0fb565f7c7b20823
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 7 13:47:05 2016 +0100
+
+    Qt configuration fixes.
+
+commit 69bc821183133121ca111f48d6f1483e193630dd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 4 16:14:45 2016 +0100
+
+    RPM build file update.
+
+commit 881e8f58b78ddce0b8cde03866aa10c29158a187
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 4 15:39:42 2016 +0100
+
+    Updated packaging files.
+
 commit 1375ee19597bac0e78ab6265e382378099e1dc3c
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Oct 31 15:45:31 2016 +0100
