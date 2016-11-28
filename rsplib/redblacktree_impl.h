@@ -488,9 +488,9 @@ size_t RB_FUNCTION(RedBlackTreeGetElements)(
 
 
 /* ###### Get prev node by walking through the tree (does *not* use list!) */
-struct RB_DEFINITION(RedBlackTreeNode)* RB_FUNCTION(RedBlackTreeInternalFindPrev)(
-                                           const struct RB_DEFINITION(RedBlackTree)*     rbt,
-                                           const struct RB_DEFINITION(RedBlackTreeNode)* cmpNode)
+static struct RB_DEFINITION(RedBlackTreeNode)* RB_FUNCTION(RedBlackTreeInternalFindPrev)(
+                                                  const struct RB_DEFINITION(RedBlackTree)*     rbt,
+                                                  const struct RB_DEFINITION(RedBlackTreeNode)* cmpNode)
 {
    const struct RB_DEFINITION(RedBlackTreeNode)* node = cmpNode->LeftSubtree;
    const struct RB_DEFINITION(RedBlackTreeNode)* parent;
@@ -514,9 +514,9 @@ struct RB_DEFINITION(RedBlackTreeNode)* RB_FUNCTION(RedBlackTreeInternalFindPrev
 
 
 /* ###### Get next node by walking through the tree (does *not* use list!) */
-struct RB_DEFINITION(RedBlackTreeNode)* RB_FUNCTION(RedBlackTreeInternalFindNext)(
-                                           const struct RB_DEFINITION(RedBlackTree)*     rbt,
-                                           const struct RB_DEFINITION(RedBlackTreeNode)* cmpNode)
+static struct RB_DEFINITION(RedBlackTreeNode)* RB_FUNCTION(RedBlackTreeInternalFindNext)(
+                                                  const struct RB_DEFINITION(RedBlackTree)*     rbt,
+                                                  const struct RB_DEFINITION(RedBlackTreeNode)* cmpNode)
 {
    const struct RB_DEFINITION(RedBlackTreeNode)* node = cmpNode->RightSubtree;
    const struct RB_DEFINITION(RedBlackTreeNode)* parent;
