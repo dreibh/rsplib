@@ -158,13 +158,11 @@ int rsp_initialize(struct rsp_info* info)
                             rserpoolSocketComparison);
 
       /* ====== Initialize RSerPool Socket descriptor storage ============ */
-      simpleRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
-      simpleRedBlackTreeNew(&gRSerPoolSocketSet, rserpoolSocketPrint, rserpoolSocketComparison);
       gRSerPoolSocketAllocationBitmap = identifierBitmapNew(FD_SETSIZE);
       if(gRSerPoolSocketAllocationBitmap != NULL) {
          /* ====== Map stdin, stdout, stderr file descriptors ============ */
          CHECK(rsp_mapsocket(STDOUT_FILENO, STDOUT_FILENO) == STDOUT_FILENO);
-         CHECK(rsp_mapsocket(STDIN_FILENO, STDIN_FILENO) == STDIN_FILENO);
+         CHECK(rsp_mapsocket(STDIN_FILENO,  STDIN_FILENO)  == STDIN_FILENO);
          CHECK(rsp_mapsocket(STDERR_FILENO, STDERR_FILENO) == STDERR_FILENO);
 
          /* ====== Add static registrars ================================= */
