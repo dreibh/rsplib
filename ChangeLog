@@ -1,3 +1,40 @@
+commit ec3e3a56a7a519c78f5787c413b33bbf4d7600be
+Merge: 5989821 d1b8940
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Mar 21 10:21:56 2017 +0100
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 59898212ac8462c17ac357bbfc93edec78f4f7e3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Mar 21 10:21:45 2017 +0100
+
+    Script update.
+
+commit d1b8940812538daf3655ed5dc3cf7f44504726fd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 7 13:53:45 2016 +0100
+
+    Compile fix for Fedora Core 25.
+
+commit 2491dc54ccfb8033a8b4324773ddbdbaeefc72ba
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 28 14:33:18 2016 +0100
+
+    Functions are static.
+
+commit 873bb7a17f02a785fcb7435999cad4e59fc5073a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 28 14:31:49 2016 +0100
+
+    Removed superflous initialisation of gRSerPoolSocketSet. It is already initialised.
+
+commit 2cbb0a99330df20cf1b21bdb973889179a54e1c5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 23 13:53:24 2016 +0100
+
+    New release.
+
 commit 7a874f941c0267be21e512de50715c777944d81b
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Nov 23 13:43:53 2016 +0100
