@@ -228,5 +228,5 @@ rm -rf "$RPM_BUILD_ROOT"
 
 
 %changelog
-* Fri Nov 04 2016 Thomas Dreibholz <dreibh@simula.no> 3.1.2
+* Fri Nov 04 2017 Thomas Dreibholz <dreibh@simula.no> 3.1.2
 - Initial RPM release
