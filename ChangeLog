@@ -1,3 +1,15 @@
+commit 47173eb202c9123f6d5f9874efb01506629022a7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 8 15:40:28 2017 +0200
+
+    Another script update.
+
+commit b89ba0656176ee250c9f19c97d88a616e2cb1d93
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 8 15:01:46 2017 +0200
+
+    Got rid of the deprecated legacy wrappers.
+
 commit 5b10bf534daa8fc4791b42ba728a756f3c4b64e9
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon May 8 14:14:32 2017 +0200
