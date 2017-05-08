@@ -390,8 +390,8 @@ endif
 
 
 # ###### Scripts ############################################################
-dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample server terminal registrar
+dist_bin_SCRIPTS = scriptingcontrol scriptingserviceexample
 
 
 # ###### Manual pages #######################################################
-dist_man_MANS = rspregistrar.1 rspserver.1 rspterminal.1 cspmonitor.1 calcappclient.1 pingpongclient.1 hsdump.1 scriptingcontrol.1 scriptingserviceexample.1 scriptingclient.1 fractalpooluser.1 server.1 terminal.1 registrar.1
+dist_man_MANS = rspregistrar.1 rspserver.1 rspterminal.1 cspmonitor.1 calcappclient.1 pingpongclient.1 hsdump.1 scriptingcontrol.1 scriptingserviceexample.1 scriptingclient.1 fractalpooluser.1

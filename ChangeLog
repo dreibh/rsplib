@@ -1,3 +1,27 @@
+commit 5b10bf534daa8fc4791b42ba728a756f3c4b64e9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 8 14:14:32 2017 +0200
+
+    Updated packaging files.
+
+commit f1b9b1a5dec443da8684a9fa5077b76039b23ee6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 8 14:13:19 2017 +0200
+
+    Removed deprecated legacy wrappers.
+
+commit fe92dc01b29bc9665de5a4fb0fa3bead6dcb8e69
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 8 14:12:46 2017 +0200
+
+    Header updates.
+
+commit 96a89008231b99c3d3c2137d5296b0460eb534fa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Mar 28 14:11:33 2017 +0200
+
+    Minor updates.
+
 commit ec3e3a56a7a519c78f5787c413b33bbf4d7600be
 Merge: 5989821 d1b8940
 Author: Thomas Dreibholz <dreibh@simula.no>

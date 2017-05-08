@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.1.4~rc1.1
+Version: 3.1.4~rc1.3
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
@@ -74,17 +74,6 @@ Requires: %{name}-tools
 %description services
 Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
 This package provides a set of input files for the Fractal Generator service.
-
-
-%package legacy-wrappers
-Summary: RSerPool legacy names
-Group: Applications/Internet
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-tools
-
-%description legacy-wrappers
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package provides legacy wrappers for rsplib-2.x scripts. The programs registrar, server and terminal have been renamed to rspregistrar, rspserver and rspterminal, respectively, in order to avoid naming conflicts.
 
 
 %prep
