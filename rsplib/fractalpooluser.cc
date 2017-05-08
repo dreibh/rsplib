@@ -9,7 +9,7 @@
  *
  * ------------- An Efficient RSerPool Prototype Implementation -------------
  *
- * Copyright (C) 2002-2016 by Thomas Dreibholz
+ * Copyright (C) 2002-2017 by Thomas Dreibholz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -508,7 +508,7 @@ void FractalPU::about()
    QMessageBox::about(this, tr("About Fractal Pool User"),
       "<center>"
          "<b>Fractal Pool User</b><br>"
-         "Copyright (C) 2002-2016 by Thomas Dreibholz"
+         "Copyright (C) 2002-2017 by Thomas Dreibholz"
       "</center>");
 }
 
@@ -956,7 +956,7 @@ int main(int argc, char** argv)
                     "2.0kde",
                     ki18n("A KDE/RSerPool Fractal Generator Pool User"),
                     KAboutData::License_GPL_V3,
-                    ki18n("Copyright (C) 2009-2016 Thomas Dreibholz"));
+                    ki18n("Copyright (C) 2009-2017 Thomas Dreibholz"));
    KCmdLineArgs::init(argc, argv, &about);
    KApplication application;
 #else
