@@ -207,14 +207,6 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_datadir}/fractalpooluser/*.qm
 %{_datadir}/fgpconfig/*.fsf
 
-%files legacy-wrappers
-%{_bindir}/registrar
-%{_bindir}/server
-%{_bindir}/terminal
-%{_datadir}/man/man1/registrar.1.gz
-%{_datadir}/man/man1/server.1.gz
-%{_datadir}/man/man1/terminal.1.gz
-
 
 %changelog
 * Fri Nov 04 2017 Thomas Dreibholz <dreibh@simula.no> 3.1.2
