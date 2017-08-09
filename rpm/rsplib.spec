@@ -4,8 +4,8 @@ Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
 Group: Applications/Internet
-URL: http://www.iem.uni-due.de/~dreibh/rserpool/
-Source: http://www.iem.uni-due.de/~dreibh/rserpool/download/%{name}-%{version}.tar.gz
+URL: https://www.uni-due.de/~be0001/rserpool/
+Source: https://www.uni-due.de/~be0001/rserpool/download/%{name}-%{version}.tar.gz
 
 AutoReqProv: on
 BuildRequires: libtool, automake, autoconf

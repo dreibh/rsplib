@@ -20,9 +20,9 @@ Keywords:       Reliable Server Pooling, RSerPool, High Availability,
                 Server Pools, Pool Management, Session Management
 Author:         dreibh@iem.uni-due.de (Thomas Dreibholz)
 Maintained-by:  dreibh@iem.uni-due.de (Thomas Dreibholz)
-Primary-site:   http://www.iem.uni-due.de/~dreibh/rserpool
+Primary-site:   https://www.uni-due.de/~be0001/rserpool
                 1052 kB download/rsplib-3.1.4.tar.gz
-Original-site:  http://www.iem.uni-due.de/~dreibh/rserpool
+Original-site:  https://www.uni-due.de/~be0001/rserpool
 Platforms:      Linux, FreeBSD, MacOS, Solaris
 Copying-policy: GPL
 End
