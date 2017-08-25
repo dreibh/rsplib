@@ -1,3 +1,15 @@
+commit c69829ded3b4433c6f6cc2bfe8acd0f833201be3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 9 12:52:09 2017 +0200
+
+    Script update.
+
+commit c7878a72161e13762a0ec572f0c8e4243f1165af
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 9 12:47:59 2017 +0200
+
+    Dependency fix.
+
 commit d9c5ad58f0955332061c8e05f10863c50cf41ab1
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Aug 9 11:06:06 2017 +0200
