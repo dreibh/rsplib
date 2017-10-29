@@ -1,8 +1,9 @@
-rsplib (3.1.7~rc1-1ubuntu1) artful; urgency=low
+rsplib (3.1.7-1ubuntu1) bionic; urgency=low
 
   * New upstream release.
+  * Close upgrade bug (LP: #1714101)
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 27 Oct 2017 08:08:08 +0200
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 29 Oct 2017 08:08:08 +0200
 
 rsplib (3.1.6-1ubuntu1) artful; urgency=low
 
