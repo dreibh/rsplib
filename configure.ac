@@ -27,7 +27,7 @@
 
 
 # ###### Basic setup ########################################################
-AC_INIT([rsplib], [3.1.7~rc1])
+AC_INIT([rsplib], [3.1.7~rc2])
 
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
 AC_CONFIG_MACRO_DIR([m4])
@@ -141,7 +141,7 @@ hpux*)
     thread_LIBS="-lpthread"
    ;;
 linux*)
-    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE -D_FORTIFY_SOURCE=2 -fPIC"
+    CFLAGS="$CFLAGS -DLINUX -D_GNU_SOURCE -std=c11 -D_FORTIFY_SOURCE=2 -fPIC"
     CXXFLAGS="$CXXFLAGS -DLINUX -D_GNU_SOURCE -std=c++11 -D_FORTIFY_SOURCE=2 -fPIC"
     LDFLAGS="$LDFLAGS"
     thread_LIBS="-lpthread"
