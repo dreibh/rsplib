@@ -11,7 +11,7 @@ COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3
 
-USE_QT5=	gui xml moc_build
+USE_QT5=	gui xml
 USE_GMAKE=	yes
 GNU_CONFIGURE=	yes
 CONFIGURE_ARGS=	--disable-maintainer-mode \
