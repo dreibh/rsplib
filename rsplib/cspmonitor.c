@@ -285,7 +285,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
            space);
    fprintf(fd, "U=%s l=%1.1fs A=%u%s \"%s\"\x1b[0K",
            uptimeString,
-           (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000) / 1000.0,
+           (double)abs(((int64_t)cspObject->LastReportTimeStamp - (int64_t)getMicroTime()) / 1000LL) / 1000.0,
            (unsigned int)cspObject->Associations,
            workloadString,
            cspObject->Status);

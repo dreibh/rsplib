@@ -1,3 +1,47 @@
+commit 7213b9ab87d0748dc04303fab06c46615b84ed30
+Merge: c1b4df2 ce2893c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 11:00:03 2017 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
+
+commit c1b4df2d9feb1ab659d180f9ad8aaf70a5cf9d24
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:59:38 2017 +0100
+
+    Improved compiler configuration for FreeBSD.
+
+commit ce2893ccc02a0f486aba0e1e334c94d2213ffb11
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:59:11 2017 +0100
+
+    Improved compiler configuration.
+
+commit 1577a6d25f52dedf358dd5ed90cb39b02b8e80d0
+Merge: 16ef0b6 64a5d58
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:48:43 2017 +0100
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 64a5d585b3c1a8e5c882be85da5d4875b060831a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:48:16 2017 +0100
+
+    Updated FreeBSD ports Makefile.
+
+commit 16ef0b6ec18ecda111cf213e26841310c07a2b6d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:41:29 2017 +0100
+
+    Updated ChangeLog.
+
+commit b1cadb851b9a66703d880f47ab1f4d72db4b1539
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:41:18 2017 +0100
+
+    Updated LSM entry.
+
 commit 404c1144d4ba323973c0ede2b8ddd90e41a60f25
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Oct 29 10:40:20 2017 +0100
