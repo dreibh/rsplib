@@ -130,8 +130,8 @@ bsdi*)
     LDFLAGS="$LDFLAGS `glib-config --libs`"
     ;;
 freebsd*)
-    CFLAGS="$CFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include -DHAVE_CONNECTX_WITH_ID"
-    CXXFLAGS="$CXXFLAGS -DFreeBSD -D_PTHREADS -pthread -I/usr/local/include"
+    CFLAGS="$CFLAGS -DFreeBSD -D_PTHREADS -std=c11 -pthread -I/usr/local/include -DHAVE_CONNECTX_WITH_ID"
+    CXXFLAGS="$CXXFLAGS -DFreeBSD -D_PTHREADS -std=c++11 -pthread -I/usr/local/include"
     LDFLAGS="$LDFLAGS -L/usr/local/v6/lib"
     thread_LIBS=""
     ;;
