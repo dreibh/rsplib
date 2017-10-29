@@ -3,15 +3,12 @@ bin/cspmonitor
 bin/fractalpooluser
 bin/hsdump
 bin/pingpongclient
-bin/registrar
 bin/rspregistrar
 bin/rspserver
 bin/rspterminal
 bin/scriptingclient
 bin/scriptingcontrol
 bin/scriptingserviceexample
-bin/server
-bin/terminal
 include/rserpool/cpprspserver.h
 include/rserpool/mutex.h
 include/rserpool/rserpool-csp.h

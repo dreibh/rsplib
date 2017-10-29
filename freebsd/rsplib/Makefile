@@ -11,8 +11,8 @@ COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3
 
-USE_QT5=	gui xml
-USE_GMAKE=	yes
+USES=           gmake
+USE_QT5=	buildtools core gui xml
 GNU_CONFIGURE=	yes
 CONFIGURE_ARGS=	--disable-maintainer-mode \
 		--enable-qt --with-qt-lib=${QT_LIBDIR} \
@@ -24,15 +24,12 @@ MAN1=		calcappclient.1 \
 		fractalpooluser.1 \
 		hsdump.1 \
 		pingpongclient.1 \
-		registrar.1 \
 		rspregistrar.1 \
 		rspserver.1 \
 		rspterminal.1 \
 		scriptingclient.1 \
 		scriptingcontrol.1 \
-		scriptingserviceexample.1 \
-		server.1 \
-		terminal.1
+		scriptingserviceexample.1
 
 
 NO_STAGE=	yes
