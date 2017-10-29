@@ -2,7 +2,7 @@
 # $FreeBSD: net/rsplib/Makefile 327755 2013-09-20 22:10:23Z bapt $
 
 PORTNAME=	rsplib
-PORTVERSION=	3.0.2
+PORTVERSION=	3.1.7
 CATEGORIES=	net
 MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/
 
@@ -11,7 +11,7 @@ COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3
 
-USE_QT4=	gui xml moc_build
+USE_QT5=	gui xml moc_build
 USE_GMAKE=	yes
 GNU_CONFIGURE=	yes
 CONFIGURE_ARGS=	--disable-maintainer-mode \
