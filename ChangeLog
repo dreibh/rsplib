@@ -1,3 +1,45 @@
+commit 404c1144d4ba323973c0ede2b8ddd90e41a60f25
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:40:20 2017 +0100
+
+    Updated README.
+
+commit 958f245679d8588b64bfbfb66205af9d873059aa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:39:38 2017 +0100
+
+    Header updates.
+
+commit a6fc437bcc9c5489f97552e288fb10cad10d70ee
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:36:26 2017 +0100
+
+    Improved autogen.sh: use multiple cores for building under FreeBSD.
+
+commit 0e7511f09bd5537ac4a64cf1856de1809e15771a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:26:46 2017 +0100
+
+    Updated FreeBSD ports makefile.
+
+commit 59b493776844597247c47959d0e24d9cda0d1055
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 10:24:28 2017 +0100
+
+    Fixed Qt5 detection under FreeBSD.
+
+commit 66d8a39f8bf8c6a7c2a854f73306e7258e1d96de
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Oct 27 22:07:21 2017 +0200
+
+    Build script updates.
+
+commit 54fe98deb1bedac201680e3929b579811b724ecd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Aug 25 13:57:22 2017 +0200
+
+    New release.
+
 commit c69829ded3b4433c6f6cc2bfe8acd0f833201be3
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Aug 9 12:52:09 2017 +0200
