@@ -1,8 +1,9 @@
 # Created by: Thomas Dreibholz <dreibh@iem.uni-due.de>
-# $FreeBSD: net/rsplib/Makefile 327755 2013-09-20 22:10:23Z bapt $
+# $FreeBSD: head/net/rsplib/Makefile 373063 2014-11-22 14:43:23Z antoine $
 
 PORTNAME=	rsplib
 PORTVERSION=	3.1.7
+PORTREVISION=	1
 CATEGORIES=	net
 MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/
 
@@ -11,26 +12,14 @@ COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3
 
-USES=           gmake
-USE_QT5=	buildtools core gui xml
 GNU_CONFIGURE=	yes
 CONFIGURE_ARGS=	--disable-maintainer-mode \
 		--enable-qt --with-qt-lib=${QT_LIBDIR} \
 		--with-qt-include=${QT_INCDIR}
+INSTALL_TARGET=	install-strip
+USES=		gmake libtool shebangfix
+SHEBANG_FILES=	rsplib/scriptingserviceexample
 USE_LDCONFIG=	yes
+USE_QT5=	buildtools core gui xml
 
-MAN1=		calcappclient.1 \
-		cspmonitor.1 \
-		fractalpooluser.1 \
-		hsdump.1 \
-		pingpongclient.1 \
-		rspregistrar.1 \
-		rspserver.1 \
-		rspterminal.1 \
-		scriptingclient.1 \
-		scriptingcontrol.1 \
-		scriptingserviceexample.1
-
-
-NO_STAGE=	yes
 .include <bsd.port.mk>
