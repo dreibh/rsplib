@@ -61,4 +61,6 @@ echo "8. ###### make package ################################################" &
 make package && \
 echo "9. ###### tar tzvf *.txz ##############################################" && \
 tar tzvf /usr/ports/packages/All/${PACKAGE}-${PACKAGE_VERSION}.txz && \
+echo "Running portlint ..." && \
+portlint && \
 echo "====== Successfully completed! ======"
