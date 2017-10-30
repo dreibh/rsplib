@@ -19,6 +19,6 @@ INSTALL_TARGET=	install-strip
 USES=		gmake libtool shebangfix
 SHEBANG_FILES=	rsplib/scriptingserviceexample
 USE_LDCONFIG=	yes
-USE_QT5=	buildtools core gui xml
+USE_QT5=	buildtools_build core gui xml
 
 .include <bsd.port.mk>
