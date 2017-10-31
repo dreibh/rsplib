@@ -1,5 +1,5 @@
-#LyX 2.0 created this file. For more info see http://www.lyx.org/
-\lyxformat 413
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass article
@@ -36,18 +36,18 @@ colorlinks=true]{hyperref}
 \maintain_unincluded_children false
 \language english
 \language_package default
-\inputencoding auto
+\inputencoding utf8
 \fontencoding global
 \font_roman times
 \font_sans default
 \font_typewriter default
+\font_math auto
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
-
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -58,15 +58,24 @@ colorlinks=true]{hyperref}
 \use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_amsmath 1
-\use_esint 0
-\use_mhchem 1
-\use_mathdots 1
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
+\cite_engine_type default
+\biblio_style plain
 \use_bibtopic false
 \use_indices false
 \paperorientation portrait
 \suppress_date false
+\justification true
 \use_refstyle 0
 \index Index
 \shortcut idx
@@ -131,11 +140,11 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-March
+October
 \begin_inset space \thinspace{}
 \end_inset
 
-1, 2015
+31, 2017
 \end_layout
 
 \begin_layout Standard
@@ -215,7 +224,7 @@ status collapsed
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset CommandInset label
@@ -253,7 +262,7 @@ status collapsed
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset CommandInset label
@@ -833,7 +842,7 @@ Add the environment variable QTDIR, setting the path to the installation
 \begin_inset space ~
 \end_inset
 
-"export QTDIR=/usr/share/qt4" for Ubuntu Linux.
+"export QTDIR=/usr/share/qt5" for Ubuntu Linux.
  This setting depends on your distribution; use "locate qwidget.h" to find
  out the directory.
 \end_layout
@@ -895,7 +904,7 @@ To make all settings above permanent, you can append them to your shell
 \begin_layout Standard
 
 \family typewriter
-export QTDIR=/usr/share/qt4
+export QTDIR=/usr/share/qt5
 \end_layout
 
 \begin_layout Standard
@@ -1129,7 +1138,7 @@ socketapi
 \begin_inset space ~
 \end_inset
 
-"export QTDIR=/usr/share/qt4" for Ubuntu Linux.
+"export QTDIR=/usr/share/qt5" for Ubuntu Linux.
  This setting depends on your distribution; use "locate qwidget.h" to find
  out the directory.
  It is recommended to add the setting of QTDIR to your shell configuration
