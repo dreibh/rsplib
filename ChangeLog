@@ -1,3 +1,100 @@
+commit 2694970cea3ad79e65e0e0bbffc20369d9fed3d9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:26:52 2017 +0100
+
+    Updated documentation.
+
+commit c71410b2d9ef811882e9be8b7c6c4be71782bf76
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:10:56 2017 +0100
+
+    Removed obsolete SVN Id tag.
+
+commit f0664adf96a57f055a7c6f1a9d58517c41535e35
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:05:05 2017 +0100
+
+    Renamed package versions to reflect ABI break.
+
+commit 3fbe0f19afa072ee0023612404cc80b18693d671
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 21:32:16 2017 +0100
+
+    Another fix.
+
+commit 5e407fb861dd965622d4742b8a44513286cb139d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 21:29:15 2017 +0100
+
+    Updated FreeBSD port.
+
+commit 4b8e102add26d54832a9a3fc9e204276fbb2590f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:55:55 2017 +0100
+
+    Updated build scripts.
+
+commit a31ee19817283198a103f145b90d9bfe07e7c94f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:55:38 2017 +0100
+
+    Updated FreeBSD port.
+
+commit d560f72c71cbb94baa8bfc96740c2db0bda24b40
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:46:49 2017 +0100
+
+    Updated script.
+
+commit 4bb494717c8f496c07a26550d19b40c769b5bcba
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:30:04 2017 +0100
+
+    Minor fixes.
+
+commit ceac3ee331c4deffeb6bd5270ea02ee27a16842a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:22:46 2017 +0100
+
+    Fixed FreeBSD port.
+
+commit 90fc5c0f31cb45a2e8aa2dd8385721b24f90d016
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:22:39 2017 +0100
+
+    Improved packaging script.
+
+commit 0437e64dca5fdb446879d875ddc9d1443dff3d86
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 30 20:06:52 2017 +0100
+
+    Fixed FreeBSD ports makefile.
+
+commit 95fa5df1116d05c49630ff94e193ff4652e06e56
+Merge: 01d9148 05dd413
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 11:46:04 2017 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
+
+commit 05dd4132fa5050a59792b578f412a65a753af549
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 11:45:48 2017 +0100
+
+    Fixed compiler warning.
+
+commit 01d91481a94f635a2024f9cfb9f291e6c12c67dd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 11:45:38 2017 +0100
+
+    Updated FreeBSD packaging files.
+
+commit 5d50c5e111b87d44159a390e6ca4197f7ce0dbf5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Oct 29 11:22:50 2017 +0100
+
+    New release.
+
 commit 7213b9ab87d0748dc04303fab06c46615b84ed30
 Merge: c1b4df2 ce2893c
 Author: Thomas Dreibholz <dreibh@simula.no>
