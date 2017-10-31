@@ -1,0 +1,143 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* "Define to 1 if CSP is supported." */
+#undef ENABLE_CSP
+
+/* QT is usable */
+#undef ENABLE_QT
+
+/* "Define to 1 to enable registrar statistics logging option." */
+#undef ENABLE_REGISTRAR_STATISTICS
+
+/* Define to 1 if you have the <bzlib.h> header file. */
+#undef HAVE_BZLIB_H
+
+/* Define to 1 if sctp_connectx has associd parameter. */
+#undef HAVE_CONNECTX_WITH_ID
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* IEEE compliant float-point handling */
+#undef HAVE_IEEE_FP
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `sctp' library (-lsctp). */
+#undef HAVE_LIBSCTP
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
+/* "Define this if you have sa_len in sockaddr struct." */
+#undef HAVE_SA_LEN
+
+/* Define to 1 if you have the `sctp_connectx' function. */
+#undef HAVE_SCTP_CONNECTX
+
+/* Define to 1 if SCTP_DELAYED_SACK with sctp_sack_info is available. */
+#undef HAVE_SCTP_DELAYED_SACK
+
+/* Define to 1 if you have the `sctp_send' function. */
+#undef HAVE_SCTP_SEND
+
+/* Define to 1 if you have the `sctp_sendmsg' function. */
+#undef HAVE_SCTP_SENDMSG
+
+/* Define to 1 if you have the `sctp_sendx' function. */
+#undef HAVE_SCTP_SENDX
+
+/* "Define this if your IPv6 has sin6_len in sockaddr_in6 struct." */
+#undef HAVE_SIN6_LEN
+
+/* "Define to 1 if sin6_scope_id is supported." */
+#undef HAVE_SIN6_SCOPE_ID
+
+/* "Define this if your IPv4 has sin_len in sockaddr_in struct." */
+#undef HAVE_SIN_LEN
+
+/* Define to 1 if you have the `socket' function. */
+#undef HAVE_SOCKET
+
+/* Define this if you support version 10 if the API ID. */
+#undef HAVE_SPP_FLAGS
+
+/* "Define to 1 if stderr is a pointer." */
+#undef HAVE_STDERR_FILEPTR
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <valgrind/memcheck.h> header file. */
+#undef HAVE_VALGRIND_MEMCHECK_H
+
+/* Define to 1 if you have the <valgrind/valgrind.h> header file. */
+#undef HAVE_VALGRIND_VALGRIND_H
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
+/* Maximum logging level */
+#undef MAX_LOGLEVEL
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* "Define to 1 if handlespace management verification is turned on." */
+#undef VERIFY
+
+/* Version number of package */
+#undef VERSION
+
+/* Define a type for socklen_t. */
+#undef socklen_t

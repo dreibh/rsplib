@@ -1,0 +1,174 @@
+.\" $Id: fractalpooluser.1 2682 2012-06-08 11:29:28Z dreibh $
+.\" --------------------------------------------------------------------------
+.\"
+.\"              //===//   //=====   //===//   //       //   //===//
+.\"             //    //  //        //    //  //       //   //    //
+.\"            //===//   //=====   //===//   //       //   //===<<
+.\"           //   \\         //  //        //       //   //    //
+.\"          //     \\  =====//  //        //=====  //   //===//    Version II
+.\"
+.\" ------------- An Efficient RSerPool Prototype Implementation -------------
+.\"
+.\" Copyright (C) 2002-2012 by Thomas Dreibholz
+.\"
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" Contact: dreibh@iem.uni-due.de
+.\"
+.\" ###### Setup ############################################################
+.Dd June 06, 2012
+.Dt FractalPoolUser 1
+.Os FractalGenerator Pool User
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm fractalpooluser
+.Nd RSerPool Client (PU) for the Fractal Generator service
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm fractalpooluser
+.Op Fl identifier=PU_identifier
+.Op Fl poolhandle=pool_handle
+.Op Fl configdir=directory
+.Op Fl caption=window_title
+.Op Fl width=pixels
+.Op Fl height=pixels
+.Op Fl threads=threads
+.Op Fl sendtimeout=milliseconds
+.Op Fl recvtimeout=milliseconds
+.Op Fl interimagetime=seconds
+.Op Fl imagestorageprefix=file_name_prefix
+.Op Fl colormarks
+.Op Fl nocolormarks
+.Op Fl sessions
+.Op Fl nosessions
+.Op Fl cspinterval=milliseconds
+.Op Fl cspserver=address:port
+.Op Fl logappend=filename
+.Op Fl logcolor=on|off
+.Op Fl logfile=filename
+.Op Fl loglevel=0-9
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm fractalpooluser
+is a Reliable Server Pooling (RSerPool) pool user (PU) for the FractalGenerator
+service. It uses a Qt-based X11 GUI.
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options are available:
+.Bl -tag -width indent
+.It Fl identifier=PU_identifier
+Sets a fixed PU identifier. Handle with care!
+.It Fl poolhandle=pool_handle
+Sets the PH to a non-default value; otherwise, the default setting is
+"FractalGeneratorPool".
+.\" ====== Service parameters ===============================================
+.It Service Parameters:
+.Bl -tag -width indent
+.It Fl configdir=directory
+Sets a directory to look for FGP config files. From all FGP files
+(pattern: *.fgp) in this directory, random files are selected for the
+calculation of requests.
+.It Fl caption=window_title
+Sets the output window title.
+.It Fl width=pixels
+Sets the width of the window and the images to be calculated.
+.It Fl height=pixels
+Sets the height of the window and the images to be calculated.
+.It Fl threads=threads
+Sets the number of parallel sessions to use for processing of each image.
+.It Fl sendtimeout=milliseconds
+Sets the transmission timeout.
+.It Fl recvtimeout=milliseconds
+Sets the receive timeout.
+.It Fl interimagetime=seconds
+Sets the pause time between two image calculations in seconds.
+.It Fl imagestorageprefix=file_name_prefix
+Sets a file name prefix for saving the calculated images. If set, each
+successfully calculated image is stored to the given location as PNG file,
+with a 6-digit file number added.
+.It Fl colormarks
+Turns on color change on session failover.
+.It Fl nocolormarks
+Turns off color change on session failover.
+.It Fl sessions
+Turns on color change between different sessions.
+.It Fl nosessions
+Turns off color change between different sessions.
+.El
+.\" ====== ASAP Protocol ====================================================
+.It ASAP Protocol Parameters:
+.Bl -tag -width indent
+.It Fl registrar=address:port
+Adds a static PR entry into the Registrar Table.
+It is possible to add multiple entries.
+.It Fl registrarannouncetimeout=milliseconds
+Sets the timeout for ASAP announces via multicast.
+.It Fl registrarconnecttimeout=milliseconds
+Sets the timeout for ASAP connection establishment.
+.It Fl registrarconnectmaxtrials=trials
+Sets the maximum number of ASAP connection establishment trials.
+.It Fl registrarrequesttimeout=milliseconds
+Sets the timeout for ASAP requests.
+.It Fl registrarresponsetimeout=milliseconds
+Sets the timeout for waiting to receive ASAP responses.
+.It Fl registrarrequestmaxtrials=trials
+Sets the maximum number of ASAP request trials.
+.El
+.\" ====== Component Status Protocol ========================================
+.It Component Status Protocol (CSP) Parameters:
+.Bl -tag -width indent
+.It Fl cspserver=address:port
+Sets the address of a CSP monitor server. By default, the content of the
+environment variable CSP_SERVER is used. If not defined, no CSP status reports
+will be sent.
+.It Fl cspinterval=milliseconds
+Sets the interval for the CSP status updates in milliseconds. By default, the
+content of the environment variable CSP_INTERVAL is used. If not defined, no
+CSP status reports will be sent.
+.El
+.\" ====== Logging ==========================================================
+.It Logging Parameters:
+.Bl -tag -width indent
+.It Fl logappend=filename
+Write logging output to a file (default is stdout); output will be appended to given file.
+.It Fl logcolor=on|off
+Turns ANSI colorization of the logging output on or off.
+.It Fl logfile=filename
+Write logging output to a file (default is stdout); given file will be overwritten.
+.It Fl loglevel=0-9
+Sets the logging verbosity from 0 (none) to 9 (very verbose).
+It is recommended to use at least a value of 2 to see possibly
+important error messages and warnings.
+.El
+.El
+.Pp
+.\" ###### Environment ######################################################
+.Sh ENVIRONMENT
+.Nm fractalpooluser
+uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+server to send reports to in the specified interval.
+.\" ###### Diagnostics ######################################################
+.Sh DIAGNOSTICS
+If loglevel>0, log messages will be printed to stdout or into a specified
+log file.
+.\" ###### See also #########################################################
+.Sh SEE ALSO
+For a detailed introduction to RSerPool, see:
+.br
+http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+.Pp
+Thomas Dreibholz's RSerPool Page:
+.br
+http://tdrwww.iem.uni-due.de/dreibholz/rserpool/

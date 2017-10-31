@@ -1,0 +1,2 @@
+debian/tmp/usr/lib/libcpprspserver.so.*
+debian/tmp/usr/lib/libtdcppthread.so.*

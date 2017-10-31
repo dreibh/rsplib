@@ -1,0 +1,61 @@
+Policy/kumulativer Lastwert:
+ Policy-Struktur überarbeiten
+   -> Update()-Funktion für Änderungserfassung vom PE
+   -> kumulativer Lastwert für LU, LUD, ...
+
+======
+
+- Adreßfilter ASAP/ENRP, Scope für sendx/connectx!
+- Message Parser
+
+======
+
+UserSet:
+ FD/AssocID
+ Set(PH) für registrierte Notifications
+
+PoolNode:
+ Rückverlinkung auf User
+
+======
+
+INTERESSANT:
+Alte Dynamic-Entries werden nicht verworfen wenn MTBF sehr klein:
+ Übertragung per Peer List:
+    toter Eintrag -> PL an Peer -> PL an nächsten Peer -> ...
+
+======
+
+lksctp-Problem bei Kernel 2.6.17:
+
+Server <-> Router (nur IP4!) <-> Client
+
+Server: Nur IPv4 + IPv6 Link Local
+sctp_test -l -H :: -P 1203
+Client: IPv4 + IPv6 (mit globaler Adresse)
+sctp_test -s -H :: -h 132.252.152.81 -p 1203
+
+FUNKTIONIERT.
+
+
+Server: IPv4 + IPv6 (mit globaler Adresse)
+sctp_test -l -H :: -P 1203
+Client: Nur IPv4 + IPv6 Link Local
+sctp_test -s -H :: -h 132.252.151.157 -p 1203
+
+------
+
+PR:   -> OK
+- PRs mit statischen Peers konfiguriert
+- stat. Peer wird beendet
+- CSP sollte diesen Eintrag mit ID 0 anzeigen (ID nicht auf 0 zurückgesetzt)
+
+rsplib:   -> OK
+- Zufallsaufwahl eines PRs überprüfen
+
+------
+
+MacOS-Tests:
+194.95.73.130
+sudo kextload /System/Library/Extensions/SCTP.kext
+sudo kextunload /System/Library/Extensions/SCTP.kext

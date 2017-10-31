@@ -1,0 +1,146 @@
+rsplib (3.0.1-1ubuntu3) raring; urgency=low
+
+  * Added missing math lib to link, fixing FTBFS.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 17 Apr 2013 17:08:55 -0400
+
+rsplib (3.0.1-1ubuntu2) raring; urgency=low
+
+  * Add Breaks/Replaces to account for files moved from rsplib-tools to
+    rsplib-legacy-wrappers.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Tue, 08 Jan 2013 11:36:48 +0000
+
+rsplib (3.0.1-1ubuntu1) raring; urgency=high
+
+  [ Thomas Dreibholz ]
+  * New upstream release.
+  * debian/control: now using colorgcc.
+  * debian/control: added dependency dpkg-dev for hardening options.
+  * debian/rules: using buildflags.mk for hardening options.
+  * debian/watch: added mirror on www.iem.uni-due.de.
+ 
+  [ Bhavani Shankar ]
+  * Update debian/copyright to reflect latest standards.
+  * Bump standards version to 3.9.4.
+  * Close Upgrade bug (LP: #1093075) 
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
+
+rsplib (2.7.13-0ubuntu1) precise; urgency=low
+
+  [ Thomas Dreibholz ]
+  * New upstream release.
+  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
+  * Added debug package to control file.
+  * Improved package descriptions in control file.
+  * Bumped standards version in control file to 3.9.2.
+  * Fixed dependencies in control file.
+  * Bugfix for configure script (LP: #831109).
+
+  [ Charlie Smotherman ]
+  * Removed ppa versioning from changelog.
+  * Updated debain/copyright with suggested DEP5 changes from output using
+    libconfig-model-perl.
+  * Removed debian/patches/fix-qt-detection.patch, included in new upstream
+    release.
+  * Close upgrade bug. (LP: #892717)
+
+ -- Charlie Smotherman <cjsmo@ubuntu.com>  Tue, 29 Nov 2011 17:37:43 -0500
+
+rsplib (2.7.10-0ubuntu2) oneiric; urgency=low
+
+  * debian/patches/fix-qt-detection.patch:
+    - Backport patch from 2.7.12 to fix FTBFS due to bad Qt detection
+      LP: #831109
+
+ -- Michael Terry <mterry@ubuntu.com>  Mon, 29 Aug 2011 09:57:02 -0400
+
+rsplib (2.7.10-0ubuntu1) natty; urgency=high
+
+  * New upstream release (LP: #721923), containing important bugfixes.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 19 Feb 2011 22:22:22 +0200
+
+rsplib (2.7.8-0ubuntu1) natty; urgency=low
+
+  * Switch to dpkg-source 3.0 (quilt) format.
+  * debian/rules: Using tiny rules for debhelper 7 now.
+  * debian/control:
+    - Drop Build-Depends on quilt. It's obsolete with 3.0 source format.
+    - Bump Standards-Version to 3.9.1.
+    - Recommends chrpath because it allows scripting service scripts to
+      remove absolute library paths.
+    - Removed obsolete build dependencies:
+      libx11-dev, libxext-dev, libxmu-dev, libxi-dev.
+  * debian/patches: Removed obsolete spelling error patch (fixed upstream).
+  * debian/copyright: Updated.
+  * debian/watch: Updated URL of upstream package.
+  * debian/README.source: Dropped. It's obsolete with 3.0 source format.
+  * debian/rsplib-docs.docs, debian/rsplib-docs.docs, debian/control:
+    Moved rsplib documentation into separate package.
+  * Removed obsolete debian/rsplib-doc.docs and debian/rsplib-doc.install.
+  * debian/rsplib-registrar.init: Updated header.
+  * Applied wrap-and-sort.
+  * New upstream release (LP: #696512).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 08 Feb 2011 11:11:11 +0200
+
+rsplib (2.7.0-0ubuntu1) lucid; urgency=low
+
+  [ Thomas Dreibholz ]
+  * New upstream release (LP: #492771).
+  * Updated Ubuntu package to latest release.
+  * Improved init file for rsplib-registrar (turn on IPv6 by default and
+    write logfile).
+
+  [ Alessio Treglia ]
+  * Bump Standards.
+  * Switch to debhelper 7.
+  * Install all new libraries.
+  * Update debian/copyright according to Debian DEP-5.
+  * debian/control:
+    - Don't duplicate Priority,Section fields.
+  * Add quilt support.
+  * debian/patches/01-spelling_error.patch:
+    - rsplib/asapinstance.c: s/succesful/successful/
+
+ -- Alessio Treglia <quadrispro@ubuntu.com>  Sat, 05 Dec 2009 10:10:30 +0100
+
+rsplib (2.6.4-0ubuntu1) karmic; urgency=low
+
+  * Updated Ubuntu package to latest release (LP: #378689).
+  * Improved init file for rsplib-registrar (turn on IPv6 by default and
+    write logfile).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 20 May 2009 13:23:00 +0200
+
+rsplib (2.6.1-0ubuntu1) karmic; urgency=low
+
+  * Updated Ubuntu package to latest release (LP: #366631).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 25 Apr 2009 12:00:00 +0200
+
+rsplib (2.6.0-3ubuntu1) jaunty; urgency=low
+
+  * Removed unnecessary setting of rpath by Qt 4.x detection code.
+  * Fixed too-long lines in debian/control.
+  * Updated packaging script.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 23 Feb 2009 15:37:12 +0200
+
+rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
+
+  * Updated Ubuntu package to latest release (LP: #324959).
+  * Updated watch file (updated URL from tdrwww.exp-math.uni-essen.de to
+    www.iem.uni-due.de)
+  * Used Qt 4.x instead of Qt 3.x for fractal demo pool user now.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2009 10:21:12 +0200
+
+
+rsplib (2.5.0~rc1-0ubuntu1) intrepid; urgency=low
+
+  * Initial Ubuntu package (LP: #190435).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 26 Aug 2008 20:09:31 +0200

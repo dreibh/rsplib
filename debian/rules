@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-maintainer-mode --enable-kernel-sctp --enable-qt --enable-csp
+
+override_dh_installchangelogs:
+	dh_installchangelogs -k ChangeLog
+
+override_dh_install:
+	dh_install
+	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la'`
+
+override_dh_strip:
+	dh_strip --dbg-package=rsplib-dbg

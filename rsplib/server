@@ -1,0 +1,3 @@
+#!/bin/sh -e
+echo >&2 "WARNING: Usage of \"server\" is deprecated, it has been renamed to \"rspserver\"!"
+rspserver $@
