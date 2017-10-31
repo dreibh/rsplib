@@ -16,7 +16,7 @@ Build-Depends: autotools-dev,
                qtchooser
 Standards-Version: 3.9.7
 
-Package: librsplib2
+Package: librsplib3
 Section: libs
 Architecture: any
 Depends: ${misc:Depends},
@@ -33,7 +33,7 @@ Description: RSerPool client/server API library for session management
 Package: librsplib-dev
 Section: libdevel
 Architecture: any
-Depends: librsplib2 (= ${binary:Version}),
+Depends: librsplib3 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-docs
@@ -47,7 +47,7 @@ Description: headers of the RSerPool client/server API library rsplib
  This package provides header files for the rsplib library. You need them
  to develop your own RSerPool-based clients and servers.
 
-Package: libcpprspserver2
+Package: libcpprspserver3
 Section: libs
 Architecture: any
 Depends: ${misc:Depends},
@@ -64,7 +64,7 @@ Description: C++ RSerPool client/server API library
 Package: libcpprspserver-dev
 Section: libdevel
 Architecture: any
-Depends: libcpprspserver2 (= ${binary:Version}),
+Depends: libcpprspserver3 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-docs
@@ -82,7 +82,7 @@ Package: rsplib-docs
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
-Recommends: librsplib2
+Recommends: librsplib3
 Description: documentation of the RSerPool implementation rsplib
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -160,8 +160,8 @@ Package: rsplib-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: libcpprspserver2 (= ${binary:Version}),
-         librsplib2 (= ${binary:Version}),
+Depends: libcpprspserver3 (= ${binary:Version}),
+         librsplib3 (= ${binary:Version}),
          rsplib-services (= ${binary:Version}),
          rsplib-tools (= ${binary:Version}),
          ${misc:Depends}

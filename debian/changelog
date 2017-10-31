@@ -1,3 +1,11 @@
+rsplib (3.1.8~rc1-1ubuntu1) bionic; urgency=low
+
+  * New upstream release.
+  * Updated library versions to reflect ABI break.
+  * Close upgrade bug (LP: #1714101)
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 01 Nov 2017 08:08:08 +0800
+
 rsplib (3.1.7-1ubuntu1) bionic; urgency=low
 
   * New upstream release.

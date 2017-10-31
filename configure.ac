@@ -8,7 +8,7 @@
 #
 # ------------- An Efficient RSerPool Prototype Implementation -------------
 #
-# Copyright (C) 2002-2017 by Thomas Dreibholz
+# Copyright (C) 2002-2018 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 
 
 # ###### Basic setup ########################################################
-AC_INIT([rsplib], [3.1.7])
+AC_INIT([rsplib], [3.1.8~rc1])
 
 AC_CONFIG_SRCDIR([rsplib/rspbasicmode.c])
 AC_CONFIG_MACRO_DIR([m4])
@@ -515,8 +515,8 @@ fi
 
 
 # ###### Version information ################################################
-RSPLIB_CURRENT=2
-RSPLIB_REVISION=8
+RSPLIB_CURRENT=3
+RSPLIB_REVISION=0
 RSPLIB_AGE=0
 
 AC_SUBST(RSPLIB_CURRENT)
