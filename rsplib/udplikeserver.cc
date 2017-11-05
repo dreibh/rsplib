@@ -38,6 +38,8 @@
 #include <string.h>
 #include <ext_socket.h>
 
+#include <algorithm>
+
 
 // ###### Constructor #######################################################
 UDPLikeServer::UDPLikeServer()
@@ -272,7 +274,7 @@ void UDPLikeServer::poolElement(const char*          programTitle,
                            timeout = 0;
                         }
                         else {
-                           timeout = min(timeout, NextTimerTimeStamp - now);
+                           timeout = std::min(timeout, NextTimerTimeStamp - now);
                         }
                      }
 
