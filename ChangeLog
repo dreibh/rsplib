@@ -1,3 +1,33 @@
+commit 4644dff2890157fe8551c60cba05836111b333b7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 5 14:14:14 2017 +0100
+
+    Build script update.
+
+commit e84762d88a5833a74bc2c6494dc46924713884a4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:44:16 2017 +0100
+
+    Got rid of obsolete SVN Id tags, part IV.
+
+commit a469304dee05d06db4074f09352d58f108a45d89
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:40:02 2017 +0100
+
+    Got rid of obsolete SVN Id tags, part III.
+
+commit ee80aa3ea996dcaab1c181a53c55933e43b6204c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:36:21 2017 +0100
+
+    Got rid of obsolete SVN Id tags, part II.
+
+commit 835055565944eee3ebfc654e830063ae99ff0423
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 31 20:34:33 2017 +0100
+
+    Got rid of obsolete SVN Id tags, part I.
+
 commit 2694970cea3ad79e65e0e0bbffc20369d9fed3d9
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue Oct 31 20:26:52 2017 +0100
