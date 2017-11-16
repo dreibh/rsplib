@@ -475,8 +475,6 @@ libtdnetutilities.so.2 librsplib2 #MINVER#
  ntoh64@Base 2.7.8
  pack_sockaddr_union@Base 2.7.8
  recvfromplus@Base 2.7.8
- sctp_getladdrs@Base 2.7.8
- sctp_getpaddrs@Base 2.7.8
  sctp_sendx@Base 2.7.8
  sendabort@Base 2.7.8
  sendmulticast@Base 2.7.8
