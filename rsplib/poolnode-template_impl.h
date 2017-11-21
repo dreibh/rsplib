@@ -214,7 +214,7 @@ unsigned int ST_CLASS(poolNodeCheckPoolElementNodeCompatibility)(
    }
 
    if(poolNode->Flags & PNF_CONTROLCHANNEL) {
-      if(!poolElementNode->UserTransport->Flags & TABF_CONTROLCHANNEL) {
+      if(!(poolElementNode->UserTransport->Flags & TABF_CONTROLCHANNEL)) {
          return(RSPERR_WRONG_CONTROLCHANNEL_HANDLING);
       }
    }
