@@ -155,7 +155,7 @@ AC_MSG_RESULT([$QTCHOOSER])
 AC_SUBST(QTCHOOSER)
 
 AC_MSG_CHECKING(Qt meta-object compiler moc)
-MOC="$QTCHOOSER -run-tool=moc -qt=qt5"
+MOC="$QTCHOOSER -run-tool=moc -qt=5"
 AC_MSG_RESULT([$MOC])
 AC_SUBST(MOC)
 
