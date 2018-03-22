@@ -1,3 +1,10 @@
+rsplib (3.1.9~rc1-1ubuntu1) bionic; urgency=low
+
+  * New upstream release.
+  * Close packaging update request (LP: #1757859)
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 22 Mar 2018 08:08:08 +0800
+
 rsplib (3.1.8-1ubuntu1) bionic; urgency=low
 
   * New upstream release.
