@@ -1,9 +1,13 @@
-rsplib (3.1.9~rc1-1ubuntu1) bionic; urgency=low
+rsplib (3.1.9~rc2-1ubuntu1) cosmic; urgency=low
 
   * New upstream release.
   * Close packaging update request (LP: #1757859)
+  * debian/control: updated standards version.
+  * debian/control: removed obsolete debug file.
+  * debian/copyright: updated.
+  * debian/compat: updated version.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 22 Mar 2018 08:08:08 +0800
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 07 Jun 2018 08:08:08 +0800
 
 rsplib (3.1.8-1ubuntu1) bionic; urgency=low
 

@@ -17,6 +17,3 @@ override_dh_installchangelogs:
 override_dh_install:
 	dh_install
 	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la'`
-
-override_dh_strip:
-	dh_strip --dbg-package=rsplib-dbg
