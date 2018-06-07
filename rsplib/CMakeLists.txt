@@ -260,8 +260,226 @@ INSTALL(TARGETS libtdnetutilities libtdnetutilities-static DESTINATION ${CMAKE_I
 INSTALL(FILES ${libtdnetutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
+# ====== librsphsmgt ========================================================
+LIST(APPEND librsphsmgt_headers
+   rserpoolerror.h
+   poolhandlespacechecksum.h
+   peerlistmanagement-template.h
+   peerlistmanagement-template_impl.h
+   peerlistnode-template.h
+   peerlistnode-template_impl.h
+   peerlist-template.h
+   peerlist-template_impl.h
+   poolelementnode-template.h
+   poolelementnode-template_impl.h
+   poolhandle.h
+   poolhandlespacemanagement-basics.h
+   poolhandlespacemanagement.h
+   poolhandlespacemanagement-template.h
+   poolhandlespacemanagement-template_impl.h
+   poolhandlespacenode-template.h
+   poolhandlespacenode-template_impl.h
+   poolnode-template.h
+   poolnode-template_impl.h
+   poolpolicysettings.h
+   poolpolicy-template.h
+   poolpolicy-template_impl.h
+   pooluserlist-template.h
+   pooluserlist-template_impl.h
+   poolusernode-template.h
+   poolusernode-template_impl.h
+   timestamphashtable.h
+   transportaddressblock.h
+)
+LIST(APPEND librsphsmgt_sources
+   rserpoolerror.c
+   poolhandlespacechecksum.c
+   poolhandle.c
+   poolhandlespacemanagement-basics.c
+   poolhandlespacemanagement.c
+   poolpolicysettings.c
+   timestamphashtable.c
+   transportaddressblock.c
+)
+ADD_LIBRARY(librsphsmgt SHARED ${librsphsmgt_sources})
+
+set_target_properties(librsphsmgt PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librsphsmgt-static STATIC ${librsphsmgt_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librsphsmgt "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librsphsmgt libtdstorage libtdrandomizer libtdstringutilities libtdnetutilities ${librsphsmgt_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librsphsmgt librsphsmgt-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librsphsmgt_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
+# ====== librspmessaging ========================================================
+LIST(APPEND librspmessaging_headers
+   rserpoolmessage.h
+   rserpoolmessagecreator.h
+   rserpoolmessageparser.h
+)
+LIST(APPEND librspmessaging_sources
+   rserpoolmessage.c
+   rserpoolmessagecreator.c
+   rserpoolmessageparser.c
+)
+ADD_LIBRARY(librspmessaging SHARED ${librspmessaging_sources})
+
+set_target_properties(librspmessaging PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librspmessaging-static STATIC ${librspmessaging_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librspmessaging "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librspmessaging  libtdnetutilities libtdtimeutilities librsphsmgt libtdloglevel ${librspmessaging_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librspmessaging librspmessaging-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librspmessaging_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+# ====== librspdispatcher ===================================================
+LIST(APPEND librspdispatcher_headers
+   dispatcher.h
+   fdcallback.h
+   timer.h
+)
+LIST(APPEND librspdispatcher_sources
+   dispatcher.c
+   fdcallback.c
+   timer.c
+)
+ADD_LIBRARY(librspdispatcher SHARED ${librspdispatcher_sources})
+
+set_target_properties(librspdispatcher PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librspdispatcher-static STATIC ${librspdispatcher_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librspdispatcher "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librspdispatcher libtdtimeutilities libtdloglevel libtdnetutilities libtdstorage ${librspdispatcher_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librspdispatcher librspdispatcher-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librspdispatcher_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+# ====== librspcsp ==========================================================
+LIST(APPEND librspcsp_headers
+   componentstatuspackets.h
+   componentstatusreporter.h
+)
+LIST(APPEND librspcsp_sources
+   componentstatusreporter.c
+)
+ADD_LIBRARY(librspcsp SHARED ${librspcsp_sources})
+
+set_target_properties(librspcsp PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librspcsp-static STATIC ${librspcsp_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librspcsp "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librspcsp libtdtimeutilities libtdstringutilities libtdloglevel librspdispatcher libtdnetutilities ${librspcsp_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librspcsp librspcsp-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librspcsp_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+# ====== librsplib ==========================================================
+LIST(APPEND librsplib_headers
+   asapinstance.h
+   asapinterthreadmessage.h
+   debug.h
+   identifierbitmap.h
+   interthreadmessageport.h
+   notificationqueue.h
+   registrartable.h
+   rserpool.h
+   rserpool-internals.h
+   rserpool-policytypes.h
+   rserpoolsocket.h
+   session.h
+   sessionstorage.h
+   sessioncontrol.h
+   tdtypes.h
+)
+LIST(APPEND librsplib_sources
+   asapinstance.c
+   asapinterthreadmessage.c
+   identifierbitmap.c
+   interthreadmessageport.c
+   notificationqueue.c
+   registrartable.c
+   rserpoolsocket.c
+   rspbasicmode.c
+   rspenhancedmode.c
+   rsputilities.c
+   sessionstorage.c
+   sessioncontrol.c
+
+)
+ADD_LIBRARY(librsplib SHARED ${librsplib_sources})
+
+set_target_properties(librsplib PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librsplib-static STATIC ${librsplib_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librsplib "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librsplib libtdrandomizer libtdtimeutilities libtdstringutilities libtdnetutilities libtdthreadsafety libtdloglevel libtdtagitem libtdstorage librsphsmgt librspdispatcher librspmessaging librspcsp ${librsplib_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librsplib librsplib-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librsplib_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+# ====== librspcpprspserver =================================================
+LIST(APPEND librspcpprspserver_headers
+   cpprspserver.h
+   tcplikeserver.h
+   udplikeserver.h
+)
+LIST(APPEND librspcpprspserver_sources
+   tcplikeserver.cc
+   udplikeserver.cc
+)
+ADD_LIBRARY(librspcpprspserver SHARED ${librspcpprspserver_sources})
+
+set_target_properties(librspcpprspserver PROPERTIES
+   VERSION ${BUILD_VERSION}
+   SOVERSION ${BUILD_MAJOR}
+)
+
+ADD_LIBRARY(librspcpprspserver-static STATIC ${librspcpprspserver_sources})
+
+if(THREADS_HAVE_PTHREAD_ARG)
+   TARGET_COMPILE_OPTIONS(PUBLIC librspcpprspserver "-pthread")
+endif()
+TARGET_LINK_LIBRARIES (librspcpprspserver libtdcppthread librsplib libtdthreadsafety libtdnetutilities libtdtimeutilities libtdloglevel libtdbreakdetector ${librspcpprspserver_libs} "${CMAKE_THREAD_LIBS_INIT}")
+
+INSTALL(TARGETS librspcpprspserver librspcpprspserver-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${librspcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
 
