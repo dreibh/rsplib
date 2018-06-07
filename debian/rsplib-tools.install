@@ -1,4 +1,4 @@
-debian/tmp/usr/bin/cspmonitor
-debian/tmp/usr/bin/hsdump
-debian/tmp/usr/bin/rspserver
-debian/tmp/usr/bin/rspterminal
+/usr/bin/cspmonitor
+/usr/bin/hsdump
+/usr/bin/rspserver
+/usr/bin/rspterminal
