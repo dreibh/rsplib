@@ -15,4 +15,4 @@ fi
 
 # ------ Configure and build ------------------------------------------------
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DWITH_QT=1 .
-gmake -j$cores || make -j$cores
+make -j$cores

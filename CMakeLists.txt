@@ -1,3 +1,30 @@
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//    Version II
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2018 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: dreibh@iem.uni-due.de
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(rsplib)
 
@@ -189,6 +216,47 @@ ELSE()
    ENDIF()
 
    SET(SCTP_LIB ${SCTPSOCKET_LIB} ${SCTPLIB_LIB} ${GLIB_LIBRARIES})
+ENDIF()
+
+
+# ###### BZip2 ##############################################################
+find_package(BZip2 REQUIRED)
+
+
+# ###### IEEE Floating-Point ################################################
+include(CheckCSourceRuns)
+check_c_source_runs("
+#include <stdio.h>
+
+union DoubleIntUnion
+{
+   double             Double;
+   unsigned long long Integer;
+};
+
+int main (int argc, char** argv)
+{
+   union DoubleIntUnion value;
+
+   value.Double = 0.0;
+   if(value.Integer != 0ULL) {
+      return(1);
+   }
+   value.Double = 1000.5;
+   if(value.Integer != 0x408f440000000000ULL) {
+      return(1);
+   }
+   value.Double = -1000.5;
+   if(value.Integer != 0xc08f440000000000ULL) {
+      return(1);
+   }
+
+   return(0);
+}"
+USES_IEEEFP_FP)
+
+IF (USES_IEEEFP_FP)
+   ADD_DEFINITIONS(-DHAVE_IEEE_FP)
 ENDIF()
 
 
