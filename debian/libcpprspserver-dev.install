@@ -4,8 +4,6 @@
 /usr/include/rserpool/thread.h
 /usr/include/rserpool/udplikeserver.h
 /usr/lib/libcpprspserver*.a
-/usr/lib/libcpprspserver*.la
 /usr/lib/libcpprspserver*.so
 /usr/lib/libtdcppthread*.a
-/usr/lib/libtdcppthread*.la
 /usr/lib/libtdcppthread*.so
