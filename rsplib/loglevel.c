@@ -43,14 +43,14 @@
 #include <sys/utsname.h>
 
 
-#ifdef HAVE_STDERR_FILEPTR
-/* stderr is of type FILE* */
+// #ifdef HAVE_STDERR_FILEPTR
+// /* stderr is of type FILE* */
 FILE** gStdLog = &stderr;
-#else
-/* stderr is a macro returning standard error FILE* */
-static FILE* _stderr  = stderr;
-FILE**        gStdLog = &_stderr;
-#endif
+// #else
+// /* stderr is a macro returning standard error FILE* */
+// static FILE* _stderr  = stderr;
+// FILE**        gStdLog = &_stderr;
+// #endif
 
 
 unsigned int          gLogLevel      = LOGLEVEL_ERROR;

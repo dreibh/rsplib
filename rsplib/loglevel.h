@@ -37,12 +37,6 @@
 #ifndef LOGLEVEL_H
 #define LOGLEVEL_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#else
-#error HAVE_CONFIG_H has not been defined?!
-#endif
-
 #include "tdtypes.h"
 #include "timeutilities.h"
 #include "threadsafety.h"

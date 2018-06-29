@@ -28,15 +28,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(rsplib)
 
-set(BUILD_MAJOR "3")
-set(BUILD_MINOR "2")
-set(BUILD_PATCH "0~rc1.0")
-set(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
+SET(BUILD_MAJOR "3")
+SET(BUILD_MINOR "2")
+SET(BUILD_PATCH "0~rc1.0")
+SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 
-#################################################
+#############################################################################
 # INSTALLATION_DIRECTORIES
-#################################################
+#############################################################################
 
 SET(CMAKE_INSTALL_BINDIR_DOC        "user executables [PREFIX/bin]")
 SET(CMAKE_INSTALL_SBINDIR_DOC       "system admin executables [EPREFIX/sbin]")
@@ -65,9 +65,9 @@ SET(CMAKE_INSTALL_MANDIR "share/man"
     CACHE PATH ${CMAKE_INSTALL_MANDIR_DOC})
 
 
-#################################################
+#############################################################################
 # PACKAGING
-#################################################
+#############################################################################
 
 SET(CPACK_SOURCE_GENERATOR "TGZ")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME
@@ -83,9 +83,9 @@ INCLUDE(CheckIncludeFile)
 INCLUDE(CheckStructHasMember)
 
 
-#################################################
-# OS DEPENDENT
-#################################################
+#############################################################################
+# OS-DEPENDENT
+#############################################################################
 
 SET(CMAKE_MACOSX_RPATH 1)
 
@@ -129,9 +129,9 @@ ENDIF()
 find_package(Threads REQUIRED)
 
 
-#################################################
+#############################################################################
 # CHECK STRUCT MEMBERS
-#################################################
+#############################################################################
 
 CHECK_STRUCT_HAS_MEMBER("struct sockaddr" "sa_len" "sys/types.h;sys/socket.h" HAVE_SA_LEN)
 IF (HAVE_SA_LEN)
@@ -158,26 +158,40 @@ IF (HAVE_SS_LEN)
 ENDIF()
 
 
-#################################################
+#############################################################################
 # CHECK OPTIONS
-#################################################
+#############################################################################
 
 # Debug build type as default
 IF (NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type selected, using DEBUG")
-    set(CMAKE_BUILD_TYPE "DEBUG")
+    SET(CMAKE_BUILD_TYPE "DEBUG")
     # _FORTIFY_SOURCE requires compiling with optimization
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
-endif()
+ENDIF()
+
+# Registrar statistics
+OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" 1)
+
+# Registrar statistics
+OPTION(ENABLE_HSMGTVERIFY "Enable handlespace management verification" 0)
+
+# Registrar statistics
+OPTION(ENABLE_CSP "Enable CSP" 1)
+
+# Registrar statistics
+OPTION(WITH_MAX_LOGLEVEL "Maximum logging level" 9)
+SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DMAX_LOGLEVEL=9")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAX_LOGLEVEL=9")
 
 
-#################################################
+#############################################################################
 # REQUIREMENTS
-#################################################
+#############################################################################
 
 # ###### Qt #################################################################
-OPTION(WITH_QT "Include Qt programs" 1)
-IF (WITH_QT)
+OPTION(ENABLE_QT "Include Qt programs" 1)
+IF (ENABLE_QT)
    SET(CMAKE_AUTOMOC ON)
    FIND_PACKAGE(Qt5 COMPONENTS Core Widgets REQUIRED)
 ENDIF()
@@ -260,9 +274,9 @@ IF (USES_IEEEFP_FP)
 ENDIF()
 
 
-#################################################
+#############################################################################
 # COMPILER FLAGS
-#################################################
+#############################################################################
 
 SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -std=c11   -Wall -Werror -Wno-unused-function -Wno-unused-parameter -Wno-overlength-strings -Wno-array-bounds")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -Wno-unused-function -Wno-unused-parameter -Wno-overlength-strings -Wno-array-bounds")
@@ -274,8 +288,8 @@ IF (CMAKE_BUILD_TYPE MATCHES DEBUG)
 ENDIF()
 
 
-#################################################
+#############################################################################
 # INCLUDE EXAMPLES
-#################################################
+#############################################################################
 
 ADD_SUBDIRECTORY(rsplib)

@@ -14,5 +14,5 @@ if [ "$cores" == "" ] ; then
 fi
 
 # ------ Configure and build ------------------------------------------------
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DWITH_QT=1 .
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_QT=1 .
 make -j$cores

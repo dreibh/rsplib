@@ -1,3 +1,5 @@
+include_directories(.)
+
 # ###### Libraries ##########################################################
 
 # ====== liblibtdtimeutilities ==============================================
@@ -18,7 +20,7 @@ ADD_LIBRARY(libtdtimeutilities-static STATIC ${libtdtimeutilities_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdtimeutilities "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdtimeutilities ${libtdtimeutilities_libs} ${NEAT_SOCKETAPI_LIB} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdtimeutilities libtdtimeutilities-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -43,7 +45,7 @@ ADD_LIBRARY(libtdrandomizer-static STATIC ${libtdrandomizer_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdrandomizer "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdrandomizer ${libtdrandomizer_libs} ${NEAT_SOCKETAPI_LIB} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdrandomizer libtdrandomizer-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -68,7 +70,7 @@ ADD_LIBRARY(libtdstringutilities-static STATIC ${libtdstringutilities_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdstringutilities "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdstringutilities ${libtdstringutilities_libs} ${NEAT_SOCKETAPI_LIB} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdstringutilities libtdstringutilities-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -93,7 +95,7 @@ ADD_LIBRARY(libtdloglevel-static STATIC ${libtdloglevel_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdloglevel "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdloglevel libtdtimeutilities ${libtdloglevel_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdloglevel libtdloglevel-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -118,7 +120,7 @@ ADD_LIBRARY(libtdtagitem-static STATIC ${libtdtagitem_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdtagitem "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdtagitem libtdloglevel libtdtimeutilities ${libtdtagitem_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdtagitem libtdtagitem-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -143,7 +145,7 @@ ADD_LIBRARY(libtdbreakdetector-static STATIC ${libtdbreakdetector_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdbreakdetector "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdbreakdetector libtdtimeutilities ${libtdbreakdetector_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdbreakdetector libtdbreakdetector-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -168,7 +170,7 @@ ADD_LIBRARY(libtdthreadsafety-static STATIC ${libtdthreadsafety_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdthreadsafety "-pthread")
-endif()
+ENDIF()
 
 INSTALL(TARGETS libtdthreadsafety libtdthreadsafety-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 INSTALL(FILES ${libtdthreadsafety_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -192,7 +194,7 @@ ADD_LIBRARY(libtdcppthread-static STATIC ${libtdcppthread_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdcppthread "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdcppthread libtdthreadsafety ${libtdcppthread_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdcppthread libtdcppthread-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -223,7 +225,7 @@ ADD_LIBRARY(libtdstorage-static STATIC ${libtdstorage_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdstorage "-pthread")
-endif()
+ENDIF()
 
 INSTALL(TARGETS libtdstorage libtdstorage-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 INSTALL(FILES ${libtdstorage_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -253,7 +255,7 @@ ADD_LIBRARY(libtdnetutilities-static STATIC ${libtdnetutilities_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdnetutilities "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (libtdnetutilities libtdrandomizer libtdstringutilities libtdtimeutilities libtdloglevel ${libtdnetutilities_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdnetutilities libtdnetutilities-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -312,7 +314,7 @@ ADD_LIBRARY(librsphsmgt-static STATIC ${librsphsmgt_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librsphsmgt "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librsphsmgt libtdstorage libtdrandomizer libtdstringutilities libtdnetutilities ${librsphsmgt_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librsphsmgt librsphsmgt-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -341,7 +343,7 @@ ADD_LIBRARY(librspmessaging-static STATIC ${librspmessaging_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librspmessaging "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librspmessaging  libtdnetutilities libtdtimeutilities librsphsmgt libtdloglevel ${librspmessaging_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librspmessaging librspmessaging-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -370,7 +372,7 @@ ADD_LIBRARY(librspdispatcher-static STATIC ${librspdispatcher_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librspdispatcher "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librspdispatcher libtdtimeutilities libtdloglevel libtdnetutilities libtdstorage ${librspdispatcher_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librspdispatcher librspdispatcher-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -396,7 +398,7 @@ ADD_LIBRARY(librspcsp-static STATIC ${librspcsp_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librspcsp "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librspcsp libtdtimeutilities libtdstringutilities libtdloglevel librspdispatcher libtdnetutilities ${librspcsp_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librspcsp librspcsp-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -447,7 +449,7 @@ ADD_LIBRARY(librsplib-static STATIC ${librsplib_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librsplib "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librsplib libtdrandomizer libtdtimeutilities libtdstringutilities libtdnetutilities libtdthreadsafety libtdloglevel libtdtagitem libtdstorage librsphsmgt librspdispatcher librspmessaging librspcsp ${librsplib_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librsplib librsplib-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -475,7 +477,7 @@ ADD_LIBRARY(librspcpprspserver-static STATIC ${librspcpprspserver_sources})
 
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC librspcpprspserver "-pthread")
-endif()
+ENDIF()
 TARGET_LINK_LIBRARIES (librspcpprspserver libtdcppthread librsplib libtdthreadsafety libtdnetutilities libtdtimeutilities libtdloglevel libtdbreakdetector ${librspcpprspserver_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS librspcpprspserver librspcpprspserver-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -506,7 +508,7 @@ INSTALL(FILES ${librspcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDED
 #         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 # INSTALL(FILES rtpa-vclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 #       
-# IF (WITH_QT)
+# IF (ENABLE_QT)
 #    ADD_EXECUTABLE(rtpa-qclient rtpa-qclient.cc qaudiomixer.cc qinfotabwidget.cc qspectrumanalyzer.cc)
 #    qt5_use_modules(rtpa-qclient Core Widgets)
 #    TARGET_LINK_LIBRARIES(rtpa-qclient rtpaudioclient audiodecoder audiowriter libtdloglevel libtdtimeutilities "${CMAKE_THREAD_LIBS_INIT}")

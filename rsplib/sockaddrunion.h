@@ -29,10 +29,6 @@
 #ifndef SOCKADDRUNION_H
 #define SOCKADDRUNION_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

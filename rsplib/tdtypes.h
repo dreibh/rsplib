@@ -29,13 +29,6 @@
 #ifndef TDTYPES_H
 #define TDTYPES_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#ifdef NDEBUG
-#include "config.h"
-#endif
-
 #include <stdint.h>
 #include <sys/types.h>
 #ifdef FreeBSD
