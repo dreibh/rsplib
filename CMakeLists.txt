@@ -163,14 +163,17 @@ ENDIF()
 
 # Debug build type as default
 IF (NOT CMAKE_BUILD_TYPE)
-    MESSAGE(STATUS "No build type selected, using DEBUG")
-    SET(CMAKE_BUILD_TYPE "DEBUG")
-    # _FORTIFY_SOURCE requires compiling with optimization
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
+   MESSAGE(STATUS "No build type selected, using DEBUG")
+   SET(CMAKE_BUILD_TYPE "DEBUG")
+   # _FORTIFY_SOURCE requires compiling with optimization
+   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
 ENDIF()
 
 # Registrar statistics
 OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" 1)
+IF (ENABLE_REGISTRAR_STATISTICS)
+   ADD_DEFINITIONS(-DENABLE_REGISTRAR_STATISTICS)
+ENDIF()
 
 # Registrar statistics
 OPTION(ENABLE_HSMGTVERIFY "Enable handlespace management verification" 0)
@@ -208,7 +211,8 @@ IF (USE_KERNEL_SCTP)
    IF (HAVE_NETINET_SCTP_H)
       SET(SCTP_INCLUDE "netinet/sctp.h")
       ADD_DEFINITIONS(-DHAVE_KERNEL_SCTP -DHAVE_NETINET_SCTP_H)
-      SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} -lsctp)
+      FIND_LIBRARY(SCTP_LIB sctp)
+      SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} SCTP_LIB)
    ENDIF()
 
 ELSE()
@@ -262,11 +266,11 @@ ENDIF()
 
 
 # ###### BZip2 ##############################################################
-find_package(BZip2 REQUIRED)
+FIND_PACKAGE(BZip2 REQUIRED)
 
 
 # ###### IEEE Floating-Point ################################################
-include(CheckCSourceRuns)
+INCLUDE(CheckCSourceRuns)
 check_c_source_runs("
 #include <stdio.h>
 

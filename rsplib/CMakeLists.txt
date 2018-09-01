@@ -96,7 +96,7 @@ ADD_LIBRARY(libtdloglevel-static STATIC ${libtdloglevel_sources})
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdloglevel "-pthread")
 ENDIF()
-TARGET_LINK_LIBRARIES (libtdloglevel libtdtimeutilities ${libtdloglevel_libs} "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES (libtdloglevel libtdtimeutilities libtdthreadsafety ${libtdloglevel_libs} "${CMAKE_THREAD_LIBS_INIT}")
 
 INSTALL(TARGETS libtdloglevel libtdloglevel-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 INSTALL(FILES ${libtdloglevel_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -486,34 +486,58 @@ INSTALL(FILES ${librspcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDED
 
 
 # ###### Programs ###########################################################
-# ADD_EXECUTABLE(rtpa-server rtpa-server.cc)
-# TARGET_LINK_LIBRARIES(rtpa-server qosmgr rtpaudioserver rtpserver libtdtimeutilities "${CMAKE_THREAD_LIBS_INIT}")
-# INSTALL(TARGETS             rtpa-server
-#         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-# INSTALL(FILES rtpa-server.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-# 
-# 
-# ADD_EXECUTABLE(rtpa-client rtpa-client.cc)
-# TARGET_LINK_LIBRARIES(rtpa-client rtpaudioclient audiodecoder audiowriter libtdloglevel libtdtimeutilities "${CMAKE_THREAD_LIBS_INIT}")
-# INSTALL(TARGETS             rtpa-client
-#         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-# INSTALL(FILES rtpa-client.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-# 
-# ADD_EXECUTABLE(rtpa-vclient rtpa-vclient.cc)
-# TARGET_LINK_LIBRARIES(rtpa-vclient rtpaudioclient audiodecoder audiowriter libtdloglevel libtdtimeutilities "${CMAKE_THREAD_LIBS_INIT}")
-# INSTALL(TARGETS             rtpa-vclient
-#         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-# INSTALL(FILES rtpa-vclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-#       
-# IF (ENABLE_QT)
-#    ADD_EXECUTABLE(rtpa-qclient rtpa-qclient.cc qaudiomixer.cc qinfotabwidget.cc qspectrumanalyzer.cc)
-#    qt5_use_modules(rtpa-qclient Core Widgets)
-#    TARGET_LINK_LIBRARIES(rtpa-qclient rtpaudioclient audiodecoder audiowriter libtdloglevel libtdtimeutilities "${CMAKE_THREAD_LIBS_INIT}")
-#    INSTALL(TARGETS             rtpa-qclient
-#          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#          BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-#    INSTALL(FILES rtpa-qclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-# ENDIF()
+ADD_EXECUTABLE(rspregistrar rspregistrar.c rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c)
+TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector librspdispatcher librspcsp librsphsmgt librspmessaging libtdstorage libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel "${BZIP2_LIBRARIES}" "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             rspregistrar
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES rspregistrar.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(rspserver rspserver.cc standardservices.cc fractalgeneratorservice.cc calcappservice.cc scriptingservice.cc environmentcache.cc memfile.cc sha1.c)
+TARGET_LINK_LIBRARIES(rspserver libtdcppthread libtdthreadsafety libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librspcpprspserver librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             rspserver
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES rspserver.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(rspterminal rspterminal.c)
+TARGET_LINK_LIBRARIES(rspterminal libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             rspterminal
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES rspterminal.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(hsdump hsdump.c)
+TARGET_LINK_LIBRARIES(hsdump libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsphsmgt librspmessaging "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             hsdump
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES hsdump.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(pingpongclient pingpongclient.c)
+TARGET_LINK_LIBRARIES(pingpongclient libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             pingpongclient
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES pingpongclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(scriptingclient scriptingclient.cc sha1.c sha1.h memfile.cc memfile.h)
+TARGET_LINK_LIBRARIES(scriptingclient libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             scriptingclient
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES scriptingclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(calcappclient calcappclient.cc calcapppackets.h statistics.cc statistics.h)
+TARGET_LINK_LIBRARIES(calcappclient libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             calcappclient
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES calcappclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+ADD_EXECUTABLE(cspmonitor cspmonitor.c)
+TARGET_LINK_LIBRARIES(cspmonitor librspcsp libtdbreakdetector libtdtimeutilities libtdstringutilities libtdnetutilities libtdstorage "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+INSTALL(TARGETS             cspmonitor
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES cspmonitor.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
