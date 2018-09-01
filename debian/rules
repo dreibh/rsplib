@@ -6,14 +6,11 @@ include /usr/share/dpkg/buildflags.mk
 
 
 %:
-	dh $@
+	dh $@ --buildsystem=cmake --parallel
+
 
 override_dh_auto_configure:
-	dh_auto_configure -- --disable-maintainer-mode --enable-kernel-sctp --enable-qt --enable-csp
+	dh_auto_configure -- -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 
 override_dh_installchangelogs:
 	dh_installchangelogs -k ChangeLog
-
-override_dh_install:
-	dh_install
-	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la'`
