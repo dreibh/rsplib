@@ -11,7 +11,7 @@ LIST(APPEND libtdtimeutilities_sources
 )
 ADD_LIBRARY(libtdtimeutilities SHARED ${libtdtimeutilities_sources})
 
-set_target_properties(libtdtimeutilities PROPERTIES
+SET_TARGET_PROPERTIES(libtdtimeutilities PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -36,7 +36,7 @@ LIST(APPEND libtdrandomizer_sources
 )
 ADD_LIBRARY(libtdrandomizer SHARED ${libtdrandomizer_sources})
 
-set_target_properties(libtdrandomizer PROPERTIES
+SET_TARGET_PROPERTIES(libtdrandomizer PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -61,7 +61,7 @@ LIST(APPEND libtdstringutilities_sources
 )
 ADD_LIBRARY(libtdstringutilities SHARED ${libtdstringutilities_sources})
 
-set_target_properties(libtdstringutilities PROPERTIES
+SET_TARGET_PROPERTIES(libtdstringutilities PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -86,7 +86,7 @@ LIST(APPEND libtdloglevel_sources
 )
 ADD_LIBRARY(libtdloglevel SHARED ${libtdloglevel_sources})
 
-set_target_properties(libtdloglevel PROPERTIES
+SET_TARGET_PROPERTIES(libtdloglevel PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -111,7 +111,7 @@ LIST(APPEND libtdtagitem_sources
 )
 ADD_LIBRARY(libtdtagitem SHARED ${libtdtagitem_sources})
 
-set_target_properties(libtdtagitem PROPERTIES
+SET_TARGET_PROPERTIES(libtdtagitem PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -136,7 +136,7 @@ LIST(APPEND libtdbreakdetector_sources
 )
 ADD_LIBRARY(libtdbreakdetector SHARED ${libtdbreakdetector_sources})
 
-set_target_properties(libtdbreakdetector PROPERTIES
+SET_TARGET_PROPERTIES(libtdbreakdetector PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -161,7 +161,7 @@ LIST(APPEND libtdthreadsafety_sources
 )
 ADD_LIBRARY(libtdthreadsafety SHARED ${libtdthreadsafety_sources})
 
-set_target_properties(libtdthreadsafety PROPERTIES
+SET_TARGET_PROPERTIES(libtdthreadsafety PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -185,7 +185,7 @@ LIST(APPEND libtdcppthread_sources
 )
 ADD_LIBRARY(libtdcppthread SHARED ${libtdcppthread_sources})
 
-set_target_properties(libtdcppthread PROPERTIES
+SET_TARGET_PROPERTIES(libtdcppthread PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -216,7 +216,7 @@ LIST(APPEND libtdstorage_sources
 )
 ADD_LIBRARY(libtdstorage SHARED ${libtdstorage_sources})
 
-set_target_properties(libtdstorage PROPERTIES
+SET_TARGET_PROPERTIES(libtdstorage PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -246,7 +246,7 @@ LIST(APPEND libtdnetutilities_sources
 )
 ADD_LIBRARY(libtdnetutilities SHARED ${libtdnetutilities_sources})
 
-set_target_properties(libtdnetutilities PROPERTIES
+SET_TARGET_PROPERTIES(libtdnetutilities PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -305,7 +305,7 @@ LIST(APPEND librsphsmgt_sources
 )
 ADD_LIBRARY(librsphsmgt SHARED ${librsphsmgt_sources})
 
-set_target_properties(librsphsmgt PROPERTIES
+SET_TARGET_PROPERTIES(librsphsmgt PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -334,7 +334,7 @@ LIST(APPEND librspmessaging_sources
 )
 ADD_LIBRARY(librspmessaging SHARED ${librspmessaging_sources})
 
-set_target_properties(librspmessaging PROPERTIES
+SET_TARGET_PROPERTIES(librspmessaging PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -363,7 +363,7 @@ LIST(APPEND librspdispatcher_sources
 )
 ADD_LIBRARY(librspdispatcher SHARED ${librspdispatcher_sources})
 
-set_target_properties(librspdispatcher PROPERTIES
+SET_TARGET_PROPERTIES(librspdispatcher PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -389,7 +389,7 @@ LIST(APPEND librspcsp_sources
 )
 ADD_LIBRARY(librspcsp SHARED ${librspcsp_sources})
 
-set_target_properties(librspcsp PROPERTIES
+SET_TARGET_PROPERTIES(librspcsp PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -440,7 +440,7 @@ LIST(APPEND librsplib_sources
 )
 ADD_LIBRARY(librsplib SHARED ${librsplib_sources})
 
-set_target_properties(librsplib PROPERTIES
+SET_TARGET_PROPERTIES(librsplib PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -468,7 +468,7 @@ LIST(APPEND librspcpprspserver_sources
 )
 ADD_LIBRARY(librspcpprspserver SHARED ${librspcpprspserver_sources})
 
-set_target_properties(librspcpprspserver PROPERTIES
+SET_TARGET_PROPERTIES(librspcpprspserver PROPERTIES
    VERSION ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )

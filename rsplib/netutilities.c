@@ -1838,11 +1838,7 @@ int connectplus(int                   sockfd,
 
    packedAddresses = pack_sockaddr_union(addressArray, addresses);
    if(packedAddresses) {
-#ifdef HAVE_CONNECTX_WITH_ID
       result = sctp_connectx(sockfd, packedAddresses, addresses, NULL);
-#else
-      result = sctp_connectx(sockfd, packedAddresses, addresses);
-#endif
       free(packedAddresses);
    }
    else {
