@@ -541,3 +541,14 @@ INSTALL(TARGETS             cspmonitor
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES cspmonitor.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+IF (ENABLE_QT)
+   SET(CMAKE_INCLUDE_CURRENT_DIR ON)
+   ADD_EXECUTABLE(fractalpooluser fractalpooluser.cc)
+   SET_TARGET_PROPERTIES(fractalpooluser PROPERTIES COMPILE_FLAGS "-DDEFAULT_FPU_CONFIGDIR=\\\"\"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/fgpconfig\\\"\"")
+   TARGET_LINK_LIBRARIES(fractalpooluser libtdrandomizer libtdtimeutilities libtdnetutilities libtdloglevel librsplib Qt5::Widgets Qt5::Xml Qt5::Core "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   INSTALL(TARGETS             fractalpooluser
+           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+           BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+   INSTALL(FILES fractalpooluser.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+ENDIF()
