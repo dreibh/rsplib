@@ -158,7 +158,7 @@ void ScriptingServer::rejectNewSession(int sd)
 
    NotReady* notReady = (NotReady*)&buffer;
    memset((char*)&notReady->Info, 0x00, sizeof(notReady->Info));
-   snprintf((char*)&notReady->Info, sizeof(notReady->Info), "%s", systemInfo.nodename);
+   safestrcpy((char*)&notReady->Info, systemInfo.nodename,  sizeof(notReady->Info));
    const ssize_t notReadyLength = sizeof(NotReady) + strlen(notReady->Info) - SR_MAX_INFOSIZE;
    notReady->Header.Type   = SPT_NOTREADY;
    notReady->Header.Flags  = 0x00;
@@ -203,7 +203,7 @@ EventHandlingResult ScriptingServer::initializeSession()
 
    Ready* ready = (Ready*)&buffer;
    memset((char*)&ready->Info, 0x00, sizeof(ready->Info));
-   snprintf((char*)&ready->Info, sizeof(ready->Info), "%s", systemInfo.nodename);
+   safestrcpy((char*)&ready->Info, systemInfo.nodename,  sizeof(ready->Info));
    const ssize_t readyLength = sizeof(Ready) + strlen(ready->Info) - SR_MAX_INFOSIZE;
    ready->Header.Type   = SPT_READY;
    ready->Header.Flags  = 0x00;
@@ -229,7 +229,7 @@ void ScriptingServer::finishSession(EventHandlingResult result)
       dup2(stdlogFD, STDERR_FILENO);
 
       // ====== Run script ==================================================
-      char sscmd[128];
+      char sscmd[168];
       char callcmd[384];
       int  success;
 
