@@ -79,7 +79,8 @@
 #warning No sctp_connectx() available - Using only the first address!
 int sctp_connectx(int                    sockfd,
                   const struct sockaddr* addrs,
-                  int                    addrcnt)
+                  int                    addrcnt,
+                  sctp_assoc_t*          id);
 {
    const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
    return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
