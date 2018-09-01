@@ -27,6 +27,7 @@
  */
 
 #include "rspregistrar.h"
+#include "rserpool.h"
 
 #include <signal.h>
 
