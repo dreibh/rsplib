@@ -151,7 +151,7 @@ int main(int argc, char** argv)
    cerr << endl << "Results:" << endl;
    qsort(&threadPtrSet, threads, sizeof(ExecThread*), ExecThread::compareExecThreads);
    for(size_t i = 0;i < threads;i++) {
-      char str[1024];
+      char str[1536];
       if(threadPtrSet[i]->Runtime != ~0ULL) {
          snprintf((char*)&str, sizeof(str), "   - %6Lums - Thread %2u: %s",
                   threadPtrSet[i]->Runtime / 1000,
