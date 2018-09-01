@@ -164,7 +164,7 @@ ENDIF()
 
 # Debug build type as default
 IF (NOT CMAKE_BUILD_TYPE)
-    message(STATUS "No build type selected, using DEBUG")
+    MESSAGE(STATUS "No build type selected, using DEBUG")
     SET(CMAKE_BUILD_TYPE "DEBUG")
     # _FORTIFY_SOURCE requires compiling with optimization
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
@@ -183,6 +183,10 @@ OPTION(ENABLE_CSP "Enable CSP" 1)
 OPTION(WITH_MAX_LOGLEVEL "Maximum logging level" 9)
 SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DMAX_LOGLEVEL=9")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAX_LOGLEVEL=9")
+
+# Handlespace management storage implementation
+SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE")
 
 
 #############################################################################
