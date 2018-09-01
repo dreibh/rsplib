@@ -500,6 +500,9 @@ INSTALL(TARGETS             rspserver
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES rspserver.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+INSTALL(FILES scriptingcontrol   DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES scriptingcontrol.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
 ADD_EXECUTABLE(rspterminal rspterminal.c)
 TARGET_LINK_LIBRARIES(rspterminal libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 INSTALL(TARGETS             rspterminal
@@ -528,6 +531,9 @@ INSTALL(TARGETS             scriptingclient
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES scriptingclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+INSTALL(FILES scriptingserviceexample   DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES scriptingserviceexample.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
 ADD_EXECUTABLE(calcappclient calcappclient.cc calcapppackets.h statistics.cc statistics.h)
 TARGET_LINK_LIBRARIES(calcappclient libtdrandomizer libtdstringutilities libtdtimeutilities libtdnetutilities libtdloglevel libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 INSTALL(TARGETS             calcappclient
@@ -542,6 +548,7 @@ INSTALL(TARGETS             cspmonitor
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES cspmonitor.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
+
 IF (ENABLE_QT)
    SET(CMAKE_INCLUDE_CURRENT_DIR ON)
    ADD_EXECUTABLE(fractalpooluser fractalpooluser.cc)
@@ -550,5 +557,41 @@ IF (ENABLE_QT)
    INSTALL(TARGETS             fractalpooluser
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-   INSTALL(FILES fractalpooluser.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+   INSTALL(FILES fractalpooluser.1                                 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+   INSTALL(FILES fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm DESTINATION ${CMAKE_INSTALL_DATADIR}/fractalpooluser)
 ENDIF()
+
+
+IF (BUILD_TEST_PROGRAMS)
+
+   ADD_EXECUTABLE(hrestest hrestest.c)
+   TARGET_LINK_LIBRARIES(hrestest libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(testregistrator testregistrator.c)
+   TARGET_LINK_LIBRARIES(testregistrator libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(fork fork.c)
+   TARGET_LINK_LIBRARIES(fork libtdtimeutilities libtdrandomizer "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(exectime exectime.cc)
+   TARGET_LINK_LIBRARIES(exectime libtdcppthread libtdtimeutilities "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(execalarm execalarm.cc)
+   TARGET_LINK_LIBRARIES(execalarm libtdcppthread libtdtimeutilities "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(gettimestamp gettimestamp.c)
+   TARGET_LINK_LIBRARIES(gettimestamp libtdtimeutilities "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ADD_EXECUTABLE(rootshell rootshell.c)
+   TARGET_LINK_LIBRARIES(rootshell)
+
+   ADD_EXECUTABLE(attacker attacker.cc)
+   TARGET_LINK_LIBRARIES(attacker libtdbreakdetector librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+#    ADD_EXECUTABLE(t1 t1.c)
+#    TARGET_LINK_LIBRARIES(t1 librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+#
+#    ADD_EXECUTABLE(t2 t2.cc environmentcache.cc environmentcache.h sha1.c sha1.h)
+#    TARGET_LINK_LIBRARIES(t1 librsplib libcpprspserver libtdthreadsafety "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+
+   ENDIF()

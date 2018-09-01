@@ -25,7 +25,7 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(rsplib)
 
 SET(BUILD_MAJOR "3")
@@ -175,8 +175,16 @@ IF (ENABLE_REGISTRAR_STATISTICS)
    ADD_DEFINITIONS(-DENABLE_REGISTRAR_STATISTICS)
 ENDIF()
 
-# Registrar statistics
+# Handlespace Management verification
 OPTION(ENABLE_HSMGTVERIFY "Enable handlespace management verification" 0)
+
+OPTION(BUILD_TEST_PROGRAMS "Build test programs" 0)
+
+OPTION(ENABLE_QT "Include Qt programs" 1)
+IF (ENABLE_QT)
+   SET(CMAKE_AUTOMOC ON)
+   FIND_PACKAGE(Qt5 COMPONENTS Core Xml Widgets REQUIRED)
+ENDIF()
 
 # Registrar statistics
 OPTION(ENABLE_CSP "Enable CSP" 1)
