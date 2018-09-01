@@ -66,7 +66,8 @@ extern "C" {
 #ifndef HAVE_SCTP_CONNECTX
 int sctp_connectx(int                    sockfd,
                   const struct sockaddr* addrs,
-                  int                    addrcnt);
+                  int                    addrcnt,
+                  sctp_assoc_t*          id);
 #endif
 
 #ifndef HAVE_SCTP_SEND
