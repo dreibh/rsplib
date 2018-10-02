@@ -31,11 +31,20 @@ How to set up a simple test of the rsplib-3.x.y release:
          (Only necessary if you want an installation; as root!)
 
       Optional "cmake" Parameters:
+      -DMAX_LOGLEVEL=n Allows for reduction of the maximum logging verbosity to n.
+                       Setting a lower value here makes the programs smaller, at
+                       cost of reduces logging capabilities (DEFAULT: 9).
+
       -DENABLE_QT=1: Enables Qt 5.x usage; this is necessary for the Fractal Generator
                      client! Without Qt, the client's compilation will be skipped.
                     (DEFAULT)
       -DENABLE_QT=0: Disables Qt usage; the Fractal Generator client will *not*
                      be available.
+
+      -DENABLE_REGISTRAR_STATISTICS=1: Adds registrar option to write statistics file.
+                                       (DEFAULT)
+      -DENABLE_REGISTRAR_STATISTICS=0: Do not compile in the statistics option. In this
+                                       case, the dependency on libbz2 is removed.
 
       -DENABLE_HSMGTVERIFY=1: Enable Handlespace Management verification. This is
                               useful for debugging only (makes the PR slow!)

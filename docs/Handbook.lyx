@@ -1143,9 +1143,13 @@ default
 \begin_layout Description
 
 \family typewriter
---with-max-loglevel
+-DMAX_LOGLEVEL=n
 \family default
- Allows for reduction of the maximum logging verbosity.
+ Allows for reduction of the maximum logging verbosity to 
+\begin_inset Formula $n$
+\end_inset
+
+.
  Setting a lower value here makes the programs smaller, at cost of reduces
  logging capabilities (
 \series bold
