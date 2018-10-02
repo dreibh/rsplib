@@ -21,7 +21,7 @@ ADD_LIBRARY(libtdtimeutilities-static STATIC ${libtdtimeutilities_sources})
 if(THREADS_HAVE_PTHREAD_ARG)
    TARGET_COMPILE_OPTIONS(PUBLIC libtdtimeutilities "-pthread")
 ENDIF()
-TARGET_LINK_LIBRARIES (libtdtimeutilities ${libtdtimeutilities_libs} ${NEAT_SOCKETAPI_LIB} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES (libtdtimeutilities ${libtdtimeutilities_libs} ${NEAT_SOCKETAPI_LIB} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}" m)
 
 INSTALL(TARGETS libtdtimeutilities libtdtimeutilities-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 INSTALL(FILES ${libtdtimeutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
