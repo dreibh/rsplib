@@ -706,7 +706,9 @@ void registrarHandleASAPEndpointKeepAliveAck(struct Registrar*       registrar,
                                              struct RSerPoolMessage* message)
 {
    struct ST_CLASS(PoolElementNode)* poolElementNode;
+#ifdef ENABLE_REGISTRAR_STATISTICS
    const unsigned long long          now = getMicroTime();
+#endif
 
    LOG_VERBOSE2
    fprintf(stdlog, "Got EndpointKeepAliveAck for pool element $%08x of pool ",
