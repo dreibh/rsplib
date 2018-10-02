@@ -35,19 +35,17 @@ LIST(APPEND libtdrandomizer_sources
 
 INSTALL(FILES ${libtdrandomizer_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdrandomizer-shared SHARED ${libtdrandomizer_sources})
+ADD_LIBRARY(libtdrandomizer-static STATIC ${libtdrandomizer_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdrandomizer-${TYPE} SHARED ${libtdrandomizer_sources})
-
    SET_TARGET_PROPERTIES(libtdrandomizer-${TYPE} PROPERTIES OUTPUT_NAME tdrandomizer CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdrandomizer-${TYPE} PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdrandomizer-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdrandomizer-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdrandomizer-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== liblibtdstringutilities ============================================
@@ -60,19 +58,17 @@ LIST(APPEND libtdstringutilities_sources
 
 INSTALL(FILES ${libtdstringutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdstringutilities-shared SHARED ${libtdstringutilities_sources})
+ADD_LIBRARY(libtdstringutilities-static STATIC ${libtdstringutilities_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdstringutilities-${TYPE} SHARED ${libtdstringutilities_sources})
-
    SET_TARGET_PROPERTIES(libtdstringutilities-${TYPE} PROPERTIES OUTPUT_NAME tdstringutilities CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdstringutilities-${TYPE} PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdstringutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdstringutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdstringutilities-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdthreadsafety ======================================================
@@ -89,7 +85,7 @@ ADD_LIBRARY(libtdthreadsafety-shared SHARED ${libtdthreadsafety_sources})
 ADD_LIBRARY(libtdthreadsafety-static STATIC ${libtdthreadsafety_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdthreadsafety-${TYPE} PROPERTIES OUTPUT_NAME tdthreadsafety CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdthreadsafety-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdthreadsafety-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -112,7 +108,7 @@ ADD_LIBRARY(libtdloglevel-shared SHARED ${libtdloglevel_sources})
 ADD_LIBRARY(libtdloglevel-static STATIC ${libtdloglevel_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdloglevel-${TYPE} PROPERTIES OUTPUT_NAME tdloglevel CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdloglevel-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdloglevel-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -135,7 +131,7 @@ ADD_LIBRARY(libtdtagitem-shared SHARED ${libtdtagitem_sources})
 ADD_LIBRARY(libtdtagitem-static STATIC ${libtdtagitem_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdtagitem-${TYPE} PROPERTIES OUTPUT_NAME tdtagitem CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdtagitem-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdtagitem-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -158,7 +154,7 @@ ADD_LIBRARY(libtdbreakdetector-shared SHARED ${libtdbreakdetector_sources})
 ADD_LIBRARY(libtdbreakdetector-static STATIC ${libtdbreakdetector_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdbreakdetector-${TYPE} PROPERTIES OUTPUT_NAME tdbreakdetector CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdbreakdetector-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdbreakdetector-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -181,7 +177,7 @@ ADD_LIBRARY(libtdcppthread-shared SHARED ${libtdcppthread_sources})
 ADD_LIBRARY(libtdcppthread-static STATIC ${libtdcppthread_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdcppthread-${TYPE} PROPERTIES OUTPUT_NAME tdcppthread CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdcppthread-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdcppthread-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -210,7 +206,7 @@ ADD_LIBRARY(libtdstorage-shared SHARED ${libtdstorage_sources})
 ADD_LIBRARY(libtdstorage-static STATIC ${libtdstorage_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdstorage-${TYPE} PROPERTIES OUTPUT_NAME tdstorage CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdstorage-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdstorage-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -239,7 +235,7 @@ ADD_LIBRARY(libtdnetutilities-shared SHARED ${libtdnetutilities_sources})
 ADD_LIBRARY(libtdnetutilities-static STATIC ${libtdnetutilities_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libtdnetutilities-${TYPE} PROPERTIES OUTPUT_NAME tdnetutilities CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libtdnetutilities-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libtdnetutilities-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -296,7 +292,7 @@ ADD_LIBRARY(librsphsmgt-shared SHARED ${librsphsmgt_sources})
 ADD_LIBRARY(librsphsmgt-static STATIC ${librsphsmgt_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(librsphsmgt-${TYPE} PROPERTIES OUTPUT_NAME rsphsmgt CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(librsphsmgt-shared PROPERTIES
+   SET_TARGET_PROPERTIES(librsphsmgt-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -323,7 +319,7 @@ ADD_LIBRARY(librspmessaging-shared SHARED ${librspmessaging_sources})
 ADD_LIBRARY(librspmessaging-static STATIC ${librspmessaging_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(librspmessaging-${TYPE} PROPERTIES OUTPUT_NAME rspmessaging CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(librspmessaging-shared PROPERTIES
+   SET_TARGET_PROPERTIES(librspmessaging-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -349,8 +345,8 @@ INSTALL(FILES ${librspdispatcher_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR
 ADD_LIBRARY(librspdispatcher-shared SHARED ${librspdispatcher_sources})
 ADD_LIBRARY(librspdispatcher-static STATIC ${librspdispatcher_sources})
 FOREACH(TYPE shared;static)
-   SET_TARGET_PROPERTIES(librspdispatcher-shared PROPERTIES OUTPUT_NAME rspdispatcher CLEAN_DIRECT_OUTPUT 1)
-    SET_TARGET_PROPERTIES(librspdispatcher-${TYPE} PROPERTIES
+   SET_TARGET_PROPERTIES(librspdispatcher-${TYPE} PROPERTIES OUTPUT_NAME rspdispatcher CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(librspdispatcher-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -375,7 +371,7 @@ IF (ENABLE_CSP)
    ADD_LIBRARY(librspcsp-static STATIC ${librspcsp_sources})
    FOREACH(TYPE shared;static)
       SET_TARGET_PROPERTIES(librspcsp-${TYPE} PROPERTIES OUTPUT_NAME rspcsp CLEAN_DIRECT_OUTPUT 1)
-      SET_TARGET_PROPERTIES(librspcsp-shared PROPERTIES
+      SET_TARGET_PROPERTIES(librspcsp-${TYPE} PROPERTIES
          VERSION   ${BUILD_VERSION}
          SOVERSION ${BUILD_MAJOR}
       )
@@ -426,7 +422,7 @@ ADD_LIBRARY(librsplib-shared SHARED ${librsplib_sources})
 ADD_LIBRARY(librsplib-static STATIC ${librsplib_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(librsplib-${TYPE} PROPERTIES OUTPUT_NAME rsplib CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(librsplib-shared PROPERTIES
+   SET_TARGET_PROPERTIES(librsplib-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
@@ -457,7 +453,7 @@ ADD_LIBRARY(libcpprspserver-shared SHARED ${libcpprspserver_sources})
 ADD_LIBRARY(libcpprspserver-static STATIC ${libcpprspserver_sources})
 FOREACH(TYPE shared;static)
    SET_TARGET_PROPERTIES(libcpprspserver-${TYPE} PROPERTIES OUTPUT_NAME cpprspserver CLEAN_DIRECT_OUTPUT 1)
-   SET_TARGET_PROPERTIES(libcpprspserver-shared PROPERTIES
+   SET_TARGET_PROPERTIES(libcpprspserver-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
