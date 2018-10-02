@@ -463,29 +463,29 @@ SET_TARGET_PROPERTIES(librsplib-shared PROPERTIES
 )
 
 
-# ====== librspcpprspserver =================================================
-LIST(APPEND librspcpprspserver_headers
+# ====== libcpprspserver =================================================
+LIST(APPEND libcpprspserver_headers
    cpprspserver.h
    tcplikeserver.h
    udplikeserver.h
 )
-LIST(APPEND librspcpprspserver_sources
+LIST(APPEND libcpprspserver_sources
    tcplikeserver.cc
    udplikeserver.cc
 )
 
-INSTALL(FILES ${librspcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(librspcpprspserver-${TYPE} SHARED ${librspcpprspserver_sources})
+   ADD_LIBRARY(libcpprspserver-${TYPE} SHARED ${libcpprspserver_sources})
 
-   SET_TARGET_PROPERTIES(librspcpprspserver-${TYPE} PROPERTIES OUTPUT_NAME rspcpprspserver CLEAN_DIRECT_OUTPUT 1)
-   TARGET_LINK_LIBRARIES (librspcpprspserver-${TYPE} libtdcppthread-${TYPE} librsplib-${TYPE} libtdthreadsafety-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdbreakdetector-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   SET_TARGET_PROPERTIES(libcpprspserver-${TYPE} PROPERTIES OUTPUT_NAME cpprspserver CLEAN_DIRECT_OUTPUT 1)
+   TARGET_LINK_LIBRARIES (libcpprspserver-${TYPE} libtdcppthread-${TYPE} librsplib-${TYPE} libtdthreadsafety-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdbreakdetector-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
 
-   INSTALL(TARGETS librspcpprspserver-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+   INSTALL(TARGETS libcpprspserver-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
-SET_TARGET_PROPERTIES(librspcpprspserver-shared PROPERTIES
+SET_TARGET_PROPERTIES(libcpprspserver-shared PROPERTIES
    VERSION   ${BUILD_VERSION}
    SOVERSION ${BUILD_MAJOR}
 )
@@ -504,7 +504,7 @@ INSTALL(TARGETS             rspregistrar
 INSTALL(FILES rspregistrar.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(rspserver rspserver.cc standardservices.cc fractalgeneratorservice.cc calcappservice.cc scriptingservice.cc environmentcache.cc memfile.cc sha1.c)
-TARGET_LINK_LIBRARIES(rspserver libtdcppthread-shared libtdthreadsafety-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librspcpprspserver-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(rspserver libtdcppthread-shared libtdthreadsafety-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared libcpprspserver-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 INSTALL(TARGETS             rspserver
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
