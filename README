@@ -23,34 +23,27 @@ How to set up a simple test of the rsplib-3.x.y release:
       - Unpack the Tar/GZip archive
       - If, AND ONLY IF, you would like to use sctplib/socketapi SCTP
         userland implementation (if unsure, you do *NOT* want this!):
-         ./configure --disable-kernel-sctp
+        cmake . -DUSE_KERNEL_SCTP=0
         OTHERWISE (i.e. for kernel SCTP):
-         ./configure
+        cmake .
       - make
       - make install
          (Only necessary if you want an installation; as root!)
 
-      Optional "configure" Parameters:
-      --enable-qt: Enables Qt 4.x usage; this is necessary for the Fractal Generator
-                   client! Without Qt, the client's compilation will be skipped.
-      --disable-qt: Disables Qt usage; the Fractal Generator client will *not*
-                    be available. (DEFAULT)
-
-      --enable-maintainer-mode: Enable the creation of debug symbols (-g) and turn
-                                off compiler optimization. Necessary for debugging,
-                                but makes programs much larger and slower. (DEFAULT)
-      --disable-maintainer-mode: Disables maintainer mode. The code will be optimized
-                                 and without debugging symbols. Node: Please turn on
-                                 the maintainer mode if you discover any problems and
-                                 report bugs to us!
-
-      --enable-hsmgtverify: Enable Handlespace Management verification. This is
-                            useful for debugging only (makes the PR slow!)
-      --disable-hsmgtverify: Turns off Handlespace Management verification. (DEFAULT)
-
-      --enable-csp: Enable the Component Status Protocol support (strongly recommended!)
+      Optional "cmake" Parameters:
+      -DENABLE_QT=1: Enables Qt 5.x usage; this is necessary for the Fractal Generator
+                     client! Without Qt, the client's compilation will be skipped.
                     (DEFAULT)
-      --disable-csp: Turns the Component Status Protocol support off.
+      -DENABLE_QT=0: Disables Qt usage; the Fractal Generator client will *not*
+                     be available.
+
+      -DENABLE_HSMGTVERIFY=1: Enable Handlespace Management verification. This is
+                              useful for debugging only (makes the PR slow!)
+      -DENABLE_HSMGTVERIFY=0: Turns off Handlespace Management verification. (DEFAULT)
+
+      -DENABLE_CSP=1: Enable the Component Status Protocol support (strongly recommended!)
+                      (DEFAULT)
+      -DENABLE_CSP=0: Turns the Component Status Protocol support off.
 
 3. Ensure that multicast is working!
    - You need a configured network interface with:
