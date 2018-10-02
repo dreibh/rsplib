@@ -177,6 +177,10 @@ ENDIF()
 
 # Handlespace Management verification
 OPTION(ENABLE_HSMGTVERIFY "Enable handlespace management verification" 0)
+IF(ENABLE_HSMGTVERIFY)
+   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVERIFY=1")
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVERIFY=1")
+ENDIF()
 
 OPTION(BUILD_TEST_PROGRAMS "Build test programs" 0)
 

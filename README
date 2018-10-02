@@ -45,6 +45,9 @@ How to set up a simple test of the rsplib-3.x.y release:
                       (DEFAULT)
       -DENABLE_CSP=0: Turns the Component Status Protocol support off.
 
+      -DBUILD_TEST_PROGRAMS=1: Enable building of test programs.
+      -DBUILD_TEST_PROGRAMS=0: Disable building of test programs. (DEFAULT)
+
 3. Ensure that multicast is working!
    - You need a configured network interface with:
         + at least a private address (192.168.x.y; 10.a.b.c; 172.16.n.m - 172.31.i.j)
