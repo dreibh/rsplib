@@ -1106,6 +1106,28 @@ socketapi
 \begin_layout Description
 
 \family typewriter
+-DMAX_LOGLEVEL=
+\begin_inset Formula $n$
+\end_inset
+
+
+\family default
+ Allows for reduction of the maximum logging verbosity to 
+\begin_inset Formula $n$
+\end_inset
+
+.
+ Setting a lower value here makes the programs smaller, at cost of reduces
+ logging capabilities (
+\series bold
+default: 9
+\series default
+).
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
 -DENABLE_QT=1
 \family default
  Enables Qt usage; this is necessary for the Fractal Generator client.
@@ -1138,24 +1160,6 @@ default
  not
 \series default
  be available.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
--DMAX_LOGLEVEL=n
-\family default
- Allows for reduction of the maximum logging verbosity to 
-\begin_inset Formula $n$
-\end_inset
-
-.
- Setting a lower value here makes the programs smaller, at cost of reduces
- logging capabilities (
-\series bold
-default: 9
-\series default
-).
 \end_layout
 
 \begin_layout Description
