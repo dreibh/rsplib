@@ -170,7 +170,7 @@ IF (NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 # Maximum logging level
-OPTION(MAX_LOGLEVEL "Maximum logging level" 9)
+SET(MAX_LOGLEVEL "9" CACHE STRING "Maximum logging level")
 ADD_DEFINITIONS(-DMAX_LOGLEVEL=${MAX_LOGLEVEL})
 
 # Registrar statistics
@@ -335,7 +335,7 @@ ENDIF()
 
 
 #############################################################################
-# INCLUDE EXAMPLES
+# SOURCE DIRECTORIES
 #############################################################################
 
-ADD_SUBDIRECTORY(rsplib)
+ADD_SUBDIRECTORY(src)
