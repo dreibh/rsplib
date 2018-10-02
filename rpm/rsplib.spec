@@ -80,18 +80,12 @@ This package provides a set of input files for the Fractal Generator service.
 %setup -q
 
 %build
-autoreconf -if
-
-%configure --disable-maintainer-mode --enable-kernel-sctp --enable-qt --enable-csp --prefix=/usr
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+%cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1 .
 make %{?_smp_mflags}
 
 %install
-make install DESTDIR=%{buildroot}
+make DESTDIR=%{buildroot} install
 
-%clean
-rm -rf "$RPM_BUILD_ROOT"
 
 %files
 %defattr(-,root,root,-)
