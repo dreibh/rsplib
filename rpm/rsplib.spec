@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.1.9~rc1
+Version: 3.2.0~rc1.1
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
@@ -8,7 +8,7 @@ URL: https://www.uni-due.de/~be0001/rserpool/
 Source: https://www.uni-due.de/~be0001/rserpool/download/%{name}-%{version}.tar.gz
 
 AutoReqProv: on
-BuildRequires: libtool, automake, autoconf
+BuildRequires: cmake
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: bzip2-devel
