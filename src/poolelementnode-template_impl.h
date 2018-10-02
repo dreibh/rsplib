@@ -118,7 +118,7 @@ void ST_CLASS(poolElementNodeGetDescription)(
         const size_t                            bufferSize,
         const unsigned int                      fields)
 {
-   char tmp[512];
+   char tmp[536];
    char poolPolicySettingsDescription[512];
    char transportAddressDescription[1024];
 
