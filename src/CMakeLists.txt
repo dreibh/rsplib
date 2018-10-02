@@ -10,21 +10,19 @@ LIST(APPEND libtdtimeutilities_sources
    timeutilities.c
 )
 
-INSTALL(FILES ${libtdtimeutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdtimeutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdtimeutilities-shared SHARED ${libtdtimeutilities_sources})
+ADD_LIBRARY(libtdtimeutilities-static STATIC ${libtdtimeutilities_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdtimeutilities-${TYPE} SHARED ${libtdtimeutilities_sources})
-
    SET_TARGET_PROPERTIES(libtdtimeutilities-${TYPE} PROPERTIES OUTPUT_NAME tdtimeutilities CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdtimeutilities-${TYPE} PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdtimeutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}" m)
-
    INSTALL(TARGETS libtdtimeutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdtimeutilities-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== liblibtdrandomizer =================================================
@@ -35,7 +33,7 @@ LIST(APPEND libtdrandomizer_sources
    randomizer.c
 )
 
-INSTALL(FILES ${libtdrandomizer_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdrandomizer_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
 FOREACH(TYPE shared;static)
    ADD_LIBRARY(libtdrandomizer-${TYPE} SHARED ${libtdrandomizer_sources})
@@ -60,7 +58,7 @@ LIST(APPEND libtdstringutilities_sources
    stringutilities.c
 )
 
-INSTALL(FILES ${libtdstringutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdstringutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
 FOREACH(TYPE shared;static)
    ADD_LIBRARY(libtdstringutilities-${TYPE} SHARED ${libtdstringutilities_sources})
@@ -85,21 +83,19 @@ LIST(APPEND libtdthreadsafety_sources
    threadsafety.c threadsignal.c
 )
 
-INSTALL(FILES ${libtdthreadsafety_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdthreadsafety_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdthreadsafety-shared SHARED ${libtdthreadsafety_sources})
+ADD_LIBRARY(libtdthreadsafety-static STATIC ${libtdthreadsafety_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdthreadsafety-${TYPE} SHARED ${libtdthreadsafety_sources})
-
    SET_TARGET_PROPERTIES(libtdthreadsafety-${TYPE} PROPERTIES OUTPUT_NAME tdthreadsafety CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdthreadsafety-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdthreadsafety-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdthreadsafety-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdloglevel ======================================================
@@ -110,21 +106,19 @@ LIST(APPEND libtdloglevel_sources
    loglevel.c
 )
 
-INSTALL(FILES ${libtdloglevel_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdloglevel_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdloglevel-shared SHARED ${libtdloglevel_sources})
+ADD_LIBRARY(libtdloglevel-static STATIC ${libtdloglevel_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdloglevel-${TYPE} SHARED ${libtdloglevel_sources})
-
    SET_TARGET_PROPERTIES(libtdloglevel-${TYPE} PROPERTIES OUTPUT_NAME tdloglevel CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdloglevel-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdloglevel-${TYPE} libtdtimeutilities-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdloglevel-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdloglevel-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdtagitem =======================================================
@@ -135,21 +129,19 @@ LIST(APPEND libtdtagitem_sources
    tagitem.c
 )
 
-INSTALL(FILES ${libtdtagitem_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdtagitem_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdtagitem-shared SHARED ${libtdtagitem_sources})
+ADD_LIBRARY(libtdtagitem-static STATIC ${libtdtagitem_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdtagitem-${TYPE} SHARED ${libtdtagitem_sources})
-
    SET_TARGET_PROPERTIES(libtdtagitem-${TYPE} PROPERTIES OUTPUT_NAME tdtagitem CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdtagitem-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdtagitem-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdtagitem-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdtagitem-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdbreakdetector =================================================
@@ -160,21 +152,19 @@ LIST(APPEND libtdbreakdetector_sources
    breakdetector.c
 )
 
-INSTALL(FILES ${libtdbreakdetector_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdbreakdetector_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdbreakdetector-shared SHARED ${libtdbreakdetector_sources})
+ADD_LIBRARY(libtdbreakdetector-static STATIC ${libtdbreakdetector_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdbreakdetector-${TYPE} SHARED ${libtdbreakdetector_sources})
-
    SET_TARGET_PROPERTIES(libtdbreakdetector-${TYPE} PROPERTIES OUTPUT_NAME tdbreakdetector CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdbreakdetector-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdbreakdetector-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdbreakdetector-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdbreakdetector-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdcppthread =====================================================
@@ -185,21 +175,19 @@ LIST(APPEND libtdcppthread_sources
    mutex.cc thread.cc
 )
 
-INSTALL(FILES ${libtdcppthread_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdcppthread_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdcppthread-shared SHARED ${libtdcppthread_sources})
+ADD_LIBRARY(libtdcppthread-static STATIC ${libtdcppthread_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdcppthread-${TYPE} SHARED ${libtdcppthread_sources})
-
    SET_TARGET_PROPERTIES(libtdcppthread-${TYPE} PROPERTIES OUTPUT_NAME tdcppthread CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdcppthread-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdcppthread-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdcppthread-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdcppthread-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdstorage =====================================================
@@ -216,21 +204,19 @@ LIST(APPEND libtdstorage_sources
    simpleredblacktree.c
 )
 
-INSTALL(FILES ${libtdstorage_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdstorage_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdstorage-shared SHARED ${libtdstorage_sources})
+ADD_LIBRARY(libtdstorage-static STATIC ${libtdstorage_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdstorage-${TYPE} SHARED ${libtdstorage_sources})
-
    SET_TARGET_PROPERTIES(libtdstorage-${TYPE} PROPERTIES OUTPUT_NAME tdstorage CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libtdstorage-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libtdstorage-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libtdstorage-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdstorage-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libtdnetutilities ==================================================
@@ -247,21 +233,19 @@ LIST(APPEND libtdnetutilities_sources
    netdouble.c
 )
 
-INSTALL(FILES ${libtdnetutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libtdnetutilities_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libtdnetutilities-shared SHARED ${libtdnetutilities_sources})
+ADD_LIBRARY(libtdnetutilities-static STATIC ${libtdnetutilities_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libtdnetutilities-${TYPE} SHARED ${libtdnetutilities_sources})
-
    SET_TARGET_PROPERTIES(libtdnetutilities-${TYPE} PROPERTIES OUTPUT_NAME tdnetutilities CLEAN_DIRECT_OUTPUT 1)
-   TARGET_LINK_LIBRARIES (libtdnetutilities-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
+   SET_TARGET_PROPERTIES(libtdnetutilities-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
+TARGET_LINK_LIBRARIES (libtdnetutilities-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
    INSTALL(TARGETS libtdnetutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libtdnetutilities-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== librsphsmgt ========================================================
@@ -306,21 +290,19 @@ LIST(APPEND librsphsmgt_sources
    transportaddressblock.c
 )
 
-INSTALL(FILES ${librsphsmgt_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${librsphsmgt_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(librsphsmgt-shared SHARED ${librsphsmgt_sources})
+ADD_LIBRARY(librsphsmgt-static STATIC ${librsphsmgt_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(librsphsmgt-${TYPE} SHARED ${librsphsmgt_sources})
-
    SET_TARGET_PROPERTIES(librsphsmgt-${TYPE} PROPERTIES OUTPUT_NAME rsphsmgt CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(librsphsmgt-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (librsphsmgt-${TYPE} libtdstorage-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS librsphsmgt-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(librsphsmgt-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== librspmessaging ========================================================
@@ -335,21 +317,19 @@ LIST(APPEND librspmessaging_sources
    rserpoolmessageparser.c
 )
 
-INSTALL(FILES ${librspmessaging_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${librspmessaging_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(librspmessaging-shared SHARED ${librspmessaging_sources})
+ADD_LIBRARY(librspmessaging-static STATIC ${librspmessaging_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(librspmessaging-${TYPE} SHARED ${librspmessaging_sources})
-
    SET_TARGET_PROPERTIES(librspmessaging-${TYPE} PROPERTIES OUTPUT_NAME rspmessaging CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(librspmessaging-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (librspmessaging-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} librsphsmgt-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS librspmessaging-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(librspmessaging-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== librspdispatcher ===================================================
@@ -364,18 +344,17 @@ LIST(APPEND librspdispatcher_sources
    timer.c
 )
 
-INSTALL(FILES ${librspdispatcher_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${librspdispatcher_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(librspdispatcher-shared SHARED ${librspdispatcher_sources})
+ADD_LIBRARY(librspdispatcher-static STATIC ${librspdispatcher_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(librspdispatcher-${TYPE} SHARED ${librspdispatcher_sources})
-   SET_TARGET_PROPERTIES(librspdispatcher-${TYPE} PROPERTIES
+   SET_TARGET_PROPERTIES(librspdispatcher-shared PROPERTIES OUTPUT_NAME rspdispatcher CLEAN_DIRECT_OUTPUT 1)
+    SET_TARGET_PROPERTIES(librspdispatcher-${TYPE} PROPERTIES
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-
-   SET_TARGET_PROPERTIES(librspdispatcher-shared PROPERTIES OUTPUT_NAME rspdispatcher CLEAN_DIRECT_OUTPUT 1)
    TARGET_LINK_LIBRARIES (librspdispatcher-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdnetutilities-${TYPE} libtdstorage-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS librspdispatcher-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -390,22 +369,20 @@ IF (ENABLE_CSP)
       componentstatusreporter.c
    )
 
-   INSTALL(FILES ${librspcsp_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+   INSTALL(FILES ${librspcsp_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+   ADD_LIBRARY(librspcsp-shared SHARED ${librspcsp_sources})
+   ADD_LIBRARY(librspcsp-static STATIC ${librspcsp_sources})
    FOREACH(TYPE shared;static)
-      ADD_LIBRARY(librspcsp-${TYPE} SHARED ${librspcsp_sources})
-
       SET_TARGET_PROPERTIES(librspcsp-${TYPE} PROPERTIES OUTPUT_NAME rspcsp CLEAN_DIRECT_OUTPUT 1)
+      SET_TARGET_PROPERTIES(librspcsp-shared PROPERTIES
+         VERSION   ${BUILD_VERSION}
+         SOVERSION ${BUILD_MAJOR}
+      )
       TARGET_LINK_LIBRARIES (librspcsp-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdloglevel-${TYPE} librspdispatcher-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
       INSTALL(TARGETS librspcsp-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
    ENDFOREACH()
 ENDIF()
-
-SET_TARGET_PROPERTIES(librspcsp-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== librsplib ==========================================================
@@ -418,6 +395,7 @@ LIST(APPEND librsplib_headers
    notificationqueue.h
    registrartable.h
    rserpool.h
+   rserpool-csp.h
    rserpool-internals.h
    rserpool-policytypes.h
    rserpoolsocket.h
@@ -442,12 +420,16 @@ LIST(APPEND librsplib_sources
 
 )
 
-INSTALL(FILES ${librsplib_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${librsplib_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(librsplib-shared SHARED ${librsplib_sources})
+ADD_LIBRARY(librsplib-static STATIC ${librsplib_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(librsplib-${TYPE} SHARED ${librsplib_sources})
-
    SET_TARGET_PROPERTIES(librsplib-${TYPE} PROPERTIES OUTPUT_NAME rsplib CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(librsplib-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    IF (ENABLE_CSP)
       TARGET_LINK_LIBRARIES (librsplib-${TYPE} libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} libtdthreadsafety-${TYPE} libtdloglevel-${TYPE} libtdtagitem-${TYPE} libtdstorage-${TYPE} librsphsmgt-${TYPE} librspdispatcher-${TYPE} librspmessaging-${TYPE} librspcsp-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
    ELSE()
@@ -456,11 +438,6 @@ FOREACH(TYPE shared;static)
 
    INSTALL(TARGETS librsplib-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(librsplib-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ====== libcpprspserver =================================================
@@ -474,21 +451,19 @@ LIST(APPEND libcpprspserver_sources
    udplikeserver.cc
 )
 
-INSTALL(FILES ${libcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+INSTALL(FILES ${libcpprspserver_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rserpool)
 
+ADD_LIBRARY(libcpprspserver-shared SHARED ${libcpprspserver_sources})
+ADD_LIBRARY(libcpprspserver-static STATIC ${libcpprspserver_sources})
 FOREACH(TYPE shared;static)
-   ADD_LIBRARY(libcpprspserver-${TYPE} SHARED ${libcpprspserver_sources})
-
    SET_TARGET_PROPERTIES(libcpprspserver-${TYPE} PROPERTIES OUTPUT_NAME cpprspserver CLEAN_DIRECT_OUTPUT 1)
+   SET_TARGET_PROPERTIES(libcpprspserver-shared PROPERTIES
+      VERSION   ${BUILD_VERSION}
+      SOVERSION ${BUILD_MAJOR}
+   )
    TARGET_LINK_LIBRARIES (libcpprspserver-${TYPE} libtdcppthread-${TYPE} librsplib-${TYPE} libtdthreadsafety-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdbreakdetector-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
-
    INSTALL(TARGETS libcpprspserver-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
-
-SET_TARGET_PROPERTIES(libcpprspserver-shared PROPERTIES
-   VERSION   ${BUILD_VERSION}
-   SOVERSION ${BUILD_MAJOR}
-)
 
 
 # ###### Programs ###########################################################
