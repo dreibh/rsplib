@@ -230,7 +230,7 @@ void ScriptingServer::finishSession(EventHandlingResult result)
 
       // ====== Run script ==================================================
       char sscmd[168];
-      char callcmd[384];
+      char callcmd[512];
       int  success;
 
       snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol cleanup %s %d %s",
@@ -511,7 +511,7 @@ EventHandlingResult ScriptingServer::performDownload()
 bool ScriptingServer::checkEnvironment(const char* environmentName)
 {
    char sscmd[1024];
-   char callcmd[1024];
+   char callcmd[2176];
 
    snprintf((char*)&sscmd, sizeof(sscmd), "scriptingcontrol check-environment \"%s\" \"%s\" \"%s\" \"%s\"",
             Directory, environmentName, Settings.Keyring.c_str(), Settings.TrustDB.c_str());

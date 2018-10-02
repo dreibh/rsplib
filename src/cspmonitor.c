@@ -175,7 +175,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
    char                    workloadString[32];
    char                    locationString[sizeof(cspObject->Location)];
    char                    uptimeString[32];
-   char                    objectLabelString[256];
+   char                    objectLabelString[384];
    char                    space[256];
    size_t                  objectLabelSize;
    unsigned int            h, m, s;
@@ -573,7 +573,7 @@ int main(int argc, char** argv)
       }
       else if(!(strncmp(argv[n], "-maxlocationsize=", 17))) {
          maxLocationSize = atoi((const char*)&argv[n][17]);
-      }      
+      }
       else if(!(strcmp(argv[n], "-compact"))) {
          useCompactMode = true;
       }
@@ -612,7 +612,7 @@ int main(int argc, char** argv)
 
    /* The first update should be in 1 second ... */
    lastUpdate = getMicroTime() + 1000000 - updateInterval;
-   
+
    while(!breakDetected()) {
       ufds.fd          = sd;
       ufds.events      = POLLIN;
