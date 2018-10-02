@@ -1157,15 +1157,20 @@ default: 9
 \begin_layout Description
 
 \family typewriter
---enable-registrar-statistics
+-DENABLE_REGISTRAR_STATISTICS=1
 \family default
  Adds registrar option to write statistics file.
+ (
+\series bold
+default
+\series default
+)
 \end_layout
 
 \begin_layout Description
 
 \family typewriter
---disable-registrar-statistics
+-DENABLE_REGISTRAR_STATISTICS=0
 \family default
  Do not compile in the statistics option.
  In this case, the dependency on 
@@ -1215,6 +1220,27 @@ default
 -DENABLE_CSP=0
 \family default
  Turns the Component Status Protocol support off.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+-DBUILD_TEST_PROGRAMS=1
+\family default
+ Enable building of test programs.
+\end_layout
+
+\begin_layout Description
+
+\family typewriter
+-DBUILD_TEST_PROGRAMS=0
+\family default
+ Disable building of test programs.
+ (
+\series bold
+default
+\series default
+)
 \end_layout
 
 \begin_layout Standard
