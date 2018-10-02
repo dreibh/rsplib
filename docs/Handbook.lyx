@@ -1,7 +1,9 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
+\save_transient_properties true
+\origin unavailable
 \textclass article
 \begin_preamble
 \usepackage{a4wide}
@@ -38,16 +40,16 @@ colorlinks=true]{hyperref}
 \language_package default
 \inputencoding utf8
 \fontencoding global
-\font_roman times
-\font_sans default
-\font_typewriter default
-\font_math auto
+\font_roman "times" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\font_sf_scale 100 100
+\font_tt_scale 100 100
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -111,19 +113,14 @@ Thomas Dreibholz
 \begin_inset Newline newline
 \end_inset
 
-University of Duisburg-Essen
+Simula@OsloMet 
 \begin_inset Newline newline
 \end_inset
 
-Institute for Experimental Mathematics
-\begin_inset Newline newline
-\end_inset
+Centre for Resilient Networks and Applications
+\end_layout
 
-Ellernstraße 29, 45326 Essen, Germany
-\begin_inset Newline newline
-\end_inset
-
-
+\begin_layout Author
 \begin_inset ERT
 status open
 
@@ -144,7 +141,7 @@ October
 \begin_inset space \thinspace{}
 \end_inset
 
-31, 2017
+2, 2018
 \end_layout
 
 \begin_layout Standard
@@ -474,11 +471,11 @@ A client is called
 
 (PU) in RSerPool terminology.
  To access the service of a pool given by its PH, a PE has to be selected.
- This selection procedure -- called
+ This selection procedure – called
 \emph on
  handle resolution
 \emph default
- -- is performed by an arbitrary PR of the operation scope.
+ – is performed by an arbitrary PR of the operation scope.
  A PU can request a handle resolution from a PR using the ASAP protocol.
  The PR selects PE identities by using a pool-specific server selection
  rule, denoted as 
@@ -583,7 +580,9 @@ Installation of Userland SCTP
 \end_layout
 
 \begin_layout Standard
-If you decide to use our userland SCTP implementation
+In the usual case, you use kernel SCTP.
+ Then, the following steps can be skipped! However, if you decide to use
+ our userland SCTP implementation
 \noun on
  sctplib
 \noun default
@@ -816,7 +815,7 @@ After installing SCTP support, the
 \begin_layout Subsubsection
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Preparation-Work"
+name "subsec:Preparation-Work"
 
 \end_inset
 
@@ -829,22 +828,6 @@ In order to prepare your system for the installation of the
 rsplib
 \noun default
  package, it is recommended to do the following tasks:
-\end_layout
-
-\begin_layout Itemize
-Add the environment variable QTDIR, setting the path to the installation
- of Qt.
- Qt is a GUI library and required for the Fractal PU example.
- Without Qt and properly set QTDIR, the client's compilation can be skipped.
- The ./configure script expects the environment variable QTDIR set to the
- Qt directory.
- You may need to set it appropriately, e.g.
-\begin_inset space ~
-\end_inset
-
-"export QTDIR=/usr/share/qt5" for Ubuntu Linux.
- This setting depends on your distribution; use "locate qwidget.h" to find
- out the directory.
 \end_layout
 
 \begin_layout Itemize
@@ -899,12 +882,6 @@ To make all settings above permanent, you can append them to your shell
 
 \family typewriter
 ...
-\end_layout
-
-\begin_layout Standard
-
-\family typewriter
-export QTDIR=/usr/share/qt5
 \end_layout
 
 \begin_layout Standard
@@ -1007,7 +984,7 @@ After appending these lines, they will be loaded automatically each time
 \begin_layout Subsubsection
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Configuration-and-Installation"
+name "subsec:Configuration-and-Installation"
 
 \end_inset
 
@@ -1059,7 +1036,8 @@ cd
 \begin_layout Standard
 
 \family typewriter
-./configure <Options>
+cmake .
+ <Options>
 \end_layout
 
 \begin_layout Standard
@@ -1096,7 +1074,7 @@ You may use the following options:
 \begin_layout Description
 
 \family typewriter
---enable-kernel-sctp
+-DUSE_KERNEL_SCTP=1
 \family default
  Enables usage of kernel SCTP (
 \series bold
@@ -1108,7 +1086,7 @@ default
 \begin_layout Description
 
 \family typewriter
---disable-kernel-sctp
+-DUSE_KERNEL_SCTP=0
 \family default
  Use userland SCTP (i.e.
 \begin_inset space ~
@@ -1128,7 +1106,7 @@ socketapi
 \begin_layout Description
 
 \family typewriter
---enable-qt
+-DENABLE_QT=1
 \family default
  Enables Qt usage; this is necessary for the Fractal Generator client.
  Without Qt, the client's compilation will be skipped.
@@ -1153,70 +1131,13 @@ default
 \begin_layout Description
 
 \family typewriter
---disable-qt
+-DENABLE_QT=0
 \family default
  Disables Qt usage; the Fractal Generator client will
 \series bold
-not
+ not
 \series default
  be available.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---enable-shared
-\family default
- Create a shared library.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---disable-shared
-\family default
- Disable the creation of a shared library (recommended for debugging).
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---enable-static
-\family default
- Create a static library (recommended for debugging).
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---disable-static
-\family default
- Disable the creation of a static library.
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---enable-maintainer-mode
-\family default
- Enable the creation of debug symbols (-g) and turn off compiler optimization.
- Necessary for debugging, but makes programs much larger and slower.
- (
-\series bold
-default
-\series default
-)
-\end_layout
-
-\begin_layout Description
-
-\family typewriter
---disable-maintainer-mode
-\family default
- Disables maintainer mode.
- The code will be optimized and without debugging symbols.
- Node: Please turn on the maintainer mode if you discover any problems and
- report bugs to us!
 \end_layout
 
 \begin_layout Description
@@ -1257,7 +1178,7 @@ libbz2
 \begin_layout Description
 
 \family typewriter
---enable-hsmgtverify
+-DENABLE_HSMGTVERIFY=1
 \family default
  Enable Handlespace Management verification.
  This is useful for debugging only; it makes the very PR slow!
@@ -1266,7 +1187,7 @@ libbz2
 \begin_layout Description
 
 \family typewriter
---disable-hsmgtverify
+-DENABLE_HSMGTVERIFY=0
 \family default
  Turns off Handlespace Management verification.
  (
@@ -1279,7 +1200,7 @@ default
 \begin_layout Description
 
 \family typewriter
---enable-csp
+-DENABLE_CSP=1
 \family default
  Enable the Component Status Protocol support (strongly recommended!) (
 \series bold
@@ -1291,24 +1212,9 @@ default
 \begin_layout Description
 
 \family typewriter
---disable-csp
+-DENABLE_CSP=0
 \family default
  Turns the Component Status Protocol support off.
-\end_layout
-
-\begin_layout Standard
-For learning how to work with
-\noun on
- rsplib
-\noun default
-, the following options are highly recommended:
-\end_layout
-
-\begin_layout Standard
-
-\family typewriter
---enable-kernel-sctp --disable-shared --enable-static --enable-qt --enable-csp
- --enable-maintainer-mode
 \end_layout
 
 \begin_layout Standard
@@ -1393,7 +1299,7 @@ preferences
 \begin_layout Subsection
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Testing-the-Installation"
+name "subsec:Testing-the-Installation"
 
 \end_inset
 
@@ -1458,7 +1364,7 @@ ID upon startup.
 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:Preparation-Work"
+reference "subsec:Preparation-Work"
 
 \end_inset
 
@@ -1532,7 +1438,7 @@ any
 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:Testing-the-Installation"
+reference "subsec:Testing-the-Installation"
 
 \end_inset
 
@@ -1569,7 +1475,7 @@ After installation (make install, see subsection
 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:Configuration-and-Installation"
+reference "subsec:Configuration-and-Installation"
 
 \end_inset
 
