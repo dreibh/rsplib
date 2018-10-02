@@ -833,19 +833,18 @@ int main(int argc, char** argv)
    const char*     imageStoragePrefix = DEFAULT_FPU_IMAGEPREFIX;
    bool            showFailoverMarks  = DEFAULT_FPU_SHOWCOLORMARKS;
    bool            showSessions       = DEFAULT_FPU_SHOWSESSIONS;
-   unsigned int    identifier;
-   int             i;
 
    rsp_initinfo(&info);
 #ifdef ENABLE_CSP
    info.ri_csp_identifier = CID_COMPOUND(CID_GROUP_POOLUSER, 0);
 #endif
-   for(i = 1;i < argc;i++) {
+   for(int i = 1;i < argc;i++) {
       if(rsp_initarg(&info, argv[i])) {
          /* rsplib argument */
       }
 #ifdef ENABLE_CSP
       else if(!(strncmp(argv[i], "-identifier=", 12))) {
+         unsigned int identifier;
          if(sscanf((const char*)&argv[i][12], "0x%x", &identifier) == 0) {
             if(sscanf((const char*)&argv[i][12], "%u", &identifier) == 0) {
                fputs("ERROR: Bad registrar ID given!\n", stderr);
