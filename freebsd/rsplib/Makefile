@@ -2,7 +2,7 @@
 # $FreeBSD: head/net/rsplib/Makefile 373063 2014-11-22 14:43:23Z antoine $
 
 PORTNAME=	rsplib
-PORTVERSION=	3.1.8
+PORTVERSION=	3.2.0~rc1.2
 CATEGORIES=	net
 MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/download/
 
@@ -10,13 +10,11 @@ MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3
+LICENSE_FILE=   ${WRKSRC}/COPYING
 
 GNU_CONFIGURE=	yes
-CONFIGURE_ARGS=	--disable-maintainer-mode \
-		--enable-qt --with-qt-lib=${QT_LIBDIR} \
-		--with-qt-include=${QT_INCDIR}
-INSTALL_TARGET=	install-strip
-USES=		gmake libtool shebangfix
+USES=		cmake shebangfix
+CMAKE_ARGS+=    -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 SHEBANG_FILES=	rsplib/scriptingserviceexample
 USE_LDCONFIG=	yes
 USE_QT5=	buildtools_build core gui widgets xml
