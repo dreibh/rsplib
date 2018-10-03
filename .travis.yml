@@ -19,7 +19,7 @@ compiler:
   - gcc
 
 before_install:
-  - sudo apt-get install -y libsctp-dev libbz2-dev
+  - sudo apt-get install -y libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser
 
 matrix:
   include:
