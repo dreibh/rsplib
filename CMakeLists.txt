@@ -30,7 +30,7 @@ PROJECT(rsplib)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "2")
-SET(BUILD_PATCH "0~rc1.4")
+SET(BUILD_PATCH "0~rc1.5")
 SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 
@@ -241,25 +241,27 @@ ELSE()
    # ====== SCTPLIB User-Space SCTP =========================================
    CHECK_INCLUDE_FILE(sctp.h HAVE_SCTPLIB_SCTP_H)
    FIND_LIBRARY(SCTPLIB_LIB sctplib)
-   MESSAGE(STATUS "sctplib found: ${SCTPLIB_LIB}")
    IF (NOT HAVE_SCTPLIB_SCTP_H OR NOT SCTPLIB_LIB)
       MESSAGE(FATAL_ERROR "sctplib not found - libsctplib installed?")
    ENDIF()
+   MESSAGE(STATUS "sctplib found: ${SCTPLIB_LIB}")
 
    CHECK_INCLUDE_FILE(sctp.h HAVE_SCTPSOCKET_SCTP_H)
    FIND_LIBRARY(SCTPSOCKET_LIB sctpsocket)
-   MESSAGE(STATUS "sctpsocket found: ${SCTPSOCKET_LIB}")
    IF (NOT HAVE_SCTPSOCKET_SCTP_H OR NOT SCTPSOCKET_LIB)
       MESSAGE(FATAL_ERROR "sctpsocket not found - libsctpsocket installed?")
    ENDIF()
+   MESSAGE(STATUS "sctpsocket found: ${SCTPSOCKET_LIB}")
 
    FIND_PACKAGE(PkgConfig)
    PKG_CHECK_MODULES(GLIB glib-2.0)
    IF (NOT ${GLIB_LIBS})
       MESSAGE(FATAL_ERROR "glib not found - glib-2.0 installed?")
    ENDIF()
+   MESSAGE(STATUS "glib found: ${GLIB_LIBRARIES}")
 
    SET(SCTP_LIB ${SCTPSOCKET_LIB} ${SCTPLIB_LIB} ${GLIB_LIBRARIES})
+   SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${SCTPSOCKET_LIB} ${SCTPLIB_LIB} ${GLIB_LIBRARIES})
 ENDIF()
 
 
