@@ -20,6 +20,13 @@ matrix:
       dist: bionic
       env: T=normal
 
+script:
+    - |
+        if [ "$T" = "normal" ]; then
+             ./bootstrap
+             ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs             make VERBOSE=1
+        fi
+
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
     only:
