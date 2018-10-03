@@ -1,14 +1,17 @@
 language: c++
 
-compiler:
-  - gcc
-  - clang
-
 matrix:
   include:
     - os: linux
       dist: bionic
-      env: T=normal
+      compiler:
+       - gcc
+       - clang
+    - os: linux
+      dist: trusty
+      compiler:
+       - gcc
+       - clang
 
 before_install:
   - |
@@ -19,14 +22,12 @@ before_install:
 
 script:
   - |
-    if [ "$T" = "normal" ] ; then
-       ./bootstrap
-       ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs
-       make VERBOSE=1
-    fi
+    ./bootstrap
+    ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs
+    make VERBOSE=1
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
-    only:
-        - master
-        - cmake
+  only:
+   - master
+   - cmake
