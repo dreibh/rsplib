@@ -7,14 +7,14 @@ How to set up a simple test of the rsplib-3.x.y release:
 
  1.a. Get latest sctplib-****.tar.gz archive and install it by
       - Unpack the Tar/GZip archive
-      - ./configure
+      - ./configure --enable-shared --enable-static
       - make
       - make install
          (as root!)
 
  1.b. Get latest socketapi-****.tar.gz and install it by
       - Unpack the Tar/GZip archive
-      - ./configure
+      - ./configure --enable-shared --enable-static
       - make
       - make install
          (as root!)
