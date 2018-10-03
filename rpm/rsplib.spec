@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.2.0~rc1.2
+Version: 3.2.0~rc1.4
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
@@ -12,7 +12,6 @@ BuildRequires: cmake
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: bzip2-devel
-BuildRequires: glib2-devel
 BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
