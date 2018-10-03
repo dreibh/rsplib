@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.2.0~rc1.1
+Version: 3.2.0~rc1.2
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0
@@ -20,6 +20,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 %description
 RSerPool client/server API library for session management Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
 
+%define _unpackaged_files_terminate_build 0
 
 
 %package devel
@@ -89,101 +90,101 @@ make DESTDIR=%{buildroot} install
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/librspcsp.so*
-%{_libdir}/librspdispatcher.so*
-%{_libdir}/librsphsmgt.so*
-%{_libdir}/librsplib.so*
-%{_libdir}/librspmessaging.so*
-%{_libdir}/libtdbreakdetector.so*
-%{_libdir}/libtdloglevel.so*
-%{_libdir}/libtdnetutilities.so*
-%{_libdir}/libtdrandomizer.so*
-%{_libdir}/libtdstorage.so*
-%{_libdir}/libtdstringutilities.so*
-%{_libdir}/libtdtagitem.so*
-%{_libdir}/libtdthreadsafety.so*
-%{_libdir}/libtdtimeutilities.so*
-%{_libdir}/libcpprspserver.so*
-%{_libdir}/libtdcppthread.so*
+/usr/lib/librspcsp.so.*
+/usr/lib/librspdispatcher.so.*
+/usr/lib/librsphsmgt.so.*
+/usr/lib/librsplib.so.*
+/usr/lib/librspmessaging.so.*
+/usr/lib/libtdbreakdetector.so.*
+/usr/lib/libtdloglevel.so.*
+/usr/lib/libtdnetutilities.so.*
+/usr/lib/libtdrandomizer.so.*
+/usr/lib/libtdstorage.so.*
+/usr/lib/libtdstringutilities.so.*
+/usr/lib/libtdtagitem.so.*
+/usr/lib/libtdthreadsafety.so.*
+/usr/lib/libtdtimeutilities.so.*
+/usr/lib/libcpprspserver.so.*
+/usr/lib/libtdcppthread.so.*
 
 %files devel
-%{_includedir}/rserpool/rserpool-internals.h
-%{_includedir}/rserpool/rserpool-policytypes.h
-%{_includedir}/rserpool/rserpool.h
-%{_includedir}/rserpool/rserpool-csp.h
-%{_includedir}/rserpool/tagitem.h
-%{_includedir}/rserpool/cpprspserver.h
-%{_includedir}/rserpool/mutex.h
-%{_includedir}/rserpool/tcplikeserver.h
-%{_includedir}/rserpool/thread.h
-%{_includedir}/rserpool/udplikeserver.h
-%{_libdir}/librspcsp*.a
-%{_libdir}/librspcsp*.so
-%{_libdir}/librspdispatcher*.a
-%{_libdir}/librspdispatcher*.so
-%{_libdir}/librsphsmgt*.a
-%{_libdir}/librsphsmgt*.so
-%{_libdir}/librsplib*.a
-%{_libdir}/librsplib*.so
-%{_libdir}/librspmessaging*.a
-%{_libdir}/librspmessaging*.so
-%{_libdir}/libtdbreakdetector*.a
-%{_libdir}/libtdbreakdetector*.so
-%{_libdir}/libtdloglevel*.a
-%{_libdir}/libtdloglevel*.so
-%{_libdir}/libtdnetutilities*.a
-%{_libdir}/libtdnetutilities*.so
-%{_libdir}/libtdrandomizer*.a
-%{_libdir}/libtdrandomizer*.so
-%{_libdir}/libtdstorage*.a
-%{_libdir}/libtdstorage*.so
-%{_libdir}/libtdstringutilities*.a
-%{_libdir}/libtdstringutilities*.so
-%{_libdir}/libtdtagitem*.a
-%{_libdir}/libtdtagitem*.so
-%{_libdir}/libtdthreadsafety*.a
-%{_libdir}/libtdthreadsafety*.so
-%{_libdir}/libtdtimeutilities*.a
-%{_libdir}/libtdtimeutilities*.so
-%{_libdir}/libcpprspserver.so.*
-%{_libdir}/libtdcppthread.so.*
-%{_libdir}/libcpprspserver*.a
-%{_libdir}/libcpprspserver*.so
-%{_libdir}/libtdcppthread*.a
-%{_libdir}/libtdcppthread*.so
+/usr/include/rserpool/rserpool-internals.h
+/usr/include/rserpool/rserpool-policytypes.h
+/usr/include/rserpool/rserpool.h
+/usr/include/rserpool/rserpool-csp.h
+/usr/include/rserpool/tagitem.h
+/usr/include/rserpool/cpprspserver.h
+/usr/include/rserpool/mutex.h
+/usr/include/rserpool/tcplikeserver.h
+/usr/include/rserpool/thread.h
+/usr/include/rserpool/udplikeserver.h
+/usr/lib/librspcsp*.a
+/usr/lib/librspcsp*.so
+/usr/lib/librspdispatcher*.a
+/usr/lib/librspdispatcher*.so
+/usr/lib/librsphsmgt*.a
+/usr/lib/librsphsmgt*.so
+/usr/lib/librsplib*.a
+/usr/lib/librsplib*.so
+/usr/lib/librspmessaging*.a
+/usr/lib/librspmessaging*.so
+/usr/lib/libtdbreakdetector*.a
+/usr/lib/libtdbreakdetector*.so
+/usr/lib/libtdloglevel*.a
+/usr/lib/libtdloglevel*.so
+/usr/lib/libtdnetutilities*.a
+/usr/lib/libtdnetutilities*.so
+/usr/lib/libtdrandomizer*.a
+/usr/lib/libtdrandomizer*.so
+/usr/lib/libtdstorage*.a
+/usr/lib/libtdstorage*.so
+/usr/lib/libtdstringutilities*.a
+/usr/lib/libtdstringutilities*.so
+/usr/lib/libtdtagitem*.a
+/usr/lib/libtdtagitem*.so
+/usr/lib/libtdthreadsafety*.a
+/usr/lib/libtdthreadsafety*.so
+/usr/lib/libtdtimeutilities*.a
+/usr/lib/libtdtimeutilities*.so
+/usr/lib/libcpprspserver.so.*
+/usr/lib/libtdcppthread.so.*
+/usr/lib/libcpprspserver*.a
+/usr/lib/libcpprspserver*.so
+/usr/lib/libtdcppthread*.a
+/usr/lib/libtdcppthread*.so
 
 %files docs
 %doc docs/Handbook.pdf
 
 %files registrar
-%{_bindir}/rspregistrar
-%{_datadir}/man/man1/rspregistrar.1.gz
+/usr/bin/rspregistrar
+/usr/share/man/man1/rspregistrar.1.gz
 
 %files tools
-%{_bindir}/cspmonitor
-%{_bindir}/hsdump
-%{_bindir}/rspserver
-%{_bindir}/rspterminal
-%{_datadir}/man/man1/rspserver.1.gz
-%{_datadir}/man/man1/rspterminal.1.gz
-%{_datadir}/man/man1/cspmonitor.1.gz
-%{_datadir}/man/man1/hsdump.1.gz
+/usr/bin/cspmonitor
+/usr/bin/hsdump
+/usr/bin/rspserver
+/usr/bin/rspterminal
+/usr/share/man/man1/rspserver.1.gz
+/usr/share/man/man1/rspterminal.1.gz
+/usr/share/man/man1/cspmonitor.1.gz
+/usr/share/man/man1/hsdump.1.gz
 
 %files services
-%{_bindir}/calcappclient
-%{_bindir}/fractalpooluser
-%{_bindir}/pingpongclient
-%{_bindir}/scriptingclient
-%{_bindir}/scriptingcontrol
-%{_bindir}/scriptingserviceexample
-%{_datadir}/man/man1/calcappclient.1.gz
-%{_datadir}/man/man1/fractalpooluser.1.gz
-%{_datadir}/man/man1/pingpongclient.1.gz
-%{_datadir}/man/man1/scriptingclient.1.gz
-%{_datadir}/man/man1/scriptingcontrol.1.gz
-%{_datadir}/man/man1/scriptingserviceexample.1.gz
-%{_datadir}/fractalpooluser/*.qm
-%{_datadir}/fgpconfig/*.fsf
+/usr/bin/calcappclient
+/usr/bin/fractalpooluser
+/usr/bin/pingpongclient
+/usr/bin/scriptingclient
+/usr/bin/scriptingcontrol
+/usr/bin/scriptingserviceexample
+/usr/share/man/man1/calcappclient.1.gz
+/usr/share/man/man1/fractalpooluser.1.gz
+/usr/share/man/man1/pingpongclient.1.gz
+/usr/share/man/man1/scriptingclient.1.gz
+/usr/share/man/man1/scriptingcontrol.1.gz
+/usr/share/man/man1/scriptingserviceexample.1.gz
+/usr/share/fractalpooluser/*.qm
+/usr/share/fgpconfig/*.fsf
 
 
 %changelog
