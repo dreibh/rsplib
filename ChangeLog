@@ -1,3 +1,443 @@
+commit 90e4fa62907725fedc86f4dc0db919106f77b5d0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 16:09:48 2018 +0100
+
+    Fix for compiling with sctplib/socketapi.
+
+commit 0f6d118fcffd959d685296b7f79887e22cf0f0e4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 14:53:46 2018 +0100
+
+    Dependency fix for Ubuntu packaging.
+
+commit 4a182357030b37420a9d316702a3414b0123325e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 13:09:28 2018 +0100
+
+    Dependency fixes.
+
+commit 03f8a217c70f2e480d25705969338bcab90f7c77
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 13:03:45 2018 +0100
+
+    Improved detection of libsctp.
+
+commit 6499d759ed40e8ada900b22666460f604488dfb3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 13:00:57 2018 +0100
+
+    Dependency fix for RPM.
+
+commit e7232304d7bfa1dafcda706e58c93789d02ce56a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 13:02:34 2018 +0200
+
+    FreeBSD packaging file updates.
+
+commit ee0b2e496268f4753fa05ba913b87d5a9c24d73c
+Merge: 8a955b94 8a4688ec
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 12:54:49 2018 +0200
+
+    Merge branch 'cmake' of https://github.com/dreibh/rsplib into cmake
+
+commit 8a955b947856dbceab59524b8996a214ef74f678
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 12:54:33 2018 +0200
+
+    Comparison operator is const.
+
+commit 8a4688ec6bb961a248aa9579e64ea29a46c1b064
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 11:40:10 2018 +0100
+
+    Format fix.
+
+commit b90397d64325e3f2cfd4aef2525a1abb64ba034f
+Merge: ca888d35 7fd2e1e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 11:00:29 2018 +0200
+
+    Merge branch 'cmake' of https://github.com/dreibh/rsplib into cmake
+
+commit ca888d359c98fb5819072fb2ca3ec36997b81ebd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 10:59:53 2018 +0200
+
+    Fixed SCTP handling for FreeBSD.
+
+commit 068ac0a402a55a52a38fb4f718096ed7fd6fba9b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 10:59:43 2018 +0200
+
+    Improved helper script.
+
+commit 7fd2e1e2e7339877a458b02febfa07716da48225
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 10:48:38 2018 +0200
+
+    RPM packaging fixes.
+
+commit 8e729deeecf4007ab5108c7b7c5ae4f933c2b24d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 09:25:30 2018 +0100
+
+    Improved RPM packaging.
+
+commit d0b05ee54c1db1ba8b7821e4f86e980eb2124994
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 3 09:22:29 2018 +0100
+
+    Fixed manpage packaging.
+
+commit 1f86978144fd7b481663610f11877ce075d478e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 19:35:15 2018 +0200
+
+    RPM packaging fixes for CMake build.
+
+commit 76f3c1d11a6f24ea1be459257d83ea8a6d35a2bf
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 17:47:17 2018 +0100
+
+    Updated handbook.
+
+commit 390184a8679e300f75cb703a31ce2b094b31493e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 17:46:05 2018 +0100
+
+    Strictened compiler options.
+
+commit 7dee467ae60c72580dde4b543b7b0050683ba38f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 17:45:49 2018 +0100
+
+    Handling FSF examples in CMakeFiles.txt.
+
+commit 0d77c6cde3a0fb01cbd839a2f43a1b9575038722
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 17:21:05 2018 +0100
+
+    Some library versioning improvements.
+
+commit 44232863a95639eb73df14c4fed783ec8b1ae9fe
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 17:11:24 2018 +0100
+
+    More clean-ups of CMakeList.txt.
+
+commit db3a7bc9991ea4ac1577e6578b389799d9e12f5b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 16:22:50 2018 +0100
+
+    Name fix.
+
+commit 28a883f6e1a52efa1d41ca37bb943eb73dd30fe0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 16:21:01 2018 +0100
+
+    Some more improvements.
+
+commit 9e961ee35fb27601efbe764018d8b546547012fd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 16:14:19 2018 +0100
+
+    Some work on the CMakeList.txt.
+
+commit e9d9d37389e82f87b50804bb060dd6bedb62d9f3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 15:13:19 2018 +0100
+
+    Buffer size increases, to fix compiler warnings.
+
+commit c4721f393d2301d34736450d6f42205183ed1b44
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 15:05:35 2018 +0100
+
+    Updated handbook.
+
+commit 7a9b25d8b2905073710ba8fa291fee92898bacf8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 15:05:23 2018 +0100
+
+    Renamed directory.
+
+commit 8ab183ddd02703459e4427bcc7d5ed2ef3818950
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 15:00:33 2018 +0100
+
+    A fix for the MAX_LOGLEVEL option handling.
+
+commit 89b916dcef8af8df72c8114d679674f47dce42d0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 13:30:27 2018 +0100
+
+    Updated packaging files.
+
+commit 62b1e1306f43a5f54abf6d62f2dcfce779d597d9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 13:16:50 2018 +0100
+
+    Removed old automake files.
+
+commit 280b00fd3a2a99bec21d1ea98e66a37e87235739
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 13:16:45 2018 +0100
+
+    Updated handbook.
+
+commit 73897ca012e8a1d8a2fb7936a44dfcb046f305a2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 13:14:45 2018 +0100
+
+    Improved MAX_LOGLEVEL option in CMakeLists.txt.
+
+commit 2a0323b0fbb5db24c724b0740115e3906aae5e47
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 13:05:14 2018 +0100
+
+    Updated documenation.
+
+commit 231896dbfcf8d0762dfe65ede670a44d3c7b6ba0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:58:40 2018 +0100
+
+    Compile when ENABLE_REGISTRAR_STATISTICS=0.
+
+commit 1a00c4c7fb792b9ed614c1c946591c9a19b8d823
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:57:12 2018 +0100
+
+    Some clean-ups.
+
+commit 815b17bb8de6d68cfef6fdb68328bbe0c1dd33cb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:53:52 2018 +0100
+
+    Updated documentation.
+
+commit 4fdf46cb1e59ff1948ab6fb8dd63a84488f2e74f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:42:21 2018 +0100
+
+    Option handling improvements in CMakeLists.txt.
+
+commit b0a306c9176107b06a6bb3e184f19c31aa1bf2d0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:35:34 2018 +0100
+
+    Fixed unused variable declaration when using ENABLE_CSP=0.
+
+commit 06f4b3ffae4153440bbf2107412aef11705df112
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:32:41 2018 +0100
+
+    Handle ENABLE_CSP option correctly again.
+
+commit e693d760c9c360e9aefa4e8af071f348366da6e4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:24:37 2018 +0100
+
+    Link libtdtimeutilities with libm.
+
+commit b9a8a2e5fc5ad842f4d8acee8434e201390300f9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 2 12:19:55 2018 +0100
+
+    Documentation updates.
+
+commit 10d60a291ba62cf5b43cb9a15444a04c3578ee27
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Sep 2 00:00:28 2018 +0200
+
+    Updated Debian packaging files.
+
+commit 9df219a5385a9bcc89ec97cfc979c56ecba0f183
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 23:49:24 2018 +0200
+
+    Updated CMakeLists.txt.
+
+commit 1eec75e7c78bcf6cdaf1360374c9a8578598b07c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 23:48:31 2018 +0200
+
+    Fixed string handling.
+
+commit b54eb3b319111f248f29dd14edbb742366c69fc5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 23:23:39 2018 +0200
+
+    Small fixes.
+
+commit 379d66bf842fdae415e98f770841a0c2cfe76322
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 23:23:29 2018 +0200
+
+    Updated CMakeLists.txt.
+
+commit 8ec06647307694b6f5fd577d80be510ba87465e9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 23:23:16 2018 +0200
+
+    A fix.
+
+commit 9542648f34aa8b69951783036b8f23a4c720bf14
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 22:37:53 2018 +0200
+
+    Added missing include file.
+
+commit 3571961d3283b37c1ee9a32a022d25296dad9706
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 22:37:43 2018 +0200
+
+    Updated CMakeLists.txt.
+
+commit 94c9dcf0d6dd731fc9b1f442ebfaf799616adcac
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 22:25:43 2018 +0200
+
+    Fixed warnings for possible truncation of strings.
+
+commit c7ffbae36f735a7976c3119e88f1f3f8f9ba731c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 22:03:35 2018 +0200
+
+    New compiling.
+
+commit 79f7c3adfcb9878e5d4cfd8f90396fa475a6a0fb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Sep 1 21:18:44 2018 +0200
+
+    Added missing options for storage.
+
+commit 40fe3cafaeb60c66c45be76bc11f94d49017586c
+Author: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Date:   Fri Jun 29 11:50:17 2018 +0200
+
+    Some updates.
+
+commit 3760d98014aa97a0e4c174797cb22ed44c986d4d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 16:58:43 2018 +0200
+
+    Some updates.
+
+commit 0fd5837b253bde30bc247cb86ed9a57a91d89b8d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 16:51:37 2018 +0200
+
+    Some more work on the makefiles.
+
+commit 03219dfe64151c52d14478ebc8330cc2cfbf5719
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 16:37:24 2018 +0200
+
+    Some makefile updates.
+
+commit 7c94a348151a117a0447c193467f87c5bee5c493
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 15:51:35 2018 +0200
+
+    Script updates.
+
+commit 98f7a291409099be3c26c45bee0545a25e3bb361
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 15:48:17 2018 +0200
+
+    Added CMakeLists.txt.
+
+commit 52ddb9870a9861bb177feda856bf4f195c3408f7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 15:32:36 2018 +0200
+
+    Updated install files again.
+
+commit b87a25777936f70ddecaafc3119398930789c921
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 7 15:32:00 2018 +0200
+
+    Updated install files.
+
+commit d78dfe841d193cf7773a41e04738519e1b611492
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Jun 6 14:57:42 2018 +0200
+
+    Packaging file updates.
+
+commit b64074ac46daafb3abc016acd5db89710ea3d73e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Jun 6 11:36:33 2018 +0200
+
+    Build script updates.
+
+commit 0bc04ebc55493c2e7182fa6f91691ad8b0f0d9b8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Mar 22 09:20:31 2018 +0100
+
+    Reference to LP #1757859.
+
+commit 83880edc8b07bb29bf811cb5dd5e69cde0f60ac5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 22 15:47:56 2017 +0100
+
+    Fedora packaging update.
+
+commit 0eaa08f46f62fcad0009036658fbb756605c052b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:48:44 2017 +0100
+
+    A fix for the FreeBSD packaging.
+
+commit 0a66cb47d2747e68db5c7def62de71c3f462eed1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:43:43 2017 +0100
+
+    Updated FreeBSD packaging.
+
+commit 14d2f95fa13d2cb0c533e784ad079ed6a989ece1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:41:44 2017 +0100
+
+    Updated FreeBSD version.
+
+commit bb315eb1688be81158d752000de83001afc22468
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:40:50 2017 +0100
+
+    Updated distinfo.
+
+commit 31fccbfcf692880ef40d40b9804d23f516faca8d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:34:20 2017 +0100
+
+    Bugfix: add parentheses after the '!' to evaluate the bitwise operator first.
+
+commit a618867988fc0c36c96a77a40af028934243db9e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 16 21:32:42 2017 +0100
+
+    Bugfix: use llabs() instead of abs() for int64_t.
+
+commit bb224d8ff5b223a99f985fae91cca4b0d778db90
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 5 17:16:38 2017 +0100
+
+    Updated LSM entry.
+
+commit 848024729b7ab57ab25794f1cd41bbfcfbba51d8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 5 17:11:58 2017 +0100
+
+    Version bump.
+
+commit df5ea1f3d77213278fe2ae5cccf91d1177e4af4e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 5 17:11:51 2017 +0100
+
+    Added configuration file.
+
 commit 0f9c5bfd455a11d06786d4082cfdbee59e0bb54c
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Nov 5 14:14:26 2017 +0100
@@ -107,7 +547,7 @@ Date:   Mon Oct 30 20:06:52 2017 +0100
     Fixed FreeBSD ports makefile.
 
 commit 95fa5df1116d05c49630ff94e193ff4652e06e56
-Merge: 01d9148 05dd413
+Merge: 01d91481 05dd4132
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Oct 29 11:46:04 2017 +0100
 
@@ -132,7 +572,7 @@ Date:   Sun Oct 29 11:22:50 2017 +0100
     New release.
 
 commit 7213b9ab87d0748dc04303fab06c46615b84ed30
-Merge: c1b4df2 ce2893c
+Merge: c1b4df2d ce2893cc
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Oct 29 11:00:03 2017 +0100
 
@@ -151,7 +591,7 @@ Date:   Sun Oct 29 10:59:11 2017 +0100
     Improved compiler configuration.
 
 commit 1577a6d25f52dedf358dd5ed90cb39b02b8e80d0
-Merge: 16ef0b6 64a5d58
+Merge: 16ef0b6e 64a5d585
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Oct 29 10:48:43 2017 +0100
 
@@ -302,7 +742,7 @@ Date:   Tue Mar 28 14:11:33 2017 +0200
     Minor updates.
 
 commit ec3e3a56a7a519c78f5787c413b33bbf4d7600be
-Merge: 5989821 d1b8940
+Merge: 59898212 d1b89408
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue Mar 21 10:21:56 2017 +0100
 

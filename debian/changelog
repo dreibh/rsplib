@@ -1,4 +1,4 @@
-rsplib (3.2.0~rc1.5-1ubuntu1) cosmic; urgency=low
+rsplib (3.2.0~rc1.6-1ubuntu1) cosmic; urgency=low
 
   * New upstream release.
   * Close packaging update request (LP: #1757859)
