@@ -3,6 +3,9 @@ language: c++
 addons:
    apt:
      packages:
+      - libtool
+      - autoconf
+      - automake
       - cmake
       - libsctp-dev
       - libbz2-dev
