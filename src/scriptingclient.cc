@@ -117,11 +117,11 @@ static unsigned int performUpload(int sd, const char* name)
    }
 
    newLogLine(stdout);
-   printf("Uploading %lu bytes ...\n", memFile->Length);
+   printf("Uploading %llu bytes ...\n", (unsigned long long)memFile->Length);
    fflush(stdout);
-   
+
    size_t totalBytesSent = 0;
-   for(;;) {      
+   for(;;) {
       Upload upload;
 
       size_t dataLength = memFile->Length - totalBytesSent;
