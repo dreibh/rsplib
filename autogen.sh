@@ -4,7 +4,7 @@ rm -f CMakeCache.txt
 
 # ------ Obtain number of cores ---------------------------------------------
 # Try Linux
-cores=`getconf _NPROCESSORS_ONLN 2>/dev/null`
+cores=`getconf _NPROCESSORS_ONLN 2>/dev/null || true`
 if [ "$cores" == "" ] ; then
    # Try FreeBSD
    cores=`sysctl -a | grep 'hw.ncpu' | cut -d ':' -f2 | tr -d ' '`
@@ -14,5 +14,5 @@ if [ "$cores" == "" ] ; then
 fi
 
 # ------ Configure and build ------------------------------------------------
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_QT=1 .
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_QT=1 $@ .
 make -j$cores
