@@ -1,0 +1,25 @@
+language: c++
+
+addons:
+   apt:
+     packages:
+      - cmake
+      - libsctp-dev
+      - libbz2-dev (>= 1.0),
+      - qtbase5-dev,
+      - qtbase5-dev-tools,
+      - qtchooser
+     
+compiler:
+  - clang
+  - gcc
+
+matrix:
+  include:
+    - os: linux
+
+# whitelist branches to avoid testing feature branches twice (as branch and as pull request)
+branches:
+    only:
+        - master
+        - cmake
