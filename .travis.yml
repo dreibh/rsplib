@@ -1,25 +1,8 @@
 language: c++
 
-addons:
-   apt:
-     update: true
-     packages:
-      - libtool
-      - autoconf
-      - automake
-      - cmake
-      - libsctp-dev
-      - libbz2-dev
-      - qtbase5-dev
-      - qtbase5-dev-tools
-      - qtchooser
-
 compiler:
-  #- clang
   - gcc
-
-before_install:
-  - sudo apt-get install -y libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser
+  # - clang
 
 matrix:
   include:
@@ -27,13 +10,20 @@ matrix:
       dist: bionic
       env: T=normal
 
+before_install:
+  - |
+    if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
+       sudo apt-get update
+       sudo apt-get install -y libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser
+    fi
+
 script:
-    - |
-        if [ "$T" = "normal" ] ; then
-             ./bootstrap
-             ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs
-             make VERBOSE=1
-        fi
+  - |
+    if [ "$T" = "normal" ] ; then
+       ./bootstrap
+       ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs
+       make VERBOSE=1
+    fi
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
