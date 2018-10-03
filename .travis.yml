@@ -2,6 +2,7 @@ language: c++
 
 addons:
    apt:
+     update: true
      packages:
       - libtool
       - autoconf
@@ -16,6 +17,9 @@ addons:
 compiler:
   #- clang
   - gcc
+
+before_install:
+  - sudo apt-get install -y libsctp-dev libbz2-dev
 
 matrix:
   include:
