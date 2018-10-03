@@ -1,6 +1,6 @@
-/usr/share/man/man1/calcappclient.1
-/usr/share/man/man1/fractalpooluser.1
-/usr/share/man/man1/pingpongclient.1
-/usr/share/man/man1/scriptingclient.1
-/usr/share/man/man1/scriptingcontrol.1
-/usr/share/man/man1/scriptingserviceexample.1
+src/calcappclient.1
+src/fractalpooluser.1
+src/pingpongclient.1
+src/scriptingclient.1
+src/scriptingcontrol.1
+src/scriptingserviceexample.1

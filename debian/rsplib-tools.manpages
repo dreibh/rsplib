@@ -1,4 +1,4 @@
-/usr/share/man/man1/cspmonitor.1
-/usr/share/man/man1/hsdump.1
-/usr/share/man/man1/rspserver.1
-/usr/share/man/man1/rspterminal.1
+src/cspmonitor.1
+src/hsdump.1
+src/rspserver.1
+src/rspterminal.1
