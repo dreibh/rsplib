@@ -70,7 +70,7 @@ class EnvironmentCache : public TDMutex
 
    struct CacheEntry {
       inline bool operator()(const CacheEntry* e1,
-                             const CacheEntry* e2) {
+                             const CacheEntry* e2) const {
          return(memcmp(&e1->Hash, &e2->Hash, sizeof(e1->Hash)) < 0);
       }
 
