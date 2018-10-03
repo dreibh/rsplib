@@ -5,11 +5,11 @@ addons:
      packages:
       - cmake
       - libsctp-dev
-      - libbz2-dev (>= 1.0),
-      - qtbase5-dev,
-      - qtbase5-dev-tools,
+      - libbz2-dev
+      - qtbase5-dev
+      - qtbase5-dev-tools
       - qtchooser
-     
+
 compiler:
   - clang
   - gcc
