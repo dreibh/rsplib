@@ -11,12 +11,14 @@ addons:
       - qtchooser
 
 compiler:
-  - clang
+  #- clang
   - gcc
 
 matrix:
   include:
     - os: linux
+      dist: bionic
+      env: T=normal
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
