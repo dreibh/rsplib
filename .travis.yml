@@ -58,6 +58,26 @@ matrix:
       group: travis_latest
       env: DOCKER="debian:testing" VARIANT="ubuntu" COMPILER_C="clang" COMPILER_CXX="clang++"
 
+    # ====== Debian Stretch =================================================
+    - os: linux
+      dist: xenial
+      group: travis_latest
+      env: DOCKER="debian:stretch" VARIANT="ubuntu" COMPILER_C="gcc" COMPILER_CXX="g++"
+    - os: linux
+      dist: xenial
+      group: travis_latest
+      env: DOCKER="debian:stretch" VARIANT="ubuntu" COMPILER_C="clang" COMPILER_CXX="clang++"
+
+    # ====== Debian Sid =====================================================
+    - os: linux
+      dist: xenial
+      group: travis_latest
+      env: DOCKER="debian:sid" VARIANT="ubuntu" COMPILER_C="gcc" COMPILER_CXX="g++"
+    - os: linux
+      dist: xenial
+      group: travis_latest
+      env: DOCKER="debian:sid" VARIANT="ubuntu" COMPILER_C="clang" COMPILER_CXX="clang++"
+
 
     # ###### Fedora Linux ###################################################
 
