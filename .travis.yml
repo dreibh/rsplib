@@ -1,15 +1,21 @@
 language: c++
 
+compiler:
+  - gcc
+  - clang
+
 matrix:
   include:
     - os: linux
-      dist:
-       - bionic
-       - xenial
-       - trusty
-      compiler:
-       - gcc
-       - clang
+      dist: trusty
+    - os: linux
+      dist: xenial
+    - os: linux
+      dist: bionic
+    - os: linux
+      dist: testing
+    - os: linux
+      dist: unstable
 
 before_install:
   - |
