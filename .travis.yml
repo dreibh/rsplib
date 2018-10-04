@@ -107,7 +107,7 @@ install:
     if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
        if [ "$VARIANT" = "ubuntu" ] ; then
           sudo docker exec -t ubuntu-test bash -c "apt-get update"
-          sudo docker exec -t ubuntu-test bash -c "apt-get install -y libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser"
+          sudo docker exec -t ubuntu-test bash -c "apt-get install -y autoconf automake libtool gcc g++ clang make libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser"
        elif [ "$VARIANT" = "fedora" ] ; then
           sudo docker exec -t ubuntu-test bash -c "dnf install -y autoconf automake libtool gcc gcc-c++ clang make lksctp-tools-devel bzip2-devel glib2-devel qt5-qtbase-devel qtchooser"
        fi
