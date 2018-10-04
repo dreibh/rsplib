@@ -167,6 +167,6 @@ int main(int argc, char** argv)
    }
 
    cerr << endl << "Done!" << endl;
-   delete threadSet;
+   delete [] threadSet;
    return(0);
 }
