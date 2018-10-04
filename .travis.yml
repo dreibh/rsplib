@@ -127,9 +127,9 @@ install:
     if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
        if [ "$VARIANT" = "ubuntu" ] ; then
           sudo docker exec -t ubuntu-test bash -c "apt-get update"
-          sudo docker exec -t ubuntu-test bash -c "apt-get install -y autoconf automake libtool gcc g++ clang make libglib2.0-dev libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser"
+          sudo docker exec -t ubuntu-test bash -c "apt-get install -y cmake gcc g++ clang make libglib2.0-dev libsctp-dev libbz2-dev qtbase5-dev qtbase5-dev-tools qtchooser"
        elif [ "$VARIANT" = "fedora" ] ; then
-          sudo docker exec -t ubuntu-test bash -c "dnf install -y autoconf automake libtool gcc gcc-c++ clang make lksctp-tools-devel bzip2-devel glib2-devel qt5-qtbase-devel qtchooser"
+          sudo docker exec -t ubuntu-test bash -c "dnf install -y cmake gcc gcc-c++ clang make lksctp-tools-devel bzip2-devel glib2-devel qt5-qtbase-devel qtchooser"
        fi
     fi
 
@@ -137,12 +137,10 @@ install:
 script:
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
-       sudo docker exec -t ubuntu-test bash -c "./bootstrap"
        sudo docker exec -t ubuntu-test bash -c "echo OPTIONS: CC=$COMPILER_C CXX=$COMPILER_CXX"
-       sudo docker exec -t ubuntu-test bash -c "env CC=$COMPILER_C CXX=$COMPILER_CXX ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs"
+       sudo docker exec -t ubuntu-test bash -c "env CC=$COMPILER_C CXX=$COMPILER_CXX cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_QT=1 -DENABLE_REGISTRAR_STATISTICS=1 -DENABLE_CSP=1 -DBUILD_TEST_PROGRAMS=1"
        sudo docker exec -t ubuntu-test bash -c "make VERBOSE=1"
     elif [ "$TRAVIS_OS_NAME" = "osx" ] ; then
-       ./bootstrap
-       ./configure --enable-kernel-sctp --enable-static --disable-shared --enable-qt --enable-csp --disable-hsmgtverify --enable-test-programs
+       cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_QT=1 -DENABLE_REGISTRAR_STATISTICS=1 -DENABLE_CSP=1 -DBUILD_TEST_PROGRAMS=1
        make VERBOSE=1
     fi
