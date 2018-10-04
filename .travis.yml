@@ -1,4 +1,4 @@
-language: generic
+language: c++
 
 matrix:
   include:
@@ -86,9 +86,9 @@ matrix:
 
     # ====== MacOS X ========================================================
     - os: osx
-     osx_image: xcode9.4
-     compiler: clang
-     group: travis_latest
+      osx_image: xcode9.4
+      compiler: clang
+      group: travis_latest
 
 
 before_install:
