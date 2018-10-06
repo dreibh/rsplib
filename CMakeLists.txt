@@ -342,8 +342,8 @@ SET(CMAKE_C_STANDARD 11)
 SET(CMAKE_C_STANDARD_REQUIRED ON)
 SET(CMAKE_C_EXTENSIONS OFF)
 
-SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -Werror -Wno-error=cpp")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-error=cpp")
+SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -Werror -Wno-error=cpp -Wno-unknown-warning-option")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-error=cpp -Wno-unknown-warning-option")
 
 IF (CMAKE_BUILD_TYPE MATCHES DEBUG)
     MESSAGE(STATUS "Building in DEBUG mode")
