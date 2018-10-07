@@ -286,7 +286,7 @@ EventHandlingResult PingPongServer::handleMessage(const char* buffer,
 
                /* ====== Send cookie ===================================== */
                struct PPPCookie cookie;
-               strncpy((char*)&cookie.ID, PPP_COOKIE_ID, sizeof(cookie.ID));
+               memcpy((char*)&cookie.ID, PPP_COOKIE_ID, sizeof(cookie.ID));
                cookie.ReplyNo = hton64(ReplyNo);
                sent = rsp_send_cookie(RSerPoolSocketDescriptor,
                                       (unsigned char*)&cookie, sizeof(cookie),
