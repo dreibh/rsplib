@@ -40,10 +40,10 @@ matrix:
       dist: xenial
       group: travis_latest
       env: DOCKER="ubuntu:trusty" VARIANT="ubuntu" COMPILER_C="gcc" COMPILER_CXX="g++"
-    - os: linux
-      dist: xenial
-      group: travis_latest
-      env: DOCKER="ubuntu:trusty" VARIANT="ubuntu" COMPILER_C="clang" COMPILER_CXX="clang++"
+    #- os: linux
+    #  dist: xenial
+    #  group: travis_latest
+    #  env: DOCKER="ubuntu:trusty" VARIANT="ubuntu" COMPILER_C="clang" COMPILER_CXX="clang++"
 
 
      # ###### Debian Linux ##################################################
