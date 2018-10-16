@@ -30,7 +30,7 @@ PROJECT(rsplib)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "2")
-SET(BUILD_PATCH "0~rc1.6")
+SET(BUILD_PATCH "0~rc1.7")
 SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 
@@ -125,8 +125,6 @@ ELSE()
 
 ENDIF()
 
-FIND_PACKAGE(Threads REQUIRED)
-
 
 #############################################################################
 # CHECK STRUCT MEMBERS
@@ -209,13 +207,15 @@ ADD_DEFINITIONS(-DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE)
 # REQUIREMENTS
 #############################################################################
 
+# ###### Threads ############################################################
+FIND_PACKAGE(Threads REQUIRED)
+
 # ###### Qt #################################################################
 OPTION(ENABLE_QT "Include Qt programs" 1)
 IF (ENABLE_QT)
    SET(CMAKE_AUTOMOC ON)
    FIND_PACKAGE(Qt5 COMPONENTS Core Xml Widgets REQUIRED)
 ENDIF()
-
 
 # ###### SCTP ###############################################################
 OPTION(USE_KERNEL_SCTP "Use Kernel SCTP" 1)
