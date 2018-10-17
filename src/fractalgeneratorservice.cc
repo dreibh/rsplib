@@ -192,7 +192,7 @@ bool FractalGeneratorServer::sendCookie(const unsigned long long now)
    FGPCookie cookie;
    ssize_t   sent;
 
-   strncpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
+   memcpy((char*)&cookie.ID, FGP_COOKIE_ID, sizeof(cookie.ID));
    cookie.Parameter.Header.Type   = FGPT_PARAMETER;
    cookie.Parameter.Header.Flags  = 0x00;
    cookie.Parameter.Header.Length = htons(sizeof(cookie.Parameter.Header));
