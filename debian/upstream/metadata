@@ -1,5 +1,5 @@
 Name: RSPLIB
-Homepage: https://www.uni-due.de/~be0001/rserpool
+Homepage: https://www.uni-due.de/~be0001/rserpool/
 Repository: https://github.com/dreibh/rsplib.git
 Repository-Browse: https://github.com/dreibh/rsplib
 Bug-Submit: https://github.com/dreibh/rsplib/issues
@@ -10,7 +10,7 @@ Reference:
   Author: Thomas Dreibholz
   Eprint: https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
   Month: mar
-  Title: "Reliable Server Pooling -- Evaluation, Optimization and Extension of a Novel IETF Architecture"
-  Year: 2017
+  Title: Reliable Server Pooling -- Evaluation, Optimization and Extension of a Novel IETF Architecture
+  Year: 2007
   Type: PhDThesis
 Other-References: https://www.uni-due.de/~be0001/rserpool/#Publications
