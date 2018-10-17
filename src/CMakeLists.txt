@@ -1,6 +1,8 @@
-INCLUDE_DIRECTORIES(.)
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# ###### Libraries ##########################################################
+#############################################################################
+# LIBRARIES
+#############################################################################
 
 # ====== liblibtdtimeutilities ==============================================
 LIST(APPEND libtdtimeutilities_headers
@@ -462,7 +464,10 @@ FOREACH(TYPE shared;static)
 ENDFOREACH()
 
 
-# ###### Programs ###########################################################
+#############################################################################
+# PROGRAMS
+#############################################################################
+
 ADD_EXECUTABLE(rspregistrar rspregistrar.c rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c)
 IF (ENABLE_CSP)
     TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector-shared librspdispatcher-shared librspcsp-shared librsphsmgt-shared librspmessaging-shared libtdstorage-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared "${BZIP2_LIBRARIES}" "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
