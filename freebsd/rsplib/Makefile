@@ -14,8 +14,8 @@ LICENSE_FILE=   ${WRKSRC}/COPYING
 
 GNU_CONFIGURE=	yes
 USES=		cmake shebangfix
-CMAKE_ARGS+=    -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
-SHEBANG_FILES=	rsplib/scriptingserviceexample
+CMAKE_ARGS+=    -DCMAKE_INSTALL_MANDIR=${PREFIX}/man -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
+SHEBANG_FILES=	src/scriptingserviceexample
 USE_LDCONFIG=	yes
 USE_QT5=	buildtools_build core gui widgets xml
 
