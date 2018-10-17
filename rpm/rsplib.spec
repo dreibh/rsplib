@@ -9,6 +9,7 @@ Source: https://www.uni-due.de/~be0001/rserpool/download/%{name}-%{version}.tar.
 
 AutoReqProv: on
 BuildRequires: cmake
+BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: bzip2-devel
