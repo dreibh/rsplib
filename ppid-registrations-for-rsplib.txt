@@ -26,7 +26,7 @@ Some more documentation of the FGP application can be found here:
 http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/Globecom2010-Demo.pdf
 
 * Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
-http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
@@ -62,7 +62,7 @@ https://www.uni-due.de/~be0001/rserpool/ .
 Some more documentation on RSPLIB can be found here:
 
 * Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
-http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
@@ -100,7 +100,7 @@ https://www.uni-due.de/~be0001/rserpool/ .
 Some more documentation of the CALCAPP application can be found here:
 
 * Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
-http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
 
 * Dreibholz, T.; Zhou, X.; Becke, M.; Pulinthanath, J.; Rathgeb, E. P.; Du, W.: ``On the Security of Reliable Server Pooling Systems´´ (PDF, 539 KiB), in International Journal on Intelligent Information and Database Systems (IJIIDS), vol. 4, no. 6, pp. 552–578, ISSN 1751-5858, December 2010.
 http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/IJIIDS2010.pdf
@@ -196,7 +196,7 @@ Some more information on RSerPool interop testing can be found here:
 * draft-dreibholz-rserpool-score-08
 
 * Dreibholz, T.: ``Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture´´ (PDF, 9079 KiB), University of Duisburg-Essen, Faculty of Economics, Institute for Computer Science and Business Information Systems, March 2007
-http://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006-final.pdf
+https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
