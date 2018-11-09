@@ -14,7 +14,7 @@ Build-Depends: cmake (>= 3.0) | cmake3,
                qtbase5-dev,
                qtbase5-dev-tools,
                qtchooser
-Standards-Version: 4.1.4
+Standards-Version: 4.2.1
 
 Package: librsplib3
 Section: libs
