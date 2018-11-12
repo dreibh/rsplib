@@ -3,7 +3,7 @@
 /usr/include/rserpool/tcplikeserver.h
 /usr/include/rserpool/thread.h
 /usr/include/rserpool/udplikeserver.h
-/usr/lib/libcpprspserver*.a
-/usr/lib/libcpprspserver*.so
-/usr/lib/libtdcppthread*.a
-/usr/lib/libtdcppthread*.so
+/usr/lib/*/libcpprspserver*.a
+/usr/lib/*/libcpprspserver*.so
+/usr/lib/*/libtdcppthread*.a
+/usr/lib/*/libtdcppthread*.so

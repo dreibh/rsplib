@@ -184,6 +184,12 @@ FOREACH(TYPE shared;static)
       SOVERSION ${BUILD_MAJOR}
    )
    TARGET_LINK_LIBRARIES (libtdcppthread-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+
+
+   MESSAGE("######################################## ${CMAKE_INSTALL_BINDIR} ${CMAKE_INSTALL_FULL_BINDIR}")
+   MESSAGE("######################################## ${CMAKE_INSTALL_LIBDIR} ${CMAKE_INSTALL_FULL_LIBDIR}")
+
+
    INSTALL(TARGETS libtdcppthread-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
