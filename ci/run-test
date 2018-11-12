@@ -3,18 +3,20 @@
 export TRAVIS_OS_NAME="linux"
 export TOOL="pbuilder"
 
-# export DOCKER="debian:testing"
-# export VARIANT="debian"
+
+export DOCKER="debian:testing"
+export VARIANT="debian"
+
 # export DOCKER="ubuntu:trusty"
 # export VARIANT="ubuntu"
 
-export DOCKER="fedora:29"
-export VARIANT="fedora"
-export TOOL="mock"
+# export DOCKER="fedora:29"
+# export VARIANT="fedora"
+# export TOOL="mock"
 
 
-# SCRIPTS="before-install install build"
-SCRIPTS="build"
+SCRIPTS="before-install install build"
+# SCRIPTS="build"
 
 for script in $SCRIPTS ; do
    sudo env \
