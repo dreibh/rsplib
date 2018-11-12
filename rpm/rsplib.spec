@@ -17,64 +17,11 @@ BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
+# TEST ONLY:
+# %define _unpackaged_files_terminate_build 0
+
 %description
 RSerPool client/server API library for session management Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-
-%define _unpackaged_files_terminate_build 0
-
-
-%package devel
-Summary: Development files for rsplib
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-
-%description devel
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package provides header files for the rsplib library. You need them to develop your own RSerPool-based clients and servers.
-
-
-%package docs
-Summary: Documentation files for rsplib
-Group: System Environment/Libraries
-Requires: %{name} = %{version}-%{release}
-
-%description docs
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package contains the documentation for the RSerPool implementation rsplib.
-
-
-%package registrar
-Summary: RSerPool Registrar service
-Group: Applications/Internet
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-docs
-
-%description registrar
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package provides the registrar, which is the management component for RSerPool-based server pools. You need at least one registrar in a setup, but for redundancy reasons, you should have at least two.
-
-
-%package tools
-Summary: RSerPool test tools
-Group: Applications/Internet
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-docs
-Requires: chrpath
-
-%description tools
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package provides some test tools for RSerPool setups.
-
-
-%package services
-Summary: RSerPool example services
-Group: Applications/Internet
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-tools
-
-%description services
-Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
-This package provides a set of input files for the Fractal Generator service.
 
 
 %prep
@@ -106,6 +53,15 @@ make DESTDIR=%{buildroot} install
 /usr/lib*/libtdtimeutilities.so.*
 /usr/lib*/libcpprspserver.so.*
 /usr/lib*/libtdcppthread.so.*
+
+%package devel
+Summary: Development files for rsplib
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+
+%description devel
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+This package provides header files for the rsplib library. You need them to develop your own RSerPool-based clients and servers.
 
 %files devel
 /usr/include/rserpool/rserpool-internals.h
@@ -152,13 +108,112 @@ make DESTDIR=%{buildroot} install
 /usr/lib*/libcpprspserver*.so
 /usr/lib*/libtdcppthread*.a
 /usr/lib*/libtdcppthread*.so
+# NOTE: These files are library-internal files, not to be packaged in the RPM:
+%ghost /usr/include/rserpool/asapinstance.h
+%ghost /usr/include/rserpool/asapinterthreadmessage.h
+%ghost /usr/include/rserpool/breakdetector.h
+%ghost /usr/include/rserpool/componentstatuspackets.h
+%ghost /usr/include/rserpool/componentstatusreporter.h
+%ghost /usr/include/rserpool/debug.h
+%ghost /usr/include/rserpool/dispatcher.h
+%ghost /usr/include/rserpool/doublelinkedringlist.h
+%ghost /usr/include/rserpool/ext_socket.h
+%ghost /usr/include/rserpool/fdcallback.h
+%ghost /usr/include/rserpool/identifierbitmap.h
+%ghost /usr/include/rserpool/interthreadmessageport.h
+%ghost /usr/include/rserpool/leaflinkedredblacktree.h
+%ghost /usr/include/rserpool/loglevel.h
+%ghost /usr/include/rserpool/messagebuffer.h
+%ghost /usr/include/rserpool/netdouble.h
+%ghost /usr/include/rserpool/netutilities.h
+%ghost /usr/include/rserpool/notificationqueue.h
+%ghost /usr/include/rserpool/peerlist-template.h
+%ghost /usr/include/rserpool/peerlist-template_impl.h
+%ghost /usr/include/rserpool/peerlistmanagement-template.h
+%ghost /usr/include/rserpool/peerlistmanagement-template_impl.h
+%ghost /usr/include/rserpool/peerlistnode-template.h
+%ghost /usr/include/rserpool/peerlistnode-template_impl.h
+%ghost /usr/include/rserpool/poolelementnode-template.h
+%ghost /usr/include/rserpool/poolelementnode-template_impl.h
+%ghost /usr/include/rserpool/poolhandle.h
+%ghost /usr/include/rserpool/poolhandlespacechecksum.h
+%ghost /usr/include/rserpool/poolhandlespacemanagement-basics.h
+%ghost /usr/include/rserpool/poolhandlespacemanagement-template.h
+%ghost /usr/include/rserpool/poolhandlespacemanagement-template_impl.h
+%ghost /usr/include/rserpool/poolhandlespacemanagement.h
+%ghost /usr/include/rserpool/poolhandlespacenode-template.h
+%ghost /usr/include/rserpool/poolhandlespacenode-template_impl.h
+%ghost /usr/include/rserpool/poolnode-template.h
+%ghost /usr/include/rserpool/poolnode-template_impl.h
+%ghost /usr/include/rserpool/poolpolicy-template.h
+%ghost /usr/include/rserpool/poolpolicy-template_impl.h
+%ghost /usr/include/rserpool/poolpolicysettings.h
+%ghost /usr/include/rserpool/pooluserlist-template.h
+%ghost /usr/include/rserpool/pooluserlist-template_impl.h
+%ghost /usr/include/rserpool/poolusernode-template.h
+%ghost /usr/include/rserpool/poolusernode-template_impl.h
+%ghost /usr/include/rserpool/randomizer.h
+%ghost /usr/include/rserpool/redblacktree.h
+%ghost /usr/include/rserpool/redblacktree_impl.h
+%ghost /usr/include/rserpool/registrartable.h
+%ghost /usr/include/rserpool/rserpoolerror.h
+%ghost /usr/include/rserpool/rserpoolmessage.h
+%ghost /usr/include/rserpool/rserpoolmessagecreator.h
+%ghost /usr/include/rserpool/rserpoolmessageparser.h
+%ghost /usr/include/rserpool/rserpoolsocket.h
+%ghost /usr/include/rserpool/session.h
+%ghost /usr/include/rserpool/sessioncontrol.h
+%ghost /usr/include/rserpool/sessionstorage.h
+%ghost /usr/include/rserpool/simpleredblacktree.h
+%ghost /usr/include/rserpool/sockaddrunion.h
+%ghost /usr/include/rserpool/stringutilities.h
+%ghost /usr/include/rserpool/tdtypes.h
+%ghost /usr/include/rserpool/threadsafety.h
+%ghost /usr/include/rserpool/threadsignal.h
+%ghost /usr/include/rserpool/timer.h
+%ghost /usr/include/rserpool/timestamphashtable.h
+%ghost /usr/include/rserpool/timeutilities.h
+%ghost /usr/include/rserpool/transportaddressblock.h
+
+
+%package docs
+Summary: Documentation files for rsplib
+Group: System Environment/Libraries
+Requires: %{name} = %{version}-%{release}
+
+%description docs
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+This package contains the documentation for the RSerPool implementation rsplib.
 
 %files docs
 /usr/share/doc/rsplib/Handbook.pdf
 
+
+%package registrar
+Summary: RSerPool Registrar service
+Group: Applications/Internet
+Requires: %{name} = %{version}-%{release}
+Requires: %{name}-docs
+
+%description registrar
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+This package provides the registrar, which is the management component for RSerPool-based server pools. You need at least one registrar in a setup, but for redundancy reasons, you should have at least two.
+
 %files registrar
 /usr/bin/rspregistrar
 /usr/share/man/man1/rspregistrar.1.gz
+
+
+%package tools
+Summary: RSerPool test tools
+Group: Applications/Internet
+Requires: %{name} = %{version}-%{release}
+Requires: %{name}-docs
+Requires: chrpath
+
+%description tools
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+This package provides some test tools for RSerPool setups.
 
 %files tools
 /usr/bin/cspmonitor
@@ -169,6 +224,17 @@ make DESTDIR=%{buildroot} install
 /usr/share/man/man1/rspterminal.1.gz
 /usr/share/man/man1/cspmonitor.1.gz
 /usr/share/man/man1/hsdump.1.gz
+
+
+%package services
+Summary: RSerPool example services
+Group: Applications/Internet
+Requires: %{name} = %{version}-%{release}
+Requires: %{name}-tools
+
+%description services
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+This package provides a set of input files for the Fractal Generator service.
 
 %files services
 /usr/bin/calcappclient
