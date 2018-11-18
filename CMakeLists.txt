@@ -26,7 +26,7 @@
 # Contact: dreibh@iem.uni-due.de
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(rsplib)
+PROJECT(rsplib LANGUAGES C CXX)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "2")
