@@ -115,8 +115,8 @@ Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: chrpath,
-            rsplib-docs,
-            rsplib-fgp-cfgfiles
+            rsplib-docs (>= ${source:Version}),
+            rsplib-fgp-cfgfiles (>= ${source:Version})
 Description: RSerPool test tools
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -128,10 +128,10 @@ Description: RSerPool test tools
 
 Package: rsplib-services
 Architecture: any
-Depends: rsplib-docs,
-         rsplib-tools,
+Depends: rsplib-tools (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
+Recommends: rsplib-docs (>= ${source:Version})
 Description: RSerPool example services
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -144,7 +144,7 @@ Description: RSerPool example services
  ScriptingService.
 
 Package: rsplib-fgp-cfgfiles
-Architecture: all
+Architecture: any
 Depends: ${misc:Depends}
 Description: RSerPool Fractal Generator Service example input files
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
