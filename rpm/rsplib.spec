@@ -295,8 +295,8 @@ This package provides some test tools for RSerPool setups.
 Summary: RSerPool example services
 Group: Applications/Internet
 Requires: %{name}-libcpprspserver = %{version}-%{release}
-Requires: %{name}-rsplib = %{version}-%{release}
-Requires: %{name}-tools= %{version}-%{release}
+Requires: %{name}-librsplib = %{version}-%{release}
+Requires: %{name}-tools = %{version}-%{release}
 Recommends: %{name}-docs = %{version}-%{release}
 
 %description services
@@ -328,9 +328,8 @@ ScriptingService.
 %package fgp-cfgfiles
 Summary: RSerPool Fractal Generator Service example input files
 Group: Applications/Internet
-Requires: %{name}-tools= %{version}-%{release}
 Recommends: fractgen
-Recommends: %{name}-tools
+Recommends: %{name}-tools = %{version}-%{release}
 
 %description fgp-cfgfiles
 Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
