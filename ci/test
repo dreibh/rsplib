@@ -96,10 +96,9 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ] ; then
 
          echo "Installing ${packages} ..."
          sudo docker exec ${CONTAINER} env LANG=C.UTF-8 dnf install -y --allowerasing ${packages}
+         echo "Done!"
 
       fi
 
    fi
 fi
-
-echo "Done!"
