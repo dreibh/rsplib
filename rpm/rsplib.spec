@@ -240,7 +240,7 @@ This package contains the documentation for the RSerPool implementation
 RSPLIB.
 
 %files docs
-/usr/share/doc/rsplib/Handbook.pdf
+/usr/share/rsplib/Handbook.pdf
 
 
 %package registrar
@@ -342,6 +342,26 @@ service.
 
 %files fgp-cfgfiles
 /usr/share/fgpconfig/*.fsf
+
+
+%package all
+Summary: RSerPool implementation RSPLIB
+Group: Applications/Internet
+Obsoletes: %{name} < %{version}
+Provides:  %{name} = %{version}
+Requires: %{name}-docs = %{version}-%{release}
+Requires: %{name}-fgp-cfgfiles = %{version}-%{release}
+Requires: %{name}-libcpprspserver = %{version}-%{release}
+Requires: %{name}-libcpprspserver-devel = %{version}-%{release}
+Requires: %{name}-librsplib = %{version}-%{release}
+Requires: %{name}-librsplib-devel = %{version}-%{release}
+Requires: %{name}-registrar = %{version}-%{release}
+Requires: %{name}-services = %{version}-%{release}
+Requires: %{name}-tools = %{version}-%{release}
+
+%description all
+This is the installation metapackage for the RSerPool implementation RSPLIB.
+It installs all RSPLIB components.
 
 
 %changelog
