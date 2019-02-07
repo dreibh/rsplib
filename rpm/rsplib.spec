@@ -240,7 +240,7 @@ This package contains the documentation for the RSerPool implementation
 RSPLIB.
 
 %files docs
-/usr/share/rsplib/Handbook.pdf
+/usr/share/doc/rsplib/Handbook.pdf
 
 
 %package registrar
