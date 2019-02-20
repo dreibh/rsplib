@@ -1,17 +1,15 @@
 #!/bin/bash -e
 
 export TRAVIS_OS_NAME="linux"
-export COMPILER_C="clang"
-export COMPILER_CXX="clang++"
 
 
 # export DOCKER="debian:stretch"
 # export VARIANT="debian"
 # export TOOL="pbuilder"
 
-export DOCKER="ubuntu:trusty"
+export DOCKER="ubuntu:cosmic"
 export VARIANT="ubuntu"
-export TOOL="compile"
+export TOOL="pbuilder"
 
 # export DOCKER="fedora:30"
 # export VARIANT="fedora"
@@ -26,7 +24,5 @@ for script in $SCRIPTS ; do
       TRAVIS_OS_NAME="$TRAVIS_OS_NAME" \
       DOCKER="$DOCKER" \
       VARIANT="$VARIANT" \
-      COMPILER_C="$COMPILER_C" \
-      COMPILER_CXX="$COMPILER_CXX" \
       TOOL="$TOOL" ci/${script}
 done
