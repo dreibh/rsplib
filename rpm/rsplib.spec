@@ -228,6 +228,7 @@ develop your own RSerPool-based clients and servers based on the C++ API.
 %package docs
 Summary: Documentation files for RSPLIB
 Group: System Environment/Libraries
+BuildArch: noarch
 Requires: %{name}-tools = %{version}-%{release}
 
 %description docs
@@ -328,6 +329,7 @@ ScriptingService.
 %package fgp-cfgfiles
 Summary: RSerPool Fractal Generator Service example input files
 Group: Applications/Internet
+BuildArch: noarch
 Recommends: fractgen
 Recommends: %{name}-tools = %{version}-%{release}
 

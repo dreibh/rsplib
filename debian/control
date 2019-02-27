@@ -14,7 +14,7 @@ Build-Depends: cmake (>= 3.0.2) | cmake3,
                qtbase5-dev,
                qtbase5-dev-tools,
                qtchooser
-Standards-Version: 4.2.1
+Standards-Version: 4.3.0
 
 Package: librsplib3
 Section: libs
@@ -146,7 +146,7 @@ Description: RSerPool example services
  ScriptingService.
 
 Package: rsplib-fgp-cfgfiles
-Architecture: any
+Architecture: all
 Depends: ${misc:Depends}
 Recommends: rsplib-tools
 Description: RSerPool Fractal Generator Service example input files
