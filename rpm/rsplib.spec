@@ -241,7 +241,7 @@ This package contains the documentation for the RSerPool implementation
 RSPLIB.
 
 %files docs
-/usr/share/doc/rsplib/Handbook.pdf
+%{_datadir}/doc/rsplib/Handbook.pdf
 
 
 %package registrar
@@ -261,8 +261,8 @@ for RSerPool-based server pools. You need at least one registrar in a
 setup, but for redundancy reasons, you should have at least two.
 
 %files registrar
-/usr/bin/rspregistrar
-/usr/share/man/man1/rspregistrar.1.gz
+%{_bindir}/rspregistrar
+%{_mandir}/man1/rspregistrar.1.gz
 
 
 %package tools
@@ -282,14 +282,14 @@ and a client-side/server-side API for accessing the service of a pool.
 This package provides some test tools for RSerPool setups.
 
 %files tools
-/usr/bin/cspmonitor
-/usr/bin/hsdump
-/usr/bin/rspserver
-/usr/bin/rspterminal
-/usr/share/man/man1/rspserver.1.gz
-/usr/share/man/man1/rspterminal.1.gz
-/usr/share/man/man1/cspmonitor.1.gz
-/usr/share/man/man1/hsdump.1.gz
+%{_bindir}/cspmonitor
+%{_bindir}/hsdump
+%{_bindir}/rspserver
+%{_bindir}/rspterminal
+%{_mandir}/man1/rspserver.1.gz
+%{_mandir}/man1/rspterminal.1.gz
+%{_mandir}/man1/cspmonitor.1.gz
+%{_mandir}/man1/hsdump.1.gz
 
 
 %package services
@@ -311,19 +311,19 @@ Echo, Discard, Daytime, CharGen, CalcApp, FractalGenerator and
 ScriptingService.
 
 %files services
-/usr/bin/calcappclient
-/usr/bin/fractalpooluser
-/usr/bin/pingpongclient
-/usr/bin/scriptingclient
-/usr/bin/scriptingcontrol
-/usr/bin/scriptingserviceexample
-/usr/share/man/man1/calcappclient.1.gz
-/usr/share/man/man1/fractalpooluser.1.gz
-/usr/share/man/man1/pingpongclient.1.gz
-/usr/share/man/man1/scriptingclient.1.gz
-/usr/share/man/man1/scriptingcontrol.1.gz
-/usr/share/man/man1/scriptingserviceexample.1.gz
-/usr/share/fractalpooluser/*.qm
+%{_bindir}/calcappclient
+%{_bindir}/fractalpooluser
+%{_bindir}/pingpongclient
+%{_bindir}/scriptingclient
+%{_bindir}/scriptingcontrol
+%{_bindir}/scriptingserviceexample
+%{_mandir}/man1/calcappclient.1.gz
+%{_mandir}/man1/fractalpooluser.1.gz
+%{_mandir}/man1/pingpongclient.1.gz
+%{_mandir}/man1/scriptingclient.1.gz
+%{_mandir}/man1/scriptingcontrol.1.gz
+%{_mandir}/man1/scriptingserviceexample.1.gz
+%{_datadir}/fractalpooluser/*.qm
 
 
 %package fgp-cfgfiles
@@ -343,7 +343,7 @@ This package provides a set of input files for the Fractal Generator
 service.
 
 %files fgp-cfgfiles
-/usr/share/fgpconfig/*.fsf
+%{_datadir}/fgpconfig/*.fsf
 
 
 %package all
