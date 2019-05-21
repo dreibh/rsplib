@@ -1,4 +1,4 @@
-rsplib (3.2.1~rc1.0-1ubuntu1) unstable; urgency=low
+rsplib (3.2.1-1ubuntu1) unstable; urgency=medium
 
   * New upstream version.
   * debian/control: updated standards version.
