@@ -91,10 +91,6 @@ ELSEIF (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
     INCLUDE_DIRECTORIES("/usr/pkg/include" "/usr/local/include")
     ADD_DEFINITIONS("-DNetBSD")
 
-ELSEIF (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
-    MESSAGE(STATUS ${CMAKE_SYSTEM_NAME} " supported")
-    ADD_DEFINITIONS("-DSOLARIS")
-
 ELSE()
     MESSAGE(FATAL_ERROR ${CMAKE_SYSTEM_NAME} " not supported (yet?)")
 
@@ -319,12 +315,6 @@ SET(CMAKE_C_EXTENSIONS OFF)
 
 SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-
-IF (CMAKE_BUILD_TYPE MATCHES DEBUG)
-    MESSAGE(STATUS "Building in DEBUG mode")
-    # _FORTIFY_SOURCE requires compiling with optimization
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
-ENDIF()
 
 
 #############################################################################
