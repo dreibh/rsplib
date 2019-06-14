@@ -1,3 +1,39 @@
+commit 4c6d4ce1a2bda942e8f04a237fc5e32f220fdcac
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 14 12:37:34 2019 +0200
+
+    A fix.
+
+commit 28ad44a041be7c4c0cdc9d9e6c7fb141b5ff8619
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 14 12:27:29 2019 +0200
+
+    Using .tar.xz instead of .tar.gz.
+
+commit 4b51dde1d40d14bc183b2f2aa2e80febff0d5c5f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 14 12:24:40 2019 +0200
+
+    Simplified CMakeLists.txt.
+
+commit 32571cb999ef0e0887e664611ff44077a7b9c82b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 14 12:21:07 2019 +0200
+
+    Improved RPM spec file.
+
+commit ef1dd2a1f931f7750acebd1a409b25d7eb3ad66e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 13 12:56:13 2019 +0200
+
+    Improved build script.
+
+commit 91d46f1ebc546d494ad0c1983af471b54c5457b4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue May 21 16:51:34 2019 +0200
+
+    New release 3.2.1.
+
 commit 5a6158004c1366070c7443ca6abec1fc086430c5
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue May 21 16:40:24 2019 +0200
