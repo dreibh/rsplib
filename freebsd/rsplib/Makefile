@@ -2,12 +2,13 @@
 # $FreeBSD: head/net/rsplib/Makefile 373063 2014-11-22 14:43:23Z antoine $
 
 PORTNAME=	rsplib
-PORTVERSION=	3.2.0
+PORTVERSION=	3.2.2
 CATEGORIES=	net
 MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/download/
 
 MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications
+EXTRACT_SUFX=   .tar.xz
 
 LICENSE=	GPLv3+
 LICENSE_FILE=   ${WRKSRC}/COPYING
