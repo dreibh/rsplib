@@ -14,7 +14,7 @@ Build-Depends: cmake (>= 3.0.2) | cmake3,
                qtbase5-dev,
                qtbase5-dev-tools,
                qtchooser
-Standards-Version: 4.3.0
+Standards-Version: 4.4.0.1
 
 Package: librsplib3
 Section: libs
@@ -158,3 +158,25 @@ Description: RSerPool Fractal Generator Service example input files
  .
  This package provides a set of input files for the Fractal Generator
  service.
+
+Package: rsplib-all
+Architecture: any
+Depends: libcpprspserver-dev (>= ${source:Version}),
+         libcpprspserver3 (= ${binary:Version}),
+         librsplib-dev (>= ${source:Version}),
+         librsplib3 (= ${binary:Version}),
+         rsplib-docs (>= ${source:Version}),
+         rsplib-fgp-cfgfiles (>= ${source:Version}),
+         rsplib-registrar (= ${binary:Version}),
+         rsplib-services (= ${binary:Version}),
+         rsplib-tools (= ${binary:Version}),
+         ${misc:Depends}
+Description: RSerPool implementation RSPLIB
+ Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+ RFC 5356) for a lightweight server pool and session management framework.
+ It provides highly available pool management (that is registration
+ handling and load distribution/balancing) by components called Registrar
+ and a client-side/server-side API for accessing the service of a pool.
+ .
+ This is the installation metapackage for the RSerPool implementation RSPLIB.
+ It installs all RSPLIB components.
