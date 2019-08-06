@@ -1,7 +1,7 @@
-/usr/bin/calcappclient
-/usr/bin/fractalpooluser
-/usr/bin/pingpongclient
-/usr/bin/scriptingclient
-/usr/bin/scriptingcontrol
-/usr/bin/scriptingserviceexample
-/usr/share/fractalpooluser/*.qm
+usr/bin/calcappclient
+usr/bin/fractalpooluser
+usr/bin/pingpongclient
+usr/bin/scriptingclient
+usr/bin/scriptingcontrol
+usr/bin/scriptingserviceexample
+usr/share/fractalpooluser/*.qm
