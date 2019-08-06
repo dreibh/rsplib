@@ -1,8 +1,7 @@
 Source: rsplib
 Section: net
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Maintainer: Thomas Dreibholz <dreibh@iem.uni-due.de>
 Homepage: https://www.uni-due.de/~be0001/rserpool/
 Build-Depends: cmake (>= 3.0.2) | cmake3,
                debhelper (>= 9),
