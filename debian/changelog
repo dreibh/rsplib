@@ -1,3 +1,9 @@
+rsplib (3.2.4~rc0-1ubuntu1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 07 Aug 2019 14:33:16 +0200
+
 rsplib (3.2.3-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
