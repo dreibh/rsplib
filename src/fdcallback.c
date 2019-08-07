@@ -103,7 +103,7 @@ void fdCallbackUpdate(struct FDCallback* fdCallback,
 }
 
 
-/* ###### FDCallback comparision function ################################ */
+/* ###### FDCallback comparison function ################################# */
 int fdCallbackComparison(const void* fdCallbackPtr1, const void* fdCallbackPtr2)
 {
    const struct FDCallback* fdCallback1 = (const struct FDCallback*)fdCallbackPtr1;

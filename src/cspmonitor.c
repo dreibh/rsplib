@@ -309,7 +309,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
 }
 
 
-/* ###### CSPObject comparision function ################################# */
+/* ###### CSPObject comparison function ################################## */
 static int cspObjectDisplayComparison(const void* cspObjectPtr1, const void* cspObjectPtr2)
 {
    const struct CSPObject* cspObject1 = getCSPObjectFromDisplayNode(cspObjectPtr1);
@@ -338,7 +338,7 @@ static int cspObjectDisplayComparison(const void* cspObjectPtr1, const void* csp
 }
 
 
-/* ###### CSPObject comparision function ################################# */
+/* ###### CSPObject comparison function ################################## */
 static int cspObjectStorageComparison(const void* cspObjectPtr1, const void* cspObjectPtr2)
 {
    const struct CSPObject* cspObject1 = (const struct CSPObject*)cspObjectPtr1;

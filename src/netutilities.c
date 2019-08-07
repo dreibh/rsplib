@@ -1102,7 +1102,7 @@ int addresscmp(const struct sockaddr* a1, const struct sockaddr* a2, const bool 
    }
 
    LOG_ERROR
-   fprintf(stdlog, "Unsupported address family comparision #%d / #%d\n",a1->sa_family,a2->sa_family);
+   fprintf(stdlog, "Unsupported address family comparison #%d / #%d\n",a1->sa_family,a2->sa_family);
    LOG_END_FATAL
    return(0);
 }

@@ -117,7 +117,7 @@ void timerStop(struct Timer* timer)
 }
 
 
-/* ###### Timer comparision function ##################################### */
+/* ###### Timer comparison function ###################################### */
 int timerComparison(const void* timerPtr1, const void* timerPtr2)
 {
    const struct Timer* timer1 = (const struct Timer*)timerPtr1;
