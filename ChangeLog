@@ -1,3 +1,69 @@
+commit c609751898de813a30285238d093907b46b31a23
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 16:18:01 2019 +0200
+
+    Some clean-up.
+
+commit d75bf4cc54dd7afb95c4756a606ce8c9c59f6bd9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 14:44:52 2019 +0200
+
+    Fixed Lintian warnings.
+
+commit 833e646ab81978ab3dc74836a0637477544cd36a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 14:31:04 2019 +0200
+
+    Fixed spelling errors.
+
+commit acd0a353a1b856c17b2aaaef8114da997766591c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 10:33:04 2019 +0200
+
+    Fixed some inconsistencies in different packaging files.
+
+commit 38113bc1d5b3fa33611ba5337f6099c1a770e8bc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 10:04:34 2019 +0200
+
+    Updated build scripts.
+
+commit 95dd792b9908b871ef5e93bc6ce280a36efcc614
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 16:50:36 2019 +0200
+
+    Removed leading / from Ubuntu/Debian install files.
+
+commit 5c3ad520e628b015f696f7a6c9d8e0bb35f7b285
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 15:36:33 2019 +0200
+
+    Fixed Lintian error.
+
+commit 85ffb1532eb813ab7b283b43baebb3bcdbdd1092
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 14:19:14 2019 +0200
+
+    Updated distinfo.
+
+commit daf3715113d8327ff4972601b357ebec2437d34a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 11:20:51 2019 +0200
+
+    Updated configuration file.
+
+commit 8b361acaf99c1ec9dc936b3d11840b96c00fec66
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 11:10:47 2019 +0200
+
+    Updated LSM entry.
+
+commit 6cc46f3a77b09ef4b79fb7bd407570fffc634765
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Aug 6 11:08:45 2019 +0200
+
+    New release rsplib-3.2.3.
+
 commit e842953de4c8e7281f2be09746c17b5db57779bf
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Aug 5 22:06:50 2019 +0200
