@@ -2,7 +2,7 @@ Name: rsplib
 Version: 3.2.3
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
-License: GPL-3.0
+License: GPL-3+
 Group: Applications/Internet
 URL: https://www.uni-due.de/~be0001/rserpool/
 Source: https://www.uni-due.de/~be0001/rserpool/download/%{name}-%{version}.tar.xz
