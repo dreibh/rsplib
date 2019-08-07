@@ -1,13 +1,9 @@
 #!/usr/bin/make -f
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-DPKG_EXPORT_BUILDFLAGS = 1
-include /usr/share/dpkg/buildflags.mk
-
 
 %:
 	dh $@ --buildsystem=cmake --parallel
-
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
