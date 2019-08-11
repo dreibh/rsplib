@@ -1,3 +1,27 @@
+commit 0474cf599842de9e90a7d6f6665ebc551b3db4c2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Aug 8 14:05:25 2019 +0200
+
+    Build script update.
+
+commit 13f6d932fb2861865c8676070f3ecb8f741351a1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 18:22:33 2019 +0200
+
+    Updated distinfo.
+
+commit a858135ed19a07700f801f02c63517ed08d1a377
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 18:22:03 2019 +0200
+
+    Updated LSM entry.
+
+commit 637b30c8e074c6f067ac335f35a39d17a4fff385
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 17:41:09 2019 +0200
+
+    New release rsplib-3.2.4.
+
 commit c609751898de813a30285238d093907b46b31a23
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Aug 7 16:18:01 2019 +0200
