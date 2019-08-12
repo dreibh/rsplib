@@ -2,7 +2,7 @@ Begin4
 Title:          rsplib
 Version:        3.2.4
 Entered-date:   2019-08-07
-Description:    rsplib is the Open Source implementation of the IETF Reliable
+Description:    RSPLIB is the Open Source implementation of the IETF Reliable
                 Server Pooling (RSerPool) architecture, a novel framework for
                 pool and session management.
                 The Reliable Server Pooling (RSerPool) architecture
