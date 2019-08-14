@@ -1,5 +1,0 @@
-#!/bin/sh
-
-PACKAGE=`cat Makefile | grep PORTNAME= | sed -e "s/PORTNAME=//g" | tr -d "\t"`
-
-shar Makefile distinfo pkg-descr pkg-plist >$PACKAGE.shar
