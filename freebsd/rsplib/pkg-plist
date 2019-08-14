@@ -94,6 +94,7 @@ man/man1/rspterminal.1.gz
 man/man1/scriptingclient.1.gz
 man/man1/scriptingcontrol.1.gz
 man/man1/scriptingserviceexample.1.gz
+share/doc/rsplib/Handbook.pdf
 share/fgpconfig/input-001.fsf
 share/fgpconfig/input-002.fsf
 share/fgpconfig/input-003.fsf
