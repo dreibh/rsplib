@@ -8,13 +8,12 @@ MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/download/
 
 MAINTAINER=	dreibh@iem.uni-due.de
 COMMENT=	RSerPool Framework and Example Applications
-EXTRACT_SUFX=   .tar.xz
 
 LICENSE=	GPLv3+
 LICENSE_FILE=   ${WRKSRC}/COPYING
 
-GNU_CONFIGURE=	yes
-USES=		cmake shebangfix
+USES=		tar:xz cmake shebangfix
+
 CMAKE_ARGS+=    -DCMAKE_INSTALL_MANDIR=${PREFIX}/man -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 SHEBANG_FILES=	src/scriptingserviceexample
 USE_LDCONFIG=	yes
