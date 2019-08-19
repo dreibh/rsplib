@@ -12,7 +12,7 @@ COMMENT=	RSerPool Framework and Example Applications
 LICENSE=	GPLv3+
 LICENSE_FILE=   ${WRKSRC}/COPYING
 
-USES=		tar:xz cmake shebangfix
+USES=		cmake qt:5 shebangfix tar:xz
 
 CMAKE_ARGS+=    -DCMAKE_INSTALL_MANDIR=${PREFIX}/man -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 SHEBANG_FILES=	src/scriptingserviceexample
