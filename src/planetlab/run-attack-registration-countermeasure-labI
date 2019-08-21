@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-registration-countermeasure-labI
 # Description: PE-based attack countermeasure (lab measurements)

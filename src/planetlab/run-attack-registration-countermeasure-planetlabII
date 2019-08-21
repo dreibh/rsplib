@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-registration-countermeasure-planetlabII
 # Description: PE-based attack countermeasure (PlanetLab measurements)

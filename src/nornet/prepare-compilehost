@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 #
 # Thomas Dreibholz's PlanetLab/NorNet Script Collection
 # Copyright (C) 2005-2019 by Thomas Dreibholz, dreibh@iem.uni-due.de
@@ -21,6 +21,9 @@
 #
 # Contact: dreibh@iem.uni-due.de
 #
+
+# Bash options:
+set -e
 
 . ./planetlab-config
 

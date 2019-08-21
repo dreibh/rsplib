@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-registration-localI
 # Description: PE-based attack (localhost measurements)

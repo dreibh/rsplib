@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-handleResolution-localI
 # Description: PU-based attack (localhost measurements)

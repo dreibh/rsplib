@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 nohup ./run-attack-handleResolution-countermeasure-planetlabI >hc1 2>&1 &
 sleep 23

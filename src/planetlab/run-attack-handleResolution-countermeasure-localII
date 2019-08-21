@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-handleResolution-countermeasure-localII
 # Description: PU-based attack countermeasure (localhost measurements)

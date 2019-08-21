@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CPU_OPT="-march=pentium4"
 SCTPLIB_OPT="--enable-shared --enable-static --disable-maintainer-mode --enable-sctp-over-udp"

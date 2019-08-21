@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-handleResolution-planetlabI
 # Description: PU-based attack (PlanetLab measurements)

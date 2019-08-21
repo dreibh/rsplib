@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        tos-pr-failure-localII
 # Description: Takeover Suggestion evaluation

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # $Id$
 #
 # Thomas Dreibholz's PlanetLab Script Collection

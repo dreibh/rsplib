@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # $Id: comon-host-selector 2279 2010-01-13 12:40:59Z dreibh $
 #
 # Thomas Dreibholz's PlanetLab Script Collection

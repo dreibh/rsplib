@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-registration-countermeasure-localI
 # Description: PE-based attack countermeasure (localhost measurements)

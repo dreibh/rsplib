@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        wp2-shutdown-localI
 # Description: Cookie-based failover

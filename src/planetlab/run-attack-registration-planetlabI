@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ###########################################################################
 # Name:        attack-registration-planetlabI
 # Description: PE-based attack (PlanetLab measurements)

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # $Id: install-binaries -1   $
 #
 # Thomas Dreibholz's PlanetLab/NorNet Script Collection
