@@ -21,4 +21,6 @@ SHEBANG_FILES=	src/scriptingserviceexample
 USE_LDCONFIG=	yes
 USE_QT=		buildtools_build core gui qmake widgets xml
 
+PLIST_SUB=      VERSION=${PORTVERSION}
+
 .include <bsd.port.mk>
