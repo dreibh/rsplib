@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Travis CI Scripts
 # Copyright (C) 2018-2019 by Thomas Dreibholz
@@ -18,76 +18,83 @@
 #
 # Contact: dreibh@iem.uni-due.de
 
-# Bash options:
+# Shell options:
 set -e
 
+# Simplified error handling
+die() {
+	printf 'FATAL: %s\n' "$*"
+	exit 1
+}
+info() {
+	printf 'FATAL: %s\n' "$?"
+}
 
-. `dirname $0`/get-container
-
-
-# ###### Linux as-is ########################################################
-if [ "${TRAVIS_OS_NAME}" == "linux" -a "${DOCKER}" == "" -a "${QEMU}" == "" ] ; then
-
-   # Nothing to be done here.
-   true
-
-
-# ###### Linux via Docker ###################################################
-elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${DOCKER}" != "" -a "${QEMU}" == "" ] ; then
-
-      # NOTE: Using tmpfs for pbuilder and mock!
-      # The build machine therefore needs a sufficient amount of RAM!
-      sudo docker rm -f ${CONTAINER} || true
-      sudo docker run -d \
-         --name ${CONTAINER} \
-         --tmpfs /var/cache/pbuilder:rw,exec,dev,size=4g \
-         --tmpfs /var/lib/mock:rw,exec,dev,size=4g \
-         --cap-add=SYS_ADMIN --cap-add=NET_ADMIN \
-         --security-opt apparmor:unconfined \
-         -v $(pwd):/travis -w /travis \
-         $DOCKER tail -f /dev/null
-      sudo docker ps
+# shellcheck source=ci/get-container
+. "$(dirname $0)/get-container"
 
 
-# ###### FreeBSD via QEMU ###################################################
-elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
-   if [ "${VARIANT}" != "" ] ; then
+# Linux as-is
+if [ "$TRAVIS_OS_NAME" = linux ] && [ -z "$DOCKER" ] && [ -z "$QEMU" ]; then
 
-      sudo mkdir -p /vservers/qemu-freebsd
-      sudo chown $USER:$USER /vservers/qemu-freebsd
-      mkdir -p /vservers/qemu-freebsd/mnt
-      cd /vservers/qemu-freebsd
+	 # Nothing to be done here.
+	 true
 
-      # ====== Download image ============================================
-      imageName="FreeBSD-${VARIANT}-amd64.raw"
-      if [ -e ${imageName}.xz -a ! -e ${imageName} ] ; then
-         echo "Extracting existing ${imageName}.xz ..."
-         xz -T0 -dk ${imageName}.xz
-      elif [ ! -e ${imageName}.xz -o ! -e ${imageName} ] ; then
-         imageURL="https://download.freebsd.org/ftp/releases/VM-IMAGES/${VARIANT}/amd64/Latest/${imageName}.xz"
-         echo "Downloading FreeBSD VM image from ${imageURL} ..."
-         curl "${imageURL}" | tee ${imageName}.xz.tmp | xz -T0 -d - >${imageName}
-         mv ${imageName}.xz.tmp ${imageName}.xz
-      fi
+# Linux via Docker
+elif [ "$TRAVIS_OS_NAME" = linux ] && [ -n "$DOCKER" ] && [ -n "$QEMU" ]; then
 
-      # ====== Download fuse-ufs2 ========================================
-      if [ ! -d fuse-ufs2/ ] ; then
-         echo "Downloading fuse-ufs2 ..."
-         git clone https://github.com/dreibh/fuse-ufs2 -b dreibh/ubuntu-disco-fix
-         # git clone https://github.com/mkatiyar/fuse-ufs2
-      fi
-   fi
+	# NOTE: Using tmpfs for pbuilder and mock!
+	# The build machine therefore needs a sufficient amount of RAM!
+	[ -e "$CONTAINER" ] && sudo docker rm -f "$CONTAINER"
+	sudo docker run -d \
+		--name "$CONTAINER" \
+		--tmpfs /var/cache/pbuilder:rw,exec,dev,size=4g \
+		--tmpfs /var/lib/mock:rw,exec,dev,size=4g \
+		--cap-add=SYS_ADMIN --cap-add=NET_ADMIN \
+		--security-opt apparmor:unconfined \
+		-v "$(pwd):/travis" -w /travis \
+	"$DOCKER" tail -f /dev/null
+	sudo docker ps
 
 
-# ###### MacOS X ############################################################
-elif [ "${TRAVIS_OS_NAME}" == "osx" ] ; then
+# FreeBSD via QEMU
+elif [ "$TRAVIS_OS_NAME" = linux ] && [ "$QEMU" = FreeBSD ]; then
+	if [ -n "$VARIANT" ]; then
+		sudo mkdir -p /vservers/qemu-freebsd
+		sudo chown "$USER:$USER" /vservers/qemu-freebsd
+		mkdir -p /vservers/qemu-freebsd/mnt
+		cd /vservers/qemu-freebsd || die "Unable to change directory in '/vservers/qemu-freebsd'"
 
-   # Nothing to be done here.
-   true
+		# ====== Download image ============================================
+		imageName="FreeBSD-$VARIANT-amd64.raw"
+		if [ -e "$imageName.xz" ] && [ ! -e "$imageName" ]; then
+			info "Extracting existing $imageName.xz ..."
+			xz -T0 -dk "$imageName.xz"
+		elif [ ! -e "$imageName.xz" ] || [ ! -e "$imageName" ]; then
+			imageURL="https://download.freebsd.org/ftp/releases/VM-IMAGES/$VARIANT/amd64/Latest/$imageName.xz"
+			info "Downloading FreeBSD VM image from $imageURL ..."
+			curl "$imageURL" | tee "$imageName.xz.tmp" | xz -T0 -d - ">$imageName"
+			mv "$imageName.xz.tmp" "$imageName.xz"
+		fi
+
+		# ====== Download fuse-ufs2 ========================================
+		if [ ! -d fuse-ufs2/ ]; then
+			info "Downloading fuse-ufs2 ..."
+			git clone https://github.com/dreibh/fuse-ufs2 -b dreibh/ubuntu-disco-fix
+			# git clone https://github.com/mkatiyar/fuse-ufs2
+		fi
+
+		unset imageName imageURL
+	fi
 
 
-# ###### Error ##############################################################
+# MacOS X
+elif [ "$TRAVIS_OS_NAME" = osx ]; then
+
+	# Nothing to be done here.
+	true
+
+# Error
 else
-   echo >&2 "ERROR: Invalid setting of TRAVIS_OS_NAME=${TRAVIS_OS_NAME}, DOCKER=${DOCKER}, QEMU=${QEMU}!"
-   exit 1
+	die "Invalid setting of TRAVIS_OS_NAME=$TRAVIS_OS_NAME, DOCKER=$DOCKER, QEMU=$QEMU!"
 fi
