@@ -28,10 +28,10 @@ RSerPool client/server API library for session management Reliable Server Poolin
 
 %build
 %cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1 .
-make %{?_smp_mflags}
+%cmake_build
 
 %install
-make DESTDIR=%{buildroot} install
+%cmake_install
 
 
 %package librsplib
