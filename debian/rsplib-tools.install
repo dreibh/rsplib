@@ -2,3 +2,7 @@ usr/bin/cspmonitor
 usr/bin/hsdump
 usr/bin/rspserver
 usr/bin/rspterminal
+usr/share/man/man1/cspmonitor.1
+usr/share/man/man1/hsdump.1
+usr/share/man/man1/rspserver.1
+usr/share/man/man1/rspterminal.1

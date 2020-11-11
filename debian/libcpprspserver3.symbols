@@ -1,4 +1,5 @@
 libcpprspserver.so.2 libcpprspserver2 #MINVER#
+* Build-Depends-Package: libcpprspserver-dev
  _ZN13TCPLikeServer13finishSessionE19EventHandlingResult@Base 2.7.8
  _ZN13TCPLikeServer14syncTimerEventEy@Base 2.7.8
  _ZN13TCPLikeServer15asyncTimerEventEy@Base 2.7.8
@@ -55,6 +56,7 @@ libcpprspserver.so.2 libcpprspserver2 #MINVER#
  (regex)"^_ZN17TCPLikeServerListC1E(m|j)i@Base$" 2.7.8
  (regex)"^_ZN17TCPLikeServerListC2E(m|j)i@Base$" 2.7.8
 libtdcppthread.so.2 libcpprspserver2 #MINVER#
+* Build-Depends-Package: libcpprspserver-dev
  _ZN7TDMutexC1Ev@Base 2.7.8
  _ZN7TDMutexC2Ev@Base 2.7.8
  _ZN7TDMutexD0Ev@Base 2.7.8

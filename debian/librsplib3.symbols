@@ -1,4 +1,5 @@
 librspcsp.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  createComponentAssociationArray@Base 2.7.8
  cspReporterDelete@Base 2.7.8
  cspReporterHandleTimerDuringRegistrarSearch@Base 2.7.8
@@ -6,6 +7,7 @@ librspcsp.so.2 librsplib2 #MINVER#
  deleteComponentAssociationArray@Base 2.7.8
  getComponentLocation@Base 2.7.8
 librspdispatcher.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  dispatcherDelete@Base 2.7.8
  dispatcherEventLoop@Base 2.7.8
  dispatcherGetPollParameters@Base 2.7.8
@@ -25,6 +27,7 @@ librspdispatcher.so.2 librsplib2 #MINVER#
  timerStart@Base 2.7.8
  timerStop@Base 2.7.8
 librsphsmgt.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  PoolPolicies_SimpleRedBlackTree@Base 2.7.8
  PoolPolicyArray_SimpleRedBlackTree@Base 2.7.8
  SeqNumberStart@Base 2.7.8
@@ -292,6 +295,7 @@ librsphsmgt.so.2 librsplib2 #MINVER#
  weightedRoundRobinPrepareSelection_SimpleRedBlackTree@Base 2.7.8
  weightedRoundRobinUpdatePoolElementNode_SimpleRedBlackTree@Base 2.7.8
 librsplib.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  addSession@Base 2.7.8
  asapInstanceDelete@Base 2.7.8
  asapInstanceDeregister@Base 2.7.8
@@ -417,6 +421,7 @@ librsplib.so.2 librsplib2 #MINVER#
  sessionStorageUpdateSession@Base 2.7.8
  waitForRead@Base 2.7.8
 librspmessaging.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  getSpace@Base 2.7.8
  rserpoolMessage2Packet@Base 2.7.8
  rserpoolMessageClearAll@Base 2.7.8
@@ -426,12 +431,14 @@ librspmessaging.so.2 librsplib2 #MINVER#
  rserpoolMessageSend@Base 2.7.8
  rserpoolPacket2Message@Base 2.7.8
 libtdbreakdetector.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  breakDetected@Base 2.7.8
  breakDetector@Base 2.7.8
  installBreakDetector@Base 2.7.8
  sendBreak@Base 2.7.8
  uninstallBreakDetector@Base 2.7.8
 libtdloglevel.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  beginLogging@Base 2.7.8
  finishLogging@Base 2.7.8
  gLogLevel@Base 2.7.8
@@ -443,6 +450,7 @@ libtdloglevel.so.2 librsplib2 #MINVER#
  loggingMutexUnlock@Base 2.7.8
  setLogColor@Base 2.7.8
 libtdnetutilities.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  address2string@Base 2.7.8
  addresscmp@Base 2.7.8
  bindplus@Base 2.7.8
@@ -488,6 +496,7 @@ libtdnetutilities.so.2 librsplib2 #MINVER#
  tuneSCTP@Base 2.7.8
  unpack_sockaddr@Base 2.7.8
 libtdrandomizer.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  random16@Base 2.7.8
  random32@Base 2.7.8
  random64@Base 2.7.8
@@ -495,6 +504,7 @@ libtdrandomizer.so.2 librsplib2 #MINVER#
  randomDouble@Base 2.7.8
  randomExpDouble@Base 2.7.8
 libtdstorage.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  doubleLinkedRingListAddAfter@Base 2.7.8
  doubleLinkedRingListAddHead@Base 2.7.8
  doubleLinkedRingListAddTail@Base 2.7.8
@@ -546,6 +556,7 @@ libtdstorage.so.2 librsplib2 #MINVER#
  simpleRedBlackTreeRemove@Base 2.7.8
  simpleRedBlackTreeVerify@Base 2.7.8
 libtdstringutilities.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  getNextWord@Base 2.7.8
  memdup@Base 2.7.8
  safestrcat@Base 2.7.8
@@ -553,6 +564,7 @@ libtdstringutilities.so.2 librsplib2 #MINVER#
  strindex@Base 2.7.8
  strrindex@Base 2.7.8
 libtdtagitem.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  tagListAllocate@Base 2.7.8
  tagListDuplicate@Base 2.7.8
  tagListDuplicateFilter@Base 2.7.8
@@ -564,6 +576,7 @@ libtdtagitem.so.2 librsplib2 #MINVER#
  tagListPrint@Base 2.7.8
  tagListSetData@Base 2.7.8
 libtdthreadsafety.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  threadSafetyDelete@Base 2.7.8
  threadSafetyLock@Base 2.7.8
  threadSafetyNew@Base 2.7.8
@@ -575,6 +588,7 @@ libtdthreadsafety.so.2 librsplib2 #MINVER#
  threadSignalUnlock@Base 2.7.8
  threadSignalWait@Base 2.7.8
 libtdtimeutilities.so.2 librsplib2 #MINVER#
+* Build-Depends-Package: librsplib-dev
  averageWeightedStatValue@Base 2.7.8
  getMicroTime@Base 2.7.8
  initWeightedStatValue@Base 2.7.8
