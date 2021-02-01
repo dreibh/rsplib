@@ -43,15 +43,9 @@
 #include <sys/utsname.h>
 
 
-// #ifdef HAVE_STDERR_FILEPTR
-// /* stderr is of type FILE* */
-FILE** gStdLog = &stderr;
-// #else
-// /* stderr is a macro returning standard error FILE* */
-// static FILE* _stderr  = stderr;
-// FILE**        gStdLog = &_stderr;
-// #endif
-
+/* stderr is a macro returning standard error FILE* */
+static FILE*          stdLogPtr = NULL;
+FILE**                gStdLog   = &stdLogPtr;
 
 unsigned int          gLogLevel      = LOGLEVEL_ERROR;
 static bool           gColorMode     = true;
@@ -127,6 +121,9 @@ void beginLogging()
    struct utsname hostInfo;
 
    threadSafetyNew(&gLogMutex, "_LogPrinter_");
+   if(*gStdLog == NULL) {
+      *gStdLog = stderr;   /* No log file -> use stderr */
+   }
    if((gCloseStdLog) && (ftell(*gStdLog) > 0)) {
       fputs("\n#########################################################################################\n\n",*gStdLog);
    }
