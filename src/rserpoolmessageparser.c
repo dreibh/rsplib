@@ -675,11 +675,14 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
                message->Error = RSPERR_INVALID_VALUE;
                return(false);
             }
-            poolPolicySettings->PolicyType = ntohl(plu->pp_plu_policy);
-            poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntohl(plu->pp_plu_load);
+            poolPolicySettings->PolicyType      = ntohl(plu->pp_plu_policy);
+            poolPolicySettings->Weight          = 0;
+            poolPolicySettings->Load            = ntohl(plu->pp_plu_load);
+            poolPolicySettings->LoadDegradation = ntohl(plu->pp_plu_loaddeg);
             LOG_VERBOSE3
-            fprintf(stdlog, "Scanned policy PLU, load=$%06x\n",poolPolicySettings->Load);
+            fprintf(stdlog, "Scanned policy PLU, load=$%06x loaddeg=$%06x\n",
+                    poolPolicySettings->Load,
+                    poolPolicySettings->LoadDegradation);
             LOG_END
          }
          else {

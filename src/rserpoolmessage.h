@@ -201,6 +201,7 @@ struct rserpool_policy_priority_leastused
 {
    uint32_t pp_plu_policy;
    uint32_t pp_plu_load;
+   uint32_t pp_plu_loaddeg;
 } __attribute__((packed));
 
 struct rserpool_policy_priority_leastused_degradation

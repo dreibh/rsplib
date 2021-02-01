@@ -435,8 +435,9 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(plu == NULL) {
              return(false);
           }
-          plu->pp_plu_policy = htonl(poolPolicySettings->PolicyType);
-          plu->pp_plu_load   = htonl(poolPolicySettings->Load);
+          plu->pp_plu_policy  = htonl(poolPolicySettings->PolicyType);
+          plu->pp_plu_load    = htonl(poolPolicySettings->Load);
+          plu->pp_plu_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       case PPT_PRIORITY_LEASTUSED_DEGRADATION:
           plud = (struct rserpool_policy_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_priority_leastused_degradation));
