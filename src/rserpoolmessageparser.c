@@ -910,11 +910,14 @@ static bool scanPolicyParameter(struct RSerPoolMessage*    message,
             if(rplu == NULL) {
                return(false);
             }
-            poolPolicySettings->PolicyType = ntohl(rplu->pp_rplu_policy);
-            poolPolicySettings->Weight     = 0;
-            poolPolicySettings->Load       = ntohl(rplu->pp_rplu_load);
+            poolPolicySettings->PolicyType      = ntohl(rplu->pp_rplu_policy);
+            poolPolicySettings->Weight          = 0;
+            poolPolicySettings->Load            = ntohl(rplu->pp_rplu_load);
+            poolPolicySettings->LoadDegradation = ntohl(rplu->pp_rplu_loaddeg);
             LOG_VERBOSE3
-            fprintf(stdlog, "Scanned policy PLU, load=$%06x\n",poolPolicySettings->Load);
+            fprintf(stdlog, "Scanned policy RPLU, load=$%06x loaddeg=$%06x\n",
+                    poolPolicySettings->Load,
+                    poolPolicySettings->LoadDegradation);
             LOG_END
          }
          else {

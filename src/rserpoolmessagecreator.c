@@ -470,8 +470,9 @@ static bool createPolicyParameter(struct RSerPoolMessage*          message,
           if(rplu == NULL) {
              return(false);
           }
-          rplu->pp_rplu_policy = htonl(poolPolicySettings->PolicyType);
-          rplu->pp_rplu_load   = htonl(poolPolicySettings->Load);
+          rplu->pp_rplu_policy  = htonl(poolPolicySettings->PolicyType);
+          rplu->pp_rplu_load    = htonl(poolPolicySettings->Load);
+          rplu->pp_rplu_loaddeg = htonl(poolPolicySettings->LoadDegradation);
        break;
       case PPT_RANDOMIZED_PRIORITY_LEASTUSED_DEGRADATION:
           rplud = (struct rserpool_policy_randomized_priority_leastused_degradation*)getSpace(message, sizeof(struct rserpool_policy_randomized_priority_leastused_degradation));
