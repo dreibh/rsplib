@@ -1,3 +1,57 @@
+commit b70a297419eb2b9fa99eaa5c3c53b90155ff5793
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 4 13:36:52 2021 +0100
+
+    Version bump.
+
+commit d31ef2ebcfd64072f6a2d13b97b62685cde44407
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Feb 2 00:41:32 2021 +0100
+
+    Bugfix: fixed issues with log file handling due to stderr being a macro.
+
+commit c38e91a451d88e011ed972309ebf197340e02735
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 1 13:48:42 2021 +0100
+
+    Version bump.
+
+commit a8e72f5d400bc4b207269481391676c46ff53ea6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 1 13:45:08 2021 +0100
+
+    Header updates.
+
+commit f56dae79b9517164a227b97b060f6b6e843561d4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 1 13:41:01 2021 +0100
+
+    Bugfix: Randomized Priority Least Used (RPLU) pool policy had loaddeg set to 0 as well.
+
+commit c4df08e082055402638245dc9d3820614c66a079
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 1 13:36:20 2021 +0100
+
+    Bugfix: Priority Least Used (PLU) pool policy had loaddeg always set to 0, due to missing field handling of loaddeg.
+
+commit 73420e521502e4180ebd1079ea52f2ba1fed3ada
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jan 30 07:40:00 2021 +0100
+
+    Updated Travis CI configuration
+
+commit caadff940b60d37b453aa694245c873f9cb113cc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 13 19:47:56 2020 +0100
+
+    Updated LSM entry.
+
+commit f7181ecb667d3b7e3d2aed713bb8c49f96d6952b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 13 19:00:39 2020 +0100
+
+    New release rsplib-3.2.6.
+
 commit b42c79e42de2c30e5f1fb4d8ac2753202fa10bbd
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Fri Nov 13 10:24:50 2020 +0100

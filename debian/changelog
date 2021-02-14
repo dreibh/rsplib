@@ -1,9 +1,9 @@
-rsplib (3.2.7~rc1-1ubuntu1) hirsute; urgency=medium
+rsplib (3.2.7-1ubuntu1) hirsute; urgency=medium
 
   * New upstream release.
   * debian/control: Updated standards version to 4.5.1.0.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 02 Feb 2021 23:28:34 +0100
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 14 Feb 2021 17:41:21 +0100
 
 rsplib (3.2.6-1ubuntu1) hirsute; urgency=medium
 
