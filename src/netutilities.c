@@ -55,7 +55,7 @@
 #include <netdb.h>
 #include <math.h>
 #include <assert.h>
-#ifdef SOLARIS
+#if defined(__sun) && defined(__SVR4)
 #include <sys/sockio.h>
 #ifndef CMSG_SPACE
 #define CMSG_SPACE(len) (_CMSG_HDR_ALIGN(sizeof(struct cmsghdr)) + _CMSG_DATA_ALIGN(len))
@@ -227,7 +227,7 @@ int ext_poll(struct pollfd* fdlist, long unsigned int count, int time)
 #endif
 
 
-#ifdef LINUX
+#ifdef __linux__
 #define LINUX_PROC_IPV6_FILE "/proc/net/if_inet6"
 #ifdef HAVE_KERNEL_SCTP
 
@@ -914,9 +914,9 @@ static unsigned int getScopeIPv4(const uint32_t* address)
 static unsigned int getScopeIPv6(const struct in6_addr* address)
 {
    if(IN6_IS_ADDR_V4MAPPED(address)) {
-#if defined SOLARIS
+#if defined(__sun) && defined(__SVR4)
       return(getScopeIPv4(&address->_S6_un._S6_u32[3]));
-#elif defined LINUX
+#elif defined(__linux__)
       return(getScopeIPv4(&address->s6_addr32[3]));
 #else
       return(getScopeIPv4(&address->__u6_addr.__u6_addr32[3]));
@@ -1412,7 +1412,7 @@ int sendtoplus(int                      sockfd,
                           (struct sockaddr*)toaddrs,
                           (toaddrs != NULL) ? getSocklen((struct sockaddr*)toaddrs) : 0);
    }
-#ifdef LINUX
+#ifdef __linux__
 #warning Using lksctp SCTP_EOF/SCTP_ABORT shutdown work-around for TCP-like sockets!
    /* LK-SCTP refuses SCTP_EOF and SCTP_ABORT on TCP-like socket.
       => using ext_shutdown() instead! */
@@ -1820,7 +1820,7 @@ bool setReusable(int sd, int on)
    if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0) {
       return(false);
    }
-#if !defined (LINUX) && !defined (SOLARIS)
+#if !defined (__linux__) && !(defined(__sun) && defined(__SVR4))
    if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
       return(false);
    }
@@ -1855,12 +1855,12 @@ size_t getladdrsplus(const int              fd,
                      union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses = NULL;
-#ifdef SOLARIS
+#if defined(__sun) && defined(__SVR4)
    int addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
 #else
    int addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
 #endif
-#ifdef LINUX
+#ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
    union sockaddr_union socketName;
    socklen_t            socketNameLen;
@@ -1872,7 +1872,7 @@ size_t getladdrsplus(const int              fd,
    int i;
 
    if(addrs > 0) {
-#ifdef LINUX
+#ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() INADDR_ANY bugfix for lksctp!
       if((addrs == 1) &&
@@ -1899,7 +1899,7 @@ size_t getladdrsplus(const int              fd,
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
 
-#ifdef LINUX
+#ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() port 0 bugfix for lksctp!
       if(getPort(&(*addressArray)[0].sa) == 0) {
@@ -1941,7 +1941,7 @@ size_t getpaddrsplus(const int              fd,
                      union sockaddr_union** addressArray)
 {
    struct sockaddr* packedAddresses = NULL;
-#ifdef SOLARIS
+#if defined(__sun) && defined(__SVR4)
    int addrs = sctp_getpaddrs(fd, assocID, (void **)&packedAddresses);
 #else
    int addrs = sctp_getpaddrs(fd, assocID, &packedAddresses);
@@ -1958,7 +1958,7 @@ size_t getpaddrsplus(const int              fd,
 /* ###### Send SCTP ABORT ################################################ */
 int sendabort(int sockfd, sctp_assoc_t assocID)
 {
-#ifdef SOLARIS
+#if defined(__sun) && defined(__SVR4)
    /* The Solaris API has no SCTP_ABORT. Instead, it is a regular flag. */
    return(sendtoplus(sockfd, NULL, 0,
                      MSG_ABORT,
@@ -1984,7 +1984,7 @@ int sendshutdown(int sockfd, sctp_assoc_t assocID)
       /* FreeBSD seems to ignore SCTP_EOF on TCP-like socket! */
       return(ext_shutdown(sockfd, 2));
    }
-#ifdef SOLARIS
+#if defined(__sun) && defined(__SVR4)
    /* The Solaris API has no SCTP_ABORT. Instead, it is a regular flag. */
    return(sendtoplus(sockfd, NULL, 0,
                      MSG_EOF,

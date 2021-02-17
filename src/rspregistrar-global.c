@@ -393,7 +393,7 @@ static void peerListNodeDisposer(struct ST_CLASS(PeerListNode)* peerListNode,
 
 
 #ifdef ENABLE_REGISTRAR_STATISTICS
-#ifdef LINUX
+#if defined(__LINUX__)
 /* ###### Get system uptime (in microseconds) ############################ */
 static unsigned long long getUptime()
 {
@@ -478,7 +478,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
    int                      bzerror;
    const char*              header;
    char                     str[1024];
-#ifdef LINUX
+#if defined(__LINUX__)
    unsigned long long       startupTime = 0;
    unsigned long long       uptime;
 #endif
@@ -499,7 +499,7 @@ static void statisticsCallback(struct Dispatcher* dispatcher,
       registrar->Stats.StatsStartTime = now;
    }
 
-#ifdef LINUX
+#if defined(__LINUX__)
    if( (getProcessTimes(&startupTime, &userTime, &systemTime)) &&
        ( (uptime = getUptime()) > 0 ) ) {
 
