@@ -31,10 +31,10 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#ifdef FreeBSD
+#if defined(__FreeBSD__)
 #include <machine/endian.h>
 #endif
-#ifdef DARWIN
+#if defined(__APPLE__)
 #include <machine/endian.h>
 #endif
 

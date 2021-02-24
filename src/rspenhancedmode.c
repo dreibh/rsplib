@@ -1318,7 +1318,7 @@ ssize_t rsp_recvmsg(int                    sd,
          else {
             if(rserpoolSocket->WaitingForFirstMsg) {
                rserpoolSocket->WaitingForFirstMsg = false;
-#ifdef LINUX
+#if defined(__LINUX__)
 #ifdef HAVE_KERNEL_SCTP
 #warning Using lksctp fix for possible bad primary path after connectx()!
 /*
