@@ -1,0 +1,86 @@
+#!/bin/bash -e
+
+PREFIX="CalcAppTest1"
+
+SERVER_ARGS="-policy LeastUsed -capcapacity=1000000 -capmaxjobs=4 -capcookiemaxcalculations=10000000 -capcookiemaxtime=10"
+CLIENT_ARGS="-jobinterval=3 -jobsize=1000000"
+
+NUM_PRs=1
+NUM_PEs=1
+NUM_PUs=16
+
+if [ "$1" == "startup" ] ; then
+   i=1 ; while [ $i -le ${NUM_PRs} ] ; do
+     echo -n "PR ${i}: "
+     ./rspregistrar >${PREFIX}-PR-${i}.log 2>&1 &
+     echo "$!" >${PREFIX}-PR-${i}.pid
+     cat ${PREFIX}-PR-${i}.pid
+     let i=$i+1
+   done
+
+   i=1 ; while [ $i -le ${NUM_PEs} ] ; do
+     echo -n "PE ${i}: "
+     ./rspserver \
+        -calcapp ${SERVER_ARGS} \
+        -capobject="scenario.calcapppoolelement[${i}]" \
+        -capscalar="${PREFIX}-PE-${i}.sca" \
+        -capvector="${PREFIX}-PE-${i}.vec" \
+           >${PREFIX}-PE-${i}.log 2>&1 &
+     echo "$!" >${PREFIX}-PE-${i}.pid
+     cat ${PREFIX}-PE-${i}.pid
+     let i=$i+1
+   done
+
+elif [ "$1" == "shutdown" ] ; then
+   PU_PID_FILES=`find . -maxdepth 1 -name "${PREFIX}-PU-*.pid"`
+   for pidFile in ${PU_PID_FILES} ; do
+      pid=`cat ${pidFile}`
+      if ! kill -INT ${pid} ; then
+         echo "${pid} is already gone (${pidFile})"
+      fi
+      rm -f ${pidFile}
+   done
+
+   PE_PID_FILES=`find . -maxdepth 1 -name "${PREFIX}-PE-*.pid"`
+   for pidFile in ${PE_PID_FILES} ; do
+      pid=`cat ${pidFile}`
+      if ! kill -INT ${pid} ; then
+         echo "${pid} is already gone (${pidFile})"
+      fi
+      rm -f ${pidFile}
+   done
+
+   PR_PID_FILES=`find . -maxdepth 1 -name "${PREFIX}-PR-*.pid"`
+   for pidFile in ${PR_PID_FILES} ; do
+      pid=`cat ${pidFile}`
+      if ! kill -INT ${pid} ; then
+         echo "${pid} is already gone (${pidFile})"
+      fi
+      rm -f ${pidFile}
+   done
+
+elif [ "$1" == "killall" ] ; then
+   killall -KILL rspserver || true
+   killall -KILL rspregistrar || true
+   killall -KILL calcappclient || true
+
+elif [ "$1" == "run" ] ; then
+   PE_PID_FILES=`find . -maxdepth 1 -name "${PREFIX}-PE-*.pid"`
+
+   i=1 ; while [ $i -le ${NUM_PUs} ] ; do
+     echo -n "PU ${i}: "
+     calcappclient ${CLIENT_ARGS} \
+        -object="scenario.calcapppooluser[${objectID}]" \
+        -scalar="${PREFIX}-PU-${objectID}.sca" \
+        -vector="${PREFIX}-PU-${objectID}.vec" \
+           >${PREFIX}-PU-${i}.log 2>&1 &
+
+     echo "$!" >${PREFIX}-PU-${i}.pid
+     cat ${PREFIX}-PU-${i}.pid
+     let i=$i+1
+   done
+
+else
+   echo >&2 "Usage: $0 startup|shutdown|killall|run"
+   exit 1
+fi
