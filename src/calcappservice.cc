@@ -483,14 +483,12 @@ void CalcAppServer::handleCalcAppKeepAlive(rserpool_session_t    sessionID,
                                            const size_t          received)
 {
    CalcAppServerJob* job = findJob(sessionID, ntohl(message->JobID));
-   if(job != NULL) {
-      sendCalcAppKeepAliveAck(job);
-   }
-   else {
-      cerr << "ERROR: CalcAppKeepAlive for wrong job!" << endl;
-      removeJob(job);
+   if(job == NULL) {
+      // The CalcAppKeepAlive may be for a job that just finished before. Then,
+      // it will not be in the list. In this case, just do nothing.
       return;
    }
+   sendCalcAppKeepAliveAck(job);
 }
 
 
@@ -539,15 +537,13 @@ void CalcAppServer::handleCalcAppKeepAliveAck(rserpool_session_t    sessionID,
                                               const size_t          received)
 {
    CalcAppServerJob* job = findJob(sessionID, ntohl(message->JobID));
-   if(job != NULL) {
-      job->KeepAliveTimeoutTimeStamp      = ~0ULL;
-      job->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
-   }
-   else {
-      cerr << "ERROR: CalcAppKeepAliveAck for wrong job!" << endl;
-      removeJob(job);
+   if(job == NULL) {
+      // The CalcAppKeepAliveAck may be for a job that just finished before. Then,
+      // it will not be in the list. In this case, just do nothing.
       return;
    }
+   job->KeepAliveTimeoutTimeStamp      = ~0ULL;
+   job->KeepAliveTransmissionTimeStamp = getMicroTime() + KeepAliveTransmissionInterval;
 }
 
 
