@@ -2,7 +2,10 @@
 
 PREFIX="CalcAppTest1"
 
+REGISTRAR="valgrind ./rspregistrar"
+SERVER="./rspserver"
 SERVER_ARGS="-policy LeastUsed -capcapacity=1000000 -capmaxjobs=4 -capcookiemaxcalculations=10000000 -capcookiemaxtime=10"
+CLIENT="./calcappclient"
 CLIENT_ARGS="-jobinterval=3 -jobsize=1000000"
 
 NUM_PRs=1
@@ -10,9 +13,12 @@ NUM_PEs=1
 NUM_PUs=16
 
 if [ "$1" == "startup" ] ; then
+   make
+   rm -f core core* vgcore*
+
    i=1 ; while [ $i -le ${NUM_PRs} ] ; do
      echo -n "PR ${i}: "
-     ./rspregistrar >${PREFIX}-PR-${i}.log 2>&1 &
+     ${REGISTRAR} >${PREFIX}-PR-${i}.log 2>&1 &
      echo "$!" >${PREFIX}-PR-${i}.pid
      cat ${PREFIX}-PR-${i}.pid
      let i=$i+1
@@ -20,7 +26,7 @@ if [ "$1" == "startup" ] ; then
 
    i=1 ; while [ $i -le ${NUM_PEs} ] ; do
      echo -n "PE ${i}: "
-     ./rspserver \
+     ${SERVER} \
         -calcapp ${SERVER_ARGS} \
         -capobject="scenario.calcapppoolelement[${i}]" \
         -capscalar="${PREFIX}-PE-${i}.sca" \
@@ -69,10 +75,10 @@ elif [ "$1" == "run" ] ; then
 
    i=1 ; while [ $i -le ${NUM_PUs} ] ; do
      echo -n "PU ${i}: "
-     calcappclient ${CLIENT_ARGS} \
-        -object="scenario.calcapppooluser[${objectID}]" \
-        -scalar="${PREFIX}-PU-${objectID}.sca" \
-        -vector="${PREFIX}-PU-${objectID}.vec" \
+     ${CLIENT} ${CLIENT_ARGS} \
+        -object="scenario.calcapppooluser[${i}]" \
+        -scalar="${PREFIX}-PU-${i}.sca" \
+        -vector="${PREFIX}-PU-${i}.vec" \
            >${PREFIX}-PU-${i}.log 2>&1 &
 
      echo "$!" >${PREFIX}-PU-${i}.pid
