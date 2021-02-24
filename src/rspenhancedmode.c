@@ -1063,8 +1063,11 @@ int rsp_forcefailover_tags(int                sd,
                  "Handle resolution did not find new pool element. Waiting %lluus...\n",
                  rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
          LOG_END
-         usleep((unsigned int)rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
          errno = ENOENT;
+         // Release lock before waiting with usleep()!
+         threadSafetyUnlock(&rserpoolSocket->Mutex);
+         usleep((unsigned int)rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
+         return(false);
       }
       else {
          LOG_WARNING
