@@ -8,13 +8,14 @@ URL: https://www.uni-due.de/~be0001/rserpool/
 Source: https://www.uni-due.de/~be0001/rserpool/download/%{name}-%{version}.tar.xz
 
 AutoReqProv: on
+BuildRequires: bzip2-devel
 BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
-BuildRequires: bzip2-devel
 BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
+BuildRequires: valgrind
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 # TEST ONLY:

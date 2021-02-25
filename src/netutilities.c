@@ -1856,10 +1856,11 @@ size_t getladdrsplus(const int              fd,
 {
    struct sockaddr* packedAddresses = NULL;
 #if defined(__sun) && defined(__SVR4)
-   int addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
+   int              addrs = sctp_getladdrs(fd, assocID, (void**)&packedAddresses);
 #else
-   int addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
+   int              addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
 #endif
+   int              i;
 #ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
    union sockaddr_union socketName;
@@ -1869,9 +1870,22 @@ size_t getladdrsplus(const int              fd,
    size_t               j;
 #endif
 #endif
-   int i;
 
    if(addrs > 0) {
+#ifdef HAVE_VALGRIND_MEMCHECK_H
+      struct sockaddr* a = packedAddresses;
+      for(i = 0;i < addrs;i++) {
+         if(a->sa_family == AF_INET) {
+            VALGRIND_MAKE_MEM_DEFINED(a, sizeof(struct sockaddr_in));
+            a = (struct sockaddr*)((long)a + (long)sizeof(struct sockaddr_in));
+         }
+         else if(a->sa_family == AF_INET6) {
+            VALGRIND_MAKE_MEM_DEFINED(a, sizeof(struct sockaddr_in6));
+            a = (struct sockaddr*)((long)a + (long)sizeof(struct sockaddr_in6));
+         }
+      }
+#endif
+
 #ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() INADDR_ANY bugfix for lksctp!

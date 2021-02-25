@@ -173,6 +173,12 @@ ADD_DEFINITIONS(-DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE)
 # REQUIREMENTS
 #############################################################################
 
+# ###### Valgrind ###########################################################
+CHECK_INCLUDE_FILE("valgrind/memcheck.h" HAVE_VALGRIND_MEMCHECK_H)
+IF(HAVE_VALGRIND_MEMCHECK_H)
+   ADD_DEFINITIONS(-DHAVE_VALGRIND_MEMCHECK_H)
+ENDIF()
+
 # ###### Threads ############################################################
 FIND_PACKAGE(Threads REQUIRED)
 
