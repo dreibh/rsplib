@@ -35,6 +35,12 @@
 #include "componentstatusreporter.h"
 #include "simpleredblacktree.h"
 
+#include "rserpoolmessage.h"
+#include "calcapppackets.h"
+#include "fractalgeneratorpackets.h"
+#include "pingpongpackets.h"
+#include "scriptingpackets.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
@@ -80,6 +86,22 @@ static void getDescriptionForID(const uint64_t id,
 }
 
 
+struct ValueItem {
+   uint32_t    Value;
+   const char* String;
+};
+
+const struct ValueItem PPIDTable[] = {
+   { 0x00000000,   "Data"      },
+   { PPID_ENRP,    "ENRP"      },
+   { PPID_ASAP,    "ASAP"      },
+   { PPID_CALCAPP, "CalcApp"   },
+   { PPID_FGP,     "FractGen"  },
+   { PPID_SP,      "Scripting" },
+   { PPID_PPP,     "PingPong"  }
+};
+
+
 /* ###### Get description for protocol ################################### */
 static void getDescriptionForProtocol(const uint16_t protocolID,
                                       const uint32_t ppid,
@@ -89,19 +111,18 @@ static void getDescriptionForProtocol(const uint16_t protocolID,
    char ppidString[32];
    char protocolString[32];
 
-   switch(ppid) {
-      case 0x0:
-         safestrcpy((char*)&ppidString, "Data", sizeof(ppidString));
-       break;
-      case 0xb:
-         safestrcpy((char*)&ppidString, "ASAP", sizeof(ppidString));
-        break;
-      case 0xc:
-         safestrcpy((char*)&ppidString, "ENRP", sizeof(ppidString));
-        break;
-      default:
-         snprintf((char*)&ppidString, sizeof(ppidString), "$%08x", ppid);
-       break;
+   const char* ppidValue = NULL;
+   for(unsigned int i = 0; i < sizeof(PPIDTable) / sizeof(struct ValueItem); i++) {
+      if(PPIDTable[i].Value == ppid) {
+         ppidValue = PPIDTable[i].String;
+         break;
+      }
+   }
+   if(ppidValue != NULL) {
+      safestrcpy((char*)&ppidString, ppidValue, sizeof(ppidString));
+   }
+   else {
+      snprintf((char*)&ppidString, sizeof(ppidString), "$%08x", ppid);
    }
 
    switch(protocolID) {
@@ -118,6 +139,7 @@ static void getDescriptionForProtocol(const uint16_t protocolID,
          snprintf((char*)&protocolString, sizeof(protocolString), "$%04x", protocolID);
        break;
    }
+
    snprintf(buffer, bufferSize, "%s%s%s",
             ppidString,
             (ppidString[0] != 0x00) ? "/" : "",
@@ -295,7 +317,7 @@ static void cspObjectDisplayPrint(const void* cspObjectPtr, FILE* fd)
          getDescriptionForProtocol(cspObject->AssociationArray[i].ProtocolID,
                                    cspObject->AssociationArray[i].PPID,
                                    (char*)&protocolString, sizeof(protocolString));
-         fprintf(fd, "\n   -> %s %s", idString, protocolString);
+         fprintf(fd, "\n   -> %s %-16s", idString, protocolString);
          if(cspObject->AssociationArray[i].Duration != ~0ULL) {
             h = (unsigned int)(cspObject->AssociationArray[i].Duration / (3600ULL * 1000000ULL));
             m = (unsigned int)((cspObject->AssociationArray[i].Duration / (60ULL * 1000000ULL)) % 60);
