@@ -616,7 +616,7 @@ int rsp_register_tags(int                        sd,
          threadSafetyUnlock(&rserpoolSocket->Mutex);
          return(-1);
       }
-      threadSafetyNew(&rserpoolSocket->PoolElement->Mutex, "RspPoolElement");
+      threadSafetyNew(&rserpoolSocket->PoolElement->Mutex, "PoolElement");
       poolHandleNew(&rserpoolSocket->PoolElement->Handle, poolHandle, poolHandleSize);
       timerNew(&rserpoolSocket->PoolElement->ReregistrationTimer,
                &gDispatcher,
