@@ -640,7 +640,7 @@ static void tryNextBlock(struct RegistrarTable*         registrarTable,
                LOG_WARNING
                fputs("Connection to registrar ",  stdlog);
                transportAddressBlockPrint(transportAddressBlock, stdlog);
-               fputs(" failed\n",  stdlog);
+               fprintf(stdlog, " failed: %s\n",  strerror(errno));
                LOG_END
             }
             else {
