@@ -5,9 +5,9 @@ set -e
 PREFIX="CalcAppTest1"
 
 REGISTRAR="valgrind ./rspregistrar"
-SERVER="./rspserver"
+SERVER="valgrind --tool=helgrind ./rspserver"
 SERVER_ARGS="-policy LeastUsed -capcapacity=1000000 -capmaxjobs=4 -capcookiemaxcalculations=10000000 -capcookiemaxtime=10"
-CLIENT="./calcappclient"
+CLIENT="valgrind --tool=helgrind ./calcappclient"
 CLIENT_ARGS="-jobinterval=3 -jobsize=1000000"
 
 NUM_PRs=1
@@ -71,6 +71,7 @@ elif [ "$1" == "killall" ] ; then
    killall -KILL rspserver || true
    killall -KILL rspregistrar || true
    killall -KILL calcappclient || true
+   # ps ax | grep valgrind | awk '{ print $1 }' | xargs kill
 
 elif [ "$1" == "run" ] ; then
    PE_PID_FILES=`find . -maxdepth 1 -name "${PREFIX}-PE-*.pid"`
