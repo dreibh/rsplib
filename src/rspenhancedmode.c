@@ -1004,7 +1004,6 @@ int rsp_forcefailover_tags(int                sd,
             if(rserpoolSocket->Socket >= 0) {
                success = true;
                rserpoolSocket->WaitingForFirstMsg = true;
-//            ???    rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
                                            0);

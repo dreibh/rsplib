@@ -71,7 +71,6 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       session->CookieEcho                 = NULL;
       session->CookieEchoSize             = 0;
       session->StatusText[0]              = 0x00;
-//    ???   session->ConnectionTimeStamp        = (isIncoming == true) ? getMicroTime() : 0;
       session->ConnectedPE                = 0;
       session->ConnectTimeout             = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
