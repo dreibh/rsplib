@@ -56,6 +56,7 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       simpleRedBlackTreeNodeNew(&session->AssocIDNode);
       simpleRedBlackTreeNodeNew(&session->SessionIDNode);
       session->AssocID                    = assocID;
+      session->PPID                       = 0;
       session->IsIncoming                 = isIncoming;
       session->IsFailed                   = isIncoming ? false : true;
       if(poolHandleSize > 0) {
@@ -164,6 +165,7 @@ void syncSessionStatus(struct RSerPoolSocket* rserpoolSocket,
    // Copy the status information
    session->Status.Socket      = rserpoolSocket->Socket;
    session->Status.AssocID     = session->AssocID;
+   session->Status.PPID        = session->PPID;
    session->Status.IsIncoming  = session->IsIncoming;
    session->Status.IsFailed    = session->IsFailed;
    session->Status.ConnectedPE = session->ConnectedPE;

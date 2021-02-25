@@ -1131,6 +1131,7 @@ ssize_t rsp_sendmsg(int                sd,
                  session->SessionID,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
+         session->PPID = ntohl(sctpPPID);
          result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
 #ifdef MSG_NOSIGNAL
                              msg_flags|MSG_NOSIGNAL,
@@ -1761,11 +1762,11 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
 
             if((!session->Status.IsIncoming) &&
                (!session->Status.IsFailed)) {
-               (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->ConnectedPE);
+               (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->Status.ConnectedPE);
                (*caeArray)[caeArraySize].Duration   = (session->Status.ConnectionTimeStamp > 0) ? (getMicroTime() - session->Status.ConnectionTimeStamp) : ~0ULL;
                (*caeArray)[caeArraySize].Flags      = 0;
                (*caeArray)[caeArraySize].ProtocolID = rserpoolSocket->SocketProtocol;
-               (*caeArray)[caeArraySize].PPID       = 0;
+               (*caeArray)[caeArraySize].PPID       = session->Status.PPID;
                caeArraySize++;
                getComponentLocation(componentLocation, session->Status.Socket, session->Status.AssocID);
             }

@@ -58,6 +58,7 @@ struct SessionStatus
 
    int                   Socket;
    sctp_assoc_t          AssocID;
+   uint32_t              PPID;
 
    unsigned long long    ConnectionTimeStamp;
    uint32_t              ConnectedPE;
@@ -76,6 +77,7 @@ struct Session
 
    sctp_assoc_t                  AssocID;
    rserpool_session_t            SessionID;
+   uint32_t                      PPID;
 
    struct PoolHandle             Handle;
    uint32_t                      ConnectedPE;
