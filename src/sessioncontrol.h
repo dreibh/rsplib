@@ -50,6 +50,10 @@ struct Session* findSession(struct RSerPoolSocket* rserpoolSocket,
                             rserpool_session_t     sessionID,
                             sctp_assoc_t           assocID);
 
+#ifdef ENABLE_CSP
+void syncSessionStatus(struct RSerPoolSocket* rserpoolSocket,
+                       struct Session*        session);
+#endif
 
 ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
                                     void*                  buffer,

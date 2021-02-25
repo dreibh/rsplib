@@ -36,34 +36,6 @@
 #include "loglevel.h"
 
 
-/* ###### Send cookie echo ################################################### */
-bool sendCookieEcho(struct RSerPoolSocket* rserpoolSocket,
-                    struct Session*        session)
-{
-   struct RSerPoolMessage* message;
-   bool                    result = false;
-
-   if(session->Cookie) {
-      message = rserpoolMessageNew(NULL, 256 + session->CookieSize);
-      if(message != NULL) {
-         message->Type       = AHT_COOKIE_ECHO;
-         message->CookiePtr  = session->Cookie;
-         message->CookieSize = session->CookieSize;
-         LOG_ACTION
-         fputs("Sending Cookie Echo\n", stdlog);
-         LOG_END
-         result = rserpoolMessageSend(IPPROTO_SCTP,
-                                      rserpoolSocket->Socket,
-                                      session->AssocID,
-                                      0, 0, 0,
-                                      message);
-         rserpoolMessageDelete(message);
-      }
-   }
-   return(result);
-}
-
-
 /* ###### Create new session ############################################# */
 struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
                            const sctp_assoc_t     assocID,
@@ -83,6 +55,7 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
 
       simpleRedBlackTreeNodeNew(&session->AssocIDNode);
       simpleRedBlackTreeNodeNew(&session->SessionIDNode);
+      threadSafetyNew(&session->Status.Mutex, "Status");
       session->AssocID                    = assocID;
       session->IsIncoming                 = isIncoming;
       session->IsFailed                   = isIncoming ? false : true;
@@ -98,10 +71,13 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       session->CookieEcho                 = NULL;
       session->CookieEchoSize             = 0;
       session->StatusText[0]              = 0x00;
-      session->ConnectionTimeStamp        = (isIncoming == true) ? getMicroTime() : 0;
+//    ???   session->ConnectionTimeStamp        = (isIncoming == true) ? getMicroTime() : 0;
       session->ConnectedPE                = 0;
       session->ConnectTimeout             = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
+#ifdef ENABLE_CSP
+      syncSessionStatus(rserpoolSocket, session);
+#endif
 
       threadSafetyLock(&rserpoolSocket->Mutex);
       session->SessionID = identifierBitmapAllocateID(rserpoolSocket->SessionAllocationBitmap);
@@ -171,9 +147,33 @@ void deleteSession(struct RSerPoolSocket* rserpoolSocket,
 
       simpleRedBlackTreeNodeDelete(&session->AssocIDNode);
       simpleRedBlackTreeNodeDelete(&session->SessionIDNode);
+      threadSafetyDelete(&session->Status.Mutex);
       free(session);
    }
 }
+
+
+#ifdef ENABLE_CSP
+/* ###### Synchronize session status ##################################### */
+void syncSessionStatus(struct RSerPoolSocket* rserpoolSocket,
+                       struct Session*        session)
+{
+   threadSafetyLock(&session->Status.Mutex);
+
+   // Copy the status information
+   session->Status.Socket      = rserpoolSocket->Socket;
+   session->Status.AssocID     = session->AssocID;
+   session->Status.IsIncoming  = session->IsIncoming;
+   session->Status.IsFailed    = session->IsFailed;
+   session->Status.ConnectedPE = session->ConnectedPE;
+   memcpy(&session->Status.StatusText, &session->StatusText, sizeof(session->Status.StatusText));
+
+   // Finally, update the time stamp of the status
+   session->Status.ConnectionTimeStamp = getMicroTime();
+
+   threadSafetyUnlock(&session->Status.Mutex);
+}
+#endif
 
 
 /* ###### Find session for given assoc ID or session ID ################## */
@@ -289,6 +289,34 @@ ssize_t getCookieEchoOrNotification(struct RSerPoolSocket* rserpoolSocket,
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return(received);
+}
+
+
+/* ###### Send cookie echo ################################################### */
+bool sendCookieEcho(struct RSerPoolSocket* rserpoolSocket,
+                    struct Session*        session)
+{
+   struct RSerPoolMessage* message;
+   bool                    result = false;
+
+   if(session->Cookie) {
+      message = rserpoolMessageNew(NULL, 256 + session->CookieSize);
+      if(message != NULL) {
+         message->Type       = AHT_COOKIE_ECHO;
+         message->CookiePtr  = session->Cookie;
+         message->CookieSize = session->CookieSize;
+         LOG_ACTION
+         fputs("Sending Cookie Echo\n", stdlog);
+         LOG_END
+         result = rserpoolMessageSend(IPPROTO_SCTP,
+                                      rserpoolSocket->Socket,
+                                      session->AssocID,
+                                      0, 0, 0,
+                                      message);
+         rserpoolMessageDelete(message);
+      }
+   }
+   return(result);
 }
 
 

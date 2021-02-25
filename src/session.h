@@ -33,6 +33,7 @@
 #include "rserpool.h"
 #include "poolhandle.h"
 #include "tagitem.h"
+#include "threadsafety.h"
 #include "simpleredblacktree.h"
 
 #include <ext_socket.h>
@@ -40,6 +41,31 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#define SESSION_STATUS_MAXLEN 128
+
+
+#ifdef ENABLE_CSP
+/*
+ * The status information needs to be accessed in getSessionStatus() for all
+ * sockets. It is necessary to keep a copy here, protected by a mutex. Then,
+ * getSessionStatus() can avoid locking *all* sockets and session!
+ */
+struct SessionStatus
+{
+   struct ThreadSafety   Mutex;
+
+   int                   Socket;
+   sctp_assoc_t          AssocID;
+
+   unsigned long long    ConnectionTimeStamp;
+   uint32_t              ConnectedPE;
+   bool                  IsIncoming;
+   bool                  IsFailed;
+
+   char                  StatusText[SESSION_STATUS_MAXLEN];
+};
 #endif
 
 
@@ -55,7 +81,6 @@ struct Session
    uint32_t                      ConnectedPE;
    bool                          IsIncoming;
    bool                          IsFailed;
-   unsigned long long            ConnectionTimeStamp;
 
    void*                         Cookie;
    size_t                        CookieSize;
@@ -66,8 +91,11 @@ struct Session
    unsigned long long            HandleResolutionRetryDelay;
 
    struct TagItem*               Tags;
+   char                          StatusText[SESSION_STATUS_MAXLEN];
 
-   char                          StatusText[128];
+#ifdef ENABLE_CSP
+   struct SessionStatus          Status;
+#endif
 };
 
 

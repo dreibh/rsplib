@@ -1004,7 +1004,7 @@ int rsp_forcefailover_tags(int                sd,
             if(rserpoolSocket->Socket >= 0) {
                success = true;
                rserpoolSocket->WaitingForFirstMsg = true;
-               rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
+//            ???    rserpoolSocket->ConnectedSession->ConnectionTimeStamp = getMicroTime();
                sessionStorageUpdateSession(&rserpoolSocket->SessionSet,
                                            rserpoolSocket->ConnectedSession,
                                            0);
@@ -1065,6 +1065,9 @@ int rsp_forcefailover_tags(int                sd,
          LOG_END
          errno = ENOENT;
          // Release lock before waiting with usleep()!
+#ifdef ENABLE_CSP
+         syncSessionStatus(rserpoolSocket, rserpoolSocket->ConnectedSession);
+#endif
          threadSafetyUnlock(&rserpoolSocket->Mutex);
          usleep((unsigned int)rserpoolSocket->ConnectedSession->HandleResolutionRetryDelay);
          return(false);
@@ -1082,6 +1085,10 @@ int rsp_forcefailover_tags(int                sd,
       LOG_END
       errno = EINVAL;
    }
+
+#ifdef ENABLE_CSP
+   syncSessionStatus(rserpoolSocket, rserpoolSocket->ConnectedSession);
+#endif
 
    threadSafetyUnlock(&rserpoolSocket->Mutex);
    return((success == true) ? 0 : -1);
@@ -1751,21 +1758,25 @@ size_t getSessionStatus(struct ComponentAssociation** caeArray,
       while(rserpoolSocket != NULL) {
          session = sessionStorageGetFirstSession(&rserpoolSocket->SessionSet);
          while(session != NULL) {
-            if((!session->IsIncoming) &&
-               (!session->IsFailed)) {
+            threadSafetyLock(&session->Status.Mutex);
+
+            if((!session->Status.IsIncoming) &&
+               (!session->Status.IsFailed)) {
                (*caeArray)[caeArraySize].ReceiverID = CID_COMPOUND(CID_GROUP_POOLELEMENT, session->ConnectedPE);
-               (*caeArray)[caeArraySize].Duration   = (session->ConnectionTimeStamp > 0) ? (getMicroTime() - session->ConnectionTimeStamp) : ~0ULL;
+               (*caeArray)[caeArraySize].Duration   = (session->Status.ConnectionTimeStamp > 0) ? (getMicroTime() - session->Status.ConnectionTimeStamp) : ~0ULL;
                (*caeArray)[caeArraySize].Flags      = 0;
                (*caeArray)[caeArraySize].ProtocolID = rserpoolSocket->SocketProtocol;
                (*caeArray)[caeArraySize].PPID       = 0;
                caeArraySize++;
-               getComponentLocation(componentLocation, rserpoolSocket->Socket, session->AssocID);
+               getComponentLocation(componentLocation, session->Status.Socket, session->Status.AssocID);
             }
             if(session->StatusText[0] != 0x00) {
                safestrcpy(statusText,
-                          session->StatusText,
+                          session->Status.StatusText,
                           CSPR_STATUS_SIZE);
             }
+
+            threadSafetyUnlock(&session->Status.Mutex);
             session = sessionStorageGetNextSession(&rserpoolSocket->SessionSet, session);
          }
          if((rserpoolSocket->PoolElement) &&
