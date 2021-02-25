@@ -53,27 +53,27 @@ struct FGPCommonHeader
 
 struct FGPParameter
 {
-   FGPCommonHeader  Header;
-   uint32_t         Width;
-   uint32_t         Height;
-   uint32_t         MaxIterations;
-   uint32_t         AlgorithmID;
-   network_double_t C1Real;
-   network_double_t C1Imag;
-   network_double_t C2Real;
-   network_double_t C2Imag;
-   network_double_t N;
+   struct FGPCommonHeader Header;
+   uint32_t               Width;
+   uint32_t               Height;
+   uint32_t               MaxIterations;
+   uint32_t               AlgorithmID;
+   network_double_t       C1Real;
+   network_double_t       C1Imag;
+   network_double_t       C2Real;
+   network_double_t       C2Imag;
+   network_double_t       N;
 } __attribute__((packed));
 
 #define FGD_MAX_POINTS 324
 
 struct FGPData
 {
-   FGPCommonHeader Header;
-   uint32_t        StartX;
-   uint32_t        StartY;
-   uint32_t        Points;
-   uint32_t        Buffer[FGD_MAX_POINTS];
+   struct FGPCommonHeader Header;
+   uint32_t               StartX;
+   uint32_t               StartY;
+   uint32_t               Points;
+   uint32_t               Buffer[FGD_MAX_POINTS];
 } __attribute__((packed));
 
 
@@ -95,10 +95,10 @@ inline size_t getFGPDataSize(const size_t points)
 
 struct FGPCookie
 {
-   char         ID[8];
-   FGPParameter Parameter;
-   uint32_t     CurrentX;
-   uint32_t     CurrentY;
+   char                ID[8];
+   struct FGPParameter Parameter;
+   uint32_t            CurrentX;
+   uint32_t            CurrentY;
 } __attribute__((packed));
 
 
