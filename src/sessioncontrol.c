@@ -55,7 +55,6 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
 
       simpleRedBlackTreeNodeNew(&session->AssocIDNode);
       simpleRedBlackTreeNodeNew(&session->SessionIDNode);
-      threadSafetyNew(&session->Status.Mutex, "Status");
       session->AssocID                    = assocID;
       session->IsIncoming                 = isIncoming;
       session->IsFailed                   = isIncoming ? false : true;
@@ -75,6 +74,7 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
       session->ConnectTimeout             = (unsigned long long)tagListGetData(tags, TAG_RspSession_ConnectTimeout, 5000000);
       session->HandleResolutionRetryDelay = (unsigned long long)tagListGetData(tags, TAG_RspSession_HandleResolutionRetryDelay, 250000);
 #ifdef ENABLE_CSP
+      threadSafetyNew(&session->Status.Mutex, "Status");
       syncSessionStatus(rserpoolSocket, session);
 #endif
 
@@ -146,7 +146,9 @@ void deleteSession(struct RSerPoolSocket* rserpoolSocket,
 
       simpleRedBlackTreeNodeDelete(&session->AssocIDNode);
       simpleRedBlackTreeNodeDelete(&session->SessionIDNode);
+#ifdef ENABLE_CSP
       threadSafetyDelete(&session->Status.Mutex);
+#endif
       free(session);
    }
 }
