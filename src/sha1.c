@@ -103,8 +103,6 @@ static void sha1_transform(uint32_t *state, const uint8_t *in)
    state[2] += c;
    state[3] += d;
    state[4] += e;
-   /* Wipe variables */
-   a = b = c = d = e = 0;
    memset (block32, 0x00, sizeof block32);
 }
 
