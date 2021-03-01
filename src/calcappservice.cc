@@ -165,7 +165,7 @@ void CalcAppServer::removeJob(CalcAppServer::CalcAppServerJob* removedJob)
          else {
             prev->Next = job->Next;
          }
-         delete removedJob;
+         delete job;
          CHECK(Jobs > 0);
          Jobs--;
          cout << " Job removed (" << Jobs << " still running)" << endl;
