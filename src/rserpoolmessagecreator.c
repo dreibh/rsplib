@@ -627,7 +627,9 @@ static bool createErrorParameter(struct RSerPoolMessage* message)
 
    aec->aec_cause  = htons(cause);
    aec->aec_length = htons(sizeof(struct rserpool_errorcause) + dataLength);
-   memcpy((char*)&aec->aec_data, data, dataLength);
+   if(dataLength > 0) {
+      memcpy((char*)&aec->aec_data, data, dataLength);
+   }
 
    return(finishTLV(message, tlvPosition));
 }
