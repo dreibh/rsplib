@@ -329,7 +329,6 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
    }
 
    numAllocAddrs = cf.ifc_len / sizeof(struct ifreq);
-   ifrequest     = cf.ifc_req;
    numIfAddrs    = numAllocAddrs;
 
    addedNets = 0;
