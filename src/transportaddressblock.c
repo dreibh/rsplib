@@ -280,24 +280,32 @@ int transportAddressBlockComparison(const void* transportAddressBlockPtr1,
       (transportAddressBlock2 == NULL)) {
       return(1);
    }
+   else if((transportAddressBlock1 == NULL) &&
+           (transportAddressBlock2 == NULL)) {
+      return(0);
+   }
+
    if(transportAddressBlock1->Port < transportAddressBlock2->Port) {
       return(-1);
    }
    else if(transportAddressBlock1->Port > transportAddressBlock2->Port) {
       return(1);
    }
+
    if(transportAddressBlock1->Flags < transportAddressBlock2->Flags) {
       return(-1);
    }
    else if(transportAddressBlock1->Flags > transportAddressBlock2->Flags) {
       return(1);
    }
+
    if(transportAddressBlock1->Addresses < transportAddressBlock2->Addresses) {
       return(-1);
    }
    else if(transportAddressBlock1->Addresses > transportAddressBlock2->Addresses) {
       return(1);
    }
+
    for(i = 0;i < transportAddressBlock1->Addresses;i++) {
       result = addresscmp((const struct sockaddr*)&transportAddressBlock1->AddressArray[i],
                           (const struct sockaddr*)&transportAddressBlock2->AddressArray[i],
@@ -327,12 +335,18 @@ int transportAddressBlockOverlapComparison(const void* transportAddressBlockPtr1
       (transportAddressBlock2 == NULL)) {
       return(1);
    }
+   else if((transportAddressBlock1 == NULL) &&
+           (transportAddressBlock2 == NULL)) {
+      return(0);
+   }
+
    if(transportAddressBlock1->Port < transportAddressBlock2->Port) {
       return(-1);
    }
    else if(transportAddressBlock1->Port > transportAddressBlock2->Port) {
       return(1);
    }
+
    if(transportAddressBlock1->Flags < transportAddressBlock2->Flags) {
       return(-1);
    }
