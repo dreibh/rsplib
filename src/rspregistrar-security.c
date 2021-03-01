@@ -60,8 +60,7 @@ bool registrarPoolUserHasPermissionFor(struct Registrar*               registrar
    poolUserNode = ST_CLASS(poolUserListAddOrUpdatePoolUserNode)(&registrar->PoolUsers, &nextPoolUserNode);
    CHECK(poolUserNode != NULL);
 
-   now  = getMicroTime();
-   rate = threshold = -1.0;
+   now = getMicroTime();
    switch(action) {
       case AHT_HANDLE_RESOLUTION:
          rate = ST_CLASS(poolUserNodeNoteHandleResolution)(poolUserNode, poolHandle, now, TSHT_BUCKETS, TSHT_ENTRIES);
