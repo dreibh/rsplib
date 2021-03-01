@@ -237,6 +237,7 @@ bool doRegistration(struct RSerPoolSocket* rserpoolSocket,
                fputs("\n", stdlog);
             }
             LOG_END
+            free(rspAddrInfo);
             return(false);
          }
 
