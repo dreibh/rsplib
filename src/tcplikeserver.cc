@@ -214,7 +214,6 @@ void TCPLikeServer::run()
          else {
             nextTimerEvent = 5000000;
          }
-         now      = getMicroTime();
          received = rsp_recvfullmsg(RSerPoolSocketDescriptor,
                                     (char*)&buffer, sizeof(buffer),
                                     &rinfo, &flags, (int)(nextTimerEvent / 1000));
