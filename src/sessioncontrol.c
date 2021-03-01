@@ -48,7 +48,7 @@ struct Session* addSession(struct RSerPoolSocket* rserpoolSocket,
    if(session != NULL) {
       CHECK(rserpoolSocket->ConnectedSession == NULL);
       session->Tags = tagListDuplicate(tags);
-      if(session->Tags == NULL) {
+      if((tags != NULL) && (session->Tags == NULL)) {
          free(session);
          return(NULL);
       }

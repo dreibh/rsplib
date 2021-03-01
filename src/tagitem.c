@@ -74,17 +74,22 @@ size_t tagListGetSize(struct TagItem* tagList)
 struct TagItem* tagListDuplicate(struct TagItem* tagList)
 {
    const size_t    count = tagListGetSize(tagList);
-   struct TagItem* copy  = tagListAllocate(count);
+   struct TagItem* copy;
    size_t          i;
 
-   if(copy) {
-      for(i = 0;i < count;i++) {
-         copy[i].Tag  = tagList[i].Tag;
-         copy[i].Data = tagList[i].Data;
+   if(count > 0) {
+      copy = tagListAllocate(count);
+      if(copy) {
+         for(i = 0;i < count;i++) {
+            copy[i].Tag  = tagList[i].Tag;
+            copy[i].Data = tagList[i].Data;
+         }
       }
+      return(copy);
    }
-   return(copy);
+   return(NULL);
 }
+
 
 
 /* ###### Duplicate tag items with filtering ############################# */
@@ -92,43 +97,36 @@ struct TagItem* tagListDuplicateFilter(struct TagItem* tagList,
                                        const tag_t*    filterArray)
 {
    const size_t    count = tagListGetSize(tagList);
-   struct TagItem* copy  = tagListAllocate(count);
-   size_t          i, j, k=0;
+   struct TagItem* copy;
+   size_t          i, j, k;
 
-   if(copy) {
-      LOG_VERBOSE5
-      fputs("Filter-copying tag list...\n", stdlog);
-      LOG_END
-      for(i = 0, j = 0;i < count;i++) {
-         while(filterArray[k] != TAG_DONE) {
-            if(tagList[i].Tag == filterArray[k]) {
-               LOG_VERBOSE5
-               fprintf(stdlog,"Copying tag #%u\n", tagList[i].Tag);
-               LOG_END
-               copy[j].Tag  = tagList[i].Tag;
-               copy[j].Data = tagList[i].Data;
-               j++;
-               break;
+   if(count > 0) {
+      copy = tagListAllocate(count);
+      if(copy) {
+         LOG_VERBOSE5
+         fputs("Filter-copying tag list...\n", stdlog);
+         LOG_END
+         k = 0;
+         for(i = 0, j = 0;i < count;i++) {
+            while(filterArray[k] != TAG_DONE) {
+               if(tagList[i].Tag == filterArray[k]) {
+                  LOG_VERBOSE5
+                  fprintf(stdlog,"Copying tag #%u\n", tagList[i].Tag);
+                  LOG_END
+                  copy[j].Tag  = tagList[i].Tag;
+                  copy[j].Data = tagList[i].Data;
+                  j++;
+                  break;
+               }
+               k++;
             }
-            k++;
          }
+         copy[j++].Tag = TAG_DONE;
       }
-      copy[j++].Tag = TAG_DONE;
+      return(copy);
    }
-   return(copy);
+   return(NULL);
 }
-
-
-/**
-  * Create a new tag item array containing all tag items of
-  * the given list which belong to any tag given in the filter
-  * array.
-  *
-  * @param tagList TagItem array.
-  * @return TagItem array or NULL in case of error.
-  */
-struct TagItem* tagListDuplicateFilter(struct TagItem* tagList,
-                                       const tag_t*    filterArray);
 
 
 /* ###### Get next tag item ############################################## */

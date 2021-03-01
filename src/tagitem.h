@@ -117,6 +117,17 @@ struct TagItem* tagListDuplicateFilter(struct TagItem* tagList,
                                        const tag_t*    filterArray);
 
 /**
+  * Create a new tag item array containing all tag items of
+  * the given list which belong to any tag given in the filter
+  * array.
+  *
+  * @param tagList TagItem array.
+  * @return TagItem array or NULL in case of error.
+  */
+struct TagItem* tagListDuplicateFilter(struct TagItem* tagList,
+                                       const tag_t*    filterArray);
+
+/**
   * Get next tag item in list.
   *
   * @param tagList TagItem array.
