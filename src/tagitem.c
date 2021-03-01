@@ -114,9 +114,6 @@ struct TagItem* tagListDuplicateFilter(struct TagItem* tagList,
          }
       }
       copy[j++].Tag = TAG_DONE;
-      if(j < count) {
-         free((void*)&copy[j]);
-      }
    }
    return(copy);
 }
