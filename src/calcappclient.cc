@@ -52,7 +52,7 @@ using namespace std;
 
 
 /* Exit immediately on Ctrl-C. No clean shutdown. */
-/* #define FAST_BREAK */
+#define FAST_BREAK
 
 struct Job
 {
@@ -695,7 +695,7 @@ void runProcess(const char* poolHandle, const char* objectName, unsigned long lo
          perror("rsp_socket() failed");
          process.Status = PS_Failed;
          // It is not useful to retry here.
-         return;
+         goto cleanup;
       }
 
       while(process.CurrentJob == NULL) {
@@ -744,6 +744,7 @@ finished:
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAlives\"    %u\n", objectName, (unsigned int)process.TotalCalcAppKeepAlives);
    fprintf(ScalarFH, "scalar \"%s\" \"CalcAppPU Total CalcAppKeepAliveAcks\" %u\n", objectName, (unsigned int)process.TotalCalcAppKeepAliveAcks);
 
+cleanup:
    if(process.CurrentJob) {
       delete process.CurrentJob;
       process.CurrentJob = NULL;
