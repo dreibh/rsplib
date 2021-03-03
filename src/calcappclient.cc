@@ -192,7 +192,7 @@ struct Process {
    const char*        ObjectName;
 
    size_t             TotalCalcAppRequests;
-   size_t	      TotalCalcAppAccepts;
+   size_t             TotalCalcAppAccepts;
    size_t             TotalCalcAppRejects;
    size_t             TotalCalcAppCompletes;
    size_t             TotalCalcAppKeepAlives;
