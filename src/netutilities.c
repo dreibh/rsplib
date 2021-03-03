@@ -75,48 +75,48 @@
 
 
 #ifdef HAVE_KERNEL_SCTP
-#ifndef HAVE_SCTP_CONNECTX
-#warning No sctp_connectx() available - Using only the first address!
-int sctp_connectx(int                    sockfd,
-                  const struct sockaddr* addrs,
-                  int                    addrcnt,
-                  sctp_assoc_t*          id);
-{
-   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
-   return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
-}
-#endif
-
-#ifndef HAVE_SCTP_SEND
-#warning No sctp_send() available - Using wrapper!
-ssize_t sctp_send_wrapper(int                           sd,
-                          const void*                   data,
-                          size_t                        len,
-                          const struct sctp_sndrcvinfo* sinfo,
-                          int                           flags)
-{
-   struct sctp_sndrcvinfo* sri;
-   struct iovec            iov = { (char*)data, len };
-   struct cmsghdr*         cmsg;
-   size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
-   char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
-   struct msghdr msg = {
-      NULL, 0,
-      &iov, 1,
-      cbuf, cmsglen,
-      flags
-   };
-
-   cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
-   cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
-   cmsg->cmsg_level = IPPROTO_SCTP;
-   cmsg->cmsg_type  = SCTP_SNDRCV;
-
-   sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
-   memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
-   return(ext_sendmsg(sd, &msg, msg.msg_flags));
-}
-#endif
+// #ifndef HAVE_SCTP_CONNECTX
+// #warning No sctp_connectx() available - Using only the first address!
+// int sctp_connectx(int                    sockfd,
+//                   const struct sockaddr* addrs,
+//                   int                    addrcnt,
+//                   sctp_assoc_t*          id);
+// {
+//    const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
+//    return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
+// }
+// #endif
+//
+// #ifndef HAVE_SCTP_SEND
+// #warning No sctp_send() available - Using wrapper!
+// ssize_t sctp_send_wrapper(int                           sd,
+//                           const void*                   data,
+//                           size_t                        len,
+//                           const struct sctp_sndrcvinfo* sinfo,
+//                           int                           flags)
+// {
+//    struct sctp_sndrcvinfo* sri;
+//    struct iovec            iov = { (char*)data, len };
+//    struct cmsghdr*         cmsg;
+//    size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
+//    char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
+//    struct msghdr msg = {
+//       NULL, 0,
+//       &iov, 1,
+//       cbuf, cmsglen,
+//       flags
+//    };
+//
+//    cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
+//    cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
+//    cmsg->cmsg_level = IPPROTO_SCTP;
+//    cmsg->cmsg_type  = SCTP_SNDRCV;
+//
+//    sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
+//    memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
+//    return(ext_sendmsg(sd, &msg, msg.msg_flags));
+// }
+// #endif
 
 #ifndef HAVE_SCTP_SENDX
 #warning No sctp_sendx() available - Using only the first address!
@@ -252,6 +252,9 @@ enum AddressScopingFlags {
    ASF_HideAllExceptSiteLocal = (1 << 9)
 };
 
+
+#if 0
+/* FIXME: Remove (hopefully) obsolete code! */
 
 /* ###### Filter address ################################################# */
 static bool filterAddress(union sockaddr_union* address,
@@ -462,6 +465,8 @@ static bool obtainLocalAddresses(union sockaddr_union** addressArray,
    return(true);
 }
 #endif
+#endif
+
 #endif
 
 
@@ -1860,6 +1865,8 @@ size_t getladdrsplus(const int              fd,
    int              addrs = sctp_getladdrs(fd, assocID, &packedAddresses);
 #endif
    int              i;
+#if 0
+/* FIXME: Remove (hopefully) obsolete code! */
 #ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
    union sockaddr_union socketName;
@@ -1867,6 +1874,7 @@ size_t getladdrsplus(const int              fd,
    uint16_t             port;
    size_t               addrs2;
    size_t               j;
+#endif
 #endif
 #endif
 
@@ -1885,6 +1893,8 @@ size_t getladdrsplus(const int              fd,
       }
 #endif
 
+#if 0
+/* FIXME: Remove (hopefully) obsolete code! */
 #ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() INADDR_ANY bugfix for lksctp!
@@ -1909,9 +1919,13 @@ size_t getladdrsplus(const int              fd,
       }
 #endif
 #endif
+#endif
+
       *addressArray = unpack_sockaddr(packedAddresses, addrs);
       sctp_freeladdrs(packedAddresses);
 
+#if 0
+/* FIXME: Remove (hopefully) obsolete code! */
 #ifdef __linux__
 #ifdef HAVE_KERNEL_SCTP
 #warning Using sctp_getladdrs() port 0 bugfix for lksctp!
@@ -1924,6 +1938,7 @@ size_t getladdrsplus(const int              fd,
             }
          }
       }
+#endif
 #endif
 #endif
 
