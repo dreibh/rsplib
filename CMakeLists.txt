@@ -73,6 +73,8 @@ ELSEIF (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
     SET(CMAKE_REQUIRED_INCLUDES "/usr/local/include" "/usr/include")
     SET(CMAKE_LIBRARY_PATH "/usr/local/lib")
     INCLUDE_DIRECTORIES("/usr/local/include")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 ELSEIF (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     MESSAGE(STATUS ${CMAKE_SYSTEM_NAME} " supported")
@@ -124,14 +126,6 @@ ENDIF()
 #############################################################################
 # CHECK OPTIONS
 #############################################################################
-
-# Debug build type as default
-IF (NOT CMAKE_BUILD_TYPE)
-   MESSAGE(STATUS "No build type selected, using DEBUG")
-   SET(CMAKE_BUILD_TYPE "DEBUG")
-   # _FORTIFY_SOURCE requires compiling with optimization
-   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
-ENDIF()
 
 # Maximum logging level
 SET(MAX_LOGLEVEL "9" CACHE STRING "Maximum logging level")
