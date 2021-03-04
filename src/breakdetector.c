@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 #include <signal.h>
-#include <stdatomic.h>
 
 
 
@@ -44,14 +43,14 @@
 
 
 /* ###### Global variables ############################################### */
-static atomic_bool   DetectedBreak = false;
-static atomic_bool   PrintedBreak  = false;
-static atomic_int    BreakSignal   = 0;
-static bool          Quiet         = false;
-static pid_t         MainThreadPID = 0;
+static _Atomic bool               DetectedBreak = false;
+static _Atomic bool               PrintedBreak  = false;
+static _Atomic int                BreakSignal   = 0;
+static bool                       Quiet         = false;
+static pid_t                      MainThreadPID = 0;
 #ifdef KILL_AFTER_TIMEOUT
-static bool          PrintedKill   = false;
-static atomic_ullong LastDetection = (unsigned long long)-1;
+static bool                       PrintedKill   = false;
+static _Atomic unsigned long long LastDetection = (unsigned long long)-1;
 #endif
 
 
