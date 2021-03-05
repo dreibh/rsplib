@@ -62,6 +62,7 @@ extern "C" {
 #endif
 
 
+#if 0
 #ifdef HAVE_KERNEL_SCTP
 #ifndef HAVE_SCTP_CONNECTX
 int sctp_connectx(int                    sockfd,
@@ -87,6 +88,7 @@ ssize_t sctp_sendx(int                           sd,
                    int                           addrcnt,
                    const struct sctp_sndrcvinfo* sinfo,
                    int                           flags);
+#endif
 #endif
 #endif
 

@@ -55,6 +55,9 @@
 #include <netdb.h>
 #include <math.h>
 #include <assert.h>
+#ifdef HAVE_KERNEL_SCTP
+#include <netinet/sctp.h>
+#endif
 #if defined(__sun) && defined(__SVR4)
 #include <sys/sockio.h>
 #ifndef CMSG_SPACE
@@ -73,6 +76,9 @@
 #define MIN_AUTOSELECT_PORT   32768
 #define MAX_AUTOSELECT_PORT   60000
 
+
+#if 0
+/* FIXME: Remove (hopefully) obsolete code! */
 
 #ifdef HAVE_KERNEL_SCTP
 // #ifndef HAVE_SCTP_CONNECTX
@@ -156,6 +162,9 @@ ssize_t sctp_sendx(int                           sd,
 }
 #endif
 #endif
+
+#endif
+
 
 #ifdef USE_SELECT
 #warning Using poll() to select() wrapper. This is inefficient!
@@ -1341,6 +1350,7 @@ int sendtoplus(int                      sockfd,
 {
    union sockaddr_union   addressArray[MAX_TRANSPORTADDRESSES];
    size_t                 addresses = 0;
+   struct iovec           iov;
    struct sctp_sndrcvinfo sri;
    struct pollfd          pfd;
    size_t                 i;
@@ -1394,12 +1404,15 @@ int sendtoplus(int                      sockfd,
                   break;
             }
          }
-         LOG_VERBOSE5
-         fputs("Calling sctp_sendx() with addresses...\n", stdlog);
+//                   LOG_VERBOSE5
+                LOG_NOTE
+         fputs("Calling sctp_sendv() with addresses...\n", stdlog);
          LOG_END
-         result = sctp_sendx(sockfd, buffer, length,
+         iov.iov_base = (void*)buffer;
+         iov.iov_len  = length;
+         result = sctp_sendv(sockfd, &iov, 1,
                              (struct sockaddr*)&addressArray, addresses,
-                             &sri, flags);
+                             &sri, sizeof(sri), SCTP_SENDV_SNDINFO, flags);
       }
       else {
          LOG_VERBOSE5
@@ -1447,12 +1460,15 @@ int sendtoplus(int                      sockfd,
             LOG_END
             if((assocID != 0) || (ppid != 0) || (streamID != 0)) {
                if(toaddrs) {
-                  LOG_VERBOSE5
-                  fputs("Calling sctp_sendx() with addresses...\n", stdlog);
+//                   LOG_VERBOSE5
+                LOG_NOTE
+                  fputs("Calling sctp_sendv() with addresses...\n", stdlog);
                   LOG_END
-                  result = sctp_sendx(sockfd, buffer, length,
+                  iov.iov_base = (void*)buffer;
+                  iov.iov_len  = length;
+                  result = sctp_sendv(sockfd, &iov, 1,
                                       (struct sockaddr*)&addressArray, addresses,
-                                      &sri, flags);
+                                      &sri, sizeof(sri), SCTP_SENDV_SNDINFO, flags);
                }
                else {
                   LOG_VERBOSE5
