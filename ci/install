@@ -339,7 +339,7 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
       sudo bash -c "echo \"PermitRootLogin prohibit-password\" >>${mountPoint}/etc/ssh/sshd_config"
       # sudo tail -n 6 ${mountPoint}/etc/ssh/sshd_config
 
-      sudo bash -c "echo \"\\\console="comconsole\\\"\" >>${mountPoint}/boot/loader.conf"
+      sudo bash -c "echo \"console=\\\"comconsole\\\"\" >>${mountPoint}/boot/loader.conf"
 
       # Set up NFS:
       sudo mkdir -p ${mountPoint}/travis
