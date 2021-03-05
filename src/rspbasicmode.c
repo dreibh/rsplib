@@ -310,9 +310,10 @@ static bool addStaticRegistrars(struct RegistrarTable* registrarTable,
 static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poolElementNode,
                                      struct rsp_addrinfo**                   rspAddrInfo)
 {
-   int    result = REAI_MEMORY;
-   char*  ptr;
-   size_t i;
+   union sockaddr_union* uptr;
+   char*                 ptr;
+   int                   result = REAI_MEMORY;
+   size_t                i;
 
    *rspAddrInfo = (struct rsp_addrinfo*)malloc(sizeof(struct rsp_addrinfo));
    if(rspAddrInfo != NULL) {
@@ -333,7 +334,8 @@ static int poolElementNodeToAddrInfo(const struct ST_CLASS(PoolElementNode)* poo
       }
       (*rspAddrInfo)->ai_addrlen = sizeof(union sockaddr_union);
       (*rspAddrInfo)->ai_addrs   = poolElementNode->UserTransport->Addresses;
-      (*rspAddrInfo)->ai_addr    = (struct sockaddr*)malloc((*rspAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
+      uptr = (union sockaddr_union*)malloc((*rspAddrInfo)->ai_addrs * sizeof(union sockaddr_union));
+      (*rspAddrInfo)->ai_addr    = (struct sockaddr*)uptr;
       if((*rspAddrInfo)->ai_addr != NULL) {
          result = 0;
          ptr = (char*)(*rspAddrInfo)->ai_addr;

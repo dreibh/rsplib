@@ -31,7 +31,6 @@
 #include "timeutilities.h"
 
 #include <unistd.h>
-#include <sys/types.h>
 #include <signal.h>
 
 
@@ -44,14 +43,14 @@
 
 
 /* ###### Global variables ############################################### */
-static bool   DetectedBreak = false;
-static bool   PrintedBreak  = false;
-static int    BreakSignal   = 0;
-static bool   Quiet         = false;
-static pid_t  MainThreadPID = 0;
+static _Atomic bool               DetectedBreak = false;
+static _Atomic bool               PrintedBreak  = false;
+static _Atomic int                BreakSignal   = 0;
+static bool                       Quiet         = false;
+static pid_t                      MainThreadPID = 0;
 #ifdef KILL_AFTER_TIMEOUT
-static bool               PrintedKill   = false;
-static unsigned long long LastDetection = (unsigned long long)-1;
+static bool                       PrintedKill   = false;
+static _Atomic unsigned long long LastDetection = (unsigned long long)-1;
 #endif
 
 
