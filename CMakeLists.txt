@@ -233,26 +233,29 @@ ENDIF()
 
 # ====== Functions ==========================================================
 INCLUDE(CheckFunctionExists)
+INCLUDE(CheckSymbolExists)
 
-check_function_exists(sctp_send HAVE_SCTP_SEND)
+CHECK_FUNCTION_EXISTS(sctp_send HAVE_SCTP_SEND)
 IF (HAVE_SCTP_SEND)
    ADD_DEFINITIONS(-DHAVE_SCTP_SEND)
 ENDIF()
 
-check_function_exists(sctp_sendx HAVE_SCTP_SENDX)
+CHECK_FUNCTION_EXISTS(sctp_sendx HAVE_SCTP_SENDX)
 IF (HAVE_SCTP_SENDX)
    ADD_DEFINITIONS(-DHAVE_SCTP_SENDX)
 ENDIF()
 
-check_function_exists(sctp_sendmsg  HAVE_SCTP_SENDMSG)
+CHECK_FUNCTION_EXISTS(sctp_sendmsg  HAVE_SCTP_SENDMSG)
 IF (HAVE_SCTP_SENDMSG)
    ADD_DEFINITIONS(-DHAVE_SCTP_SENDMSG)
 ENDIF()
 
-check_function_exists(sctp_connectx HAVE_SCTP_CONNECTX)
+CHECK_FUNCTION_EXISTS(sctp_connectx HAVE_SCTP_CONNECTX)
 IF (HAVE_SCTP_CONNECTX)
    ADD_DEFINITIONS(-DHAVE_SCTP_CONNECTX)
 ENDIF()
+
+CHECK_SYMBOL_EXISTS(SCTP_DELAYED_SACK "netinet/sctp.h;sctp.h" HAVE_SCTP_DELAYED_SACK)
 
 
 # ###### BZip2 ##############################################################
@@ -261,7 +264,7 @@ FIND_PACKAGE(BZip2 REQUIRED)
 
 # ###### IEEE Floating-Point ################################################
 INCLUDE(CheckCSourceRuns)
-check_c_source_runs("
+CHECK_C_SOURCE_RUNS("
 #include <stdio.h>
 
 union DoubleIntUnion
