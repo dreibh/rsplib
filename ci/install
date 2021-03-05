@@ -319,6 +319,7 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
             echo \"rpc_lockd_enable=\\\"YES\\\"\"
             echo \"rpc_statd_enable=\\\"YES\\\"\"
             echo \"fsck_y_enable=\\\"YES\\\"\"
+            echo \"fsck_y_flags=\\\"-f\\\"\"
             echo \"background_fsck=\\\"NO\\\"\"
             echo \"force_fsck=\\\"YES\\\"\"
             echo \"force_fsck_list=\\\"/\\\"\"
