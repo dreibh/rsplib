@@ -347,6 +347,8 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
       # Make sure the boot output goes into the serial console:
       sudo bash -c "echo \"console=\\\"comconsole\\\"\" >>${mountPoint}/boot/loader.conf"
 
+      sudo bash -c "echo \"/sbin/fsck -y -f\" >>${mountPoint}/etc/rc.early"
+
       # Set up NFS:
       sudo mkdir -p ${mountPoint}/travis
       sudo sed -e "/^.*\/travis.*$/d" -i~ ${mountPoint}/etc/fstab
