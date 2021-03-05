@@ -227,13 +227,13 @@ matrix:
 
    # ###### FreeBSD #########################################################
 
-   # ====== FreeBSD 13.0-BETA3 ==============================================
-   - name: "FreeBSD 13.0-BETA3 with Clang"
+   # ====== FreeBSD 13.0-BETA4 ==============================================
+   - name: "FreeBSD 13.0-BETA4 with Clang"
      os: linux
      dist: bionic
      group: travis_latest
      env: QEMU="FreeBSD" VARIANT="12.1-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   - name: "FreeBSD 12.1-RELEASE with GCC"
+   - name: "FreeBSD 13.0-BETA4 with GCC"
      os: linux
      dist: bionic
      group: travis_latest
