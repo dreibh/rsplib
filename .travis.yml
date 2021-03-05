@@ -227,8 +227,8 @@ matrix:
 
    # ###### FreeBSD #########################################################
 
-   # ====== FreeBSD 12.1-RELEASE ============================================
-   - name: "FreeBSD 12.1-RELEASE with Clang"
+   # ====== FreeBSD 13.0-BETA3 ==============================================
+   - name: "FreeBSD 13.0-BETA3 with Clang"
      os: linux
      dist: bionic
      group: travis_latest
@@ -239,29 +239,29 @@ matrix:
      group: travis_latest
      env: QEMU="FreeBSD" VARIANT="12.1-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
 
-   ## ====== FreeBSD 12.2-RELEASE ============================================
-   #- name: "FreeBSD 12.2-RELEASE with Clang"
-     #os: linux
-     #dist: bionic
-     #group: travis_latest
-     #env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   #- name: "FreeBSD 12.2-RELEASE with GCC"
-     #os: linux
-     #dist: bionic
-     #group: travis_latest
-     #env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+   # ====== FreeBSD 12.2-RELEASE ============================================
+   - name: "FreeBSD 12.2-RELEASE with Clang"
+     os: linux
+     dist: bionic
+     group: travis_latest
+     env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   - name: "FreeBSD 12.2-RELEASE with GCC"
+     os: linux
+     dist: bionic
+     group: travis_latest
+     env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
 
-   # ====== FreeBSD 11.4-RELEASE ============================================
-   - name: "FreeBSD 11.4-RELEASE with Clang"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="11.4-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   - name: "FreeBSD 11.4-RELEASE with GCC"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="11.4-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+   ## ====== FreeBSD 11.4-RELEASE ============================================
+   #- name: "FreeBSD 11.4-RELEASE with Clang"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="11.4-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   #- name: "FreeBSD 11.4-RELEASE with GCC"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="11.4-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
 
 
    # ###### Other ###########################################################
