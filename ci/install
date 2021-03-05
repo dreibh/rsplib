@@ -323,6 +323,7 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
             echo \"background_fsck=\\\"NO\\\"\"
             echo \"force_fsck=\\\"YES\\\"\"
             echo \"force_fsck_list=\\\"/\\\"\"
+            echo \"root_rw_mount=\\\"NO\\\"\"
          ) >>${mountPoint}/etc/rc.conf"
       # sudo cat ${mountPoint}/etc/rc.conf
 
