@@ -348,6 +348,7 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
       sudo bash -c "echo \"console=\\\"comconsole\\\"\" >>${mountPoint}/boot/loader.conf"
 
       sudo bash -c "echo \"/sbin/fsck -y -f\" >>${mountPoint}/etc/rc.early"
+      sudo bash -c "chmod +x ${mountPoint}/etc/rc.early"
 
       # Set up NFS:
       sudo mkdir -p ${mountPoint}/travis
