@@ -256,6 +256,9 @@ IF (HAVE_SCTP_CONNECTX)
 ENDIF()
 
 CHECK_SYMBOL_EXISTS(SCTP_DELAYED_SACK "netinet/sctp.h;sctp.h" HAVE_SCTP_DELAYED_SACK)
+IF (HAVE_SCTP_DELAYED_SACK)
+   ADD_DEFINITIONS(-DHAVE_SCTP_DELAYED_SACK)
+ENDIF()
 
 
 # ###### BZip2 ##############################################################
