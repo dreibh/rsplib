@@ -318,6 +318,7 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
             echo \"nfs_client_enable=\\\"YES\\\"\"
             echo \"rpc_lockd_enable=\\\"YES\\\"\"
             echo \"rpc_statd_enable=\\\"YES\\\"\"
+            echo \"fsck_y_enable=\\\"YES\\\"\"
          ) >>${mountPoint}/etc/rc.conf"
       # sudo cat ${mountPoint}/etc/rc.conf
 
