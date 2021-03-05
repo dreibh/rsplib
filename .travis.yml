@@ -227,53 +227,53 @@ matrix:
 
    # ###### FreeBSD #########################################################
 
-   # ====== FreeBSD 13.0-BETA4 ==============================================
-   - name: "FreeBSD 13.0-BETA4 with Clang"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA4" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   - name: "FreeBSD 13.0-BETA4 with GCC"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA4" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
-
-   # ====== FreeBSD 13.0-BETA3 ==============================================
-   - name: "FreeBSD 13.0-BETA3 with Clang"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA3" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   - name: "FreeBSD 13.0-BETA3 with GCC"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA3" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
-
-   # ====== FreeBSD 13.0-BETA2 ==============================================
-   - name: "FreeBSD 13.0-BETA2 with Clang"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA2" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   - name: "FreeBSD 13.0-BETA2 with GCC"
-     os: linux
-     dist: bionic
-     group: travis_latest
-     env: QEMU="FreeBSD" VARIANT="13.0-BETA2" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
-
-   ## ====== FreeBSD 12.2-RELEASE ============================================
-   #- name: "FreeBSD 12.2-RELEASE with Clang"
+   ## ====== FreeBSD 13.0-BETA4 ==============================================
+   #- name: "FreeBSD 13.0-BETA4 with Clang"
      #os: linux
      #dist: bionic
      #group: travis_latest
-     #env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
-   #- name: "FreeBSD 12.2-RELEASE with GCC"
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA4" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   #- name: "FreeBSD 13.0-BETA4 with GCC"
      #os: linux
      #dist: bionic
      #group: travis_latest
-     #env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA4" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+
+   ## ====== FreeBSD 13.0-BETA3 ==============================================
+   #- name: "FreeBSD 13.0-BETA3 with Clang"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA3" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   #- name: "FreeBSD 13.0-BETA3 with GCC"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA3" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+
+   ## ====== FreeBSD 13.0-BETA2 ==============================================
+   #- name: "FreeBSD 13.0-BETA2 with Clang"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA2" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   #- name: "FreeBSD 13.0-BETA2 with GCC"
+     #os: linux
+     #dist: bionic
+     #group: travis_latest
+     #env: QEMU="FreeBSD" VARIANT="13.0-BETA2" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
+
+   # ====== FreeBSD 12.2-RELEASE ============================================
+   - name: "FreeBSD 12.2-RELEASE with Clang"
+     os: linux
+     dist: bionic
+     group: travis_latest
+     env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="clang" COMPILER_CXX="clang++"
+   - name: "FreeBSD 12.2-RELEASE with GCC"
+     os: linux
+     dist: bionic
+     group: travis_latest
+     env: QEMU="FreeBSD" VARIANT="12.2-RELEASE" TOOL="compile" COMPILER_C="gcc" COMPILER_CXX="g++"
 
    ## ====== FreeBSD 11.4-RELEASE ============================================
    #- name: "FreeBSD 11.4-RELEASE with Clang"
