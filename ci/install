@@ -318,12 +318,6 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
             echo \"nfs_client_enable=\\\"YES\\\"\"
             echo \"rpc_lockd_enable=\\\"YES\\\"\"
             echo \"rpc_statd_enable=\\\"YES\\\"\"
-            echo \"fsck_y_enable=\\\"YES\\\"\"
-            echo \"fsck_y_flags=\\\"-f\\\"\"
-            echo \"background_fsck=\\\"NO\\\"\"
-            echo \"force_fsck=\\\"YES\\\"\"
-            echo \"force_fsck_list=\\\"/\\\"\"
-            echo \"root_rw_mount=\\\"NO\\\"\"
          ) >>${mountPoint}/etc/rc.conf"
       # sudo cat ${mountPoint}/etc/rc.conf
 
@@ -347,9 +341,6 @@ elif [ "${TRAVIS_OS_NAME}" == "linux" -a "${QEMU}" == "FreeBSD" ] ; then
 
       # Make sure the boot output goes into the serial console:
       sudo bash -c "echo \"console=\\\"comconsole\\\"\" >>${mountPoint}/boot/loader.conf"
-
-      sudo bash -c "echo \"/sbin/fsck -y -f\" >>${mountPoint}/etc/rc.early"
-      sudo bash -c "chmod +x ${mountPoint}/etc/rc.early"
 
       # Set up NFS:
       sudo mkdir -p ${mountPoint}/travis
