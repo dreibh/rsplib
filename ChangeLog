@@ -1,3 +1,353 @@
+commit e025ba5d65a43dcea6f0977b64aa3f7ae36f450e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 20:49:05 2021 +0100
+
+    Formatting fix.
+
+commit 473e30369d2fc369af9a8b6fe97ec71a4a34d4eb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 20:34:12 2021 +0100
+
+    Improved CMakeLists.txt.
+
+commit 6dffb4528994d3eefc16ee71946354e57feceb31
+Merge: 04f9a054 da17a2cc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 19:40:11 2021 +0100
+
+    Merge branch 'dreibh/csp-status-locking' of github.com:dreibh/rsplib into dreibh/csp-status-locking
+
+commit 04f9a054014290f51a524b58413ca6292b103ed2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 19:39:32 2021 +0100
+
+    Minor update.
+
+commit da17a2cced14470c86cf986f5bb742c10590242b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 19:32:38 2021 +0100
+
+    A fix.
+
+commit 1277dd353b1958cefa1f0aff50ca5834bc80312b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 19:24:24 2021 +0100
+
+    Added check for SCTP_DELAYED_SACK into CMakeLists.txt.
+
+commit 292e02444e655c44345a4d0adee47aba7a996c50
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 16:01:45 2021 +0100
+
+    Updated build scripts
+
+commit 378e762eaa53bc22b53afe9cf16a38c429f14df1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 15:51:41 2021 +0100
+
+    Updated Travis CI configuration.
+
+commit ed86310de43b03775d33669595d59ea77a5c3b07
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 5 15:50:40 2021 +0100
+
+    Updated Travis CI configuration.
+
+commit fd07560bcfc95bf856951b5d48cd6a0dee193ac8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Mar 4 21:39:06 2021 +0100
+
+    Updated CMakeLists.txt due to FreeBSD build issue.
+
+commit 3484297d2aac5aeef1aa3fb9f53ae5ae4c5446a2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Mar 4 21:37:08 2021 +0100
+
+    Replaced stdatomic.h by _Atomic to compile on older systems.
+
+commit 03d6d4b92212ac549ed7fc7234b2420d26cb591f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 19:34:34 2021 +0100
+
+    Updated script.
+
+commit 7521152e9ba2ca7e72d7a40679ad610c6e1ec894
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 19:15:14 2021 +0100
+
+    Commented out the (hopefully) obsolete LK-SCTP work-arounds.
+
+commit 98e309e78aa923b0912382cb78f6a82bfc48af43
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 19:02:23 2021 +0100
+
+    Updated code to handle malloc() pointer type mismatch (false positive reported by static analysis).
+
+commit 961536bf3c4a9cb80d0052400cc5483d49f08016
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 18:33:25 2021 +0100
+
+    Updated Travis CI configuration.
+
+commit a8eebbe14ce1dc46925f8f2ee34ed199118cbce0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 17:16:21 2021 +0100
+
+    Using atomic_int and atomic_bool in breakdetector.c.
+
+commit b7668823e2e1b21a7a0d099b35359bf01482a809
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 17:16:11 2021 +0100
+
+    Updated test script.
+
+commit 4c3377447ffa40b4594b7ca724c7cd12c4a0d592
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 17:04:30 2021 +0100
+
+    Clean-up in CMakeLists.txt.
+
+commit 7ab18c85d7ac1132cd1ae0bc2c6a563a9b4ae59b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Mar 3 16:31:00 2021 +0100
+
+    Formatting fix.
+
+commit 4b3d231cf12696d2057b464cc673b7d71463051d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 21:20:30 2021 +0100
+
+    Updated build scripts
+
+commit 96dd5b99aa635a719a5960d1119800af3911e7e9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 16:30:36 2021 +0100
+
+    Updated build scripts
+
+commit 0dc32e70ddbd359a0b22040dd3226de58bd0e862
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 13:28:37 2021 +0100
+
+    Bugfix: Fixed possible memory access error on TagItem list duplication detected by static analysis. tagListDuplicate() now returns NULL on NULL input.
+
+commit 2afbc7c2e2f9e8a37e03effa9769540bb0ff9433
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:40:53 2021 +0100
+
+    Bugfix: Fixed call of memcpy() with null-pointer as source (but 0 length of data to copy) detected by static analysis -> added check for positive length.
+
+commit 66c41af7a32ac4331b6fc61142149bbb68b7cf16
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:38:03 2021 +0100
+
+    Bugfix: Fixed memory leak detected by static analysis.
+
+commit 277aa9e443396c04cc5eb1dc7fe2a17e41650619
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:35:29 2021 +0100
+
+    Bugfix: Handle possible null-pointer dereference when comparing to null-pointer TransportAddressBlocks.
+
+commit ab1a39a7b61f07f21cd445cfb70b90f4ed9bf635
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:30:38 2021 +0100
+
+    Clean-up from static analysis: removed another unused variable assignment.
+
+commit ed9d5812e2984e24e4d3a1485f0392a878eea900
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:22:13 2021 +0100
+
+    Bugfix: Fixed potential memory leak detected by static analysis.
+
+commit b26c5f54c7c5c41db9ef1f6efe200712fbcb4fee
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:16:46 2021 +0100
+
+    Clean-up from static analysis: removed another unused variable assignment.
+
+commit f94b5de0d823e5c01657afa734f85de307db5859
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:13:07 2021 +0100
+
+    Bugfix: Fixed release of part of a memory block allocated by malloc(). This may result in non-portable behaviour.
+
+commit 4e5d89c3539f8566633dbbaa10da413101108663
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:07:05 2021 +0100
+
+    Another clean-up from static analysis: removed unused variable assignment.
+
+commit 4a8b31433de16139e1119390c5eb336cfce146de
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 12:02:54 2021 +0100
+
+    Clean-up from static analysis: removed unused variable assignment.
+
+commit 9838cbe490878434b230b760483c1d88f5c20d5a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 11:55:18 2021 +0100
+
+    Minor update for false positive of static analysis report.
+
+commit 38d3e45d362a0751454387bebcfe3acc0f98550f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Mar 1 11:54:30 2021 +0100
+
+    Improved autogen.sh script with static analysis options.
+
+commit 5829c160681d3f2949127d79aee14ae6afa0cfcd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 20:23:32 2021 +0100
+
+    Improved log output.
+
+commit 3e48c0790d2afd4e1b0746ddad439a9bee4c1994
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 20:22:50 2021 +0100
+
+    Bugfix: Added VALGRIND_MAKE_MEM_DEFINED() for addresses obtained via sctp_getladdrs(), since LK-SCTP does not flag the memory as defined => false positive in Helgrind check. This requires to have valgrind/memcheck.h available during build => added dependency on Valgrind package.
+
+commit 7574fb1e5851a6564f55e83bd5add038e5706952
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 12:42:18 2021 +0100
+
+    Updated test script.
+
+commit a26e9d4f7c62a9487c72569155327533df690105
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 11:59:17 2021 +0100
+
+    Added PPID to session status.
+
+commit ea3f19edbabaadfdf17d24c8ee3223759f0e7158
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 11:58:41 2021 +0100
+
+    Improved decoding of PPIDs in CSPMonitor.
+
+commit 2ce2ab318b71fbb885dc2940a3f368b1c0cd80d4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 11:58:18 2021 +0100
+
+    Header has to compile with ANSI C as well.
+
+commit 8772234d2746976d3505bc46acb29af78f90434d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 10:53:42 2021 +0100
+
+    Make sure the code compiles again with ENABLE_CSP=0.
+
+commit 35c69dcc8ea915db4faa57aca499b29274b0025d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 10:51:12 2021 +0100
+
+    Minor update.
+
+commit 4c5fb16b3f9eb8594e9b45ece58661189c72fe3d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 10:50:56 2021 +0100
+
+    Minor clean-ups.
+
+commit 795ce78fbca4add6a3b41b7e90974a37d42f62e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 25 10:47:38 2021 +0100
+
+    Implemented proper handling of the CSP status locking, to finally fix the long outstanding Helgrind report.
+
+commit 9263302ab3944a47e5c4fae1f883704f7e454108
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 21:48:24 2021 +0100
+
+    Bugfix: Fix for hold lock on shutdown reported by Helgrind.
+
+commit 7fb8124ffb0df80ade9d03391cce11a93617d96b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 19:46:33 2021 +0100
+
+    Header fix for FreeBSD.
+
+commit 7f21fff596cbd7de334bced6630fa46647122ffd
+Merge: e2fcd219 4faaa9e1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 18:41:26 2021 +0100
+
+    Merge branch 'dreibh/removed-custom-defines'
+
+commit e2fcd21931dead44d55ce35f341e80fa126c0a6f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 18:40:52 2021 +0100
+
+    CalcAppProtocol example: cleaned up keep-alive handling.
+
+commit a5f3614c9ed914251c8a8510d9b1e5a63ac78166
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 17:28:59 2021 +0100
+
+    Updated script.
+
+commit 9206260d60d53ce51f04a31845db04e8ce1f8ea7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 24 12:30:25 2021 +0100
+
+    Added test script.
+
+commit c310695432a5dc19a156b09a02fa979ba332135f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 22 12:08:14 2021 +0100
+
+    Updated Wireshark color filter example.
+
+commit 4faaa9e1de55c80f3cd23f5c046d2460826aec3d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 16:00:57 2021 +0100
+
+    Got rid of custom OS defines; using __linux__, __FreeBSD__, etc. instead.
+
+commit 392af4c0b2212e486321b9b20ec914f8c6590fdf
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 15:19:07 2021 +0100
+
+    Updated build scripts
+
+commit a120b938dd63ae526d6e8f2082268df9b2c74a98
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 15:19:06 2021 +0100
+
+    Updated build scripts
+
+commit 76bcd917067e10511b60b677cded787e4312c356
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 15:17:37 2021 +0100
+
+    Updated build scripts
+
+commit 31d60e15f1cd0e0c91944106d587016917505db1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 15:17:37 2021 +0100
+
+    Updated build scripts
+
+commit f1a1bafab79a8b04d1e88d126c47ca816450712e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Feb 17 15:16:37 2021 +0100
+
+    Header updates.
+
+commit ef9951af3c3ec1c84a048a3e74cd961c1ff80eeb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Feb 14 17:45:47 2021 +0100
+
+    Updated LSM entry.
+
+commit 580b3bdefd889565f89b7a0a167679881edfa7d4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Feb 14 17:41:25 2021 +0100
+
+    New release rsplib-3.2.7.
+
 commit b70a297419eb2b9fa99eaa5c3c53b90155ff5793
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Thu Feb 4 13:36:52 2021 +0100
