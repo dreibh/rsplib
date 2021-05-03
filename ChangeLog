@@ -1,3 +1,33 @@
+commit b837cf9b488c1a4c44476e49c7796428b7c9c54b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 19:43:44 2021 +0200
+
+    Updated build scripts
+
+commit 32e0e8c8d1dc37a6c8d8a697f279164940a5f6dc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 19:42:46 2021 +0200
+
+    Bugfix: CSP header length is 16-bit value.
+
+commit 5b2d41ef4b588a497131bfc3fbf35024a5a4ae4d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Mar 9 19:09:38 2021 +0100
+
+    Updated Wireshark configuration example.
+
+commit fe712678b73edd0c17cda21f95aacf8f5689ec45
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Mar 7 00:00:41 2021 +0100
+
+    Updated LSM entry.
+
+commit 85ba8319d69da72a9c6ef5735cba9d0abc6bf54d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Mar 6 23:37:20 2021 +0100
+
+    New release rsplib-3.3.0.
+
 commit e025ba5d65a43dcea6f0977b64aa3f7ae36f450e
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Fri Mar 5 20:49:05 2021 +0100

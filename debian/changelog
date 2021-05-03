@@ -1,3 +1,9 @@
+rsplib (3.3.1-1ubuntu1) hirsute; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 03 May 2021 20:09:52 +0200
+
 rsplib (3.3.0-1ubuntu1) hirsute; urgency=medium
 
   * New upstream release.
