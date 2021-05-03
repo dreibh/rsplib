@@ -1,5 +1,4 @@
 # Created by: Thomas Dreibholz <dreibh@iem.uni-due.de>
-# $FreeBSD: head/net/rsplib/Makefile 509199 2019-08-18 10:42:52Z pi $
 
 PORTNAME=	rsplib
 PORTVERSION=	3.3.1
@@ -12,14 +11,14 @@ COMMENT=	RSerPool Framework and Example Applications
 LICENSE=	GPLv3+
 LICENSE_FILE=	${WRKSRC}/COPYING
 
-USES=		cmake qt:5 shebangfix tar:xz
+USES=		cmake compiler:c++11-lang qt:5 shebangfix tar:xz
+USE_LDCONFIG=	yes
+USE_QT=		buildtools_build core gui qmake widgets xml
 
 CMAKE_ARGS+=	-DCMAKE_INSTALL_MANDIR=${PREFIX}/man \
 		-DDOCSDIR="${DOCSDIR}" \
 		-DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 SHEBANG_FILES=	src/scriptingserviceexample
-USE_LDCONFIG=	yes
-USE_QT=		buildtools_build core gui qmake widgets xml
 
 PLIST_SUB=      VERSION=${PORTVERSION}
 
