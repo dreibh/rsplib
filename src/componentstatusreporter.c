@@ -103,7 +103,7 @@ void getComponentLocation(char*        componentLocation,
       }
       addresses = gatherLocalAddresses(&addressArray);
    }
-   
+
    if(addresses > 0) {
       copiedAddresses = 0;
       minScope        = AS_UNICAST_GLOBAL;
@@ -220,7 +220,7 @@ static ssize_t componentStatusSend(const union sockaddr_union*        reportAddr
       cspReport->Header.Type            = CSPT_REPORT;
       cspReport->Header.Flags           = flags;
       cspReport->Header.Version         = htonl(CSP_VERSION);
-      cspReport->Header.Length          = htonl(length);
+      cspReport->Header.Length          = htons(length);
       cspReport->Header.SenderID        = hton64(senderID);
       cspReport->Header.SenderTimeStamp = hton64(getMicroTime() - startupTime);
       cspReport->ReportInterval         = htonl(reportInterval);
