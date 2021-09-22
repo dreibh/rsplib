@@ -1119,6 +1119,7 @@ ssize_t rsp_sendmsg(int                sd,
    struct Session*          session;
    struct NotificationNode* notificationNode;
    ssize_t                  result;
+   const uint32_t           ppid = ntohl(sctpPPID);
 
    GET_RSERPOOL_SOCKET(rserpoolSocket, sd);
    threadSafetyLock(&rserpoolSocket->Mutex);
@@ -1131,7 +1132,12 @@ ssize_t rsp_sendmsg(int                sd,
                  session->SessionID,
                  rserpoolSocket->Descriptor, rserpoolSocket->Socket);
          LOG_END
-         session->PPID = ntohl(sctpPPID);
+         if(session->PPID != ppid) {
+            session->PPID = ppid;
+            threadSafetyLock(&session->Status.Mutex);
+            session->Status.PPID = ppid;
+            threadSafetyUnlock(&session->Status.Mutex);
+         }
          result = sendtoplus(rserpoolSocket->Socket, data, dataLength,
 #ifdef MSG_NOSIGNAL
                              msg_flags|MSG_NOSIGNAL,
@@ -1139,7 +1145,7 @@ ssize_t rsp_sendmsg(int                sd,
                              msg_flags,
 #endif
                              NULL, 0,
-                             ntohl(sctpPPID), session->AssocID, sctpStreamID, sctpTimeToLive, sctpFlags,
+                             ppid, session->AssocID, sctpStreamID, sctpTimeToLive, sctpFlags,
                              (timeout >= 0) ? (1000ULL * timeout) : 0);
          if((result < 0) && (errno != EAGAIN)) {
             LOG_ACTION
