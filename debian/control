@@ -14,7 +14,7 @@ Build-Depends: cmake (>= 3.0.2) | cmake3,
                qtbase5-dev-tools,
                qtchooser,
                valgrind
-Standards-Version: 4.5.1.0
+Standards-Version: 4.6.0.1
 Rules-Requires-Root: no
 Vcs-Git: https://github.com/dreibh/rsplib.git
 Vcs-Browser: https://github.com/dreibh/rsplib

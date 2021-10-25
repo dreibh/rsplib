@@ -1,3 +1,40 @@
+commit 8659e5e1fb7552c1ca761eeeb6799f665db2d6dd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 19 16:06:20 2021 +0200
+
+    Updated build scripts
+
+commit 219151944b7e5d7ef18b94e279066c677b16e47a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Sep 22 23:13:41 2021 +0200
+
+    Bugfix: CSP did not properly update changed PPID.
+
+commit e70d9f446682fd33c3452da9a3e72024aeb9aa09
+Merge: 49163e25 feeebeae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 20:33:55 2021 +0200
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 49163e25c15bc7681314ec6d21ca448e78a37854
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 20:33:45 2021 +0200
+
+    Updated LSM entry.
+
+commit feeebeae9a2091aa3e05e066a56afe52deb88d58
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 18:30:40 2021 +0000
+
+    Updated FreeBSD package.
+
+commit 1e29c5955e4463535e15b7da741e86bf8ab5f7b6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 3 20:09:56 2021 +0200
+
+    New release rsplib-3.3.1.
+
 commit b837cf9b488c1a4c44476e49c7796428b7c9c54b
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon May 3 19:43:44 2021 +0200

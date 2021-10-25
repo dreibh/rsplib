@@ -1,3 +1,10 @@
+rsplib (3.3.2-1ubuntu1) jammy; urgency=medium
+
+  * New upstream release.
+  * debian/control: Updated standards version to 4.6.0.1.
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 25 Oct 2021 21:33:19 +0200
+
 rsplib (3.3.1-1ubuntu1) hirsute; urgency=medium
 
   * New upstream release.
