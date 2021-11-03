@@ -419,7 +419,7 @@ librsplib.so.3 librsplib3 #MINVER#
  sessionStorageNew@Base 2.7.8
  sessionStoragePrint@Base 2.7.8
  sessionStorageUpdateSession@Base 2.7.8
- syncSessionStatus@Base 3.3.3
+ syncSessionStatus@Base 3.3.3~test0
  waitForRead@Base 2.7.8
 librspmessaging.so.3 librsplib3 #MINVER#
 * Build-Depends-Package: librsplib-dev
