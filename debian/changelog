@@ -1,9 +1,11 @@
-rsplib (3.3.3~test0-1ubuntu1) unstable; urgency=medium
+rsplib (3.3.3~test1-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
   * Closes: #516750 (ITP).
+  * debian/control: Fixed use of substitution variable ${shlibs:Depends}.
+  * debian/*.symbols: Updated symbols.
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 03 Nov 2021 19:36:44 +0100
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 03 Nov 2021 23:34:16 +0100
 
 rsplib (3.3.2-1ubuntu1) jammy; urgency=medium
 

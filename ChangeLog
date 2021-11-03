@@ -1,3 +1,40 @@
+commit d2c25c3f37b1a72772dad0aaea85ca85e40fa427
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 3 19:44:51 2021 +0100
+
+    Added ITP closing to debian/changelog.
+
+commit 1edabaa3df93642058c5c663c87659fbf3bdaf80
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 3 18:20:53 2021 +0100
+
+    Updated build scripts
+
+commit a2b21e644a7520bfd2d7c4fa2b1c42cdd350d292
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 3 18:20:51 2021 +0100
+
+    Updated build scripts
+
+commit aa34125c7f2a139aadace97f98cc3435b46b78f2
+Merge: 02af7dc5 f2a6c32d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 3 18:13:26 2021 +0100
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit f2a6c32d94e1f12d171a1dc037af63334ea21c6c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 3 16:20:58 2021 +0100
+
+    Improved README file.
+
+commit 02af7dc590d36af54ae96eed98a665572b15c0c9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 25 21:33:50 2021 +0200
+
+    New release rsplib-3.3.2.
+
 commit 8659e5e1fb7552c1ca761eeeb6799f665db2d6dd
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue Oct 19 16:06:20 2021 +0200
