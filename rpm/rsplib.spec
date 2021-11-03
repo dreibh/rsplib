@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.3.2
+Version: 3.3.3~test0
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3+
