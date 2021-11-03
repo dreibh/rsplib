@@ -70,20 +70,16 @@ How to set up a simple test of the rsplib-3.x.y release:
      as ASAP/ENRP traffic over SCTP.
 
 4. Start at least one registrar
-   ./registrar-example
-   (You can start multiple registrars; they may also run on different hosts, of course)
-
-   Alternatively, start the registrar directly:
-   ./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpannounce=auto
-   See also chapter D for registrar parameters.
+   ./rspregistrar
+   See also Section D for registrar parameters.
 
 5. Start at least one pool element
-   ./poolelement-example
+   ./rspserver -echo
    (You can start multiple pool elements; they may also run on different hosts, of course.
     If it complains about finding no registrar, check the multicast settings!)
 
 6. Start a pool user
-   ./pooluser-example
+   ./rspterminal
    (If it complains about finding no registrar, check the multicast settings!)
    Now, you have to manually enter text lines on standard input.
 
@@ -91,7 +87,7 @@ How to set up a simple test of the rsplib-3.x.y release:
    element and watching the failover.
 
 8. You can monitor the status of each component using the Component Status Protocol
-   client "cspclient". Simply start it by "./cspmonitor". It will listen for status
+   monitor "cspmonitor". Simply start it by "./cspmonitor". It will listen for status
    messages sent via UDP on port 2960. The components (registrar, rspserver, etc.) accept
    the command line arguments "-cspserver=<Server>:<Port>" and
    "-cspinterval=<Microseconds>". For example, if you want a status update every 300ms
@@ -99,7 +95,7 @@ How to set up a simple test of the rsplib-3.x.y release:
    "-cspserver=1.2.3.4:2960 -cspinterval=300".
    NOTE: You *must* specify address AND interval, otherwise no messages are sent.
 
-9. You can use Wireshark (http://www.wireshark.org) to observe the RSerPool and demo
+9. You can use Wireshark (https://www.wireshark.org) to observe the RSerPool and demo
    protocol traffic. Coloring rules and filters can be found in the directory
    "rsplib/wireshark" Simply copy "colorfilters", "dfilters" and optionally
    "preferences" to ~/.wireshark (or /root/.wireshark).
@@ -110,12 +106,12 @@ How to set up a simple test of the rsplib-3.x.y release:
 
 B. DEMO POOL ELEMENTS (SERVERS)
 
-All demo servers can be started using the ./rspserver program. It takes a set of
+All demo servers can be started using the rspserver program. It takes a set of
 common parameters as well as some service-specific arguments. These parameters
 are explained in the following.
 
 Note: For most of the provided services, the latest version of Wireshark
-      (http://www.wireshark.org) already includes the packets dissectors!
+      (https://www.wireshark.org) already includes the packets dissectors!
 
 
 B.1 Common Parameters
@@ -244,12 +240,9 @@ C.4 Ping Pong Client (for the Fractal Generator service)
 
 D. REGISTRAR
 
-Start with ./registrar. By default, the auto-configuration (for ASAP as well as
-for ENRP) is turned off! The script "./registrar-example" is provided for
-convenience and starts the registrar with auto-configuration turned on.
+Start the registrar with:
 
-In most cases, you want the following command line:
-./registrar -asap=auto -asapannounce=auto -enrp=auto -enrpmulticast=auto
+./rspregistrar
 
 
 
