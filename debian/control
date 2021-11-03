@@ -37,8 +37,7 @@ Package: librsplib-dev
 Section: libdevel
 Architecture: any
 Depends: librsplib3 (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
+         ${misc:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
 Description: headers of the RSerPool client/server API library rsplib
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
@@ -70,8 +69,7 @@ Section: libdevel
 Architecture: any
 Depends: libcpprspserver3 (= ${binary:Version}),
          librsplib-dev (>= ${source:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
+         ${misc:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
 Description: headers of the C++ RSerPool client/server API library
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
