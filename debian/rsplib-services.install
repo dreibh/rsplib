@@ -5,9 +5,3 @@ usr/bin/scriptingclient
 usr/bin/scriptingcontrol
 usr/bin/scriptingserviceexample
 usr/share/fractalpooluser/*.qm
-usr/share/man/man1/calcappclient.1
-usr/share/man/man1/fractalpooluser.1
-usr/share/man/man1/pingpongclient.1
-usr/share/man/man1/scriptingclient.1
-usr/share/man/man1/scriptingcontrol.1
-usr/share/man/man1/scriptingserviceexample.1
