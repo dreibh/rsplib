@@ -1,4 +1,4 @@
-rsplib (3.3.3~test3-1ubuntu1) jammy; urgency=medium
+rsplib (3.3.3~test4-1ubuntu1) jammy; urgency=medium
 
   * New upstream release.
   * debian/control: Fixed use of substitution variable ${shlibs:Depends}.
@@ -7,7 +7,7 @@ rsplib (3.3.3~test3-1ubuntu1) jammy; urgency=medium
   * debian/: Using dh_installman for the manpages.
   * Closes: #516750 (ITP).
 
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 07 Nov 2021 19:15:40 +0100
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 07 Nov 2021 20:49:35 +0100
 
 rsplib (3.3.2-1ubuntu1) jammy; urgency=medium
 
