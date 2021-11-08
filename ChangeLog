@@ -1,3 +1,87 @@
+commit 5155c2ec63124b608db6c142ab587ad6af79931b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 20:53:14 2021 +0100
+
+    A fix.
+
+commit 46de359cd872ec9e80b1d29c2d6f097a53b39730
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 20:42:36 2021 +0100
+
+    Minor update.
+
+commit c5497daf70ecaecd9ff843dfeacbda878c3d8224
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 20:34:28 2021 +0100
+
+    Using dh_installman for the manpages in the Debian/Ubuntu package.
+
+commit ff44638084f87f57293a1f49c837add6bac2f307
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 20:28:51 2021 +0100
+
+    Removed unused tests/control.
+
+commit 81d01992a662d5ac83b99fb27b312af4ced194da
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 20:28:38 2021 +0100
+
+    Removed obsolete test files.
+
+commit f4112f1fa867d3fec5c33180627dc40b38dc0521
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 7 19:00:41 2021 +0100
+
+    Updated build scripts
+
+commit 21210044b7e4a56d9cdaee4b6c54fbe4eb7b78e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 6 20:49:37 2021 +0100
+
+    Updated build scripts
+
+commit 88016230fc0b864df5a556be8d77c75814547896
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 6 20:10:53 2021 +0100
+
+    Version update.
+
+commit 686d3d11ac27fcbc2f0c99e98b3ff41b4f3f88ae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 6 20:06:30 2021 +0100
+
+    Updated build scripts
+
+commit 11983321608d91e1d65571d0ee6d5c2ed9fc2295
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 4 00:29:18 2021 +0100
+
+    Packaging update.
+
+commit f831b5add6e592645b41b37a44fcd4148df0eefb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 4 00:29:08 2021 +0100
+
+    Updated build scripts
+
+commit 19a205dbd2a41d3c13e6a769bf6265be3def591d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 4 00:28:41 2021 +0100
+
+    Symbols file update.
+
+commit f34adf939695b4db1ca036151bf3f86bdaeca776
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 4 00:08:30 2021 +0100
+
+    Fixed use of substitution variable ${shlibs:Depends}.
+
+commit 9f888cf068a508fa44021c0f2e6bf2bb880949b1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 4 00:08:12 2021 +0100
+
+    Updated symbols.
+
 commit d2c25c3f37b1a72772dad0aaea85ca85e40fa427
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Nov 3 19:44:51 2021 +0100
