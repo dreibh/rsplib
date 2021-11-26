@@ -22,8 +22,8 @@ on:
   push:
     branches:
       - master
-      - dreibh/github-actions
-      - dreibh/github-actions-freebsd
+      #- dreibh/github-actions
+      #- dreibh/github-actions-freebsd
 
 jobs:
   build_job:

@@ -25,47 +25,50 @@ on:
       - dreibh/github-actions
 
 jobs:
-  # ====== Ubuntu Linux =====================================================
-  ubuntu-packaging:
-    name: Ubuntu Packaging
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Packaging
-      shell: bash
-      run: |
-        sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-setup   package
-        sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-install package
-        sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-build   package
-        sudo ci/ci-test
+  ## ====== Ubuntu Linux =====================================================
+  #ubuntu-packaging:
+    #name: Ubuntu Packaging
+    #runs-on: ubuntu-latest
+    #steps:
+    #- uses: actions/checkout@v2
+    #- name: Packaging
+      #shell: bash
+      #run: |
+        #sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-setup   package
+        #sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-install package
+        #sudo CC=gcc CXX=g++ OS=ubuntu DIST=focal ARCH= ci/ci-build   package
+        #sudo ci/ci-test
 
   # ====== Debian Linux =====================================================
   debian-packaging:
     name: Debian Packaging
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Packaging
-      shell: bash
-      run: |
-        sudo CC=gcc CXX=g++ OS=debian DIST=unstable ARCH= ci/ci-setup   package
-        sudo CC=gcc CXX=g++ OS=debian DIST=unstable ARCH= ci/ci-install package
-        sudo CC=gcc CXX=g++ OS=debian DIST=unstable ARCH= ci/ci-build   package
-        sudo ci/ci-test
-
-  # ====== Fedora Linux =====================================================
-  fedora-packaging:
-    name: Fedora Packaging
-    runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: debian:unstable
       options: "--privileged"
     steps:
       - uses: actions/checkout@v2
       - name: Packaging
         shell: bash
         run: |
-          CC=clang CXX=clang++ ARCH= ci/ci-setup   package
-          CC=clang CXX=clang++ ARCH= ci/ci-install package
-          CC=clang CXX=clang++ ARCH= ci/ci-build   package
+          CC=gcc CXX=g++ OS=debian DIST=unstable ARCH=  ci/ci-setup   package
+          CC=gcc CXX=g++ OS=debian DIST=unstable ARCH=  ci/ci-install package
+          CC=gcc CXX=g++ OS=debian DIST=unstable ARCH=  ci/ci-build   package
           ci/ci-test
+
+  ## ====== Fedora Linux =====================================================
+  #fedora-packaging:
+    #name: Fedora Packaging
+    #runs-on: ubuntu-latest
+    #container:
+      #image: fedora:latest
+      #options: "--privileged"
+    #steps:
+      #- uses: actions/checkout@v2
+      #- name: Packaging
+        #shell: bash
+        #run: |
+          #CC=clang CXX=clang++ ARCH= ci/ci-setup   package
+          #CC=clang CXX=clang++ ARCH= ci/ci-install package
+          #CC=clang CXX=clang++ ARCH= ci/ci-build   package
+          #ci/ci-test
