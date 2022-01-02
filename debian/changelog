@@ -1,6 +1,8 @@
 rsplib (3.3.4~rc1-1ubuntu1) jammy; urgency=medium
 
   * New upstream release.
+  * Fix for MIPS build issue (Closes: #1002569).
+  * Fix for ARM build issue (Closes: #1002536).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 01 Jan 2022 11:35:32 +0100
 
