@@ -30,7 +30,6 @@
 #define POOLNAMESPACEMANAGEMENT_H
 
 
-#include "config.h"
 #include "debug.h"
 #include "rserpoolerror.h"
 #include "poolhandlespacechecksum.h"
