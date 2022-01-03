@@ -115,8 +115,7 @@ void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBloc
    transportAddressBlock->Flags     = flags;
    transportAddressBlock->Port      = port;
    transportAddressBlock->Protocol  = protocol;
-   transportAddressBlock->Addresses = min(maxAddresses, addresses);
-
+   transportAddressBlock->Addresses = (addresses < maxAddresses) ? addresses : maxAddresses;
    for(i = 0;i < transportAddressBlock->Addresses;i++) {
       memcpy((void*)&transportAddressBlock->AddressArray[i],
              (void*)&addressArray[i],

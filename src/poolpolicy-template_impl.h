@@ -116,6 +116,12 @@ size_t ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder)(
    poolElementNodes = 0;
    poolElementNode  = ST_CLASS(poolNodeGetFirstPoolElementNodeFromSelection)(poolNode);
    while((poolElementNodes < maxPoolElementNodes) && (poolElementNode != NULL)) {
+/*
+      printf("SELECT: $%08x   l=$%x ldeg=$%x\n",
+             poolElementNode->Identifier,
+             poolElementNode->PolicySettings.Load,
+             poolElementNode->PolicySettings.LoadDegradation);
+*/
       poolElementNodeArray[poolElementNodes] = poolElementNode;
       poolElementNode = ST_CLASS(poolNodeGetNextPoolElementNodeFromSelection)(poolNode, poolElementNode);
       poolElementNodes++;
@@ -484,6 +490,60 @@ static int ST_CLASS(leastUsedDPFComparison)(
 
 /*
    #######################################################################
+   #### Priority Least Used with Distance Penalty Factor Policy       ####
+   #######################################################################
+*/
+
+/* ###### Sorting Order ################################################## */
+static int ST_CLASS(priorityLeastUsedDPFComparison)(
+   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
+   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
+{
+   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+
+   unsigned long long v1 = (unsigned long long)rint(
+      (double)poolElementNode1->PolicySettings.Load +
+      (double)poolElementNode1->PolicySettings.LoadDegradation +
+      (dpf1 * (double)PPV_MAX_LOAD));
+   if(v1 > (long long)PPV_MAX_LOAD) {
+      v1 = (long long)PPV_MAX_LOAD;
+   }
+   unsigned long long v2 = (unsigned long long)rint(
+      (double)poolElementNode2->PolicySettings.Load +
+      (double)poolElementNode2->PolicySettings.LoadDegradation +
+      (dpf2 * (double)PPV_MAX_LOAD));
+   if(v2 > (long long)PPV_MAX_LOAD) {
+      v2 = (long long)PPV_MAX_LOAD;
+   }
+
+/*
+   printf("I1=$%08x dpf1=%1.6lf l1=$%x ldeg1=$%x ldpf1=%1.8lf d1=%3u v1=$%Lx ; ",
+          poolElementNode1->Identifier,
+          dpf1,
+          poolElementNode1->PolicySettings.Load,
+          poolElementNode1->PolicySettings.LoadDegradation,
+          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
+          poolElementNode1->PolicySettings.Distance,
+          v1);
+   printf("I2=$%08x dpf2=%1.6lf l2=$%x ldeg2=$%x ldpf2=%1.8lf d2=%3u v2=$%Lx\n",
+          poolElementNode2->Identifier,
+          dpf2,
+          poolElementNode2->PolicySettings.Load,
+          poolElementNode2->PolicySettings.LoadDegradation,
+          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
+          poolElementNode2->PolicySettings.Distance,
+          v2);
+*/
+
+   COMPARE_KEY_ASCENDING(v1, v2);
+   COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
+   return(0);
+}
+
+
+/*
+   #######################################################################
    #### Least Used Degradation Policy                                 ####
    #######################################################################
 */
@@ -610,14 +670,57 @@ static int ST_CLASS(priorityLeastUsedDegradationComparison)(
 }
 
 
-/* ###### Update ######################################################### */
-static void ST_CLASS(priorityLeastUsedDegradationUpdatePoolElementNode)(
-               struct ST_CLASS(PoolElementNode)* poolElementNode)
+/*
+   #######################################################################
+   #### Priority Least Used with Degradation & DPF Policy             ####
+   #######################################################################
+*/
+
+/* ###### Sorting Order ################################################## */
+static int ST_CLASS(priorityLeastUsedDegradationDPFComparison)(
+   const struct ST_CLASS(PoolElementNode)* poolElementNode1,
+   const struct ST_CLASS(PoolElementNode)* poolElementNode2)
 {
-   poolElementNode->Degradation =
-      ST_CLASS(getSum)(poolElementNode->Degradation,
-                       poolElementNode->PolicySettings.LoadDegradation,
-                       0);
+   const double dpf1 = (double)poolElementNode1->PolicySettings.Distance * ((double)poolElementNode1->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+   const double dpf2 = (double)poolElementNode2->PolicySettings.Distance * ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF);
+
+   unsigned long long v1 = (unsigned long long)rint(
+      (double)poolElementNode1->PolicySettings.Load +
+      (double)poolElementNode1->PolicySettings.LoadDegradation +
+      (double)poolElementNode1->Degradation +
+      (dpf1 * (double)PPV_MAX_LOADDPF));
+   if(v1 > (long long)PPV_MAX_LOAD) {
+      v1 = (long long)PPV_MAX_LOAD;
+   }
+   unsigned long long v2 = (unsigned long long)rint(
+      (double)poolElementNode2->PolicySettings.Load +
+      (double)poolElementNode2->PolicySettings.LoadDegradation +
+      (double)poolElementNode2->Degradation +
+      (dpf2 * (double)PPV_MAX_LOAD));
+   if(v2 > (long long)PPV_MAX_LOAD) {
+      v2 = (long long)PPV_MAX_LOAD;
+   }
+
+/*
+   printf("dpf1=%1.6lf deg1=%1.3f%% l1=$%x ldpf1=%1.8lf d1=%3u v1=$%llx ; ",
+          dpf1,
+          poolElementNode1->Degradation * 100.0 / (double)PPV_MAX_LOADDEGRADATION,
+          poolElementNode1->PolicySettings.Load,
+          ((double)poolElementNode1->PolicySettings.LoadDPF / (double)(long long)PPV_MAX_LOAD_DPF),
+          poolElementNode1->PolicySettings.Distance,
+          v1);
+   printf("dpf2=%1.6lf deg1=%1.3f%% l2=$%x ldpf2=%1.8lf d2=%3u v2=$%llx\n",
+          dpf2,
+          poolElementNode2->Degradation * 100.0 / (double)PPV_MAX_LOAD_DEGRADATION,
+          poolElementNode2->PolicySettings.Load,
+          ((double)poolElementNode2->PolicySettings.LoadDPF / (double)PPV_MAX_LOADDPF),
+          poolElementNode2->PolicySettings.Distance,
+          v2);
+*/
+
+   COMPARE_KEY_ASCENDING(v1, v2);
+   COMPARE_KEY_ASCENDING(poolElementNode1->SeqNumber, poolElementNode2->SeqNumber);
+   return(0);
 }
 
 
@@ -807,6 +910,24 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
       NULL
    },
    {
+      PPT_PRIORITY_LEASTUSED_DPF, "PriorityLeastUsedDPF",
+      1,
+      &ST_CLASS(priorityLeastUsedDPFComparison),
+      &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
+      NULL,
+      NULL,
+      NULL
+   },
+   {
+      PPT_PRIORITY_LEASTUSED_DEGRADATION_DPF, "PriorityLeastUsedDegradationDPF",
+      1,
+      &ST_CLASS(priorityLeastUsedDegradationDPFComparison),
+      &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
+      NULL,
+      &ST_CLASS(leastUsedDegradationUpdatePoolElementNode),
+      NULL
+   },
+   {
       PPT_LEASTUSED_DEGRADATION, "LeastUsedDegradation",
       1,
       &ST_CLASS(leastUsedDegradationComparison),
@@ -839,7 +960,7 @@ const struct ST_CLASS(PoolPolicy) ST_CLASS(PoolPolicyArray)[] =
       &ST_CLASS(priorityLeastUsedDegradationComparison),
       &ST_CLASS(poolPolicySelectPoolElementNodesBySortingOrder),
       NULL,
-      &ST_CLASS(priorityLeastUsedDegradationUpdatePoolElementNode),
+      &ST_CLASS(leastUsedDegradationUpdatePoolElementNode),
       NULL
    },
 
