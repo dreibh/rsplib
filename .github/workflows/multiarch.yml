@@ -71,6 +71,11 @@ jobs:
             distro: unstable
             cc: gcc
             cxx: g++
+          - label: "Debian Unstable: GCC/MIPS-EL"
+            arch: mipsel
+            distro: unstable
+            cc: gcc
+            cxx: g++
 
 
           # ====== Fedora Linux =============================================
