@@ -8,7 +8,7 @@
  *
  * ------------- An Open Source RSerPool Simulation for OMNeT++ -------------
  *
- * Copyright (C) 2003-2021 by Thomas Dreibholz
+ * Copyright (C) 2003-2022 by Thomas Dreibholz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -465,8 +465,10 @@ static int ST_CLASS(getOwnershipHandleTable)(
    size_t                            i;
 #endif
 
-   maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
-   if(maxElements < 1) {
+   if(maxElements > NTE_MAX_POOL_ELEMENT_NODES) {
+      maxElements = NTE_MAX_POOL_ELEMENT_NODES;
+   }
+   else if(maxElements < 1) {
       return(0);
    }
    if(flags & HTEF_START) {
@@ -525,8 +527,10 @@ static int ST_CLASS(getGlobalHandleTable)(struct ST_CLASS(PoolHandlespaceManagem
    size_t                            i;
 #endif
 
-   maxElements = min(NTE_MAX_POOL_ELEMENT_NODES, maxElements);
-   if(maxElements < 1) {
+   if(maxElements > NTE_MAX_POOL_ELEMENT_NODES) {
+      maxElements = NTE_MAX_POOL_ELEMENT_NODES;
+   }
+   else if(maxElements < 1) {
       return(0);
    }
    handleTableExtract->PoolElementNodes = 0;

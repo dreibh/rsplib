@@ -1,3 +1,125 @@
+commit 7d9715acf652de622f33dd6028e6aed0b5c2417d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jan 3 11:00:59 2022 +0100
+
+    A fix.
+
+commit 2d8ee129ce5b2530a50455e7fe9305df315e4bb6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jan 3 10:27:24 2022 +0100
+
+    Merged updates from RSPSIM:
+    * Build fixes for handlespace management within RSPSIM.
+    * New pool policies: PLU-DPF and PLUD-DPF.
+
+commit 700f22e23085c90d1baecb7c3aa451f3aac1d101
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jan 3 10:25:18 2022 +0100
+
+    Header updates.
+
+commit 7f4e75728c1ee6b38c6a0c021263aa1111442803
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jan 3 10:20:30 2022 +0100
+
+    Added lintian overrides for long manpage lines.
+
+commit 7cd413108e6b342840d929674970ea75be2413b3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Jan 2 11:49:05 2022 +0100
+
+    Updated Debian changelog.
+
+commit e14fba4d4a08039ca247889b36cc6bc32f8eb7a9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Jan 2 11:47:06 2022 +0100
+
+    Bugfix: Add libatomic for ARMv5 and RISC-V.
+
+commit 8251b1d1d103746b2808b2de7029358b8127fada
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jan 1 12:46:01 2022 +0100
+
+    Version bump.
+
+commit cae0d9f29bcdc4918669a344eb50f1db69090ea7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Nov 30 15:29:33 2021 +0100
+
+    Removed invalid field "Homepage" from debian/upstream/metadata
+
+commit 276aee9bafb073c07ae0cfca6b0800146f3bdd08
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 21:50:56 2021 +0100
+
+    Improved CI workflows.
+
+commit 0a047c7edacba2f38a0e63e97237a0b2de89e4ae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 21:36:49 2021 +0100
+
+    Finished changes.
+
+commit 9397b33b81052775176507c1dca2bc1559bfcc85
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 21:27:28 2021 +0100
+
+    An update.
+
+commit 8ef28c184656d3e01f93d46e8ac89ec7bd6e8ba0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 20:46:45 2021 +0100
+
+    Another try.
+
+commit 48675a4fb68cfb9559a935eff8508a9955678507
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 20:15:17 2021 +0100
+
+    A test.
+
+commit 74ad78e9dd3791f39708a0f82be1473ac8976274
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 19:48:48 2021 +0100
+
+    Minor update.
+
+commit e4d488213a8f215f9406710956deea00fcca2c52
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 15:51:39 2021 +0100
+
+    Added CI workflows.
+
+commit 34b2a3eb75a7f156600441987acbacc78716ff46
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 15:51:12 2021 +0100
+
+    Updated CI scripts
+
+commit 4bb014618a437e637b06dad2277411ce7670e60f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 15:51:12 2021 +0100
+
+    Travis CI is dead. Removed obsolete Travis CI scripts and configuration.
+
+commit ed77da85f69e8409eaef736620fd887a17dca487
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 26 15:51:12 2021 +0100
+
+    Updated build scripts
+
+commit 6d8f3a6464dce5a83e96113919800487fe9e5692
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 8 20:34:36 2021 +0100
+
+    Updated LSM entry.
+
+commit 12e3e24a4c7625e37fa52e8e08e8336931300b2e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 8 19:58:20 2021 +0100
+
+    New release rsplib-3.3.3.
+
 commit 5155c2ec63124b608db6c142ab587ad6af79931b
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Nov 7 20:53:14 2021 +0100

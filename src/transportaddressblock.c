@@ -8,7 +8,7 @@
  *
  * ------------- An Open Source RSerPool Simulation for OMNeT++ -------------
  *
- * Copyright (C) 2003-2021 by Thomas Dreibholz
+ * Copyright (C) 2003-2022 by Thomas Dreibholz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -115,8 +115,7 @@ void transportAddressBlockNew(struct TransportAddressBlock* transportAddressBloc
    transportAddressBlock->Flags     = flags;
    transportAddressBlock->Port      = port;
    transportAddressBlock->Protocol  = protocol;
-   transportAddressBlock->Addresses = min(maxAddresses, addresses);
-
+   transportAddressBlock->Addresses = (addresses < maxAddresses) ? addresses : maxAddresses;
    for(i = 0;i < transportAddressBlock->Addresses;i++) {
       memcpy((void*)&transportAddressBlock->AddressArray[i],
              (void*)&addressArray[i],

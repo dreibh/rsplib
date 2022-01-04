@@ -8,7 +8,7 @@
  *
  * ------------- An Open Source RSerPool Simulation for OMNeT++ -------------
  *
- * Copyright (C) 2003-2021 by Thomas Dreibholz
+ * Copyright (C) 2003-2022 by Thomas Dreibholz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,15 @@
 #define PPT_WEIGHTED_RANDOM_DPF                       0xb0002001
 #define PPT_LEASTUSED_DPF                             0xb0002002
 #define PPT_LEASTUSED_DEGRADATION_DPF                 0xb0002003
+#define PPT_PRIORITY_LEASTUSED_DPF                    0xb0002004
+#define PPT_PRIORITY_LEASTUSED_DEGRADATION_DPF        0xb0002005
 
+
+/*
+ * NOTE:
+ * Make sure to adapt the following macro when adding a new dynamic policy!
+ * Otherwise, the PE will not update its status!
+ */
 
 #define PPT_IS_ADAPTIVE(p) \
    ( ((p) == PPT_LEASTUSED) || \
@@ -62,6 +70,8 @@
      ((p) == PPT_LEASTUSED_DEGRADATION_DPF) || \
      ((p) == PPT_PRIORITY_LEASTUSED) || \
      ((p) == PPT_PRIORITY_LEASTUSED_DEGRADATION) || \
+     ((p) == PPT_PRIORITY_LEASTUSED_DPF) || \
+     ((p) == PPT_PRIORITY_LEASTUSED_DEGRADATION_DPF) || \
      ((p) == PPT_RANDOMIZED_LEASTUSED) || \
      ((p) == PPT_RANDOMIZED_LEASTUSED_DEGRADATION) || \
      ((p) == PPT_RANDOMIZED_PRIORITY_LEASTUSED) || \
