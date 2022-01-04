@@ -15,7 +15,6 @@ BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
-BuildRequires: valgrind
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 # TEST ONLY:
