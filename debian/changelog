@@ -1,7 +1,13 @@
+rsplib (3.4.1-1ubuntu1) jammy; urgency=medium
+
+  * New upstream release.
+  * libatomic needed for mipsel architecture (Closes: #1002569).
+
+ -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 10 Jan 2022 09:56:05 +0100
+
 rsplib (3.4.0-1ubuntu1) jammy; urgency=medium
 
   * New upstream release.
-  * Fix for MIPS build issue (Closes: #1002569).
   * Fix for ARM build issue (Closes: #1002536).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 03 Jan 2022 11:18:27 +0100

@@ -1,3 +1,21 @@
+commit ee9c6dd25758919f1434a2f4b39166a34080238a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jan 7 20:28:33 2022 +0100
+
+    Bugfix: now also building on mipsel architecture again.
+
+commit 589c27c20336fc1f14214c59768f916d933ed4e6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Jan 4 11:15:42 2022 +0100
+
+    RPM dependency update.
+
+commit c36349ed60ef9dbccf2dbde7bb8864301006e41a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jan 3 11:18:31 2022 +0100
+
+    New release rsplib-3.4.0.
+
 commit 7d9715acf652de622f33dd6028e6aed0b5c2417d
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Jan 3 11:00:59 2022 +0100
