@@ -17,6 +17,10 @@ BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
+# Meta-package rsplib: install rsplib all => install all sub-packages!
+Requires: %{name}-all
+
+
 %description
 RSerPool client/server API library for session management Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
 
@@ -29,6 +33,8 @@ RSerPool client/server API library for session management Reliable Server Poolin
 
 %install
 %cmake_install
+
+%files
 
 
 %package librsplib
