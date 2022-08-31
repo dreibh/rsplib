@@ -17,7 +17,7 @@ BuildRequires: qt5-qtbase-devel
 BuildRequires: qtchooser
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
-# Meta-package rsplib: install rsplib all => install all sub-packages!
+# Meta-package rsplib: install rsplib-all => install all sub-packages!
 Requires: %{name}-all
 
 
