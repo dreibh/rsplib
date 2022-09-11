@@ -1,3 +1,34 @@
+commit 68fcca9170569594d55cd9daa267749a7c4e13bb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 31 11:48:05 2022 +0200
+
+    Removed Vcs-* fields from debian/control.
+
+commit d53f0ce9d0f6cc5b5ea265693ad7e7a506208ecd
+Merge: b020aaa6 7abb1a62
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 31 11:14:30 2022 +0200
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit b020aaa60c8d85f1158c496322254ecb19c8fe51
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 31 11:14:24 2022 +0200
+
+    Updated comment.
+
+commit 7abb1a6255705a8f40d25f25b61f429503e7f0cb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Aug 22 20:28:33 2022 +0200
+
+    Updated LSM entry.
+
+commit 5817fad07aed34bb8e4e53489cf0717c5c560079
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Aug 22 20:23:41 2022 +0200
+
+    New release rsplib-3.4.2.
+
 commit 28ceba063a22b2d128133401460889f15ba58f07
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Aug 21 14:44:11 2022 +0200
