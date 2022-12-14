@@ -1,7 +1,7 @@
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #############################################################################
-# LIBRARIES
+#### LIBRARIES                                                           ####
 #############################################################################
 
 # ====== liblibtdtimeutilities ==============================================
@@ -465,7 +465,7 @@ ENDFOREACH()
 
 
 #############################################################################
-# PROGRAMS
+#### PROGRAMS                                                            ####
 #############################################################################
 
 ADD_EXECUTABLE(rspregistrar rspregistrar.c rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c)
