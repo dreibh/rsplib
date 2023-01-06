@@ -24,7 +24,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Contact: dreibh@iem.uni-due.de
+# Contact: thomas.dreibholz@gmail.com
 
 echo "valgrind $@"
 G_SLICE=always-malloc valgrind  -v --tool=memcheck --leak-check=yes --show-reachable=no --leak-resolution=high --num-callers=40 --freelist-vol=4000000 $@

@@ -1,14 +1,14 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Reliable Server Pooling
-Upstream-Contact: Thomas Dreibholz <dreibh@iem.uni-due.de>
-Source: https://www.uni-due.de/~be0001/rserpool/download/
+Upstream-Contact: Thomas Dreibholz <thomas.dreibholz@gmail.com>
+Source: https://www.nntb.no/~dreibh/rserpool/download/
 
 Files: *
-Copyright: 2002-2021, Thomas Dreibholz <dreibh@iem.uni-due.de>
+Copyright: 2002-2021, Thomas Dreibholz <thomas.dreibholz@gmail.com>
 License: GPL-3+
 
 Files: src/sha1.c
-Copyright: Thomas Dreibholz <dreibh@iem.uni-due.de>
+Copyright: Thomas Dreibholz <thomas.dreibholz@gmail.com>
            Jean-Luc Cooke <jlcooke@certainkey.com>
            Andrew McDonald <andrew@mcdonald.org.uk>
            Kyle McMartin <kyle@debian.org>

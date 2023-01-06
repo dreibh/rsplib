@@ -23,14 +23,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Contact: dreibh@iem.uni-due.de
+# Contact: thomas.dreibholz@gmail.com
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
 PROJECT(rsplib LANGUAGES C CXX)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "4")
-SET(BUILD_PATCH "3")
+SET(BUILD_PATCH "4~rc0")
 SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -50,6 +50,8 @@ colorlinks=true]{hyperref}
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -79,6 +81,7 @@ colorlinks=true]{hyperref}
 \suppress_date false
 \justification true
 \use_refstyle 0
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -87,7 +90,10 @@ colorlinks=true]{hyperref}
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -113,7 +119,7 @@ Thomas Dreibholz
 \begin_inset Newline newline
 \end_inset
 
-Simula@OsloMet 
+Simula Metropolitan Centre for Digital Engineering 
 \begin_inset Newline newline
 \end_inset
 
@@ -128,7 +134,7 @@ status open
 
 
 \backslash
-href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
+href{mailto:thomas.dreibholz@gmail.com}{thomas.dreibholz@gmail.com}
 \end_layout
 
 \end_inset
@@ -137,11 +143,11 @@ href{mailto:dreibh@iem.uni-due.de}{dreibh@iem.uni-due.de}
 \end_layout
 
 \begin_layout Date
-October
+January
 \begin_inset space \thinspace{}
 \end_inset
 
-2, 2018
+6, 2023
 \end_layout
 
 \begin_layout Standard
@@ -176,6 +182,7 @@ This is the documentation for the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Dre2006"
+literal "true"
 
 \end_inset
 
@@ -192,6 +199,7 @@ rsplib
 \begin_inset CommandInset citation
 LatexCommand cite
 key "RSerPoolPage"
+literal "true"
 
 \end_inset
 
@@ -301,6 +309,7 @@ reference "cap:The-RSerPool-Architecture"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "rfc-rserpool-overview"
+literal "true"
 
 \end_inset
 
@@ -324,6 +333,7 @@ reference "cap:The-RSerPool-Protocol-Stack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "rfc-rserpool-overview"
+literal "true"
 
 \end_inset
 
@@ -367,6 +377,7 @@ an organization or building) synchronize their view of the handlespace using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "rfc-rserpool-enrp,draft-dreibholz-rserpool-enrp-takeover,rfc-rserpool-common-param"
+literal "true"
 
 \end_inset
 
@@ -378,6 +389,7 @@ key "rfc-rserpool-enrp,draft-dreibholz-rserpool-enrp-takeover,rfc-rserpool-commo
 \begin_inset CommandInset citation
 LatexCommand cite
 key "RFC4960,Jun2005,JST2000b,SCI2002a"
+literal "true"
 
 \end_inset
 
@@ -410,6 +422,7 @@ on possible
 \begin_inset CommandInset citation
 LatexCommand cite
 key "IJHIT2008,FGCN2007-HsMgt,Contel2005"
+literal "true"
 
 \end_inset
 
@@ -429,6 +442,7 @@ a company or organization; RSerPool does not intend to scale to the whole
 \begin_inset CommandInset citation
 LatexCommand cite
 key "KiVS2007"
+literal "true"
 
 \end_inset
 
@@ -445,6 +459,7 @@ PEs choose an arbitrary PR to register into a pool by using the Aggregate
 \begin_inset CommandInset citation
 LatexCommand cite
 key "rfc-rserpool-asap,draft-dreibholz-rserpool-asap-hropt,rfc-rserpool-common-param"
+literal "true"
 
 \end_inset
 
@@ -491,6 +506,7 @@ pool policy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "rfc-rserpool-policies,draft-dreibholz-rserpool-delay"
+literal "true"
 
 \end_inset
 
@@ -502,6 +518,7 @@ key "rfc-rserpool-policies,draft-dreibholz-rserpool-delay"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Dre2006,LCN2005,Tencon2005,Euromicro2007,ICDS2008-LUD,ICDS2008-Failover,ADCOM2007,AINTEC2007,FGCN2007-LoadBalancing"
+literal "true"
 
 \end_inset
 
@@ -594,6 +611,7 @@ In the usual case, you use kernel SCTP.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sctplib"
+literal "true"
 
 \end_inset
 
@@ -624,16 +642,17 @@ key "sctplib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "RSerPoolPage"
+literal "true"
 
 \end_inset
 
- (https://www.uni-due.de/~be0001/rserpool 
+ (https://www.nntb.no/~dreibh/rserpool 
 \begin_inset Flex URL
 status collapsed
 
 \begin_layout Plain Layout
 
-https://www.uni-due.de/~be0001/rserpool
+https://www.nntb.no/~dreibh/rserpool
 \end_layout
 
 \end_inset
@@ -703,6 +722,7 @@ memory leak detection using Valgrind
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Valgrind"
+literal "true"
 
 \end_inset
 
@@ -715,6 +735,7 @@ key "Valgrind"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "draft-tuexen-sctp-udp-encaps"
+literal "true"
 
 \end_inset
 
@@ -1004,6 +1025,7 @@ In order to install
 \begin_inset CommandInset citation
 LatexCommand cite
 key "RSerPoolPage"
+literal "true"
 
 \end_inset
 
@@ -1013,7 +1035,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
-https://www.uni-due.de/~be0001/rserpool
+https://www.nntb.no/~dreibh/rserpool
 \end_layout
 
 \end_inset
@@ -1269,6 +1291,7 @@ The
 \begin_inset CommandInset citation
 LatexCommand cite
 key "WiresharkUsersGuide"
+literal "true"
 
 \end_inset
 
@@ -1543,6 +1566,7 @@ sed failover
 \begin_inset CommandInset citation
 LatexCommand cite
 key "LCN2002,IJAIT2009"
+literal "true"
 
 \end_inset
 
@@ -1559,6 +1583,7 @@ calcappclient The PU for the CalcApp service used for performance measurements
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Dre2006,KiVS2007,Contel2009"
+literal "true"
 
 \end_inset
 
@@ -1579,6 +1604,7 @@ scriptingclient The PU for the scripting service (remote script execution
 \begin_inset CommandInset citation
 LatexCommand cite
 key "OMNeT++Workshop2008"
+literal "true"
 
 \end_inset
 
@@ -1969,6 +1995,7 @@ A large-scale and realistic Internet testbed platform with support for the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PAMS2013-NorNet,ComNets2013-Core,CAIA2015,NNUW2-Dreibholz-NorNetCore-Tutorial"
+literal "true"
 
 \end_inset
 

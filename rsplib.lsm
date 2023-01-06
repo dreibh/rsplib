@@ -18,11 +18,11 @@ Description:    RSPLIB is the Open Source implementation of the IETF Reliable
                 like telecommunications equipment or routers).
 Keywords:       Reliable Server Pooling, RSerPool, High Availability,
                 Server Pools, Pool Management, Session Management
-Author:         dreibh@iem.uni-due.de (Thomas Dreibholz)
-Maintained-by:  dreibh@iem.uni-due.de (Thomas Dreibholz)
-Primary-site:   https://www.uni-due.de/~be0001/rserpool
+Author:         thomas.dreibholz@gmail.com (Thomas Dreibholz)
+Maintained-by:  thomas.dreibholz@gmail.com (Thomas Dreibholz)
+Primary-site:   https://www.nntb.no/~dreibh/rserpool
                 997 kB download/rsplib-3.4.2.tar.xz
-Original-site:  https://www.uni-due.de/~be0001/rserpool
+Original-site:  https://www.nntb.no/~dreibh/rserpool
 Platforms:      Linux, FreeBSD, MacOS, Solaris
 Copying-policy: GPL-3+
 End

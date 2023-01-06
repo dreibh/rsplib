@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Thomas Dreibholz's PlanetLab Script Collection
-# Copyright (C) 2005-2023 by Thomas Dreibholz, dreibh@iem.uni-due.de
+# Copyright (C) 2005-2023 by Thomas Dreibholz, thomas.dreibholz@gmail.com
 #
 # $Id$
 #
@@ -19,7 +19,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
-# Contact: dreibh@iem.uni-due.de
+# Contact: thomas.dreibholz@gmail.com
 #
 
 # INPUT="U01 U02 U03 U04 U05 U06 U07 U08 U09 U10 U11 U12"

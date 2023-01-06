@@ -1,11 +1,11 @@
-# Created by: Thomas Dreibholz <dreibh@iem.uni-due.de>
+# Created by: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 
 PORTNAME=	rsplib
-PORTVERSION=	3.4.3
+PORTVERSION=	3.4.4~rc0
 CATEGORIES=	net
-MASTER_SITES=	https://www.uni-due.de/~be0001/rserpool/download/
+MASTER_SITES=	https://www.nntb.no/~dreibh/rserpool/download/
 
-MAINTAINER=	dreibh@iem.uni-due.de
+MAINTAINER=	thomas.dreibholz@gmail.com
 COMMENT=	RSerPool Framework and Example Applications
 
 LICENSE=	GPLv3+

@@ -4,7 +4,7 @@
 Thomas Dreibholz
 
 ## Contact Email:
-dreibh@iem.uni-due.de
+thomas.dreibholz@gmail.com
 
 ## What type of assignment/registration are you requesting?
 SCTP Payload Protocol Identifier for the Fractal Generator Protocol (FGP)
@@ -18,7 +18,7 @@ SCTP Parameters -> SCTP Payload Protocol Identifiers
 The Fractal Generator Protocol (FGP) is used by the Fractal Generator Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of the FGP is to demonstrate ASAP cookie based failover (RFC 5351/RFC 5352) and RSerPool workload distribution (draft-dreibholz-rserpool-applic-distcomp-08). Particularly, it is also intended to be used in RSerPool interop testing. Since FGP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between FGP and ASAP messages.
 
 The implementation of the FGP is available as Open Source under GPLv3 licence within the RSPLIB package at:
-https://www.uni-due.de/~be0001/rserpool/ .
+https://www.nntb.no/~dreibh/rserpool/ .
 
 Some more documentation of the FGP application can be found here:
 
@@ -43,7 +43,7 @@ Registration Procedures: First Come First Served
 Thomas Dreibholz
 
 ## Contact Email:
-dreibh@iem.uni-due.de
+thomas.dreibholz@gmail.com
 
 ## What type of assignment/registration are you requesting?
 SCTP Payload Protocol Identifier for the Ping Pong Protocol (PPP)
@@ -57,7 +57,7 @@ SCTP Parameters -> SCTP Payload Protocol Identifiers
 The Ping Pong Protocol (PPP) is used by the Ping Pong Service application of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of the PPP is to test RSerPool failover behaviour (RFC 5351/RFC 5352). Particularly, it is also intended to be used in RSerPool interop testing. Since PPP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between PPP and ASAP messages.
 
 The implementation of the PPP is available as Open Source under GPLv3 licence within the RSPLIB package at:
-https://www.uni-due.de/~be0001/rserpool/ .
+https://www.nntb.no/~dreibh/rserpool/ .
 
 Some more documentation on RSPLIB can be found here:
 
@@ -79,7 +79,7 @@ Registration Procedures: First Come First Served
 Thomas Dreibholz
 
 ## Contact Email:
-dreibh@iem.uni-due.de
+thomas.dreibholz@gmail.com
 
 ## What type of assignment/registration are you requesting?
 SCTP Payload Protocol Identifier for the CalcApp Protocol (CALCAPP)
@@ -95,7 +95,7 @@ The CalcApp Protocol (CALCAPP) is used by the CalcApp Service application of the
 Its implementation is available as Open Source under GPLv3 licence. Since CALCAPP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between CALCAPP and ASAP messages.
 
 The implementation of the CALCAPP is available as Open Source under GPLv3 licence within the RSPLIB package at:
-https://www.uni-due.de/~be0001/rserpool/ .
+https://www.nntb.no/~dreibh/rserpool/ .
 
 Some more documentation of the CALCAPP application can be found here:
 
@@ -129,7 +129,7 @@ Registration Procedures: First Come First Served
 Thomas Dreibholz
 
 ## Contact Email:
-dreibh@iem.uni-due.de
+thomas.dreibholz@gmail.com
 
 ## What type of assignment/registration are you requesting?
 SCTP Payload Protocol Identifier for the Scripting Service Protocol (SSP)
@@ -145,7 +145,7 @@ The Scripting Service Protocol (SSP is used by the Scripting Service Service app
 Its implementation is available as Open Source under GPLv3 licence. Since SSP is multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between SSP and ASAP messages.
 
 The implementation of the SSP is available as Open Source under GPLv3 licence within the RSPLIB package at:
-https://www.uni-due.de/~be0001/rserpool/ .
+https://www.nntb.no/~dreibh/rserpool/ .
 
 Some more documentation of the SSP application can be found here:
 
@@ -155,7 +155,7 @@ http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publica
 * Dreibholz, T.; Rathgeb, E. P.: ``A Powerful Tool-Chain for Setup, Distributed Processing, Analysis and Debugging of OMNeT++ Simulations´´ (PDF, 557 KiB), in Proceedings of the 1st ACM/ICST International Workshop on OMNeT++, ISBN 978-963-9799-20-2, Marseille/France, March 7, 2008.
 http://www.tdr.wiwi.uni-due.de/fileadmin/fileupload/I-TDR/ReliableServer/Publications/OMNeTWorkshop2008.pdf
 
-* SimProcTC Homepage: https://www.uni-due.de/~be0001/omnetpp/
+* SimProcTC Homepage: https://www.nntb.no/~dreibh/omnetpp/
 
 
 ## Additional Information. Please include a reference to the specification or RFC (if available) that defines this number or name space:
@@ -171,7 +171,7 @@ Registration Procedures: First Come First Served
 Thomas Dreibholz
 
 ## Contact Email:
-dreibh@iem.uni-due.de
+thomas.dreibholz@gmail.com
 
 ## What type of assignment/registration are you requesting?
 SCTP Payload Protocol Identifier for RSerPool test protocols:
@@ -189,7 +189,7 @@ SCTP Parameters -> SCTP Payload Protocol Identifiers
 The protocols ECHO, DISCARD, DAYTIME and CHARGEN are test applications of the Reliable Server Pooling (RSerPool) framework implementation RSPLIB. The purpose of these protocols is to test the correct behaviour of implementations (according to RFC 5351 to RFC 5354 and RFC 5356). In particular, these protocols are used for interop testing (draft-dreibholz-rserpool-score-08). Since the test protocols are multiplexed with the ASAP protocol over a single SCTP stream, different PPIDs are required to distinguish between test protocol and ASAP messages.
 
 The implementation of the ECHO, DISCARD, DAYTIME and CHARGEN protocols is available as Open Source under GPLv3 licence within the RSPLIB package at:
-https://www.uni-due.de/~be0001/rserpool/ .
+https://www.nntb.no/~dreibh/rserpool/ .
 
 Some more information on RSerPool interop testing can be found here:
 
