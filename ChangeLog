@@ -1,3 +1,51 @@
+commit 275d43a1a154f0b876ee125b790c5f7a8b0f03b2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jan 21 22:02:47 2023 +1100
+
+    Updated build scripts
+
+commit daa732df45156f87f28d373ad87d688d04a36733
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jan 6 21:38:01 2023 +1100
+
+    URL change from UDE to NNTB.
+
+commit 8f069649081c4c04f2e629d48e15c04e988d3038
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jan 6 10:21:52 2023 +1100
+
+    Updated CI scripts
+
+commit 651205210b0438ec1448572aed19c1a0a2b07564
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jan 6 10:21:46 2023 +1100
+
+    Updated build scripts
+
+commit 6fc6c8e87c3979e6a6dc30d70584bf01e8ff7afe
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 14 15:43:23 2022 +0100
+
+    Header updates.
+
+commit 8e3c9cc95800940c9f32f8715d24e3848f4247d1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 14 15:41:27 2022 +0100
+
+    Small CMakeLists.txt updates.
+
+commit be33cf02555d5f5d5acfc34161c78375a30ef11a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 14 15:39:06 2022 +0100
+
+    Added missing configuration option for PLUD and PLUD-DPF policies.
+
+commit 01fea7c27ee05c074bf57c2ae2b8d70025fc0f53
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Sep 11 13:04:20 2022 +0200
+
+    New release rsplib-3.4.3.
+
 commit 68fcca9170569594d55cd9daa267749a7c4e13bb
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Aug 31 11:48:05 2022 +0200
