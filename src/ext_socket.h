@@ -1,6 +1,6 @@
 /*
  * SocketAPI implementation for the sctplib.
- * Copyright (C) 1999-2023 by Thomas Dreibholz
+ * Copyright (C) 1999-2024 by Thomas Dreibholz
  *
  * Realized in co-operation between
  * - Siemens AG
