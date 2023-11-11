@@ -1825,7 +1825,6 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
             /* These structures were used temporarily only */
             free(poolElementNode->UserTransport);
             free(poolElementNode->RegistratorTransport);
-            free(poolElementNode);
 
             if(message->Error != RSPERR_OKAY) {
                LOG_WARNING
@@ -1835,8 +1834,10 @@ static bool scanHandleTableResponseMessage(struct RSerPoolMessage* message)
                rserpoolErrorPrint(message->Error, stdlog);
                fputs("\n", stdlog);
                LOG_END
+               free(poolElementNode);
                return(false);
             }
+            free(poolElementNode);
          }
          if(message->Error != RSPERR_OKAY) {
             return(false);
