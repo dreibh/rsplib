@@ -3,12 +3,11 @@ Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 Homepage: https://www.nntb.no/~dreibh/rserpool/
-Build-Depends: cmake (>= 3.10),
+Build-Depends: cmake,
                debhelper (>= 12),
-               dpkg-dev (>= 1.16.1~),
-               libbz2-dev (>= 1.0),
+               libbz2-dev,
                libfile-fcntllock-perl,
-               libsctp-dev (>= 1.0.8),
+               libsctp-dev,
                libtool,
                qtbase5-dev,
                qtbase5-dev-tools,
