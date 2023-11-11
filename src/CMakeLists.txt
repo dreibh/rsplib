@@ -477,6 +477,7 @@ ENDIF()
 INSTALL(TARGETS             rspregistrar
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES rspregistrar.service DESTINATION /lib/systemd/system)
 INSTALL(FILES rspregistrar.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(rspserver rspserver.cc standardservices.cc fractalgeneratorservice.cc calcappservice.cc scriptingservice.cc environmentcache.cc memfile.cc sha1.c)

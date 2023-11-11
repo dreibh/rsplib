@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.4.4
+Version: 3.4.5~rc1
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3+
@@ -266,6 +266,7 @@ setup, but for redundancy reasons, you should have at least two.
 %files registrar
 %{_bindir}/rspregistrar
 %{_mandir}/man1/rspregistrar.1.gz
+/lib/systemd/system/rspregistrar.service
 
 
 %package tools

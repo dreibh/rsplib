@@ -97,9 +97,7 @@ Description: documentation of the RSerPool implementation RSPLIB
 
 Package: rsplib-registrar
 Architecture: any
-Pre-Depends: ${misc:Pre-Depends}
-Depends: lsb-base (>= 3.2-14),
-         ${misc:Depends},
+Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
 Description: RSerPool Registrar service
