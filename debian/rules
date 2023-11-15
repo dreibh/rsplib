@@ -8,15 +8,5 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 override_dh_auto_configure:
 	dh_auto_configure -- -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 
-override_dh_strip:
-	dh_strip -plibcpprspserver3
-	dh_strip -plibcpprspserver-dev
-	dh_strip -plibrsplib3
-	dh_strip -plibrsplib-dev
-	dh_strip -prsplib-registrar
-	dh_strip -prsplib-services
-	dh_strip -prsplib-tools
-	strip --strip-debug --remove-section=.comment --remove-section=.note debian/librsplib-dev/usr/lib/*/lib*.a
-
 override_dh_installchangelogs:
 	dh_installchangelogs -k ChangeLog
