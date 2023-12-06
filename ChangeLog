@@ -1,3 +1,81 @@
+commit f29fc149da242e042459d63e4962cd1f4fcebc95
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 15 11:42:31 2023 +0100
+
+    Dependency improvements.
+
+commit 21a689a942bf4a3abf92685a1fe3392141b9a2ce
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 15 10:55:04 2023 +0100
+
+    Packaging clean-ups.
+
+commit 1702b61c7bf079b026e6e740063751b806de9d13
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 15 09:52:41 2023 +0100
+
+    Updated build scripts
+
+commit b12f886865a7a7ba0d2420adeb29dac10040ce31
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 15 09:33:32 2023 +0100
+
+    Updated build scripts
+
+commit c5486ade65d3caf29dc6eeaaece1e825b710762d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 18:07:02 2023 +0100
+
+    Removed unnecessary constraints in debian/control.
+
+commit bc2425098d0caaefb1c7fd274afcae39111e7dc1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 17:50:51 2023 +0100
+
+    Workflows update.
+
+commit f5dff24290c3154bc105dab56e97de3324a0b2b2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 17:46:22 2023 +0100
+
+    Removing dependency on lsb-core by converting Registrar init script to SystemD unit.
+
+commit 26c0ec9d59a21f934569df99a015759dc49978a4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 17:07:59 2023 +0100
+
+    Bugfix: Fixed access to already-freed memory.
+
+commit 64f29986bd511bf09b9e4634b781fb53d495e04f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 17:03:27 2023 +0100
+
+    Using CMake 3.10/Debhelper 12.
+
+commit b9e9292455f58664d05d2ed92bea69bad29025e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 16:22:36 2023 +0100
+
+    Header updates.
+
+commit fa48e7fb5ec3cc7ea9ca7a6650fd87dc7c102c45
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 16:16:18 2023 +0100
+
+    Updated CI scripts
+
+commit 76be45f2fea7f4c156842c03c7007d870dec8648
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Nov 11 16:15:53 2023 +0100
+
+    Updated build scripts
+
+commit 29a8a57834c36a6fcd99320c856d6b7a3ba8f0b2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Jan 22 22:48:47 2023 +1100
+
+    New release rsplib-3.4.4.
+
 commit 275d43a1a154f0b876ee125b790c5f7a8b0f03b2
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sat Jan 21 22:02:47 2023 +1100
