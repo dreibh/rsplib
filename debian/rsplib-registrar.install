@@ -1,2 +1,2 @@
-usr/bin/rspregistrar
 lib/systemd/system/rspregistrar.service
+usr/bin/rspregistrar
