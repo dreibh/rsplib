@@ -7,6 +7,7 @@ MASTER_SITES=	https://www.nntb.no/~dreibh/rserpool/download/
 
 MAINTAINER=	thomas.dreibholz@gmail.com
 COMMENT=	RSerPool Framework and Example Applications
+WWW=		https://www.nntb.no/~dreibh/rserpool/
 
 LICENSE=	GPLv3+
 LICENSE_FILE=	${WRKSRC}/COPYING
