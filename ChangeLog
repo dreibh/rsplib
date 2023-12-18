@@ -1,3 +1,64 @@
+commit affd74bcb043a3e7b8842ae4ddb76fe0ae7cd70e
+Merge: 03a12a91 0a5f2e0d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:52:59 2023 +0100
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 03a12a9181908e506a7893b53fdc596fb43d66f2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:49:58 2023 +0100
+
+    FreeBSD build fix.
+
+commit 0a5f2e0da4c95242e7923a1cb8a32e0f14f3a770
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 11:50:24 2023 +0100
+
+    FreeBSD packaging update.
+
+commit c660f7f230df2c1649a3b6c3beab44dd32b434ae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 10:06:46 2023 +0100
+
+    Updated FreeBSD packaging.
+
+commit 61833c887fddfedf44162f4245b5777fc037ce4d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 7 13:41:31 2023 +0100
+
+    Packaging fix.
+
+commit a23057c7f46ae5eebe76ee9fe659cf966a16bc91
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 7 12:32:29 2023 +0100
+
+    Improved FreeBSD test script.
+
+commit 6aa558d39bf0d8ab525af02bf6cd02a0263a9246
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 7 12:13:02 2023 +0100
+
+    Updated FreeBSD packaging files.
+
+commit e4f03621ff1f2ab5c40f14fd2474b0b7007d0318
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 7 10:20:15 2023 +0100
+
+    Updated packaging configuration.
+
+commit 34e7ba8d3277105570c627252e9d489507b238a3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 6 16:58:34 2023 +0100
+
+    Updated LSM entry.
+
+commit 291277b801c27c56cefc1e250a56573f9726639f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 6 16:54:08 2023 +0100
+
+    New release rsplib-3.4.5.
+
 commit f29fc149da242e042459d63e4962cd1f4fcebc95
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Nov 15 11:42:31 2023 +0100
