@@ -1,3 +1,27 @@
+commit bf50cefc59c81d47b72956ed692e2862e1d82b3d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:02:18 2023 +0100
+
+    Another FreeBSD build fix.
+
+commit 11048d41faa494179bc256c37198e9e03eede98b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:58:52 2023 +0100
+
+    Updated distinfo.
+
+commit 73fe1d88f51cf645025ce5477e90a5397de86067
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:55:47 2023 +0100
+
+    Updated LSM entry.
+
+commit 52cc5f865c77cb01c358c70a69e55537f30e575f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:53:24 2023 +0100
+
+    New release rsplib-3.4.6.
+
 commit affd74bcb043a3e7b8842ae4ddb76fe0ae7cd70e
 Merge: 03a12a91 0a5f2e0d
 Author: Thomas Dreibholz <dreibh@simula.no>
