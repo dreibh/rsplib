@@ -1,5 +1,3 @@
-# Created by: Thomas Dreibholz <thomas.dreibholz@gmail.com>
-
 PORTNAME=	rsplib
 PORTVERSION=	3.4.5
 CATEGORIES=	net
