@@ -33,7 +33,7 @@
 #include <stdlib.h>
 
 
-#ifdef NDEBUG
+#if defined(SIM_IMPORT) || defined(OMNETPPLIBS_IMPORT)
 #undef min
 #undef max
 #include <omnetpp.h>

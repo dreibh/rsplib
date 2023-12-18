@@ -30,6 +30,10 @@
 #define POOLNAMESPACEMANAGEMENT_H
 
 
+#if defined(SIM_IMPORT) || defined(OMNETPPLIBS_IMPORT)
+#include "config.h"
+#endif
+
 #include "debug.h"
 #include "rserpoolerror.h"
 #include "poolhandlespacechecksum.h"
