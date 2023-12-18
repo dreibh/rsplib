@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.4.5
+Version: 3.4.6
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3+
@@ -374,6 +374,8 @@ It installs all RSPLIB components.
 
 
 %changelog
+* Mon Dec 18 2023 Thomas Dreibholz <thomas.dreibholz@gmail.com> - 3.4.6
+- New upstream release.
 * Wed Dec 06 2023 Thomas Dreibholz <thomas.dreibholz@gmail.com> - 3.4.5
 - New upstream release.
 * Sun Jan 22 2023 Thomas Dreibholz <thomas.dreibholz@gmail.com> - 3.4.4
