@@ -21,8 +21,4 @@ SHEBANG_FILES=	src/scriptingserviceexample
 
 PLIST_SUB=	VERSION=${PORTVERSION}
 
-post-patch:
-	@${REINPLACE_CMD} -e 's/^#ifdef NDEBUG/#if defined(SIM_IMPORT) || defined(OMNETPPLIBS_IMPORT)/' \
-		${WRKSRC}/src/randomizer.c
-
 .include <bsd.port.mk>
