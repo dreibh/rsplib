@@ -1,0 +1,4 @@
+# Debian time_t transition requires package name change:
+libcpprspserver3t64: distant-prerequisite-in-shlibs
+libcpprspserver3t64: package-name-doesnt-match-sonames
+libcpprspserver3t64: symbols-declares-dependency-on-other-package
