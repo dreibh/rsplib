@@ -1,5 +1,6 @@
 PORTNAME=	rsplib
 PORTVERSION=	3.4.7
+PORTREVISION=	1
 CATEGORIES=	net
 MASTER_SITES=	https://www.nntb.no/~dreibh/rserpool/download/
 
@@ -14,11 +15,10 @@ USES=		cmake compiler:c++11-lang qt:5 shebangfix tar:xz
 USE_LDCONFIG=	yes
 USE_QT=		buildtools:build core gui qmake widgets xml
 
-CMAKE_ARGS+=	-DCMAKE_INSTALL_MANDIR=${PREFIX}/man \
-		-DDOCSDIR="${DOCSDIR}" \
+CMAKE_ARGS=	-DCMAKE_INSTALL_DOCDIR=${DOCSDIR} \
 		-DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1
 SHEBANG_FILES=	src/scriptingserviceexample
 
-PLIST_SUB=	VERSION=${PORTVERSION}
+PLIST_SUB=	VERSION=${DISTVERSION}
 
 .include <bsd.port.mk>
