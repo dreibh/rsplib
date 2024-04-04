@@ -94,6 +94,7 @@ int main(int argc, char** argv)
       perror("Unable to create SCTP socket");
       exit(1);
    }
+   setIPv6Only(sd, 0);
    memset(&sctpEvents, 0, sizeof(sctpEvents));
    sctpEvents.sctp_data_io_event = 1;
    if(ext_setsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, &sctpEvents, sizeof(sctpEvents)) < 0) {

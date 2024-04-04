@@ -110,11 +110,14 @@ int rsp_socket_internal(int domain, int type, int protocol, int customFD)
    domain = (domain == 0) ? (checkIPv6() ? AF_INET6 : AF_INET) : domain;
    if(customFD < 0) {
       fd = ext_socket(domain, type, protocol);
+      if( (fd >= 0) && (domain == AF_INET6) ) {
+         setIPv6Only(fd, 0);
+      }
    }
    else {
       fd = customFD;
    }
-   if(fd <= 0) {
+   if(fd < 0) {
       LOG_ERROR
       logerror("Unable to create socket for RSerPool socket");
       LOG_END

@@ -553,7 +553,6 @@ int main(int argc, char** argv)
    size_t                         lastElements   = ~0;
    size_t                         elements;
    int                            result;
-   int                            reuse;
    int                            sd;
    int                            n;
 
@@ -614,10 +613,10 @@ int main(int argc, char** argv)
       perror("Unable to create socket");
       exit(1);
    }
-   reuse = 1;
-   if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-      perror("setsockopt() with SO_REUSEADDR failed");
+   if(!setReusable(sd, 1)) {
+      perror("setReusable() failed");
    }
+   setIPv6Only(sd, 0);
    if(bindplus(sd, &localAddress, 1) == false) {
       fputs("ERROR: Unable to bind socket to local address\n", stderr);
       exit(1);

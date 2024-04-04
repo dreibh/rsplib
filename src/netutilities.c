@@ -619,14 +619,7 @@ size_t gatherLocalAddresses(union sockaddr_union** addressArray)
    string2address(hasIPv6 ? "[::]" : "0.0.0.0", &anyAddress);
    sd = ext_socket(hasIPv6 ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd >= 0) {
-#ifdef IPV6_V6ONLY
-      if(hasIPv6) {
-         const int off = 0;
-         if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off)) < 0) {
-            return(0);
-         }
-      }
-#endif
+      setIPv6Only(sd, 0);
       if(ext_bind(sd, (struct sockaddr*)&anyAddress, getSocklen(&anyAddress.sa)) == 0) {
          addresses = getAddressesFromSocket(sd, addressArray);
       }
@@ -1835,6 +1828,18 @@ bool setReusable(int sd, int on)
    }
 #if !defined (__linux__) && !(defined(__sun) && defined(__SVR4))
    if(ext_setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) != 0) {
+      return(false);
+   }
+#endif
+   return(true);
+}
+
+
+/* ###### Set IPV6_V6ONLY (if supported) ################################# */
+bool setIPv6Only(int sd, int on)
+{
+#ifdef IPV6_V6ONLY
+   if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) < 0) {
       return(false);
    }
 #endif

@@ -446,6 +446,16 @@ bool setReusable(int sd, int on);
 
 
 /**
+  * Set IPv6-only mode on IPv6 socket.
+  *
+  * @param sd Socket descriptor.
+  * @param on 1 to set IPv6-only mode on, 0 for off.
+  * @return true for success; false otherwise.
+  */
+bool setIPv6Only(int sd, int on);
+
+
+/**
   * Translate a sockaddr_union array into a block of sockaddrs.
   * The memory is dynamically allocated using malloc() and has to be
   * freed using free().

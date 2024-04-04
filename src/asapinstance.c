@@ -141,6 +141,8 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
             asapInstanceDelete(asapInstance);
             return(NULL);
          }
+         setIPv6Only(asapInstance->RegistrarHuntSocket, 0);
+         setNonBlocking(asapInstance->RegistrarHuntSocket);
 
          fdCallbackNew(&asapInstance->RegistrarHuntFDCallback,
                        asapInstance->StateMachine,
@@ -156,7 +158,6 @@ struct ASAPInstance* asapInstanceNew(struct Dispatcher*          dispatcher,
             asapInstanceDelete(asapInstance);
             return(NULL);
          }
-         setNonBlocking(asapInstance->RegistrarHuntSocket);
 
          if(ext_listen(asapInstance->RegistrarHuntSocket, 10) < 0) {
             LOG_ERROR

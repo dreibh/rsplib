@@ -184,6 +184,7 @@ static void getSocketPair(const char*                   sctpAddressParameter,
          }
          continue;
       }
+      setIPv6Only(*sctpSocket, 0);
       if(bindplus(*sctpSocket,
                   (union sockaddr_union*)&sctpAddressArray,
                   sctpAddresses) == false) {
