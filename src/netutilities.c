@@ -614,10 +614,19 @@ size_t gatherLocalAddresses(union sockaddr_union** addressArray)
    union sockaddr_union anyAddress;
    size_t               addresses = 0;
    int                  sd;
+   const bool           hasIPv6   = checkIPv6();
 
-   string2address(checkIPv6() ? "[::]" : "0.0.0.0", &anyAddress);
-   sd = ext_socket(checkIPv6() ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+   string2address(hasIPv6 ? "[::]" : "0.0.0.0", &anyAddress);
+   sd = ext_socket(hasIPv6 ? AF_INET6 : AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
    if(sd >= 0) {
+#ifdef IPV6_V6ONLY
+      if(hasIPv6) {
+         const int off = 0;
+         if(ext_setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off)) < 0) {
+            return(0);
+         }
+      }
+#endif
       if(ext_bind(sd, (struct sockaddr*)&anyAddress, getSocklen(&anyAddress.sa)) == 0) {
          addresses = getAddressesFromSocket(sd, addressArray);
       }
