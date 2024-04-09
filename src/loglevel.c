@@ -71,11 +71,11 @@ static bool initLogFile(const unsigned int logLevel, const char* fileName, const
 
    finishLogging();
    if(fileName != NULL) {
-      newLogFile = fopen(fileName,fileMode);
+      newLogFile = fopen(fileName, fileMode);
       if(newLogFile != NULL) {
          *gStdLog     = newLogFile;
          gCloseStdLog = true;
-         gLogLevel    = min(logLevel,MAX_LOGLEVEL);
+         gLogLevel    = min(logLevel, MAX_LOGLEVEL);
          return(true);
       }
    }
@@ -86,21 +86,21 @@ static bool initLogFile(const unsigned int logLevel, const char* fileName, const
 /* ###### Set logging parameter ########################################## */
 bool initLogging(const char* parameter)
 {
-   if(!(strncmp(parameter,"-logfile=",9))) {
-      return(initLogFile(gLogLevel,(char*)&parameter[9],"w"));
+   if(!(strncmp(parameter, "-logfile=", 9))) {
+      return(initLogFile(gLogLevel,(char*)&parameter[9], "w"));
    }
-   else if(!(strncmp(parameter,"-logappend=",11))) {
-      return(initLogFile(gLogLevel,(char*)&parameter[11],"a"));
+   else if(!(strncmp(parameter,"-logappend=", 11))) {
+      return(initLogFile(gLogLevel,(char*)&parameter[11], "a"));
    }
-   else if(!(strcmp(parameter,"-logquiet"))) {
+   else if(!(strcmp(parameter, "-logquiet"))) {
       initLogFile(0,NULL,"w");
       gLogLevel = 0;
    }
-   else if(!(strncmp(parameter,"-loglevel=",10))) {
+   else if(!(strncmp(parameter, "-loglevel=", 10))) {
       gLogLevel = min(atol((char*)&parameter[10]),MAX_LOGLEVEL);
    }
-   else if(!(strncmp(parameter,"-logcolor=",10))) {
-      if(!(strcmp((char*)&parameter[10],"off"))) {
+   else if(!(strncmp(parameter, "-logcolor=", 10))) {
+      if(!(strcmp((char*)&parameter[10], "off"))) {
          gColorMode = false;
       }
       else {

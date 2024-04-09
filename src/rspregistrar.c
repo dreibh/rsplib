@@ -407,7 +407,7 @@ start:
                (!(strncmp(argv[i], "-peermaxtimenoresponse=", 23))) ||
                (!(strncmp(argv[i], "-mentordiscoverytimeout=", 19))) ||
                (!(strncmp(argv[i], "-takeoverexpiryinterval=", 24))) ||
-               (!(strcmp(argv[i], "-supporttakeoversuggestion"))) ||
+               (!(strcmp(argv[i],  "-supporttakeoversuggestion"))) ||
                (!(strncmp(argv[i], "-maxincrement=", 14))) ||
                (!(strncmp(argv[i], "-maxhresitems=", 14))) ||
                (!(strncmp(argv[i], "-maxhrrate=", 11))) ||
@@ -455,7 +455,7 @@ start:
             enrpAnnounceViaMulticast      = true;
          }
       }
-      else if(!(strncmp(argv[i], "-log",4))) {
+      else if(!(strncmp(argv[i], "-log", 4))) {
          if(initLogging(argv[i]) == false) {
             exit(1);
          }
