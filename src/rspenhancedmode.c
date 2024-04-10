@@ -852,6 +852,7 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
                    rserpoolSocket->SocketProtocol);
    if(sd >= 0) {
       setNonBlocking(sd);
+      setIPv6Only(sd, false);
       if(configureSCTPSocket(rserpoolSocket, sd, 0)) {
          LOG_VERBOSE
          fprintf(stdlog, "Trying connection to pool element $%08x (", rserpoolSocket->ConnectedSession->ConnectedPE);
@@ -863,7 +864,7 @@ static int connectToPE(struct RSerPoolSocket* rserpoolSocket,
          LOG_END
 
          result = sctp_connectx(sd, (struct sockaddr*)destinationAddressArray, destinationAddresses, NULL);
-         if((result == 0) || (errno == EINPROGRESS)) {
+         if((result >= 0) || (errno == EINPROGRESS) || (errno == EISCONN)) {
             ufds.fd     = sd;
             ufds.events = POLLIN;
             if(ext_poll(&ufds, 1, (int)(rserpoolSocket->ConnectedSession->ConnectTimeout / 1000)) > 0) {
