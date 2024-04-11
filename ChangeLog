@@ -1,14 +1,101 @@
+commit 9aaddf8565fa0a82364b3317fbc8b650c5aa3bcf
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Apr 10 13:51:14 2024 +0200
+
+    Updated build scripts
+
+commit 0acff633f335fb2167407e0d3aade62425253d72
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Apr 10 10:17:54 2024 +0000
+
+    Bugfix: Also need to turn off V6ONLY option for PU->PE association setup.
+
+commit 75bced1ce23d057b92ac6d18fb4b670f9e88d4fe
+Author: NorNet Praesum Presum <nornetpp@zollverein.ude.nornet>
+Date:   Thu Apr 4 16:44:06 2024 +0200
+
+    Bugfix: Also need to properly set IPV6_V6ONLY on the other sockets to allow SCTP connections to all configured addresses on FreeBSD.
+
+commit b45a8e3665182ba234a465608e0692825e7e442a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 4 16:00:25 2024 +0200
+
+    Bugfix: Need to turn off IPV6_V6ONLY to also get IPv4 addresses.
+
+commit 805197acd42a3bf4bcd04500f3b008245e4e94bc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Feb 10 11:21:35 2024 +0100
+
+    FreeBSD packaging update.
+
+commit 7120e1387e578c306b199b34c39c16900aba89d2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Feb 6 16:33:54 2024 +0100
+
+    Updated Wireshark filter examples.
+
+commit 228ac5b6cee30c1d695a6c6768fc938b1f4d14fe
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Feb 6 14:28:01 2024 +0100
+
+    Updated Wireshark colorfilters example.
+
+commit 84a9ba8ff2294fe8cec96a8749308d05a8beaa17
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:09:49 2023 +0100
+
+    FreeBSD packaging update.
+
+commit b8e0df10a8c07255b79fbc48e399c39d7ac3951a
+Merge: 59485654 972c5acc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:08:46 2023 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
+
+commit 972c5accccc75bdbf4c66187924c09e972259e90
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:06:40 2023 +0100
+
+    Updated distinfo.
+
+commit 36f6274bdc579ad13ec792daf12e195e3b5a5b19
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:05:44 2023 +0100
+
+    Updated LSM entry.
+
+commit 61c3e05fbaed24fd786b55d30529e0ace7a09180
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 13:03:26 2023 +0100
+
+    New release rsplib-3.4.7.
+
 commit bf50cefc59c81d47b72956ed692e2862e1d82b3d
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Dec 18 13:02:18 2023 +0100
 
     Another FreeBSD build fix.
 
+commit 5948565417e97a2c48009a869bce25797e164bb6
+Merge: b15cbec5 11048d41
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:59:34 2023 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
+
 commit 11048d41faa494179bc256c37198e9e03eede98b
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Dec 18 12:58:52 2023 +0100
 
     Updated distinfo.
+
+commit b15cbec532c80fc2aeccfd1dbe98538869f6e6b7
+Merge: 44cb695f 73fe1d88
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:57:23 2023 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
 
 commit 73fe1d88f51cf645025ce5477e90a5397de86067
 Author: Thomas Dreibholz <dreibh@simula.no>
@@ -28,6 +115,12 @@ Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Dec 18 12:52:59 2023 +0100
 
     Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 44cb695f1de51b5adbcfb84fc53f559216e2bd7f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Dec 18 12:50:44 2023 +0100
+
+    FreeBSD packaging update.
 
 commit 03a12a9181908e506a7893b53fdc596fb43d66f2
 Author: Thomas Dreibholz <dreibh@simula.no>

@@ -1,3 +1,9 @@
+rsplib (3.4.8-1ubuntu1) noble; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 11 Apr 2024 10:09:15 +0200
+
 rsplib (3.4.7-1ubuntu1) jammy; urgency=medium
 
   * New upstream release.
