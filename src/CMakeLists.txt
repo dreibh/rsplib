@@ -544,7 +544,7 @@ IF (ENABLE_QT)
    FILE(GLOB fractalpooluser_configs "fgpconfig/*.fsf")
    ADD_EXECUTABLE(fractalpooluser fractalpooluser.cc)
    SET_TARGET_PROPERTIES(fractalpooluser PROPERTIES COMPILE_FLAGS "-DDEFAULT_FPU_CONFIGDIR=\\\"\"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/fgpconfig\\\"\"")
-   TARGET_LINK_LIBRARIES(fractalpooluser libtdrandomizer-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared librsplib-shared Qt::Widgets Qt::Xml Qt::Core "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(fractalpooluser libtdrandomizer-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared librsplib-shared "${QT_CORE_LIB}" "${QT_WIDGETS_LIB}" "${QT_XML_LIB}" "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
    INSTALL(TARGETS             fractalpooluser
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
