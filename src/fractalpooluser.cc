@@ -959,9 +959,10 @@ int main(int argc, char** argv)
 #else
    QApplication application(argc, argv);
    QTranslator applicationTranslator;
-   applicationTranslator.load("fractalpooluser_" + QLocale::system().name(),
-                              "/usr/share/fractalpooluser");
-   application.installTranslator(&applicationTranslator);
+   if(applicationTranslator.load("fractalpooluser_" + QLocale::system().name(),
+                                 "/usr/share/fractalpooluser")) {
+      application.installTranslator(&applicationTranslator);
+   }
 #endif
    FractalPU* fractalPU = new FractalPU(width, height, poolHandle, configDirName,
                                         sendTimeout, recvTimeout, interImageTime,
