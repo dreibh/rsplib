@@ -58,7 +58,6 @@ ADD_CUSTOM_TARGET(dist COMMAND ${CMAKE_MAKE_PROGRAM} clean package_source)
 
 INCLUDE(CheckIncludeFile)
 INCLUDE(CheckStructHasMember)
-INCLUDE(CheckCCompilerFlag)
 
 
 #############################################################################
@@ -326,27 +325,12 @@ ENDIF()
 #### COMPILER FLAGS                                                      ####
 #############################################################################
 
-# SET(CMAKE_CXX_STANDARD 11)
-# SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-# SET(CMAKE_CXX_EXTENSIONS OFF)
-#
-# SET(CMAKE_C_STANDARD 11)
-# SET(CMAKE_C_STANDARD_REQUIRED ON)
-# SET(CMAKE_C_EXTENSIONS OFF)
-
 MESSAGE("Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 IF( (CMAKE_SYSTEM_PROCESSOR MATCHES "^riscv64") OR
     (CMAKE_SYSTEM_PROCESSOR MATCHES "^mips$")   OR
     (CMAKE_SYSTEM_PROCESSOR MATCHES "^arm") )
   STRING(APPEND CMAKE_C_STANDARD_LIBRARIES " -latomic")
   STRING(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -latomic")
-ENDIF()
-
-# ------ Check for "vla-cxx-extension" --------------------------
-CHECK_C_COMPILER_FLAG("-Wvla-cxx-extension -Werror" HAS_VLA_CXX_EXTENSION)
-IF (HAS_VLA_CXX_EXTENSION)
-   # Disable "vla-cxx-extension" warning:
-   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-vla-cxx-extension")
 ENDIF()
 
 
