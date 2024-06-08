@@ -30,7 +30,7 @@ PROJECT(rsplib LANGUAGES C CXX)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "4")
-SET(BUILD_PATCH "9~rc2")
+SET(BUILD_PATCH "9")
 SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 
@@ -168,20 +168,8 @@ ENDIF()
 OPTION(ENABLE_QT "Include Qt programs" 1)
 IF (ENABLE_QT)
    SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(Qt6 COMPONENTS Core Widgets Xml)
-   IF (Qt6_FOUND)
-      MESSAGE(STATUS "Using Qt6")
-      SET(QT_CORE_LIB    Qt::Core)
-      SET(QT_WIDGETS_LIB Qt::Widgets)
-      SET(QT_XML_LIB     Qt::Xml)
-   ELSE()
-      FIND_PACKAGE(Qt5 COMPONENTS Core Widgets Xml REQUIRED)
-      MESSAGE(STATUS "Using Qt5")
-      # Older versions of Qt5 do not define "Qt::..."!
-      SET(QT_CORE_LIB    Qt5::Core)
-      SET(QT_WIDGETS_LIB Qt5::Widgets)
-      SET(QT_XML_LIB     Qt5::Xml)
-   ENDIF()
+   FIND_PACKAGE(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
+   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
 ENDIF()
 
 # Test programs

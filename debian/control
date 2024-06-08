@@ -7,11 +7,9 @@ Build-Depends: cmake,
                debhelper (>= 12),
                libbz2-dev,
                libsctp-dev,
-               libtool,
                qtbase5-dev,
-               qtbase5-dev-tools,
-               qtchooser
-Standards-Version: 4.6.2
+               qtbase5-dev-tools
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 
 Package: librsplib3

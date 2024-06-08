@@ -1,3 +1,64 @@
+commit 13d4a11843bc501db4d5a2034bf5358608cfa8c9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 13:19:31 2024 +0200
+
+    Qt6 build fix.
+
+commit 16e04a93f7642c001809b9530c5a289d2338b9ae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 12:36:51 2024 +0200
+
+    Fix for old Qt5 builds.
+
+commit dbe9bee049caf11189b06d603a4743f6bd02f9d3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 12:06:45 2024 +0200
+
+    Added support for Qt6 build.
+
+commit 993db089185a5c7db6f60d799e305ae1b540d148
+Merge: 3001f6ad c64f0dc0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 11:06:30 2024 +0200
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 3001f6add0998c3ded025acad40f8a7bcabe52c2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 11:05:45 2024 +0200
+
+    Updated build scripts
+
+commit c64f0dc0e9df04f89a661d7ac09e912e31542efa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 11:02:04 2024 +0200
+
+    Simplified CMakeLists.txt.
+
+commit 5c42c7cf08706bf1c248a777e32c7f527814b89a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 10:56:41 2024 +0200
+
+    CMakeLists.txt improvement: no need to request out-of-date C11/C++11 standards for compilation.
+
+commit d3633c2e4e2ec3deacf8cd502a5663dd748907ac
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 11 10:38:12 2024 +0200
+
+    FreeBSD packaging update.
+
+commit 9bc728aa07d54ca50f912d86ad7e117f2b0dc609
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 11 10:13:24 2024 +0200
+
+    Updated LSM entry.
+
+commit ed19843f9f96f527a55bc2ba8466564d8b1d3629
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 11 10:09:22 2024 +0200
+
+    New release rsplib-3.4.8.
+
 commit 9aaddf8565fa0a82364b3317fbc8b650c5aa3bcf
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Wed Apr 10 13:51:14 2024 +0200
