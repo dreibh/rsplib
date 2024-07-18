@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-./create-binaries && cat alive-planetlab.hosts | xargs -n64 ./install-binaries
