@@ -488,6 +488,7 @@ libtdnetutilities.so.3 librsplib3 #MINVER#
  sendmulticast@Base 2.7.8
  sendshutdown@Base 2.7.8
  sendtoplus@Base 2.7.8
+ setIPv6Only@Base 3.4.9
  setBlocking@Base 2.7.8
  setNonBlocking@Base 2.7.8
  setPort@Base 2.7.8
