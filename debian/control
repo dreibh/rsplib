@@ -12,7 +12,10 @@ Build-Depends: cmake,
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 
-Package: librsplib3
+Package: librsplib3t64
+Provides: ${t64:Provides}
+Replaces: librsplib3
+Breaks: librsplib3 (<< ${source:Version})
 Section: libs
 Architecture: any
 Depends: ${misc:Depends},
@@ -29,7 +32,7 @@ Description: RSerPool client/server API library for session management
 Package: librsplib-dev
 Section: libdevel
 Architecture: any
-Depends: librsplib3 (= ${binary:Version}),
+Depends: librsplib3t64 (= ${binary:Version}),
          ${misc:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
 Description: headers of the RSerPool client/server API library rsplib
@@ -42,10 +45,13 @@ Description: headers of the RSerPool client/server API library rsplib
  This package provides header files for the rsplib library. You need them
  to develop your own RSerPool-based clients and servers.
 
-Package: libcpprspserver3
+Package: libcpprspserver3t64
+Provides: ${t64:Provides}
+Replaces: libcpprspserver3
+Breaks: libcpprspserver3 (<< ${source:Version})
 Section: libs
 Architecture: any
-Depends: librsplib3 (= ${binary:Version}),
+Depends: librsplib3t64 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Description: C++ RSerPool client/server API library
@@ -60,7 +66,7 @@ Description: C++ RSerPool client/server API library
 Package: libcpprspserver-dev
 Section: libdevel
 Architecture: any
-Depends: libcpprspserver3 (= ${binary:Version}),
+Depends: libcpprspserver3t64 (= ${binary:Version}),
          librsplib-dev (>= ${source:Version}),
          ${misc:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
@@ -159,9 +165,9 @@ Description: RSerPool Fractal Generator Service example input files
 Package: rsplib-all
 Architecture: any
 Depends: libcpprspserver-dev (>= ${source:Version}),
-         libcpprspserver3 (= ${binary:Version}),
+         libcpprspserver3t64 (= ${binary:Version}),
          librsplib-dev (>= ${source:Version}),
-         librsplib3 (= ${binary:Version}),
+         librsplib3t64 (= ${binary:Version}),
          rsplib-doc (>= ${source:Version}),
          rsplib-fgp-cfgfiles (>= ${source:Version}),
          rsplib-registrar (= ${binary:Version}),
