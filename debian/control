@@ -79,6 +79,7 @@ Provides: rsplib-docs
 Replaces: rsplib-docs
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
 Recommends: rsplib-tools
 Description: documentation of the RSerPool implementation RSPLIB
@@ -142,6 +143,7 @@ Description: RSerPool example services
 
 Package: rsplib-fgp-cfgfiles
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
 Recommends: rsplib-tools
 Description: RSerPool Fractal Generator Service example input files
