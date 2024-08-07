@@ -1,3 +1,52 @@
+commit 24d6cd8231e0872fce7ce461951bbb6c20338bd4
+Merge: cc7c300a c58287f4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 14:37:17 2024 +0200
+
+    Merge branch 'dreibh/t64'
+
+commit cc7c300aaf0e7d217e7d446c9a62cd2d86f17443
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 14:29:45 2024 +0200
+
+    Version bump.
+
+commit 1ef8ab0a2e2d738d71e798b8ce276ca336dd15ec
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 14:29:07 2024 +0200
+
+    Set Multi-Arch settings.
+
+commit c85da55933b8c0f7eee9ff75f3d8056b5749b0d1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 11:51:23 2024 +0200
+
+    Removed obsolete PlanetLab files.
+
+commit ee145e407ba63f9f72e5c78399e8e70e643410ae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 11:50:37 2024 +0200
+
+    Header updates.
+
+commit 88084d7abe384c5de928544c2fe9a5576373a8d7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jul 18 11:46:19 2024 +0200
+
+    Debian symbols file update.
+
+commit 8575ed1f5e2c263a94819fd25827ed050155b725
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 14:27:58 2024 +0200
+
+    FreeBSD packaging update.
+
+commit d72dc9aa6a869dc5521254d52b8be4748e31d321
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jun 8 14:17:30 2024 +0200
+
+    New release rsplib-3.4.9.
+
 commit 13d4a11843bc501db4d5a2034bf5358608cfa8c9
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sat Jun 8 13:19:31 2024 +0200
@@ -82,6 +131,18 @@ Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Thu Apr 4 16:00:25 2024 +0200
 
     Bugfix: Need to turn off IPV6_V6ONLY to also get IPv4 addresses.
+
+commit c58287f4b8a6f73c06eb1ee23cdb77b886c709f4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Feb 10 14:21:49 2024 +0100
+
+    Added Lintian overrides.
+
+commit e7c2534b08ebb2ea290d41d031a4f95ca93710c2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Feb 10 14:13:23 2024 +0100
+
+    Added Debian patch for the time_t 64-bit transition on 32-bit systems.
 
 commit 805197acd42a3bf4bcd04500f3b008245e4e94bc
 Author: Thomas Dreibholz <dreibh@simula.no>

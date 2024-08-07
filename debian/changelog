@@ -1,10 +1,10 @@
-rsplib (3.4.10~rc0-1ubuntu1) noble; urgency=medium
+rsplib (3.4.10-1ubuntu1) noble; urgency=medium
 
   * New upstream release.
   * debian/librsplib3.symbols: Added missing symbol.
   * debian/control: Fixed Multi-Arch settings.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 18 Jul 2024 11:51:59 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Wed, 07 Aug 2024 21:04:48 +0200
 
 rsplib (3.4.9-1ubuntu1) noble; urgency=medium
 
