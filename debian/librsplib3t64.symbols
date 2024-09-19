@@ -1,4 +1,4 @@
-librspcsp.so.3 librsplib3 #MINVER#
+librspcsp.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  createComponentAssociationArray@Base 2.7.8
  cspReporterDelete@Base 2.7.8
@@ -6,7 +6,7 @@ librspcsp.so.3 librsplib3 #MINVER#
  cspReporterNew@Base 2.7.8
  deleteComponentAssociationArray@Base 2.7.8
  getComponentLocation@Base 2.7.8
-librspdispatcher.so.3 librsplib3 #MINVER#
+librspdispatcher.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  dispatcherDelete@Base 2.7.8
  dispatcherEventLoop@Base 2.7.8
@@ -26,7 +26,7 @@ librspdispatcher.so.3 librsplib3 #MINVER#
  timerRestart@Base 2.7.8
  timerStart@Base 2.7.8
  timerStop@Base 2.7.8
-librsphsmgt.so.3 librsplib3 #MINVER#
+librsphsmgt.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  PoolPolicies_SimpleRedBlackTree@Base 2.7.8
  PoolPolicyArray_SimpleRedBlackTree@Base 2.7.8
@@ -294,7 +294,7 @@ librsphsmgt.so.3 librsplib3 #MINVER#
  weightedRoundRobinInitializePoolElementNode_SimpleRedBlackTree@Base 2.7.8
  weightedRoundRobinPrepareSelection_SimpleRedBlackTree@Base 2.7.8
  weightedRoundRobinUpdatePoolElementNode_SimpleRedBlackTree@Base 2.7.8
-librsplib.so.3 librsplib3 #MINVER#
+librsplib.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  addSession@Base 2.7.8
  asapInstanceDelete@Base 2.7.8
@@ -421,7 +421,7 @@ librsplib.so.3 librsplib3 #MINVER#
  sessionStorageUpdateSession@Base 2.7.8
  syncSessionStatus@Base 3.3.3~test0
  waitForRead@Base 2.7.8
-librspmessaging.so.3 librsplib3 #MINVER#
+librspmessaging.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  getSpace@Base 2.7.8
  rserpoolMessage2Packet@Base 2.7.8
@@ -431,14 +431,14 @@ librspmessaging.so.3 librsplib3 #MINVER#
  rserpoolMessageNew@Base 2.7.8
  rserpoolMessageSend@Base 2.7.8
  rserpoolPacket2Message@Base 2.7.8
-libtdbreakdetector.so.3 librsplib3 #MINVER#
+libtdbreakdetector.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  breakDetected@Base 2.7.8
  breakDetector@Base 2.7.8
  installBreakDetector@Base 2.7.8
  sendBreak@Base 2.7.8
  uninstallBreakDetector@Base 2.7.8
-libtdloglevel.so.3 librsplib3 #MINVER#
+libtdloglevel.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  beginLogging@Base 2.7.8
  finishLogging@Base 2.7.8
@@ -450,7 +450,7 @@ libtdloglevel.so.3 librsplib3 #MINVER#
  loggingMutexLock@Base 2.7.8
  loggingMutexUnlock@Base 2.7.8
  setLogColor@Base 2.7.8
-libtdnetutilities.so.3 librsplib3 #MINVER#
+libtdnetutilities.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  address2string@Base 2.7.8
  addresscmp@Base 2.7.8
@@ -496,7 +496,7 @@ libtdnetutilities.so.3 librsplib3 #MINVER#
  string2address@Base 2.7.8
  tuneSCTP@Base 2.7.8
  unpack_sockaddr@Base 2.7.8
-libtdrandomizer.so.3 librsplib3 #MINVER#
+libtdrandomizer.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  random16@Base 2.7.8
  random32@Base 2.7.8
@@ -504,7 +504,7 @@ libtdrandomizer.so.3 librsplib3 #MINVER#
  random8@Base 2.7.8
  randomDouble@Base 2.7.8
  randomExpDouble@Base 2.7.8
-libtdstorage.so.3 librsplib3 #MINVER#
+libtdstorage.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  doubleLinkedRingListAddAfter@Base 2.7.8
  doubleLinkedRingListAddHead@Base 2.7.8
@@ -556,7 +556,7 @@ libtdstorage.so.3 librsplib3 #MINVER#
  simpleRedBlackTreePrint@Base 2.7.8
  simpleRedBlackTreeRemove@Base 2.7.8
  simpleRedBlackTreeVerify@Base 2.7.8
-libtdstringutilities.so.3 librsplib3 #MINVER#
+libtdstringutilities.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  getNextWord@Base 2.7.8
  memdup@Base 2.7.8
@@ -564,7 +564,7 @@ libtdstringutilities.so.3 librsplib3 #MINVER#
  safestrcpy@Base 2.7.8
  strindex@Base 2.7.8
  strrindex@Base 2.7.8
-libtdtagitem.so.3 librsplib3 #MINVER#
+libtdtagitem.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  tagListAllocate@Base 2.7.8
  tagListDuplicate@Base 2.7.8
@@ -576,7 +576,7 @@ libtdtagitem.so.3 librsplib3 #MINVER#
  tagListNext@Base 2.7.8
  tagListPrint@Base 2.7.8
  tagListSetData@Base 2.7.8
-libtdthreadsafety.so.3 librsplib3 #MINVER#
+libtdthreadsafety.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  threadSafetyDelete@Base 2.7.8
  threadSafetyLock@Base 2.7.8
@@ -588,7 +588,7 @@ libtdthreadsafety.so.3 librsplib3 #MINVER#
  threadSignalNew@Base 2.7.8
  threadSignalUnlock@Base 2.7.8
  threadSignalWait@Base 2.7.8
-libtdtimeutilities.so.3 librsplib3 #MINVER#
+libtdtimeutilities.so.3 librsplib3t64 #MINVER#
 * Build-Depends-Package: librsplib-dev
  averageWeightedStatValue@Base 2.7.8
  getMicroTime@Base 2.7.8
