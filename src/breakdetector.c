@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 #include <signal.h>
-#include <stdatomic.h>
 
 
 /* Kill after timeout: Send kill signal, if Ctrl-C is pressed again
