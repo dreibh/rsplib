@@ -160,7 +160,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdbreakdetector-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdbreakdetector-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} ${ATOMIC_LIB} "${CMAKE_THREAD_LIBS_INIT}")
    INSTALL(TARGETS libtdbreakdetector-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 

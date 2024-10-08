@@ -342,10 +342,13 @@ void main()
 CHECK_C_SOURCE_COMPILES("${ATOMIC_TEST_CODE}" atomic_test)
 IF (atomic_test)
    MESSAGE("No need for libatomic!")
+   SET(ATOMIC_LIB "")
 ELSE()
    MESSAGE("Searching for libatomic!")
    FIND_LIBRARY(ATOMIC_LIB
-                NAMES libatomic.so
+                REQUIRED
+                NAMES libatomic.so.1
+                      libatomic.so
                 HINTS /usr/local/lib64
                       /usr/local/lib
                       /usr/lib64
@@ -363,8 +366,7 @@ ELSE()
       IF(NOT atomic_test_with_library)
          MESSAGE(FATAL_ERROR "stdatomic compilation failed, even with libatomic!")
       ENDIF()
-      STRING(APPEND CMAKE_C_STANDARD_LIBRARIES   " -L${atomic_lib_dir} -latomic")
-      STRING(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -L${atomic_lib_dir} -latomic")
+      MESSAGE("Using ${ATOMIC_LIB}!")
    ENDIF()
 ENDIF()
 
