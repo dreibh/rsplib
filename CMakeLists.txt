@@ -280,6 +280,8 @@ IF (HAVE_SCTP_DELAYED_SACK)
    ADD_DEFINITIONS(-DHAVE_SCTP_DELAYED_SACK)
 ENDIF()
 
+ADD_DEFINITIONS(-D_LARGE_FILES=1 -D_FILE_OFFSET_BITS=64)
+
 
 # ###### BZip2 ##############################################################
 FIND_PACKAGE(BZip2 REQUIRED)
@@ -322,16 +324,46 @@ IF (USES_IEEEFP_FP)
 ENDIF()
 
 
-#############################################################################
-#### COMPILER FLAGS                                                      ####
-#############################################################################
+# ###### Atomic #############################################################
+INCLUDE(CheckCSourceCompiles)
+SET(ATOMIC_TEST_CODE "
+#include <stdatomic.h>
+#include <stdint.h>
 
-MESSAGE("Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-IF( (CMAKE_SYSTEM_PROCESSOR MATCHES "^riscv64") OR
-    (CMAKE_SYSTEM_PROCESSOR MATCHES "^mips$")   OR
-    (CMAKE_SYSTEM_PROCESSOR MATCHES "^arm") )
-  STRING(APPEND CMAKE_C_STANDARD_LIBRARIES " -latomic")
-  STRING(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -latomic")
+void main()
+{
+   volatile _Atomic uint32_t a;
+   volatile _Atomic uint64_t b;
+   a = 1;
+   b = 2;
+}
+")
+CHECK_C_SOURCE_COMPILES("${ATOMIC_TEST_CODE}" atomic_test)
+IF (atomic_test)
+   MESSAGE("No need for libatomic!")
+ELSE()
+   MESSAGE("Searching for libatomic!")
+   FIND_LIBRARY(ATOMIC
+                NAMES libatomic.so.1
+                HINTS /usr/local/lib64
+                      /usr/local/lib
+                      /usr/lib64
+                      /usr/lib
+                      /opt/local/lib64
+                      /opt/local/lib
+                      /lib64
+                      /lib)
+   IF (ATOMIC)
+      CMAKE_PUSH_CHECK_STATE()
+      SET(CMAKE_REQUIRED_LIBRARIES "-L${atomic_lib_dir} -latomic")
+      CHECK_C_SOURCE_COMPILES("${ATOMIC_TEST_CODE}" atomic_test_with_library)
+      CMAKE_POP_CHECK_STATE()
+      IF(NOT atomic_test_with_library)
+         MESSAGE(FATAL_ERROR "stdatomic compilation failed, even with libatomic!")
+      ENDIF()
+      STRING(APPEND CMAKE_C_STANDARD_LIBRARIES   " -L${atomic_lib_dir} -latomic")
+      STRING(APPEND CMAKE_CXX_STANDARD_LIBRARIES " -L${atomic_lib_dir} -latomic")
+   ENDIF()
 ENDIF()
 
 
