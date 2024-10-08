@@ -325,6 +325,7 @@ ENDIF()
 
 
 # ###### Atomic #############################################################
+# Based on: https://stackoverflow.com/questions/69281559/cmake-library-order-in-cmake-required-libraries-to-test-a-minimal-program-while
 INCLUDE(CheckCSourceCompiles)
 SET(ATOMIC_TEST_CODE "
 #include <stdatomic.h>
@@ -343,8 +344,8 @@ IF (atomic_test)
    MESSAGE("No need for libatomic!")
 ELSE()
    MESSAGE("Searching for libatomic!")
-   FIND_LIBRARY(ATOMIC
-                NAMES libatomic.so.1
+   FIND_LIBRARY(ATOMIC_LIB
+                NAMES libatomic.so
                 HINTS /usr/local/lib64
                       /usr/local/lib
                       /usr/lib64
@@ -353,7 +354,8 @@ ELSE()
                       /opt/local/lib
                       /lib64
                       /lib)
-   IF (ATOMIC)
+   IF (ATOMIC_LIB)
+      GET_FILENAME_COMPONENT(atomic_lib_dir ${ATOMIC_LIB} DIRECTORY)
       CMAKE_PUSH_CHECK_STATE()
       SET(CMAKE_REQUIRED_LIBRARIES "-L${atomic_lib_dir} -latomic")
       CHECK_C_SOURCE_COMPILES("${ATOMIC_TEST_CODE}" atomic_test_with_library)
