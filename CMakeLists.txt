@@ -166,11 +166,9 @@ ENDIF()
 
 # Qt programs
 OPTION(ENABLE_QT "Include Qt programs" 1)
-IF (ENABLE_QT)
-   SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
-   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
-ENDIF()
+
+# Kernel SCTP
+OPTION(USE_KERNEL_SCTP "Use Kernel SCTP" 1)
 
 # Test programs
 OPTION(BUILD_TEST_PROGRAMS "Build test programs" 0)
@@ -193,14 +191,13 @@ ENDIF()
 FIND_PACKAGE(Threads REQUIRED)
 
 # ###### Qt #################################################################
-OPTION(ENABLE_QT "Include Qt programs" 1)
 IF (ENABLE_QT)
    SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(Qt5 COMPONENTS Core Xml Widgets REQUIRED)
+   FIND_PACKAGE(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
+   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
 ENDIF()
 
 # ###### SCTP ###############################################################
-OPTION(USE_KERNEL_SCTP "Use Kernel SCTP" 1)
 IF (USE_KERNEL_SCTP)
    # ====== Kernel SCTP =====================================================
    CHECK_INCLUDE_FILE(netinet/sctp.h HAVE_NETINET_SCTP_H)
