@@ -85,7 +85,7 @@ _rspregistrar()
          return
          ;;
       # ====== Special case: on/off =========================================
-      --logcolor=*)
+      -logcolor=*)
          cur="${cur#*=}"
          # shellcheck disable=SC2207
          COMPREPLY=( $(compgen -W "on off" --  "${cur}") )

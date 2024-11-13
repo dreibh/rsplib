@@ -69,6 +69,13 @@ _cspmonitor()
          _filedir '@(log)'
          return
          ;;
+      # ====== Special case: on/off =========================================
+      -logcolor=*)
+         cur="${cur#*=}"
+         # shellcheck disable=SC2207
+         COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
+         return
+         ;;
    esac
 
    # ====== All options =====================================================

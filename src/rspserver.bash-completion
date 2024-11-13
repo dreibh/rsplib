@@ -124,13 +124,6 @@ WeightedRoundRobin
          COMPREPLY=( $(compgen -W "$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -a | grep 'hw.ncpu' | cut -d ':' -f2 | tr -d ' ' || echo "1")" --  "${cur}") )
          return
          ;;
-      # ====== Special case: log file =======================================
-      -logappend=* | \
-      -logfile=*)
-         cur="${cur#*=}"
-         _filedir '@(log)'
-         return
-         ;;
       # ====== Special case: scalar file ====================================
       -capscalar=*)
          cur="${cur#*=}"
@@ -143,8 +136,15 @@ WeightedRoundRobin
          _filedir '@(vec)'
          return
          ;;
+      # ====== Special case: log file =======================================
+      -logappend=* | \
+      -logfile=*)
+         cur="${cur#*=}"
+         _filedir '@(log)'
+         return
+         ;;
       # ====== Special case: on/off =========================================
-      --logcolor=*)
+      -logcolor=*)
          cur="${cur#*=}"
          # shellcheck disable=SC2207
          COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
