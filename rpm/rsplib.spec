@@ -279,7 +279,7 @@ Summary: RSerPool test tools
 Group: Applications/Internet
 Requires: %{name}-librsplib = %{version}-%{release}
 Recommends: %{name}-docs = %{version}-%{release}
-Recommends: %{name}-fgp-cfgfiles = %{version}-%{release}
+Recommends: %{name}-common = %{version}-%{release}
 Recommends: chrpath
 
 %description tools
@@ -312,6 +312,7 @@ Requires: %{name}-libcpprspserver = %{version}-%{release}
 Requires: %{name}-librsplib = %{version}-%{release}
 Requires: %{name}-tools = %{version}-%{release}
 Recommends: %{name}-docs = %{version}-%{release}
+Suggests: %{name}-fractalpooluser
 
 %description services
 Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
@@ -320,48 +321,71 @@ It provides highly available pool management (that is registration
 handling and load distribution/balancing) by components called Registrar
 and a client-side/server-side API for accessing the service of a pool.
 This package provides the rsplib RSerPool example services:
-Echo, Discard, Daytime, CharGen, CalcApp, FractalGenerator and
-ScriptingService.
+Echo, Discard, Daytime, CharGen, CalcApp, and ScriptingService.
 
 %files services
 %{_bindir}/calcappclient
-%{_bindir}/fractalpooluser
 %{_bindir}/pingpongclient
 %{_bindir}/scriptingclient
 %{_bindir}/scriptingcontrol
 %{_bindir}/scriptingserviceexample
-%{_datadir}/applications/fractalpooluser.desktop
 %{_datadir}/bash-completion/completions/calcappclient
-%{_datadir}/bash-completion/completions/fractalpooluser
 %{_datadir}/bash-completion/completions/pingpongclient
 %{_datadir}/bash-completion/completions/scriptingclient
-%{_datadir}/fractalpooluser/*.qm
 %{_mandir}/man1/calcappclient.1.gz
-%{_mandir}/man1/fractalpooluser.1.gz
 %{_mandir}/man1/pingpongclient.1.gz
 %{_mandir}/man1/scriptingclient.1.gz
 %{_mandir}/man1/scriptingcontrol.1.gz
 %{_mandir}/man1/scriptingserviceexample.1.gz
 
 
-%package fgp-cfgfiles
+%package fractalpooluser
+Summary: RSerPool-based fractal generator client
+Group: Applications/Internet
+Requires: %{name}-libcpprspserver = %{version}-%{release}
+Requires: %{name}-librsplib = %{version}-%{release}
+Requires: %{name}-tools = %{version}-%{release}
+Recommends: %{name}-docs = %{version}-%{release}
+Recommends: %{name}-services = %{version}-%{release}
+
+%description fractalpooluser
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+RFC 5356) for a lightweight server pool and session management framework.
+It provides highly available pool management (that is registration
+handling and load distribution/balancing) by components called Registrar
+and a client-side/server-side API for accessing the service of a pool.
+This package provides the provides the Pool User client for the
+FractalGenerator service. Is uses a Qt-based GUI.
+
+%files fractalpooluser
+%{_bindir}/fractalpooluser
+%{_datadir}/applications/fractalpooluser.desktop
+%{_datadir}/fractalpooluser/*.qm
+%{_mandir}/man1/fractalpooluser.1.gz
+
+
+%package common
 Summary: RSerPool Fractal Generator Service example input files
 Group: Applications/Internet
 BuildArch: noarch
 Recommends: fractgen
 Recommends: %{name}-tools = %{version}-%{release}
 
-%description fgp-cfgfiles
+%description common
 Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
 RFC 5356) for a lightweight server pool and session management framework.
 It provides highly available pool management (that is registration
 handling and load distribution/balancing) by components called Registrar
 and a client-side/server-side API for accessing the service of a pool.
-This package provides a set of input files for the Fractal Generator
-service.
+This package provides common files for the example service.
 
-%files fgp-cfgfiles
+%files common
 %{_datadir}/fgpconfig/*.fsf
+%{_datadir}/icons/hicolor/*x*/apps/rsplib.png
+%{_datadir}/icons/hicolor/scalable/apps/rsplib.svg
+%{_datadir}/rsplib/rsplib.bib
+%{_datadir}/rsplib/rsplib.pdf
+%{_datadir}/rsplib/rsplib.png
 
 
 %package all
@@ -370,8 +394,9 @@ Group: Applications/Internet
 BuildArch: noarch
 Obsoletes: %{name} < %{version}
 Provides:  %{name} = %{version}
+Requires: %{name}-common = %{version}-%{release}
 Requires: %{name}-docs = %{version}-%{release}
-Requires: %{name}-fgp-cfgfiles = %{version}-%{release}
+Requires: %{name}-fractalpooluser = %{version}-%{release}
 Requires: %{name}-libcpprspserver = %{version}-%{release}
 Requires: %{name}-libcpprspserver-devel = %{version}-%{release}
 Requires: %{name}-librsplib = %{version}-%{release}
