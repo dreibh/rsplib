@@ -8,7 +8,7 @@
  *
  * ------------- An Efficient RSerPool Prototype Implementation -------------
  *
- * Copyright (C) 2002-2024 by Thomas Dreibholz
+ * Copyright (C) 2002-2025 by Thomas Dreibholz
  * Based on Linux kernel SHA-1 code:
  * Copyright (C) Jean-Luc Cooke <jlcooke@certainkey.com>
  * Copyright (C) Andrew McDonald <andrew@mcdonald.org.uk>
