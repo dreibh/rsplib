@@ -1,0 +1,223 @@
+# shellcheck shell=bash
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//   Version III
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2025 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: thomas.dreibholz@gmail.com
+
+
+# ###### Bash completion for rspserver #####################################
+_rspserver()
+{
+   # Based on: https://www.benningtons.net/index.php/bash-completion/
+   local cur prev words cword
+   if type -t _comp_initialize >/dev/null; then
+      _comp_initialize -n = || return
+   elif type -t _init_completion >/dev/null; then
+      _init_completion -n = || return
+   else
+      # Manual initialization for older bash completion versions:
+      COMPREPLY=()
+      cur="${COMP_WORDS[COMP_CWORD]}"
+      # shellcheck disable=SC2034
+      prev="${COMP_WORDS[COMP_CWORD-1]}"
+      # shellcheck disable=SC2034,SC2124
+      words="${COMP_WORDS[@]}"
+      # shellcheck disable=SC2034
+      cword="${COMP_CWORD}"
+   fi
+
+   # ====== Parameters ======================================================
+   case "${cur}" in
+      #  ====== Generic value ===============================================
+      -local=*                            | \
+      -asapannounce=*                     | \
+      -identifier=*                       | \
+      -poolhandle=*                       | \
+      -registrar=*                        | \
+      -rereginterval=*                    | \
+      -runtime=*                          | \
+      -uptime=*                           | \
+      -downtime=*                         | \
+      -loglevel=*                         | \
+      -cspserver=*                        | \
+      -cspinterval=*                      | \
+      -capcapacity=*                      | \
+      -capcleanshutdownprobability=*      | \
+      -capcookiemaxcalculations=*         | \
+      -capcookiemaxtime=*                 | \
+      -capkeepalivetransmissioninterval=* | \
+      -capkeepalivetimeoutinterval=*      | \
+      -capmaxjobs=*                       | \
+      -capobject=*                        | \
+      -fgpcookiemaxpackets=*              | \
+      -fgpcookiemaxtime=*                 | \
+      -fgpfailureafter=*                  | \
+      -fgptransmittimeout=*               | \
+      -pppfailureafter=*                  | \
+      -sskeyring=*                        | \
+      -sstrustdb=*                        | \
+      -sscachedirectory=*                 | \
+      -sscachemaxentries=*                | \
+      -sscachemaxsize=*                   | \
+      -sskeepaliveinterval=*              | \
+      -sskeepalivetimeout=*               | \
+      -sstransmittimeout=*)
+         cur="${cur#*=}"
+         return
+         ;;
+      # ====== Special case: pool policy ====================================
+      -policy=*)
+         cur="${cur#*=}"
+         local policies="
+LeastUsed
+LeastUsedDegradation
+LeastUsedDegradationDPF
+LeastUsedDPF
+Priority
+PriorityLeastUsed
+PriorityLeastUsedDegradation
+PriorityLeastUsedDegradationDPF
+PriorityLeastUsedDPF
+Random
+RandomizedLeastUsed
+RandomizedLeastUsedDegradation
+RandomizedPriorityLeastUsed
+RandomizedPriorityLeastUsedDegradation
+RoundRobin
+WeightedRandom
+WeightedRandomDPF
+WeightedRoundRobin
+"
+         COMPREPLY=( $(compgen -W "${policies}" --  "${cur}") )
+         return
+         ;;
+      # ====== Special case: number of cores ================================
+      -chargenmaxthreads=*                | \
+      -fgpmaxthreads=*                    | \
+      -pppmaxthreads=*                    | \
+      -ssmaxthreads=*)
+         cur="${cur#*=}"
+         # shellcheck disable=SC2207
+         COMPREPLY=( $(compgen -W "$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -a | grep 'hw.ncpu' | cut -d ':' -f2 | tr -d ' ' || echo "1")" --  "${cur}") )
+         return
+         ;;
+      # ====== Special case: log file =======================================
+      -logappend=* | \
+      -logfile=*)
+         cur="${cur#*=}"
+         _filedir '@(log)'
+         return
+         ;;
+      # ====== Special case: scalar file ====================================
+      -capscalar=*)
+         cur="${cur#*=}"
+         _filedir '@(sca)'
+         return
+         ;;
+      # ====== Special case: vector file ====================================
+      -capvector=*)
+         cur="${cur#*=}"
+         _filedir '@(vec)'
+         return
+         ;;
+      # ====== Special case: on/off =========================================
+      --logcolor=*)
+         cur="${cur#*=}"
+         # shellcheck disable=SC2207
+         COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
+         return
+         ;;
+   esac
+
+   # ====== All options =====================================================
+   # Simple options without parameter(s)
+   local opts1="
+-quiet
+-calcapp
+-chargen
+-daytime
+-discard
+-echo
+-fractal
+-fgptestmode
+-pingpong
+-scripting
+-sskeeptempdirs
+"
+   # Options with "=" and parameter(s)
+   local opts2="
+-local
+-asapannounce
+-identifier
+-policy
+-poolhandle
+-registrar
+-rereginterval
+-runtime
+-uptime
+-downtime
+-logcolor
+-logappend
+-logfile
+-loglevel
+-cspserver
+-cspinterval
+-capcapacity
+-capcleanshutdownprobability
+-capcookiemaxcalculations
+-capcookiemaxtime
+-capkeepalivetransmissioninterval
+-capkeepalivetimeoutinterval
+-capmaxjobs
+-capobject
+-capscalar
+-capvector
+-chargenmaxthreads
+-fgpcookiemaxpackets
+-fgpcookiemaxtime
+-fgpfailureafter
+-fgpmaxthreads
+-fgptransmittimeout
+-pppfailureafter
+-pppmaxthreads
+-sskeyring
+-sstrustdb
+-sscachedirectory
+-sscachemaxentries
+-sscachemaxsize
+-sskeepaliveinterval
+-sskeepalivetimeout
+-ssmaxthreads
+-sstransmittimeout
+"
+   # shellcheck disable=SC2207
+   COMPREPLY=( $( compgen -W "${opts1}"        -- "${cur}" )
+               $( compgen -W "${opts2}" -S "=" -- "${cur}" ) )
+   [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
+
+   return 0
+}
+
+complete -F _rspserver rspserver
