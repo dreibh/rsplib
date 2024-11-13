@@ -2,3 +2,7 @@ usr/bin/cspmonitor
 usr/bin/hsdump
 usr/bin/rspserver
 usr/bin/rspterminal
+usr/share/bash-completion/completions/cspmonitor
+usr/share/bash-completion/completions/hsdump
+usr/share/bash-completion/completions/rspserver
+usr/share/bash-completion/completions/rspterminal

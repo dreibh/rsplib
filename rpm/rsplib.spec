@@ -265,6 +265,7 @@ setup, but for redundancy reasons, you should have at least two.
 
 %files registrar
 %{_bindir}/rspregistrar
+%{_datadir}/bash-completion/completions/rspregistrar
 %{_mandir}/man1/rspregistrar.1.gz
 /lib/systemd/system/rspregistrar.service
 
@@ -290,6 +291,10 @@ This package provides some test tools for RSerPool setups.
 %{_bindir}/hsdump
 %{_bindir}/rspserver
 %{_bindir}/rspterminal
+%{_datadir}/bash-completion/completions/cspmonitor
+%{_datadir}/bash-completion/completions/hsdump
+%{_datadir}/bash-completion/completions/rspserver
+%{_datadir}/bash-completion/completions/rspterminal
 %{_mandir}/man1/rspserver.1.gz
 %{_mandir}/man1/rspterminal.1.gz
 %{_mandir}/man1/cspmonitor.1.gz
@@ -321,6 +326,10 @@ ScriptingService.
 %{_bindir}/scriptingclient
 %{_bindir}/scriptingcontrol
 %{_bindir}/scriptingserviceexample
+%{_datadir}/bash-completion/completions/calcappclient
+%{_datadir}/bash-completion/completions/fractalpooluser
+%{_datadir}/bash-completion/completions/pingpongclient
+%{_datadir}/bash-completion/completions/scriptingclient
 %{_mandir}/man1/calcappclient.1.gz
 %{_mandir}/man1/fractalpooluser.1.gz
 %{_mandir}/man1/pingpongclient.1.gz
