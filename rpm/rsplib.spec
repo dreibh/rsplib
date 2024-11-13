@@ -2,7 +2,7 @@ Name: rsplib
 Version: 3.4.11~rc1.2
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
-License: GPL-3+
+License: GPL-3.0-or-later
 Group: Applications/Internet
 URL: https://www.nntb.no/~dreibh/rserpool/
 Source: https://www.nntb.no/~dreibh/rserpool/download/%{name}-%{version}.tar.xz
@@ -22,7 +22,12 @@ Requires: %{name}-all
 
 
 %description
-RSerPool client/server API library for session management Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool.
+RSerPool client/server API library for session management Reliable Server
+Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a
+lightweight server pool and session management framework. It provides highly
+available pool management (that is registration handling and load
+distribution/balancing) by components called Registrar and a
+client-side/server-side API for accessing the service of a pool.
 
 %prep
 %setup -q
