@@ -13,8 +13,7 @@ BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
-BuildRequires: qt5-qtbase-devel
-BuildRequires: qtchooser
+BuildRequires: qt6-qtbase-devel
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 # Meta-package rsplib: install rsplib-all => install all sub-packages!
