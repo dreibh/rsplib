@@ -73,18 +73,6 @@ _fractalpooluser()
          _filedir -d
          return
          ;;
-      # ====== Special case: scalar file ====================================
-      -scalar=*)
-         cur="${cur#*=}"
-         _filedir '@(sca)'
-         return
-         ;;
-      # ====== Special case: vector file ====================================
-      -vector=*)
-         cur="${cur#*=}"
-         _filedir '@(vec)'
-         return
-         ;;
       # ====== Special case: log file =======================================
       -logappend=* | \
       -logfile=*)
