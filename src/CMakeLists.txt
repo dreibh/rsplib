@@ -1,3 +1,31 @@
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//   Version III
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2025 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: thomas.dreibholz@gmail.com
+
+
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #############################################################################
@@ -478,7 +506,10 @@ INSTALL(TARGETS             rspregistrar
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES rspregistrar.service DESTINATION /lib/systemd/system)
-INSTALL(FILES rspregistrar.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES rspregistrar.1       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       rspregistrar.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      rspregistrar)
 
 ADD_EXECUTABLE(rspserver rspserver.cc standardservices.cc fractalgeneratorservice.cc calcappservice.cc scriptingservice.cc environmentcache.cc memfile.cc sha1.c)
 TARGET_LINK_LIBRARIES(rspserver libtdcppthread-shared libtdthreadsafety-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared libcpprspserver-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -486,6 +517,9 @@ INSTALL(TARGETS             rspserver
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES rspserver.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       rspserver.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      rspserver)
 
 INSTALL(FILES scriptingcontrol   DESTINATION ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES scriptingcontrol.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -496,6 +530,9 @@ INSTALL(TARGETS             rspterminal
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES rspterminal.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       rspterminal.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      rspterminal)
 
 ADD_EXECUTABLE(hsdump hsdump.c)
 TARGET_LINK_LIBRARIES(hsdump libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsphsmgt-shared librspmessaging-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -503,6 +540,9 @@ INSTALL(TARGETS             hsdump
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES hsdump.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       hsdump.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      hsdump)
 
 ADD_EXECUTABLE(pingpongclient pingpongclient.c)
 TARGET_LINK_LIBRARIES(pingpongclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -510,6 +550,9 @@ INSTALL(TARGETS             pingpongclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES pingpongclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       pingpongclient.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      pingpongclient)
 
 ADD_EXECUTABLE(scriptingclient scriptingclient.cc sha1.c sha1.h memfile.cc memfile.h)
 TARGET_LINK_LIBRARIES(scriptingclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -517,6 +560,9 @@ INSTALL(TARGETS             scriptingclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES scriptingclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       scriptingclient.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      scriptingclient)
 
 INSTALL(FILES scriptingserviceexample   DESTINATION ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES scriptingserviceexample.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
@@ -527,15 +573,21 @@ INSTALL(TARGETS             calcappclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES calcappclient.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(FILES       calcappclient.bash-completion
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+        RENAME      calcappclient)
 
 
 IF (ENABLE_CSP)
-    ADD_EXECUTABLE(cspmonitor cspmonitor.c)
-    TARGET_LINK_LIBRARIES(cspmonitor librspcsp-shared libtdbreakdetector-shared libtdtimeutilities-shared libtdstringutilities-shared libtdnetutilities-shared libtdstorage-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
-    INSTALL(TARGETS             cspmonitor
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-    INSTALL(FILES cspmonitor.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+   ADD_EXECUTABLE(cspmonitor cspmonitor.c)
+   TARGET_LINK_LIBRARIES(cspmonitor librspcsp-shared libtdbreakdetector-shared libtdtimeutilities-shared libtdstringutilities-shared libtdnetutilities-shared libtdstorage-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   INSTALL(TARGETS             cspmonitor
+           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+           BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
+   INSTALL(FILES cspmonitor.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+   INSTALL(FILES       cspmonitor.bash-completion
+           DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+           RENAME      cspmonitor)
 ENDIF()
 
 
@@ -551,6 +603,9 @@ IF (ENABLE_QT)
    INSTALL(FILES fractalpooluser.1                                 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
    INSTALL(FILES fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm DESTINATION ${CMAKE_INSTALL_DATADIR}/fractalpooluser)
    INSTALL(FILES ${fractalpooluser_configs}                        DESTINATION ${CMAKE_INSTALL_DATADIR}/fgpconfig)
+   INSTALL(FILES       fractalpooluser.bash-completion
+           DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+           RENAME      fractalpooluser)
 ENDIF()
 
 
@@ -580,10 +635,7 @@ IF (BUILD_TEST_PROGRAMS)
    ADD_EXECUTABLE(attacker attacker.cc)
    TARGET_LINK_LIBRARIES(attacker libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 
-#    ADD_EXECUTABLE(t1 t1.c)
-#    TARGET_LINK_LIBRARIES(t1 librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
-#
-#    ADD_EXECUTABLE(t2 t2.cc environmentcache.cc environmentcache.h sha1.c sha1.h)
-#    TARGET_LINK_LIBRARIES(t1 librsplib libcpprspserver-shared libtdthreadsafety-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   # ADD_EXECUTABLE(t1 t1.c)
+   # TARGET_LINK_LIBRARIES(t1 librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 
    ENDIF()
