@@ -602,6 +602,7 @@ IF (ENABLE_QT)
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
    INSTALL(FILES fractalpooluser.1                                 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
    INSTALL(FILES fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm DESTINATION ${CMAKE_INSTALL_DATADIR}/fractalpooluser)
+   INSTALL(FILES fractalpooluser.desktop                           DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
    INSTALL(FILES ${fractalpooluser_configs}                        DESTINATION ${CMAKE_INSTALL_DATADIR}/fgpconfig)
    INSTALL(FILES       fractalpooluser.bash-completion
            DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
@@ -609,7 +610,7 @@ IF (ENABLE_QT)
 ENDIF()
 
 
-IF (BUILD_TEST_PROGRAMS)
+IF (ENABLE_TEST_PROGRAMS)
 
    ADD_EXECUTABLE(hrestest hrestest.c)
    TARGET_LINK_LIBRARIES(hrestest libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -638,4 +639,14 @@ IF (BUILD_TEST_PROGRAMS)
    # ADD_EXECUTABLE(t1 t1.c)
    # TARGET_LINK_LIBRARIES(t1 librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
 
-   ENDIF()
+ENDIF()
+
+
+INSTALL(FILES rsplib.bib DESTINATION ${CMAKE_INSTALL_DATADIR}/rsplib)
+
+
+#############################################################################
+#### SUBDIRECTORIES                                                      ####
+#############################################################################
+
+ADD_SUBDIRECTORY(logo)

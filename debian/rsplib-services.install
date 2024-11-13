@@ -1,11 +1,8 @@
 usr/bin/calcappclient
-usr/bin/fractalpooluser
 usr/bin/pingpongclient
 usr/bin/scriptingclient
 usr/bin/scriptingcontrol
 usr/bin/scriptingserviceexample
 usr/share/bash-completion/completions/calcappclient
-usr/share/bash-completion/completions/fractalpooluser
 usr/share/bash-completion/completions/pingpongclient
 usr/share/bash-completion/completions/scriptingclient
-usr/share/fractalpooluser/*.qm

@@ -1,0 +1,4 @@
+usr/bin/fractalpooluser
+usr/share/applications/fractalpooluser.desktop
+usr/share/bash-completion/completions/fractalpooluser
+usr/share/fractalpooluser/*.qm

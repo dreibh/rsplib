@@ -153,28 +153,32 @@ IF (ENABLE_REGISTRAR_STATISTICS)
 ENDIF()
 
 # Handlespace Management verification
-OPTION(ENABLE_HSMGTVERIFY "Enable handlespace management verification" 0)
+OPTION(ENABLE_HSMGTVERIFY   "Enable handlespace management verification" 0)
 IF(ENABLE_HSMGTVERIFY)
    ADD_DEFINITIONS(-DVERIFY)
 ENDIF()
 
 # Registrar statistics
-OPTION(ENABLE_CSP "Enable CSP" 1)
+OPTION(ENABLE_CSP           "Enable CSP" 1)
 IF (ENABLE_CSP)
    ADD_DEFINITIONS(-DENABLE_CSP)
 ENDIF()
 
 # Qt programs
-OPTION(ENABLE_QT "Include Qt programs" 1)
+OPTION(ENABLE_QT            "Include Qt programs" 1)
 
 # # KDE programs
-# OPTION(ENABLE_KDE "Include KDE programs" 0)
+# OPTION(ENABLE_KDE          "Include KDE programs" 0)
 
 # Kernel SCTP
-OPTION(USE_KERNEL_SCTP "Use Kernel SCTP" 1)
+OPTION(USE_KERNEL_SCTP      "Use Kernel SCTP" 1)
 
 # Test programs
-OPTION(BUILD_TEST_PROGRAMS "Build test programs" 0)
+OPTION(ENABLE_TEST_PROGRAMS "Build test programs" 0)
+
+# Icons and logo files
+OPTION(ENABLE_ICONS         "Build RSPLIB icons and logo files" 1)
+
 
 # Handlespace management storage implementation
 ADD_DEFINITIONS(-DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE)
@@ -269,6 +273,37 @@ ELSE()
 
    SET(SCTP_LIB ${SCTPSOCKET_LIB} ${SCTPLIB_LIB} ${GLIB_LIBRARIES})
    SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${SCTPSOCKET_LIB} ${SCTPLIB_LIB} ${GLIB_LIBRARIES})
+ENDIF()
+
+
+# ====== Graphics tools for icons and logo ==================================
+IF (ENABLE_ICONS)
+   FIND_PROGRAM(GS gs PATHS /bin /usr/bin /usr/local/bin)
+   IF(NOT GS)
+      MESSAGE(FATAL_ERROR
+            " Cannot find GhostScript! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y ghostscript\n"
+            " * Fedora:        sudo dnf install -y ghostscript\n"
+            " * FreeBSD:       sudo pkg install -y ghostscript10")
+   ENDIF()
+
+   FIND_PROGRAM(PDF2SVG pdf2svg PATHS /bin /usr/bin /usr/local/bin)
+   IF(NOT PDF2SVG)
+      MESSAGE(FATAL_ERROR
+            " Cannot find PDF2SVG! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y pdf2svg\n"
+            " * Fedora:        sudo dnf install -y pdf2svg\n"
+            " * FreeBSD:       sudo pkg install -y pdf2svg")
+   ENDIF()
+
+   FIND_PROGRAM(GM gm PATHS /bin /usr/bin /usr/local/bin)
+   IF(NOT GM)
+      MESSAGE(FATAL_ERROR
+            " Cannot find GraphicsMagick! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y graphicsmagick\n"
+            " * Fedora:        sudo dnf install -y GraphicsMagick\n"
+            " * FreeBSD:       sudo pkg install -y GraphicsMagick")
+   ENDIF()
 ENDIF()
 
 

@@ -32,7 +32,7 @@ client-side/server-side API for accessing the service of a pool.
 %setup -q
 
 %build
-%cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=1 -DENABLE_CSP=1 -DENABLE_QT=1 .
+%cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DENABLE_QT=ON -DENABLE_ICONS=ON .
 %cmake_build
 
 %install
@@ -330,17 +330,18 @@ ScriptingService.
 %{_bindir}/scriptingclient
 %{_bindir}/scriptingcontrol
 %{_bindir}/scriptingserviceexample
+%{_datadir}/applications/fractalpooluser.desktop
 %{_datadir}/bash-completion/completions/calcappclient
 %{_datadir}/bash-completion/completions/fractalpooluser
 %{_datadir}/bash-completion/completions/pingpongclient
 %{_datadir}/bash-completion/completions/scriptingclient
+%{_datadir}/fractalpooluser/*.qm
 %{_mandir}/man1/calcappclient.1.gz
 %{_mandir}/man1/fractalpooluser.1.gz
 %{_mandir}/man1/pingpongclient.1.gz
 %{_mandir}/man1/scriptingclient.1.gz
 %{_mandir}/man1/scriptingcontrol.1.gz
 %{_mandir}/man1/scriptingserviceexample.1.gz
-%{_datadir}/fractalpooluser/*.qm
 
 
 %package fgp-cfgfiles

@@ -1,0 +1,41 @@
+#!/bin/sh -e
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//   Version III
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2025 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: thomas.dreibholz@gmail.com
+
+INPUT="Logo-RSPLIB.dia"
+OUTPUT="rsplib"
+
+# Conversion of Dia to EPS and PDF:
+dia -n -t eps-pango -e "${OUTPUT}.eps" "${INPUT}"
+epstopdf --outfile="${OUTPUT}.pdf.tmp" "${OUTPUT}.eps"
+pdfcrop --hires "${OUTPUT}.pdf.tmp" "${OUTPUT}.pdf"
+rm -f "${OUTPUT}.pdf.tmp"
+
+# Conversion of Dia to PDF:
+# dia -n -t cairo-pdf -e "${OUTPUT}.pdf.tmp" "${INPUT}"
+# pdfcrop --hires "${OUTPUT}.pdf.tmp" "${OUTPUT}.pdf"
+# rm -f "${OUTPUT}.pdf.tmp"

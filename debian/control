@@ -5,12 +5,15 @@ Maintainer: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 Homepage: https://www.nntb.no/~dreibh/rserpool/
 Build-Depends: cmake,
                debhelper (>= 12),
-               libbz2-dev,
-               libsctp-dev,
                extra-cmake-modules (<< 6.0.0) | qt6-base-dev,
                extra-cmake-modules (<< 6.0.0) | qt6-l10n-tools,
                extra-cmake-modules (>= 6.0.0) | qtbase5-dev,
-               extra-cmake-modules (>= 6.0.0) | qttools5-dev-tools
+               extra-cmake-modules (>= 6.0.0) | qttools5-dev-tools,
+               ghostscript,
+               graphicsmagick,
+               libbz2-dev,
+               libsctp-dev,
+               pdf2svg
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 
@@ -121,8 +124,7 @@ Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: chrpath,
-            rsplib-doc (>= ${source:Version}),
-            rsplib-fgp-cfgfiles (>= ${source:Version})
+            rsplib-doc (>= ${source:Version})
 Description: RSerPool test tools
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -134,7 +136,8 @@ Description: RSerPool test tools
 
 Package: rsplib-services
 Architecture: any
-Depends: rsplib-tools (= ${binary:Version}),
+Depends: rsplib-common (>= ${source:Version}),
+         rsplib-tools (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
@@ -149,11 +152,32 @@ Description: RSerPool example services
  Echo, Discard, Daytime, CharGen, CalcApp, FractalGenerator and
  ScriptingService.
 
-Package: rsplib-fgp-cfgfiles
+Package: rsplib-fractalpooluser
+Architecture: any
+Depends: rsplib-common (>= ${source:Version}),
+         rsplib-tools (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: rsplib-doc (>= ${source:Version}),
+            rsplib-services (= ${binary:Version})
+Description: RSerPool-based fractal generator client
+ Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+ RFC 5356) for a lightweight server pool and session management framework.
+ It provides highly available pool management (that is registration
+ handling and load distribution/balancing) by components called Registrar
+ and a client-side/server-side API for accessing the service of a pool.
+ .
+ This package provides the provides the Pool User client for the
+ FractalGenerator service. Is uses a Qt-based GUI.
+
+Package: rsplib-common
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends}
 Recommends: rsplib-tools
+Provides: rsplib-fgp-cfgfiles
+Replaces: rsplib-fgp-cfgfiles
+Breaks: rsplib-fgp-cfgfiles (<< ${source:Version})
 Description: RSerPool Fractal Generator Service example input files
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
@@ -170,8 +194,9 @@ Depends: libcpprspserver-dev (>= ${source:Version}),
          libcpprspserver3t64 (= ${binary:Version}),
          librsplib-dev (>= ${source:Version}),
          librsplib3t64 (= ${binary:Version}),
+         rsplib-common (>= ${source:Version}),
          rsplib-doc (>= ${source:Version}),
-         rsplib-fgp-cfgfiles (>= ${source:Version}),
+         rsplib-fractalpooluser (= ${binary:Version}),
          rsplib-registrar (= ${binary:Version}),
          rsplib-services (= ${binary:Version}),
          rsplib-tools (= ${binary:Version}),
