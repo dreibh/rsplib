@@ -167,6 +167,9 @@ ENDIF()
 # Qt programs
 OPTION(ENABLE_QT "Include Qt programs" 1)
 
+# # KDE programs
+# OPTION(ENABLE_KDE "Include KDE programs" 0)
+
 # Kernel SCTP
 OPTION(USE_KERNEL_SCTP "Use Kernel SCTP" 1)
 
@@ -181,23 +184,48 @@ ADD_DEFINITIONS(-DINCLUDE_SIMPLEREDBLACKTREE -DUSE_SIMPLEREDBLACKTREE)
 #### REQUIREMENTS                                                        ####
 #############################################################################
 
-# ###### Valgrind ###########################################################
+# ====== Valgrind ===========================================================
 CHECK_INCLUDE_FILE("valgrind/memcheck.h" HAVE_VALGRIND_MEMCHECK_H)
 IF(HAVE_VALGRIND_MEMCHECK_H)
    ADD_DEFINITIONS(-DHAVE_VALGRIND_MEMCHECK_H)
 ENDIF()
 
-# ###### Threads ############################################################
+
+# ====== Threads ============================================================
 FIND_PACKAGE(Threads REQUIRED)
 
-# ###### Qt #################################################################
-IF (ENABLE_QT)
+
+# ====== Qt =================================================================
+IF (ENABLE_QT OR ENABLE_KDE)
    SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Xml)
-   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Xml)
+   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml)
+   IF (NOT QT_FOUND)
+      FIND_PACKAGE(QT NAMES Qt5 REQUIRED COMPONENTS Core Network Widgets Xml)
+   ENDIF()
+   MESSAGE("Using Qt version ${QT_VERSION_MAJOR}!")
+   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network Widgets Xml)
 ENDIF()
 
-# ###### SCTP ###############################################################
+
+# # ====== KDE ================================================================
+# IF (ENABLE_KDE)
+#    # Needed:
+#    # KDE5: libkf5coreaddons-dev libkf5xmlgui-dev
+#    # KDE6: libkf6coreaddons-dev libkf6xmlgui-dev
+#
+#    FIND_PACKAGE(ECM "1.0.0" NO_MODULE REQUIRED)
+#    SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+#
+#    INCLUDE(KDEInstallDirs)
+#    INCLUDE(KDECMakeSettings)
+#    INCLUDE(KDECompilerSettings NO_POLICY_SCOPE)
+#    INCLUDE(KDEFrameworkCompilerSettings NO_POLICY_SCOPE)
+#
+#    FIND_PACKAGE(KF${QT_VERSION_MAJOR} "${QT_VERSION_MAJOR}.0.0" REQUIRED COMPONENTS CoreAddons WidgetsAddons)
+# ENDIF()
+
+
+# ====== SCTP ==============================================================#
 IF (USE_KERNEL_SCTP)
    # ====== Kernel SCTP =====================================================
    CHECK_INCLUDE_FILE(netinet/sctp.h HAVE_NETINET_SCTP_H)
@@ -280,11 +308,11 @@ ENDIF()
 ADD_DEFINITIONS(-D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64)
 
 
-# ###### BZip2 ##############################################################
+# ====== BZip2 ==============================================================
 FIND_PACKAGE(BZip2 REQUIRED)
 
 
-# ###### IEEE Floating-Point ################################################
+# ====== IEEE Floating-Point ================================================
 INCLUDE(CheckCSourceRuns)
 CHECK_C_SOURCE_RUNS("
 #include <stdio.h>
@@ -321,7 +349,7 @@ IF (USES_IEEEFP_FP)
 ENDIF()
 
 
-# ###### Atomic #############################################################
+# ====== Atomic =============================================================
 # Based on: https://stackoverflow.com/questions/69281559/cmake-library-order-in-cmake-required-libraries-to-test-a-minimal-program-while
 INCLUDE(CheckCSourceCompiles)
 SET(ATOMIC_TEST_CODE "
