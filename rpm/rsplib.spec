@@ -10,10 +10,13 @@ Source: https://www.nntb.no/~dreibh/rserpool/download/%{name}-%{version}.tar.xz
 AutoReqProv: on
 BuildRequires: bzip2-devel
 BuildRequires: cmake
+BuildRequires: ghostscript
+BuildRequires: GraphicsMagick
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: qt6-qtbase-devel
+BuildRequires: pdf2svg
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 # Meta-package rsplib: install rsplib-all => install all sub-packages!
@@ -360,6 +363,7 @@ FractalGenerator service. Is uses a Qt-based GUI.
 %files fractalpooluser
 %{_bindir}/fractalpooluser
 %{_datadir}/applications/fractalpooluser.desktop
+%{_datadir}/bash-completion/completions/fractalpooluser
 %{_datadir}/fractalpooluser/*.qm
 %{_mandir}/man1/fractalpooluser.1.gz
 
