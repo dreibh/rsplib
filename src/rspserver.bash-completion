@@ -110,6 +110,7 @@ WeightedRandom
 WeightedRandomDPF
 WeightedRoundRobin
 "
+         # shellcheck disable=SC2207
          COMPREPLY=( $(compgen -W "${policies}" --  "${cur}") )
          return
          ;;
