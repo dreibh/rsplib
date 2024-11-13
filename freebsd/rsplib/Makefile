@@ -1,5 +1,5 @@
 PORTNAME=	rsplib
-DISTVERSION=	3.4.11~rc1.2
+DISTVERSION=	3.5.0~rc0
 CATEGORIES=	net
 MASTER_SITES=	https://www.nntb.no/~dreibh/rserpool/download/
 
