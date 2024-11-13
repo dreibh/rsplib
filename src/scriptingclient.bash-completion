@@ -1,0 +1,123 @@
+# shellcheck shell=bash
+# --------------------------------------------------------------------------
+#
+#              //===//   //=====   //===//   //       //   //===//
+#             //    //  //        //    //  //       //   //    //
+#            //===//   //=====   //===//   //       //   //===<<
+#           //   \\         //  //        //       //   //    //
+#          //     \\  =====//  //        //=====  //   //===//   Version III
+#
+# ------------- An Efficient RSerPool Prototype Implementation -------------
+#
+# Copyright (C) 2002-2025 by Thomas Dreibholz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Contact: thomas.dreibholz@gmail.com
+
+
+# ###### Bash completion for scriptingclient ####################################
+_scriptingclient()
+{
+   # Based on: https://www.benningtons.net/index.php/bash-completion/
+   local cur prev words cword
+   if type -t _comp_initialize >/dev/null; then
+      _comp_initialize -n = || return
+   elif type -t _init_completion >/dev/null; then
+      _init_completion -n = || return
+   else
+      # Manual initialization for older bash completion versions:
+      COMPREPLY=()
+      cur="${COMP_WORDS[COMP_CWORD]}"
+      # shellcheck disable=SC2034
+      prev="${COMP_WORDS[COMP_CWORD-1]}"
+      # shellcheck disable=SC2034,SC2124
+      words="${COMP_WORDS[@]}"
+      # shellcheck disable=SC2034
+      cword="${COMP_CWORD}"
+   fi
+
+   # ====== Parameters ======================================================
+   case "${cur}" in
+      #  ====== Generic value ===============================================
+      -poolhandle=*        | \
+      -maxretry=*          | \
+      -retrydelay=*        | \
+      -runid=*             | \
+      -transmittimeout=*   | \
+      -keepaliveinterval=* | \
+      -keepalivetimeout=*  | \
+      -cspinterval=*       | \
+      -cspserver=*         | \
+      -loglevel=*)
+         cur="${cur#*=}"
+         return
+         ;;
+      # ====== Special case: generic file ===================================
+      -environment=* | \
+      -input=*       | \
+      -output=*)
+         cur="${cur#*=}"
+         _filedir
+         return
+         ;;
+      # ====== Special case: log file =======================================
+      -logappend=* | \
+      -logfile=*)
+         cur="${cur#*=}"
+         _filedir '@(log)'
+         return
+         ;;
+      # ====== Special case: on/off =========================================
+      -logcolor=*)
+         cur="${cur#*=}"
+         # shellcheck disable=SC2207
+         COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
+         return
+         ;;
+   esac
+
+   # ====== All options =====================================================
+   # Simple options without parameter(s)
+   local opts1="
+-quiet
+"
+   # Options with "=" and parameter(s)
+   local opts2="
+-poolhandle
+-environment
+-input
+-output
+-maxretry
+-retrydelay
+-runid
+-transmittimeout
+-keepaliveinterval
+-keepalivetimeout
+-cspinterval
+-cspserver
+-logappend
+-logcolor
+-logfile
+-loglevel
+"
+   # shellcheck disable=SC2207
+   COMPREPLY=( $( compgen -W "${opts1}"        -- "${cur}" )
+               $( compgen -W "${opts2}" -S "=" -- "${cur}" ) )
+   [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
+
+   return 0
+}
+
+complete -F _scriptingclient scriptingclient
