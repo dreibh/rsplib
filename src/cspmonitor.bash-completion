@@ -51,14 +51,14 @@ _cspmonitor()
    # ====== Parameters ======================================================
    case "${cur}" in
       #  ====== Generic value ===============================================
-      -localaddress    | \
-      -updateinterval  | \
-      -purgeinterval   | \
-      -maxpr           | \
-      -maxpe           | \
-      -maxpu           | \
-      -maxlocationsize | \
-      -loglevel)
+      -localaddress=*    | \
+      -updateinterval=*  | \
+      -purgeinterval=*   | \
+      -maxpr=*           | \
+      -maxpe=*           | \
+      -maxpu=*           | \
+      -maxlocationsize=* | \
+      -loglevel=*)
          cur="${cur#*=}"
          return
          ;;

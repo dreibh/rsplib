@@ -51,17 +51,17 @@ _rspterminal()
    # ====== Parameters ======================================================
    case "${cur}" in
       #  ====== Generic value ===============================================
-      -poolhandle                | \
-      -loglevel                  | \
-      -registrar                 | \
-      -registrarannouncetimeout  | \
-      -registrarconnecttimeout   | \
-      -registrarconnectmaxtrials | \
-      -registrarrequesttimeout   | \
-      -registrarresponsetimeout  | \
-      -registrarrequestmaxtrials | \
-      -cspinterval               | \
-      -cspserver)
+      -poolhandle=*                | \
+      -loglevel=*                  | \
+      -registrar=*                 | \
+      -registrarannouncetimeout=*  | \
+      -registrarconnecttimeout=*   | \
+      -registrarconnectmaxtrials=* | \
+      -registrarrequesttimeout=*   | \
+      -registrarresponsetimeout=*  | \
+      -registrarrequestmaxtrials=* | \
+      -cspinterval=*               | \
+      -cspserver=*)
          cur="${cur#*=}"
          return
          ;;
