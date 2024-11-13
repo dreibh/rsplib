@@ -11,7 +11,7 @@ Build-Depends: cmake,
                extra-cmake-modules (<< 6.0.0) | qt6-l10n-tools,
                extra-cmake-modules (>= 6.0.0) | qtbase5-dev,
                extra-cmake-modules (>= 6.0.0) | qttools5-dev-tools
-SStandards-Version: 4.7.0
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 
 Package: librsplib3t64
