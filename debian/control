@@ -10,8 +10,8 @@ Build-Depends: cmake,
                libbz2-dev,
                libsctp-dev,
                pdf2svg,
-               qtbase5-dev,
-               qttools5-dev-tools
+               qt6-base-dev | qtbase5-dev,
+               libgl1-mesa-dev
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 
