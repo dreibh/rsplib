@@ -10,6 +10,9 @@ WWW=		https://www.nntb.no/~dreibh/rserpool/
 LICENSE=	GPLv3+
 LICENSE_FILE=	${WRKSRC}/COPYING
 
+BUILD_DEPENDS=	gm:graphics/GraphicsMagick \
+		pdf2svg:graphics/pdf2svg \
+		gs:print/ghostscript10
 USES=		cmake qt:5 shebangfix tar:xz
 SHEBANG_FILES=	src/scriptingserviceexample
 USE_LDCONFIG=	yes
