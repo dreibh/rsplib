@@ -46,10 +46,6 @@ INCLUDE(GNUInstallDirs)
 #### PACKAGING                                                           ####
 #############################################################################
 
-#############################################################################
-#### PACKAGING                                                           ####
-#############################################################################
-
 SET(CPACK_SOURCE_GENERATOR "TXZ")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${CMAKE_PROJECT_NAME}-${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH}")
