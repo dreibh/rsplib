@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # GitHub Actions Scripts
-# Copyright (C) 2018-2024 by Thomas Dreibholz
+# Copyright (C) 2018-2025 by Thomas Dreibholz
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -72,16 +72,8 @@ def extractRPMDependencies(line, system):
    # Remove "build-depends:", etc.:
    m = rpmDepLine.match(line)
    if m != None:
-      line = m.group(2)
-   line = line.strip()
-
-   # Split into segments
-   for l in line.split(','):
-      l = l.strip()
-      m = rpmDepItem.match(l)
-      if m != None:
-         dependency = m.group(1)
-         dependencies.append(dependency)
+      dependency = m.group(2).strip()
+      dependencies.append(dependency)
 
    return dependencies
 
@@ -176,12 +168,18 @@ elif system == 'fedora':
                dependencies = dependencies + extractRPMDependencies(line, system)
                inside = True
 
+      dnfCall = [ 'dnf', 'install', '-y' ]
+      i=0
       for dependency in sorted(set(dependencies)):
-          sys.stdout.write(dependency + ' ')
+          if i > 0:
+             sys.stdout.write(', ')
+          sys.stdout.write(dependency)
+          dnfCall.append(dependency)
+          i = i + 1
       sys.stdout.write('\n')
 
       if runInstall == True:
-         subprocess.call([ 'dnf', 'install', '-y' ] + dependencies)
+         subprocess.call(dnfCall)
 
    else:
       sys.stderr.write('ERROR: Unable to locate RPM spec file!\n')
