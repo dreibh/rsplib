@@ -5,15 +5,13 @@ Maintainer: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 Homepage: https://www.nntb.no/~dreibh/rserpool/
 Build-Depends: cmake,
                debhelper (>= 12),
-               extra-cmake-modules (<< 6.0.0) | qt6-base-dev,
-               extra-cmake-modules (<< 6.0.0) | qt6-l10n-tools,
-               extra-cmake-modules (>= 6.0.0) | qtbase5-dev,
-               extra-cmake-modules (>= 6.0.0) | qttools5-dev-tools,
                ghostscript,
                graphicsmagick,
                libbz2-dev,
                libsctp-dev,
-               pdf2svg
+               pdf2svg,
+               qt6-base-dev | qtbase5-dev,
+               libgl1-mesa-dev
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 

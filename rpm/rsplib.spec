@@ -15,7 +15,7 @@ BuildRequires: GraphicsMagick
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
-BuildRequires: qt6-qtbase-devel
+BuildRequires: (qt6-qtbase-devel or qt5-qtbase-devel)
 BuildRequires: pdf2svg
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
