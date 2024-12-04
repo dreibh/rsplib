@@ -3,6 +3,8 @@ Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 Homepage: https://www.nntb.no/~dreibh/rserpool/
+Vcs-Git: https://github.com/dreibh/rsplib.git
+Vcs-Browser: https://github.com/dreibh/rsplib
 Build-Depends: cmake,
                debhelper (>= 12),
                ghostscript,
