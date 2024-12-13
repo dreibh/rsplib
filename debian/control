@@ -10,6 +10,7 @@ Build-Depends: cmake,
                ghostscript,
                graphicsmagick,
                libbz2-dev,
+               libgl-dev,
                libsctp-dev,
                pdf2svg,
                qt6-base-dev | qtbase5-dev
