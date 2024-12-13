@@ -1,8 +1,8 @@
-rsplib (3.5.0~rc0-1ubuntu1) noble; urgency=medium
+rsplib (3.5.0-1ubuntu1) trixie; urgency=medium
 
   * New upstream release.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Wed, 13 Nov 2024 21:53:20 +0100
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 13 Dec 2024 21:27:18 +0100
 
 rsplib (3.4.10-1ubuntu1) noble; urgency=medium
 

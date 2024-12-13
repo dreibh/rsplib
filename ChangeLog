@@ -1,3 +1,455 @@
+commit 19cfd1bb81375043aae7a7e025f049fcaa7fdd54
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 20:53:05 2024 +0100
+
+    Minor manpage update.
+
+commit ed8ad7dfed50aef9d54c3dedc138ac2471235b01
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 15:57:53 2024 +0100
+
+    Workflow update.
+
+commit 9cd91bc6cddda7b2158f1c205d89184b0815c6fa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 15:13:03 2024 +0100
+
+    RPM spec update.
+
+commit 598e926b73877ec01207368e54f127ec1a8387d5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 14:56:50 2024 +0100
+
+    Another try.
+
+commit bfeb59d46fef8f766d195411296ad8492c33db3c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 14:45:11 2024 +0100
+
+    Workflow update.
+
+commit bf95eab2952b17c8de3444d4ac991819bf48112c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 14:45:05 2024 +0100
+
+    Dependency update.
+
+commit e4211d795dec50f60796c14bd9edb91cd39a3327
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 10:09:24 2024 +0100
+
+    Updated SystemD unit file installation.
+
+commit 92be73e73c12a01fb1a6be50efc00ea2b57c0909
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 12 18:01:23 2024 +0100
+
+    Minor manpage updates.
+
+commit 16c13370d2fbf2cf04c6b7ba2f81a93b6730d2f0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 5 16:00:54 2024 +0100
+
+    Updated CI scripts
+
+commit d07a3da288736c76dd0261a7ccfcc2ea329cda7c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Dec 5 15:58:02 2024 +0100
+
+    Updated build scripts
+
+commit 91236fd576c5c6fa50091bd11b615ccca9414552
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Dec 4 12:10:28 2024 +0100
+
+    debian/control: added missing Vcs fields.
+
+commit a5cc39c79ae1312cd41425ac55243d6bf4e83cb4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Dec 3 21:59:50 2024 +0100
+
+    Workflow update.
+
+commit 7b07e51f030e44bf8c9aab824ae337070c2965e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 29 12:02:35 2024 +0100
+
+    Minor manpage update.
+
+commit cf55739777537592ed9f7bcf4164b125144a1e75
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 29 10:27:28 2024 +0100
+
+    Updated workflow.
+
+commit 5ff6699355d3d0f316b8e934c03ebf29f86b563b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 28 17:31:58 2024 +0100
+
+    Improved CI script.
+
+commit 27e41dbe14cdc52c1b6d7597dfdd82a2ffff58ec
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 21 09:05:00 2024 +0100
+
+    Updated CI scripts.
+
+commit c6f7e81be5664183aa6d6ba6b48b01f7f8e9b37e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Nov 21 09:04:02 2024 +0100
+
+    Updated script.
+
+commit 9a3aed105c0932cee6d9b4e0a9dcafb3e6b171c5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 17 12:21:36 2024 +0100
+
+    Further improvements for DNF dependency handling.
+
+commit 6ec555f2fbd3ad107c3284365eca996a3f50bc25
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 17 12:06:33 2024 +0100
+
+    Improved CI script.
+
+commit a7d57edf0a307fd686f79bf7992967097653547c
+Merge: 1816b207 2946af2c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Nov 17 11:39:46 2024 +0100
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit 2946af2c0c10fdb0d35ef95382f126c8df47a9e3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 13:41:47 2024 +0100
+
+    Dependency improvements, to build Qt-6 client if Qt-6 is available.
+
+commit 26d201ae408ec0f841e3209a679052d313c99fb1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 12:59:40 2024 +0100
+
+    Minor clean-ups.
+
+commit e6bc839a0ac44d687dc35e58f75e7696e68c81e7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 09:51:55 2024 +0100
+
+    FreeBSD Makefile update.
+
+commit f2dbc90597700add47bb19bb7daab6ae121b5b82
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 09:50:07 2024 +0100
+
+    Dependency fix.
+
+commit e4b18b97d4216b0da892e2378c8f7fad40572fb3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 09:34:18 2024 +0100
+
+    A test.
+
+commit f0c1e3a405e6da70cb89304311e4ce891684dce8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Nov 15 09:18:56 2024 +0100
+
+    Updated CMakeLists.txt.
+
+commit 1816b2076c3f6ca779a7c8ce76f8fedbe2b2b98a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 21:53:26 2024 +0100
+
+    Version bump.
+
+commit 61b6088b62feb1e0cf0ebf35a975609e5ba1c907
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 21:50:53 2024 +0100
+
+    RPM spec update.
+
+commit 68e596700dc7f91c27fe11814055bb9627069e73
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 21:42:03 2024 +0100
+
+    Further packaging updates.
+
+commit f05a6e17c7ab4fe3fa2d8f91a0061c36991888eb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 21:35:25 2024 +0100
+
+    Improved packaging.
+
+commit 94520a401495b2e2d870c35325ac8f15714031d4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 16:11:29 2024 +0100
+
+    Fixed typo.
+
+commit 40f65ac77fff6be8baaf2d5d8a60dc1c36d1c788
+Merge: 47236b9e 7c377b64
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 16:02:59 2024 +0100
+
+    Merge branch 'master' of https://github.com/dreibh/rsplib
+
+commit 47236b9ebe008db0bb3a39f04802dd7bdad6af04
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 16:02:48 2024 +0100
+
+    RPM spec update.
+
+commit 7c377b64dc8abe00286f659bbb5c5742c6fa6204
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 16:02:27 2024 +0100
+
+    Build improvements to handle Qt 6 support.
+
+commit 66f5af2d6a365baf499da09415719f9f26e4b42d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:40:19 2024 +0100
+
+    Packaging file updates to add the Bash completions.
+
+commit 2addccc6c6ba9eceb297a2a5a0e1e31c31635425
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:34:23 2024 +0100
+
+    Updated CMakeLists.txt and removed obsolete file.
+
+commit 841c4b2fdaa8f0d43e6611c2f5c99acc3d4498df
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:25:59 2024 +0100
+
+    Some fixes.
+
+commit 2229001d1925036bb07220c8dd0c89a0172b5ea9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:25:47 2024 +0100
+
+    Added Bash completion for scriptingclient.
+
+commit 6df76ce76d1b20d2116833f744faf1a0ce69bf28
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:20:13 2024 +0100
+
+    Added Bash completion for pingpongclient.
+
+commit 08a3785d763e29ea82a2565182a63bf76811c3be
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:17:25 2024 +0100
+
+    Added Bash completion for fractalpooluser.
+
+commit c4c32fd4df9707e7ac631b4904b6e33b1fdc5206
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:12:39 2024 +0100
+
+    Added Bash completion for hsdump.
+
+commit 824cbdb7c60002872d817520860837816010d85a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:10:42 2024 +0100
+
+    Small fixes in Bash completions.
+
+commit 203602fb11b887dc3f8572e8328db2852852018b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:10:23 2024 +0100
+
+    Added Bash completion for calcappclient.
+
+commit aa69ba218c886fae9e6a2db23510dfce862f8819
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:04:06 2024 +0100
+
+    Some fixes.
+
+commit fc27665bda263fab834c155fa14509b9515f18f2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 15:03:51 2024 +0100
+
+    Added Bash completion for rspregistrar.
+
+commit fba0be51480aaddb5a62cfc625d0171a9489a83a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:56:19 2024 +0100
+
+    Added Bash completions for cspmonitor.
+
+commit e6d203bfd1f3bc93d3bf80948234b9dbc10c2eb1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:52:51 2024 +0100
+
+    Manpage improvements and Bash completions for rspterminal.
+
+commit d237ef45ceb47ea17167c90283664b951c2cfac1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:42:46 2024 +0100
+
+    Minor update.
+
+commit 805d2121f83c75f5a2df3a8c69b58dc33a57ace6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:37:02 2024 +0100
+
+    Added Bash completions for rspserver.
+
+commit dd80c76855ac7a709c4f0d58917dab7d42f4ae43
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:36:53 2024 +0100
+
+    Minor manpage update.
+
+commit ffd4a59d290fc454c97c6d4e1ab9703c9ee5605c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 14:04:18 2024 +0100
+
+    Header updates.
+
+commit fb1c58e4a5c64041117e9c2823fa0e0e6155515e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Nov 13 08:55:04 2024 +0100
+
+    Updated build script.
+
+commit fbff86a32bab7e6c8388ef41527321c6b68b38f9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 4 12:52:01 2024 +0100
+
+    Added build script.
+
+commit 298ebacfc5e74d0ed03605eaf53ef73a9d33d039
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 4 09:57:57 2024 +0100
+
+    Updated workflows.
+
+commit fae328975ce2132e39cab94af39d011c20267bbe
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Nov 4 09:48:04 2024 +0100
+
+    Updated CI scripts.
+
+commit 3ad2172fc0303935d6f1d70b6cedaf05e16f3b3b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 9 17:48:04 2024 +0200
+
+    CMakeLists.txt clean-ups.
+
+commit c1faaa5b098d81d9c40b1eeabd59c370c0629924
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 9 12:28:28 2024 +0200
+
+    Updated autogen.sh script.
+
+commit eb9d2c2bdadd3ed98c7c4d963b5697f529b955c0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Oct 9 09:10:29 2024 +0200
+
+    Removed LSM file.
+
+commit d1b5c3b917a89787169c0be4957d175f38d4cdea
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 23:33:31 2024 +0200
+
+    Detecting and handling libatomic on MIPS architecture.
+
+commit 5e70b41d3c7652847820416d1d583e55ee5298ee
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 23:08:11 2024 +0200
+
+    Minor update.
+
+commit 4d3712033334d936910b786fe71da240adb526eb
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 23:08:03 2024 +0200
+
+    Reverted change.
+
+commit 88ea817af9a4f75e18c0789b58fceaf0b980b09d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 22:48:11 2024 +0200
+
+    Some improvements.
+
+commit 5a44869341e5a23094447bee280e1003b4e4ae3f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 22:30:17 2024 +0200
+
+    Added check for need to compile with libatomic.
+
+commit 7708b6e47f47463aee25e0d6df86a4c2b7666e91
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 22:30:03 2024 +0200
+
+    Added missing include file.
+
+commit 06c2da042eb5d79e2bea29d453516d0ee3e35b97
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 18:02:07 2024 +0200
+
+    Debian 12 build fix.
+
+commit 662ed8f45989d049d2ceea6d3946578b09430d87
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 17:49:49 2024 +0200
+
+    Updated workflow.
+
+commit 369844179628fb589e413df2a47b8ad7c9a098e5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 17:34:38 2024 +0200
+
+    Minor update.
+
+commit 2f194e358b8acd31b3d96f011fd6c5e3bdb96d0a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 16:54:09 2024 +0200
+
+    Yet another workflow update.
+
+commit 6677036e9261ae44f226002c54e666ce0830a40e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 16:48:43 2024 +0200
+
+    Workflows update.
+
+commit e25c4e41258bdae04c7992ca5286c2d8dc6cb447
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 15:30:38 2024 +0200
+
+    Updated multiarch workflow.
+
+commit 77b8732ced664366d7e683d629c20a5361cfddbd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 8 14:20:09 2024 +0200
+
+    Updated CI scripts
+
+commit e18f686b361e19bcc441fd7b627134b3c9592a16
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Sep 19 18:14:50 2024 +0200
+
+    Jævla faen!
+
+commit fceeaa4e028c3b22c7b8338fc674832176b212e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Sep 18 14:37:06 2024 +0200
+
+    Another try.
+
+commit a6e2f696448717d6bcfa1c6d796d9d26f471e5f9
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Sep 18 14:33:28 2024 +0200
+
+    GitHub Workflows update.
+
+commit 13eedfb0f82a85927d22c844b28e39ffcd34175c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Aug 7 21:04:52 2024 +0200
+
+    New release rsplib-3.4.10.
+
 commit 24d6cd8231e0872fce7ce461951bbb6c20338bd4
 Merge: cc7c300a c58287f4
 Author: Thomas Dreibholz <dreibh@simula.no>
