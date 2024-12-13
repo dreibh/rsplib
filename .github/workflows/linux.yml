@@ -57,8 +57,8 @@ jobs:
             cxx: g++
 
           # ====== Fedora Linux =============================================
-          - label: "Fedora 40 with Clang"
-            image: fedora:40
+          - label: "Fedora 41 with Clang"
+            image: fedora:41
             cc: clang
             cxx: clang++
 
