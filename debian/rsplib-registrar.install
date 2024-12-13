@@ -1,3 +1,3 @@
-lib/systemd/system/rspregistrar.service
 usr/bin/rspregistrar
+usr/lib/systemd/system/rspregistrar.service
 usr/share/bash-completion/completions/rspregistrar

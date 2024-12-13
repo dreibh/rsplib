@@ -273,8 +273,8 @@ setup, but for redundancy reasons, you should have at least two.
 %files registrar
 %{_bindir}/rspregistrar
 %{_datadir}/bash-completion/completions/rspregistrar
+%{_libdir}//systemd/system/rspregistrar.service
 %{_mandir}/man1/rspregistrar.1.gz
-/lib/systemd/system/rspregistrar.service
 
 
 %package tools
