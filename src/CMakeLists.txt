@@ -505,7 +505,9 @@ ENDIF()
 INSTALL(TARGETS             rspregistrar
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-INSTALL(FILES rspregistrar.service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system)
+IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   INSTALL(FILES rspregistrar.service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system)
+ENDIF()
 INSTALL(FILES rspregistrar.1       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 INSTALL(FILES       rspregistrar.bash-completion
         DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
