@@ -1,3 +1,45 @@
+commit a8fcc6514b5791be4cb0a7c6e8d049bdb2ed7340
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 20:59:51 2025 +0100
+
+    Removed obsolete build scripts.
+
+commit 73e3a44b18e0008e6b9015ad71d7a235bd3c069b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 20:59:43 2025 +0100
+
+    Updated CI configuration
+
+commit d0dcac0005bef6be95db27127b9cff6d62ac3d93
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 20:59:42 2025 +0100
+
+    Updated CI scripts
+
+commit d491cc48290ef35a3da990a8d43d9a1c987f68c8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 20:57:24 2025 +0100
+
+    FreeBSD build fix: no SystemD -> no need to install SystemD service file.
+
+commit 04c0446c14f51238e32b1b303d3551b84cd297a2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 20 16:06:27 2024 +0100
+
+    Another update.
+
+commit 4b3b79f56519c758fe9df0147fcc3db8434f095a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 20 15:36:51 2024 +0100
+
+    FreeBSD packaging update.
+
+commit 2aba6a2d5e7b37ca2bf790ccb5f9be4b0f112ee8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Dec 13 21:27:23 2024 +0100
+
+    New release rsplib-3.5.0.
+
 commit 19cfd1bb81375043aae7a7e025f049fcaa7fdd54
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Fri Dec 13 20:53:05 2024 +0100
