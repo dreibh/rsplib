@@ -13,8 +13,8 @@ Build-Depends: cmake,
                libgl-dev,
                libsctp-dev,
                pdf2svg,
-               qt6-base-dev | qtbase5-dev
-Standards-Version: 4.7.0
+               qt6-base-dev
+Standards-Version: 4.7.1
 Rules-Requires-Root: no
 
 Package: librsplib3t64
