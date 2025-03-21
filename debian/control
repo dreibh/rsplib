@@ -14,7 +14,7 @@ Build-Depends: cmake,
                libsctp-dev,
                pdf2svg,
                qt6-base-dev
-Standards-Version: 4.7.1
+Standards-Version: 4.7.2
 Rules-Requires-Root: no
 
 Package: librsplib3t64
@@ -160,6 +160,7 @@ Depends: rsplib-common (>= ${source:Version}),
          ${shlibs:Depends}
 Recommends: rsplib-doc (>= ${source:Version}),
             rsplib-services (= ${binary:Version})
+Breaks: rsplib-services (<< 3.5.0)
 Description: RSerPool-based fractal generator client
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.

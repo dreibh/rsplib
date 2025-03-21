@@ -1,3 +1,10 @@
+rsplib (3.5.1-2ubuntu1) trixie; urgency=medium
+
+  * debian/control: Fixed conflicts (Closes: #1100891).
+  * debian/control: Updated standards version to 4.7.2.
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 20 Mar 2025 16:44:08 +0100
+
 rsplib (3.5.1-1ubuntu1) trixie; urgency=medium
 
   * New upstream release.
