@@ -158,7 +158,7 @@ share/bash-completion/completions/rspregistrar
 share/bash-completion/completions/rspserver
 share/bash-completion/completions/rspterminal
 share/bash-completion/completions/scriptingclient
-share/doc/rsplib/Handbook.pdf
+%%DOCSDIR%%/Handbook.pdf
 share/fgpconfig/input-001.fsf
 share/fgpconfig/input-002.fsf
 share/fgpconfig/input-003.fsf
