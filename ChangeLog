@@ -1,3 +1,64 @@
+commit 8ef55f856f1feffa403dc4c773a3fc2b2febcc8b
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 12 22:46:14 2025 +0200
+
+    * Updated year range in debian/copyright.
+    * Removed unnecessary lintian-overrides.
+
+commit 32a013c1a921a3cd12d25f137cdc4bb6052062f8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 12 22:08:45 2025 +0200
+
+    Updated manpages.
+
+commit 7ca3c925286dd2498210ab070771b08e40909e42
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Apr 27 21:10:35 2025 +0200
+
+    Updated CI configuration
+
+commit 3de7b9b5931467f2d98baee47440ebf7707c9940
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Apr 27 21:10:32 2025 +0200
+
+    Updated CI scripts
+
+commit 1c317ebf75514d1a26cb4c36f3f68e7d36fba4c1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Mar 27 22:51:21 2025 +0100
+
+    FreeBSD packaging update.
+
+commit 79c4b6f16a7fc8f8ba42177b002464116c0e5e7a
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Mar 21 09:20:56 2025 +0100
+
+    Fixed Debian package conflict.
+
+commit a2e9696d0e0b866d8a29aabee142e0af35c3dbaa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 27 14:14:14 2025 +0100
+
+    Removed obsolete files.
+
+commit 5489a40697054dfb6b617cfe08565302460fd7e3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Feb 27 14:14:04 2025 +0100
+
+    Updated Debian standards version.
+
+commit 2db76b9e4c8bdbf3b1d76bcdb1bacd8435216b08
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 21:47:22 2025 +0100
+
+    FreeBSD packaging update.
+
+commit 74a190c63b125f847f554e74c96df83dcab8a847
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Feb 17 21:45:10 2025 +0100
+
+    New release rsplib-3.5.1.
+
 commit a8fcc6514b5791be4cb0a7c6e8d049bdb2ed7340
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon Feb 17 20:59:51 2025 +0100

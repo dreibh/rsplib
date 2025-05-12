@@ -1,3 +1,9 @@
+rsplib (3.5.2-1ubuntu1) trixie; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 12 May 2025 22:53:36 +0200
+
 rsplib (3.5.1-2ubuntu1) trixie; urgency=medium
 
   * debian/control: Fixed conflicts (Closes: #1100891).
