@@ -26,7 +26,7 @@
 .\" Contact: thomas.dreibholz@gmail.com
 .\"
 .\" ###### Setup ############################################################
-.Dd December 13, 2024
+.Dd May 12, 2025
 .Dt RspServer 1
 .Os RSerPool Server
 .\" ###### Name #############################################################
@@ -55,16 +55,16 @@
 .Op Fl cspinterval=milliseconds
 .Nm rspserver
 .Op Fl calcapp
-.Op Fl capcapacity=calculations_per_second
-.Op Fl capcleanshutdownprobability=probability
-.Op Fl capcookiemaxcalculations=calculations
-.Op Fl capcookiemaxtime=seconds
-.Op Fl capkeepalivetransmissioninterval=milliseconds
-.Op Fl capkeepalivetimeoutinterval=milliseconds
-.Op Fl capmaxjobs=max_jobs
-.Op Fl capobject=name
-.Op Fl capscalar=scalar_file
-.Op Fl capvector=vector_file
+.Op Fl cap\%capacity=\%calculations_per_second
+.Op Fl cap\%cleanshutdownprobability=\%probability
+.Op Fl cap\%cookiemaxcalculations=\%calculations
+.Op Fl cap\%cookiemaxtime=\%seconds
+.Op Fl cap\%keepalivetransmissioninterval=\%milliseconds
+.Op Fl cap\%keepalivetimeoutinterval=\%milliseconds
+.Op Fl cap\%maxjobs=\%max_jobs
+.Op Fl cap\%object=\%name
+.Op Fl cap\%scalar=\%scalar_file
+.Op Fl cap\%vector=\%vector_file
 .Nm rspserver
 .Op Fl chargen
 .Op Fl chargenmaxthreads=threads
@@ -93,8 +93,8 @@
 .Op Fl sscachedirectory=directory
 .Op Fl sscachemaxentries=entries
 .Op Fl sscachemaxsize=kibibytes
-.Op Fl sskeepaliveinterval=milliseconds
-.Op Fl sskeepalivetimeout=milliseconds
+.Op Fl sskeepaliveinterval=\%milli\%seconds
+.Op Fl sskeepalivetimeout=\%milli\%seconds
 .Op Fl sskeeptempdirs
 .Op Fl ssmaxthreads=threads
 .Op Fl sstransmittimeout=milliseconds
@@ -110,7 +110,7 @@ provides the following services:
 .Bl -tag -width indent
 .It CalcApp
 Calculation application model for performance tests. See
-https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
+https://\%due\%pub\%li\%co.\%uni-\%duis\%burg-\%es\%sen.\%de/\%servlets/\%Deri\%vate\%Serv\%let/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
 for more information.
 .It CharGen
 Sending as much character data as possible.
@@ -330,7 +330,7 @@ log file.
 .Sh SEE ALSO
 For a detailed introduction to RSerPool, see:
 .br
-https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
+https://duepublico.\%uni-\%duisburg-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
 .Pp
 Thomas Dreibholz's RSerPool Page:
 .br

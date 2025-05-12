@@ -26,7 +26,7 @@
 .\" Contact: thomas.dreibholz@gmail.com
 .\"
 .\" ###### Setup ############################################################
-.Dd December 13, 2024
+.Dd May 12, 2025
 .Dt RspRegistrar 1
 .Os RSerPool Registrar
 .\" ###### Name #############################################################
@@ -38,29 +38,29 @@
 .Nm rspregistrar
 .Op Fl announcettl=TTL
 .Op Fl asap=auto|address:port,address,...
-.Op Fl asapannounce=auto|address:port
-.Op Fl autoclosetimeout=seconds
-.Op Fl endpointkeepalivetransmissioninterval=milliseconds
-.Op Fl endpointkeepalivetimeoutinterval=milliseconds
-.Op Fl maxbadpereports=reports
-.Op Fl maxhresitems=items
-.Op Fl maxincrement=increment
-.Op Fl minaddressscope=loopback|sitelocal|global
-.Op Fl serverannouncecycle=milliseconds
-.Op Fl enrp=auto|address:port,address,...
-.Op Fl enrpannounce=auto|address:port
-.Op Fl maxelementsperhtrequest=items
-.Op Fl mentordiscoverytimeout=milliseconds
-.Op Fl peer=address:port
-.Op Fl peerheartbeatcycle=milliseconds
-.Op Fl peermaxtimelastheard=millisecond
-.Op Fl peermaxtimenoresponse=milliseconds
-.Op Fl takeoverexpiryinterval=milliseconds
-.Op Fl cspinterval=milliseconds
-.Op Fl cspserver=address:port
-.Op Fl logcolor=on|off
-.Op Fl logappend=filename
-.Op Fl logfile=filename
+.Op Fl asapannounce=\%auto|address:port
+.Op Fl autoclosetimeout=\%seconds
+.Op Fl endpointkeepalivetransmissioninterval=\%milli\%seconds
+.Op Fl endpointkeepalivetimeoutinterval=\%milli\%seconds
+.Op Fl maxbadpereports=\%reports
+.Op Fl maxhresitems=\%items
+.Op Fl maxincrement=\%increment
+.Op Fl minaddressscope=\%loopback|sitelocal|global
+.Op Fl serverannouncecycle=\%milli\%seconds
+.Op Fl enrp=\%auto|address:port,address,...
+.Op Fl enrpannounce=\%auto|address:port
+.Op Fl max\%elements\%perhtrequest=\%items
+.Op Fl mentor\%discovery\%timeout=\%milli\%seconds
+.Op Fl peer=\%address:port
+.Op Fl peerheartbeatcycle=\%milli\%seconds
+.Op Fl peer\%max\%timelastheard=\%millisecond
+.Op Fl peer\%max\%time\%no\%response=\%milli\%seconds
+.Op Fl takeover\%expiry\%interval=\%milli\%seconds
+.Op Fl cspinterval=\%milli\%seconds
+.Op Fl cspserver=\%address:port
+.Op Fl logcolor=\%on|off
+.Op Fl logappend=\%filename
+.Op Fl logfile=\%filename
 .Op Fl loglevel=0-9
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
@@ -204,7 +204,7 @@ log file.
 .Sh SEE ALSO
 For a detailed introduction to RSerPool, see:
 .br
-https://duepublico.uni-duisburg-essen.de/servlets/DerivateServlet/Derivate-16326/Dre2006_final.pdf
+https://duepublico.\%uni-\%duisburg-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
 .Pp
 Thomas Dreibholz's RSerPool Page:
 .br
