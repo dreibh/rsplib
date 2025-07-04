@@ -193,6 +193,15 @@ void FractalPU::getNextParameters()
       return;
    }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+   QDomDocument::ParseResult result = doc.setContent(&parameterFile);
+   if (!result.errorMessage.isEmpty()) {
+      parameterFile.close();
+      std::cerr << "WARNING: Error in parameter file " << (const char*)(parameterFileName.toLocal8Bit().constData()) << ":" << std::endl
+                << (const char*)(result.errorMessage.toLocal8Bit().constData()) << " in line " << result.errorLine << ", column " << result.errorColumn << std::endl;
+      return;
+   }
+#else
    QString error;
    int line, column;
    if(!doc.setContent(&parameterFile, false, &error, &line, &column)) {
@@ -201,6 +210,7 @@ void FractalPU::getNextParameters()
                 << (const char*)(error.toLocal8Bit().constData()) << " in line " << line << ", column " << column << std::endl;
       return;
    }
+#endif
    parameterFile.close();
 
    QDomElement algorithm = doc.elementsByTagName("AlgorithmName").item(0).toElement();
