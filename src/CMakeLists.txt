@@ -523,8 +523,8 @@ INSTALL(FILES       rspserver.bash-completion
         DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
         RENAME      rspserver)
 
-INSTALL(FILES scriptingcontrol   DESTINATION ${CMAKE_INSTALL_BINDIR})
-INSTALL(FILES scriptingcontrol.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(PROGRAMS scriptingcontrol   DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES    scriptingcontrol.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(rspterminal rspterminal.c)
 TARGET_LINK_LIBRARIES(rspterminal libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
@@ -566,8 +566,8 @@ INSTALL(FILES       scriptingclient.bash-completion
         DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
         RENAME      scriptingclient)
 
-INSTALL(FILES scriptingserviceexample   DESTINATION ${CMAKE_INSTALL_BINDIR})
-INSTALL(FILES scriptingserviceexample.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+INSTALL(PROGRAMS scriptingserviceexample   DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES    scriptingserviceexample.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(calcappclient calcappclient.cc calcapppackets.h statistics.cc statistics.h)
 TARGET_LINK_LIBRARIES(calcappclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
