@@ -1,3 +1,9 @@
+rsplib (3.5.3-1ubuntu1) trixie; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sat, 05 Jul 2025 16:36:58 +0200
+
 rsplib (3.5.2-1ubuntu1) trixie; urgency=medium
 
   * New upstream release.

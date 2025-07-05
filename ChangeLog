@@ -1,3 +1,57 @@
+commit 4eae85c28f010025c35d8c9b173031b7000033ad
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jul 5 15:16:57 2025 +0200
+
+    RPM spec: Separate sub-packages for the static libraries.
+
+commit d2ad43416bee76bcf6654b3ff8100de594ddde96
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jul 5 14:45:35 2025 +0200
+
+    Typo fix.
+
+commit 0442eda860054e77a20b6682145a142e7b28308e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jul 5 14:45:13 2025 +0200
+
+    CMakeLists.txt fix.
+
+commit 8af08f69bc522ea805929edf259e5c98c81cc5b0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Jul 5 11:02:00 2025 +0200
+
+    Build fix for C23 compilation.
+
+commit e77bb65fd96d2b01638669e4dcebc5334b72e3c1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jul 4 23:48:08 2025 +0200
+
+    Packaging update.
+
+commit abece0cde4101fe64d020a40647f612974fcf7fc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jul 4 23:22:30 2025 +0200
+
+    Replaced deprecated QDomDocument::setContent() usage.
+
+commit 24cf41a8ff4f085d1ad69599361e2fc4d19ecd66
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue May 13 11:40:36 2025 +0200
+
+    FreeBSD port update.
+
+commit d658f6ea0bb4823d6551c84ae6ced2f49519f96d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue May 13 11:35:12 2025 +0200
+
+    Updated FreeBSD port.
+
+commit 25731b27bcb55d47e9045ad93988905b1e4c8ccc
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon May 12 22:53:38 2025 +0200
+
+    New release rsplib-3.5.2.
+
 commit 8ef55f856f1feffa403dc4c773a3fc2b2febcc8b
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Mon May 12 22:46:14 2025 +0200
