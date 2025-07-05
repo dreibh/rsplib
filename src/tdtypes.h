@@ -29,6 +29,7 @@
 #ifndef TDTYPES_H
 #define TDTYPES_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
 #if defined(__FreeBSD__)
@@ -39,10 +40,6 @@
 #endif
 
 #ifndef __cplusplus
-typedef unsigned char bool;
-#define true 1
-#define false 0
-
 #ifndef max
 #define max(a, b) ((a) < (b) ? (b) : (a))
 #endif
