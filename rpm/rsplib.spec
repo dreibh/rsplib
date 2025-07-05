@@ -76,7 +76,7 @@ The API library is provided by this package.
 
 
 %package librsplib-devel
-Summary: headers of the RSerPool client/server API library rsplib
+Summary: Headers of the RSerPool client/server API library rsplib
 Group: Development/Libraries
 Requires: %{name}-librsplib = %{version}-%{release}
 
