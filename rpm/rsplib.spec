@@ -75,6 +75,35 @@ The API library is provided by this package.
 %{_libdir}/libtdcppthread.so.*
 
 
+%package librsplib-static
+Summary: RSerPool client/server API static library for session management
+Group: System Environment/Libraries
+
+%description librsplib-static
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+RFC 5356) for a lightweight server pool and session management framework.
+It provides highly available pool management (that is registration
+handling and load distribution/balancing) by components called Registrar
+and a client-side/server-side API for accessing the service of a pool.
+The static API library is provided by this package.
+
+%files librsplib-static
+%{_libdir}/librspcsp*.a
+%{_libdir}/librspdispatcher*.a
+%{_libdir}/librsphsmgt*.a
+%{_libdir}/librsplib*.a
+%{_libdir}/librspmessaging*.a
+%{_libdir}/libtdbreakdetector*.a
+%{_libdir}/libtdloglevel*.a
+%{_libdir}/libtdnetutilities*.a
+%{_libdir}/libtdrandomizer*.a
+%{_libdir}/libtdstorage*.a
+%{_libdir}/libtdstringutilities*.a
+%{_libdir}/libtdtagitem*.a
+%{_libdir}/libtdthreadsafety*.a
+%{_libdir}/libtdtimeutilities*.a
+
+
 %package librsplib-devel
 Summary: Headers of the RSerPool client/server API library rsplib
 Group: Development/Libraries
@@ -95,33 +124,19 @@ to develop your own RSerPool-based clients and servers.
 %{_includedir}/rserpool/rserpool.h
 %{_includedir}/rserpool/rserpool-csp.h
 %{_includedir}/rserpool/tagitem.h
-%{_libdir}/librspcsp*.a
 %{_libdir}/librspcsp*.so
-%{_libdir}/librspdispatcher*.a
 %{_libdir}/librspdispatcher*.so
-%{_libdir}/librsphsmgt*.a
 %{_libdir}/librsphsmgt*.so
-%{_libdir}/librsplib*.a
 %{_libdir}/librsplib*.so
-%{_libdir}/librspmessaging*.a
 %{_libdir}/librspmessaging*.so
-%{_libdir}/libtdbreakdetector*.a
 %{_libdir}/libtdbreakdetector*.so
-%{_libdir}/libtdloglevel*.a
 %{_libdir}/libtdloglevel*.so
-%{_libdir}/libtdnetutilities*.a
 %{_libdir}/libtdnetutilities*.so
-%{_libdir}/libtdrandomizer*.a
 %{_libdir}/libtdrandomizer*.so
-%{_libdir}/libtdstorage*.a
 %{_libdir}/libtdstorage*.so
-%{_libdir}/libtdstringutilities*.a
 %{_libdir}/libtdstringutilities*.so
-%{_libdir}/libtdtagitem*.a
 %{_libdir}/libtdtagitem*.so
-%{_libdir}/libtdthreadsafety*.a
 %{_libdir}/libtdthreadsafety*.so
-%{_libdir}/libtdtimeutilities*.a
 %{_libdir}/libtdtimeutilities*.so
 # NOTE: These files are library-internal files, not to be packaged in the RPM:
 %ghost %{_includedir}/rserpool/asapinstance.h
@@ -202,11 +217,31 @@ RFC 5356) for a lightweight server pool and session management framework.
 It provides highly available pool management (that is registration
 handling and load distribution/balancing) by components called Registrar
 and a client-side/server-side API for accessing the service of a pool.
-This package provides an object-oriented API for the rsplib library.
+This package provides the C++ API library.
 
 %files libcpprspserver
 %{_libdir}/libcpprspserver.so.*
 %{_libdir}/libtdcppthread.so.*
+
+
+%package libcpprspserver-static
+Summary: C++ RSerPool client/server API static library
+Group: System Environment/Libraries
+Requires: %{name}-librsplib = %{version}-%{release}
+
+%description libcpprspserver-static
+Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
+RFC 5356) for a lightweight server pool and session management framework.
+It provides highly available pool management (that is registration
+handling and load distribution/balancing) by components called Registrar
+and a client-side/server-side API for accessing the service of a pool.
+This package provides the static C++ API for the rsplib library.
+This package provides the static C++ API library.
+
+%files libcpprspserver-static
+%{_libdir}/libcpprspserver*.a
+%{_libdir}/libtdcppthread*.a
+
 
 %package libcpprspserver-devel
 Summary: Headers of the C++ RSerPool client/server API library
@@ -229,9 +264,7 @@ develop your own RSerPool-based clients and servers based on the C++ API.
 %{_includedir}/rserpool/tcplikeserver.h
 %{_includedir}/rserpool/thread.h
 %{_includedir}/rserpool/udplikeserver.h
-%{_libdir}/libcpprspserver*.a
 %{_libdir}/libcpprspserver*.so
-%{_libdir}/libtdcppthread*.a
 %{_libdir}/libtdcppthread*.so
 
 
@@ -403,8 +436,10 @@ Requires: %{name}-docs = %{version}-%{release}
 Requires: %{name}-fractalpooluser = %{version}-%{release}
 Requires: %{name}-libcpprspserver = %{version}-%{release}
 Requires: %{name}-libcpprspserver-devel = %{version}-%{release}
+Requires: %{name}-libcpprspserver-static = %{version}-%{release}
 Requires: %{name}-librsplib = %{version}-%{release}
 Requires: %{name}-librsplib-devel = %{version}-%{release}
+Requires: %{name}-librsplib-static = %{version}-%{release}
 Requires: %{name}-registrar = %{version}-%{release}
 Requires: %{name}-services = %{version}-%{release}
 Requires: %{name}-tools = %{version}-%{release}

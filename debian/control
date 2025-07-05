@@ -66,7 +66,7 @@ Description: C++ RSerPool client/server API library
  handling and load distribution/balancing) by components called Registrar
  and a client-side/server-side API for accessing the service of a pool.
  .
- This package provides an object-oriented API for the rsplib library.
+ This package provides the C++ API library.
 
 Package: libcpprspserver-dev
 Section: libdevel
