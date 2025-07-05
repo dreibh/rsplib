@@ -26,8 +26,8 @@ CMAKE_ARGS=	-DCMAKE_INSTALL_DOCDIR=${DOCSDIR} \
 		-DENABLE_QT=1 \
 		-DUSE_KERNEL_SCTP=1
 
-# Work-around for build issue #285706 on ARM (https://bugs.freebsd.org/285706):
-MAKE_ENV=       OMP_NUM_THREADS=1
+# Work-around for build issue on ARM (https://bugs.freebsd.org/285706):
+MAKE_ENV=	OMP_NUM_THREADS=1
 
 PLIST_SUB=	DISTVERSION=${DISTVERSION}
 
