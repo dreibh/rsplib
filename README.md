@@ -1,3 +1,13 @@
+<h1 align="center">
+ RSPLIB<br />
+ <span style="font-size: 30%">The Reliable Server Pooling Implementation</span><br />
+ <a href="https://www.nntb.no/~dreibh/rserpool/">
+  <img alt="RSPLIB Project Logo" src="src/logo/rsplib.svg" width="25%" /><br />
+  <span style="font-size: 30%;">https://www.nntb.no/~dreibh/rserpool</span>
+ </a>
+</h1>
+
+
 # 💡 What is RSPLIB?
 
 [Reliable Server Pooling&nbsp;(RSerPool)](https://www.nntb.no/~dreibh/rserpool/#Description) is the new IETF framework for server pool management and session failover handling. In particular, it can be used for realising highly available services and load distribution. RSPLIB is the reference implementation of RSerPool. It includes:
@@ -5,6 +15,80 @@
 * The library librsplib, which is the RSerPool implementation itself;
 * The library libcpprspserver, which is a C++ wrapper library to easily write server applications based on librsplib;
 * A collection of server (pool element) and client (pool user) examples.
+
+
+# 📦 Binary Package Installation
+
+Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues) to report bugs and issues!
+
+## Ubuntu Linux
+
+For ready-to-install Ubuntu Linux packages of RSPLIB, see [Launchpad PPA for Thomas Dreibholz](https://launchpad.net/~dreibh/+archive/ubuntu/ppa/+packages?field.name_filter=rsplib&field.status_filter=published&field.series_filter=)!
+
+<pre>
+sudo apt-add-repository -sy ppa:dreibh/ppa
+sudo apt-get update
+sudo apt-get install rsplib
+</pre>
+
+## Fedora Linux
+
+For ready-to-install Fedora Linux packages of RSPLIB, see [COPR PPA for Thomas Dreibholz](https://copr.fedorainfracloud.org/coprs/dreibh/ppa/package/rsplib/)!
+
+<pre>
+sudo dnf copr enable -y dreibh/ppa
+sudo dnf install rsplib
+</pre>
+
+## FreeBSD
+
+For ready-to-install FreeBSD packages of RSPLIB, it is included in the ports collection, see [FreeBSD ports tree index of net/rsplib/](https://cgit.freebsd.org/ports/tree/net/rsplib/)!
+
+<pre>
+pkg install rsplib
+</pre>
+
+Alternatively, to compile it from the ports sources:
+
+<pre>
+cd /usr/ports/net/rsplib
+make
+make install
+</pre>
+
+
+# 💾 Build from Sources
+
+RSPLIB is released under the [GNU General Public Licence&nbsp;(GPL)](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text).
+
+Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues) to report bugs and issues!
+
+## Development Version
+
+The Git repository of the RSPLIB sources can be found at [https://github.com/dreibh/rsplib](https://github.com/dreibh/rsplib):
+
+<pre>
+git clone https://github.com/dreibh/rsplib
+cd rsplib
+cmake .
+make
+</pre>
+
+Contributions:
+
+* Issue tracker: [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues).
+  Please submit bug reports, issues, questions, etc. in the issue tracker!
+
+* Pull Requests for RSPLIB: [https://github.com/dreibh/rsplib/pulls](https://github.com/dreibh/rsplib/pulls).
+  Your contributions to RSPLIB are always welcome!
+
+* CI build tests of RSPLIB: [https://github.com/dreibh/rsplib/actions](https://github.com/dreibh/rsplib/actions).
+
+* Coverity Scan analysis of RSPLIB: [https://scan.coverity.com/projects/dreibh-rsplib](https://scan.coverity.com/projects/dreibh-rsplib).
+
+## Release Versions
+
+See [https://www.nntb.no/~dreibh/rsplib/#current-stable-release](https://www.nntb.no/~dreibh/rsplib/#current-stable-release) for release packages!
 
 
 # 🗃️ First Steps
@@ -363,81 +447,7 @@ In order to send status information, the registrar as well as all servers and cl
 * ```-cspserver=<address>:<port>```: Sets the CSP monitor server's address and port.
 * ```-cspinterval=<milliseconds>```: Sets the interval for the CSP status updates in milliseconds.
 
-Note: Both parameters MUST be provided in order to send status updates!
-
-
-# 📦 Binary Package Installation
-
-Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues) to report bugs and issues!
-
-## Ubuntu Linux
-
-For ready-to-install Ubuntu Linux packages of RSPLIB, see [Launchpad PPA for Thomas Dreibholz](https://launchpad.net/~dreibh/+archive/ubuntu/ppa/+packages?field.name_filter=rsplib&field.status_filter=published&field.series_filter=)!
-
-<pre>
-sudo apt-add-repository -sy ppa:dreibh/ppa
-sudo apt-get update
-sudo apt-get install rsplib
-</pre>
-
-## Fedora Linux
-
-For ready-to-install Fedora Linux packages of RSPLIB, see [COPR PPA for Thomas Dreibholz](https://copr.fedorainfracloud.org/coprs/dreibh/ppa/package/rsplib/)!
-
-<pre>
-sudo dnf copr enable -y dreibh/ppa
-sudo dnf install rsplib
-</pre>
-
-## FreeBSD
-
-For ready-to-install FreeBSD packages of RSPLIB, it is included in the ports collection, see [FreeBSD ports tree index of net/rsplib/](https://cgit.freebsd.org/ports/tree/net/rsplib/)!
-
-<pre>
-pkg install rsplib
-</pre>
-
-Alternatively, to compile it from the ports sources:
-
-<pre>
-cd /usr/ports/net/rsplib
-make
-make install
-</pre>
-
-
-# 💾 Build from Sources
-
-RSPLIB is released under the [GNU General Public Licence&nbsp;(GPL)](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text).
-
-Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues) to report bugs and issues!
-
-## Development Version
-
-The Git repository of the RSPLIB sources can be found at [https://github.com/dreibh/rsplib](https://github.com/dreibh/rsplib):
-
-<pre>
-git clone https://github.com/dreibh/rsplib
-cd rsplib
-cmake .
-make
-</pre>
-
-Contributions:
-
-* Issue tracker: [https://github.com/dreibh/rsplib/issues](https://github.com/dreibh/rsplib/issues).
-  Please submit bug reports, issues, questions, etc. in the issue tracker!
-
-* Pull Requests for RSPLIB: [https://github.com/dreibh/rsplib/pulls](https://github.com/dreibh/rsplib/pulls).
-  Your contributions to RSPLIB are always welcome!
-
-* CI build tests of RSPLIB: [https://github.com/dreibh/rsplib/actions](https://github.com/dreibh/rsplib/actions).
-
-* Coverity Scan analysis of RSPLIB: [https://scan.coverity.com/projects/dreibh-rsplib](https://scan.coverity.com/projects/dreibh-rsplib).
-
-## Release Versions
-
-See [https://www.nntb.no/~dreibh/rsplib/#current-stable-release](https://www.nntb.no/~dreibh/rsplib/#current-stable-release) for release packages!
+Note: Both parameters **must** be provided in order to send status updates!
 
 
 # 🖋️ Citing RSPLIB in Publications
