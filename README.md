@@ -278,7 +278,7 @@ rspserver -fractal -fgpmaxthreads=4
 
 ```-calcapp```: Selects the Calculation Application (CalcApp) service. The default PH will be "CalcAppPool".
 
-Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)!
+Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf#chapter.8)!
 
 The CalcApp service provides further options:
 
@@ -324,9 +324,9 @@ The PU for the
 [Character Generator Service](#character-generator-service)
 can be started by:
 
-```
+<pre>
 rspterminal &lt;options&gt; ...
-```
+</pre>
 
 Input from standard input is sent to the PE, and the response is printed to standard output.
 
@@ -374,17 +374,17 @@ man pingpongclient
 
 The PU for the [Fractal Generator Service](#fractal-generator-service) can be started by:
 
-```
+<pre>
 fractalpooluser &lt;options&gt; ...
-```
+</pre>
 
 The Fractal Generator PU provides further options:
 
-* ```-configdir=<directory>```: Sets a directory to look for FGP config files. From all FGP files (pattern: <tt>*.fgp</tt>) in this directory, random files are selected for the calculation of requests. The <tt>.fgp</tt> files can be created, read and modified by [FractGen][https://www.nntb.no/~dreibh/fractalgenerator/).
+* ```-configdir=<directory>```: Sets a directory to look for FGP config files. From all FGP files (pattern: <tt>*.fgp</tt>) in this directory, random files are selected for the calculation of requests. The <tt>.fgp</tt> files can be created, read and modified by [FractGen](https://www.nntb.no/~dreibh/fractalgenerator/).
 * ```-threads=<maximum_number_of_threads> ```: Sets the number of parallel sessions for the calculation of an image.
 * ```-caption=<title>```: Sets the window title.
 
-Example (assuming the <tt>.fgp</tt> input files are installed under <tt>/usr/share/fgpconfig</tt>):
+Example (assuming the [<tt>.fgp</tt> input files](https://github.com/dreibh/rsplib/tree/master/src/fgpconfig) are installed under <tt>/usr/share/fgpconfig</tt>):
 
 <pre>
 fractalpooluser -configdir=/usr/share/fgpconfig -caption="Fractal PU Demo!"
@@ -424,7 +424,7 @@ calcappclient -jobinterval=30.125 -jobsize=5000000
 
 Notes:
 
-* Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)!
+* Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf#chapter.8)!
 * See the [manpage of "calcappclient"](https://github.com/dreibh/rsplib/blob/master/src/calcappclient.1) for further options!
 
   <pre>
