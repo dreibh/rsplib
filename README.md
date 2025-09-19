@@ -274,6 +274,32 @@ rspserver -fractal -fgpmaxthreads=4
 </pre>
 
 
+## Calculation Application Service
+
+```-calcapp```: Selects the Calculation Application (CalcApp) service. The default PH will be "CalcAppPool".
+
+Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)!
+
+The CalcApp service provides further options:
+
+* ```-capcapacity=<calculations_per_second>```: Sets the service capacity in calculations per second.
+* ```-capcleanshutdownprobability=<probability>```: Sets the probability for sending state cookies to all sessions before shutting down.
+* ```-capcookiemaxcalculations=<calculations>```: Sets the cookie interval in calculations.
+* ```-capcookiemaxtime=<seconds>```: Sets the cookie interval in seconds.
+* ```-capkeepalivetransmissioninterval=<milliseconds>```: Sets the keep-alive transmission interval in milliseconds.
+* ```-capkeepalivetimeoutinterval=<milliseconds>```: Sets the keep-alive timeout in milliseconds.
+* ```-capmaxjobs=<max_jobs>```: Sets the an upper limit for the number of simultaneous CalcApp requests.
+* ```-capobject=<name>```: Sets the object name for scalar hierarchy.
+* ```-capscalar=<scalar_file>```: Sets the name of vector scalar file to write.
+* ```-capvector=<vector_file>```: Sets the name of vector output file to write.
+
+Example:
+
+<pre>
+rspserver -calcapp -capcapacity=2000000 -capmaxjobs=8
+</pre>
+
+
 # 📚 Pool Users (Clients)
 
 ## Common Parameters
@@ -319,6 +345,31 @@ Notes:
   </pre>
 
 
+## Ping Pong Client
+
+The PU for the [Ping Pong Service](#ping-pong-service) can be started by:
+
+```
+pingpongclient
+```
+
+The Ping Pong PU provides further options:
+
+* ```-interval=<milliseconds>```: Sets the Ping interval in milliseconds.
+
+Example:
+
+<pre>
+pingpongclient -poolhandle=MyPingPongPool -interval=333
+</pre>
+
+Note: See the [manpage of "pingpongclient"](https://github.com/dreibh/rsplib/blob/master/src/pingpongclient.1) for further options!
+
+<pre>
+man pingpongclient
+</pre>
+
+
 ## Fractal Generator Client
 
 The PU for the [Fractal Generator Service](#fractal-generator-service) can be started by:
@@ -346,29 +397,39 @@ man fractalpooluser
 </pre>
 
 
-## Ping Pong Client
+## Calculation Application Client
 
-The PU for the [Ping Pong Service](#ping-pong-service) can be started by:
+The PU for the [Calculation Application Service](#calculation-application-service) (CalcApp) can be started by:
 
 ```
-pingpongclient
+calcappclient
 ```
 
-The Ping Pong PU provides further options:
+The CalcApp PU provides further options:
 
-* ```-interval=<milliseconds>```: Sets the Ping interval in milliseconds.
+* ```-jobinterval=<seconds>```: Sets the job interval in seconds.
+* ```-jobsize=<calculations>```: Sets the job size in calculations.
+* ```-keepalivetransmissioninterval=<milliseconds>```: Sets the session keep-alive interval in milliseconds.
+* ```-keepalivetimeoutinterval=<milliseconds>```: Sets the session keep-alive timeout in milliseconds.
+* ```-object=<name>```: Sets the object name for scalar hierarchy.
+* ```-runtime=<seconds>```: After the configured number of seconds, the service is shut down. Floating-point values (e.g.&nbsp;30.125) are possible.
+* ```-scalar=<scalar_file>```: Sets the name of vector scalar file to write.
+* ```-vector=<vector_file>```: Sets the name of vector output file to write.
 
 Example:
 
 <pre>
-pingpongclient -poolhandle=MyPingPongPool -interval=333
+calcappclient -jobinterval=30.125 -jobsize=5000000
 </pre>
 
-Note: See the [manpage of "pingpongclient"](https://github.com/dreibh/rsplib/blob/master/src/pingpongclient.1) for further options!
+Notes:
 
-<pre>
-man pingpongclient
-</pre>
+* Details about the CalcApp service can be found in Chapter&nbsp;8 of [Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture»](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)!
+* See the [manpage of "calcappclient"](https://github.com/dreibh/rsplib/blob/master/src/calcappclient.1) for further options!
+
+  <pre>
+  man calcappclient
+  </pre>
 
 
 # 📚 Registrar
