@@ -217,7 +217,7 @@ If everything works, you can test RSerPool functionality by stopping the pool el
 
 ## Monitor the component status
 
-You can monitor the status of each component using the Component Status Protocol monitor "cspmonitor". Simply start it by ```cspmonitor```. It will listen for status messages sent via UDP on port&nbsp;2960. The components (registrar, rspserver, etc.) accept the command line arguments ```-cspserver=<server>:<port>``` and ```-cspinterval=<milliseconds>```. For example, if you want a status update every 300&nbsp;ms and your CSP client is listening on port 2960 of host 192.168.11.22, use the arguments
+You can monitor the status of each component using the Component Status Protocol monitor ```cspmonitor```. Simply start it by ```cspmonitor```. It will listen for status messages sent via UDP on port&nbsp;2960. The components (```rspregistrar```, ```rspserver```, etc.) accept the command line arguments ```-cspserver=<server>:<port>``` and ```-cspinterval=<milliseconds>```. For example, if you want a status update every 300&nbsp;ms and your CSP client is listening on port 2960 of host 192.168.11.22, use the arguments
 ```
 ... -cspserver=192.168.11.22:2960 -cspinterval=300
 ```
@@ -231,13 +231,24 @@ You can use [Wireshark](https://www.wireshark.org) to observe the RSerPool and d
 
 # 📚 Pool Elements (Servers)
 
-All demo PE services can be started using the ```rspserver``` program. That is:
+All example PE services can be started using the ```rspserver``` program. That is:
 
 <pre>
 rspserver &lt;options&gt; ...
 </pre>
 
 It takes a set of common parameters as well as some service-specific arguments. These parameters are explained in the following.
+
+The following example PE services are provided:
+
+* [Echo Service](#echo-service): A simple echo service. The server-side returns the received payload as-is, i.e.&nbsp;echoes it.
+* [Discard Service](#discard-service): A simple discard service. The server-side just ignores the received payload.
+* [Daytime Service](#daytime-service): A simple daytime service. The server-side responds with the current date and time.
+* [Character Generator Service](#character-generator-service): A simple character generator service. The server-side generates test data.
+* [Ping Pong Service](#ping-pong-service): A simple request-response service.
+* [Scripting Service](#scripting-service): An example workload-offloading service. It is for example used by [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/).
+* [Fractal Generator Service](#fractal-generator-service): The fractal graphics computation service, for testing and illustratively demonstrating RSerPool features. It is also used for the [RSerPool Demo Tool](https://github.com/dreibh/rserpooldemo).
+* [Calculation Application Service](#calculation-application-service): A simulated calculation application, for evaluating load distribution. Details can be found in «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)».
 
 Notes:
 
@@ -338,7 +349,7 @@ rspserver -pingpong -poolhandle=MyPingPongPool -pppmaxthreads=4 -pppmaxthreads=8
 
 ## Scripting Service
 
-```--scripting```: Selects Scripting service. The default PH will be "ScriptingPool".
+```-scripting```: Selects Scripting service. The default PH will be "ScriptingPool".
 
 The Scripting Service service provides further options:
 
