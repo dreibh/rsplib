@@ -244,15 +244,15 @@ The following example PE services are provided:
 * [Echo Service](#echo-service): A simple echo service. The server-side returns the received payload as-is, i.e.&nbsp;echoes it.
 * [Discard Service](#discard-service): A simple discard service. The server-side just ignores the received payload.
 * [Daytime Service](#daytime-service): A simple daytime service. The server-side responds with the current date and time.
-* [Character Generator Service](#character-generator-service): A simple character generator service. The server-side generates test data.
+* [Character Generator&nbsp;(CharGen) Service](#character-generator-service): A simple character generator service. The server-side generates test data.
 * [Ping Pong Service](#ping-pong-service): A simple request-response service.
-* [Scripting Service](#scripting-service): An example workload-offloading service. It is for example used by [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/).
+* [Scripting Service](#scripting-service): An example workload-offloading service. It is for example used by [SimProcTC](https://github.com/dreibh/simproctc).
 * [Fractal Generator Service](#fractal-generator-service): The fractal graphics computation service, for testing and illustratively demonstrating RSerPool features. It is also used for the [RSerPool Demo Tool](https://github.com/dreibh/rserpooldemo).
-* [Calculation Application Service](#calculation-application-service): A simulated calculation application, for evaluating load distribution. Details can be found in «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)».
+* [Calculation Application&nbsp;(CalcApp) Service](#calculation-application-service): A simulated calculation application, for evaluating load distribution. Details can be found in «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)».
 
 Notes:
 
-* For most of the provided services, the latest version of [Wireshark](https://www.wireshark.org) already includes the packets dissectors!
+* For all provided services, the latest version of [Wireshark](https://www.wireshark.org) already includes the packets dissectors!
 * See the [manpage of "rspserver"](https://github.com/dreibh/rsplib/blob/master/src/rspserver.1) for further options!
 
   <pre>
@@ -369,10 +369,10 @@ Example:
 rspserver -scripting -policy=LeastUsed -ssmaxthreads=4
 </pre>
 
-The Scripting Service is used e.g. by:
+The Scripting Service is used e.g. by the following open source tools, which provide more detailed examples:
 
-* [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/)
-* [SCTP and RSerPool – A Practical Exercise](https://www.nntb.no/~dreibh/rserpool/#Teaching)
+* [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/): Distributing simulation jobs in a compute pool.
+* [SCTP and RSerPool – A Practical Exercise](https://www.nntb.no/~dreibh/rserpool/#Teaching): A tutorial to create a simple load distribution setup to run [Persistence of Vision Raytracer&nbsp;(POV-Ray)](https://www.povray.org/) image computations.
 
 
 ## Fractal Generator Service
@@ -488,6 +488,39 @@ Note: See the [manpage of "pingpongclient"](https://github.com/dreibh/rsplib/blo
 <pre>
 man pingpongclient
 </pre>
+
+
+## Scripting Client
+
+The PU for the [Scripting Service](#scripting-service) can be started by:
+
+```
+scriptingclient
+```
+
+The Scripting PU provides further options:
+
+* ```-environment=<file_name>```: Sets the name of the environment file to upload to the PE. The PE may cache this environment file, allowing to skip a subsequent upload of the same environment file.
+* ```-input=<file_name>```: Sets the name of the input file to upload to the PE.
+* ```-output=<file_name>```: Sets the name of the output file to write the download from the PE to.
+* ```-quiet```: Turns on quiet mode, i.e. only limited information is printed.
+* ```-maxretry=<trials>```: Maximum number of retries upon errors on the remote site. The error counter only increments when the remote-side script returns a  non-zero  error  code.  When  the  error  limit  is reached, the received output file will be downloaded for debugging purposes.
+* ```-retrydelay=<milliseconds>```: Sets the retry delay upon failover in milliseconds.
+* ```-runid=<description>```: Add the given description to all log lines of the scripting service PU operation. This can be useful when multiple PUs are running simultaneously.
+* ```-transmittimeout=<milliseconds>```: Sets the transmission timeout in milliseconds.
+* ```-keepaliveinterval=<milliseconds>```: Sets the keep-alive interval in milliseconds.
+* ```-keepalivetimeout=<milliseconds>```: Sets the keep-alive timeout in milliseconds.
+
+To demonstrate the usage of ```scriptingclient```, the script <tt>[scriptingserviceexample](https://github.com/dreibh/rsplib/blob/master/src/scriptingserviceexample)</tt> provides a simple example. It just takes an arbitrary ID number as parameter:
+
+<pre>
+scriptingserviceexample 1234
+</pre>
+
+The Scripting Service is used e.g. by the following open source tools, which provide more detailed examples:
+
+* [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/): Distributing simulation jobs in a compute pool.
+* [SCTP and RSerPool – A Practical Exercise](https://www.nntb.no/~dreibh/rserpool/#Teaching): A tutorial to create a simple load distribution setup to run [Persistence of Vision Raytracer&nbsp;(POV-Ray)](https://www.povray.org/) image computations.
 
 
 ## Fractal Generator Client
