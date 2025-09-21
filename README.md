@@ -268,8 +268,8 @@ Notes:
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
 * ```-poolhandle=<poolhandle>```: Sets the PH to a non-default value; otherwise, the default setting will be the service-specific default (see below).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below).
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below).
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
 * ```-registrar=<address>:<port>```: Adds a static PR entry into the Registrar Table. It is possible to add multiple entries.
 * ```-asapannounce=<address>:<port>```: Sets the multicast address and port the ASAP instance listens for ASAP Server Announces on.
 * ```-rereginterval=<milliseconds>```: Sets the PE's re-registration interval (in milliseconds).
@@ -430,8 +430,8 @@ The pool users provides some common options for all programs:
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
 * ```-poolhandle=<poolhandle>```: Sets the PH to a non-default value; otherwise, the default setting will be the service-specific default (see below).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below).
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below).
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
 * ```-registrar=<address>:<port>```: Adds a static PR entry into the Registrar Table. It is possible to add multiple entries.
 
 
@@ -599,8 +599,8 @@ rspregistrar &lt;options&gt; ...
 * ```-loglevel=0-9```: Sets the logging verbosity from 0 (none) to 9 (very verbose).
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below).
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below).
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
 
 
 ## ASAP Parameters
@@ -677,7 +677,7 @@ RSPLIB and related BibTeX entries can be found in [AllReferences.bib](https://ww
 
 * 🇧🇦 [Bosnian](https://bs.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Nihad Cosić)
 * 🇨🇳 [Chinese](https://zh.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Xing Zhou)
-* 🇭🇷 [Croatian](https://hr.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Nihad Cosić)
+* 🇭🇷 [Croatian](https://web.archive.org/web/20230709054321/https://hr.wikipedia.org/wiki/Reliable_server_Pooling) (thanks to Nihad Cosić)
 * 🇬🇧 [English](https://en.wikipedia.org/wiki/Reliable_server_pooling)
 * 🇫🇷 [French](https://fr.wikipedia.org/wiki/Reliable_Server_Pooling)
 * 🇩🇪 [German](https://de.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Jobin Pulinthanath)
