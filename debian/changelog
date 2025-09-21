@@ -1,9 +1,9 @@
-rsplib (3.5.4~rc0-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.4-1ubuntu1) trixie; urgency=medium
 
   * New upstream release.
   * Fixes "typedef bool" issue (Closed: #1114349).
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 19 Sep 2025 12:10:40 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sun, 21 Sep 2025 16:37:21 +0200
 
 rsplib (3.5.3-1ubuntu1) trixie; urgency=medium
 
