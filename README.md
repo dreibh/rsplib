@@ -336,6 +336,34 @@ rspserver -pingpong -poolhandle=MyPingPongPool -pppmaxthreads=4 -pppmaxthreads=8
 </pre>
 
 
+## Scripting Service
+
+```--scripting```: Selects Scripting service. The default PH will be "ScriptingPool".
+
+The Scripting Service service provides further options:
+
+* ```-sskeyring=<keyring>```: The location of a [GnuPG](https://www.gnupg.org/) keyring to check the work packages and environments against. If a keyring is specified, only files that pass the validation are accepted.
+* ```-sscachedirectory=<directory>```: Sets the environment cache directory.
+* ```-sscachemaxentries=<entries>```: Sets the maximum number of environment cache entries.
+* ```-sscachemaxsize=<kibibytes>```: Sets the maximum size of the environment cache in kibibytes.
+* ```-sskeepaliveinterval=<milliseconds>```: Sets the keep-alive interval in milliseconds.
+* ```-sskeepalivetimeout=<milliseconds>```: Sets the keep-alive timeout in milliseconds.
+* ```-sskeeptempdirs```: Turns on keeping all temporary files for debugging. Handle with care!
+* ```-ssmaxthreads=<threads>```: Sets an upper limit for the number of simultaneous sessions.
+* ```-sstransmittimeout=<milliseconds>```: Sets the transmission timeout in milliseconds.
+
+Example:
+
+<pre>
+rspserver -scripting -policy=LeastUsed -ssmaxthreads=4
+</pre>
+
+The Scripting Service is used e.g. by:
+
+* [SimProcTC – A Simulation Processing Tool-Chain for OMNeT++ Simulations](https://www.nntb.no/~dreibh/omnetpp/)
+* [SCTP and RSerPool – A Practical Exercise](https://www.nntb.no/~dreibh/rserpool/#Teaching)
+
+
 ## Fractal Generator Service
 
 ```-fractal```: Selects the Fractal Generator service. The default PH will be "FractalGeneratorPool".
