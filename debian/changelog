@@ -5,6 +5,8 @@ rsplib (3.5.4-2ubuntu1) trixie; urgency=medium
   * debian/sources/lintian-overrides: Added Lintian overrides to ignore
     long lines in documentation, configuration files, translation files,
     etc.
+  * debian/control: Removed "Rules-Requires-Root: no",
+    since it is default now.
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 07 Oct 2025 10:31:21 +0200
 

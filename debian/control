@@ -15,7 +15,6 @@ Build-Depends: cmake,
                pdf2svg,
                qt6-base-dev
 Standards-Version: 4.7.2
-Rules-Requires-Root: no
 
 Package: librsplib3t64
 Provides: ${t64:Provides}
