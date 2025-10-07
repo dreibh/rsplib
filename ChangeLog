@@ -1,3 +1,39 @@
+commit 2cd25903a6da64775ad584e14607e81decb08211
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 7 12:24:23 2025 +0200
+
+    Minor documentation update.
+
+commit 3c0490ec4f1f53f2a03c898a1255d686a3e21018
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 7 12:20:45 2025 +0200
+
+    A fix.
+
+commit dc327e5af5d6c04e8d9f5eef293e3f645ff1d335
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 7 11:55:12 2025 +0200
+
+    debian/control: Removed "Rules-Requires-Root: no" since it is the default now.
+
+commit 2827b1e06a779144522e9e6d423a6e7bc93ee1c7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 7 11:18:03 2025 +0200
+
+    Added Lintian override for long lines in sources.
+
+commit fe9aaab19b44eb11036318836fcd54f188413e26
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Sep 25 17:13:53 2025 +0200
+
+    FreeBSD packaging update.
+
+commit ea1337a173dfa9e4615ddcee26ef5ed237e26875
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Sep 21 16:37:25 2025 +0200
+
+    New release rsplib-3.5.4.
+
 commit 2060450ed020f4ef89768f61e688bb153836ec66
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Sun Sep 21 14:48:45 2025 +0200
