@@ -1,9 +1,12 @@
-rsplib (3.5.4-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.4-2ubuntu1) trixie; urgency=medium
 
   * New upstream release.
   * Fixes "typedef bool" issue (Closed: #1114349).
+  * debian/sources/lintian-overrides: Added Lintian overrides to ignore
+    long lines in documentation, configuration files, translation files,
+    etc.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sun, 21 Sep 2025 16:37:21 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 07 Oct 2025 10:31:21 +0200
 
 rsplib (3.5.3-1ubuntu1) trixie; urgency=medium
 

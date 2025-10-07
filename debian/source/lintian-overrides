@@ -1,0 +1,3 @@
+# Ignore long lines in markdown text, configuration files, translation files, etc.:
+# rsplib source: very-long-line-length-in-source-file [src/figures/*.dia]
+rsplib source: very-long-line-length-in-source-file
