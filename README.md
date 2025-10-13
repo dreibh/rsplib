@@ -149,12 +149,11 @@ Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https:
 
 The Git repository of the RSPLIB sources can be found at [https://github.com/dreibh/rsplib](https://github.com/dreibh/rsplib):
 
-<pre>
-git clone https://github.com/dreibh/rsplib
-cd rsplib
-cmake .
-make
-</pre>
+<pre><code><span class="fu">git</span> clone <a href="https://github.com/dreibh/rsplib">https://github.com/dreibh/rsplib</a>
+<span class="bu">cd</span> rsplib
+<span class="fu">cmake</span> .
+<span class="fu">make</span>
+</code></pre>
 
 Contributions:
 
