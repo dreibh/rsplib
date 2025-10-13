@@ -2,7 +2,7 @@
  RSPLIB<br />
  <span style="font-size: 30%">The Reliable Server Pooling Implementation</span><br />
  <a href="https://www.nntb.no/~dreibh/rserpool/">
-  <img alt="RSPLIB Project Logo" src="src/logo/rsplib.svg" width="25%" /><br />
+  <img alt="RSPLIB Project Logo" src="src/figures/RSPLIB-Logo.svg" width="25%" /><br />
   <span style="font-size: 30%;">https://www.nntb.no/~dreibh/rserpool</span>
  </a>
 </h1>
