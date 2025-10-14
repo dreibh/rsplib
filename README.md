@@ -107,36 +107,36 @@ Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https:
 
 For ready-to-install Ubuntu Linux packages of RSPLIB, see [Launchpad PPA for Thomas Dreibholz](https://launchpad.net/~dreibh/+archive/ubuntu/ppa/+packages?field.name_filter=rsplib&field.status_filter=published&field.series_filter=)!
 
-<pre>
+```bash
 sudo apt-add-repository -sy ppa:dreibh/ppa
 sudo apt-get update
 sudo apt-get install rsplib
-</pre>
+```
 
 ## Fedora Linux
 
 For ready-to-install Fedora Linux packages of RSPLIB, see [COPR PPA for Thomas Dreibholz](https://copr.fedorainfracloud.org/coprs/dreibh/ppa/package/rsplib/)!
 
-<pre>
+```bash
 sudo dnf copr enable -y dreibh/ppa
 sudo dnf install rsplib
-</pre>
+```
 
 ## FreeBSD
 
 For ready-to-install FreeBSD packages of RSPLIB, it is included in the ports collection, see [FreeBSD ports tree index of net/rsplib/](https://cgit.freebsd.org/ports/tree/net/rsplib/)!
 
-<pre>
-pkg install rsplib
-</pre>
+```bash
+sudo pkg install rsplib
+```
 
 Alternatively, to compile it from the ports sources:
 
-<pre>
+```bash
 cd /usr/ports/net/rsplib
 make
-make install
-</pre>
+sudo make install
+```
 
 
 # 💾 Build from Sources
@@ -179,7 +179,7 @@ See [https://www.nntb.no/~dreibh/rserpool/#current-stable-release](https://www.n
 You need a configured network interface with:
 
 * at least a private address (192.168.*x*.*y*; 10.*a*.*b*.*c*; 172.16.*n*.*m* - 172.31.*i*.*j*)
-* having the multicast flag set (e.g. ```sudo ifconfig <dev> multicast```)
+* having the multicast flag set (e.g. `sudo ifconfig <dev> multicast`{.bash})
 
 In a typical network setup, this should already be configured.
 
@@ -187,7 +187,7 @@ Ensure that your firewall settings allow UDP packets to/from the registrar (ASAP
 
 ## Start at least one registrar
 
-```
+```bash
 rspregistrar
 ```
 
@@ -195,7 +195,7 @@ See [Registrar](#registrar) for registrar parameters.
 
 ## Start at least one pool element
 
-```
+```bash
 rspserver -echo
 ```
 
@@ -203,7 +203,7 @@ You can start multiple pool elements; they may also run on different hosts, of c
 
 ## Start a pool user
 
-```
+```bash
 rspterminal
 ```
 
@@ -217,7 +217,7 @@ If everything works, you can test RSerPool functionality by stopping the pool el
 ## Monitor the component status
 
 You can monitor the status of each component using the Component Status Protocol monitor ```cspmonitor```. Simply start it by ```cspmonitor```. It will listen for status messages sent via UDP on port&nbsp;2960. The components (```rspregistrar```, ```rspserver```, etc.) accept the command line arguments ```-cspserver=<server>:<port>``` and ```-cspinterval=<milliseconds>```. For example, if you want a status update every 300&nbsp;ms and your CSP client is listening on port 2960 of host 192.168.11.22, use the arguments
-```
+```bash
 ... -cspserver=192.168.11.22:2960 -cspinterval=300
 ```
 
@@ -225,16 +225,16 @@ Note: You *must* specify address **and** interval, otherwise no messages are sen
 
 ## Run Wireshark
 
-You can use [Wireshark](https://www.wireshark.org) to observe the RSerPool and demo protocol traffic. Coloring rules and filters can be found in the directory <tt>[rsplib/src/wireshark](https://github.com/dreibh/rsplib/tree/master/src/wireshark)</tt>. Simply copy <tt>[colorfilters](https://github.com/dreibh/rsplib/blob/master/src/wireshark/colorfilters)</tt>, <tt>[dfilters](https://github.com/dreibh/rsplib/blob/master/src/wireshark/dfilters)</tt> and optionally <tt>[preferences](https://github.com/dreibh/rsplib/blob/master/src/wireshark/preferences)</tt> to <tt>$HOME/.wireshark</tt>. Dissectors for the RSerPool and application protocols are already included in recent Wireshark distributions!
+You can use [Wireshark](https://www.wireshark.org) to observe the RSerPool and demo protocol traffic. Coloring rules and filters can be found in the directory [`rsplib/src/wireshark`](https://github.com/dreibh/rsplib/tree/master/src/wireshark). Simply copy [`colorfilters`](https://github.com/dreibh/rsplib/blob/master/src/wireshark/colorfilters), [`dfilters`](https://github.com/dreibh/rsplib/blob/master/src/wireshark/dfilters) and optionally [`preferences`](https://github.com/dreibh/rsplib/blob/master/src/wireshark/preferences) to `$HOME/.wireshark`. Dissectors for the RSerPool and application protocols are already included in recent Wireshark distributions!
 
 
 # 📚 Pool Elements (Servers)
 
 All example PE services can be started using the ```rspserver``` program. That is:
 
-<pre>
-rspserver &lt;options&gt; ...
-</pre>
+```bash
+rspserver <OPTIONS> ...
+```
 
 It takes a set of common parameters as well as some service-specific arguments. These parameters are explained in the following.
 
@@ -254,9 +254,9 @@ Notes:
 * For all provided services, the latest version of [Wireshark](https://www.wireshark.org) already includes the packets dissectors!
 * See the [manpage of "rspserver"](https://github.com/dreibh/rsplib/blob/master/src/rspserver.1) for further options!
 
-  <pre>
+  ```bash
   man rspserver
-  </pre>
+  ```
 
 
 ## Common Parameters
@@ -292,9 +292,9 @@ Note: The Echo Service will be started by default, unless a different service is
 
 Example:
 
-<pre>
+```bash
 rspserver -echo -poolhandle=MyEchoPool
-</pre>
+```
 
 
 ## Discard Service
@@ -303,9 +303,9 @@ rspserver -echo -poolhandle=MyEchoPool
 
 Example:
 
-<pre>
+```bash
 rspserver -discard -poolhandle=MyDiscardPool
-</pre>
+```
 
 
 ## Daytime Service
@@ -314,9 +314,9 @@ rspserver -discard -poolhandle=MyDiscardPool
 
 Example:
 
-<pre>
+```bash
 rspserver -daytime -poolhandle=MyDaytimePool
-</pre>
+```
 
 
 ## Character Generator Service
@@ -325,9 +325,9 @@ rspserver -daytime -poolhandle=MyDaytimePool
 
 Example:
 
-<pre>
+```bash
 rspserver -chargen -poolhandle=MyCharGenPool
-</pre>
+```
 
 
 ## Ping Pong Service
@@ -341,9 +341,10 @@ The Ping Pong service provides further options:
 
 Example:
 
-<pre>
-rspserver -pingpong -poolhandle=MyPingPongPool -pppmaxthreads=4 -pppmaxthreads=8
-</pre>
+```bash
+rspserver -pingpong -poolhandle=MyPingPongPool \
+   -pppmaxthreads=4 -pppmaxthreads=8
+```
 
 
 ## Scripting Service
@@ -364,9 +365,9 @@ The Scripting Service service provides further options:
 
 Example:
 
-<pre>
+```bash
 rspserver -scripting -policy=LeastUsed -ssmaxthreads=4
-</pre>
+```
 
 The Scripting Service is used e.g. by the following open source tools, which provide more detailed examples:
 
@@ -389,9 +390,9 @@ The Fractal Generator service provides further options:
 
 Example:
 
-<pre>
+```bash
 rspserver -fractal -fgpmaxthreads=4
-</pre>
+```
 
 
 ## Calculation Application Service
@@ -414,9 +415,9 @@ The CalcApp service provides further options:
 
 Example:
 
-<pre>
+```bash
 rspserver -calcapp -capcapacity=2000000 -capmaxjobs=8
-</pre>
+```
 
 
 # 📚 Pool Users (Clients)
@@ -443,25 +444,25 @@ The PU for the
 [Character Generator Service](#character-generator-service)
 can be started by:
 
-<pre>
-rspterminal &lt;options&gt; ...
-</pre>
+```bash
+rspterminal <OPTIONS> ...
+```
 
 Input from standard input is sent to the PE, and the response is printed to standard output.
 
 Example:
 
-<pre>
+```bash
 rspterminal -poolhandle=MyDaytimePool
-</pre>
+```
 
 Notes:
 
 * The default PH is EchoPool. Use ```-poolhandle=<poolhandle>``` to set a different PH, e.g. "DaytimePool".
 * See the [manpage of "rspterminal"](https://github.com/dreibh/rsplib/blob/master/src/rspterminal.1) for further options!
-  <pre>
+  ```bash
   man rspterminal
-  </pre>
+  ```
 
 
 ## Ping Pong Client
@@ -478,15 +479,15 @@ The Ping Pong PU provides further options:
 
 Example:
 
-<pre>
+```bash
 pingpongclient -poolhandle=MyPingPongPool -interval=333
-</pre>
+```
 
 Note: See the [manpage of "pingpongclient"](https://github.com/dreibh/rsplib/blob/master/src/pingpongclient.1) for further options!
 
-<pre>
+```bash
 man pingpongclient
-</pre>
+```
 
 
 ## Scripting Client
@@ -510,11 +511,11 @@ The Scripting PU provides further options:
 * ```-keepaliveinterval=<milliseconds>```: Sets the keep-alive interval in milliseconds.
 * ```-keepalivetimeout=<milliseconds>```: Sets the keep-alive timeout in milliseconds.
 
-To demonstrate the usage of ```scriptingclient```, the script <tt>[scriptingserviceexample](https://github.com/dreibh/rsplib/blob/master/src/scriptingserviceexample)</tt> provides a simple example. It just takes an arbitrary ID number as parameter:
+To demonstrate the usage of ```scriptingclient```, the script `[scriptingserviceexample](https://github.com/dreibh/rsplib/blob/master/src/scriptingserviceexample)` provides a simple example. It just takes an arbitrary ID number as parameter:
 
-<pre>
+```bash
 scriptingserviceexample 1234
-</pre>
+```
 
 The Scripting Service is used e.g. by the following open source tools, which provide more detailed examples:
 
@@ -526,27 +527,29 @@ The Scripting Service is used e.g. by the following open source tools, which pro
 
 The PU for the [Fractal Generator Service](#fractal-generator-service) can be started by:
 
-<pre>
-fractalpooluser &lt;options&gt; ...
-</pre>
+```bash
+fractalpooluser <OPTIONS> ...
+```
 
 The Fractal Generator PU provides further options:
 
-* ```-configdir=<directory>```: Sets a directory to look for FGP config files. From all FGP files (pattern: <tt>*.fgp</tt>) in this directory, random files are selected for the calculation of requests. The <tt>.fgp</tt> files can be created, read and modified by [FractGen](https://www.nntb.no/~dreibh/fractalgenerator/).
+* ```-configdir=<directory>```: Sets a directory to look for FGP config files. From all FGP files (pattern: `*.fgp`) in this directory, random files are selected for the calculation of requests. The `.fgp` files can be created, read and modified by [FractGen](https://www.nntb.no/~dreibh/fractalgenerator/).
 * ```-threads=<maximum_number_of_threads> ```: Sets the number of parallel sessions for the calculation of an image.
 * ```-caption=<title>```: Sets the window title.
 
-Example (assuming the [<tt>.fgp</tt> input files](https://github.com/dreibh/rsplib/tree/master/src/fgpconfig) are installed under <tt>/usr/share/fgpconfig</tt>):
+Example (assuming the [`.fgp` input files](https://github.com/dreibh/rsplib/tree/master/src/fgpconfig) are installed under `/usr/share/fgpconfig`):
 
-<pre>
-fractalpooluser -configdir=/usr/share/fgpconfig -caption="Fractal PU Demo!"
-</pre>
+```bash
+fractalpooluser \
+   -configdir=/usr/share/fgpconfig \
+   -caption="Fractal PU Demo!"
+```
 
 Note: See the [manpage of "fractalpooluser"](https://github.com/dreibh/rsplib/blob/master/src/fractalpooluser.1) for further options!
 
-<pre>
+```bash
 man fractalpooluser
-</pre>
+```
 
 
 ## Calculation Application Client
@@ -570,27 +573,27 @@ The CalcApp PU provides further options:
 
 Example:
 
-<pre>
+```bash
 calcappclient -jobinterval=30.125 -jobsize=5000000
-</pre>
+```
 
 Notes:
 
 * Details about the CalcApp service can be found in Chapter&nbsp;8 of «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf#chapter.8)»!
 * See the [manpage of "calcappclient"](https://github.com/dreibh/rsplib/blob/master/src/calcappclient.1) for further options!
 
-  <pre>
+  ```bash
   man calcappclient
-  </pre>
+  ```
 
 
 # 📚 Registrar
 
 Start the registrar with:
 
-<pre>
-rspregistrar &lt;options&gt; ...
-</pre>
+```bash
+rspregistrar <OPTIONS> ...
+```
 
 
 ## Basic Parameters
@@ -645,9 +648,9 @@ rspregistrar &lt;options&gt; ...
 
 Note: See the [manpage of "rspregistrar"](https://github.com/dreibh/rsplib/blob/master/src/rspregistrar.1) for further options!
 
-<pre>
+```bash
 man rspregistrar
-</pre>
+```
 
 
 # 📚 Component Status Protocol
