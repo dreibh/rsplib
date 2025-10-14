@@ -10,7 +10,7 @@
 
 # 💡 What is RSPLIB?
 
-[Reliable Server Pooling&nbsp;(RSerPool)](#what-is-reliable-server-pooling-rserpool) is the new IETF framework for server pool management and session failover handling. In particular, it can be used for realising highly available services and load distribution. RSPLIB is the reference implementation of RSerPool. It includes:
+[Reliable Server Pooling&nbsp;(RSerPool)](#-what-is-reliable-server-pooling-rserpool) is the new IETF framework for server pool management and session failover handling. In particular, it can be used for realising highly available services and load distribution. RSPLIB is the reference implementation of RSerPool. It includes:
 
 * The library librsplib, which is the RSerPool implementation itself;
 * The library libcpprspserver, which is a C++ wrapper library to easily write server applications based on librsplib;
@@ -191,7 +191,7 @@ Ensure that your firewall settings allow UDP packets to/from the registrar (ASAP
 rspregistrar
 ```
 
-See [Registrar](#registrar) for registrar parameters.
+See [Registrar](#-registrar) for registrar parameters.
 
 ## Start at least one pool element
 
@@ -240,14 +240,14 @@ It takes a set of common parameters as well as some service-specific arguments. 
 
 The following example PE services are provided:
 
-* [Echo Service](#echo-service): A simple echo service. The server-side returns the received payload as-is, i.e.&nbsp;echoes it.
-* [Discard Service](#discard-service): A simple discard service. The server-side just ignores the received payload.
-* [Daytime Service](#daytime-service): A simple daytime service. The server-side responds with the current date and time.
-* [Character Generator&nbsp;(CharGen) Service](#character-generator-service): A simple character generator service. The server-side generates test data.
-* [Ping Pong Service](#ping-pong-service): A simple request-response service.
-* [Scripting Service](#scripting-service): An example workload-offloading service. It is for example used by [SimProcTC](https://github.com/dreibh/simproctc).
-* [Fractal Generator Service](#fractal-generator-service): The fractal graphics computation service, for testing and illustratively demonstrating RSerPool features. It is also used for the [RSerPool Demo Tool](https://github.com/dreibh/rserpooldemo).
-* [Calculation Application&nbsp;(CalcApp) Service](#calculation-application-service): A simulated calculation application, for evaluating load distribution. Details can be found in «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)».
+* [Echo Service](#-echo-service): A simple echo service. The server-side returns the received payload as-is, i.e.&nbsp;echoes it.
+* [Discard Service](#-discard-service): A simple discard service. The server-side just ignores the received payload.
+* [Daytime Service](#-daytime-service): A simple daytime service. The server-side responds with the current date and time.
+* [Character Generator&nbsp;(CharGen) Service](#-character-generator-service): A simple character generator service. The server-side generates test data.
+* [Ping Pong Service](#-ping-pong-service): A simple request-response service.
+* [Scripting Service](#-scripting-service): An example workload-offloading service. It is for example used by [SimProcTC](https://github.com/dreibh/simproctc).
+* [Fractal Generator Service](#-fractal-generator-service): The fractal graphics computation service, for testing and illustratively demonstrating RSerPool features. It is also used for the [RSerPool Demo Tool](https://github.com/dreibh/rserpooldemo).
+* [Calculation Application&nbsp;(CalcApp) Service](#-calculation-application-service): A simulated calculation application, for evaluating load distribution. Details can be found in «[Reliable Server Pooling – Evaluation, Optimization and Extension of a Novel IETF Architecture](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00016326/Dre2006_final.pdf)».
 
 Notes:
 
@@ -267,8 +267,8 @@ Notes:
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
 * ```-poolhandle=<poolhandle>```: Sets the PH to a non-default value; otherwise, the default setting will be the service-specific default (see below).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#-component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#-component-status-protocol) below.
 * ```-registrar=<address>:<port>```: Adds a static PR entry into the Registrar Table. It is possible to add multiple entries.
 * ```-asapannounce=<address>:<port>```: Sets the multicast address and port the ASAP instance listens for ASAP Server Announces on.
 * ```-rereginterval=<milliseconds>```: Sets the PE's re-registration interval (in milliseconds).
@@ -430,18 +430,18 @@ The pool users provides some common options for all programs:
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
 * ```-poolhandle=<poolhandle>```: Sets the PH to a non-default value; otherwise, the default setting will be the service-specific default (see below).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#-component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#-component-status-protocol) below.
 * ```-registrar=<address>:<port>```: Adds a static PR entry into the Registrar Table. It is possible to add multiple entries.
 
 
 ## Terminal Client
 
 The PU for the
-[Echo Service](#echo-service),
-[Discard Service](#discard-service),
-[Daytime Service](#daytime-service), or
-[Character Generator Service](#character-generator-service)
+[Echo Service](#-echo-service),
+[Discard Service](#-discard-service),
+[Daytime Service](#-daytime-service), or
+[Character Generator Service](#-character-generator-service)
 can be started by:
 
 ```bash
@@ -467,7 +467,7 @@ Notes:
 
 ## Ping Pong Client
 
-The PU for the [Ping Pong Service](#ping-pong-service) can be started by:
+The PU for the [Ping Pong Service](#-ping-pong-service) can be started by:
 
 ```
 pingpongclient
@@ -492,7 +492,7 @@ man pingpongclient
 
 ## Scripting Client
 
-The PU for the [Scripting Service](#scripting-service) can be started by:
+The PU for the [Scripting Service](#-scripting-service) can be started by:
 
 ```
 scriptingclient
@@ -525,7 +525,7 @@ The Scripting Service is used e.g. by the following open source tools, which pro
 
 ## Fractal Generator Client
 
-The PU for the [Fractal Generator Service](#fractal-generator-service) can be started by:
+The PU for the [Fractal Generator Service](#-fractal-generator-service) can be started by:
 
 ```bash
 fractalpooluser <OPTIONS> ...
@@ -554,7 +554,7 @@ man fractalpooluser
 
 ## Calculation Application Client
 
-The PU for the [Calculation Application Service](#calculation-application-service) (CalcApp) can be started by:
+The PU for the [Calculation Application Service](#-calculation-application-service) (CalcApp) can be started by:
 
 ```
 calcappclient
@@ -601,8 +601,8 @@ rspregistrar <OPTIONS> ...
 * ```-loglevel=0-9```: Sets the logging verbosity from 0 (none) to 9 (very verbose).
 * ```-logcolor=on|off```: Turns ANSI colorization of the logging output on or off.
 * ```-logfile=<filename>```: Writes logging output to a file (default is stdout).
-* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#component-status-protocol) below.
-* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#component-status-protocol) below.
+* ```-cspserver=<address>:<port>```: See [Component Status Protocol](#-component-status-protocol) below.
+* ```-cspinterval=<milliseconds>```: See [Component Status Protocol](#-component-status-protocol) below.
 
 
 ## ASAP Parameters
