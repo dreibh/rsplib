@@ -1,7 +1,14 @@
+rsplib (3.5.6-1ubuntu1) forky; urgency=medium
+
+  * New upstream release.
+  * Debian SysV deprecation (Closes: #1039355).
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 17 Oct 2025 11:15:37 +0200
+
 rsplib (3.5.5-1ubuntu1) trixie; urgency=medium
 
   * New upstream release.
-  * Fixes "typedef bool" issue (Closed: #1114349).
+  * Fixes "typedef bool" issue (Closes: #1114349).
   * debian/sources/lintian-overrides: Added Lintian overrides to ignore
     long lines in documentation, configuration files, translation files,
     etc.

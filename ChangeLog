@@ -1,3 +1,40 @@
+commit 5b1e2fc6e9bf311d60cd3d45341b26539d41506e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 14 20:28:48 2025 +0200
+
+    Fixed cross references.
+
+commit 455d65d2d9f9c4c8c972800de3c6ac73209b91ab
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 14 19:28:00 2025 +0200
+
+    Improved documentation.
+
+commit 0fc8d935afb2067219393830caadd38110763de1
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 13 21:43:48 2025 +0200
+
+    Minor documentation update.
+
+commit 963a6168d976b5146f8cb57f321d45c4cbe791c2
+Merge: f18655c7 e784d69d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 13 20:40:32 2025 +0200
+
+    Merge branch 'master' of github.com:dreibh/rsplib
+
+commit f18655c798de252f86b68be4d568a01dd5ba3151
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Oct 13 20:18:29 2025 +0200
+
+    Improved documentation.
+
+commit e784d69df9716241a14877e4007425ba09b93a5d
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Oct 7 17:38:49 2025 +0200
+
+    New release rsplib-3.5.5.
+
 commit 2cd25903a6da64775ad584e14607e81decb08211
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue Oct 7 12:24:23 2025 +0200
