@@ -149,11 +149,15 @@ Please use the issue tracker at [https://github.com/dreibh/rsplib/issues](https:
 
 The Git repository of the RSPLIB sources can be found at [https://github.com/dreibh/rsplib](https://github.com/dreibh/rsplib):
 
-<pre><code><span class="fu">git</span> clone <a href="https://github.com/dreibh/rsplib">https://github.com/dreibh/rsplib</a>
-<span class="bu">cd</span> rsplib
-<span class="fu">cmake</span> .
-<span class="fu">make</span>
-</code></pre>
+```bash
+git clone https://github.com/dreibh/rsplib
+cd rsplib
+sudo ci/get-dependencies --install
+cmake .
+make
+```
+
+Note: The script [`ci/get-dependencies`](https://github.com/dreibh/rsplib/blob/master/ci/get-dependencies) automatically installs the build dependencies for Debian/Ubuntu Linux, Fedora Linux, and FreeBSD. For manual handling of the build dependencies, see the packaging configuration in [debian/control](https://github.com/dreibh/rsplib/blob/master/debian/control) (Debian/Ubuntu Linux), [rsplib.spec](https://github.com/dreibh/rsplib/blob/master/rpm/rsplib.spec) (Fedora Linux), and [Makefile](https://github.com/dreibh/rsplib/blob/master/freebsd/rsplib/Makefile) FreeBSD.
 
 Contributions:
 
