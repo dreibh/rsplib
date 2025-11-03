@@ -157,7 +157,7 @@ cmake .
 make
 ```
 
-Note: The script [`ci/get-dependencies`](https://github.com/dreibh/rsplib/blob/master/ci/get-dependencies) automatically installs the build dependencies for Debian/Ubuntu Linux, Fedora Linux, and FreeBSD. For manual handling of the build dependencies, see the packaging configuration in [debian/control](https://github.com/dreibh/rsplib/blob/master/debian/control) (Debian/Ubuntu Linux), [rsplib.spec](https://github.com/dreibh/rsplib/blob/master/rpm/rsplib.spec) (Fedora Linux), and [Makefile](https://github.com/dreibh/rsplib/blob/master/freebsd/rsplib/Makefile) FreeBSD.
+Note: The script [`ci/get-dependencies`](https://github.com/dreibh/rsplib/blob/master/ci/get-dependencies) automatically  installs the build dependencies under Debian/Ubuntu Linux, Fedora Linux, and FreeBSD. For manual handling of the build dependencies, see the packaging configuration in [debian/control](https://github.com/dreibh/rsplib/blob/master/debian/control) (Debian/Ubuntu Linux), [rsplib.spec](https://github.com/dreibh/rsplib/blob/master/rpm/rsplib.spec) (Fedora Linux), and [Makefile](https://github.com/dreibh/rsplib/blob/master/freebsd/rsplib/Makefile) FreeBSD.
 
 Contributions:
 
