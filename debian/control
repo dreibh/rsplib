@@ -6,7 +6,7 @@ Homepage: https://www.nntb.no/~dreibh/rserpool/
 Vcs-Git: https://github.com/dreibh/rsplib.git
 Vcs-Browser: https://github.com/dreibh/rsplib
 Build-Depends: cmake,
-               debhelper (>= 12),
+               debhelper-compat (= 13),
                ghostscript,
                graphicsmagick,
                libbz2-dev,
