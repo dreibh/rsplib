@@ -8,7 +8,7 @@
  *
  * ------------- An Efficient RSerPool Prototype Implementation -------------
  *
- * Copyright (C) 2002-2025 by Thomas Dreibholz
+ * Copyright (C) 2002-2026 by Thomas Dreibholz
  *
  * Acknowledgements:
  * Realized in co-operation between Siemens AG and

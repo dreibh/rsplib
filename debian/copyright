@@ -4,7 +4,7 @@ Upstream-Contact: Thomas Dreibholz <thomas.dreibholz@gmail.com>
 Source: https://www.nntb.no/~dreibh/rserpool/download/
 
 Files: *
-Copyright: 2002-2025 Thomas Dreibholz <thomas.dreibholz@gmail.com>
+Copyright: 2002-2026 Thomas Dreibholz <thomas.dreibholz@gmail.com>
 License: GPL-3+
 
 Files: src/sha1.c
