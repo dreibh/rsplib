@@ -602,10 +602,11 @@ IF (ENABLE_QT)
    INSTALL(TARGETS             fractalpooluser
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
-   INSTALL(FILES fractalpooluser.1                                 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-   INSTALL(FILES fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm DESTINATION ${CMAKE_INSTALL_DATADIR}/fractalpooluser)
-   INSTALL(FILES fractalpooluser.desktop                           DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
-   INSTALL(FILES ${fractalpooluser_configs}                        DESTINATION ${CMAKE_INSTALL_DATADIR}/fgpconfig)
+   INSTALL(FILES fractalpooluser.1                                  DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+   INSTALL(FILES fractalpooluser_de_DE.qm fractalpooluser_nb_NO.qm  DESTINATION ${CMAKE_INSTALL_DATADIR}/fractalpooluser)
+   INSTALL(FILES fractalpooluser.desktop                            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+   INSTALL(FILES no.nntb.dreibh.rsplib.fractalpooluser.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
+   INSTALL(FILES ${fractalpooluser_configs}                         DESTINATION ${CMAKE_INSTALL_DATADIR}/fgpconfig)
    INSTALL(FILES       fractalpooluser.bash-completion
            DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
            RENAME      fractalpooluser)

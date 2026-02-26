@@ -397,6 +397,7 @@ FractalGenerator service. Is uses a Qt-based GUI.
 %{_bindir}/fractalpooluser
 %{_datadir}/applications/fractalpooluser.desktop
 %{_datadir}/bash-completion/completions/fractalpooluser
+%{_datadir}/metainfo/no.nntb.dreibh.rsplib.fractalpooluser.metainfo.xml
 %{_datadir}/fractalpooluser/*.qm
 %{_mandir}/man1/fractalpooluser.1.gz
 

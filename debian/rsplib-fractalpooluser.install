@@ -2,3 +2,4 @@ usr/bin/fractalpooluser
 usr/share/applications/fractalpooluser.desktop
 usr/share/bash-completion/completions/fractalpooluser
 usr/share/fractalpooluser/*.qm
+usr/share/metainfo/no.nntb.dreibh.rsplib.fractalpooluser.metainfo.xml

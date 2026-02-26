@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>no.nntb.dreibh.rsplib.fractalpooluser</id>
+
+  <name>FractalPoolUser</name>
+  <summary>An RSerPool-based Fractal Generator Client</summary>
+
+  <developer id="no.nntb.dreibh">
+    <name>Thomas Dreibholz</name>
+  </developer>
+  <update_contact>thomas.dreibholz@gmail.com</update_contact>
+
+  <content_rating type="oars-1.1"/>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <description>
+    <p>
+      Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to RFC 5356) for a lightweight server pool and session management framework. It provides highly available pool management (that is registration  handling and load distribution/balancing) by components called Registrar and a client-side/server-side API for accessing the service of a pool. FractalPoolUser the provides the Pool User client for the  FractalGenerator service. Is uses a Qt-based GUI.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">fractalpooluser.desktop</launchable>
+
+  <url type="homepage">https://www.nntb.no/~dreibh/rserpool/</url>
+  <url type="bugtracker">https://github.com/dreibh/rsplib/issues</url>
+  <url type="vcs-browser">https://github.com/dreibh/rsplib</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://www.nntb.no/~dreibh/rserpool/images/RSerPool-Demo-13Jul2010.png</image>
+    </screenshot>
+  </screenshots>
+</component>
