@@ -40,7 +40,3 @@ Keywords[nb]=Fraktal;Mandelbrot;Mathematikk;Grafikk;RSerPool;RSPLIB
 StartupNotify=true
 Terminal=false
 Type=Application
-X-DBUS-ServiceName=
-X-DBUS-StartupType=
-X-KDE-SubstituteUID=false
-X-KDE-Username=
