@@ -14,7 +14,7 @@ Build-Depends: cmake,
                libsctp-dev,
                pdf2svg,
                qt6-base-dev
-Standards-Version: 4.7.2
+Standards-Version: 4.7.3
 
 Package: librsplib3t64
 Provides: ${t64:Provides}
@@ -22,6 +22,7 @@ Replaces: librsplib3
 Breaks: librsplib3 (<< ${source:Version})
 Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends},
          ${shlibs:Depends}
 Description: RSerPool client/server API library for session management
@@ -36,6 +37,7 @@ Description: RSerPool client/server API library for session management
 Package: librsplib-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: librsplib3t64 (= ${binary:Version}),
          ${misc:Depends}
 Recommends: rsplib-doc (>= ${source:Version})
@@ -55,6 +57,7 @@ Replaces: libcpprspserver3
 Breaks: libcpprspserver3 (<< ${source:Version})
 Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: librsplib3t64 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
@@ -70,6 +73,7 @@ Description: C++ RSerPool client/server API library
 Package: libcpprspserver-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: libcpprspserver3t64 (= ${binary:Version}),
          librsplib-dev (>= ${source:Version}),
          ${misc:Depends}
