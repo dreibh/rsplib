@@ -2,12 +2,12 @@ Source: rsplib
 Section: net
 Priority: optional
 Maintainer: Thomas Dreibholz <thomas.dreibholz@gmail.com>
-Uploaders: Thomas Dreibholz <dreibh@simula.no>
 Homepage: https://www.nntb.no/~dreibh/rserpool/
 Vcs-Git: https://github.com/dreibh/rsplib.git
 Vcs-Browser: https://github.com/dreibh/rsplib
 Build-Depends: cmake,
                debhelper-compat (= 13),
+               dpkg-dev (>= 1.22.5),
                ghostscript,
                graphicsmagick,
                libbz2-dev,
@@ -15,7 +15,7 @@ Build-Depends: cmake,
                libsctp-dev,
                pdf2svg,
                qt6-base-dev
-Standards-Version: 4.7.3
+Standards-Version: 4.7.4
 
 Package: librsplib3t64
 Provides: ${t64:Provides}
@@ -69,7 +69,7 @@ Description: C++ RSerPool client/server API library
  handling and load distribution/balancing) by components called Registrar
  and a client-side/server-side API for accessing the service of a pool.
  .
- This package provides the C++ API library.
+ This package provides an object-oriented API for the rsplib library.
 
 Package: libcpprspserver-dev
 Section: libdevel
@@ -158,13 +158,14 @@ Description: RSerPool example services
 
 Package: rsplib-fractalpooluser
 Architecture: any
+Replaces: rsplib-services (<< 3.5.1)
+Breaks: rsplib-services (<< 3.5.1)
 Depends: rsplib-common (>= ${source:Version}),
          rsplib-tools (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsplib-doc (>= ${source:Version}),
             rsplib-services (= ${binary:Version})
-Breaks: rsplib-services (<< 3.5.0)
 Description: RSerPool-based fractal generator client
  Reliable Server Pooling (RSerPool) is the IETF's standard (RFC 5351 to
  RFC 5356) for a lightweight server pool and session management framework.
