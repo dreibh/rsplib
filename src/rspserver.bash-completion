@@ -110,8 +110,7 @@ WeightedRandom
 WeightedRandomDPF
 WeightedRoundRobin
 "
-         # shellcheck disable=SC2207
-         COMPREPLY=( $(compgen -W "${policies}" --  "${cur}") )
+         mapfile -t COMPREPLY < <(compgen -W "${policies}" --  "${cur}")
          return
          ;;
       # ====== Special case: number of cores ================================
@@ -120,8 +119,7 @@ WeightedRoundRobin
       -pppmaxthreads=*                    | \
       -ssmaxthreads=*)
          cur="${cur#*=}"
-         # shellcheck disable=SC2207
-         COMPREPLY=( $(compgen -W "$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -a | grep 'hw.ncpu' | cut -d ':' -f2 | tr -d ' ' || echo "1")" --  "${cur}") )
+         mapfile -t COMPREPLY < <(compgen -W "$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -a | grep 'hw.ncpu' | cut -d ':' -f2 | tr -d ' ' || echo "1")" --  "${cur}")
          return
          ;;
       # ====== Special case: scalar file ====================================
@@ -146,8 +144,7 @@ WeightedRoundRobin
       # ====== Special case: on/off =========================================
       -logcolor=*)
          cur="${cur#*=}"
-         # shellcheck disable=SC2207
-         COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
+         mapfile -t COMPREPLY < <(compgen -W "on off" --  "${cur}")
          return
          ;;
    esac
@@ -213,7 +210,6 @@ WeightedRoundRobin
 -ssmaxthreads
 -sstransmittimeout
 "
-   # shellcheck disable=SC2207
    COMPREPLY=( $( compgen -W "${opts1}"        -- "${cur}" )
                $( compgen -W "${opts2}" -S "=" -- "${cur}" ) )
    [[ ${COMPREPLY-} == *= ]] && compopt -o nospace

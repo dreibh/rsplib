@@ -72,8 +72,7 @@ _cspmonitor()
       # ====== Special case: on/off =========================================
       -logcolor=*)
          cur="${cur#*=}"
-         # shellcheck disable=SC2207
-         COMPREPLY=( $(compgen -W "on off" --  "${cur}") )
+         mapfile -t COMPREPLY < <(compgen -W "on off" --  "${cur}")
          return
          ;;
    esac
@@ -98,7 +97,6 @@ _cspmonitor()
 -logfile
 -loglevel
 "
-   # shellcheck disable=SC2207
    COMPREPLY=( $( compgen -W "${opts1}"        -- "${cur}" )
                $( compgen -W "${opts2}" -S "=" -- "${cur}" ) )
    [[ ${COMPREPLY-} == *= ]] && compopt -o nospace
