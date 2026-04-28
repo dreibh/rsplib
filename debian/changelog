@@ -1,11 +1,10 @@
-rsplib (3.5.8~rc0-1ubuntu1) unstable; urgency=medium
+rsplib (3.5.8~rc1.1-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
-  * debian/control: Fixed dropped changes from Debian
-    (Closes: #1100891, Closes: #1106092).
+  * debian/control: Fixed dropped changes from Debian.
   * debian/control: Updated standards version to 4.7.4.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 23 Apr 2026 20:14:21 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 28 Apr 2026 10:17:42 +0200
 
 rsplib (3.5.7-1ubuntu1) unstable; urgency=medium
 
@@ -16,17 +15,16 @@ rsplib (3.5.7-1ubuntu1) unstable; urgency=medium
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 27 Feb 2026 09:14:09 +0100
 
-rsplib (3.5.6-1ubuntu1) forky; urgency=medium
+rsplib (3.5.6-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
   * Debian SysV deprecation (Closes: #1039355).
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 17 Oct 2025 11:15:37 +0200
 
-rsplib (3.5.5-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.5-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
-  * Fixes "typedef bool" issue (Closes: #1114349).
   * debian/sources/lintian-overrides: Added Lintian overrides to ignore
     long lines in documentation, configuration files, translation files,
     etc.
@@ -35,447 +33,87 @@ rsplib (3.5.5-1ubuntu1) trixie; urgency=medium
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 07 Oct 2025 17:38:47 +0200
 
-rsplib (3.5.4-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.4-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sun, 21 Sep 2025 16:37:21 +0200
 
-rsplib (3.5.3-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.3-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sat, 05 Jul 2025 16:36:58 +0200
 
-rsplib (3.5.2-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.2-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 12 May 2025 22:53:36 +0200
 
-rsplib (3.5.1-2ubuntu1) trixie; urgency=medium
+rsplib (3.5.1-1.3) unstable; urgency=medium
 
-  * debian/control: Fixed conflicts (Closes: #1100891).
-  * debian/control: Updated standards version to 4.7.2.
+  * Non-maintainer upload.
+  * Backport upstream fix for FTBFS with GCC 15. (Closes: #1114349)
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 20 Mar 2025 16:44:08 +0100
+ -- Adrian Bunk <bunk@debian.org>  Wed, 08 Oct 2025 17:23:12 +0300
 
-rsplib (3.5.1-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.1-1.2) unstable; urgency=medium
 
-  * New upstream release.
+  * Non-maintainer upload.
+  * Add Breaks/Replaces on separated-out rsplib-fractalpooluser (Closes: #1100891).
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 17 Feb 2025 21:45:08 +0100
+ -- Bastian Germann <bage@debian.org>  Tue, 20 May 2025 08:48:49 +0200
 
-rsplib (3.5.0-1ubuntu1) trixie; urgency=medium
+rsplib (3.5.1-1.1) unstable; urgency=medium
 
-  * New upstream release.
+  * Non-maintainer upload.
+  * Source-only reupload to let the package rebuild on a buildd node.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 13 Dec 2024 21:27:18 +0100
+ -- Bastian Germann <bage@debian.org>  Wed, 19 Mar 2025 23:38:26 +0100
 
-rsplib (3.4.10-1ubuntu1) noble; urgency=medium
+rsplib (3.5.1-1) unstable; urgency=low
 
   * New upstream release.
   * debian/librsplib3.symbols: Added missing symbol.
   * debian/control: Fixed Multi-Arch settings.
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Wed, 07 Aug 2024 21:04:48 +0200
-
-rsplib (3.4.9-1ubuntu1) noble; urgency=medium
-
-  * New upstream release.
   * debian/control: Updated standards version to 4.7.0.
   * debian/control: Removed unnecessary build dependencies.
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sat, 08 Jun 2024 14:17:19 +0200
-
-rsplib (3.4.8-1ubuntu1) noble; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Thu, 11 Apr 2024 10:09:15 +0200
-
-rsplib (3.4.7-2) unstable; urgency=high
-
-  * New upstream release.
-  * Rename libraries for 64-bit time_t transition (Closes: #1062869).
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sat, 10 Feb 2024 13:46:58 +0100
-
-rsplib (3.4.7-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 18 Dec 2023 13:03:23 +0100
-
-rsplib (3.4.6-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 18 Dec 2023 12:53:20 +0100
-
-rsplib (3.4.5-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
   * debian/control: Fixed dependency on obsolete lsb-core.
   * debian/control: Removed unnecessary constraints.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Wed, 06 Dec 2023 16:54:06 +0100
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Mon, 17 Feb 2025 21:45:08 +0100
 
-rsplib (3.4.4-1ubuntu1) jammy; urgency=medium
+rsplib (3.4.4-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Rename libraries for 64-bit time_t transition.  Closes: #1062869
+
+ -- Benjamin Drung <bdrung@debian.org>  Thu, 29 Feb 2024 15:35:23 +0000
+
+rsplib (3.4.4-1) unstable; urgency=medium
 
   * New upstream release.
   * debian/control: Updated standards version to 4.6.2.
 
  -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Sun, 22 Jan 2023 22:48:46 +1100
 
-rsplib (3.4.3-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 11 Sep 2022 13:04:18 +0200
-
-rsplib (3.4.2-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
-  * debian/control: Updated standards version to 4.6.1.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 22 Aug 2022 20:23:36 +0200
-
-rsplib (3.4.1-1ubuntu1) jammy; urgency=medium
+rsplib (3.4.1-1) unstable; urgency=medium
 
   * New upstream release.
   * libatomic needed for mipsel architecture (Closes: #1002569).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 10 Jan 2022 09:56:05 +0100
 
-rsplib (3.4.0-1ubuntu1) jammy; urgency=medium
+rsplib (3.4.0-1) unstable; urgency=medium
 
   * New upstream release.
   * Fix for ARM build issue (Closes: #1002536).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 03 Jan 2022 11:18:27 +0100
 
-rsplib (3.3.3-1ubuntu1) jammy; urgency=medium
+rsplib (3.3.3-1) unstable; urgency=medium
 
-  * New upstream release.
-  * debian/control: Fixed use of substitution variable ${shlibs:Depends}.
-  * debian/*.symbols: Updated symbols.
-  * debian/copyright: Fix for src/sha1.c.
-  * debian/: Using dh_installman for the manpages.
   * Closes: #516750 (ITP).
 
  -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 08 Nov 2021 19:58:17 +0100
-
-rsplib (3.3.2-1ubuntu1) jammy; urgency=medium
-
-  * New upstream release.
-  * debian/control: Updated standards version to 4.6.0.1.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 25 Oct 2021 21:33:19 +0200
-
-rsplib (3.3.1-1ubuntu1) hirsute; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 03 May 2021 20:09:52 +0200
-
-rsplib (3.3.0-1ubuntu1) hirsute; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 06 Mar 2021 23:37:12 +0100
-
-rsplib (3.2.7-1ubuntu1) hirsute; urgency=medium
-
-  * New upstream release.
-  * debian/control: Updated standards version to 4.5.1.0.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 14 Feb 2021 17:41:21 +0100
-
-rsplib (3.2.6-1ubuntu1) hirsute; urgency=medium
-
-  * New upstream release.
-  * debian/control: Updated standards version to 4.5.0.3.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 13 Nov 2020 19:00:35 +0100
-
-rsplib (3.2.5-1ubuntu1) focal; urgency=medium
-
-  * New upstream release.
-  * debian/control: Updated standards version to 4.5.0.0.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 07 Feb 2020 13:21:02 +0100
-
-rsplib (3.2.4-1ubuntu1) eoan; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 07 Aug 2019 17:40:55 +0200
-
-rsplib (3.2.3-1ubuntu1) unstable; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 06 Aug 2019 11:08:42 +0200
-
-rsplib (3.2.2-1ubuntu1) unstable; urgency=medium
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 14 Jun 2019 12:27:06 +0200
-
-rsplib (3.2.1-1ubuntu1) unstable; urgency=medium
-
-  * New upstream version.
-  * debian/control: updated standards version.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 27 Feb 2019 08:08:08 +0800
-
-rsplib (3.2.0-1ubuntu1) cosmic; urgency=low
-
-  * New upstream release.
-  * Close packaging update request (LP: #1757859)
-  * debian/control: updated standards version.
-  * debian/control: removed obsolete debug file.
-  * debian/copyright: updated.
-  * debian/compat: updated version.
-  * debian/upstream/metadata: added metadata file.
-  * debian/tests/control: added tests control file.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 17 Oct 2018 08:08:08 +0800
-
-rsplib (3.1.8-1ubuntu1) bionic; urgency=low
-
-  * New upstream release.
-  * Updated library versions to reflect ABI break.
-  * Close upgrade bug (LP: #1714101)
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 05 Nov 2017 08:08:08 +0800
-
-rsplib (3.1.7-1ubuntu1) bionic; urgency=low
-
-  * New upstream release.
-  * Close upgrade bug (LP: #1714101)
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 29 Oct 2017 08:08:08 +0200
-
-rsplib (3.1.6-1ubuntu1) artful; urgency=low
-
-  * New upstream release.
-  * debian/control: dependency fix.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 25 Aug 2017 08:08:08 +0200
-
-rsplib (3.1.5-1ubuntu1) zesty; urgency=low
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 09 Aug 2017 08:08:08 +0200
-
-rsplib (3.1.4-1ubuntu1) zesty; urgency=low
-
-  * New upstream release.
-  * debian/watch: URL update
-  * debian/control: URL update
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 08 May 2017 08:08:08 +0200
-
-rsplib (3.1.3-1ubuntu1) zesty; urgency=low
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 23 Nov 2016 08:08:08 +0200
-
-rsplib (3.1.2-1ubuntu1) zesty; urgency=low
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 31 Oct 2016 08:08:08 +0200
-
-rsplib (3.1.1-1ubuntu1) xenial; urgency=low
-
-  * New upstream release.
-  * debian/compat: using debhelper 9 now.
-  * debian/control: Updated standards version.
-  * debian/control: added dependency dpkg-dev for hardening options.
-  * debian/control: updated standards version.
-  * debian/copyright: fix for machine-readable format.
-  * debian/rules: using buildflags.mk for hardening options.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 05 Apr 2016 08:08:08 +0200
-
-rsplib (3.1.0-1ubuntu1) xenial; urgency=low
-
-  * New upstream release.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 21 Oct 2015 08:08:08 +0200
-
-rsplib (3.0.3-1ubuntu1) vivid; urgency=low
-
-  * New upstream release.
-  * debian/copyright: changed to machine-readable format.
-  * debian/control: updated standards version.
-  * debian/watch: added pgpsigurlmangle option.
-  * debian/upstream/signing-key.asc: added upstream public key.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sun, 01 Mar 2015 08:08:08 +0200
-
-rsplib (3.0.2-1ubuntu1) saucy; urgency=low
-
-  * New upstream release.
-  * debian/control: Bump standards version to 3.9.4. Now requires
-    libsctp > 1.0.7, since work-around wrapper for older version's bug does
-    not work any more.
-  * debian/control: Added build dependency libfile-fcntllock-perl to avoid
-    lock warning.
-  * debian/watch: Removed old server tdrwww.iem.uni-due.de.
-  * debian/copyright: Updated URL.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Thu, 24 Oct 2013 08:08:08 +0200
-
-rsplib (3.0.1-1ubuntu3) raring; urgency=low
-
-  * Added missing math lib to link, fixing FTBFS.
-
- -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 17 Apr 2013 17:08:55 -0400
-
-rsplib (3.0.1-1ubuntu2) raring; urgency=low
-
-  * Add Breaks/Replaces to account for files moved from rsplib-tools to
-    rsplib-legacy-wrappers.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Tue, 08 Jan 2013 11:36:48 +0000
-
-rsplib (3.0.1-1ubuntu1) raring; urgency=high
-
-  [ Thomas Dreibholz ]
-  * New upstream release.
-  * debian/control: now using colorgcc.
-  * debian/control: added dependency dpkg-dev for hardening options.
-  * debian/rules: using buildflags.mk for hardening options.
-  * debian/watch: added mirror on www.iem.uni-due.de.
-
-  [ Bhavani Shankar ]
-  * Update debian/copyright to reflect latest standards.
-  * Bump standards version to 3.9.4.
-  * Close Upgrade bug (LP: #1093075)
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 21 Dec 2012 22:22:22 +0800
-
-rsplib (2.7.13-0ubuntu1) precise; urgency=low
-
-  [ Thomas Dreibholz ]
-  * New upstream release.
-  * Fixed non-empty-dependency_libs-in-la-file lintian error in rules file.
-  * Added debug package to control file.
-  * Improved package descriptions in control file.
-  * Bumped standards version in control file to 3.9.2.
-  * Fixed dependencies in control file.
-  * Bugfix for configure script (LP: #831109).
-
-  [ Charlie Smotherman ]
-  * Removed ppa versioning from changelog.
-  * Updated debain/copyright with suggested DEP5 changes from output using
-    libconfig-model-perl.
-  * Removed debian/patches/fix-qt-detection.patch, included in new upstream
-    release.
-  * Close upgrade bug. (LP: #892717)
-
- -- Charlie Smotherman <cjsmo@ubuntu.com>  Tue, 29 Nov 2011 17:37:43 -0500
-
-rsplib (2.7.10-0ubuntu2) oneiric; urgency=low
-
-  * debian/patches/fix-qt-detection.patch:
-    - Backport patch from 2.7.12 to fix FTBFS due to bad Qt detection
-      LP: #831109
-
- -- Michael Terry <mterry@ubuntu.com>  Mon, 29 Aug 2011 09:57:02 -0400
-
-rsplib (2.7.10-0ubuntu1) natty; urgency=high
-
-  * New upstream release (LP: #721923), containing important bugfixes.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 19 Feb 2011 22:22:22 +0200
-
-rsplib (2.7.8-0ubuntu1) natty; urgency=low
-
-  * Switch to dpkg-source 3.0 (quilt) format.
-  * debian/rules: Using tiny rules for debhelper 7 now.
-  * debian/control:
-    - Drop Build-Depends on quilt. It's obsolete with 3.0 source format.
-    - Bump Standards-Version to 3.9.1.
-    - Recommends chrpath because it allows scripting service scripts to
-      remove absolute library paths.
-    - Removed obsolete build dependencies:
-      libx11-dev, libxext-dev, libxmu-dev, libxi-dev.
-  * debian/patches: Removed obsolete spelling error patch (fixed upstream).
-  * debian/copyright: Updated.
-  * debian/watch: Updated URL of upstream package.
-  * debian/README.source: Dropped. It's obsolete with 3.0 source format.
-  * debian/rsplib-docs.docs, debian/rsplib-docs.docs, debian/control:
-    Moved rsplib documentation into separate package.
-  * Removed obsolete debian/rsplib-doc.docs and debian/rsplib-doc.install.
-  * debian/rsplib-registrar.init: Updated header.
-  * Applied wrap-and-sort.
-  * New upstream release (LP: #696512).
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 08 Feb 2011 11:11:11 +0200
-
-rsplib (2.7.0-0ubuntu1) lucid; urgency=low
-
-  [ Thomas Dreibholz ]
-  * New upstream release (LP: #492771).
-  * Updated Ubuntu package to latest release.
-  * Improved init file for rsplib-registrar (turn on IPv6 by default and
-    write logfile).
-
-  [ Alessio Treglia ]
-  * Bump Standards.
-  * Switch to debhelper 7.
-  * Install all new libraries.
-  * Update debian/copyright according to Debian DEP-5.
-  * debian/control:
-    - Don't duplicate Priority,Section fields.
-  * Add quilt support.
-  * debian/patches/01-spelling_error.patch:
-    - rsplib/asapinstance.c: s/succesful/successful/
-
- -- Alessio Treglia <quadrispro@ubuntu.com>  Sat, 05 Dec 2009 10:10:30 +0100
-
-rsplib (2.6.4-0ubuntu1) karmic; urgency=low
-
-  * Updated Ubuntu package to latest release (LP: #378689).
-  * Improved init file for rsplib-registrar (turn on IPv6 by default and
-    write logfile).
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Wed, 20 May 2009 13:23:00 +0200
-
-rsplib (2.6.1-0ubuntu1) karmic; urgency=low
-
-  * Updated Ubuntu package to latest release (LP: #366631).
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Sat, 25 Apr 2009 12:00:00 +0200
-
-rsplib (2.6.0-3ubuntu1) jaunty; urgency=low
-
-  * Removed unnecessary setting of rpath by Qt 4.x detection code.
-  * Fixed too-long lines in debian/control.
-  * Updated packaging script.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Mon, 23 Feb 2009 15:37:12 +0200
-
-rsplib (2.6.0-0ubuntu1) jaunty; urgency=low
-
-  * Updated Ubuntu package to latest release (LP: #324959).
-  * Updated watch file (updated URL from tdrwww.exp-math.uni-essen.de to
-    www.iem.uni-due.de)
-  * Used Qt 4.x instead of Qt 3.x for fractal demo pool user now.
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Fri, 16 Jan 2009 10:21:12 +0200
-
-
-rsplib (2.5.0~rc1-0ubuntu1) intrepid; urgency=low
-
-  * Initial Ubuntu package (LP: #190435).
-
- -- Thomas Dreibholz <dreibh@iem.uni-due.de>  Tue, 26 Aug 2008 20:09:31 +0200
