@@ -1,10 +1,10 @@
-rsplib (3.5.8~rc1.1-1ubuntu1) unstable; urgency=medium
+rsplib (3.5.8-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
   * debian/control: Fixed dropped changes from Debian.
   * debian/control: Updated standards version to 4.7.4.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 28 Apr 2026 10:17:42 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Wed, 29 Apr 2026 08:36:31 +0200
 
 rsplib (3.5.7-1ubuntu1) unstable; urgency=medium
 

@@ -1,3 +1,69 @@
+commit 5c99cc97a8fdacc3f07f3b42067d79d02eecdaae
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Tue Apr 28 10:28:11 2026 +0200
+
+    Debian changelog fixes.
+
+commit 6c26e426dc44c9d1b63f8a9f1875fb6fe03f64cd
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Apr 26 21:38:25 2026 +0200
+
+    Updated FreeBSD workflow.
+
+commit d70cd8a902457634964c6cb4745f1f5d609d16b7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Apr 26 20:45:33 2026 +0200
+
+    Updated workflows.
+
+commit d8059398b8d14ccaeed77d8d5ad3e5279b8eecd4
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun Apr 26 20:29:54 2026 +0200
+
+    Some ShellCheck clean-ups for shell completions.
+
+commit 959f44fb7c0e2c6c0b04d117f1656b56478997a3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Apr 25 20:07:48 2026 +0200
+
+    Updated build script.
+
+commit 04cbff8160694edcb146242fd73f4e46dacece89
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sat Apr 25 20:07:02 2026 +0200
+
+    Updated CI scripts
+
+commit 0c4cf5841422ae67d155a4958da712c5412428ce
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 23 21:02:02 2026 +0200
+
+    Debian packaging fixes.
+
+commit d4bdbd3aa8989982e0f55cc941a7316e699182b5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Apr 23 15:50:33 2026 +0200
+
+    Updated CI scripts
+
+commit d08c5dc24f8ebccf45050df5f641a4b8fbab550f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Mar 12 11:13:14 2026 +0100
+
+    Updated URLs.
+
+commit e0d9754d4183c28eef1e840aa473f41c5733ebc3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Feb 27 09:38:32 2026 +0100
+
+    Updated FreeBSD port.
+
+commit e6ffe6468399afd44fd05464fae748172a5a381f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Feb 27 09:14:12 2026 +0100
+
+    New release rsplib-3.5.7.
+
 commit 25119e8a246ead9d083ac118776556ad3f5a61ef
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Thu Feb 26 12:58:20 2026 +0100
