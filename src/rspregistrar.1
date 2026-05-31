@@ -61,7 +61,7 @@
 .Op Fl logcolor=\%on|off
 .Op Fl logappend=\%filename
 .Op Fl logfile=\%filename
-.Op Fl loglevel=0-9
+.Op Fl loglevel=0\-9
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm rspregistrar
@@ -76,16 +76,16 @@ distributed globally for their service to survive localized disasters.
 .Pp
 PEs choose an arbitrary PR of the operation scope to register into a pool by
 using the Aggregate Server Access Protocol (ASAP), again transported via SCTP.
-Upon registration at a PR, the chosen PR becomes the Home-PR (PR-H) of the
-newly registered PE. A PR-H is responsible for monitoring its PEs' availability
-by keep-alive messages (to be acknowledged by the PE within a given timeout)
+Upon registration at a PR, the chosen PR becomes the Home\-PR (PR\-H) of the
+newly registered PE. A PR\-H is responsible for monitoring its PEs' availability
+by keep\-alive messages (to be acknowledged by the PE within a given timeout)
 and propagates the information about its PEs to the other PRs of the operation
 scope via ENRP updates.
 .Pp
 In order to access the service of a pool given by its PH, a PU requests a PE
 selection from an arbitrary PR of the operation scope, using the Aggregate
 Server Access Protocol (ASAP), transported via SCTP. The PR selects the
-requested list of PE identities by applying a pool-specific selection rule,
+requested list of PE identities by applying a pool\-specific selection rule,
 called pool policy.
 .Pp
 In order to allow for automatic configuration, a PR can send out regular
@@ -111,7 +111,7 @@ Turns ANSI colorization of the logging output on or off.
 Write logging output to a file (default is stdout); output will be appended to given file.
 .It Fl logfile=filename
 Write logging output to a file (default is stdout); given file will be overwritten.
-.It Fl loglevel=0-9
+.It Fl loglevel=0\-9
 Sets the logging verbosity from 0 (none) to 9 (very verbose).
 .El
 .\" ====== Component Status Protocol ========================================
@@ -151,7 +151,7 @@ Sets the minimum address scope acceptable for registered PEs:
 .br
 loopback: Loopback address (only valid on the same node!)
 .br
-site-local: Site-local addresses (e.g. 192.168.1.1, etc.)
+site\-local: Site\-local addresses (e.g. 192.168.1.1, etc.)
 .br
 global: Global addresses
 .It Fl serverannouncecycle=milliseconds
@@ -194,7 +194,7 @@ Sets the ENRP takeover timeout.
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
 .Nm rspregistrar
-uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+uses the environment variables CSP\_SERVER and CSP\_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
 .Sh DIAGNOSTICS
@@ -204,7 +204,7 @@ log file.
 .Sh SEE ALSO
 For a detailed introduction to RSerPool, see:
 .br
-https://duepublico.\%uni-\%duisburg-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
+https://duepublico.\%uni\-\%duisburg\-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate\-\%16326/\%Dre\%2006\_\%final.pdf
 .Pp
 Thomas Dreibholz's RSerPool Page:
 .br

@@ -36,17 +36,17 @@
 .\" ###### Synopsis #########################################################
 .Sh SYNOPSIS
 .Nm fractalpooluser
-.Op Fl identifier=PU_identifier
-.Op Fl poolhandle=pool_handle
+.Op Fl identifier=PU\_identifier
+.Op Fl poolhandle=pool\_handle
 .Op Fl configdir=directory
-.Op Fl caption=window_title
+.Op Fl caption=window\_title
 .Op Fl width=pixels
 .Op Fl height=pixels
 .Op Fl threads=threads
 .Op Fl sendtimeout=\%milliseconds
 .Op Fl recvtimeout=\%milliseconds
 .Op Fl interimagetime=\%seconds
-.Op Fl image\%storage\%prefix=\%file_\%name_\%prefix
+.Op Fl image\%storage\%prefix=\%file\_\%name\_\%prefix
 .Op Fl colormarks
 .Op Fl nocolormarks
 .Op Fl sessions
@@ -56,21 +56,21 @@
 .Op Fl logappend=filename
 .Op Fl logcolor=on|off
 .Op Fl logfile=filename
-.Op Fl loglevel=0-9
+.Op Fl loglevel=0\-9
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm fractalpooluser
 is a Reliable Server Pooling (RSerPool) pool user (PU) for the FractalGenerator
-service. It uses a Qt-based X11 GUI.
+service. It uses a Qt\-based X11 GUI.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
 The following options are available:
 .Bl -tag -width indent
-.It Fl identifier=PU_identifier
+.It Fl identifier=PU\_identifier
 Sets a fixed PU identifier. Handle with care!
-.It Fl poolhandle=pool_handle
-Sets the PH to a non-default value; otherwise, the default setting is
+.It Fl poolhandle=pool\_handle
+Sets the PH to a non\-default value; otherwise, the default setting is
 "FractalGeneratorPool".
 .\" ====== Service parameters ===============================================
 .It Service Parameters:
@@ -79,7 +79,7 @@ Sets the PH to a non-default value; otherwise, the default setting is
 Sets a directory to look for FGP config files. From all FGP files
 (pattern: *.fgp) in this directory, random files are selected for the
 calculation of requests.
-.It Fl caption=window_title
+.It Fl caption=window\_title
 Sets the output window title.
 .It Fl width=pixels
 Sets the width of the window and the images to be calculated.
@@ -93,10 +93,10 @@ Sets the transmission timeout.
 Sets the receive timeout.
 .It Fl interimagetime=seconds
 Sets the pause time between two image calculations in seconds.
-.It Fl imagestorageprefix=file_name_prefix
+.It Fl imagestorageprefix=file\_name\_prefix
 Sets a file name prefix for saving the calculated images. If set, each
 successfully calculated image is stored to the given location as PNG file,
-with a 6-digit file number added.
+with a 6\-digit file number added.
 .It Fl colormarks
 Turns on color change on session failover.
 .It Fl nocolormarks
@@ -130,11 +130,11 @@ Sets the maximum number of ASAP request trials.
 .Bl -tag -width indent
 .It Fl cspserver=address:port
 Sets the address of a CSP monitor server. By default, the content of the
-environment variable CSP_SERVER is used. If not defined, no CSP status reports
+environment variable CSP\_SERVER is used. If not defined, no CSP status reports
 will be sent.
 .It Fl cspinterval=milliseconds
 Sets the interval for the CSP status updates in milliseconds. By default, the
-content of the environment variable CSP_INTERVAL is used. If not defined, no
+content of the environment variable CSP\_INTERVAL is used. If not defined, no
 CSP status reports will be sent.
 .El
 .\" ====== Logging ==========================================================
@@ -146,7 +146,7 @@ Write logging output to a file (default is stdout); output will be appended to g
 Turns ANSI colorization of the logging output on or off.
 .It Fl logfile=filename
 Write logging output to a file (default is stdout); given file will be overwritten.
-.It Fl loglevel=0-9
+.It Fl loglevel=0\-9
 Sets the logging verbosity from 0 (none) to 9 (very verbose).
 It is recommended to use at least a value of 2 to see possibly
 important error messages and warnings.
@@ -156,7 +156,7 @@ important error messages and warnings.
 .\" ###### Environment ######################################################
 .Sh ENVIRONMENT
 .Nm fractalpooluser
-uses the environment variables CSP_SERVER and CSP_INTERVAL to define a CSP
+uses the environment variables CSP\_SERVER and CSP\_INTERVAL to define a CSP
 server to send reports to in the specified interval.
 .\" ###### Diagnostics ######################################################
 .Sh DIAGNOSTICS
@@ -166,7 +166,7 @@ log file.
 .Sh SEE ALSO
 For a detailed introduction to RSerPool, see:
 .br
-https://duepublico.\%uni-\%duisburg-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
+https://duepublico.\%uni\-\%duisburg\-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate\-\%16326/\%Dre\%2006\_\%final.pdf
 .Pp
 Thomas Dreibholz's RSerPool Page:
 .br

@@ -43,15 +43,15 @@
 is a small shell script providing an example of how to use the scripting
 service PU and PE: it first creates a temporary directory with a name created
 from the given unique ID. In this directory, an input directory is created
-containing two files: an example input file "my-input.data" and a run
+containing two files: an example input file "my\-input.data" and a run
 script "ssrun" (the run script is written by echo commands within
 scriptingserviceexample). The input directory is archived by Tar/GZip and
 provided to scriptingclient as input file. scriptingclient distributes the
 input to a Scripting PE, which unpacks the archive and executes "ssrun".
 "ssrun" gets the name of an output archive as its first argument; this archive
 is created by the example script and contains an example output file
-"my-output.data". The output archive is transferred back to the PU. Finally,
-scriptingserviceexample dumps the content of "my-output.data".
+"my\-output.data". The output archive is transferred back to the PU. Finally,
+scriptingserviceexample dumps the content of "my\-output.data".
 .br
 .Nm scriptingserviceexample
 can be taken as an example to do something more useful with the scripting
@@ -76,7 +76,7 @@ Gives an unique identifier for the example run, for example: 1234.
 .Sh SEE ALSO
 For a detailed introduction to RSerPool, see:
 .br
-https://duepublico.\%uni-\%duisburg-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate-\%16326/\%Dre\%2006_\%final.pdf
+https://duepublico.\%uni\-\%duisburg\-\%essen.\%de/\%servlets/\%Derivate\%Servlet/\%Deri\%vate\-\%16326/\%Dre\%2006\_\%final.pdf
 .Pp
 Thomas Dreibholz's RSerPool Page:
 .br
