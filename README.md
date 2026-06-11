@@ -46,7 +46,7 @@ As key requirements to the Reliable Server Pooling architecture, the following p
  An RSerPool Scenario
 </p>
 
-The figure above shows the building blocks of the RSerPool architecture, which has been defined by the [IETF RSerPool&nbsp;WG](https://datatracker.ietf.org/wg/rserpool/about/) in [RFC&nbsp;5351](https://www.rfc-editor.org/rfc/rfc5351.html):. In the terminology of RSerPool a server is denoted as a _Pool Element_&nbsp;(PE). In its _Pool_, it is identified by its _Pool Element Identifier_&nbsp;(PE&nbsp;ID), a 32-bit number. The PE&nbsp;ID is randomly chosen upon a PE's registration to its pool. The set of all pools is denoted as the _Handlespace_. In older literature, it may be denoted as _Namespace_. This denomination has been dropped in order to avoid confusion with the [Domain Name System&nbsp;(DNS)](https://en.wikipedia.org/wiki/Domain_Name_System). Each pool in a handlespace is identified by a unique Pool Handle&nbsp;(PH), which is represented by an arbitrary byte vector. Usually, this is an ASCII or Unicode representation of the pool, e.g.&nbsp;"Compute Pool" or "Web Server Pool".
+The figure above shows the building blocks of the RSerPool architecture, which has been defined by the [IETF RSerPool&nbsp;WG](https://datatracker.ietf.org/wg/rserpool/about/) in [RFC&nbsp;5351](https://www.rfc-editor.org/rfc/rfc5351.html):. In the terminology of RSerPool a server is denoted as a _Pool Element_&nbsp;(PE). In its _Pool_, it is identified by its _Pool Element Identifier_&nbsp;(PE&nbsp;ID), a 32-bit number. The PE&nbsp;ID is randomly chosen upon a PE's registration to its pool. The set of all pools is denoted as the _Handlespace_. In older literature, it may be denoted as _Namespace_. This denomination has been dropped in order to avoid confusion with the [Domain Name System&nbsp;(DNS)](http://www.tcpipguide.com/free/t_DNSNameServerConceptsandOperation.htm). Each pool in a handlespace is identified by a unique Pool Handle&nbsp;(PH), which is represented by an arbitrary byte vector. Usually, this is an ASCII or Unicode representation of the pool, e.g.&nbsp;"Compute Pool" or "Web Server Pool".
 
 <p align="center">
  <a href="src/figures/EN-RSerPool-Handlespace-Information.svg"><img alt="Figure of the RSerPool Protocol Stack" src="src/figures/EN-RSerPool-Handlespace-Information.svg" style="width: 512pt;" /></a><br />
@@ -684,19 +684,6 @@ RSPLIB and related BibTeX entries can be found in [AllReferences.bib](https://ww
 
 
 # 🔗 Useful Links
-
-## RSerPool Introductions on Wikipedia in Different Languages
-
-* 🇧🇦 [Bosnian](https://bs.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Nihad Cosić)
-* 🇨🇳 [Chinese](https://zh.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Xing Zhou)
-* 🇭🇷 [Croatian](https://web.archive.org/web/20230709054321/https://hr.wikipedia.org/wiki/Reliable_server_Pooling) (thanks to Nihad Cosić)
-* 🇬🇧 [English](https://en.wikipedia.org/wiki/Reliable_server_pooling)
-* 🇫🇷 [French](https://fr.wikipedia.org/wiki/Reliable_Server_Pooling)
-* 🇩🇪 [German](https://de.wikipedia.org/wiki/Reliable_Server_Pooling) (thanks to Jobin Pulinthanath)
-* 🇮🇹 [Italian](https://it.wikipedia.org/wiki/Reliable_server_pooling)
-* 🇳🇴 [Norwegian (bokmål)](https://no.wikipedia.org/wiki/Reliable_Server_Pooling)
-
-What about helping Wikipedia by adding an article in your language?
 
 ## Networking and System Management Software
 
