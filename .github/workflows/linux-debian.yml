@@ -41,10 +41,10 @@ jobs:
             image: debian:trixie
             cc: gcc
             cxx: g++
-          - label: "Debian 12 (Bookworm) with GCC"
-            image: debian:bookworm
-            cc: gcc
-            cxx: g++
+          # - label: "Debian 12 (Bookworm) with GCC"
+          #   image: debian:bookworm
+          #   cc: gcc
+          #   cxx: g++
 
     # ###### Build commands #################################################
     name: ${{ matrix.label }}
