@@ -1,5 +1,5 @@
 Name: rsplib
-Version: 3.5.8
+Version: 3.5.9~rc0
 Release: 1
 Summary: Reliable Server Pooling (RSerPool) implementation
 License: GPL-3.0-or-later
@@ -15,8 +15,8 @@ BuildRequires: GraphicsMagick
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
+BuildRequires: mupdf
 BuildRequires: (qt6-qtbase-devel or qt5-qtbase-devel)
-BuildRequires: pdf2svg
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 # Meta-package rsplib: install rsplib-all => install all sub-packages!

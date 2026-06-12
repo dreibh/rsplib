@@ -30,7 +30,7 @@ PROJECT(rsplib LANGUAGES C CXX)
 
 SET(BUILD_MAJOR "3")
 SET(BUILD_MINOR "5")
-SET(BUILD_PATCH "8")
+SET(BUILD_PATCH "9~rc0")
 SET(BUILD_VERSION ${BUILD_MAJOR}.${BUILD_MINOR}.${BUILD_PATCH})
 
 
@@ -272,32 +272,74 @@ ENDIF()
 
 # ====== Graphics tools for icons and logo ==================================
 IF (ENABLE_ICONS)
-   FIND_PROGRAM(GS gs PATHS /bin /usr/bin /usr/local/bin)
-   IF(NOT GS)
+   MESSAGE("Building with icons (ENABLE_ICONS=${ENABLE_ICONS})")
+
+   # ------ Ghostscript -----------------------------------------------------
+   FIND_PROGRAM(GS gs HINTS /usr/pkg/bin)
+   IF(GS)
+      EXECUTE_PROCESS(COMMAND ${GS} --version
+                      OUTPUT_VARIABLE GS_OUTPUT
+                      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+      STRING(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+\\.[0-9]+)" GS_VERSION "${GS_OUTPUT}")
+      MESSAGE(STATUS "Ghostscript found: ${GS} (version ${GS_VERSION})")
+   ELSE()
       MESSAGE(FATAL_ERROR
-            " Cannot find GhostScript! Try:\n"
+            "Cannot find Ghostscript! Try:\n"
             " * Ubuntu/Debian: sudo apt install -y ghostscript\n"
             " * Fedora:        sudo dnf install -y ghostscript\n"
-            " * FreeBSD:       sudo pkg install -y ghostscript10")
+            " * SuSE:          sudo zypper install -y ghostscript\n"
+            " * Alpine:        sudo apk add ghostscript\n"
+            " * FreeBSD:       sudo pkg install -y ghostscript10\n"
+            " * NetBSD:        sudo pkgin -y install ghostscript\n"
+            " * OpenBSD:       sudo pkg_add ghostscript\n"
+            " * Apple:         brew install ghostscript")
    ENDIF()
 
-   FIND_PROGRAM(PDF2SVG pdf2svg PATHS /bin /usr/bin /usr/local/bin)
-   IF(NOT PDF2SVG)
+   # ------ GraphicsMagick --------------------------------------------------
+   FIND_PROGRAM(GM gm HINTS /usr/pkg/bin)
+   IF(GM)
+      EXECUTE_PROCESS(COMMAND ${GM} version | head -n1
+                      OUTPUT_VARIABLE GM_OUTPUT
+                      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+      STRING(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+\\.[0-9]+)" GM_VERSION "${GM_OUTPUT}")
+      MESSAGE(STATUS "GraphicsMagick found: ${GM} (version ${GM_VERSION})")
+   ELSE()
       MESSAGE(FATAL_ERROR
-            " Cannot find PDF2SVG! Try:\n"
-            " * Ubuntu/Debian: sudo apt install -y pdf2svg\n"
-            " * Fedora:        sudo dnf install -y pdf2svg\n"
-            " * FreeBSD:       sudo pkg install -y pdf2svg")
-   ENDIF()
-
-   FIND_PROGRAM(GM gm PATHS /bin /usr/bin /usr/local/bin)
-   IF(NOT GM)
-      MESSAGE(FATAL_ERROR
-            " Cannot find GraphicsMagick! Try:\n"
+            "Cannot find GraphicsMagick! Try:\n"
             " * Ubuntu/Debian: sudo apt install -y graphicsmagick\n"
             " * Fedora:        sudo dnf install -y GraphicsMagick\n"
-            " * FreeBSD:       sudo pkg install -y GraphicsMagick")
+            " * SuSE:          sudo zypper install -y GraphicsMagick\n"
+            " * Alpine:        sudo apk add graphicsmagick\n"
+            " * FreeBSD:       sudo pkg install -y GraphicsMagick\n"
+            " * NetBSD:        sudo pkgin -y install GraphicsMagick\n"
+            " * OpenBSD:       sudo pkg_add GraphicsMagick\n"
+            " * Apple:         brew install graphicsmagick")
    ENDIF()
+
+   # ------ MuPDF mutool ----------------------------------------------------
+   FIND_PROGRAM(MUTOOL mutool HINTS /usr/pkg/bin)
+   IF(MUTOOL)
+      EXECUTE_PROCESS(COMMAND ${MUTOOL} -v
+                      ERROR_VARIABLE  MUTOOL_OUTPUT
+                      OUTPUT_VARIABLE MUTOOL_OUTPUT
+                      OUTPUT_STRIP_TRAILING_WHITESPACE)
+      STRING(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+\\.[0-9]+)" MUTOOL_VERSION "${MUTOOL_OUTPUT}")
+      MESSAGE(STATUS "MuPDF mutool found: ${MUTOOL} (version ${MUTOOL_VERSION})")
+   ELSE()
+      MESSAGE(FATAL_ERROR
+            "Cannot find mupdf! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y mupdf-tools\n"
+            " * Fedora:        sudo dnf install -y mupdf\n"
+            " * SuSE:          sudo zypper install -y mupdf\n"
+            " * Alpine:        sudo apk add mupdf-tools\n"
+            " * FreeBSD:       sudo pkg install -y mupdf\n"
+            " * NetBSD:        sudo pkgin -y install mupdf\n"
+            " * OpenBSD:       sudo pkg_add mupdf\n"
+            " * Apple:         brew install mupdf-tools")
+   ENDIF()
+
+ELSE()
+   MESSAGE("Building without icons (ENABLE_ICONS=${ENABLE_ICONS})")
 ENDIF()
 
 

@@ -13,7 +13,7 @@ Build-Depends: cmake,
                libbz2-dev,
                libgl-dev,
                libsctp-dev,
-               pdf2svg,
+               mupdf-tools,
                qt6-base-dev
 Standards-Version: 4.7.4
 

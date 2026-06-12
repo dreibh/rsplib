@@ -1,5 +1,5 @@
 PORTNAME=	rsplib
-DISTVERSION=	3.5.8
+DISTVERSION=	3.5.9~rc0
 CATEGORIES=	net
 MASTER_SITES=	https://www.nntb.no/~dreibh/rserpool/download/
 
@@ -11,7 +11,7 @@ LICENSE=	GPLv3+
 LICENSE_FILE=	${WRKSRC}/COPYING
 
 BUILD_DEPENDS=	gm:graphics/GraphicsMagick \
-		pdf2svg:graphics/pdf2svg
+		mutool:graphics/mupdf
 
 USES=		cmake desktop-file-utils ghostscript:10,build gl qt:6 \
 		shebangfix tar:xz
