@@ -1,3 +1,70 @@
+commit f8008fc6646713e2b4ae4dcee5b3b84478906049
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 12 17:36:55 2026 +0200
+
+    * Improved CMakeLists.txt.
+    * Replaced dependency pdf2svg by mutool, which is available in more distributions.
+
+commit 5c6cbc6ee3bd28732bcfe8e2feb98b1a2ed7e39c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 11 18:28:29 2026 +0200
+
+    Updated build helper script.
+
+commit df9035b951c860e6ceba0f70616e5d9ebf779a2f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 11 18:28:20 2026 +0200
+
+    Updated CI configuration
+
+commit ba86356529142a38c1191c563d7ab231605cfed0
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 11 18:22:40 2026 +0200
+
+    Updated workflows.
+
+commit d27c479125f8bc69eb16b6582aadc74a4e5592a6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 11 13:19:30 2026 +0200
+
+    Improved documentation.
+
+commit 8e2d7f9fad5798f86badc1d847ef02d339f87744
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 11 11:32:12 2026 +0200
+
+    Improved CMakeLists.txt.
+
+commit f92ab44551e79352ef22677c78b58b9c41f5a5a3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun May 31 23:00:18 2026 +0200
+
+    Minor manpage updates.
+
+commit 406be37d0c8a6e3571d0bf49be3e2367ace08049
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun May 31 22:59:05 2026 +0200
+
+    Updated CI configuration
+
+commit dbfeac752337d7a7baf9fcc9efa6cc608907793f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Sun May 31 22:59:04 2026 +0200
+
+    Updated CI scripts
+
+commit 5b5b0443f6417aa91e2063cb795c7b0a72d783e2
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Apr 29 08:43:55 2026 +0200
+
+    Updated Debian changelog.
+
+commit 732b53d8721fc10dd66f5fc2c7af28514eda2474
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Apr 29 08:36:34 2026 +0200
+
+    New release rsplib-3.5.8.
+
 commit 5c99cc97a8fdacc3f07f3b42067d79d02eecdaae
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Tue Apr 28 10:28:11 2026 +0200

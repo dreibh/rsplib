@@ -1,10 +1,10 @@
-rsplib (3.5.9~rc0-1ubuntu1) unstable; urgency=medium
+rsplib (3.5.9-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
   * debian/control: Replaced dependency pdf2svg by mupdf-tools,
                     which is available in more distributions.
 
- -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 12 Jun 2026 17:19:37 +0200
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Fri, 12 Jun 2026 18:24:02 +0200
 
 rsplib (3.5.8-1ubuntu1) unstable; urgency=low
 
