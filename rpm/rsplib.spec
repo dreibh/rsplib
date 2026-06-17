@@ -418,7 +418,11 @@ and a client-side/server-side API for accessing the service of a pool.
 This package provides common files for the example service.
 
 %files common
+%dir %attr(0755, root, root) %{_datadir}/fgpconfig
 %{_datadir}/fgpconfig/*.fsf
+%dir %attr(0755, root, root) %{_datadir}/icons/hicolor
+%dir %attr(0755, root, root) %{_datadir}/icons/hicolor/*
+%dir %attr(0755, root, root) %{_datadir}/icons/hicolor/*/apps
 %{_datadir}/icons/hicolor/*x*/apps/rsplib.png
 %{_datadir}/icons/hicolor/scalable/apps/rsplib.svg
 %{_datadir}/rsplib/rsplib.bib
