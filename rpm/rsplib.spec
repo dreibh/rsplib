@@ -8,7 +8,7 @@ URL: https://www.nntb.no/~dreibh/rserpool/
 Source: https://www.nntb.no/~dreibh/rserpool/download/%{name}-%{version}.tar.xz
 
 AutoReqProv: on
-BuildRequires: bzip2-devel
+BuildRequires: (bzip2-devel or libbz2-devel)
 BuildRequires: cmake
 BuildRequires: ghostscript
 BuildRequires: GraphicsMagick
@@ -16,8 +16,8 @@ BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
 BuildRequires: mupdf
-BuildRequires: (qt6-qtbase-devel or qt5-qtbase-devel)
-BuildRoot: %{_tmppath}/%{name}-%{version}-build
+BuildRequires: (qt6-qtbase-devel or qt6-base-devel)
+BuildRequires: (qt6-linguist or qt6-linguist-devel)
 
 # Meta-package rsplib: install rsplib-all => install all sub-packages!
 Requires: %{name}-all
