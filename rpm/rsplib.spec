@@ -38,7 +38,7 @@ client-side/server-side API for accessing the service of a pool.
 export CFLAGS="%{optflags} -ffat-lto-objects"
 export CXXFLAGS="%{optflags} -ffat-lto-objects"
 export LDFLAGS="%{build_ldflags}"
-%cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DENABLE_QT=ON -DENABLE_ICONS=ON .
+%cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DENABLE_QT=ON -DENABLE_ICONS=ON
 %cmake_build
 
 %install
