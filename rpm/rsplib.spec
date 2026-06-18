@@ -35,11 +35,24 @@ client-side/server-side API for accessing the service of a pool.
 %setup -q
 
 %build
+export CFLAGS="%{optflags} -ffat-lto-objects"
+export CXXFLAGS="%{optflags} -ffat-lto-objects"
+export LDFLAGS="%{build_ldflags}"
 %cmake -DCMAKE_INSTALL_PREFIX=/usr -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DENABLE_QT=ON -DENABLE_ICONS=ON .
 %cmake_build
 
 %install
 %cmake_install
+
+# Apply shebang fix for Bash and Rscript:
+for directory in %{_bindir} \
+                 ; do
+   find "%{buildroot}/$directory" -type f -exec sed -i \
+      -e 's|^#!/usr/bin/env bash|#!/usr/bin/bash|' \
+      -e 's|^#!/usr/bin/env python3|#!/usr/bin/python3|' \
+      -e 's|^#!/usr/bin/env Rscript|#!/usr/bin/Rscript|' \
+      {} +
+done
 
 %files
 
@@ -71,8 +84,12 @@ The API library is provided by this package.
 %{_libdir}/libtdtagitem.so.*
 %{_libdir}/libtdthreadsafety.so.*
 %{_libdir}/libtdtimeutilities.so.*
-%{_libdir}/libcpprspserver.so.*
-%{_libdir}/libtdcppthread.so.*
+
+%post librsplib
+ldconfig
+
+%postun librsplib
+ldconfig
 
 
 %package librsplib-static
@@ -119,6 +136,7 @@ This package provides header files for the rsplib library. You need them
 to develop your own RSerPool-based clients and servers.
 
 %files librsplib-devel
+%dir %attr(0755, root, root) %{_includedir}/rserpool
 %{_includedir}/rserpool/rserpool-internals.h
 %{_includedir}/rserpool/rserpool-policytypes.h
 %{_includedir}/rserpool/rserpool.h
@@ -223,6 +241,12 @@ This package provides the C++ API library.
 %{_libdir}/libcpprspserver.so.*
 %{_libdir}/libtdcppthread.so.*
 
+%post libcpprspserver
+ldconfig
+
+%postun libcpprspserver
+ldconfig
+
 
 %package libcpprspserver-static
 Summary: C++ RSerPool client/server API static library
@@ -259,6 +283,7 @@ This package provides the header files for the rsplib C++ API. You need them to
 develop your own RSerPool-based clients and servers based on the C++ API.
 
 %files libcpprspserver-devel
+%dir %attr(0755, root, root) %{_includedir}/rserpool
 %{_includedir}/rserpool/cpprspserver.h
 %{_includedir}/rserpool/mutex.h
 %{_includedir}/rserpool/tcplikeserver.h
@@ -284,7 +309,8 @@ This package contains the documentation for the RSerPool implementation
 RSPLIB.
 
 %files docs
-%{_datadir}/doc/rsplib/Handbook.pdf
+%dir %attr(0755, root, root) %{_docdir}/rsplib
+%{_docdir}/rsplib/Handbook.pdf
 
 
 %package registrar
@@ -308,6 +334,18 @@ setup, but for redundancy reasons, you should have at least two.
 %{_datadir}/bash-completion/completions/rspregistrar
 %{_prefix}/lib/systemd/system/rspregistrar.service
 %{_mandir}/man1/rspregistrar.1.gz
+
+%pre registrar
+%service_add_pre rspregistrar.service
+
+%post registrar
+%service_add_post rspregistrar.service
+
+%preun registrar
+%service_del_preun rspregistrar.service
+
+%postun registrar
+%service_del_postun rspregistrar.service
 
 
 %package tools
@@ -398,6 +436,7 @@ FractalGenerator service. Is uses a Qt-based GUI.
 %{_datadir}/applications/fractalpooluser.desktop
 %{_datadir}/bash-completion/completions/fractalpooluser
 %{_datadir}/metainfo/no.nntb.dreibh.rsplib.fractalpooluser.metainfo.xml
+%dir %attr(0755, root, root) %{_datadir}/fractalpooluser
 %{_datadir}/fractalpooluser/*.qm
 %{_mandir}/man1/fractalpooluser.1.gz
 
@@ -425,6 +464,7 @@ This package provides common files for the example service.
 %dir %attr(0755, root, root) %{_datadir}/icons/hicolor/*/apps
 %{_datadir}/icons/hicolor/*x*/apps/rsplib.png
 %{_datadir}/icons/hicolor/scalable/apps/rsplib.svg
+%dir %attr(0755, root, root) %{_datadir}/rsplib
 %{_datadir}/rsplib/rsplib.bib
 %{_datadir}/rsplib/rsplib.pdf
 %{_datadir}/rsplib/rsplib.png
