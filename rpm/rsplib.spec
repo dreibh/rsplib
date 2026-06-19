@@ -44,7 +44,7 @@ export LDFLAGS="%{build_ldflags}"
 %install
 %cmake_install
 
-# Apply shebang fix for Bash and Rscript:
+# ====== Apply shebang fix for scripts ======================================
 for directory in %{_bindir} \
                  ; do
    find "%{buildroot}/$directory" -type f -exec sed -i \
@@ -53,6 +53,7 @@ for directory in %{_bindir} \
       -e 's|^#!/usr/bin/env Rscript|#!/usr/bin/Rscript|' \
       {} +
 done
+# ===========================================================================
 
 %files
 
