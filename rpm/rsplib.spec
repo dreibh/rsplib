@@ -336,18 +336,6 @@ setup, but for redundancy reasons, you should have at least two.
 %{_prefix}/lib/systemd/system/rspregistrar.service
 %{_mandir}/man1/rspregistrar.1.gz
 
-%pre registrar
-%service_add_pre rspregistrar.service
-
-%post registrar
-%service_add_post rspregistrar.service
-
-%preun registrar
-%service_del_preun rspregistrar.service
-
-%postun registrar
-%service_del_postun rspregistrar.service
-
 
 %package tools
 Summary: RSerPool test tools
