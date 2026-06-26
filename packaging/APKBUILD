@@ -1,0 +1,222 @@
+# Maintainer: Thomas Dreibholz <dreibh@simula.no>
+pkgname=rsplib
+pkgver=3.5.9
+pkgrel=1
+pkgdesc="Reliable Server Pooling (RSerPool) implementation"
+url="https://www.nntb.no/~dreibh/rserpool/"
+arch="all"
+license="GPL-3.0-or-later"
+depends=""
+makedepends="
+	bzip2-dev
+	cmake
+	g++
+	ghostscript
+	imagemagick
+	lksctp-tools-dev
+	mupdf-dev
+	ninja
+	qt6-qtbase-dev
+	qt6-qttools-dev
+"
+subpackages="
+	libcpprspserver:libcpprspserver_sub
+	libcpprspserver-static:libcpprspserver_static
+	libcpprspserver-dev:libcpprspserver_dev
+	librsplib:librsplib_sub
+	librsplib-static:librsplib_static
+	librsplib-dev:librsplib_dev
+	$pkgname-registrar:registrar_sub
+	$pkgname-tools:tools_sub
+	$pkgname-services:services_sub
+	$pkgname-fractalpooluser:fractalpooluser_sub
+	$pkgname-common:common_sub:noarch
+	$pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-all:all_sub:noarch
+"
+source="https://www.nntb.no/~dreibh/rserpool/download/$pkgname-$pkgver.tar.xz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+prepare() {
+	default_prepare
+}
+
+build() {
+	export CFLAGS="$CFLAGS -ffat-lto-objects"
+	export CXXFLAGS="$CXXFLAGS -ffat-lto-objects"
+
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DUSE_KERNEL_SCTP=ON \
+		-DENABLE_CSP=ON \
+		-DENABLE_QT=ON \
+		-DENABLE_ICONS=ON
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	# Clean out systemd files since Alpine Linux relies on OpenRC
+	rm -rf "$pkgdir"/usr/lib/systemd
+	rm -rf "$pkgdir"/usr/prefix/lib/systemd
+
+	# Fixing shebangs for Alpine environment
+	local directory
+	for directory in usr/bin; do
+		if [ -d "$pkgdir/$directory" ]; then
+			find "$pkgdir/$directory" -type f -exec sed -i \
+				-e 's|^#!/usr/bin/env bash|#!/bin/bash|' \
+				-e 's|^#!/usr/bin/env python3|#!/bin/python3|' \
+				-e 's|^#!/usr/bin/env Rscript|#!/usr/bin/Rscript|' \
+				{} +
+		fi
+	done
+}
+
+libcpprspserver_sub() {
+	pkgdesc="C++ RSerPool client/server API library"
+	depends="librsplib=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/libcpprspserver.so.* \
+	   "$pkgdir"/usr/lib/libtdcppthread.so.* \
+	   "$subpkgdir"/usr/lib/
+}
+
+libcpprspserver_static() {
+	pkgdesc="C++ RSerPool client/server API static library"
+	depends="librsplib=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/libcpprspserver*.a \
+	   "$pkgdir"/usr/lib/libtdcppthread*.a \
+	   "$subpkgdir"/usr/lib/
+}
+
+libcpprspserver_dev() {
+	pkgdesc="Headers of the C++ RSerPool client/server API library"
+	depends="libcpprspserver=$pkgver-r$pkgrel librsplib-dev=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/include/rserpool "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/include/rserpool/cpprspserver.h \
+	   "$pkgdir"/usr/include/rserpool/mutex.h \
+	   "$pkgdir"/usr/include/rserpool/tcplikeserver.h \
+	   "$pkgdir"/usr/include/rserpool/thread.h \
+	   "$pkgdir"/usr/include/rserpool/udplikeserver.h \
+	   "$subpkgdir"/usr/include/rserpool/
+	mv "$pkgdir"/usr/lib/libcpprspserver*.so \
+	   "$pkgdir"/usr/lib/libtdcppthread*.so \
+	   "$subpkgdir"/usr/lib/
+}
+
+librsplib_sub() {
+	pkgdesc="RSerPool client/server API library for session management"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/librspcsp.so.* \
+	   "$pkgdir"/usr/lib/librspdispatcher.so.* \
+	   "$pkgdir"/usr/lib/librsphsmgt.so.* \
+	   "$pkgdir"/usr/lib/librsplib.so.* \
+	   "$pkgdir"/usr/lib/librspmessaging.so.* \
+	   "$pkgdir"/usr/lib/libtd*.so.* \
+	   "$subpkgdir"/usr/lib/
+}
+
+librsplib_static() {
+	pkgdesc="RSerPool client/server API static library for session management"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/librspcsp*.a \
+	   "$pkgdir"/usr/lib/librspdispatcher*.a \
+	   "$pkgdir"/usr/lib/librsphsmgt*.a \
+	   "$pkgdir"/usr/lib/librsplib*.a \
+	   "$pkgdir"/usr/lib/librspmessaging*.a \
+	   "$pkgdir"/usr/lib/libtd*.a \
+	   "$subpkgdir"/usr/lib/
+}
+
+librsplib_dev() {
+	pkgdesc="Headers of the RSerPool client/server API library rsplib"
+	depends="librsplib=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/include/rserpool "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/include/rserpool/rserpool-internals.h \
+	   "$pkgdir"/usr/include/rserpool/rserpool-policytypes.h \
+	   "$pkgdir"/usr/include/rserpool/rserpool.h \
+	   "$pkgdir"/usr/include/rserpool/rserpool-csp.h \
+	   "$pkgdir"/usr/include/rserpool/tagitem.h \
+	   "$subpkgdir"/usr/include/rserpool/
+	mv "$pkgdir"/usr/lib/librspcsp*.so \
+	   "$pkgdir"/usr/lib/librspdispatcher*.so \
+	   "$pkgdir"/usr/lib/librsphsmgt*.so \
+	   "$pkgdir"/usr/lib/librsplib*.so \
+	   "$pkgdir"/usr/lib/librspmessaging*.so \
+	   "$pkgdir"/usr/lib/libtd*.so \
+	   "$subpkgdir"/usr/lib/
+}
+
+registrar_sub() {
+	pkgdesc="RSerPool Registrar service"
+	depends="librsplib=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/bin
+	mv "$pkgdir"/usr/bin/rspregistrar "$subpkgdir"/usr/bin/
+}
+
+tools_sub() {
+	pkgdesc="RSerPool test tools"
+	depends="librsplib=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/bin
+	mv "$pkgdir"/usr/bin/cspmonitor \
+	   "$pkgdir"/usr/bin/hsdump \
+	   "$pkgdir"/usr/bin/rspserver \
+	   "$pkgdir"/usr/bin/rspterminal \
+	   "$subpkgdir"/usr/bin/
+}
+
+services_sub() {
+	pkgdesc="RSerPool example services"
+	depends="libcpprspserver=$pkgver-r$pkgrel librsplib=$pkgver-r$pkgrel rsplib-tools=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/bin
+	mv "$pkgdir"/usr/bin/calcappclient \
+	   "$pkgdir"/usr/bin/pingpongclient \
+	   "$pkgdir"/usr/bin/scriptingclient \
+	   "$pkgdir"/usr/bin/scriptingcontrol \
+	   "$pkgdir"/usr/bin/scriptingserviceexample \
+	   "$subpkgdir"/usr/bin/
+}
+
+fractalpooluser_sub() {
+	pkgdesc="RSerPool-based fractal generator client"
+	depends="libcpprspserver=$pkgver-r$pkgrel librsplib=$pkgver-r$pkgrel rsplib-tools=$pkgver-r$pkgrel"
+	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/share
+	mv "$pkgdir"/usr/bin/fractalpooluser "$subpkgdir"/usr/bin/
+	mv "$pkgdir"/usr/share/applications "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/metainfo "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/fractalpooluser "$subpkgdir"/usr/share/
+}
+
+common_sub() {
+	pkgdesc="RSerPool Fractal Generator Service example input files"
+	mkdir -p "$subpkgdir"/usr/share
+	mv "$pkgdir"/usr/share/fgpconfig \
+	   "$pkgdir"/usr/share/icons \
+	   "$pkgdir"/usr/share/rsplib \
+	   "$subpkgdir"/usr/share/
+}
+
+all_sub() {
+	pkgdesc="Installation metapackage for the RSerPool implementation RSPLIB"
+	depends="
+		rsplib-common=$pkgver-r$pkgrel
+		rsplib-doc=$pkgver-r$pkgrel
+		rsplib-fractalpooluser=$pkgver-r$pkgrel
+		libcpprspserver=$pkgver-r$pkgrel
+		libcpprspserver-dev=$pkgver-r$pkgrel
+		libcpprspserver-static=$pkgver-r$pkgrel
+		librsplib=$pkgver-r$pkgrel
+		librsplib-dev=$pkgver-r$pkgrel
+		librsplib-static=$pkgver-r$pkgrel
+		rsplib-registrar=$pkgver-r$pkgrel
+		rsplib-services=$pkgver-r$pkgrel
+		rsplib-tools=$pkgver-r$pkgrel
+	"
+	mkdir -p "$subpkgdir"
+}
