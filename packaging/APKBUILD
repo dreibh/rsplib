@@ -1,6 +1,6 @@
 # Maintainer: Thomas Dreibholz <dreibh@simula.no>
 pkgname=rsplib
-pkgver=3.5.9
+pkgver=3.5.10
 pkgrel=1
 pkgdesc="Reliable Server Pooling (RSerPool) implementation"
 url="https://www.nntb.no/~dreibh/rserpool/"
@@ -197,8 +197,8 @@ fractalpooluser_sub() {
 common_sub() {
 	pkgdesc="RSerPool Fractal Generator Service example input files"
 	mkdir -p "$subpkgdir"/usr/share
-	mv "$pkgdir"/usr/share/fgpconfig \
-	   "$pkgdir"/usr/share/icons \
+	# FIXME "$pkgdir"/usr/share/fgpconfig \
+	mv "$pkgdir"/usr/share/icons \
 	   "$pkgdir"/usr/share/rsplib \
 	   "$subpkgdir"/usr/share/
 }
@@ -223,5 +223,5 @@ all_sub() {
 # FIXME!	rsplib-fractalpooluser=$pkgver-r$pkgrel
 
 sha512sums="
-43147d57984d292cf75961b11a7c7b9d49081385c7476f7415ba76d8183c27892f3c67d72f4bcf25dae7ab45388ef590e155caf25c66f79832f998ba9b6ae175  rsplib-3.5.9.tar.xz
+9323555db26083d1b3cd66e828c5a4b6e3f925606a1fab2f57ff34cfc226eaec5b7702f0cface75bc42d187bb2eacdcfee41f13d46c0d0840a59d231e3a69f02  rsplib-3.5.10.tar.xz
 "
