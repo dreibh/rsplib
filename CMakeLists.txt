@@ -223,22 +223,33 @@ ENDIF()
 # ENDIF()
 
 
-# ====== SCTP ==============================================================#
+# ====== SCTP ===============================================================
 IF (USE_KERNEL_SCTP)
-   # ====== Kernel SCTP =====================================================
+   ADD_DEFINITIONS(-DHAVE_KERNEL_SCTP)
+
+   # ------ Kernel SCTP -----------------------------------------------------
    CHECK_INCLUDE_FILE(netinet/sctp.h HAVE_NETINET_SCTP_H)
    IF (HAVE_NETINET_SCTP_H)
       SET(SCTP_INCLUDE "netinet/sctp.h")
-      ADD_DEFINITIONS(-DHAVE_KERNEL_SCTP -DHAVE_NETINET_SCTP_H)
-      IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
-         FIND_LIBRARY(SCTP_LIB sctp REQUIRED)
+      ADD_DEFINITIONS(-DHAVE_SCTP -DHAVE_NETINET_SCTP_H)
+   ENDIF()
+
+   # ------ Linux LK-SCTP library -------------------------------------------
+   IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+      MESSAGE(STATUS "${CMAKE_SYSTEM_NAME} supported")
+      FIND_LIBRARY(SCTP_LIBRARY sctp)
+      FIND_PATH(SCTP_INCLUDE_DIR NAMES netinet/sctp.h)
+      IF (SCTP_LIBRARY AND SCTP_INCLUDE_DIR)
+         MESSAGE(STATUS "LK-SCTP library found:")
+         MESSAGE(STATUS " SCTP_LIBRARY:     ${SCTP_LIBRARY}")
+         MESSAGE(STATUS " SCTP_INCLUDE_DIR: ${SCTP_INCLUDE_DIR}")
       ELSE()
-         FIND_LIBRARY(SCTP_LIB sctp)
-      ENDIF()
-      IF (SCTP_LIB)
-         SET(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${SCTP_LIB})
-      ELSE()
-         SET(SCTP_LIB "")
+         MESSAGE(FATAL_ERROR
+               "Cannot find Linux Kernel SCTP library! Try:\n"
+               " * Ubuntu/Debian: sudo apt install -y libsctp-dev\n"
+               " * Fedora:        sudo dnf install -y lksctp-tools-devel\n"
+               " * OpenSUSE:      sudo zypper install -y lksctp-tools-devel\n"
+               " * Alpine:        sudo apk add lksctp-tools-dev\n")
       ENDIF()
    ENDIF()
 
