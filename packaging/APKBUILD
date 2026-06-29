@@ -10,15 +10,15 @@ depends=""
 makedepends="
 	bzip2-dev
 	cmake
-	g++
 	ghostscript
 	imagemagick
 	lksctp-tools-dev
-	mupdf-dev
+	mupdf-tools
 	ninja
-	qt6-qtbase-dev
-	qt6-qttools-dev
 "
+# FIXME!
+# 	qt6-qtbase-dev
+# 	qt6-qttools-dev
 subpackages="
 	libcpprspserver:libcpprspserver_sub
 	libcpprspserver-static:libcpprspserver_static
@@ -29,12 +29,12 @@ subpackages="
 	$pkgname-registrar:registrar_sub
 	$pkgname-tools:tools_sub
 	$pkgname-services:services_sub
-	$pkgname-fractalpooluser:fractalpooluser_sub
 	$pkgname-common:common_sub:noarch
 	$pkgname-doc
 	$pkgname-bash-completion
 	$pkgname-all:all_sub:noarch
 "
+#	FIXME! $pkgname-fractalpooluser:fractalpooluser_sub
 source="https://www.nntb.no/~dreibh/rserpool/download/$pkgname-$pkgver.tar.xz"
 builddir="$srcdir/$pkgname-$pkgver"
 
@@ -52,10 +52,11 @@ build() {
 		-DCMAKE_INSTALL_LIBDIR=lib \
 		-DUSE_KERNEL_SCTP=ON \
 		-DENABLE_CSP=ON \
-		-DENABLE_QT=ON \
+		-DENABLE_QT=OFF \
 		-DENABLE_ICONS=ON
 	cmake --build build
 }
+# FIXME!		-DENABLE_QT=ON \
 
 package() {
 	DESTDIR="$pkgdir" cmake --install build
@@ -207,7 +208,6 @@ all_sub() {
 	depends="
 		rsplib-common=$pkgver-r$pkgrel
 		rsplib-doc=$pkgver-r$pkgrel
-		rsplib-fractalpooluser=$pkgver-r$pkgrel
 		libcpprspserver=$pkgver-r$pkgrel
 		libcpprspserver-dev=$pkgver-r$pkgrel
 		libcpprspserver-static=$pkgver-r$pkgrel
@@ -220,3 +220,8 @@ all_sub() {
 	"
 	mkdir -p "$subpkgdir"
 }
+# FIXME!	rsplib-fractalpooluser=$pkgver-r$pkgrel
+
+sha512sums="
+43147d57984d292cf75961b11a7c7b9d49081385c7476f7415ba76d8183c27892f3c67d72f4bcf25dae7ab45388ef590e155caf25c66f79832f998ba9b6ae175  rsplib-3.5.9.tar.xz
+"
