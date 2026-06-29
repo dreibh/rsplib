@@ -1,3 +1,117 @@
+commit d452b918edd2b7f3e89531ac66d8603a2bd67644
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 15:45:08 2026 +0200
+
+    Another workflow update.
+
+commit 661a4ed2af6f58395740307d0abf40f9e376482e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 15:42:47 2026 +0200
+
+    Updated CI configuration
+
+commit 411f565dea9fe3994b18a6ff3dd90afd609c23d7
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 15:32:34 2026 +0200
+
+    Updated workflow.
+
+commit 297c4e35ec56478d1a5d217624e43ebef9d763a6
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 15:31:28 2026 +0200
+
+    Updated CI scripts
+
+commit abfb9d188a9da8ce6c5fcbee6386ad82c0654da3
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 13:05:55 2026 +0000
+
+    Improved library handling.
+
+commit 110db9b34d2cfedef82d775176b4d4efc62236fa
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 13:05:31 2026 +0000
+
+    Include update: sys/poll.h -> poll.h; sys/fcntl.h -> fcntl.h.
+
+commit 9b5e9c0b908488725ceca5fb5b6827f190ce969f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 14:58:29 2026 +0200
+
+    SCTP work-around clean-ups.
+
+commit b3fac3b376344a06613eaa0545f9f824b671065c
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 14:53:20 2026 +0200
+
+    Improved msghdr handling to work under Alpine Linux.
+
+commit 27fa56a5be0027c500ded430d0df9145a9021883
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 14:28:44 2026 +0200
+
+    Updated APKBUILD file.
+
+commit bc7bafa9c6e4a9fbbd94a157c65f437d77dbbac8
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 29 14:28:19 2026 +0200
+
+    Improved handling of libbz2 in CMakeLists.txt.
+
+commit 3bc70970a3825cc1d54206a3193f355fcec1eb26
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 26 13:06:40 2026 +0200
+
+    Added initial APKBUILD file.
+
+commit f31e69c8de177db6e92c2d0e6b5153e9c3c53d78
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 25 14:20:54 2026 +0200
+
+    RPM spec fix.
+
+commit 60075e1d14b38a244e225556c00d23463a32a72e
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Mon Jun 22 22:08:41 2026 +0200
+
+    Improved CMakeLists.txt.
+
+commit 090324990f9fc397c891109ddadbcef6b1775b9f
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 19 14:34:02 2026 +0200
+
+    Minor RPM spec clean-up.
+
+commit 0ecd4433055c0e77545953143cff549bf54b1eb5
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 18 17:51:55 2026 +0200
+
+    Yet another RPM spec update.
+
+commit afcfc63aa7665cd1760fcf570334bf8ae4358248
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Thu Jun 18 16:07:37 2026 +0200
+
+    RPM spec improvements.
+
+commit 82c8cb96d604513095b3e32845952816183dc825
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Jun 17 18:20:25 2026 +0200
+
+    Improved RPM spec.
+
+commit 0d875480ee60569da704963fdebe96501f3b3033
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Wed Jun 17 17:36:22 2026 +0200
+
+    Improved RPM spec.
+
+commit f74abca52fa1c86ee592edf2c9e662cf533bb167
+Author: Thomas Dreibholz <dreibh@simula.no>
+Date:   Fri Jun 12 18:24:04 2026 +0200
+
+    New release rsplib-3.5.9.
+
 commit f8008fc6646713e2b4ae4dcee5b3b84478906049
 Author: Thomas Dreibholz <dreibh@simula.no>
 Date:   Fri Jun 12 17:36:55 2026 +0200
