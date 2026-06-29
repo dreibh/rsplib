@@ -63,27 +63,11 @@ extern "C" {
 
 
 #ifdef HAVE_KERNEL_SCTP
-#ifndef HAVE_SCTP_CONNECTX
-int sctp_connectx(int                    sockfd,
-                  const struct sockaddr* addrs,
-                  int                    addrcnt,
-                  sctp_assoc_t*          id);
-#endif
-
-#ifndef HAVE_SCTP_SEND
-#define sctp_send(a,b,c,d,e) sctp_send_wrapper(a,b,c,d,e)
-ssize_t sctp_send_wrapper(int                           sd,
-                          const void*                   data,
-                          size_t                        len,
-                          const struct sctp_sndrcvinfo* sinfo,
-                          int                           flags);
-#endif
-
 #ifndef HAVE_SCTP_SENDX
 ssize_t sctp_sendx(int                           sd,
                    const void*                   data,
                    size_t                        len,
-                   const struct sockaddr*        addrs,
+                   struct sockaddr*              addrs,
                    int                           addrcnt,
                    const struct sctp_sndrcvinfo* sinfo,
                    int                           flags);

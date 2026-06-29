@@ -75,90 +75,53 @@
 
 
 #ifdef HAVE_KERNEL_SCTP
-// #ifndef HAVE_SCTP_CONNECTX
-// #warning No sctp_connectx() available - Using only the first address!
-// int sctp_connectx(int                    sockfd,
-//                   const struct sockaddr* addrs,
-//                   int                    addrcnt,
-//                   sctp_assoc_t*          id);
-// {
-//    const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
-//    return(ext_connect(sockfd, bestScopedAddress, getSocklen(bestScopedAddress)));
-// }
-// #endif
-//
-// #ifndef HAVE_SCTP_SEND
-// #warning No sctp_send() available - Using wrapper!
-// ssize_t sctp_send_wrapper(int                           sd,
-//                           const void*                   data,
-//                           size_t                        len,
-//                           const struct sctp_sndrcvinfo* sinfo,
-//                           int                           flags)
-// {
-//    struct sctp_sndrcvinfo* sri;
-//    struct iovec            iov = { (char*)data, len };
-//    struct cmsghdr*         cmsg;
-//    size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
-//    char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
-//    struct msghdr msg = {
-//       .msg_name       = NULL,
-//       .msg_namelen    = 0,
-//       .msg_iov        = &iov,
-//       .msg_iovlen     = 1,
-//       .msg_control    = cbuf,
-//       .msg_controllen = cmsglen,
-//       .msg_flags      = flags
-//    };
-//
-//    cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
-//    cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
-//    cmsg->cmsg_level = IPPROTO_SCTP;
-//    cmsg->cmsg_type  = SCTP_SNDRCV;
-//
-//    sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
-//    memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
-//    return(ext_sendmsg(sd, &msg, msg.msg_flags));
-// }
-// #endif
-
 #ifndef HAVE_SCTP_SENDX
-#warning No sctp_sendx() available - Using only the first address!
 ssize_t sctp_sendx(int                           sd,
                    const void*                   data,
                    size_t                        len,
-                   const struct sockaddr*        addrs,
+                   struct sockaddr*              addrs,
                    int                           addrcnt,
                    const struct sctp_sndrcvinfo* sinfo,
                    int                           flags)
 {
-   struct sctp_sndrcvinfo* sri;
-   struct iovec            iov = { (char*)data, len };
-   struct cmsghdr*         cmsg;
-   size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
-   char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
-   struct msghdr msg = {
-      .msg_name       = NULL,
-      .msg_namelen    = 0,
-      .msg_iov        = &iov,
-      .msg_iovlen     = 1,
-      .msg_control    = cbuf,
-      .msg_controllen = cmsglen,
-      .msg_flags      = flags
-   };
+   struct iovec iov;
+   iov.iov_base = (void*)data;
+   iov.iov_len  = len;
 
-   const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
-   msg.msg_name = (struct sockaddr*)bestScopedAddress;
-   msg.msg_namelen = getSocklen(bestScopedAddress);
+   void*     infoPtr = NULL;
+   socklen_t infolen = 0;
+   unsigned int infoType = SCTP_SENDV_NOINFO;
 
-   cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
-   cmsg->cmsg_len   = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
-   cmsg->cmsg_level = IPPROTO_SCTP;
-   cmsg->cmsg_type  = SCTP_SNDRCV;
+   struct sctp_sendv_spa spa;
+   if(sinfo != NULL) {
+      memset(&spa, 0, sizeof(spa));
+      spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
+      spa.sendv_sndinfo.snd_sid      = sinfo->sinfo_stream;
+      spa.sendv_sndinfo.snd_flags    = sinfo->sinfo_flags;
+      spa.sendv_sndinfo.snd_ppid     = sinfo->sinfo_ppid;
+      spa.sendv_sndinfo.snd_context  = sinfo->sinfo_context;
+      spa.sendv_sndinfo.snd_assoc_id = sinfo->sinfo_assoc_id;
 
-   sri = (struct sctp_sndrcvinfo*)CMSG_DATA(cmsg);
-   memcpy(sri, sinfo, sizeof(struct sctp_sndrcvinfo));
+      if(sinfo->sinfo_timetolive > 0) {
+         spa.sendv_flags |= SCTP_SEND_PRINFO_VALID;
+         spa.sendv_prinfo.pr_value = sinfo->sinfo_timetolive;
+         if (sinfo->sinfo_flags & SCTP_PR_SCTP_TTL) {
+            spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+         } else if (sinfo->sinfo_flags & SCTP_PR_SCTP_RTX) {
+            spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+         } else if (sinfo->sinfo_flags & SCTP_PR_SCTP_PRIO) {
+            spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_PRIO;
+         } else {
+             spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+         }
+      }
 
-   return(ext_sendmsg(sd, &msg, msg.msg_flags));
+      infoType = SCTP_SENDV_SPA;
+      infoPtr = &spa;
+      infolen = sizeof(spa);
+   }
+
+   return sctp_sendv(sd, &iov, 1, addrs, addrcnt, infoPtr, infolen, infoType, flags);
 }
 #endif
 #endif
