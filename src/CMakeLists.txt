@@ -50,7 +50,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdtimeutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}" m)
+   TARGET_LINK_LIBRARIES (libtdtimeutilities-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT} m)
    INSTALL(TARGETS libtdtimeutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -73,7 +73,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdrandomizer-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -96,7 +96,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdstringutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdstringutilities-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdstringutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -119,7 +119,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdthreadsafety-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdthreadsafety-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -142,7 +142,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdloglevel-${TYPE} libtdtimeutilities-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdloglevel-${TYPE} libtdtimeutilities-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdloglevel-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -165,7 +165,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdtagitem-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdtagitem-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdtagitem-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -188,7 +188,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdbreakdetector-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} ${ATOMIC_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdbreakdetector-${TYPE} libtdtimeutilities-${TYPE} ${SCTP_LIB} ${ATOMIC_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdbreakdetector-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -211,7 +211,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdcppthread-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdcppthread-${TYPE} libtdthreadsafety-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdcppthread-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -240,7 +240,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libtdstorage-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libtdstorage-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdstorage-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -269,7 +269,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-TARGET_LINK_LIBRARIES (libtdnetutilities-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES (libtdnetutilities-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libtdnetutilities-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -326,7 +326,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (librsphsmgt-${TYPE} libtdstorage-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (librsphsmgt-${TYPE} libtdstorage-${TYPE} libtdrandomizer-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS librsphsmgt-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -353,7 +353,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (librspmessaging-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} librsphsmgt-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (librspmessaging-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} librsphsmgt-${TYPE} libtdloglevel-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS librspmessaging-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -380,7 +380,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (librspdispatcher-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdnetutilities-${TYPE} libtdstorage-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (librspdispatcher-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdnetutilities-${TYPE} libtdstorage-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS librspdispatcher-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -405,7 +405,7 @@ IF (ENABLE_CSP)
          VERSION   ${BUILD_VERSION}
          SOVERSION ${BUILD_MAJOR}
       )
-      TARGET_LINK_LIBRARIES (librspcsp-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdloglevel-${TYPE} librspdispatcher-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+      TARGET_LINK_LIBRARIES (librspcsp-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdloglevel-${TYPE} librspdispatcher-${TYPE} libtdnetutilities-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
       INSTALL(TARGETS librspcsp-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
    ENDFOREACH()
 ENDIF()
@@ -457,9 +457,9 @@ FOREACH(TYPE shared;static)
       SOVERSION ${BUILD_MAJOR}
    )
    IF (ENABLE_CSP)
-      TARGET_LINK_LIBRARIES (librsplib-${TYPE} libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} libtdthreadsafety-${TYPE} libtdloglevel-${TYPE} libtdtagitem-${TYPE} libtdstorage-${TYPE} librsphsmgt-${TYPE} librspdispatcher-${TYPE} librspmessaging-${TYPE} librspcsp-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+      TARGET_LINK_LIBRARIES (librsplib-${TYPE} libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} libtdthreadsafety-${TYPE} libtdloglevel-${TYPE} libtdtagitem-${TYPE} libtdstorage-${TYPE} librsphsmgt-${TYPE} librspdispatcher-${TYPE} librspmessaging-${TYPE} librspcsp-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    ELSE()
-      TARGET_LINK_LIBRARIES (librsplib-${TYPE} libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} libtdthreadsafety-${TYPE} libtdloglevel-${TYPE} libtdtagitem-${TYPE} libtdstorage-${TYPE} librsphsmgt-${TYPE} librspdispatcher-${TYPE} librspmessaging-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+      TARGET_LINK_LIBRARIES (librsplib-${TYPE} libtdrandomizer-${TYPE} libtdtimeutilities-${TYPE} libtdstringutilities-${TYPE} libtdnetutilities-${TYPE} libtdthreadsafety-${TYPE} libtdloglevel-${TYPE} libtdtagitem-${TYPE} libtdstorage-${TYPE} librsphsmgt-${TYPE} librspdispatcher-${TYPE} librspmessaging-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    ENDIF()
 
    INSTALL(TARGETS librsplib-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -487,7 +487,7 @@ FOREACH(TYPE shared;static)
       VERSION   ${BUILD_VERSION}
       SOVERSION ${BUILD_MAJOR}
    )
-   TARGET_LINK_LIBRARIES (libcpprspserver-${TYPE} libtdcppthread-${TYPE} librsplib-${TYPE} libtdthreadsafety-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdbreakdetector-${TYPE} ${SCTP_LIB} "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES (libcpprspserver-${TYPE} libtdcppthread-${TYPE} librsplib-${TYPE} libtdthreadsafety-${TYPE} libtdnetutilities-${TYPE} libtdtimeutilities-${TYPE} libtdloglevel-${TYPE} libtdbreakdetector-${TYPE} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS libcpprspserver-${TYPE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 ENDFOREACH()
 
@@ -497,10 +497,11 @@ ENDFOREACH()
 #############################################################################
 
 ADD_EXECUTABLE(rspregistrar rspregistrar.c rspregistrar-global.c rspregistrar-core.c rspregistrar-asap.c rspregistrar-enrp.c rspregistrar-takeover.c rspregistrar-security.c rspregistrar-misc.c takeoverprocess.c)
+TARGET_INCLUDE_DIRECTORIES(rspregistrar PRIVATE ${BZ2_INCLUDE_DIR})
 IF (ENABLE_CSP)
-    TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector-shared librspdispatcher-shared librspcsp-shared librsphsmgt-shared librspmessaging-shared libtdstorage-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared "${BZIP2_LIBRARIES}" "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+    TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector-shared librspdispatcher-shared librspcsp-shared librsphsmgt-shared librspmessaging-shared libtdstorage-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared ${BZ2_LIBRARY} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 ELSE()
-    TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector-shared librspdispatcher-shared librsphsmgt-shared librspmessaging-shared libtdstorage-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared "${BZIP2_LIBRARIES}" "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+    TARGET_LINK_LIBRARIES(rspregistrar libtdbreakdetector-shared librspdispatcher-shared librsphsmgt-shared librspmessaging-shared libtdstorage-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared ${BZ2_LIBRARY} ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 ENDIF()
 INSTALL(TARGETS             rspregistrar
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -514,7 +515,7 @@ INSTALL(FILES       rspregistrar.bash-completion
         RENAME      rspregistrar)
 
 ADD_EXECUTABLE(rspserver rspserver.cc standardservices.cc fractalgeneratorservice.cc calcappservice.cc scriptingservice.cc environmentcache.cc memfile.cc sha1.c)
-TARGET_LINK_LIBRARIES(rspserver libtdcppthread-shared libtdthreadsafety-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared libcpprspserver-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(rspserver libtdcppthread-shared libtdthreadsafety-shared libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared libcpprspserver-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             rspserver
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -527,7 +528,7 @@ INSTALL(PROGRAMS scriptingcontrol   DESTINATION ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES    scriptingcontrol.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(rspterminal rspterminal.c)
-TARGET_LINK_LIBRARIES(rspterminal libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(rspterminal libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             rspterminal
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -537,7 +538,7 @@ INSTALL(FILES       rspterminal.bash-completion
         RENAME      rspterminal)
 
 ADD_EXECUTABLE(hsdump hsdump.c)
-TARGET_LINK_LIBRARIES(hsdump libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsphsmgt-shared librspmessaging-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(hsdump libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsphsmgt-shared librspmessaging-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             hsdump
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -547,7 +548,7 @@ INSTALL(FILES       hsdump.bash-completion
         RENAME      hsdump)
 
 ADD_EXECUTABLE(pingpongclient pingpongclient.c)
-TARGET_LINK_LIBRARIES(pingpongclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(pingpongclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             pingpongclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -557,7 +558,7 @@ INSTALL(FILES       pingpongclient.bash-completion
         RENAME      pingpongclient)
 
 ADD_EXECUTABLE(scriptingclient scriptingclient.cc sha1.c sha1.h memfile.cc memfile.h)
-TARGET_LINK_LIBRARIES(scriptingclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(scriptingclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             scriptingclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -570,7 +571,7 @@ INSTALL(PROGRAMS scriptingserviceexample   DESTINATION ${CMAKE_INSTALL_BINDIR})
 INSTALL(FILES    scriptingserviceexample.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 ADD_EXECUTABLE(calcappclient calcappclient.cc calcapppackets.h statistics.cc statistics.h)
-TARGET_LINK_LIBRARIES(calcappclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+TARGET_LINK_LIBRARIES(calcappclient libtdrandomizer-shared libtdstringutilities-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 INSTALL(TARGETS             calcappclient
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -582,7 +583,7 @@ INSTALL(FILES       calcappclient.bash-completion
 
 IF (ENABLE_CSP)
    ADD_EXECUTABLE(cspmonitor cspmonitor.c)
-   TARGET_LINK_LIBRARIES(cspmonitor librspcsp-shared libtdbreakdetector-shared libtdtimeutilities-shared libtdstringutilities-shared libtdnetutilities-shared libtdstorage-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(cspmonitor librspcsp-shared libtdbreakdetector-shared libtdtimeutilities-shared libtdstringutilities-shared libtdnetutilities-shared libtdstorage-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS             cspmonitor
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -598,7 +599,7 @@ IF (ENABLE_QT)
    FILE(GLOB fractalpooluser_configs "fgpconfig/*.fsf")
    ADD_EXECUTABLE(fractalpooluser fractalpooluser.cc)
    SET_TARGET_PROPERTIES(fractalpooluser PROPERTIES COMPILE_FLAGS "-DDEFAULT_FPU_CONFIGDIR=\\\"\"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/fgpconfig\\\"\"")
-   TARGET_LINK_LIBRARIES(fractalpooluser libtdrandomizer-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared librsplib-shared Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Xml "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(fractalpooluser libtdrandomizer-shared libtdtimeutilities-shared libtdnetutilities-shared libtdloglevel-shared librsplib-shared Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Xml ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
    INSTALL(TARGETS             fractalpooluser
            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
            BUNDLE DESTINATION  ${CMAKE_INSTALL_BINDIR})
@@ -616,31 +617,31 @@ ENDIF()
 IF (ENABLE_TEST_PROGRAMS)
 
    ADD_EXECUTABLE(hrestest hrestest.c)
-   TARGET_LINK_LIBRARIES(hrestest libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(hrestest libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(testregistrator testregistrator.c)
-   TARGET_LINK_LIBRARIES(testregistrator libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(testregistrator libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(fork fork.c)
-   TARGET_LINK_LIBRARIES(fork libtdtimeutilities-shared libtdrandomizer-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(fork libtdtimeutilities-shared libtdrandomizer-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(exectime exectime.cc)
-   TARGET_LINK_LIBRARIES(exectime libtdcppthread-shared libtdtimeutilities-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(exectime libtdcppthread-shared libtdtimeutilities-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(execalarm execalarm.cc)
-   TARGET_LINK_LIBRARIES(execalarm libtdcppthread-shared libtdtimeutilities-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(execalarm libtdcppthread-shared libtdtimeutilities-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(gettimestamp gettimestamp.c)
-   TARGET_LINK_LIBRARIES(gettimestamp libtdtimeutilities-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(gettimestamp libtdtimeutilities-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    ADD_EXECUTABLE(rootshell rootshell.c)
    TARGET_LINK_LIBRARIES(rootshell)
 
    ADD_EXECUTABLE(attacker attacker.cc)
-   TARGET_LINK_LIBRARIES(attacker libtdbreakdetector-shared librsplib-shared "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   TARGET_LINK_LIBRARIES(attacker libtdbreakdetector-shared librsplib-shared ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
    # ADD_EXECUTABLE(t1 t1.c)
-   # TARGET_LINK_LIBRARIES(t1 librsplib "${SCTP_LIB}" "${CMAKE_THREAD_LIBS_INIT}")
+   # TARGET_LINK_LIBRARIES(t1 librsplib ${SCTP_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
 ENDIF()
 

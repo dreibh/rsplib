@@ -376,8 +376,25 @@ ENDIF()
 ADD_DEFINITIONS(-D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64)
 
 
-# ====== BZip2 ==============================================================
-FIND_PACKAGE(BZip2 REQUIRED)
+# ====== libbz2 =============================================================
+FIND_LIBRARY(BZ2_LIBRARY NAMES bz2)
+FIND_PATH(BZ2_INCLUDE_DIR NAMES bzlib.h)
+IF (BZ2_LIBRARY AND BZ2_INCLUDE_DIR)
+   MESSAGE(STATUS "BZip2 library found:")
+   MESSAGE(STATUS " BZ2_LIBRARY:     ${BZ2_LIBRARY}")
+   MESSAGE(STATUS " BZ2_INCLUDE_DIR: ${BZ2_INCLUDE_DIR}")
+ELSE()
+   MESSAGE(FATAL_ERROR
+           "Cannot find BZip2 library! Try:\n"
+           " * Ubuntu/Debian: sudo apt install -y libbz2-dev\n"
+           " * Fedora:        sudo dnf install -y bzip2-devel\n"
+           " * SuSE:          sudo zypper install -y libbz2-devel\n"
+           " * Alpine:        sudo apk add bzip2-dev\n"
+           " * FreeBSD:       sudo pkg install -y bzip2\n"
+           " * NetBSD:        (should be installed by default)\n"
+           " * OpenBSD:       (should be installed by default)\n"
+           " * Apple:         brew install bzip2")
+ENDIF()
 
 
 # ====== IEEE Floating-Point ================================================
