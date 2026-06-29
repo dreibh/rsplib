@@ -101,10 +101,13 @@
 //    size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
 //    char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
 //    struct msghdr msg = {
-//       NULL, 0,
-//       &iov, 1,
-//       cbuf, cmsglen,
-//       flags
+//       .msg_name       = NULL,
+//       .msg_namelen    = 0,
+//       .msg_iov        = &iov,
+//       .msg_iovlen     = 1,
+//       .msg_control    = cbuf,
+//       .msg_controllen = cmsglen,
+//       .msg_flags      = flags
 //    };
 //
 //    cmsg = (struct cmsghdr*)CMSG_FIRSTHDR(&msg);
@@ -134,10 +137,13 @@ ssize_t sctp_sendx(int                           sd,
    size_t                  cmsglen = CMSG_SPACE(sizeof(struct sctp_sndrcvinfo));
    char                    cbuf[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
    struct msghdr msg = {
-      NULL, 0,
-      &iov, 1,
-      cbuf, cmsglen,
-      flags
+      .msg_name       = NULL,
+      .msg_namelen    = 0,
+      .msg_iov        = &iov,
+      .msg_iovlen     = 1,
+      .msg_control    = cbuf,
+      .msg_controllen = cmsglen,
+      .msg_flags      = flags
    };
 
    const struct sockaddr* bestScopedAddress = getBestScopedAddress(addrs, addrcnt);
@@ -1518,16 +1524,18 @@ int recvfromplus(int                      sockfd,
    struct pollfd           pfd;
    int                     result;
    int                     cc;
-   struct msghdr           msg = {
+   struct msghdr msg = {
 #ifdef __APPLE__
-      (char*)from,
+      .msg_name       = (char*)from,
 #else
-      from,
+      .msg_name       = from,
 #endif
-      (fromlen != NULL) ? *fromlen : 0,
-      &iov, 1,
-      cbuf, cmsglen,
-      *flags
+      .msg_namelen    = (fromlen != NULL) ? *fromlen : 0,
+      .msg_iov        = &iov,
+      .msg_iovlen     = 1,
+      .msg_control    = cbuf,
+      .msg_controllen = cmsglen,
+      .msg_flags      = *flags
    };
 
    if(ppid     != NULL) *ppid     = 0;
