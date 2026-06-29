@@ -42,7 +42,7 @@
 #include "dispatcher.h"
 #include "simpleredblacktree.h"
 
-#include <sys/poll.h>
+#include <poll.h>
 
 
 #ifdef __cplusplus

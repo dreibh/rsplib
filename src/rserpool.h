@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <sys/time.h>
-#include <sys/poll.h>
+#include <poll.h>
 
 #include "rserpool-policytypes.h"
 #include "rserpool-csp.h"
