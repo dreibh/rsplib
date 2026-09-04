@@ -145,37 +145,37 @@ SET(MAX_LOGLEVEL "9" CACHE STRING "Maximum logging level")
 ADD_DEFINITIONS(-DMAX_LOGLEVEL=${MAX_LOGLEVEL})
 
 # Registrar statistics
-OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" 1)
+OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" ON)
 IF (ENABLE_REGISTRAR_STATISTICS)
    ADD_DEFINITIONS(-DENABLE_REGISTRAR_STATISTICS)
 ENDIF()
 
 # Handlespace Management verification
-OPTION(ENABLE_HSMGTVERIFY   "Enable handlespace management verification" 0)
+OPTION(ENABLE_HSMGTVERIFY   "Enable handlespace management verification" OFF)
 IF(ENABLE_HSMGTVERIFY)
    ADD_DEFINITIONS(-DVERIFY)
 ENDIF()
 
 # Registrar statistics
-OPTION(ENABLE_CSP           "Enable CSP" 1)
+OPTION(ENABLE_CSP           "Enable CSP"                        ON)
 IF (ENABLE_CSP)
    ADD_DEFINITIONS(-DENABLE_CSP)
 ENDIF()
 
 # Qt programs
-OPTION(ENABLE_QT            "Include Qt programs" 1)
+OPTION(WITH_QT              "Include Qt programs"               ON)
 
 # # KDE programs
-# OPTION(ENABLE_KDE          "Include KDE programs" 0)
+OPTION(WITH_KDE             "Include KDE programs"              OFF)
 
 # Kernel SCTP
-OPTION(USE_KERNEL_SCTP      "Use Kernel SCTP" 1)
+OPTION(USE_KERNEL_SCTP      "Use Kernel SCTP"                   ON)
 
 # Test programs
-OPTION(ENABLE_TEST_PROGRAMS "Build test programs" 0)
+OPTION(WITH_TEST_PROGRAMS   "Build test programs"               OFF)
 
 # Icons and logo files
-OPTION(ENABLE_ICONS         "Build RSPLIB icons and logo files" 1)
+OPTION(WITH_ICONS           "Build RSPLIB icons and logo files" ON)
 
 
 # Handlespace management storage implementation
@@ -198,7 +198,7 @@ FIND_PACKAGE(Threads REQUIRED)
 
 
 # ====== Qt =================================================================
-IF (ENABLE_QT OR ENABLE_KDE)
+IF (WITH_QT OR WITH_KDE)
    FIND_PROGRAM(QMAKE NAMES qmake6 qmake-qt5 qmake6 qmake-qt5 qmake PATHS /usr/lib/qt/*/bin)
    IF (QMAKE)
       EXECUTE_PROCESS(
@@ -263,7 +263,7 @@ ENDIF()
 
 
 # # ====== KDE ================================================================
-# IF (ENABLE_KDE)
+# IF (WITH_KDE)
 #    # Needed:
 #    # KDE5: libkf5coreaddons-dev libkf5xmlgui-dev
 #    # KDE6: libkf6coreaddons-dev libkf6xmlgui-dev
@@ -339,8 +339,8 @@ ENDIF()
 
 
 # ====== Graphics tools for icons and logo ==================================
-IF (ENABLE_ICONS)
-   MESSAGE("Building with icons (ENABLE_ICONS=${ENABLE_ICONS})")
+IF (WITH_ICONS)
+   MESSAGE("Building with icons (WITH_ICONS=${WITH_ICONS})")
 
    # ------ Ghostscript -----------------------------------------------------
    FIND_PROGRAM(GS gs HINTS /bin /usr/bin /usr/local/bin /usr/pkg/bin)
@@ -423,11 +423,11 @@ IF (ENABLE_ICONS)
               " * OpenBSD:       sudo pkg_add inkscape\n"
               " * Solaris:       sudo pkg install inkscape\n"
               " * Apple:         brew install inkscape\n"
-              "If desktop icons are not required, they can be disabled by setting ENABLE_ICONS=OFF (add -DENABLE_ICONS=OFF to CMake options)!")
+              "If desktop icons are not required, they can be disabled by setting WITH_ICONS=OFF (add -DWITH_ICONS=OFF to CMake options)!")
    ENDIF()
 
 ELSE()
-   MESSAGE("Building without icons (ENABLE_ICONS=${ENABLE_ICONS})")
+   MESSAGE("Building without icons (WITH_ICONS=${WITH_ICONS})")
 ENDIF()
 
 

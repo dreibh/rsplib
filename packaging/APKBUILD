@@ -52,11 +52,11 @@ build() {
 		-DCMAKE_INSTALL_LIBDIR=lib \
 		-DUSE_KERNEL_SCTP=ON \
 		-DENABLE_CSP=ON \
-		-DENABLE_QT=OFF \
-		-DENABLE_ICONS=ON
+		-DWITH_QT=OFF \
+		-DWITH_ICONS=ON
 	cmake --build build
 }
-# FIXME!		-DENABLE_QT=ON \
+# FIXME!		-DWITH_QT=ON \
 
 package() {
 	DESTDIR="$pkgdir" cmake --install build

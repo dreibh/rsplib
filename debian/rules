@@ -6,7 +6,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 	dh $@ --buildsystem=cmake
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DENABLE_QT=ON -DENABLE_ICONS=ON
+	dh_auto_configure -- -DUSE_KERNEL_SCTP=ON -DENABLE_CSP=ON -DWITH_QT=ON -DWITH_ICONS=ON
 
 override_dh_installchangelogs:
 	dh_installchangelogs -k ChangeLog
