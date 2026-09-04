@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -35,11 +35,11 @@ colorlinks=true]{hyperref}
 ,filecolor=darkgreen}
 \end_preamble
 \use_default_options false
-\maintain_unincluded_children false
+\maintain_unincluded_children no
 \language english
 \language_package default
 \inputencoding utf8
-\fontencoding global
+\fontencoding auto
 \font_roman "times" "default"
 \font_sans "default" "default"
 \font_typewriter "default" "default"
@@ -47,7 +47,9 @@ colorlinks=true]{hyperref}
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
-\font_osf false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
 \use_microtype false
@@ -60,7 +62,7 @@ colorlinks=true]{hyperref}
 \paperfontsize 11
 \spacing single
 \use_hyperref false
-\papersize a4paper
+\papersize a4
 \use_geometry false
 \use_package amsmath 1
 \use_package amssymb 1
@@ -81,7 +83,9 @@ colorlinks=true]{hyperref}
 \suppress_date false
 \justification true
 \use_refstyle 0
+\use_formatted_ref 0
 \use_minted 0
+\use_lineno 0
 \index Index
 \shortcut idx
 \color #008000
@@ -97,11 +101,16 @@ colorlinks=true]{hyperref}
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\tablestyle default
 \tracking_changes false
 \output_changes false
+\change_bars false
+\postpone_fragile_content false
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
 \end_header
 
 \begin_body
@@ -143,11 +152,12 @@ href{mailto:thomas.dreibholz@gmail.com}{thomas.dreibholz@gmail.com}
 \end_layout
 
 \begin_layout Date
-January
+September
 \begin_inset space \thinspace{}
 \end_inset
 
-6, 2023
+4,
+ 2026
 \end_layout
 
 \begin_layout Standard
@@ -174,7 +184,8 @@ This is the documentation for the
  rsplib
 \noun default
 .
- For a detailed introduction to RSerPool and its concepts itself, see
+ For a detailed introduction to RSerPool and its concepts itself,
+ see
 \begin_inset space ~
 \end_inset
 
@@ -191,7 +202,8 @@ literal "true"
 \noun on
 rsplib
 \noun default
-, see our mailing lists at
+,
+ see our mailing lists at
 \begin_inset space ~
 \end_inset
 
@@ -212,6 +224,8 @@ What is RSerPool?
 
 \begin_layout Standard
 \begin_inset Float figure
+placement document
+alignment document
 wide false
 sideways false
 status collapsed
@@ -250,6 +264,8 @@ The RSerPool Architecture
 
 
 \begin_inset Float figure
+placement document
+alignment document
 wide false
 sideways false
 status collapsed
@@ -294,6 +310,7 @@ Figure
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "cap:The-RSerPool-Architecture"
+nolink "false"
 
 \end_inset
 
@@ -313,7 +330,8 @@ literal "true"
 
 \end_inset
 
-; the protocol stack of RSerPool is shown in figure
+;
+ the protocol stack of RSerPool is shown in figure
 \begin_inset space ~
 \end_inset
 
@@ -321,6 +339,7 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "cap:The-RSerPool-Protocol-Stack"
+nolink "false"
 
 \end_inset
 
@@ -337,7 +356,8 @@ literal "true"
 
 \end_inset
 
-: servers of a pool are called
+:
+ servers of a pool are called
 \emph on
  pool elements
 \emph default
@@ -354,7 +374,8 @@ literal "true"
 \begin_inset space ~
 \end_inset
 
-(PH) in the handlespace, which is the set of all pools.
+(PH) in the handlespace,
+ which is the set of all pools.
  The handlespace is managed by
 \emph on
  pool registrars
@@ -364,12 +385,12 @@ literal "true"
 \emph on
  operation scope
 \emph default
- (the domain which is covered by the handlespace, e.g.
+ (the domain which is covered by the handlespace,
+ e.g.
 \begin_inset space ~
 \end_inset
 
-an organization or building) synchronize their view of the handlespace using
- the Endpoint haNdlespace Redundancy Protocol (ENRP
+an organization or building) synchronize their view of the handlespace using the Endpoint haNdlespace Redundancy Protocol (ENRP
 \begin_inset space ~
 \end_inset
 
@@ -381,7 +402,8 @@ literal "true"
 
 \end_inset
 
-), transported via SCTP
+),
+ transported via SCTP
 \begin_inset space ~
 \end_inset
 
@@ -397,8 +419,8 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Unlike already available solutions in the area of GRID and high-performance
- computing, the fundamental property of RSerPool is to be
+Unlike already available solutions in the area of GRID and high-performance computing,
+ the fundamental property of RSerPool is to be
 \begin_inset Quotes eld
 \end_inset
 
@@ -406,15 +428,14 @@ lightweight
 \begin_inset Quotes erd
 \end_inset
 
-, i.e.
+,
+ i.e.
 \begin_inset space ~
 \end_inset
 
-it must also be usable low-performance devices like telecommunications equipment
- or routers.
- This property restricts the RSerPool architecture to the management of
- pools and sessions only, but on the other hand makes a very efficient realizati
-on possible
+it must also be usable low-performance devices like telecommunications equipment or routers.
+ This property restricts the RSerPool architecture to the management of pools and sessions only,
+ but on the other hand makes a very efficient realization possible
 \begin_inset space ~
 \end_inset
 
@@ -427,14 +448,17 @@ literal "true"
 \end_inset
 
 .
- In particular, an operation scope has a limited range, e.g.
+ In particular,
+ an operation scope has a limited range,
+ e.g.
 \begin_inset space ~
 \end_inset
 
-a company or organization; RSerPool does not intend to scale to the whole
- Internet.
- Nevertheless, it is assumed that PEs can be distributed globally, for their
- service to survive localized disasters
+a company or organization;
+ RSerPool does not intend to scale to the whole Internet.
+ Nevertheless,
+ it is assumed that PEs can be distributed globally,
+ for their service to survive localized disasters
 \begin_inset space ~
 \end_inset
 
@@ -450,8 +474,7 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-PEs choose an arbitrary PR to register into a pool by using the Aggregate
- Server Access Protocol (ASAP
+PEs choose an arbitrary PR to register into a pool by using the Aggregate Server Access Protocol (ASAP
 \begin_inset space ~
 \end_inset
 
@@ -463,16 +486,15 @@ literal "true"
 
 \end_inset
 
-), again transported via SCTP.
- Upon registration at a PR, the chosen PR becomes the Home-PR
+),
+ again transported via SCTP.
+ Upon registration at a PR,
+ the chosen PR becomes the Home-PR
 \begin_inset space ~
 \end_inset
 
 (PR-H) of the newly registered PE.
- A PR-H is responsible for monitoring its PEs' availability by using ASAP
- Endpoint Keep-Alive messages (to be acknowledged by the PE within a given
- timeout) and propagates the information about its PEs to the other PRs
- of the operation scope via ENRP Update messages.
+ A PR-H is responsible for monitoring its PEs' availability by using ASAP Endpoint Keep-Alive messages (to be acknowledged by the PE within a given timeout) and propagates the information about its PEs to the other PRs of the operation scope via ENRP Update messages.
 \end_layout
 
 \begin_layout Standard
@@ -485,15 +507,16 @@ A client is called
 \end_inset
 
 (PU) in RSerPool terminology.
- To access the service of a pool given by its PH, a PE has to be selected.
+ To access the service of a pool given by its PH,
+ a PE has to be selected.
  This selection procedure – called
 \emph on
  handle resolution
 \emph default
  – is performed by an arbitrary PR of the operation scope.
  A PU can request a handle resolution from a PR using the ASAP protocol.
- The PR selects PE identities by using a pool-specific server selection
- rule, denoted as 
+ The PR selects PE identities by using a pool-specific server selection rule,
+ denoted as 
 \emph on
 pool policy
 \emph default
@@ -510,7 +533,9 @@ literal "true"
 
 \end_inset
 
-; for a detailed discussion of these policies, see
+;
+ for a detailed discussion of these policies,
+ see
 \begin_inset space ~
 \end_inset
 
@@ -530,7 +555,8 @@ Installation
 \end_layout
 
 \begin_layout Standard
-In this section, the installation of the
+In this section,
+ the installation of the
 \emph on
 \noun on
  rsplib
@@ -546,7 +572,8 @@ Installation of the SCTP Protocol
 \begin_layout Standard
 The first step is to decide which SCTP implementation should be used.
  You have the choice between kernel SCTP and userland SCTP.
- In most cases, you probably want kernel SCTP.
+ In most cases,
+ you probably want kernel SCTP.
  It is most efficient and the implementation should be sufficiently stable.
 \end_layout
 
@@ -556,7 +583,8 @@ Installation of Kernel SCTP for Linux
 
 \begin_layout Standard
 A SCTP kernel module is already provided by all major Linux distributions.
- To load it into the kernel, call:
+ To load it into the kernel,
+ call:
 \end_layout
 
 \begin_layout Standard
@@ -567,7 +595,8 @@ sudo modprobe sctp
 
 \begin_layout Standard
 \noindent
-In order to load it permanently, add a line 
+In order to load it permanently,
+ add a line 
 \begin_inset Quotes eld
 \end_inset
 
@@ -576,12 +605,14 @@ sctp
 \end_inset
 
  to /etc/modules.
- After that, the module will be loaded automatically at boot time.
+ After that,
+ the module will be loaded automatically at boot time.
  Also make sure that the SCTP include files are installed (in particular:
  /usr/include/netinet/sctp.h).
- If they are not installed, install the package libsctp-dev (or similar
- name).
- For Debian/Ubuntu Linux, you can use:
+ If they are not installed,
+ install the package libsctp-dev (or similar name).
+ For Debian/Ubuntu Linux,
+ you can use:
 \end_layout
 
 \begin_layout Standard
@@ -597,9 +628,12 @@ Installation of Userland SCTP
 \end_layout
 
 \begin_layout Standard
-In the usual case, you use kernel SCTP.
- Then, the following steps can be skipped! However, if you decide to use
- our userland SCTP implementation
+In the usual case,
+ you use kernel SCTP.
+ Then,
+ the following steps can be skipped!
+ However,
+ if you decide to use our userland SCTP implementation
 \noun on
  sctplib
 \noun default
@@ -615,12 +649,14 @@ literal "true"
 
 \end_inset
 
-, the following steps have to be performed.
+,
+ the following steps have to be performed.
  The
 \noun on
  sctplib
 \noun default
  userland SCTP implementation consists of two packages:
+
 \noun on
  sctplib
 \noun default
@@ -658,7 +694,9 @@ https://www.nntb.no/~dreibh/rserpool
 \end_inset
 
 ).
- First, unpack, configure and install
+ First,
+ unpack,
+ configure and install
 \noun on
 sctplib
 \noun default
@@ -739,7 +777,8 @@ literal "true"
 
 \end_inset
 
-), use 
+),
+ use 
 \begin_inset Quotes eld
 \end_inset
 
@@ -787,7 +826,8 @@ sudo make install
 
 \begin_layout Standard
 \noindent
-Again, you can use 
+Again,
+ you can use 
 \begin_inset Quotes eld
 \end_inset
 
@@ -800,7 +840,8 @@ Again, you can use
 \end_inset
 
  to generate a static library with debug symbols.
- If you want to use kernel SCTP and SCTP over UDP simultaneously, add 
+ If you want to use kernel SCTP and SCTP over UDP simultaneously,
+ add 
 \begin_inset Quotes eld
 \end_inset
 
@@ -813,8 +854,8 @@ Again, you can use
 \end_inset
 
 .
- In this case, the socketapi will not abort if it finds a loaded kernel
- SCTP module.
+ In this case,
+ the socketapi will not abort if it finds a loaded kernel SCTP module.
 \end_layout
 
 \begin_layout Subsection
@@ -826,7 +867,8 @@ Installation of the
 \end_layout
 
 \begin_layout Standard
-After installing SCTP support, the
+After installing SCTP support,
+ the
 \noun on
  rsplib
 \noun default
@@ -848,7 +890,8 @@ In order to prepare your system for the installation of the
 \noun on
 rsplib
 \noun default
- package, it is recommended to do the following tasks:
+ package,
+ it is recommended to do the following tasks:
 \end_layout
 
 \begin_layout Itemize
@@ -856,12 +899,12 @@ The Component Status Protocol
 \begin_inset space ~
 \end_inset
 
-(CSP) can be used to send status messages of PRs, PEs and PUs to a central
- monitoring program (cspmonitor, to be explained later).
- This is a helpful feature to keep an overview of large, distributed test
- setups.
- You can set a default address and report interval for CSP by defining two
- environment variables:
+(CSP) can be used to send status messages of PRs,
+ PEs and PUs to a central monitoring program (cspmonitor,
+ to be explained later).
+ This is a helpful feature to keep an overview of large,
+ distributed test setups.
+ You can set a default address and report interval for CSP by defining two environment variables:
 \begin_inset Newline newline
 \end_inset
 
@@ -881,8 +924,10 @@ Useful settings are CSP_SERVER=127.0.0.1:2960 and CSP_INTERVAL=333.
 \end_layout
 
 \begin_layout Itemize
-For debugging, it is useful to turn on the generation of core dumps.
- Under the bash shell, this can be done by
+For debugging,
+ it is useful to turn on the generation of core dumps.
+ Under the bash shell,
+ this can be done by
 \begin_inset Quotes eld
 \end_inset
 
@@ -894,8 +939,8 @@ ulimit -c unlimited
 \end_layout
 
 \begin_layout Standard
-To make all settings above permanent, you can append them to your shell
- configuration (usually ~/.bashrc).
+To make all settings above permanent,
+ you can append them to your shell configuration (usually ~/.bashrc).
  Example (your settings may be different!):
 \end_layout
 
@@ -924,28 +969,30 @@ ulimit -c unlimited
 \end_layout
 
 \begin_layout Standard
-In order to use RSerPool, your host needs at least one multicast-capable
- network interface with at least a private IP address (i.e.
+In order to use RSerPool,
+ your host needs at least one multicast-capable network interface with at least a private IP address (i.e.
 \begin_inset space ~
 \end_inset
 
-192.168.x.y; 10.a.b.c; 172.16.n.m - 172.31.i.j).
- If your host is already connected to a network and has an IP address, everythin
-g should be fine.
- For testing with a non-connected host, you can just set up a dummy interface:
+192.168.x.y;
+ 10.a.b.c;
+ 172.16.n.m - 172.31.i.j).
+ If your host is already connected to a network and has an IP address,
+ everything should be fine.
+ For testing with a non-connected host,
+ you can just set up a dummy interface:
 \end_layout
 
 \begin_layout Standard
 
 \family typewriter
-sudo ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 broadcast 10.255.255.255
- up multicast
+sudo ifconfig dummy0 10.255.255.1 netmask 255.255.255.0 broadcast 10.255.255.255 up multicast
 \end_layout
 
 \begin_layout Standard
-In order to permanently set up a dummy interface, you can add the following
- lines to /etc/network/interfaces (Debian/Ubuntu Linux; may be different
- for other distributions!):
+In order to permanently set up a dummy interface,
+ you can add the following lines to /etc/network/interfaces (Debian/Ubuntu Linux;
+ may be different for other distributions!):
 \end_layout
 
 \begin_layout Standard
@@ -993,8 +1040,8 @@ pre-down ip link set dummy0 up multicast off
 \end_layout
 
 \begin_layout Standard
-After appending these lines, they will be loaded automatically each time
- a new bash shell is started.
+After appending these lines,
+ they will be loaded automatically each time a new bash shell is started.
  Your system should now be ready to install the
 \noun on
  rsplib
@@ -1017,7 +1064,8 @@ In order to install
 \noun on
  rsplib
 \noun default
-, get the latest version from
+,
+ get the latest version from
 \begin_inset space ~
 \end_inset
 
@@ -1040,7 +1088,9 @@ https://www.nntb.no/~dreibh/rserpool
 
 \end_inset
 
-), unpack, configure and compile it:
+),
+ unpack,
+ configure and compile it:
 \end_layout
 
 \begin_layout Standard
@@ -1139,10 +1189,11 @@ socketapi
 \end_inset
 
 .
- Setting a lower value here makes the programs smaller, at cost of reduces
- logging capabilities (
+ Setting a lower value here makes the programs smaller,
+ at cost of reduces logging capabilities (
 \series bold
-default: 9
+default:
+ 9
 \series default
 ).
 \end_layout
@@ -1150,21 +1201,22 @@ default: 9
 \begin_layout Description
 
 \family typewriter
--DENABLE_QT=1
+-DWITH_QT=1
 \family default
- Enables Qt usage; this is necessary for the Fractal Generator client.
- Without Qt, the client's compilation will be skipped.
- The ./configure script expects the environment variable QTDIR set to the
- Qt directory.
- You may need to set it appropriately, e.g.
+ Enables Qt usage;
+ this is necessary for the Fractal Generator client.
+ Without Qt,
+ the client's compilation will be skipped.
+ The ./configure script expects the environment variable QTDIR set to the Qt directory.
+ You may need to set it appropriately,
+ e.g.
 \begin_inset space ~
 \end_inset
 
 "export QTDIR=/usr/share/qt5" for Ubuntu Linux.
- This setting depends on your distribution; use "locate qwidget.h" to find
- out the directory.
- It is recommended to add the setting of QTDIR to your shell configuration
- (usually ~/.bashrc).
+ This setting depends on your distribution;
+ use "locate qwidget.h" to find out the directory.
+ It is recommended to add the setting of QTDIR to your shell configuration (usually ~/.bashrc).
  (
 \series bold
 default
@@ -1175,9 +1227,10 @@ default
 \begin_layout Description
 
 \family typewriter
--DENABLE_QT=0
+-DWITH_QT=0
 \family default
- Disables Qt usage; the Fractal Generator client will
+ Disables Qt usage;
+ the Fractal Generator client will
 \series bold
  not
 \series default
@@ -1203,7 +1256,8 @@ default
 -DENABLE_REGISTRAR_STATISTICS=0
 \family default
  Do not compile in the statistics option.
- In this case, the dependency on 
+ In this case,
+ the dependency on 
 \noun on
 libbz2
 \noun default
@@ -1216,7 +1270,8 @@ libbz2
 -DENABLE_HSMGTVERIFY=1
 \family default
  Enable Handlespace Management verification.
- This is useful for debugging only; it makes the very PR slow!
+ This is useful for debugging only;
+ it makes the very PR slow!
 \end_layout
 
 \begin_layout Description
@@ -1317,8 +1372,9 @@ colorfilters
 \noun on
  Wireshark
 \noun default
- settings directory: ~/.wireshark (Ubuntu/Debian) or /root/.wireshark (you
- need root permission to do so, i.e.
+ settings directory:
+ ~/.wireshark (Ubuntu/Debian) or /root/.wireshark (you need root permission to do so,
+ i.e.
 \begin_inset space ~
 \end_inset
 
@@ -1331,7 +1387,8 @@ sudo
 \end_inset
 
 !).
- Optionally, you can also copy the file 
+ Optionally,
+ you can also copy the file 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1339,14 +1396,14 @@ preferences
 \begin_inset Quotes erd
 \end_inset
 
- (if you do not have your own preferences configured yet, otherwise this
- would overwrite them!).
+ (if you do not have your own preferences configured yet,
+ otherwise this would overwrite them!).
  You do
 \series bold
  not
 \series default
- need to install the provided dissectors, they have already contributed
- to the
+ need to install the provided dissectors,
+ they have already contributed to the
 \noun on
  Wireshark
 \noun default
@@ -1364,8 +1421,8 @@ Testing the Installation
 \end_layout
 
 \begin_layout Standard
-To perform a test of the installation, start the following programs in the
- rsplib/ subdirectory of the
+To perform a test of the installation,
+ start the following programs in the rsplib/ subdirectory of the
 \noun on
  rsplib
 \noun default
@@ -1373,8 +1430,8 @@ To perform a test of the installation, start the following programs in the
 \end_layout
 
 \begin_layout Enumerate
-Start the CSP monitor, it will print out useful information about the components
- started:
+Start the CSP monitor,
+ it will print out useful information about the components started:
 \family typewriter
 
 \begin_inset Newline newline
@@ -1384,7 +1441,8 @@ Start the CSP monitor, it will print out useful information about the components
 \end_layout
 
 \begin_layout Enumerate
-First, start a registrar:
+First,
+ start a registrar:
 \family typewriter
 
 \begin_inset Newline newline
@@ -1411,9 +1469,10 @@ The PE should find the PR and show its PE
 \end_inset
 
 ID upon startup.
- When it shows the ID, it has successfully registered.
- If something does not work, use the parameter -loglevel=5 to increase the
- verbosity of the log output.
+ When it shows the ID,
+ it has successfully registered.
+ If something does not work,
+ use the parameter -loglevel=5 to increase the verbosity of the log output.
  Also refer to subsection
 \begin_inset space ~
 \end_inset
@@ -1422,6 +1481,7 @@ ID upon startup.
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "subsec:Preparation-Work"
+nolink "false"
 
 \end_inset
 
@@ -1447,11 +1507,13 @@ Start a PU for the Fractal Generator service:
 \end_inset
 
 You should now see the calculation progress in the PU's window.
- Also have a look at the CSP monitor output; it should show the PU.
+ Also have a look at the CSP monitor output;
+ it should show the PU.
 \end_layout
 
 \begin_layout Enumerate
-Start more PEs, PUs and PRs.
+Start more PEs,
+ PUs and PRs.
  You can turn on the 
 \begin_inset Quotes eld
 \end_inset
@@ -1461,7 +1523,8 @@ unreliable mode
 \end_inset
 
  of the PE using the parameter -fgpfailureafter=20.
- When all PEs are in unreliable mode, you should see the failovers.
+ When all PEs are in unreliable mode,
+ you should see the failovers.
  You can also abort and restart the PRs.
  Also have a look at the CSP monitor output.
 \end_layout
@@ -1471,7 +1534,8 @@ Start
 \noun on
  Wireshark
 \noun default
-, sniff on the 
+,
+ sniff on the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1479,7 +1543,8 @@ lo
 \begin_inset Quotes erd
 \end_inset
 
- (loopback, only local traffic) or the 
+ (loopback,
+ only local traffic) or the 
 \begin_inset Quotes erd
 \end_inset
 
@@ -1496,11 +1561,12 @@ any
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "subsec:Testing-the-Installation"
+nolink "false"
 
 \end_inset
 
-), you can select some useful filters and get the RSerPool traffic nicely
- colorized.
+),
+ you can select some useful filters and get the RSerPool traffic nicely colorized.
 \end_layout
 
 \begin_layout Section
@@ -1508,8 +1574,7 @@ The Programs
 \end_layout
 
 \begin_layout Standard
-All installable programs in the rsplib/ subdirectory also have a manual
- page (suffix:
+All installable programs in the rsplib/ subdirectory also have a manual page (suffix:
 \begin_inset space ~
 \end_inset
 
@@ -1525,7 +1590,8 @@ man ./<program name>.8
 
 \begin_layout Standard
 \noindent
-After installation (make install, see subsection
+After installation (make install,
+ see subsection
 \begin_inset space ~
 \end_inset
 
@@ -1533,10 +1599,12 @@ After installation (make install, see subsection
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "subsec:Configuration-and-Installation"
+nolink "false"
 
 \end_inset
 
-), the manual pages will also be available directly.
+),
+ the manual pages will also be available directly.
 \end_layout
 
 \begin_layout Standard
@@ -1553,12 +1621,13 @@ rspserver A PE which provides multiple services.
 \end_layout
 
 \begin_layout Description
-rspterminal A simple PU for services like Echo, Discard, Daytime and CharGen.
+rspterminal A simple PU for services like Echo,
+ Discard,
+ Daytime and CharGen.
 \end_layout
 
 \begin_layout Description
-pingpongclient A simple PU for a request-response example service with cookie-ba
-sed failover
+pingpongclient A simple PU for a request-response example service with cookie-based failover
 \begin_inset space ~
 \end_inset
 
@@ -1574,8 +1643,7 @@ literal "true"
 \end_layout
 
 \begin_layout Description
-calcappclient The PU for the CalcApp service used for performance measurements
- (see
+calcappclient The PU for the CalcApp service used for performance measurements (see
 \begin_inset space ~
 \end_inset
 
@@ -1595,8 +1663,8 @@ fractalpooluser The PU for the FractalGenerator service.
 \end_layout
 
 \begin_layout Description
-scriptingclient The PU for the scripting service (remote script execution
- with input/output data transfer; see also
+scriptingclient The PU for the scripting service (remote script execution with input/output data transfer;
+ see also
 \begin_inset space ~
 \end_inset
 
@@ -1612,8 +1680,7 @@ literal "true"
 \end_layout
 
 \begin_layout Description
-cspmonitor The CSP monitor program to view status information of running
- components.
+cspmonitor The CSP monitor program to view status information of running components.
 \end_layout
 
 \begin_layout Description
@@ -1985,8 +2052,7 @@ Testbed Platform
 \end_layout
 
 \begin_layout Standard
-A large-scale and realistic Internet testbed platform with support for the
- multi-homing feature of the underlying SCTP protocol is NorNet.
+A large-scale and realistic Internet testbed platform with support for the multi-homing feature of the underlying SCTP protocol is NorNet.
  A description of NorNet is provided in
 \begin_inset space \thinspace{}
 \end_inset
@@ -1999,7 +2065,8 @@ literal "true"
 
 \end_inset
 
-, some further information can be found on the project website at
+,
+ some further information can be found on the project website at
 \begin_inset space \thinspace{}
 \end_inset
 

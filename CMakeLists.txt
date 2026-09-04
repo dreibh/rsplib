@@ -147,37 +147,37 @@ SET(MAX_LOGLEVEL "9" CACHE STRING "Maximum logging level")
 ADD_DEFINITIONS(-DMAX_LOGLEVEL=${MAX_LOGLEVEL})
 
 # Registrar statistics
-OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" 1)
+OPTION(ENABLE_REGISTRAR_STATISTICS "Enable Registrar statistics" ON)
 IF (ENABLE_REGISTRAR_STATISTICS)
    ADD_DEFINITIONS(-DENABLE_REGISTRAR_STATISTICS)
 ENDIF()
 
 # Handlespace Management verification
-OPTION(ENABLE_HSMGTVERIFY   "Enable handlespace management verification" 0)
+OPTION(ENABLE_HSMGTVERIFY   "Enable handlespace management verification" OFF)
 IF(ENABLE_HSMGTVERIFY)
    ADD_DEFINITIONS(-DVERIFY)
 ENDIF()
 
 # Registrar statistics
-OPTION(ENABLE_CSP           "Enable CSP" 1)
+OPTION(ENABLE_CSP           "Enable CSP"                        ON)
 IF (ENABLE_CSP)
    ADD_DEFINITIONS(-DENABLE_CSP)
 ENDIF()
 
 # Qt programs
-OPTION(ENABLE_QT            "Include Qt programs" 1)
+OPTION(WITH_QT              "Include Qt programs"               ON)
 
 # # KDE programs
-# OPTION(ENABLE_KDE          "Include KDE programs" 0)
+OPTION(WITH_KDE             "Include KDE programs"              OFF)
 
 # Kernel SCTP
-OPTION(USE_KERNEL_SCTP      "Use Kernel SCTP" 1)
+OPTION(USE_KERNEL_SCTP      "Use Kernel SCTP"                   ON)
 
 # Test programs
-OPTION(ENABLE_TEST_PROGRAMS "Build test programs" 0)
+OPTION(WITH_TEST_PROGRAMS   "Build test programs"               OFF)
 
 # Icons and logo files
-OPTION(ENABLE_ICONS         "Build RSPLIB icons and logo files" 1)
+OPTION(WITH_ICONS           "Build RSPLIB icons and logo files" ON)
 
 
 # Handlespace management storage implementation
@@ -200,19 +200,72 @@ FIND_PACKAGE(Threads REQUIRED)
 
 
 # ====== Qt =================================================================
-IF (ENABLE_QT OR ENABLE_KDE)
-   SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml)
-   IF (NOT QT_FOUND)
-      FIND_PACKAGE(QT NAMES Qt5 REQUIRED COMPONENTS Core Network Widgets Xml)
+IF (WITH_QT OR WITH_KDE)
+   FIND_PROGRAM(QMAKE NAMES qmake6 qmake-qt5 qmake6 qmake-qt5 qmake PATHS /usr/lib/qt/*/bin)
+   IF (QMAKE)
+      EXECUTE_PROCESS(
+      COMMAND "${QMAKE}" -query QT_INSTALL_PREFIX
+      OUTPUT_VARIABLE QT_INSTALL_PREFIX
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      LIST(APPEND CMAKE_PREFIX_PATH
+         "${QT_INSTALL_PREFIX}"
+         "${QT_INSTALL_PREFIX}/lib/amd64"
+         "${QT_INSTALL_PREFIX}/lib/amd64/cmake"
+      )
    ENDIF()
+
+   SET(CMAKE_AUTOMOC ON)
+   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml PrintSupport)
+   IF (NOT QT_FOUND)
+      # Try Qt5 instead:
+      FIND_PACKAGE(QT NAMES Qt5 COMPONENTS Core Network Widgets Xml PrintSupport)
+   ENDIF()
+   IF (NOT QT_FOUND)
+      MESSAGE(FATAL_ERROR
+               "Cannot find Qt! Try:\n"
+               " * Ubuntu/Debian: sudo apt install -y qt6-base-dev\n"
+               " * Fedora:        sudo dnf install -y qt6-qtbase-devel\n"
+               " * OpenSUSE:      sudo zypper install -y libqt6-qtbase-devel\n"
+               " * Alpine:        sudo apk add qt6-qtbase-dev\n"
+               " * FreeBSD:       sudo pkg install -y qt6-base\n"
+               " * NetBSD:        sudo pkgin -y install qt6-qtbase\n"
+               " * OpenBSD:       sudo pkg_add qt6-qtbase\n"
+               " * Solaris:       sudo pkg install library/qt6 print/cups\n"
+               " * Apple:         brew install qt")
+   ENDIF()
+
    MESSAGE("Using Qt version ${QT_VERSION_MAJOR}!")
-   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network Widgets Xml)
+   FIND_PACKAGE(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network Widgets Xml PrintSupport)
+
+   FIND_PROGRAM(LRELEASE lrelease lrelease-qt${QT_VERSION_MAJOR}
+               PATHS ${QT_INSTALL_PREFIX}/bin
+                     /usr/pkg/qt${QT_VERSION_MAJOR}/bin
+                     /usr/local/lib/qt${QT_VERSION_MAJOR}/bin
+                     /usr/lib64/qt${QT_VERSION_MAJOR}/bin
+                     /usr/lib/qt${QT_VERSION_MAJOR}/bin
+                     /usr/bin
+               EQUIRED)
+   IF (LRELEASE)
+      MESSAGE("LRelease found: ${LRELEASE}!")
+   ELSE()
+   MESSAGE(FATAL_ERROR
+            "Cannot find Qt Linguist's LRelease tool! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y qt6-l10n-tools\n"
+            " * Fedora:        sudo dnf install -y qt6-linguist\n"
+            " * OpenSUSE:      sudo zypper install -y qt6-tools-linguist\n"
+            " * Alpine:        sudo apk add qt6-qttools\n"
+            " * FreeBSD:       sudo pkg install -y qt6-tools\n"
+            " * NetBSD:        sudo pkgin -y install qt6-qttools\n"
+            " * OpenBSD:       sudo pkg_add qt6-qttools\n"
+            " * Solaris:       sudo pkg install library/cups library/qt6\n"
+            " * Apple:         brew install qt")
+   ENDIF()
 ENDIF()
 
 
 # # ====== KDE ================================================================
-# IF (ENABLE_KDE)
+# IF (WITH_KDE)
 #    # Needed:
 #    # KDE5: libkf5coreaddons-dev libkf5xmlgui-dev
 #    # KDE6: libkf6coreaddons-dev libkf6xmlgui-dev
@@ -288,12 +341,12 @@ ENDIF()
 
 
 # ====== Graphics tools for icons and logo ==================================
-IF (ENABLE_ICONS)
-   MESSAGE("Building with icons (ENABLE_ICONS=${ENABLE_ICONS})")
+IF (WITH_ICONS)
+   MESSAGE("Building with icons (WITH_ICONS=${WITH_ICONS})")
 
    # ------ Ghostscript -----------------------------------------------------
    FIND_PROGRAM(GS gs HINTS /bin /usr/bin /usr/local/bin /usr/pkg/bin)
-   IF(GS)
+   IF (GS)
       EXECUTE_PROCESS(COMMAND ${GS} -version
                       OUTPUT_VARIABLE GS_OUTPUT
                       ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -309,12 +362,14 @@ IF (ENABLE_ICONS)
               " * FreeBSD:       sudo pkg install -y ghostscript10\n"
               " * NetBSD:        sudo pkgin -y install ghostscript\n"
               " * OpenBSD:       sudo pkg_add ghostscript\n"
-              " * Apple:         brew install ghostscript")
+              " * Solaris:       sudo pkg install ghostscript gnu-gs-fonts-std gnu-gs-fonts-other dejavu\n"
+              " * Apple:         brew install ghostscript\n"
+              "If desktop icons are not required, they can be disabled by setting WITH_ICONS=OFF (add -DWITH_ICONS=OFF to CMake options)!")
    ENDIF()
 
    # ------ GraphicsMagick or ImageMagick -----------------------------------
    FIND_PROGRAM(GM gm magick HINTS /bin /usr/bin /usr/local/bin /usr/pkg/bin)
-   IF(GM)
+   IF (GM)
       EXECUTE_PROCESS(COMMAND ${GM} -version | head -n1
                       OUTPUT_VARIABLE GM_OUTPUT
                       ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -330,7 +385,9 @@ IF (ENABLE_ICONS)
               " * FreeBSD:       sudo pkg install -y GraphicsMagick\n"
               " * NetBSD:        sudo pkgin -y install GraphicsMagick\n"
               " * OpenBSD:       sudo pkg_add GraphicsMagick\n"
-              " * Apple:         brew install graphicsmagick")
+              " * Solaris:       sudo pkg install graphicsmagick\n"
+              " * Apple:         brew install graphicsmagick\n"
+              "If desktop icons are not required, they can be disabled by setting WITH_ICONS=OFF (add -DWITH_ICONS=OFF to CMake options)!")
    ENDIF()
 
    # ------ PDF to SVG Conversion (pdf2svg, mutool, or Inkscape) ------------
@@ -368,11 +425,11 @@ IF (ENABLE_ICONS)
               " * OpenBSD:       sudo pkg_add inkscape\n"
               " * Solaris:       sudo pkg install inkscape\n"
               " * Apple:         brew install inkscape\n"
-              "If desktop icons are not required, they can be disabled by setting ENABLE_ICONS=OFF (add -DENABLE_ICONS=OFF to CMake options)!")
+              "If desktop icons are not required, they can be disabled by setting WITH_ICONS=OFF (add -DWITH_ICONS=OFF to CMake options)!")
    ENDIF()
 
 ELSE()
-   MESSAGE("Building without icons (ENABLE_ICONS=${ENABLE_ICONS})")
+   MESSAGE("Building without icons (WITH_ICONS=${WITH_ICONS})")
 ENDIF()
 
 

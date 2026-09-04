@@ -23,7 +23,7 @@ SHEBANG_FILES=	src/scriptingserviceexample
 
 CMAKE_ARGS=	-DCMAKE_INSTALL_DOCDIR=${DOCSDIR} \
 		-DENABLE_CSP=1 \
-		-DENABLE_QT=1 \
+		-DWITH_QT=1 \
 		-DUSE_KERNEL_SCTP=1
 
 # Work-around for build issue on ARM (https://bugs.freebsd.org/285706):

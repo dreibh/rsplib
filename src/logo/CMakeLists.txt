@@ -32,7 +32,7 @@
 SET(LOGO      "rsplib")
 SET(DIRECTORY "rsplib")   # in ${CMAKE_INSTALL_DATAROOTDIR}
 
-IF (ENABLE_ICONS)
+IF (WITH_ICONS)
 
    # To check the system's icon sizes available:
    # find /usr/share/icons/hicolor/ -maxdepth 1 -type d -printf "%f\n" | grep -E "^[0-9]+" | sort | cut -dx -f1 | sort -n

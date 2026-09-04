@@ -594,7 +594,7 @@ IF (ENABLE_CSP)
 ENDIF()
 
 
-IF (ENABLE_QT)
+IF (WITH_QT)
    SET(CMAKE_INCLUDE_CURRENT_DIR ON)
    FILE(GLOB fractalpooluser_configs "fgpconfig/*.fsf")
    ADD_EXECUTABLE(fractalpooluser fractalpooluser.cc)
@@ -614,7 +614,7 @@ IF (ENABLE_QT)
 ENDIF()
 
 
-IF (ENABLE_TEST_PROGRAMS)
+IF (WITH_TEST_PROGRAMS)
 
    ADD_EXECUTABLE(hrestest hrestest.c)
    TARGET_LINK_LIBRARIES(hrestest libtdbreakdetector-shared librsplib-shared ${SCTP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
