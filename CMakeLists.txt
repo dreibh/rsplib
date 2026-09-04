@@ -199,63 +199,54 @@ FIND_PACKAGE(Threads REQUIRED)
 
 # ====== Qt =================================================================
 IF (WITH_QT OR WITH_KDE)
-   FIND_PROGRAM(QMAKE NAMES qmake6 qmake-qt6 qmake5 qmake-qt5 qmake PATHS /usr/lib/qt/*/bin)
-   IF (QMAKE)
-      EXECUTE_PROCESS(
-         COMMAND "${QMAKE}" -query QT_INSTALL_PREFIX
-         OUTPUT_VARIABLE QT_INSTALL_PREFIX
-         OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-      LIST(APPEND CMAKE_PREFIX_PATH
-         "${QT_INSTALL_PREFIX}"
-         "${QT_INSTALL_PREFIX}/lib/amd64"
-         "${QT_INSTALL_PREFIX}/lib/amd64/cmake"
-      )
-   ENDIF()
-
    SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml PrintSupport)
-   IF (NOT QT_FOUND)
+   FIND_PACKAGE(Qt6 COMPONENTS Core Network Widgets Xml)
+   IF (NOT Qt6_FOUND)
       # Try Qt5 instead:
-      FIND_PACKAGE(QT NAMES Qt5 COMPONENTS Core Network Widgets Xml PrintSupport)
+      FIND_PACKAGE(Qt5 COMPONENTS Core Network Widgets Xml)
    ENDIF()
-   IF (NOT QT_FOUND)
+   IF ((NOT Qt6_FOUND) AND (NOT Qt5_FOUND))
       MESSAGE(FATAL_ERROR
-             "Cannot find Qt! Try:\n"
-             " * Ubuntu/Debian: sudo apt install -y qt6-base-dev\n"
-             " * Fedora:        sudo dnf install -y qt6-qtbase-devel\n"
-             " * OpenSUSE:      sudo zypper install -y libqt6-qtbase-devel\n"
-             " * Alpine:        sudo apk add qt6-qtbase-dev\n"
-             " * FreeBSD:       sudo pkg install -y qt6-base\n"
-             " * NetBSD:        sudo pkgin -y install qt6-qtbase\n"
-             " * OpenBSD:       sudo pkg_add qt6-qtbase\n"
-             " * Solaris:       sudo pkg install library/qt6 print/cups\n"
-             " * Apple:         brew install qt")
+            "Cannot find Qt! Try:\n"
+            " * Ubuntu/Debian: sudo apt install -y qt6-base-dev\n"
+            " * Fedora:        sudo dnf install -y qt6-qtbase-devel\n"
+            " * OpenSUSE:      sudo zypper install -y libqt6-qtbase-devel\n"
+            " * Alpine:        sudo apk add qt6-qtbase-dev\n"
+            " * FreeBSD:       sudo pkg install -y qt6-base\n"
+            " * NetBSD:        sudo pkgin -y install qt6-qtbase\n"
+            " * OpenBSD:       sudo pkg_add qt6-qtbase\n"
+            " * Solaris:       sudo pkg install library/qt6 print/cups\n"
+            " * Apple:         brew install qt")
+   ELSEIF (Qt6_FOUND)
+      SET(QT_FOUND TRUE)
+      SET(QT_VERSION_MAJOR ${Qt6_VERSION_MAJOR})
+   ELSEIF (Qt5_FOUND)
+      SET(QT_FOUND TRUE)
+      SET(QT_VERSION_MAJOR ${Qt5_VERSION_MAJOR})
    ENDIF()
    MESSAGE("Using Qt version ${QT_VERSION_MAJOR}!")
 
    FIND_PROGRAM(LRELEASE lrelease lrelease-qt${QT_VERSION_MAJOR}
-                PATHS ${QT_INSTALL_PREFIX}/bin
-                      /usr/pkg/qt${QT_VERSION_MAJOR}/bin
+                PATHS /usr/pkg/qt${QT_VERSION_MAJOR}/bin
                       /usr/local/lib/qt${QT_VERSION_MAJOR}/bin
                       /usr/lib64/qt${QT_VERSION_MAJOR}/bin
                       /usr/lib/qt${QT_VERSION_MAJOR}/bin
                       /usr/bin
-                EQUIRED)
+                REQUIRED)
    IF (LRELEASE)
       MESSAGE("LRelease found: ${LRELEASE}!")
    ELSE()
       MESSAGE(FATAL_ERROR
-            "Cannot find Qt Linguist's LRelease tool! Try:\n"
-            " * Ubuntu/Debian: sudo apt install -y qt6-l10n-tools\n"
-            " * Fedora:        sudo dnf install -y qt6-linguist\n"
-            " * OpenSUSE:      sudo zypper install -y qt6-tools-linguist\n"
-            " * Alpine:        sudo apk add qt6-qttools\n"
-            " * FreeBSD:       sudo pkg install -y qt6-tools\n"
-            " * NetBSD:        sudo pkgin -y install qt6-qttools\n"
-            " * OpenBSD:       sudo pkg_add qt6-qttools\n"
-            " * Solaris:       sudo pkg install library/cups library/qt6\n"
-            " * Apple:         brew install qt")
+             "Cannot find Qt Linguist's LRelease tool! Try:\n"
+             " * Ubuntu/Debian: sudo apt install -y qt6-l10n-tools\n"
+             " * Fedora:        sudo dnf install -y qt6-linguist\n"
+             " * OpenSUSE:      sudo zypper install -y qt6-tools-linguist\n"
+             " * Alpine:        sudo apk add qt6-qttools\n"
+             " * FreeBSD:       sudo pkg install -y qt6-tools\n"
+             " * NetBSD:        sudo pkgin -y install qt6-qttools\n"
+             " * OpenBSD:       sudo pkg_add qt6-qttools\n"
+             " * Solaris:       sudo pkg install library/qt6\n"
+             " * Apple:         brew install qt")
    ENDIF()
 ENDIF()
 
