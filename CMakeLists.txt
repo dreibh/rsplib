@@ -199,6 +199,16 @@ FIND_PACKAGE(Threads REQUIRED)
 
 # ====== Qt =================================================================
 IF (WITH_QT OR WITH_KDE)
+   FIND_PROGRAM(QMAKE NAMES qmake6 qmake-qt6 qmake5 qmake-qt5 qmake PATHS /usr/lib/qt/*/bin)
+   IF (QMAKE)
+      EXECUTE_PROCESS(
+         COMMAND "${QMAKE}" -query QT_INSTALL_LIBS
+         OUTPUT_VARIABLE QT_INSTALL_LIBS
+         OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      LIST(APPEND CMAKE_PREFIX_PATH "${QT_INSTALL_LIBS}/cmake")
+   ENDIF()
+
    SET(CMAKE_AUTOMOC ON)
    FIND_PACKAGE(Qt6 COMPONENTS Core Network Widgets Xml)
    IF (NOT Qt6_FOUND)
