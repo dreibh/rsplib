@@ -366,7 +366,7 @@ IF (ENABLE_ICONS)
               " * OpenBSD:       sudo pkg_add inkscape\n"
               " * Solaris:       sudo pkg install inkscape\n"
               " * Apple:         brew install inkscape\n"
-              "If desktop icons are not required, they can be disabled by setting WITH_ICONS=OFF (add -DWITH_ICONS=OFF to CMake options)!")
+              "If desktop icons are not required, they can be disabled by setting ENABLE_ICONS=OFF (add -DENABLE_ICONS=OFF to CMake options)!")
    ENDIF()
 
 ELSE()
