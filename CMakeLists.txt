@@ -214,10 +214,10 @@ IF (WITH_QT OR WITH_KDE)
    ENDIF()
 
    SET(CMAKE_AUTOMOC ON)
-   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml)
+   FIND_PACKAGE(QT NAMES Qt6 COMPONENTS Core Network Widgets Xml PrintSupport)
    IF (NOT QT_FOUND)
       # Try Qt5 instead:
-      FIND_PACKAGE(QT NAMES Qt5 COMPONENTS Core Network Widgets Xml)
+      FIND_PACKAGE(QT NAMES Qt5 COMPONENTS Core Network Widgets Xml PrintSupport)
    ENDIF()
    IF (NOT QT_FOUND)
       MESSAGE(FATAL_ERROR
@@ -229,7 +229,7 @@ IF (WITH_QT OR WITH_KDE)
              " * FreeBSD:       sudo pkg install -y qt6-base\n"
              " * NetBSD:        sudo pkgin -y install qt6-qtbase\n"
              " * OpenBSD:       sudo pkg_add qt6-qtbase\n"
-             " * Solaris:       sudo pkg install library/qt6\n"
+             " * Solaris:       sudo pkg install library/qt6 print/cups\n"
              " * Apple:         brew install qt")
    ENDIF()
    MESSAGE("Using Qt version ${QT_VERSION_MAJOR}!")
