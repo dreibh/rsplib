@@ -15,7 +15,7 @@ BuildRequires: GraphicsMagick
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: lksctp-tools-devel
-BuildRequires: mupdf
+BuildRequires: pdf2svg
 BuildRequires: (qt6-qtbase-devel or qt6-base-devel)
 BuildRequires: (qt6-linguist or qt6-linguist-devel)
 
