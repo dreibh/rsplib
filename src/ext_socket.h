@@ -585,6 +585,12 @@ int sctp_enableCRC32(const unsigned int enable);
 #include <sys/uio.h>
 #include <netinet/sctp.h>
 
+#ifndef SCTP_EOF
+#define SCTP_EOF MSG_EOF
+#endif
+#ifndef SCTP_ABORT
+#define SCTP_ABORT MSG_ABORT
+#endif
 #ifndef SCTP_DELAYED_SACK
 #define SCTP_DELAYED_SACK SCTP_DELAYED_ACK_TIME
 #endif
