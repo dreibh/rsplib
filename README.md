@@ -28,16 +28,16 @@ The development and standardisation of an application-independent server pooling
 As key requirements to the Reliable Server Pooling architecture, the following points have been identified in [RFC&nbsp;3237](https://www.rfc-editor.org/rfc/rfc3237.html):
 
 * Lightweight:
-  The RSerPool solution may not require a significant amount of resources (e.g.&nbsp;CPU power or memory). In particular, it should be possible to realize RSerPool-based systems also on low-power devices like mobile phones, PDAs and embedded devices.
+  The RSerPool solution may not require a significant amount of resources (e.g., CPU power or memory). In particular, it should be possible to realize RSerPool-based systems also on low-power devices like mobile phones, PDAs and embedded devices.
 
 * Real-Time:
   Real-time services like telephone signalling have very strict limitations on the duration of failovers. In the case of component failures, it may be necessary that a "normal" system state is re-established within a duration of just a few hundreds of milliseconds. In telephone signalling, such a feature is in particular crucial when dealing with emergency calls.
 
 * Scalability:
-  Providing services like distributed computing, it is necessary to manage pools of many hundreds or even thousands of servers (e.g.&nbsp;animation rendering pools). The RSerPool architecture must be able to efficiently handle such pools. But the amount and size of pools are limited to a company or organization. In particular, it is not a goal of RSerPool to handle the global Internet in one pool set.
+  Providing services like distributed computing, it is necessary to manage pools of many hundreds or even thousands of servers (e.g., animation rendering pools). The RSerPool architecture must be able to efficiently handle such pools. But the amount and size of pools are limited to a company or organization. In particular, it is not a goal of RSerPool to handle the global Internet in one pool set.
 
 * Extensibility:
-  It must be possible to easily adapt the RSerPool architecture to future applications. In particular, this means to have the possibility to add new server selection procedures. That is, new applications can define special rules on which server of the pool is the most appropriate to use for the processing of a request (e.g.&nbsp;the least-used server). The configuration effort of RSerPool components (e.g.&nbsp;adding or removing servers) should be as small as possible. In the ideal case, the configuration should happen automatically, i.e., it should only be necessary to turn on a new server and it will configure automatically.
+  It must be possible to easily adapt the RSerPool architecture to future applications. In particular, this means to have the possibility to add new server selection procedures. That is, new applications can define special rules on which server of the pool is the most appropriate to use for the processing of a request (e.g., the least-used server). The configuration effort of RSerPool components (e.g., adding or removing servers) should be as small as possible. In the ideal case, the configuration should happen automatically, i.e., it should only be necessary to turn on a new server and it will configure automatically.
 
 ## The Reliable Server Pooling Architecture
 
@@ -46,14 +46,14 @@ As key requirements to the Reliable Server Pooling architecture, the following p
  An RSerPool Scenario
 </p>
 
-The figure above shows the building blocks of the RSerPool architecture, which has been defined by the [IETF RSerPool&nbsp;WG](https://datatracker.ietf.org/wg/rserpool/about/) in [RFC&nbsp;5351](https://www.rfc-editor.org/rfc/rfc5351.html): In the terminology of RSerPool a server is denoted as a _Pool Element_&nbsp;(PE). In its _Pool_, it is identified by its _Pool Element Identifier_&nbsp;(PE&nbsp;ID), a 32-bit number. The PE&nbsp;ID is randomly chosen upon a PE's registration to its pool. The set of all pools is denoted as the _Handlespace_. In older literature, it may be denoted as _Namespace_. This denomination has been dropped in order to avoid confusion with the [Domain Name System&nbsp;(DNS)](http://www.tcpipguide.com/free/t_DNSNameServerConceptsandOperation.htm). Each pool in a handlespace is identified by a unique Pool Handle&nbsp;(PH), which is represented by an arbitrary byte vector. Usually, this is an ASCII or Unicode representation of the pool, e.g.&nbsp;"Compute Pool" or "Web Server Pool".
+The figure above shows the building blocks of the RSerPool architecture, which has been defined by the [IETF RSerPool&nbsp;WG](https://datatracker.ietf.org/wg/rserpool/about/) in [RFC&nbsp;5351](https://www.rfc-editor.org/rfc/rfc5351.html): In the terminology of RSerPool a server is denoted as a _Pool Element_&nbsp;(PE). In its _Pool_, it is identified by its _Pool Element Identifier_&nbsp;(PE&nbsp;ID), a 32-bit number. The PE&nbsp;ID is randomly chosen upon a PE's registration to its pool. The set of all pools is denoted as the _Handlespace_. In older literature, it may be denoted as _Namespace_. This denomination has been dropped in order to avoid confusion with the [Domain Name System&nbsp;(DNS)](http://www.tcpipguide.com/free/t_DNSNameServerConceptsandOperation.htm). Each pool in a handlespace is identified by a unique Pool Handle&nbsp;(PH), which is represented by an arbitrary byte vector. Usually, this is an ASCII or Unicode representation of the pool, e.g., "Compute Pool" or "Web Server Pool".
 
 <p align="center">
  <a href="src/figures/EN-RSerPool-Handlespace-Information.svg"><img alt="Figure of the RSerPool Protocol Stack" src="src/figures/EN-RSerPool-Handlespace-Information.svg" style="width: 512pt;" /></a><br />
  A Handlespace Example
 </p>
 
-Each handlespace has a certain scope (e.g.&nbsp;an organization or company), which is denoted as _Operation Scope_. It is an explicit non-goal of RSerPool to manage the global Internet's pools within a single handlespace. Due to the limitation of operation scopes, it is possible to keep the handlespace "flat". That is, PHs do not have any hierarchy in contrast to the DNS with its top-level and sub-domains. This constraint results in a significant simplification of the handlespace management.
+Each handlespace has a certain scope (e.g., an organization or company), which is denoted as _Operation Scope_. It is an explicit non-goal of RSerPool to manage the global Internet's pools within a single handlespace. Due to the limitation of operation scopes, it is possible to keep the handlespace "flat". That is, PHs do not have any hierarchy in contrast to the DNS with its top-level and sub-domains. This constraint results in a significant simplification of the handlespace management.
 
 Within an operation scope, the handlespace is managed by redundant _Registrars_. In literature, this component is also denoted as _ENRP Server_ or _Name Server_. Since "registrar" is the most expressive term, this denotation is used here. PRs have to be redundant in order to avoid a PR from becoming a single point of failure&nbsp;(SPoF). Each PR of an operation scope is identified by its _Registrar ID_ (PR&nbsp;ID), which is a 32-bit random number. It is not necessary to ensure uniqueness of PR&nbsp;IDs. A PR contains a complete copy of the operation scope's handlespace. PRs of an operation scope synchronize their view of the handlespace using the **E**ndpoint Ha**N**dlespace **R**edundancy **P**rotocol&nbsp;(ENRP) defined in [RFC&nbsp;5353](https://www.rfc-editor.org/rfc/rfc5353.html). Older versions of this protocol use the term Endpoint Namespace Redundancy Protocol; this naming has been replaced to avoid confusion with DNS, but the abbreviation has been kept. Due to handlespace synchronization by ENRP, PRs of an operation scope are functionally equal. That is, if any of the PRs fails, each other PR is able to seamlessly replace it.
 
@@ -61,11 +61,11 @@ By using the **A**ggregate **S**erver **A**ccess **P**rotocol&nbsp;(ASAP), defin
 
 To use the service of a pool, a client – called _Pool User_&nbsp;(PU) in RSerPool terminology – first has to request the resolution of the pool's PH to a list of PE identities at an arbitrary PR of the operation scope. This selection procedure is denoted as _Handle Resolution_. If the requested pool exists, the PR will select a list of PE identities according to the pool's _Pool Member Selection Policy_, also simply denoted as _Pool Policy_. [RFC&nbsp;5356](https://www.rfc-editor.org/rfc/rfc5356.html) defines some standard pool policies.
 
-Possible pool policies are e.g.&nbsp;a random selection (Random) or the least-loaded PE (Least Used). While in the first case it is not necessary to have any selection information (PEs are selected randomly), it is required to maintain up-to-date load information in the second case of selecting the least-loaded PE. By using an appropriate selection policy, it is e.g.&nbsp;possible to equally distribute the request load onto the pool's PEs.
+Possible pool policies are e.g., a random selection (Random) or the least-loaded PE (Least Used). While in the first case it is not necessary to have any selection information (PEs are selected randomly), it is required to maintain up-to-date load information in the second case of selecting the least-loaded PE. By using an appropriate selection policy, it is e.g., possible to equally distribute the request load onto the pool's PEs.
 
-After reception of a list of PE identities from a PR, a PU will write the PE information into its local cache. This cache is denoted as _PU-side Cache_. Out of its cache, the PU will select exactly one PE – again by applying the pool's selection policy – and establish a connection to it by using the application's protocol, e.g.&nbsp;HTTP over SCTP or TCP in case of a web server. Over this connection, the service provided by the server can be used. For the case that the establishment of the connection fails or the connection is aborted during service usage, a new PE can be selected by repeating the described selection procedure. If the information in the PU-side cache is not outdated, a PE identity may be directly selected from cache, skipping the effort of asking a PR for handle resolution. After re-establishing a connection with a new PE, the state of the application session has to be re-instantiated on the new PE. The procedure necessary for session resumption is denoted as _failover procedure_ and is of course application-specific. For an FTP download for example, the failover procedure could mean to tell the new FTP server the file name and the last received data position. By that, the FTP server will be able to resume the download session. Since the failover procedure is highly application-dependent, it is not part of RSerPool itself, though RSerPool provides far-reaching support for the implementation of arbitrary failover schemes by its Session Layer mechanisms.
+After reception of a list of PE identities from a PR, a PU will write the PE information into its local cache. This cache is denoted as _PU-side Cache_. Out of its cache, the PU will select exactly one PE – again by applying the pool's selection policy – and establish a connection to it by using the application's protocol, e.g., HTTP over SCTP or TCP in case of a web server. Over this connection, the service provided by the server can be used. For the case that the establishment of the connection fails or the connection is aborted during service usage, a new PE can be selected by repeating the described selection procedure. If the information in the PU-side cache is not outdated, a PE identity may be directly selected from cache, skipping the effort of asking a PR for handle resolution. After re-establishing a connection with a new PE, the state of the application session has to be re-instantiated on the new PE. The procedure necessary for session resumption is denoted as _failover procedure_ and is of course application-specific. For an FTP download for example, the failover procedure could mean to tell the new FTP server the file name and the last received data position. By that, the FTP server will be able to resume the download session. Since the failover procedure is highly application-dependent, it is not part of RSerPool itself, though RSerPool provides far-reaching support for the implementation of arbitrary failover schemes by its Session Layer mechanisms.
 
-To make it possible for RSerPool components to configure automatically, PRs can announce themselves via UDP over IP multicast. These announces can be received by PEs, PUs and other PRs, allowing them to learn the list of PRs currently available in the operation scope. The advantage of using IP multicast instead of broadcast is that this mechanism will also work over routers (e.g.&nbsp;LANs connected via a VPN) and the announces will – for the case of e.g.&nbsp;a switched Ethernet – only be heard and processed by stations actually interested in this information. For the case that IP multicast is not available, it is of course possible to statically configure PR addresses.
+To make it possible for RSerPool components to configure automatically, PRs can announce themselves via UDP over IP multicast. These announces can be received by PEs, PUs and other PRs, allowing them to learn the list of PRs currently available in the operation scope. The advantage of using IP multicast instead of broadcast is that this mechanism will also work over routers (e.g., LANs connected via a VPN) and the announces will – for the case of e.g., a switched Ethernet – only be heard and processed by stations actually interested in this information. For the case that IP multicast is not available, it is of course possible to statically configure PR addresses.
 
 ## A Migration Path for Legacy Applications
 
@@ -84,7 +84,7 @@ The transport protocol used for RSerPool is usually SCTP, defined in [RFC&nbsp;9
 
 * Multi-homing and path monitoring by Heartbeat messages for improved availability and verification of transport addresses,
 
-* Dynamic Address Reconfiguration (Add-IP, see [RFC&nbsp;5061](https://www.rfc-editor.org/rfc/rfc5061.html)) to enable mobility and interruption-free address changes (e.g.&nbsp;adding a new network interface for enhanced redundancy),
+* Dynamic Address Reconfiguration (Add-IP, see [RFC&nbsp;5061](https://www.rfc-editor.org/rfc/rfc5061.html)) to enable mobility and interruption-free address changes (e.g., adding a new network interface for enhanced redundancy),
 
 * Message framing for simplified message handling (especially for the Session Layer),
 
@@ -92,7 +92,7 @@ The transport protocol used for RSerPool is usually SCTP, defined in [RFC&nbsp;9
 
 * Protocol identification by [Payload Protocol Identifier&nbsp;(PPID)](https://www.iana.org/assignments/sctp-parameters/sctp-parameters.xhtml) for protocol multiplexing (required for the ASAP Session Layer functionality).
 
-For the transport of PR announces by ASAP and ENRP via IP multicast, UDP is used as transport protocol. The usage of SCTP is mandatory for all ENRP communication between PRs and the ASAP communication between PEs and PRs. For the ASAP communication between PU and PR and the Session Layer communication between PE and PU, it is recommended to use SCTP. However, the usage of TCP together with an adaptation layer defined in [draft-ietf-rserpool-tcpmapping](https://datatracker.ietf.org/doc/html/draft-ietf-rserpool-tcpmapping-03) is possible. This adaptation layer adds functionalities like Heartbeats, message framing and protocol identification on top of a TCP connection. But nevertheless, some important advantages of SCTP are missing – especially the high immunity against flooding attacks and the multi-homing property. The only meaningful reason to use TCP is when the PU implementation cannot be equipped with an SCTP stack, e.g.&nbsp;when using a proprietary embedded system providing only a TCP stack.
+For the transport of PR announces by ASAP and ENRP via IP multicast, UDP is used as transport protocol. The usage of SCTP is mandatory for all ENRP communication between PRs and the ASAP communication between PEs and PRs. For the ASAP communication between PU and PR and the Session Layer communication between PE and PU, it is recommended to use SCTP. However, the usage of TCP together with an adaptation layer defined in [draft-ietf-rserpool-tcpmapping](https://datatracker.ietf.org/doc/html/draft-ietf-rserpool-tcpmapping-03) is possible. This adaptation layer adds functionalities like Heartbeats, message framing and protocol identification on top of a TCP connection. But nevertheless, some important advantages of SCTP are missing – especially the high immunity against flooding attacks and the multi-homing property. The only meaningful reason to use TCP is when the PU implementation cannot be equipped with an SCTP stack, e.g., when using a proprietary embedded system providing only a TCP stack.
 
 ## Further Details
 
@@ -238,13 +238,12 @@ Optionally, for installation to the standard paths (usually under `/usr/local`):
 sudo make install
 ```
 
-Note: The script [`ci/get-dependencies`](https://github.com/dreibh/rsplib/blob/master/ci/get-dependencies) automatically installs the build dependencies under Debian/Ubuntu Linux, Fedora Linux, OpenSUSE Linux, Alpine Linux, FreeBSD, and Debian GNU/Hurd. For manual handling of the build dependencies, take a look at the packaging configuration files:
+Note: The script [`ci/get-dependencies`](https://github.com/dreibh/rsplib/blob/master/ci/get-dependencies) automatically installs the build dependencies under Debian/Ubuntu Linux, Fedora Linux, OpenSUSE Linux, Alpine Linux, and FreeBSD. For manual handling of the build dependencies, take a look at the packaging configuration files:
 
-* [`debian/control`](https://github.com/dreibh/rsplib/blob/master/debian/control) (Debian/Ubuntu Linux, Debian GNU/Hurd),
+* [`debian/control`](https://github.com/dreibh/rsplib/blob/master/debian/control) (Debian/Ubuntu Linux),
 * [`rsplib.spec`](https://github.com/dreibh/rsplib/blob/master/rpm/rsplib.spec) (Fedora Linux, OpenSUSE Linux),
-* [`APKBUILD`](https://github.com/dreibh/rsplib/blob/master/packaging/APKBUILD) (Alpine Linux),
-* [`Makefile`](https://github.com/dreibh/rsplib/blob/master/freebsd/rsplib/Makefile) (FreeBSD), and
-* [`rsplib.rb`](https://github.com/dreibh/rsplib/blob/master/packaging/rsplib.rb) (Homebrew).
+* [`APKBUILD`](https://github.com/dreibh/rsplib/blob/master/packaging/APKBUILD) (Alpine Linux), and
+* [`Makefile`](https://github.com/dreibh/rsplib/blob/master/freebsd/rsplib/Makefile) (FreeBSD).
 
 Contributions:
 
@@ -659,7 +658,7 @@ The CalcApp PU provides further options:
 * `-keepalivetransmissioninterval=<milliseconds>`: Sets the session keep-alive interval in milliseconds.
 * `-keepalivetimeoutinterval=<milliseconds>`: Sets the session keep-alive timeout in milliseconds.
 * `-object=<name>`: Sets the object name for scalar hierarchy.
-* `-runtime=<seconds>`: After the configured number of seconds, the service is shut down. Floating-point values (e.g.&nbsp;30.125) are possible.
+* `-runtime=<seconds>`: After the configured number of seconds, the service is shut down. Floating-point values (e.g., 30.125) are possible.
 * `-scalar=<scalar_file>`: Sets the name of scalar output file to write.
 * `-vector=<vector_file>`: Sets the name of vector output file to write.
 
@@ -714,7 +713,7 @@ rspregistrar <OPTIONS> ...
 * `-autoclosetimeout=<seconds>`: Sets the SCTP autoclose timeout for idle ASAP associations.
 * `-minaddressscope=<scope>`: Sets the minimum address scope acceptable for registered PEs:
   - `loopback`: Loopback address (only valid on the same node!)
-  - `site-local`: Site-local addresses (e.g., 192.168.1.1, etc.)
+  - `site-local`: Site-local addresses (e.g., 192.168.1.1)
   - `global`: Global addresses
 * `-quiet`: Do not print startup and shutdown messages.
 
