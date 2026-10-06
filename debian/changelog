@@ -1,3 +1,10 @@
+rsplib (3.5.11~rc0-1ubuntu1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: qt6-tools-dev is needed to build fractalpooluser.
+
+ -- Thomas Dreibholz <thomas.dreibholz@gmail.com>  Tue, 06 Oct 2026 12:43:09 +0200
+
 rsplib (3.5.10-1ubuntu1) unstable; urgency=medium
 
   * New upstream release.
